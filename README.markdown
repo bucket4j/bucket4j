@@ -9,8 +9,8 @@ to attempting to consume any tokens the refill strategy will be consulted to see
 bucket
 
 See also:
-  [Wikipedia - Token Bucket](http://en.wikipedia.org/wiki/Token_bucket)
-  [Wikipedia - Leaky Bucket](http://en.wikipedia.org/wiki/Leaky_bucket)
+* [Wikipedia - Token Bucket](http://en.wikipedia.org/wiki/Token_bucket)
+* [Wikipedia - Leaky Bucket](http://en.wikipedia.org/wiki/Leaky_bucket)
 
 Usage
 -----
@@ -18,13 +18,17 @@ Using a token bucket is incredibly easy and is best illustrated by an example.  
 polls a website and you would only like to be able to access the site once per second:
 
 ```java
+// Use the system ticker for measuring time (part of Guava)
+Ticker ticker = Ticker.systemTicker()
+
 // Refill the bucket with 1 token every 1 second
-RefillStrategy refillStrategy = new FixedIntervalRefillStrategy(Ticker.systemTicker(), 1, 1, TimeUnit.SECONDS);
+RefillStrategy refillStrategy = new FixedIntervalRefillStrategy(ticker, 1, 1, TimeUnit.SECONDS);
 
 // Create a token bucket with a capacity of 1 token
 TokenBucket bucket = new TokenBucket(1, refillStrategy);
 
 // ...
+
 while (true) {
   // Consume a token from the token bucket.  If a token is not available this method will block until
   // the refill strategy adds one to the bucket.
@@ -38,8 +42,11 @@ As another example suppose you wanted to rate limit the size response of a serve
 allow for a periodic burst rate of 40 kb/sec:
 
 ```java
+// Use the system ticker for measuring time (part of Guava)
+Ticker ticker = Ticker.systemTicker()
+
 // Refill the bucket with 20 kb of tokens per second
-RefillStrategy refillStrategy = new FixedIntervalRefillStrategy(Ticker.systemTicker(), 20480, 1, TimeUnit.SECONDS);
+RefillStrategy refillStrategy = new FixedIntervalRefillStrategy(ticker, 20480, 1, TimeUnit.SECONDS);
 
 // Create a token bucket with a capacity of 40 kb tokens
 TokenBucket bucket = new TokenBucket(40960, refillStrategy);
