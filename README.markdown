@@ -9,6 +9,7 @@ to attempting to consume any tokens the refill strategy will be consulted to see
 bucket
 
 See also:
+
 * [Wikipedia - Token Bucket](http://en.wikipedia.org/wiki/Token_bucket)
 * [Wikipedia - Leaky Bucket](http://en.wikipedia.org/wiki/Leaky_bucket)
 
