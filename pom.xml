@@ -8,6 +8,12 @@
   <version>1.0-SNAPSHOT</version>
   <packaging>jar</packaging>
 
+  <parent>
+    <groupId>org.sonatype.oss</groupId>
+    <artifactId>oss-parent</artifactId>
+    <version>7</version>
+  </parent>
+
   <name>token-bucket</name>
   <description>Token bucket algorithm for rate-limiting</description>
   <url>http://github.com/bbeck/token-bucket</url>
