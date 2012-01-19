@@ -19,14 +19,8 @@ Using a token bucket is incredibly easy and is best illustrated by an example.  
 polls a website and you would only like to be able to access the site once per second:
 
 ```java
-// Use the system ticker for measuring time (part of Guava)
-Ticker ticker = Ticker.systemTicker()
-
-// Refill the bucket with 1 token every 1 second
-RefillStrategy refillStrategy = new FixedIntervalRefillStrategy(ticker, 1, 1, TimeUnit.SECONDS);
-
-// Create a token bucket with a capacity of 1 token
-TokenBucket bucket = new TokenBucket(1, refillStrategy);
+// Create a token bucket with a capacity of 1 token that refills at a fixed interval of 1 token/sec.
+TokenBucket bucket = TokenBuckets.newFixedIntervalRefill(1, 1, 1, TimeUnit.SECONDS);
 
 // ...
 
@@ -43,14 +37,8 @@ As another example suppose you wanted to rate limit the size response of a serve
 allow for a periodic burst rate of 40 kb/sec:
 
 ```java
-// Use the system ticker for measuring time (part of Guava)
-Ticker ticker = Ticker.systemTicker()
-
-// Refill the bucket with 20 kb of tokens per second
-RefillStrategy refillStrategy = new FixedIntervalRefillStrategy(ticker, 20480, 1, TimeUnit.SECONDS);
-
-// Create a token bucket with a capacity of 40 kb tokens
-TokenBucket bucket = new TokenBucket(40960, refillStrategy);
+// Create a token bucket with a capacity of 40 kb tokens that refills at a fixed interval of 20 kb tokens per second
+TokenBucket bucket = TokenBuckets.newFixedIntervalRefill(40960, 20480, 1, TimeUnit.SECONDS);
 
 // ...
 
@@ -63,3 +51,20 @@ while (true) {
   send(response);
 }
 ```
+
+Maven Setup
+-----------
+The token bucket library is distributed through maven central.  Just include it as a dependency in your ```pom.xml```.
+
+```xml
+<dependency>
+    <groupId>org.isomorphism</groupId>
+    <artifactId>token-bucket</artifactId>
+    <version>1.1</version>
+</dependency>
+```
+
+License
+-------
+Copyright 2012 Brandon Beck
+Licensed under the Apache Software License, Version 2.0: <http://www.apache.org/licenses/LICENSE-2.0>.
