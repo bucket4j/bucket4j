@@ -8,6 +8,8 @@ In this implementation the rules for refilling the bucket are encapsulated in a 
 to attempting to consume any tokens the refill strategy will be consulted to see how many tokens should be added to the
 bucket
 
+We use [Travis CI](http://about.travis-ci.org) for build verification.  [![Build Status](https://secure.travis-ci.org/bbeck/token-bucket.png?branch=master)](http://travis-ci.org/bbeck/token-bucket)
+
 See also:
 
 * [Wikipedia - Token Bucket](http://en.wikipedia.org/wiki/Token_bucket)
