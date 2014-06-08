@@ -19,13 +19,15 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
 
 public class TokenBucketTest
 {
   private static final long CAPACITY = 10;
 
   private final MockRefillStrategy refillStrategy = new MockRefillStrategy();
-  private final TokenBucket bucket = new TokenBucket(CAPACITY, refillStrategy);
+  private final TokenBucket.SleepStrategy sleepStrategy = mock(TokenBucket.SleepStrategy.class);
+  private final TokenBucket bucket = new TokenBucket(CAPACITY, refillStrategy, sleepStrategy);
 
   @Test(expected = IllegalArgumentException.class)
   public void testTryConsumeZeroTokens()
