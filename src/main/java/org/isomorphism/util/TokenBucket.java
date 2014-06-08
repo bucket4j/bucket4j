@@ -15,11 +15,8 @@
  */
 package org.isomorphism.util;
 
-import com.google.common.util.concurrent.Uninterruptibles;
-
-import java.util.concurrent.TimeUnit;
-
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * A token bucket implementation used for rate limiting access to a portion of code.  This implementation is that of a
@@ -29,20 +26,30 @@ import static com.google.common.base.Preconditions.checkArgument;
  * In this implementation the rules for refilling the bucket are encapsulated in a provided {@code RefillStrategy}
  * instance.  Prior to attempting to consume any tokens the refill strategy will be consulted to see how many tokens
  * should be added to the bucket.
+ * <p/>
+ * In addition in this implementation the method of yielding CPU control is encapsulated in the provided
+ * {@code SleepStrategy} instance.  For high performance applications where tokens are being refilled incredibly quickly
+ * and an accurate bucket implementation is required, it may be useful to never yield control of the CPU and to instead
+ * busy wait.  This strategy allows the caller to make this decision for themselves instead of the library forcing a
+ * decision.
  *
  * @see <a href="http://en.wikipedia.org/wiki/Token_bucket">Token Bucket on Wikipedia</a>
  * @see <a href="http://en.wikipedia.org/wiki/Leaky_bucket">Leaky Bucket on Wikipedia</a>
  */
 public class TokenBucket
 {
-  private final RefillStrategy refillStrategy;
   private final long capacity;
+  private final RefillStrategy refillStrategy;
+  private final SleepStrategy sleepStrategy;
   private long size;
 
-  public TokenBucket(long capacity, RefillStrategy refillStrategy)
+  public TokenBucket(long capacity, RefillStrategy refillStrategy, SleepStrategy sleepStrategy)
   {
-    this.refillStrategy = refillStrategy;
+    checkArgument(capacity > 0);
+
     this.capacity = capacity;
+    this.refillStrategy = checkNotNull(refillStrategy);
+    this.sleepStrategy = checkNotNull(sleepStrategy);
     this.size = 0;
   }
 
@@ -104,9 +111,7 @@ public class TokenBucket
         break;
       }
 
-      // Sleep for the smallest unit of time possible just to relinquish control
-      // and to allow other threads to run.
-      Uninterruptibles.sleepUninterruptibly(1, TimeUnit.NANOSECONDS);
+      sleepStrategy.sleep();
     }
   }
 
@@ -119,5 +124,14 @@ public class TokenBucket
      * @return The number of tokens to add to the token bucket.
      */
     long refill();
+  }
+
+  /** Encapsulation of a strategy for relinquishing control of the CPU. */
+  public static interface SleepStrategy
+  {
+    /**
+     * Sleep for a short period of time to allow other threads and system processes to execute.
+     */
+    void sleep();
   }
 }

@@ -16,8 +16,12 @@
 package org.isomorphism.util;
 
 import com.google.common.base.Ticker;
+import com.google.common.util.concurrent.Uninterruptibles;
 
 import java.util.concurrent.TimeUnit;
+
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /** Static utility methods pertaining to creating {@link TokenBucket} instances. */
 public final class TokenBuckets
@@ -29,11 +33,86 @@ public final class TokenBuckets
    * {@code capacityTokens} tokens in it, and every {@code period} time units {@code refillTokens} will be added to
    * it.  The tokens are added all at one time on the interval boundaries.  By default the system clock is used for
    * keeping time.
+   *
+   * @deprecated Use {@link org.isomorphism.util.TokenBuckets.Builder} instead.
    */
   public static TokenBucket newFixedIntervalRefill(long capacityTokens, long refillTokens, long period, TimeUnit unit)
   {
-    Ticker ticker = Ticker.systemTicker();
-    TokenBucket.RefillStrategy strategy = new FixedIntervalRefillStrategy(ticker, refillTokens, period, unit);
-    return new TokenBucket(capacityTokens, strategy);
+    return builder()
+        .withCapacity(capacityTokens)
+        .withYieldingSleepStrategy()
+        .withFixedIntervalRefillStrategy(refillTokens, period, unit)
+        .build();
   }
+
+  public static Builder builder()
+  {
+    return new Builder();
+  }
+
+  public static class Builder
+  {
+    private Long capacity = null;
+    private TokenBucket.RefillStrategy refillStrategy = null;
+    private TokenBucket.SleepStrategy sleepStrategy = YIELDING_SLEEP_STRATEGY;
+    private final Ticker ticker = Ticker.systemTicker();
+
+    public Builder withCapacity(long numTokens)
+    {
+      checkArgument(numTokens > 0, "Must specify a positive number of tokens");
+      capacity = numTokens;
+      return this;
+    }
+
+    /** Refill tokens at a fixed interval. */
+    public Builder withFixedIntervalRefillStrategy(long refillTokens, long period, TimeUnit unit)
+    {
+      refillStrategy = new FixedIntervalRefillStrategy(ticker, refillTokens, period, unit);
+      return this;
+    }
+
+    /** Use a sleep strategy that will always attempt to yield the CPU to other processes. */
+    public Builder withYieldingSleepStrategy()
+    {
+      sleepStrategy = YIELDING_SLEEP_STRATEGY;
+      return this;
+    }
+
+    /**
+     * Use a sleep strategy that will not yield the CPU to other processes.  It will busy wait until more tokens become
+     * available.
+     */
+    public Builder withBusyWaitSleepStrategy() {
+      sleepStrategy = BUSY_WAIT_SLEEP_STRATEGY;
+      return this;
+    }
+
+    /** Build the token bucket. */
+    public TokenBucket build() {
+      checkNotNull(capacity, "Must specify a capacity");
+      checkNotNull(refillStrategy, "Must specify a refill strategy");
+
+      return new TokenBucket(capacity, refillStrategy, sleepStrategy);
+    }
+  }
+
+  private static final TokenBucket.SleepStrategy YIELDING_SLEEP_STRATEGY = new TokenBucket.SleepStrategy()
+  {
+    @Override
+    public void sleep()
+    {
+      // Sleep for the smallest unit of time possible just to relinquish control
+      // and to allow other threads to run.
+      Uninterruptibles.sleepUninterruptibly(1, TimeUnit.NANOSECONDS);
+    }
+  };
+
+  private static final TokenBucket.SleepStrategy BUSY_WAIT_SLEEP_STRATEGY = new TokenBucket.SleepStrategy()
+  {
+    @Override
+    public void sleep()
+    {
+      // Do nothing, don't sleep.
+    }
+  };
 }
