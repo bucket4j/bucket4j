@@ -28,24 +28,6 @@ public final class TokenBuckets
 {
   private TokenBuckets() {}
 
-  /**
-   * Construct a token bucket that uses a fixed interval refill strategy.  Initially the bucket will start with
-   * {@code capacityTokens} tokens in it, and every {@code period} time units {@code refillTokens} will be added to
-   * it.  The tokens are added all at one time on the interval boundaries.  By default the system clock is used for
-   * keeping time.
-   *
-   * @deprecated Use {@link org.isomorphism.util.TokenBuckets.Builder} instead.
-   */
-  public static TokenBucketImpl newFixedIntervalRefill(long capacityTokens, long refillTokens,
-                                                       long period, TimeUnit unit)
-  {
-    return builder()
-        .withCapacity(capacityTokens)
-        .withYieldingSleepStrategy()
-        .withFixedIntervalRefillStrategy(refillTokens, period, unit)
-        .build();
-  }
-
   public static Builder builder()
   {
     return new Builder();
@@ -68,28 +50,41 @@ public final class TokenBuckets
     /** Refill tokens at a fixed interval. */
     public Builder withFixedIntervalRefillStrategy(long refillTokens, long period, TimeUnit unit)
     {
-      refillStrategy = new FixedIntervalRefillStrategy(ticker, refillTokens, period, unit);
+      return withRefillStrategy(new FixedIntervalRefillStrategy(ticker, refillTokens, period, unit));
+    }
+
+    /** Use a user defined refill strategy. */
+    public Builder withRefillStrategy(TokenBucket.RefillStrategy refillStrategy)
+    {
+      this.refillStrategy = checkNotNull(refillStrategy);
       return this;
     }
 
     /** Use a sleep strategy that will always attempt to yield the CPU to other processes. */
     public Builder withYieldingSleepStrategy()
     {
-      sleepStrategy = YIELDING_SLEEP_STRATEGY;
-      return this;
+      return withSleepStrategy(YIELDING_SLEEP_STRATEGY);
     }
 
     /**
      * Use a sleep strategy that will not yield the CPU to other processes.  It will busy wait until more tokens become
      * available.
      */
-    public Builder withBusyWaitSleepStrategy() {
-      sleepStrategy = BUSY_WAIT_SLEEP_STRATEGY;
+    public Builder withBusyWaitSleepStrategy()
+    {
+      return withSleepStrategy(BUSY_WAIT_SLEEP_STRATEGY);
+    }
+
+    /** Use a user defined sleep strategy. */
+    public Builder withSleepStrategy(TokenBucket.SleepStrategy sleepStrategy)
+    {
+      this.sleepStrategy = checkNotNull(sleepStrategy);
       return this;
     }
 
     /** Build the token bucket. */
-    public TokenBucketImpl build() {
+    public TokenBucketImpl build()
+    {
       checkNotNull(capacity, "Must specify a capacity");
       checkNotNull(refillStrategy, "Must specify a refill strategy");
 
