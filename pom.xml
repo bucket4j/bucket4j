@@ -4,7 +4,7 @@
 
   <groupId>org.isomorphism</groupId>
   <artifactId>token-bucket</artifactId>
-  <version>1.3</version>
+  <version>1.4-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <parent>
