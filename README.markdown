@@ -22,7 +22,10 @@ polls a website and you would only like to be able to access the site once per s
 
 ```java
 // Create a token bucket with a capacity of 1 token that refills at a fixed interval of 1 token/sec.
-TokenBucket bucket = TokenBuckets.newFixedIntervalRefill(1, 1, 1, TimeUnit.SECONDS);
+TokenBucket bucket = TokenBuckets.builder()
+  .withCapacity(1)
+  .withFixedIntervalRefillStrategy(1, 1, TimeUnit.SECONDS)
+  .build();
 
 // ...
 
@@ -40,7 +43,10 @@ allow for a periodic burst rate of 40 kb/sec:
 
 ```java
 // Create a token bucket with a capacity of 40 kb tokens that refills at a fixed interval of 20 kb tokens per second
-TokenBucket bucket = TokenBuckets.newFixedIntervalRefill(40960, 20480, 1, TimeUnit.SECONDS);
+TokenBucket bucket = TokenBuckets.builder()
+  .withCapacity(40960)
+  .withFixedIntervalRefillStrategy(20480, 1, TimeUnit.SECONDS)
+  .build();
 
 // ...
 
@@ -62,11 +68,11 @@ The token bucket library is distributed through maven central.  Just include it 
 <dependency>
     <groupId>org.isomorphism</groupId>
     <artifactId>token-bucket</artifactId>
-    <version>1.2</version>
+    <version>1.3</version>
 </dependency>
 ```
 
 License
 -------
-Copyright 2012 Brandon Beck
+Copyright 2012-2014 Brandon Beck
 Licensed under the Apache Software License, Version 2.0: <http://www.apache.org/licenses/LICENSE-2.0>.
