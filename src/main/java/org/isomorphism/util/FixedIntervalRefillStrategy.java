@@ -24,7 +24,7 @@ import java.util.concurrent.TimeUnit;
  * The tokens are refilled in bursts rather than at a fixed rate.  This refill strategy will never allow more than
  * N tokens to be consumed during a window of time T.
  */
-public class FixedIntervalRefillStrategy implements TokenBucket.RefillStrategy
+public class FixedIntervalRefillStrategy implements TokenBucketImpl.RefillStrategy
 {
   private final Ticker ticker;
   private final long numTokens;

@@ -23,7 +23,7 @@ import java.util.concurrent.TimeUnit;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-/** Static utility methods pertaining to creating {@link TokenBucket} instances. */
+/** Static utility methods pertaining to creating {@link TokenBucketImpl} instances. */
 public final class TokenBuckets
 {
   private TokenBuckets() {}
@@ -36,7 +36,8 @@ public final class TokenBuckets
    *
    * @deprecated Use {@link org.isomorphism.util.TokenBuckets.Builder} instead.
    */
-  public static TokenBucket newFixedIntervalRefill(long capacityTokens, long refillTokens, long period, TimeUnit unit)
+  public static TokenBucketImpl newFixedIntervalRefill(long capacityTokens, long refillTokens,
+                                                       long period, TimeUnit unit)
   {
     return builder()
         .withCapacity(capacityTokens)
@@ -53,8 +54,8 @@ public final class TokenBuckets
   public static class Builder
   {
     private Long capacity = null;
-    private TokenBucket.RefillStrategy refillStrategy = null;
-    private TokenBucket.SleepStrategy sleepStrategy = YIELDING_SLEEP_STRATEGY;
+    private TokenBucketImpl.RefillStrategy refillStrategy = null;
+    private TokenBucketImpl.SleepStrategy sleepStrategy = YIELDING_SLEEP_STRATEGY;
     private final Ticker ticker = Ticker.systemTicker();
 
     public Builder withCapacity(long numTokens)
@@ -88,15 +89,15 @@ public final class TokenBuckets
     }
 
     /** Build the token bucket. */
-    public TokenBucket build() {
+    public TokenBucketImpl build() {
       checkNotNull(capacity, "Must specify a capacity");
       checkNotNull(refillStrategy, "Must specify a refill strategy");
 
-      return new TokenBucket(capacity, refillStrategy, sleepStrategy);
+      return new TokenBucketImpl(capacity, refillStrategy, sleepStrategy);
     }
   }
 
-  private static final TokenBucket.SleepStrategy YIELDING_SLEEP_STRATEGY = new TokenBucket.SleepStrategy()
+  private static final TokenBucketImpl.SleepStrategy YIELDING_SLEEP_STRATEGY = new TokenBucketImpl.SleepStrategy()
   {
     @Override
     public void sleep()
@@ -107,7 +108,7 @@ public final class TokenBuckets
     }
   };
 
-  private static final TokenBucket.SleepStrategy BUSY_WAIT_SLEEP_STRATEGY = new TokenBucket.SleepStrategy()
+  private static final TokenBucketImpl.SleepStrategy BUSY_WAIT_SLEEP_STRATEGY = new TokenBucketImpl.SleepStrategy()
   {
     @Override
     public void sleep()
