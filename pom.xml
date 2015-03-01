@@ -1,67 +1,109 @@
 <?xml version="1.0"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-  <modelVersion>4.0.0</modelVersion>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
 
-  <groupId>org.isomorphism</groupId>
-  <artifactId>token-bucket</artifactId>
-  <version>1.4-SNAPSHOT</version>
-  <packaging>jar</packaging>
+    <groupId>ru.vbukhtoyarov.concurrency</groupId>
+    <artifactId>token-bucket</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>jar</packaging>
 
-  <parent>
-    <groupId>org.sonatype.oss</groupId>
-    <artifactId>oss-parent</artifactId>
-    <version>7</version>
-  </parent>
+    <name>token-bucket</name>
+    <description>Non-blocking Java implementation of token bucket algorithm for rate-limiting</description>
+    <url>http://github.com/vladimir-bukhtoyarov/token-bucket</url>
+    <licenses>
+        <license>
+            <name>The Apache Software License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
 
-  <name>token-bucket</name>
-  <description>Token bucket algorithm for rate-limiting</description>
-  <url>http://github.com/bbeck/token-bucket</url>
-  <licenses>
-    <license>
-      <name>The Apache Software License, Version 2.0</name>
-      <url>http://www.apache.org/licenses/LICENSE-2.0</url>
-      <distribution>repo</distribution>
-    </license>
-  </licenses>
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    </properties>
 
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-  </properties>
+    <scm>
+        <url>http://github.com/vladimir-bukhtoyarov/token-bucket</url>
+        <connection>scm:git:git@github.com:vladimir-bukhtoyarov/token-bucket</connection>
+        <developerConnection>scm:git:git@github.com:vladimir-bukhtoyarov/token-bucket.git</developerConnection>
+    </scm>
 
-  <scm>
-    <url>http://github.com/bbeck/token-bucket</url>
-    <connection>scm:git:git@github.com:bbeck/token-bucket.git</connection>
-    <developerConnection>scm:git:git@github.com:bbeck/token-bucket.git</developerConnection>
-  </scm>
+    <developers>
+        <developer>
+            <id>vladimir-bukhtoyarov</id>
+            <name>Vladimir Bukhtoyarov</name>
+            <email>jsecoder@gmail.com</email>
+            <url>https://github.com/vladimir-bukhtoyarov</url>
+            <organization>RingCentral</organization>
+            <organizationUrl>http://www.ringcentral.com/</organizationUrl>
+            <roles>
+                <role>Senior software engineer</role>
+            </roles>
+        </developer>
+    </developers>
 
-  <developers>
-    <developer>
-      <id>bbeck</id>
-      <name>Brandon</name>
-      <url>http://github.com/bbeck</url>
-    </developer>
-  </developers>
-
-  <dependencies>
-    <dependency>
-      <groupId>com.google.guava</groupId>
-      <artifactId>guava</artifactId>
-      <version>17.0</version>
-    </dependency>
-
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>4.11</version>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.mockito</groupId>
-      <artifactId>mockito-core</artifactId>
-      <version>1.9.5</version>
-      <scope>test</scope>
-    </dependency>
-  </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.1</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.codehaus.groovy</groupId>
+                        <artifactId>groovy-eclipse-compiler</artifactId>
+                        <version>2.9.1-01</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.codehaus.groovy</groupId>
+                        <artifactId>groovy-eclipse-batch</artifactId>
+                        <version>2.3.7-01</version>
+                    </dependency>
+                </dependencies>
+                <configuration>
+                    <compilerId>groovy-eclipse-compiler</compilerId>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                    <encoding>UTF-8</encoding>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok-maven-plugin</artifactId>
+                <version>1.16.2.0</version>
+            </plugin>
+        </plugins>
+    </build>
+    <dependencies>
+        <!--<dependency>-->
+        <!--<groupId>org.projectlombok</groupId>-->
+        <!--<artifactId>lombok</artifactId>-->
+        <!--<version>1.16.2</version>-->
+        <!--</dependency>-->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.12</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-all</artifactId>
+            <version>1.9.5</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.spockframework</groupId>
+            <artifactId>spock-core</artifactId>
+            <version>0.7-groovy-2.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>cglib</groupId>
+            <artifactId>cglib-nodep</artifactId>
+            <version>3.1</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
 </project>
