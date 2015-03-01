@@ -19,6 +19,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+
 import ru.vbukhtoyarov.concurrency.tokenbucket.refill.FixedIntervalRefillStrategy;
 import ru.vbukhtoyarov.concurrency.tokenbucket.refill.RefillStrategy;
 import ru.vbukhtoyarov.concurrency.tokenbucket.sleep.WaitingStrategy;
