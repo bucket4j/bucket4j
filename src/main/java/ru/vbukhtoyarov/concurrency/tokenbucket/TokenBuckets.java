@@ -17,11 +17,11 @@ package ru.vbukhtoyarov.concurrency.tokenbucket;
 
 import ru.vbukhtoyarov.concurrency.tokenbucket.refill.FixedIntervalRefillStrategy;
 import ru.vbukhtoyarov.concurrency.tokenbucket.refill.RefillStrategy;
+import ru.vbukhtoyarov.concurrency.tokenbucket.sleep.WaitingStrategy;
 import ru.vbukhtoyarov.concurrency.tokenbucket.wrapper.NanoTimeWrapper;
 
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.LockSupport;
 
 /**
  * Static utility methods pertaining to creating {@link TokenBucketImpl} instances.
@@ -37,7 +37,7 @@ public final class TokenBuckets {
     public static class Builder {
         private Long capacity = null;
         private RefillStrategy refillStrategy = null;
-        private TokenBucketImpl.SleepStrategy sleepStrategy = YIELDING_SLEEP_STRATEGY;
+        private WaitingStrategy waitingStrategy = WaitingStrategy.YIELDING_WAIT_STRATEGY;
         private final NanoTimeWrapper ticker = NanoTimeWrapper.SYSTEM;
 
         public Builder withCapacity(long numTokens) {
@@ -68,7 +68,7 @@ public final class TokenBuckets {
          * Use a sleep strategy that will always attempt to yield the CPU to other processes.
          */
         public Builder withYieldingSleepStrategy() {
-            return withSleepStrategy(YIELDING_SLEEP_STRATEGY);
+            return withSleepStrategy(WaitingStrategy.YIELDING_WAIT_STRATEGY);
         }
 
         /**
@@ -76,14 +76,14 @@ public final class TokenBuckets {
          * available.
          */
         public Builder withBusyWaitSleepStrategy() {
-            return withSleepStrategy(BUSY_WAIT_SLEEP_STRATEGY);
+            return withSleepStrategy(WaitingStrategy.SPINLOOP_WAIT_STRATEGY);
         }
 
         /**
          * Use a user defined sleep strategy.
          */
-        public Builder withSleepStrategy(TokenBucket.SleepStrategy sleepStrategy) {
-            this.sleepStrategy = Objects.requireNonNull(sleepStrategy);
+        public Builder withSleepStrategy(WaitingStrategy waitingStrategy) {
+            this.waitingStrategy = Objects.requireNonNull(waitingStrategy);
             return this;
         }
 
@@ -94,23 +94,8 @@ public final class TokenBuckets {
             Objects.requireNonNull(capacity, "Must specify a capacity");
             Objects.requireNonNull(refillStrategy, "Must specify a refill strategy");
 
-            return new TokenBucketImpl(capacity, capacity, refillStrategy, sleepStrategy, NanoTimeWrapper.SYSTEM);
+            return new TokenBucketImpl(capacity, capacity, refillStrategy, waitingStrategy, NanoTimeWrapper.SYSTEM);
         }
     }
 
-    private static final TokenBucketImpl.SleepStrategy YIELDING_SLEEP_STRATEGY = new TokenBucketImpl.SleepStrategy() {
-        @Override
-        public void sleep() {
-            // Sleep for the smallest unit of time possible just to relinquish control
-            // and to allow other threads to run.
-            LockSupport.parkNanos(1);
-        }
-    };
-
-    private static final TokenBucketImpl.SleepStrategy BUSY_WAIT_SLEEP_STRATEGY = new TokenBucketImpl.SleepStrategy() {
-        @Override
-        public void sleep() {
-            // Do nothing, don't sleep.
-        }
-    };
 }

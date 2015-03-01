@@ -53,13 +53,4 @@ public interface TokenBucket {
      */
     void consume(long numTokens);
 
-    /**
-     * Encapsulation of a strategy for relinquishing control of the CPU.
-     */
-    static interface SleepStrategy {
-        /**
-         * Sleep for a short period of time to allow other threads and system processes to execute.
-         */
-        void sleep();
-    }
 }

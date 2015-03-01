@@ -21,13 +21,13 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import ru.vbukhtoyarov.concurrency.tokenbucket.refill.FixedIntervalRefillStrategy;
 import ru.vbukhtoyarov.concurrency.tokenbucket.refill.RefillStrategy;
+import ru.vbukhtoyarov.concurrency.tokenbucket.sleep.WaitingStrategy;
 import ru.vbukhtoyarov.concurrency.tokenbucket.wrapper.NanoTimeWrapper;
 
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class TokenBucketImplTest {
@@ -47,16 +47,16 @@ public class TokenBucketImplTest {
     private NanoTimeWrapper nanoTimeWrapper;
 
     @Mock
-    private TokenBucket.SleepStrategy sleepStrategy;
+    private WaitingStrategy waitingStrategy;
 
     @Before
     public void initMocks() {
         MockitoAnnotations.initMocks(this);
 
         refillStrategy = new FixedIntervalRefillStrategy(MAX_CAPACITY, period, timeUnit);
-        bucket = new TokenBucketImpl(MAX_CAPACITY, MAX_CAPACITY, refillStrategy, sleepStrategy, nanoTimeWrapper);
-        halfBucket = new TokenBucketImpl(MAX_CAPACITY, MAX_CAPACITY / 2, refillStrategy, sleepStrategy, nanoTimeWrapper);
-        emptyBucket = new TokenBucketImpl(MAX_CAPACITY, 0, refillStrategy, sleepStrategy, nanoTimeWrapper);
+        bucket = new TokenBucketImpl(MAX_CAPACITY, MAX_CAPACITY, refillStrategy, waitingStrategy, nanoTimeWrapper);
+        halfBucket = new TokenBucketImpl(MAX_CAPACITY, MAX_CAPACITY / 2, refillStrategy, waitingStrategy, nanoTimeWrapper);
+        emptyBucket = new TokenBucketImpl(MAX_CAPACITY, 0, refillStrategy, waitingStrategy, nanoTimeWrapper);
     }
 
     @Test(expected = IllegalArgumentException.class)

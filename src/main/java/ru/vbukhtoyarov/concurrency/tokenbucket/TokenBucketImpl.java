@@ -16,6 +16,7 @@
 package ru.vbukhtoyarov.concurrency.tokenbucket;
 
 import ru.vbukhtoyarov.concurrency.tokenbucket.refill.RefillStrategy;
+import ru.vbukhtoyarov.concurrency.tokenbucket.sleep.WaitingStrategy;
 import ru.vbukhtoyarov.concurrency.tokenbucket.wrapper.NanoTimeWrapper;
 
 import java.util.concurrent.atomic.AtomicReference;
@@ -37,15 +38,15 @@ import java.util.concurrent.atomic.AtomicReference;
 class TokenBucketImpl implements TokenBucket {
     private final long maxCapacity;
     private final RefillStrategy refillStrategy;
-    private final SleepStrategy sleepStrategy;
+    private final WaitingStrategy waitingStrategy;
     private final NanoTimeWrapper nanoTimeWrapper;
 
     private final AtomicReference<ImmutableState> stateReference;
 
-    TokenBucketImpl(long maxCapacity, long initialCapacity, RefillStrategy refillStrategy, SleepStrategy sleepStrategy, NanoTimeWrapper nanoTimeWrapper) {
+    TokenBucketImpl(long maxCapacity, long initialCapacity, RefillStrategy refillStrategy, WaitingStrategy waitingStrategy, NanoTimeWrapper nanoTimeWrapper) {
         this.maxCapacity = maxCapacity;
         this.refillStrategy = refillStrategy;
-        this.sleepStrategy = sleepStrategy;
+        this.waitingStrategy = waitingStrategy;
         this.nanoTimeWrapper = nanoTimeWrapper;
         this.stateReference = new AtomicReference(new ImmutableState(initialCapacity, nanoTimeWrapper.nanoTime()));
     }
@@ -68,28 +69,7 @@ class TokenBucketImpl implements TokenBucket {
      * @return {@code true} if the tokens were consumed, {@code false} otherwise.
      */
     public boolean tryConsume(long numTokens) {
-        if (numTokens <= 0) {
-            throw new IllegalArgumentException("Number of tokens to consume must be positive");
-        }
-        if (numTokens > maxCapacity) {
-            throw new IllegalArgumentException("Number of tokens to consume must be less than the capacity of the bucket.");
-        }
-
-        while (true) {
-            long currentNanoTime = nanoTimeWrapper.nanoTime();
-            ImmutableState currentState = stateReference.get();
-            long currentSize = currentState.size;
-            long refillTokens = refillStrategy.refill(currentState.previuosRefillNanoTime, currentNanoTime);
-            long currentSizeWithRefill = Math.min(maxCapacity, currentSize + refillTokens);
-            if (numTokens > currentSizeWithRefill) {
-                return false;
-            }
-
-            long newSize = currentSizeWithRefill - numTokens;
-            if (stateReference.compareAndSet(currentState, new ImmutableState(newSize, currentNanoTime))) {
-                return true;
-            }
-        }
+        return consumeOrReturnMillisToAwait(numTokens) == 0;
     }
 
     /**
@@ -108,11 +88,37 @@ class TokenBucketImpl implements TokenBucket {
      */
     public void consume(long numTokens) {
         while (true) {
-            if (tryConsume(numTokens)) {
+            long millisToAwait = consumeOrReturnMillisToAwait(numTokens);
+            if (millisToAwait == 0) {
                 return;
             }
 
-            sleepStrategy.sleep();
+            waitingStrategy.sleep(millisToAwait);
+        }
+    }
+
+    private long consumeOrReturnMillisToAwait(long numTokens) {
+        if (numTokens <= 0) {
+            throw new IllegalArgumentException("Number of tokens to consume must be positive");
+        }
+        if (numTokens > maxCapacity) {
+            throw new IllegalArgumentException("Number of tokens to consume must be less than the capacity of the bucket.");
+        }
+
+        while (true) {
+            long currentNanoTime = nanoTimeWrapper.nanoTime();
+            ImmutableState currentState = stateReference.get();
+            long currentSize = currentState.size;
+            long refillTokens = refillStrategy.refill(currentState.previuosRefillNanoTime, currentNanoTime);
+            long currentSizeWithRefill = Math.min(maxCapacity, currentSize + refillTokens);
+            if (numTokens > currentSizeWithRefill) {
+                return refillStrategy.nanosRequiredToRefill(numTokens - currentSizeWithRefill);
+            }
+
+            long newSize = currentSizeWithRefill - numTokens;
+            if (stateReference.compareAndSet(currentState, new ImmutableState(newSize, currentNanoTime))) {
+                return 0;
+            }
         }
     }
 
