@@ -15,6 +15,11 @@
  */
 package ru.vbukhtoyarov.concurrency.tokenbucket;
 
+import ru.vbukhtoyarov.concurrency.tokenbucket.refill.RefillStrategy;
+import ru.vbukhtoyarov.concurrency.tokenbucket.wrapper.NanoTimeWrapper;
+
+import java.util.concurrent.atomic.AtomicReference;
+
 /**
  * A token bucket implementation that is of a leaky bucket in the sense that it has a finite capacity and any added
  * tokens that would exceed this capacity will "overflow" out of the bucket and are lost forever.
@@ -30,16 +35,19 @@ package ru.vbukhtoyarov.concurrency.tokenbucket;
  * decision.
  */
 class TokenBucketImpl implements TokenBucket {
-    private final long capacity;
+    private final long maxCapacity;
     private final RefillStrategy refillStrategy;
     private final SleepStrategy sleepStrategy;
-    private long size;
+    private final NanoTimeWrapper nanoTimeWrapper;
 
-    TokenBucketImpl(long capacity, RefillStrategy refillStrategy, SleepStrategy sleepStrategy) {
-        this.capacity = capacity;
+    private final AtomicReference<ImmutableState> stateReference;
+
+    TokenBucketImpl(long maxCapacity, long initialCapacity, RefillStrategy refillStrategy, SleepStrategy sleepStrategy, NanoTimeWrapper nanoTimeWrapper) {
+        this.maxCapacity = maxCapacity;
         this.refillStrategy = refillStrategy;
         this.sleepStrategy = sleepStrategy;
-        this.size = 0;
+        this.nanoTimeWrapper = nanoTimeWrapper;
+        this.stateReference = new AtomicReference(new ImmutableState(initialCapacity, nanoTimeWrapper.nanoTime()));
     }
 
     /**
@@ -59,25 +67,29 @@ class TokenBucketImpl implements TokenBucket {
      * @param numTokens The number of tokens to consume from the bucket, must be a positive number.
      * @return {@code true} if the tokens were consumed, {@code false} otherwise.
      */
-    public synchronized boolean tryConsume(long numTokens) {
+    public boolean tryConsume(long numTokens) {
         if (numTokens <= 0) {
             throw new IllegalArgumentException("Number of tokens to consume must be positive");
         }
-        if (numTokens > capacity) {
+        if (numTokens > maxCapacity) {
             throw new IllegalArgumentException("Number of tokens to consume must be less than the capacity of the bucket.");
         }
 
-        // Give the refill strategy a chance to add tokens if it needs to, but beware of overflow
-        long newTokens = Math.min(capacity, Math.max(0, refillStrategy.refill()));
-        size = Math.max(0, Math.min(size + newTokens, capacity));
+        while (true) {
+            long currentNanoTime = nanoTimeWrapper.nanoTime();
+            ImmutableState currentState = stateReference.get();
+            long currentSize = currentState.size;
+            long refillTokens = refillStrategy.refill(currentState.previuosRefillNanoTime, currentNanoTime);
+            long currentSizeWithRefill = Math.min(maxCapacity, currentSize + refillTokens);
+            if (numTokens > currentSizeWithRefill) {
+                return false;
+            }
 
-        // Now try to consume some tokens
-        if (numTokens <= size) {
-            size -= numTokens;
-            return true;
+            long newSize = currentSizeWithRefill - numTokens;
+            if (stateReference.compareAndSet(currentState, new ImmutableState(newSize, currentNanoTime))) {
+                return true;
+            }
         }
-
-        return false;
     }
 
     /**
@@ -97,10 +109,22 @@ class TokenBucketImpl implements TokenBucket {
     public void consume(long numTokens) {
         while (true) {
             if (tryConsume(numTokens)) {
-                break;
+                return;
             }
 
             sleepStrategy.sleep();
         }
     }
+
+    private static class ImmutableState {
+
+        private final long size;
+        private final long previuosRefillNanoTime;
+
+        private ImmutableState(long size, long refillNanoTime) {
+            this.size = size;
+            this.previuosRefillNanoTime = refillNanoTime;
+        }
+    }
+
 }

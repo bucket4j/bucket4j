@@ -15,6 +15,10 @@
  */
 package ru.vbukhtoyarov.concurrency.tokenbucket;
 
+import ru.vbukhtoyarov.concurrency.tokenbucket.refill.FixedIntervalRefillStrategy;
+import ru.vbukhtoyarov.concurrency.tokenbucket.refill.RefillStrategy;
+import ru.vbukhtoyarov.concurrency.tokenbucket.wrapper.NanoTimeWrapper;
+
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.LockSupport;
@@ -32,7 +36,7 @@ public final class TokenBuckets {
 
     public static class Builder {
         private Long capacity = null;
-        private TokenBucketImpl.RefillStrategy refillStrategy = null;
+        private RefillStrategy refillStrategy = null;
         private TokenBucketImpl.SleepStrategy sleepStrategy = YIELDING_SLEEP_STRATEGY;
         private final NanoTimeWrapper ticker = NanoTimeWrapper.SYSTEM;
 
@@ -49,13 +53,13 @@ public final class TokenBuckets {
          * Refill tokens at a fixed interval.
          */
         public Builder withFixedIntervalRefillStrategy(long refillTokens, long period, TimeUnit unit) {
-            return withRefillStrategy(new FixedIntervalRefillStrategy(ticker, refillTokens, period, unit));
+            return withRefillStrategy(new FixedIntervalRefillStrategy(refillTokens, period, unit));
         }
 
         /**
          * Use a user defined refill strategy.
          */
-        public Builder withRefillStrategy(TokenBucket.RefillStrategy refillStrategy) {
+        public Builder withRefillStrategy(RefillStrategy refillStrategy) {
             this.refillStrategy = Objects.requireNonNull(refillStrategy);
             return this;
         }
@@ -90,7 +94,7 @@ public final class TokenBuckets {
             Objects.requireNonNull(capacity, "Must specify a capacity");
             Objects.requireNonNull(refillStrategy, "Must specify a refill strategy");
 
-            return new TokenBucketImpl(capacity, refillStrategy, sleepStrategy);
+            return new TokenBucketImpl(capacity, capacity, refillStrategy, sleepStrategy, NanoTimeWrapper.SYSTEM);
         }
     }
 

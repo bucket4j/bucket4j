@@ -13,9 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ru.vbukhtoyarov.concurrency.tokenbucket;
+package ru.vbukhtoyarov.concurrency.tokenbucket.refill;
 
-import java.time.Clock;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -23,34 +22,35 @@ import java.util.concurrent.TimeUnit;
  * The tokens are refilled in bursts rather than at a fixed rate.  This refill strategy will never allow more than
  * N tokens to be consumed during a window of time T.
  */
-public class FixedIntervalRefillStrategy implements TokenBucketImpl.RefillStrategy {
-    private final NanoTimeWrapper ticker;
+public class FixedIntervalRefillStrategy implements RefillStrategy {
+
     private final long numTokens;
     private final long periodInNanos;
-    private long nextRefillTime;
 
     /**
      * Create a FixedIntervalRefillStrategy.
      *
-     * @param ticker Reader to measure time.
      * @param numTokens The number of tokens to add to the bucket every interval.
      * @param period    How often to refill the bucket.
      * @param unit      Unit for period.
      */
-    public FixedIntervalRefillStrategy(NanoTimeWrapper ticker, long numTokens, long period, TimeUnit unit) {
-        this.ticker = ticker;
+    public FixedIntervalRefillStrategy(long numTokens, long period, TimeUnit unit) {
         this.numTokens = numTokens;
         this.periodInNanos = unit.toNanos(period);
-        this.nextRefillTime = -1;
     }
 
-    public synchronized long refill() {
-        long now = ticker.nanoTime();
-        if (now < nextRefillTime) {
-            return 0;
+    @Override
+    public long refill(long previousRefillNanoTime, long currentNanoTime) {
+        if (currentNanoTime - previousRefillNanoTime >= periodInNanos) {
+            return numTokens;
         }
-        nextRefillTime = now + periodInNanos;
-        return numTokens;
+        return 0;
     }
+
+    @Override
+    public long nanosRequiredToRefill(long numTokens) {
+        return periodInNanos * numTokens / this.numTokens;
+    }
+
 }
 

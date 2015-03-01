@@ -15,18 +15,49 @@
  */
 package ru.vbukhtoyarov.concurrency.tokenbucket;
 
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import ru.vbukhtoyarov.concurrency.tokenbucket.refill.FixedIntervalRefillStrategy;
+import ru.vbukhtoyarov.concurrency.tokenbucket.refill.RefillStrategy;
+import ru.vbukhtoyarov.concurrency.tokenbucket.wrapper.NanoTimeWrapper;
+
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class TokenBucketImplTest {
-    private static final long CAPACITY = 10;
 
-    private final MockRefillStrategy refillStrategy = new MockRefillStrategy();
-    private final TokenBucket.SleepStrategy sleepStrategy = mock(TokenBucket.SleepStrategy.class);
-    private final TokenBucketImpl bucket = new TokenBucketImpl(CAPACITY, refillStrategy, sleepStrategy);
+    private static final long MAX_CAPACITY = 10;
+    private static final long period = 1000;
+    private static final TimeUnit timeUnit = TimeUnit.NANOSECONDS;
+
+
+    private RefillStrategy refillStrategy;
+
+    private TokenBucketImpl bucket;
+    private TokenBucketImpl halfBucket;
+    private TokenBucketImpl emptyBucket;
+
+    @Mock
+    private NanoTimeWrapper nanoTimeWrapper;
+
+    @Mock
+    private TokenBucket.SleepStrategy sleepStrategy;
+
+    @Before
+    public void initMocks() {
+        MockitoAnnotations.initMocks(this);
+
+        refillStrategy = new FixedIntervalRefillStrategy(MAX_CAPACITY, period, timeUnit);
+        bucket = new TokenBucketImpl(MAX_CAPACITY, MAX_CAPACITY, refillStrategy, sleepStrategy, nanoTimeWrapper);
+        halfBucket = new TokenBucketImpl(MAX_CAPACITY, MAX_CAPACITY / 2, refillStrategy, sleepStrategy, nanoTimeWrapper);
+        emptyBucket = new TokenBucketImpl(MAX_CAPACITY, 0, refillStrategy, sleepStrategy, nanoTimeWrapper);
+    }
 
     @Test(expected = IllegalArgumentException.class)
     public void testTryConsumeZeroTokens() {
@@ -40,58 +71,43 @@ public class TokenBucketImplTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testTryConsumeMoreThanCapacityTokens() {
-        bucket.tryConsume(100);
+        bucket.tryConsume(MAX_CAPACITY + 1);
     }
 
     @Test
-    public void testBucketInitiallyEmpty() {
-        assertFalse(bucket.tryConsume());
+    public void testInitiallyCapacityEmpty() {
+        assertFalse(emptyBucket.tryConsume());
+        assertFalse(emptyBucket.tryConsume(MAX_CAPACITY - 1));
+
+        assertTrue(bucket.tryConsume());
+        assertTrue(bucket.tryConsume(MAX_CAPACITY - 1));
     }
 
     @Test
     public void testTryConsumeOneToken() {
-        refillStrategy.addToken();
+        assertFalse(emptyBucket.tryConsume());
+        assertTrue(halfBucket.tryConsume());
         assertTrue(bucket.tryConsume());
     }
 
     @Test
     public void testTryConsumeMoreTokensThanAreAvailable() {
-        refillStrategy.addToken();
-        assertFalse(bucket.tryConsume(2));
+        assertFalse(halfBucket.tryConsume(MAX_CAPACITY / 2 + 1));
+
+        assertTrue(bucket.tryConsume(MAX_CAPACITY));
+        assertFalse(bucket.tryConsume());
     }
 
     @Test
-    public void testTryRefillMoreThanCapacityTokens() {
-        refillStrategy.addTokens(CAPACITY + 1);
-        assertTrue(bucket.tryConsume(CAPACITY));
-        assertFalse(bucket.tryConsume(1));
+    public void testRefill() {
+        when(nanoTimeWrapper.nanoTime()).thenReturn(refillStrategy.nanosRequiredToRefill(MAX_CAPACITY));
+        assertTrue(emptyBucket.tryConsume());
+        assertTrue(halfBucket.tryConsume(MAX_CAPACITY / 2 + 1));
+
+        assertTrue(bucket.tryConsume(MAX_CAPACITY));
+
+        when(nanoTimeWrapper.nanoTime()).thenReturn(refillStrategy.nanosRequiredToRefill(MAX_CAPACITY) + 1);
+        assertFalse(bucket.tryConsume(MAX_CAPACITY));
     }
 
-    @Test
-    public void testTryRefillWithTooManyTokens() {
-        refillStrategy.addTokens(CAPACITY);
-        assertTrue(bucket.tryConsume());
-
-        refillStrategy.addTokens(Long.MAX_VALUE);
-        assertTrue(bucket.tryConsume(CAPACITY));
-        assertFalse(bucket.tryConsume(1));
-    }
-
-    private static final class MockRefillStrategy implements TokenBucketImpl.RefillStrategy {
-        private long numTokensToAdd = 0;
-
-        public long refill() {
-            long numTokens = numTokensToAdd;
-            numTokensToAdd = 0;
-            return numTokens;
-        }
-
-        public void addToken() {
-            numTokensToAdd++;
-        }
-
-        public void addTokens(long numTokens) {
-            numTokensToAdd += numTokens;
-        }
-    }
 }

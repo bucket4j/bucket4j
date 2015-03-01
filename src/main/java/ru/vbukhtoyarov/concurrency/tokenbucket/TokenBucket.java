@@ -54,18 +54,6 @@ public interface TokenBucket {
     void consume(long numTokens);
 
     /**
-     * Encapsulation of a refilling strategy for a token bucket.
-     */
-    static interface RefillStrategy {
-        /**
-         * Returns the number of tokens to add to the token bucket.
-         *
-         * @return The number of tokens to add to the token bucket.
-         */
-        long refill();
-    }
-
-    /**
      * Encapsulation of a strategy for relinquishing control of the CPU.
      */
     static interface SleepStrategy {
