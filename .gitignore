@@ -5,6 +5,7 @@
 *.iml
 
 # Eclipse Files
+.settings/
 .classpath
 .project
 
