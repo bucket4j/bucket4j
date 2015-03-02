@@ -15,10 +15,6 @@
  */
 package ru.vbukhtoyarov.concurrency.tokenbucket;
 
-import ru.vbukhtoyarov.concurrency.tokenbucket.refill.FixedIntervalRefillStrategy;
-import ru.vbukhtoyarov.concurrency.tokenbucket.refill.RefillStrategy;
-import ru.vbukhtoyarov.concurrency.tokenbucket.sleep.WaitingStrategy;
-import ru.vbukhtoyarov.concurrency.tokenbucket.wrapper.NanoTimeWrapper;
 
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -27,75 +23,75 @@ import java.util.concurrent.TimeUnit;
  * Static utility methods pertaining to creating {@link TokenBucketImpl} instances.
  */
 public final class TokenBuckets {
-    private TokenBuckets() {
-    }
-
-    public static Builder builder() {
-        return new Builder();
-    }
-
-    public static class Builder {
-        private Long capacity = null;
-        private RefillStrategy refillStrategy = null;
-        private WaitingStrategy waitingStrategy = WaitingStrategy.YIELDING_WAIT_STRATEGY;
-        private final NanoTimeWrapper ticker = NanoTimeWrapper.SYSTEM;
-
-        public Builder withCapacity(long numTokens) {
-            if (numTokens <= 0) {
-                throw new IllegalArgumentException("Must specify a positive number of tokens");
-            }
-
-            capacity = numTokens;
-            return this;
-        }
-
-        /**
-         * Refill tokens at a fixed interval.
-         */
-        public Builder withFixedIntervalRefillStrategy(long refillTokens, long period, TimeUnit unit) {
-            return withRefillStrategy(new FixedIntervalRefillStrategy(refillTokens, period, unit));
-        }
-
-        /**
-         * Use a user defined refill strategy.
-         */
-        public Builder withRefillStrategy(RefillStrategy refillStrategy) {
-            this.refillStrategy = Objects.requireNonNull(refillStrategy);
-            return this;
-        }
-
-        /**
-         * Use a sleep strategy that will always attempt to yield the CPU to other processes.
-         */
-        public Builder withYieldingSleepStrategy() {
-            return withSleepStrategy(WaitingStrategy.YIELDING_WAIT_STRATEGY);
-        }
-
-        /**
-         * Use a sleep strategy that will not yield the CPU to other processes.  It will busy wait until more tokens become
-         * available.
-         */
-        public Builder withBusyWaitSleepStrategy() {
-            return withSleepStrategy(WaitingStrategy.SPINLOOP_WAIT_STRATEGY);
-        }
-
-        /**
-         * Use a user defined sleep strategy.
-         */
-        public Builder withSleepStrategy(WaitingStrategy waitingStrategy) {
-            this.waitingStrategy = Objects.requireNonNull(waitingStrategy);
-            return this;
-        }
-
-        /**
-         * Build the token bucket.
-         */
-        public TokenBucketImpl build() {
-            Objects.requireNonNull(capacity, "Must specify a capacity");
-            Objects.requireNonNull(refillStrategy, "Must specify a refill strategy");
-
-            return new TokenBucketImpl(capacity, capacity, refillStrategy, waitingStrategy, NanoTimeWrapper.SYSTEM);
-        }
-    }
+//    private TokenBuckets() {
+//    }
+//
+//    public static Builder builder() {
+//        return new Builder();
+//    }
+//
+//    public static class Builder {
+//        private Long capacity = null;
+//        private RefillStrategy refillStrategy = null;
+//        private WaitingStrategy waitingStrategy = WaitingStrategy.YIELDING_WAIT_STRATEGY;
+//        private final NanoTimeWrapper ticker = NanoTimeWrapper.SYSTEM;
+//
+//        public Builder withCapacity(long numTokens) {
+//            if (numTokens <= 0) {
+//                throw new IllegalArgumentException("Must specify a positive number of tokens");
+//            }
+//
+//            capacity = numTokens;
+//            return this;
+//        }
+//
+//        /**
+//         * Refill tokens at a fixed interval.
+//         */
+//        public Builder withFixedIntervalRefillStrategy(long refillTokens, long period, TimeUnit unit) {
+//            return withRefillStrategy(new FixedIntervalRefillStrategy(refillTokens, period, unit));
+//        }
+//
+//        /**
+//         * Use a user defined refill strategy.
+//         */
+//        public Builder withRefillStrategy(RefillStrategy refillStrategy) {
+//            this.refillStrategy = Objects.requireNonNull(refillStrategy);
+//            return this;
+//        }
+//
+//        /**
+//         * Use a sleep strategy that will always attempt to yield the CPU to other processes.
+//         */
+//        public Builder withYieldingSleepStrategy() {
+//            return withSleepStrategy(WaitingStrategy.YIELDING_WAIT_STRATEGY);
+//        }
+//
+//        /**
+//         * Use a sleep strategy that will not yield the CPU to other processes.  It will busy wait until more tokens become
+//         * available.
+//         */
+//        public Builder withBusyWaitSleepStrategy() {
+//            return withSleepStrategy(WaitingStrategy.SPINLOOP_WAIT_STRATEGY);
+//        }
+//
+//        /**
+//         * Use a user defined sleep strategy.
+//         */
+//        public Builder withSleepStrategy(WaitingStrategy waitingStrategy) {
+//            this.waitingStrategy = Objects.requireNonNull(waitingStrategy);
+//            return this;
+//        }
+//
+//        /**
+//         * Build the token bucket.
+//         */
+//        public TokenBucketImpl build() {
+//            Objects.requireNonNull(capacity, "Must specify a capacity");
+//            Objects.requireNonNull(refillStrategy, "Must specify a refill strategy");
+//
+//            return new TokenBucketImpl(capacity, capacity, refillStrategy, waitingStrategy, NanoTimeWrapper.SYSTEM);
+//        }
+//    }
 
 }

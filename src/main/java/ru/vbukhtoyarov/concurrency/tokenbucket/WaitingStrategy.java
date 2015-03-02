@@ -1,4 +1,4 @@
-package ru.vbukhtoyarov.concurrency.tokenbucket.sleep;
+package ru.vbukhtoyarov.concurrency.tokenbucket;
 
 import java.util.concurrent.locks.LockSupport;
 

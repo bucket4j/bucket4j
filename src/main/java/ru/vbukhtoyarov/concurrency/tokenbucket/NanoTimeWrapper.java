@@ -1,4 +1,4 @@
-package ru.vbukhtoyarov.concurrency.tokenbucket.wrapper;
+package ru.vbukhtoyarov.concurrency.tokenbucket;
 
 public class NanoTimeWrapper {
 
