@@ -14,10 +14,9 @@
  *  limitations under the License.
  */
 
-package ru.vbukhtoyarov.concurrency.tokenbucket;
+package com.github.bandwidthlimiter.tokenbucket;
 
 import java.util.concurrent.locks.LockSupport;
-import java.util.concurrent.locks.ReentrantLock;
 
 public interface WaitingStrategy {
     

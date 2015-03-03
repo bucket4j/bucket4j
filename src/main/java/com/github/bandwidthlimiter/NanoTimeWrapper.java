@@ -13,20 +13,15 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package ru.vbukhtoyarov.concurrency.tokenbucket;
 
-import org.junit.Test;
+package com.github.bandwidthlimiter;
 
-public class TokenBucketBuilderTest {
-//    private final TokenBuckets.Builder builder = TokenBuckets.builder();
-//
-//    @Test(expected = IllegalArgumentException.class)
-//    public void testNegativeCapacity() {
-//        builder.withCapacity(-1);
-//    }
-//
-//    @Test(expected = IllegalArgumentException.class)
-//    public void testZeroCapacity() {
-//        builder.withCapacity(0);
-//    }
+public class NanoTimeWrapper {
+
+    public static final NanoTimeWrapper SYSTEM = new NanoTimeWrapper();  
+    
+    public long nanoTime() {
+        return System.nanoTime();
+    }
+
 }

@@ -13,7 +13,7 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package ru.vbukhtoyarov.concurrency.tokenbucket;
+package com.github.bandwidthlimiter;
 
 
 import java.util.Objects;
@@ -22,7 +22,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Static utility methods pertaining to creating {@link TokenBucketImpl} instances.
  */
-public final class TokenBuckets {
+public final class BandwidthLimiters {
 //    private TokenBuckets() {
 //    }
 //

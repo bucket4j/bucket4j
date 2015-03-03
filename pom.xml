@@ -19,14 +19,14 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>ru.vbukhtoyarov.concurrency</groupId>
-    <artifactId>token-bucket</artifactId>
+    <groupId>com.github</groupId>
+    <artifactId>bandwidth-limiter</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>token-bucket</name>
-    <description>Non-blocking Java implementation of token bucket algorithm for rate-limiting</description>
-    <url>http://github.com/vladimir-bukhtoyarov/token-bucket</url>
+    <name>bandwidth-limiter</name>
+    <description>Non-blocking Java implementation of token bucket algorithm for bandwidth-limiting</description>
+    <url>http://github.com/vladimir-bukhtoyarov/bandwidth-limiter</url>
     <licenses>
         <license>
             <name>The Apache Software License, Version 2.0</name>
@@ -41,9 +41,9 @@
     </properties>
 
     <scm>
-        <url>http://github.com/vladimir-bukhtoyarov/token-bucket</url>
-        <connection>scm:git:git@github.com:vladimir-bukhtoyarov/token-bucket</connection>
-        <developerConnection>scm:git:git@github.com:vladimir-bukhtoyarov/token-bucket.git</developerConnection>
+        <url>http://github.com/vladimir-bukhtoyarov/bandwidth-limiter</url>
+        <connection>scm:git:git@github.com:vladimir-bukhtoyarov/bandwidth-limiter</connection>
+        <developerConnection>scm:git:git@github.com:vladimir-bukhtoyarov/bandwidth-limiter.git</developerConnection>
     </scm>
 
     <developers>

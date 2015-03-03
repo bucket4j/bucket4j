@@ -13,7 +13,7 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package ru.vbukhtoyarov.concurrency.tokenbucket;
+package com.github.bandwidthlimiter;
 
 /**
  * A token bucket is used for rate limiting access to a portion of code.
