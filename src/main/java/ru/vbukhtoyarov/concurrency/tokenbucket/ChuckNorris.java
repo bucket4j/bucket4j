@@ -16,12 +16,10 @@
 
 package ru.vbukhtoyarov.concurrency.tokenbucket;
 
-public class NanoTimeWrapper {
+public class ChuckNorris {
 
-    public static final NanoTimeWrapper SYSTEM = new NanoTimeWrapper();  
-    
-    public long nanoTime() {
-        return System.nanoTime();
+    public static <T> T roundKickExceptionAndGetMeWhatIWant(Exception e) {
+        throw new IllegalStateException("42", e);
     }
 
 }

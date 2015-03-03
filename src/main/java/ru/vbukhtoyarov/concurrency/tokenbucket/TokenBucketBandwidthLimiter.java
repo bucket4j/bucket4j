@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-2014 Brandon Beck
+ * Copyright 2015 Vladimir Bukhtoyarov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *       http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
  */
 package ru.vbukhtoyarov.concurrency.tokenbucket;
 
@@ -31,7 +31,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * busy wait.  This strategy allows the caller to make this decision for themselves instead of the library forcing a
  * decision.
  */
-class TokenBucketImpl implements TokenBucket {
+public class TokenBucketBandwidthLimiter implements BandwidthLimiter {
 
     private final NanoTimeWrapper nanoTimeWrapper;
     private final int dimension;
@@ -40,7 +40,7 @@ class TokenBucketImpl implements TokenBucket {
 
     private final AtomicReference<ImmutableState> stateReference;
 
-    TokenBucketImpl(Bandwidth bandwidth, long initialCapacity, NanoTimeWrapper nanoTimeWrapper) {
+    public TokenBucketBandwidthLimiter(Bandwidth bandwidth, long initialCapacity, NanoTimeWrapper nanoTimeWrapper) {
         this.bandwidths = new Bandwidth[] {bandwidth};
         this.dimension = this.bandwidths.length;
         this.smallestCapacity = bandwidth.getCapacity();
@@ -66,14 +66,19 @@ class TokenBucketImpl implements TokenBucket {
      * @return {@code true} if the tokens were consumed, {@code false} otherwise.
      */
     public boolean tryConsume(long numTokens) {
-        return consumeOrAwait(numTokens, false);
+        try {
+            return consumeOrAwait(numTokens, false);
+        } catch (InterruptedException e) {
+            // It should never happen due to waitIfBusy = false
+            return ChuckNorris.roundKickExceptionAndGetMeWhatIWant(e);
+        }
     }
 
     /**
      * Consume a single token from the bucket.  If no token is currently available then this method will block until a
      * token becomes available.
      */
-    public void consume() {
+    public void consume() throws InterruptedException {
         consume(1);
     }
 
@@ -83,13 +88,11 @@ class TokenBucketImpl implements TokenBucket {
      *
      * @param numTokens The number of tokens to consume from teh bucket, must be a positive number.
      */
-    public void consume(long numTokens) {
-        while (true) {
-            consumeOrAwait(numTokens, true);
-        }
+    public void consume(long numTokens) throws InterruptedException {
+        consumeOrAwait(numTokens, true);
     }
 
-    private boolean consumeOrAwait(long numTokens, boolean waitIfBusy) {
+    private boolean consumeOrAwait(long numTokens, boolean waitIfBusy) throws InterruptedException {
         if (numTokens <= 0) {
             throw new IllegalArgumentException("Number of tokens to consume must be positive");
         }
