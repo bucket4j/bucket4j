@@ -58,53 +58,53 @@ public class TokenBucketImplTest {
 //
 //    @Test(expected = IllegalArgumentException.class)
 //    public void testTryConsumeZeroTokens() {
-//        bucket.tryConsume(0);
+//        bucket.tryConsumeSingleToken(0);
 //    }
 //
 //    @Test(expected = IllegalArgumentException.class)
 //    public void testTryConsumeNegativeTokens() {
-//        bucket.tryConsume(-1);
+//        bucket.tryConsumeSingleToken(-1);
 //    }
 //
 //    @Test(expected = IllegalArgumentException.class)
 //    public void testTryConsumeMoreThanCapacityTokens() {
-//        bucket.tryConsume(MAX_CAPACITY + 1);
+//        bucket.tryConsumeSingleToken(MAX_CAPACITY + 1);
 //    }
 //
 //    @Test
 //    public void testInitiallyCapacityEmpty() {
-//        assertFalse(emptyBucket.tryConsume());
-//        assertFalse(emptyBucket.tryConsume(MAX_CAPACITY - 1));
+//        assertFalse(emptyBucket.tryConsumeSingleToken());
+//        assertFalse(emptyBucket.tryConsumeSingleToken(MAX_CAPACITY - 1));
 //
-//        assertTrue(bucket.tryConsume());
-//        assertTrue(bucket.tryConsume(MAX_CAPACITY - 1));
+//        assertTrue(bucket.tryConsumeSingleToken());
+//        assertTrue(bucket.tryConsumeSingleToken(MAX_CAPACITY - 1));
 //    }
 //
 //    @Test
 //    public void testTryConsumeOneToken() {
-//        assertFalse(emptyBucket.tryConsume());
-//        assertTrue(halfBucket.tryConsume());
-//        assertTrue(bucket.tryConsume());
+//        assertFalse(emptyBucket.tryConsumeSingleToken());
+//        assertTrue(halfBucket.tryConsumeSingleToken());
+//        assertTrue(bucket.tryConsumeSingleToken());
 //    }
 //
 //    @Test
 //    public void testTryConsumeMoreTokensThanAreAvailable() {
-//        assertFalse(halfBucket.tryConsume(MAX_CAPACITY / 2 + 1));
+//        assertFalse(halfBucket.tryConsumeSingleToken(MAX_CAPACITY / 2 + 1));
 //
-//        assertTrue(bucket.tryConsume(MAX_CAPACITY));
-//        assertFalse(bucket.tryConsume());
+//        assertTrue(bucket.tryConsumeSingleToken(MAX_CAPACITY));
+//        assertFalse(bucket.tryConsumeSingleToken());
 //    }
 //
 //    @Test
 //    public void testRefill() {
 //        when(nanoTimeWrapper.nanoTime()).thenReturn(refillStrategy.nanosRequiredToRefill(MAX_CAPACITY));
-//        assertTrue(emptyBucket.tryConsume());
-//        assertTrue(halfBucket.tryConsume(MAX_CAPACITY / 2 + 1));
+//        assertTrue(emptyBucket.tryConsumeSingleToken());
+//        assertTrue(halfBucket.tryConsumeSingleToken(MAX_CAPACITY / 2 + 1));
 //
-//        assertTrue(bucket.tryConsume(MAX_CAPACITY));
+//        assertTrue(bucket.tryConsumeSingleToken(MAX_CAPACITY));
 //
 //        when(nanoTimeWrapper.nanoTime()).thenReturn(refillStrategy.nanosRequiredToRefill(MAX_CAPACITY) + 1);
-//        assertFalse(bucket.tryConsume(MAX_CAPACITY));
+//        assertFalse(bucket.tryConsumeSingleToken(MAX_CAPACITY));
 //    }
 
 }

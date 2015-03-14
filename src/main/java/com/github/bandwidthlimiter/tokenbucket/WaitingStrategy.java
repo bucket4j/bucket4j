@@ -16,19 +16,22 @@
 
 package com.github.bandwidthlimiter.tokenbucket;
 
+import com.github.bandwidthlimiter.ChuckNorris;
+
 import java.util.concurrent.locks.LockSupport;
 
 public interface WaitingStrategy {
     
-    void sleep(long millisToAwait) throws InterruptedException;
+    void sleep(long nanosToAwait) throws InterruptedException;
 
     /**
-     * This is true waiting strategy, uses {@link java.util.concurrent.locks.LockSupport#parkNanos(long)} inside.
+     * This is fair waiting strategy, uses {@link java.util.concurrent.locks.LockSupport#parkNanos(long)}.
+     * This strategy is used by default.
      */
-    public static final WaitingStrategy PARKING_WAIT_STRATEGY = new WaitingStrategy() {
+    public static final WaitingStrategy PARKING = new WaitingStrategy() {
         @Override
-        public void sleep(long millisToAwait) throws InterruptedException {
-            LockSupport.parkNanos(millisToAwait);
+        public void sleep(long nanosToAwait) throws InterruptedException {
+            LockSupport.parkNanos(nanosToAwait);
             if (Thread.interrupted()) {
                 throw new InterruptedException();
             }
@@ -38,9 +41,9 @@ public interface WaitingStrategy {
     /**
      * Sleeps for the smallest unit of time possible just to relinquish control and to allow other threads to run.
      */
-    public static final WaitingStrategy YIELDING_WAIT_STRATEGY = new WaitingStrategy() {
+    public static final WaitingStrategy YIELDING = new WaitingStrategy() {
         @Override
-        public void sleep(long millisToAwait) throws InterruptedException {
+        public void sleep(long nanosToAwait) throws InterruptedException {
             LockSupport.parkNanos(1);
             if (Thread.interrupted()) {
                 throw new InterruptedException();
@@ -51,9 +54,10 @@ public interface WaitingStrategy {
     /**
      * Does nothing, behaves like spin loop.
      */
-    public static final WaitingStrategy SPINLOOP_WAIT_STRATEGY = new WaitingStrategy() {
+    public static final WaitingStrategy SPINLOOP = new WaitingStrategy() {
         @Override
-        public void sleep(long millisToAwait) throws InterruptedException {
+        public void sleep(long nanosToAwait) throws InterruptedException {
+            ChuckNorris.doNothing();
             if (Thread.interrupted()) {
                 throw new InterruptedException();
             }

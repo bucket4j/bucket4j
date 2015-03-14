@@ -33,7 +33,7 @@ public final class BandwidthLimiters {
 //    public static class Builder {
 //        private Long capacity = null;
 //        private RefillStrategy refillStrategy = null;
-//        private WaitingStrategy waitingStrategy = WaitingStrategy.YIELDING_WAIT_STRATEGY;
+//        private WaitingStrategy waitingStrategy = WaitingStrategy.YIELDING;
 //        private final NanoTimeWrapper ticker = NanoTimeWrapper.SYSTEM;
 //
 //        public Builder withCapacity(long numTokens) {
@@ -64,7 +64,7 @@ public final class BandwidthLimiters {
 //         * Use a sleep strategy that will always attempt to yield the CPU to other processes.
 //         */
 //        public Builder withYieldingSleepStrategy() {
-//            return withSleepStrategy(WaitingStrategy.YIELDING_WAIT_STRATEGY);
+//            return withSleepStrategy(WaitingStrategy.YIELDING);
 //        }
 //
 //        /**
@@ -72,7 +72,7 @@ public final class BandwidthLimiters {
 //         * available.
 //         */
 //        public Builder withBusyWaitSleepStrategy() {
-//            return withSleepStrategy(WaitingStrategy.SPINLOOP_WAIT_STRATEGY);
+//            return withSleepStrategy(WaitingStrategy.SPINLOOP);
 //        }
 //
 //        /**

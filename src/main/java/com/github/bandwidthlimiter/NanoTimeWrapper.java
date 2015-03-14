@@ -16,12 +16,15 @@
 
 package com.github.bandwidthlimiter;
 
-public class NanoTimeWrapper {
+public interface NanoTimeWrapper {
 
-    public static final NanoTimeWrapper SYSTEM = new NanoTimeWrapper();  
+    public static final NanoTimeWrapper SYSTEM = new NanoTimeWrapper() {
+        @Override
+        public long nanoTime() {
+            return System.nanoTime();
+        }
+    };
     
-    public long nanoTime() {
-        return System.nanoTime();
-    }
+    public long nanoTime();
 
 }

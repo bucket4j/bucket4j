@@ -21,12 +21,14 @@ import com.github.bandwidthlimiter.NanoTimeWrapper;
 
 import java.util.concurrent.atomic.AtomicReference;
 
+import static com.github.bandwidthlimiter.tokenbucket.TokenBucketExceptions.*;
+
 /**
  * A token bucket implementation that is of a leaky bucket in the sense that it has a finite capacity and any added
  * tokens that would exceed this capacity will "overflow" out of the bucket and are lost forever.
  * <p/>
  * In this implementation the rules for refilling the bucket are encapsulated in a provided {@code RefillStrategy}
- * instance.  Prior to attempting to consume any tokens the refill strategy will be consulted to see how many tokens
+ * instance.  Prior to attempting to consumeSingleToken any tokens the refill strategy will be consulted to see how many tokens
  * should be added to the bucket.
  * <p/>
  * In addition in this implementation the method of yielding CPU control is encapsulated in the provided
@@ -34,120 +36,264 @@ import java.util.concurrent.atomic.AtomicReference;
  * and an accurate bucket implementation is required, it may be useful to never yield control of the CPU and to instead
  * busy wait.  This strategy allows the caller to make this decision for themselves instead of the library forcing a
  * decision.
+ *
+ * @see <a href="http://en.wikipedia.org/wiki/Token_bucket">Token Bucket on Wikipedia</a>
+ * @see <a href="http://en.wikipedia.org/wiki/Leaky_bucket">Leaky Bucket on Wikipedia</a>
  */
 public class TokenBucketBandwidthLimiter implements BandwidthLimiter {
 
+    private static final int PREVIOUS_REFILL_OFFSET = 0;
+    private static final int GUARANTEED_SIZE_OFFSET = 1;
+    private static final int FIRST_RESTRICTED_SIZE_OFFSET = 2;
+
+    private static final boolean WAIT_IF_BUSY = true;
+    private static final boolean NO_WAIT_IF_BUSY = false;
+    private static final boolean LIMITED_WAITING = true;
+    private static final boolean UNLIMITED_WAITING = false;
+    private static final long UNSPECIFIED_WAITING_LIMIT = -1;
+
     private final NanoTimeWrapper nanoTimeWrapper;
-    private final int dimension;
+    private final int restrictedDimension;
     private final long smallestCapacity;
-    private final Bandwidth[] bandwidths;
+    private final BandwidthDefinition[] restrictedBandwidths;
+    private final BandwidthDefinition guaranteedBandwidth;
+    private final boolean raiseErrorWhenConsumeGreaterThanSmallestBandwidth;
 
-    private final AtomicReference<ImmutableState> stateReference;
+    private final AtomicReference<long[]> stateReference;
 
-    public TokenBucketBandwidthLimiter(Bandwidth bandwidth, long initialCapacity, NanoTimeWrapper nanoTimeWrapper) {
-        this.bandwidths = new Bandwidth[] {bandwidth};
-        this.dimension = this.bandwidths.length;
-        this.smallestCapacity = bandwidth.getCapacity();
+    TokenBucketBandwidthLimiter(BandwidthDefinition[] restrictedBandwidths, BandwidthDefinition guaranteedBandwidth,
+                boolean raiseErrorWhenConsumeGreaterThanSmallestBandwidth, NanoTimeWrapper nanoTimeWrapper) {
+
+        checkBandwidths(restrictedBandwidths, guaranteedBandwidth);
+
+        this.restrictedBandwidths = restrictedBandwidths;
+        this.guaranteedBandwidth = guaranteedBandwidth;
         this.nanoTimeWrapper = nanoTimeWrapper;
-        this.stateReference = new AtomicReference(new ImmutableState(new long[] {initialCapacity}, nanoTimeWrapper.nanoTime()));
+        this.restrictedDimension = this.restrictedBandwidths.length;
+        this.smallestCapacity = getSmallestCapacity(restrictedBandwidths);
+        this.raiseErrorWhenConsumeGreaterThanSmallestBandwidth = raiseErrorWhenConsumeGreaterThanSmallestBandwidth;
+        long[] initialState = buildInitialState(restrictedBandwidths, guaranteedBandwidth, nanoTimeWrapper);
+        this.stateReference = new AtomicReference(initialState);
     }
 
-    /**
-     * Attempt to consume a single token from the bucket.  If it was consumed then {@code true} is returned, otherwise
-     * {@code false} is returned.
-     *
-     * @return {@code true} if a token was consumed, {@code false} otherwise.
-     */
-    public boolean tryConsume() {
+    @Override
+    public boolean tryConsumeSingleToken() {
         return tryConsume(1);
     }
 
-    /**
-     * Attempt to consume a specified number of tokens from the bucket.  If the tokens were consumed then {@code true}
-     * is returned, otherwise {@code false} is returned.
-     *
-     * @param numTokens The number of tokens to consume from the bucket, must be a positive number.
-     * @return {@code true} if the tokens were consumed, {@code false} otherwise.
-     */
+    @Override
     public boolean tryConsume(long numTokens) {
         try {
-            return consumeOrAwait(numTokens, false);
+            return consumeOrAwait(numTokens, NO_WAIT_IF_BUSY, UNLIMITED_WAITING, UNSPECIFIED_WAITING_LIMIT);
         } catch (InterruptedException e) {
             // It should never happen due to waitIfBusy = false
-            return ChuckNorris.roundKickExceptionAndGetMeWhatIWant(e);
+            return ChuckNorris.roundKickExceptionAndGiveMeWhatIWant(e);
         }
     }
 
-    /**
-     * Consume a single token from the bucket.  If no token is currently available then this method will block until a
-     * token becomes available.
-     */
-    public void consume() throws InterruptedException {
+    @Override
+    public void consumeSingleToken() throws InterruptedException {
         consume(1);
     }
 
-    /**
-     * Consumes multiple tokens from the bucket.  If enough tokens are not currently available then this method will block
-     * until
-     *
-     * @param numTokens The number of tokens to consume from teh bucket, must be a positive number.
-     */
+    @Override
     public void consume(long numTokens) throws InterruptedException {
-        consumeOrAwait(numTokens, true);
+        consumeOrAwait(numTokens, WAIT_IF_BUSY, UNLIMITED_WAITING, UNSPECIFIED_WAITING_LIMIT);
     }
 
-    private boolean consumeOrAwait(long numTokens, boolean waitIfBusy) throws InterruptedException {
-        if (numTokens <= 0) {
-            throw new IllegalArgumentException("Number of tokens to consume must be positive");
+    @Override
+    public boolean tryConsumeSingleToken(long maxWaitNanos) throws InterruptedException {
+        return tryConsume(1, maxWaitNanos);
+    }
+
+    @Override
+    public boolean tryConsume(long numTokens, long maxWaitNanos) throws InterruptedException {
+        return consumeOrAwait(numTokens, WAIT_IF_BUSY, LIMITED_WAITING, maxWaitNanos);
+    }
+
+    private boolean consumeOrAwait(long tokensToConsume, boolean waitIfBusy, boolean isWaitingLimited, long waitIfBusyNanos) throws InterruptedException {
+        validateArguments(tokensToConsume, waitIfBusy, isWaitingLimited, waitIfBusyNanos);
+
+        if (tokensToConsume > smallestCapacity) {
+            // if this behavior is deprecated then exception already thrown by #validateArguments
+            return false;
         }
-        if (numTokens > smallestCapacity) {
-            throw new IllegalArgumentException("Number of tokens to consume must be less than the capacity of the bucket.");
-        }
+
+        final boolean noWaitIfBusy = !waitIfBusy;
+        final boolean isWaitingUnlimited = !isWaitingLimited;
+
+        final long methodStartNanoTime = isWaitingLimited? nanoTimeWrapper.nanoTime(): 0;
+        long currentNanoTime = methodStartNanoTime;
+        boolean isFirstCycle = true;
+
+        // Moved out of cycle in order to reduce memory allocation in case of high contention.
+        // There are no data-races, due to array is published through happens-before edge on the atomic reference
+        final long[] newState = new long[restrictedDimension + 2];
 
         while (true) {
-            long currentNanoTime = nanoTimeWrapper.nanoTime();
-            ImmutableState currentState = stateReference.get();
+            long[] currentState = stateReference.get();
+            long previousRefillNanos = getPreviousRefillNanos(currentState);
+            if (isFirstCycle) {
+                isFirstCycle = false;
+            } else {
+                currentNanoTime = nanoTimeWrapper.nanoTime();
+            }
+            if (isWaitingUnlimited && currentNanoTime - methodStartNanoTime >= waitIfBusyNanos) {
+                return false;
+            }
+            setPreviousRefillNanos(newState, currentNanoTime);
 
-            long currentSizes[] = currentState.size;
-            long newSizes[] = new long[currentSizes.length];
-
-            for (int i = 0; i < dimension; i++) {
-                Bandwidth bandwidth = bandwidths[i];
-                RefillStrategy refillStrategy = bandwidth.getRefillStrategy();
-                long refillTokens = refillStrategy.refill(bandwidth, currentState.previuosRefillNanoTime, currentNanoTime);
-
-                long currentSize = currentSizes[i];
-                long currentSizeWithRefill = Math.min(bandwidth.getCapacity(), currentSize + refillTokens);
-                if (numTokens > currentSizeWithRefill) {
-                    if (!waitIfBusy) {
-                        return false;
+            boolean isPassedByGuarantees = false;
+            long waitGuaranteedNanos = Long.MAX_VALUE;
+            if (guaranteedBandwidth != null) {
+                long guaranteedSize = getGuaranteedSize(currentState);
+                guaranteedSize += guaranteedBandwidth.refill(previousRefillNanos, currentNanoTime);
+                guaranteedSize = Math.min(guaranteedSize, guaranteedBandwidth.capacity);
+                if (tokensToConsume <= guaranteedSize) {
+                    isPassedByGuarantees = true;
+                    guaranteedSize -= tokensToConsume;
+                    setGuaranteedSize(newState, guaranteedSize);
+                } else {
+                    setGuaranteedSize(newState, 0);
+                    if (waitIfBusy && tokensToConsume <= guaranteedBandwidth.capacity) {
+                        waitGuaranteedNanos = guaranteedBandwidth.nanosRequiredToRefill(tokensToConsume - guaranteedSize);
                     }
-                    long nanosToWait = refillStrategy.nanosRequiredToRefill(bandwidth, numTokens - currentSizeWithRefill);
-                    bandwidth.getWaitingStrategy().sleep(nanosToWait);
-
-                    currentNanoTime = nanoTimeWrapper.nanoTime();
-                    currentState = stateReference.get();
-                    continue;
                 }
-                long newSize = currentSizeWithRefill - numTokens;
-                newSizes[i] = newSize;
             }
 
-            if (stateReference.compareAndSet(currentState, new ImmutableState(newSizes, currentNanoTime))) {
+            long methodDuration = currentNanoTime - methodStartNanoTime;
+            int countOfSuccessfulyChecked = 0;
+            for (int i = 0; i < restrictedDimension; i++) {
+                long restrictedSize = getRestrictedSize(i, currentState);
+                restrictedSize += restrictedBandwidths[i].refill(previousRefillNanos, currentNanoTime);
+                restrictedSize = Math.min(restrictedSize, restrictedBandwidths[i].capacity);
+
+                if (isPassedByGuarantees) {
+                    // validation of restricted bandwidth should be skipped, in order to satisfy promises about guaranteed bandwidth
+                    restrictedSize -= tokensToConsume;
+                    restrictedSize = Math.max(0, restrictedSize);
+                    setRestrictedSize(i, newState, restrictedSize);
+                    countOfSuccessfulyChecked++;
+                    continue;
+                }
+
+                if (tokensToConsume <= restrictedSize) {
+                    // Limit of current bandwidth successfully checked
+                    restrictedSize -= tokensToConsume;
+                    setRestrictedSize(i, newState, restrictedSize);
+                    countOfSuccessfulyChecked++;
+                    continue;
+                }
+
+                if (noWaitIfBusy) {
+                    // limit is reached and client does not want to wait
+                    return false;
+                }
+
+                // calculate time required to refill current bandwidth
+                long waitRestrictedNanos = restrictedBandwidths[i].nanosRequiredToRefill(tokensToConsume - tokensToConsume);
+
+                // Check that waiting for refilling is make sense
+                if (isWaitingLimited
+                        && methodDuration + waitRestrictedNanos >= waitIfBusyNanos
+                        && (guaranteedBandwidth == null || methodDuration + waitGuaranteedNanos >= waitIfBusyNanos)) {
+                    // there is no sense in waiting, due to waiting limit will be exceeded before required counts of tokens will be added to bucket
+                    return false;
+                }
+
+                // Choose target for waiting
+                if (guaranteedBandwidth != null && waitGuaranteedNanos < waitRestrictedNanos) {
+                    guaranteedBandwidth.sleep(waitGuaranteedNanos);
+                } else {
+                    restrictedBandwidths[i].sleep(waitRestrictedNanos);
+                }
+                break;
+            }
+
+            if (countOfSuccessfulyChecked == restrictedDimension && stateReference.compareAndSet(currentState, newState)) {
                 return true;
             }
         }
     }
 
-    private static class ImmutableState {
-
-        private final long size[];
-        private final long previuosRefillNanoTime;
-
-        private ImmutableState(long size[], long refillNanoTime) {
-            this.size = size;
-            this.previuosRefillNanoTime = refillNanoTime;
+    private void validateArguments(long tokensToConsume, boolean waitIfBusy, boolean isWaitingLimited, long waitIfBusyNanos) {
+        if (tokensToConsume <= 0) {
+            throw nonPositiveTokensToConsume(tokensToConsume);
         }
+        if (isWaitingLimited && waitIfBusyNanos <= 0) {
+            throw nonPositiveWaitingNanos(waitIfBusyNanos);
+        }
+        if (tokensToConsume > smallestCapacity) {
+            if (waitIfBusy) {
+                // there is no sense in waiting, due to limits will be never satisfied
+                throw tokensToConsumeGreaterThanCapacityOfSmallestBandwidth(tokensToConsume, smallestCapacity);
+            }
+            if (raiseErrorWhenConsumeGreaterThanSmallestBandwidth) {
+                // illegal api usage detected
+                throw tokensToConsumeGreaterThanCapacityOfSmallestBandwidth(tokensToConsume, smallestCapacity);
+            }
+        }
+    }
+
+    private static long getSmallestCapacity(BandwidthDefinition[] definitions) {
+        long minCapacity = Long.MAX_VALUE;
+        for (int i = 0; i < definitions.length; i++) {
+            if (definitions[i].capacity < minCapacity) {
+                minCapacity = definitions[i].capacity;
+            }
+        }
+        return minCapacity;
+    }
+
+    private static long[] buildInitialState(BandwidthDefinition[] restrictedBandwidths, BandwidthDefinition garantedBandwidth, NanoTimeWrapper nanoTimeWrapper) {
+        long[] state = new long[restrictedBandwidths.length + 2];
+        if (garantedBandwidth != null) {
+            setGuaranteedSize(state, garantedBandwidth.initialCapacity);
+        }
+        for (int i = 0; i < restrictedBandwidths.length; i++) {
+            setRestrictedSize(i, state, restrictedBandwidths[i].initialCapacity);
+        }
+        setPreviousRefillNanos(state, nanoTimeWrapper.nanoTime());
+        return state;
+    }
+
+    private void checkBandwidths(BandwidthDefinition[] restricteds, BandwidthDefinition guaranteed) {
+        if (restricteds.length == 0) {
+            throw TokenBucketExceptions.restrictionsNotSpecified();
+        }
+        if (guaranteed == null) {
+            return;
+        }
+        for (BandwidthDefinition restricted : restricteds) {
+            if (restricted.tokensPerNanosecond <= guaranteed.tokensPerNanosecond
+                    || restricted.nanosecondsPerToken > guaranteed.nanosecondsPerToken) {
+                throw TokenBucketExceptions.guarantedHasGreaterRateThanRestricted(guaranteed, restricted);
+            }
+        }
+    }
+
+    private static void setPreviousRefillNanos(long[] state, long value) {
+        state[PREVIOUS_REFILL_OFFSET] = value;
+    }
+
+    private static long getPreviousRefillNanos(long[] state) {
+        return state[PREVIOUS_REFILL_OFFSET];
+    }
+
+    private static void setGuaranteedSize(long[] state, long value) {
+        state[GUARANTEED_SIZE_OFFSET] = value;
+    }
+
+    private static long getGuaranteedSize(long[] state) {
+        return state[GUARANTEED_SIZE_OFFSET];
+    }
+
+    private static void setRestrictedSize(int restrictedIdx, long[] state, long value) {
+        state[FIRST_RESTRICTED_SIZE_OFFSET + restrictedIdx] = value;
+    }
+
+    private static long getRestrictedSize(int restrictedIdx,long[] state) {
+        return state[FIRST_RESTRICTED_SIZE_OFFSET + restrictedIdx];
     }
 
 }

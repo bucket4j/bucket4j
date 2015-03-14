@@ -18,8 +18,12 @@ package com.github.bandwidthlimiter;
 
 public class ChuckNorris {
 
-    public static <T> T roundKickExceptionAndGetMeWhatIWant(Exception e) {
+    public static <T> T roundKickExceptionAndGiveMeWhatIWant(Exception e) {
         throw new IllegalStateException("42", e);
+    }
+
+    public static void doNothing() {
+        // do nothing
     }
 
 }
