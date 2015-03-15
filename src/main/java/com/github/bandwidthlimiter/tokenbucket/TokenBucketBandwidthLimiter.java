@@ -65,6 +65,9 @@ public class TokenBucketBandwidthLimiter implements BandwidthLimiter {
                 boolean raiseErrorWhenConsumeGreaterThanSmallestBandwidth, NanoTimeWrapper nanoTimeWrapper) {
 
         checkBandwidths(limitedBandwidths, guaranteedBandwidth);
+        if (nanoTimeWrapper == null) {
+            throw nullNanoTimeWrapper();
+        }
 
         this.limitedBandwidths = limitedBandwidths;
         this.guaranteedBandwidth = guaranteedBandwidth;
@@ -255,8 +258,8 @@ public class TokenBucketBandwidthLimiter implements BandwidthLimiter {
     }
 
     private void checkBandwidths(BandwidthDefinition[] limitedBandwidths, BandwidthDefinition guaranteedBandwidth) {
-        if (limitedBandwidths.length == 0) {
-            throw TokenBucketExceptions.restrictionsNotSpecified();
+        if (limitedBandwidths == null || limitedBandwidths.length == 0) {
+            throw restrictionsNotSpecified();
         }
         for (int i = 0; i < limitedBandwidths.length - 1; i++) {
             for (int j = 1; j < limitedBandwidths.length; j++) {
@@ -264,7 +267,7 @@ public class TokenBucketBandwidthLimiter implements BandwidthLimiter {
                 BandwidthDefinition second = limitedBandwidths[i];
                 if (first.periodInNanos < second.periodInNanos
                         && first.capacity >= second.capacity) {
-                    throw TokenBucketExceptions.hasSmallerPeriodButHigherCapacity(first, second);
+                    throw hasSmallerPeriodButHigherCapacity(first, second);
                 }
             }
         }

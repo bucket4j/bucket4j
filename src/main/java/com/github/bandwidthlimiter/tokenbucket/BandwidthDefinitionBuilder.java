@@ -1,12 +1,14 @@
 package com.github.bandwidthlimiter.tokenbucket;
 
+import com.github.bandwidthlimiter.BandwidthLimiter;
+
 import java.util.concurrent.TimeUnit;
 
 public class BandwidthDefinitionBuilder {
 
     private final TokenBucketBuilder rootBuilder;
 
-    private RefillStrategy refillStrategy = RefillStrategy.CONTINUOUS;
+    private RefillStrategy refillStrategy = RefillStrategy.MONOTONE;
     private WaitingStrategy waitingStrategy = WaitingStrategy.PARKING;
     private Long initialCapacity = null;
 
@@ -28,7 +30,7 @@ public class BandwidthDefinitionBuilder {
         return this;
     }
 
-    public BandwidthDefinitionBuilder withDuration(long period, TimeUnit timeUnit) {
+    public BandwidthDefinitionBuilder withInterval(long period, TimeUnit timeUnit) {
         this.timeUnit = timeUnit;
         this.period = period;
         return this;
@@ -57,10 +59,13 @@ public class BandwidthDefinitionBuilder {
         return this.rootBuilder.setupGuaranteedBandwidth();
     }
 
-    public BandwidthDefinition buildBandwidth() {
+    public BandwidthLimiter build() {
+        return rootBuilder.build();
+    }
+
+    BandwidthDefinition buildBandwidth() {
         long initialCapacity = this.initialCapacity == null? capacity: this.initialCapacity.longValue();
         return new BandwidthDefinition(capacity, initialCapacity, period, timeUnit, refillStrategy, waitingStrategy);
     }
-
 
 }

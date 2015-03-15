@@ -34,7 +34,8 @@ public interface RefillStrategy {
     long nanosRequiredToRefill(BandwidthDefinition bandwidth, long numTokens);
 
 
-    public static RefillStrategy CONTINUOUS = new RefillStrategy() {
+
+    public static RefillStrategy MONOTONE = new RefillStrategy() {
 
         @Override
         public long refill(BandwidthDefinition bandwidth, long previousRefillNanoTime, long currentNanoTime) {
@@ -52,9 +53,9 @@ public interface RefillStrategy {
     /**
      * A token bucket refill strategy that will provide N tokens for a token bucket to consumeSingleToken every T units of time.
      * The tokens are refilled in bursts rather than at a fixed tokensGeneratedInOneNanosecond.  This refill strategy will never allow more than
-     * N tokens to be consumed during a window of time T.
+     * N * 2 tokens to be consumed during a window of time T.
      */
-    public static RefillStrategy FIXED_INTERVAL = new RefillStrategy() {
+    public static RefillStrategy BURST = new RefillStrategy() {
 
         @Override
         public long refill(BandwidthDefinition bandwidth, long previousRefillNanoTime, long currentNanoTime) {
