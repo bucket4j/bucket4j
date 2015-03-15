@@ -51,7 +51,7 @@ public interface RefillStrategy {
 
     /**
      * A token bucket refill strategy that will provide N tokens for a token bucket to consumeSingleToken every T units of time.
-     * The tokens are refilled in bursts rather than at a fixed tokensPerNanosecond.  This refill strategy will never allow more than
+     * The tokens are refilled in bursts rather than at a fixed tokensGeneratedInOneNanosecond.  This refill strategy will never allow more than
      * N tokens to be consumed during a window of time T.
      */
     public static RefillStrategy FIXED_INTERVAL = new RefillStrategy() {

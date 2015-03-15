@@ -58,9 +58,18 @@ public class TokenBucketExceptions {
         return new IllegalArgumentException();
     }
 
-    public static IllegalArgumentException guarantedHasGreaterRateThanRestricted(BandwidthDefinition guaranteed, BandwidthDefinition restricted) {
+    public static IllegalArgumentException guarantedHasGreaterRateThanLimited(BandwidthDefinition guaranteed, BandwidthDefinition restricted) {
         // TODO provide error description
         return new IllegalArgumentException();
     }
 
+    public static IllegalArgumentException onlyOneGuarantedBandwidthSupported() {
+        // TODO provide error description
+        return new IllegalArgumentException();
+    }
+
+    public static IllegalArgumentException hasSmallerPeriodButHigherCapacity(BandwidthDefinition first, BandwidthDefinition second) {
+        // TODO provide error description
+        return new IllegalArgumentException();
+    }
 }

@@ -42,9 +42,9 @@ import static com.github.bandwidthlimiter.tokenbucket.TokenBucketExceptions.*;
  */
 public class TokenBucketBandwidthLimiter implements BandwidthLimiter {
 
-    private static final int PREVIOUS_REFILL_OFFSET = 0;
-    private static final int GUARANTEED_SIZE_OFFSET = 1;
-    private static final int FIRST_RESTRICTED_SIZE_OFFSET = 2;
+    private static final int REFILL_DATE_OFFSET = 0;
+    private static final int GUARANTEED_OFFSET = 1;
+    private static final int FIRST_LIMITED_OFFSET = 2;
 
     private static final boolean WAIT_IF_BUSY = true;
     private static final boolean NO_WAIT_IF_BUSY = false;
@@ -53,26 +53,26 @@ public class TokenBucketBandwidthLimiter implements BandwidthLimiter {
     private static final long UNSPECIFIED_WAITING_LIMIT = -1;
 
     private final NanoTimeWrapper nanoTimeWrapper;
-    private final int restrictedDimension;
+    private final int limitedDimension;
     private final long smallestCapacity;
-    private final BandwidthDefinition[] restrictedBandwidths;
+    private final BandwidthDefinition[] limitedBandwidths;
     private final BandwidthDefinition guaranteedBandwidth;
     private final boolean raiseErrorWhenConsumeGreaterThanSmallestBandwidth;
 
     private final AtomicReference<long[]> stateReference;
 
-    TokenBucketBandwidthLimiter(BandwidthDefinition[] restrictedBandwidths, BandwidthDefinition guaranteedBandwidth,
+    TokenBucketBandwidthLimiter(BandwidthDefinition[] limitedBandwidths, BandwidthDefinition guaranteedBandwidth,
                 boolean raiseErrorWhenConsumeGreaterThanSmallestBandwidth, NanoTimeWrapper nanoTimeWrapper) {
 
-        checkBandwidths(restrictedBandwidths, guaranteedBandwidth);
+        checkBandwidths(limitedBandwidths, guaranteedBandwidth);
 
-        this.restrictedBandwidths = restrictedBandwidths;
+        this.limitedBandwidths = limitedBandwidths;
         this.guaranteedBandwidth = guaranteedBandwidth;
         this.nanoTimeWrapper = nanoTimeWrapper;
-        this.restrictedDimension = this.restrictedBandwidths.length;
-        this.smallestCapacity = getSmallestCapacity(restrictedBandwidths);
+        this.limitedDimension = this.limitedBandwidths.length;
+        this.smallestCapacity = getSmallestCapacity(limitedBandwidths);
         this.raiseErrorWhenConsumeGreaterThanSmallestBandwidth = raiseErrorWhenConsumeGreaterThanSmallestBandwidth;
-        long[] initialState = buildInitialState(restrictedBandwidths, guaranteedBandwidth, nanoTimeWrapper);
+        long[] initialState = buildInitialState(limitedBandwidths, guaranteedBandwidth, nanoTimeWrapper);
         this.stateReference = new AtomicReference(initialState);
     }
 
@@ -119,42 +119,39 @@ public class TokenBucketBandwidthLimiter implements BandwidthLimiter {
             return false;
         }
 
-        final boolean noWaitIfBusy = !waitIfBusy;
-        final boolean isWaitingUnlimited = !isWaitingLimited;
-
         final long methodStartNanoTime = isWaitingLimited? nanoTimeWrapper.nanoTime(): 0;
         long currentNanoTime = methodStartNanoTime;
         boolean isFirstCycle = true;
 
         // Moved out of cycle in order to reduce memory allocation in case of high contention.
         // There are no data-races, due to array is published through happens-before edge on the atomic reference
-        final long[] newState = new long[restrictedDimension + 2];
+        final long[] newState = new long[limitedDimension + 2];
 
         while (true) {
             long[] currentState = stateReference.get();
-            long previousRefillNanos = getPreviousRefillNanos(currentState);
+            long previousRefillNanos = currentState[REFILL_DATE_OFFSET];
             if (isFirstCycle) {
                 isFirstCycle = false;
             } else {
                 currentNanoTime = nanoTimeWrapper.nanoTime();
             }
-            if (isWaitingUnlimited && currentNanoTime - methodStartNanoTime >= waitIfBusyNanos) {
+            if (!isWaitingLimited && currentNanoTime - methodStartNanoTime >= waitIfBusyNanos) {
                 return false;
             }
-            setPreviousRefillNanos(newState, currentNanoTime);
+            newState[REFILL_DATE_OFFSET] = currentNanoTime;
 
             boolean isPassedByGuarantees = false;
             long waitGuaranteedNanos = Long.MAX_VALUE;
             if (guaranteedBandwidth != null) {
-                long guaranteedSize = getGuaranteedSize(currentState);
+                long guaranteedSize = currentState[GUARANTEED_OFFSET];
                 guaranteedSize += guaranteedBandwidth.refill(previousRefillNanos, currentNanoTime);
                 guaranteedSize = Math.min(guaranteedSize, guaranteedBandwidth.capacity);
                 if (tokensToConsume <= guaranteedSize) {
                     isPassedByGuarantees = true;
                     guaranteedSize -= tokensToConsume;
-                    setGuaranteedSize(newState, guaranteedSize);
+                    newState[GUARANTEED_OFFSET] = guaranteedSize;
                 } else {
-                    setGuaranteedSize(newState, 0);
+                    newState[GUARANTEED_OFFSET] = 0l;
                     if (waitIfBusy && tokensToConsume <= guaranteedBandwidth.capacity) {
                         waitGuaranteedNanos = guaranteedBandwidth.nanosRequiredToRefill(tokensToConsume - guaranteedSize);
                     }
@@ -163,54 +160,54 @@ public class TokenBucketBandwidthLimiter implements BandwidthLimiter {
 
             long methodDuration = currentNanoTime - methodStartNanoTime;
             int countOfSuccessfulyChecked = 0;
-            for (int i = 0; i < restrictedDimension; i++) {
-                long restrictedSize = getRestrictedSize(i, currentState);
-                restrictedSize += restrictedBandwidths[i].refill(previousRefillNanos, currentNanoTime);
-                restrictedSize = Math.min(restrictedSize, restrictedBandwidths[i].capacity);
+            for (int i = 0; i < limitedDimension; i++) {
+                long limitedSize = currentState[FIRST_LIMITED_OFFSET + i];
+                limitedSize += limitedBandwidths[i].refill(previousRefillNanos, currentNanoTime);
+                limitedSize = Math.min(limitedSize, limitedBandwidths[i].capacity);
 
                 if (isPassedByGuarantees) {
-                    // validation of restricted bandwidth should be skipped, in order to satisfy promises about guaranteed bandwidth
-                    restrictedSize -= tokensToConsume;
-                    restrictedSize = Math.max(0, restrictedSize);
-                    setRestrictedSize(i, newState, restrictedSize);
+                    // validation of limited bandwidth should be skipped, in order to satisfy promises about guaranteed bandwidth
+                    limitedSize -= tokensToConsume;
+                    limitedSize = Math.max(0, limitedSize);
+                    newState[FIRST_LIMITED_OFFSET + i] = limitedSize;
                     countOfSuccessfulyChecked++;
                     continue;
                 }
 
-                if (tokensToConsume <= restrictedSize) {
+                if (tokensToConsume <= limitedSize) {
                     // Limit of current bandwidth successfully checked
-                    restrictedSize -= tokensToConsume;
-                    setRestrictedSize(i, newState, restrictedSize);
+                    limitedSize -= tokensToConsume;
+                    newState[FIRST_LIMITED_OFFSET + i] = limitedSize;
                     countOfSuccessfulyChecked++;
                     continue;
                 }
 
-                if (noWaitIfBusy) {
+                if (!waitIfBusy) {
                     // limit is reached and client does not want to wait
                     return false;
                 }
 
                 // calculate time required to refill current bandwidth
-                long waitRestrictedNanos = restrictedBandwidths[i].nanosRequiredToRefill(tokensToConsume - tokensToConsume);
+                long waitLimitedNanos = limitedBandwidths[i].nanosRequiredToRefill(tokensToConsume - tokensToConsume);
 
                 // Check that waiting for refilling is make sense
                 if (isWaitingLimited
-                        && methodDuration + waitRestrictedNanos >= waitIfBusyNanos
+                        && methodDuration + waitLimitedNanos >= waitIfBusyNanos
                         && (guaranteedBandwidth == null || methodDuration + waitGuaranteedNanos >= waitIfBusyNanos)) {
                     // there is no sense in waiting, due to waiting limit will be exceeded before required counts of tokens will be added to bucket
                     return false;
                 }
 
                 // Choose target for waiting
-                if (guaranteedBandwidth != null && waitGuaranteedNanos < waitRestrictedNanos) {
+                if (guaranteedBandwidth != null && waitGuaranteedNanos < waitLimitedNanos) {
                     guaranteedBandwidth.sleep(waitGuaranteedNanos);
                 } else {
-                    restrictedBandwidths[i].sleep(waitRestrictedNanos);
+                    limitedBandwidths[i].sleep(waitLimitedNanos);
                 }
                 break;
             }
 
-            if (countOfSuccessfulyChecked == restrictedDimension && stateReference.compareAndSet(currentState, newState)) {
+            if (countOfSuccessfulyChecked == limitedDimension && stateReference.compareAndSet(currentState, newState)) {
                 return true;
             }
         }
@@ -245,55 +242,40 @@ public class TokenBucketBandwidthLimiter implements BandwidthLimiter {
         return minCapacity;
     }
 
-    private static long[] buildInitialState(BandwidthDefinition[] restrictedBandwidths, BandwidthDefinition garantedBandwidth, NanoTimeWrapper nanoTimeWrapper) {
-        long[] state = new long[restrictedBandwidths.length + 2];
+    private static long[] buildInitialState(BandwidthDefinition[] limitedBandwidths, BandwidthDefinition garantedBandwidth, NanoTimeWrapper nanoTimeWrapper) {
+        long[] state = new long[limitedBandwidths.length + 2];
         if (garantedBandwidth != null) {
-            setGuaranteedSize(state, garantedBandwidth.initialCapacity);
+            state[GUARANTEED_OFFSET] = garantedBandwidth.initialCapacity;
         }
-        for (int i = 0; i < restrictedBandwidths.length; i++) {
-            setRestrictedSize(i, state, restrictedBandwidths[i].initialCapacity);
+        for (int i = 0; i < limitedBandwidths.length; i++) {
+            state[FIRST_LIMITED_OFFSET + i] = limitedBandwidths[i].initialCapacity;
         }
-        setPreviousRefillNanos(state, nanoTimeWrapper.nanoTime());
+        state[REFILL_DATE_OFFSET] = nanoTimeWrapper.nanoTime();
         return state;
     }
 
-    private void checkBandwidths(BandwidthDefinition[] restricteds, BandwidthDefinition guaranteed) {
-        if (restricteds.length == 0) {
+    private void checkBandwidths(BandwidthDefinition[] limitedBandwidths, BandwidthDefinition guaranteedBandwidth) {
+        if (limitedBandwidths.length == 0) {
             throw TokenBucketExceptions.restrictionsNotSpecified();
         }
-        if (guaranteed == null) {
-            return;
-        }
-        for (BandwidthDefinition restricted : restricteds) {
-            if (restricted.tokensPerNanosecond <= guaranteed.tokensPerNanosecond
-                    || restricted.nanosecondsPerToken > guaranteed.nanosecondsPerToken) {
-                throw TokenBucketExceptions.guarantedHasGreaterRateThanRestricted(guaranteed, restricted);
+        for (int i = 0; i < limitedBandwidths.length - 1; i++) {
+            for (int j = 1; j < limitedBandwidths.length; j++) {
+                BandwidthDefinition first = limitedBandwidths[i];
+                BandwidthDefinition second = limitedBandwidths[i];
+                if (first.periodInNanos < second.periodInNanos
+                        && first.capacity >= second.capacity) {
+                    throw TokenBucketExceptions.hasSmallerPeriodButHigherCapacity(first, second);
+                }
             }
         }
-    }
-
-    private static void setPreviousRefillNanos(long[] state, long value) {
-        state[PREVIOUS_REFILL_OFFSET] = value;
-    }
-
-    private static long getPreviousRefillNanos(long[] state) {
-        return state[PREVIOUS_REFILL_OFFSET];
-    }
-
-    private static void setGuaranteedSize(long[] state, long value) {
-        state[GUARANTEED_SIZE_OFFSET] = value;
-    }
-
-    private static long getGuaranteedSize(long[] state) {
-        return state[GUARANTEED_SIZE_OFFSET];
-    }
-
-    private static void setRestrictedSize(int restrictedIdx, long[] state, long value) {
-        state[FIRST_RESTRICTED_SIZE_OFFSET + restrictedIdx] = value;
-    }
-
-    private static long getRestrictedSize(int restrictedIdx,long[] state) {
-        return state[FIRST_RESTRICTED_SIZE_OFFSET + restrictedIdx];
+        if (guaranteedBandwidth == null) {
+            for (BandwidthDefinition limited : limitedBandwidths) {
+                if (limited.tokensGeneratedInOneNanosecond <= guaranteedBandwidth.tokensGeneratedInOneNanosecond
+                        || limited.nanosecondsToGenerateOneToken > guaranteedBandwidth.nanosecondsToGenerateOneToken) {
+                    throw guarantedHasGreaterRateThanLimited(guaranteedBandwidth, limited);
+                }
+            }
+        }
     }
 
 }

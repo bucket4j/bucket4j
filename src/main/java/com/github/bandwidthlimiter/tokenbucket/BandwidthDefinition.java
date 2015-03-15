@@ -25,8 +25,8 @@ public final class BandwidthDefinition {
     final long periodInNanos;
     final RefillStrategy refillStrategy;
     final WaitingStrategy waitingStrategy;
-    final double tokensPerNanosecond;
-    final double nanosecondsPerToken;
+    final double tokensGeneratedInOneNanosecond;
+    final double nanosecondsToGenerateOneToken;
 
     BandwidthDefinition(long capacity, long initialCapacity, long period, TimeUnit timeUnit, RefillStrategy refillStrategy, WaitingStrategy waitingStrategy) {
         if (capacity <= 0) {
@@ -56,8 +56,8 @@ public final class BandwidthDefinition {
         this.periodInNanos = timeUnit.toNanos(period);
         this.refillStrategy = refillStrategy;
         this.waitingStrategy = waitingStrategy;
-        this.tokensPerNanosecond = (double) capacity / (double) periodInNanos;
-        this.nanosecondsPerToken = (double) periodInNanos / (double) capacity;
+        this.tokensGeneratedInOneNanosecond = (double) capacity / (double) periodInNanos;
+        this.nanosecondsToGenerateOneToken = (double) periodInNanos / (double) capacity;
     }
 
     public void sleep(long nanosToAwait) throws InterruptedException {
@@ -80,8 +80,8 @@ public final class BandwidthDefinition {
                 ", periodInNanos=" + periodInNanos +
                 ", refillStrategy=" + refillStrategy +
                 ", waitingStrategy=" + waitingStrategy +
-                ", tokensPerNanosecond=" + tokensPerNanosecond +
-                ", nanosecondsPerToken=" + nanosecondsPerToken +
+                ", tokensGeneratedInOneNanosecond=" + tokensGeneratedInOneNanosecond +
+                ", nanosecondsToGenerateOneToken=" + nanosecondsToGenerateOneToken +
                 '}';
     }
 
