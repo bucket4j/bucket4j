@@ -271,7 +271,7 @@ public class TokenBucketBandwidthLimiter implements BandwidthLimiter {
                 }
             }
         }
-        if (guaranteedBandwidth == null) {
+        if (guaranteedBandwidth != null) {
             for (BandwidthDefinition limited : limitedBandwidths) {
                 if (limited.tokensGeneratedInOneNanosecond <= guaranteedBandwidth.tokensGeneratedInOneNanosecond
                         || limited.nanosecondsToGenerateOneToken > guaranteedBandwidth.nanosecondsToGenerateOneToken) {
