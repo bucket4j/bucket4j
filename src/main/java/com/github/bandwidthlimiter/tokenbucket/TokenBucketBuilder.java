@@ -27,9 +27,22 @@ public final class TokenBucketBuilder {
         return this.guaranteedBuilder;
     }
 
+    public TokenBucketBuilder setGuaranteedBandwidth(BandwidthDefinitionBuilder guaranteedBuilder) {
+        if (this.guaranteedBuilder != null) {
+            throw TokenBucketExceptions.onlyOneGuarantedBandwidthSupported();
+        }
+        this.guaranteedBuilder = guaranteedBuilder;
+        return this;
+    }
+
     public BandwidthDefinitionBuilder addLimitedBandwidth() {
         limitedBuilders.add(new BandwidthDefinitionBuilder(this));
         return limitedBuilders.get(limitedBuilders.size() - 1);
+    }
+
+    public TokenBucketBuilder addLimitedBandwidth(BandwidthDefinitionBuilder limitedBuilder) {
+        limitedBuilders.add(limitedBuilder);
+        return this;
     }
 
     public TokenBucketBuilder withNanoTimeWrapper(NanoTimeWrapper timeWrapper) {

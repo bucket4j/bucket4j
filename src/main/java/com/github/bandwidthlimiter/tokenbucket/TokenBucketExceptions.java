@@ -4,6 +4,7 @@ import java.text.MessageFormat;
 
 public class TokenBucketExceptions {
 
+    // ------------------- construction time exceptions --------------------------------
     public static IllegalArgumentException nonPositiveCapacity(long capacity) {
         String pattern = "{0} is wrong value for capacity, because capacity should be positive";
         String msg = MessageFormat.format(pattern, capacity);
@@ -19,18 +20,6 @@ public class TokenBucketExceptions {
     public static IllegalArgumentException initialCapacityGreaterThanMaxCapacity(long initialCapacity, long maxCapasity) {
         String pattern = "initial capacity {0} is greater than max capacity {1}";
         String msg = MessageFormat.format(pattern, initialCapacity, maxCapasity);
-        return new IllegalArgumentException(msg);
-    }
-
-    public static IllegalArgumentException nonPositiveTokensToConsume(long tokens) {
-        String pattern = "Unable to consume {0} tokens, due to number of tokens to consume should be positive";
-        String msg = MessageFormat.format(pattern, tokens);
-        return new IllegalArgumentException(msg);
-    }
-
-    public static IllegalArgumentException tokensToConsumeGreaterThanCapacityOfSmallestBandwidth(long tokens, long smallestCapacity) {
-        String pattern = "Unable to consume {0} tokens, due to it is grater than {1} - capacity of smaller bandwidth";
-        String msg = MessageFormat.format(pattern, tokens, smallestCapacity);
         return new IllegalArgumentException(msg);
     }
 
@@ -70,21 +59,35 @@ public class TokenBucketExceptions {
         return new IllegalArgumentException(msg);
     }
 
-    public static IllegalArgumentException nonPositiveWaitingNanos(long waitIfBusyNanos) {
-        String pattern = "Waiting value should be positive, {0} is wrong waiting period";
-        String msg = MessageFormat.format(pattern, waitIfBusyNanos);
-        return new IllegalArgumentException(msg);
-    }
-
     public static IllegalArgumentException guarantedHasGreaterRateThanLimited(BandwidthDefinition guaranteed, BandwidthDefinition limited) {
         String pattern = "Misconfiguration detected, guaranteed bandwidth {0} has higher rate than limited bandwidth {1}";
         String msg = MessageFormat.format(pattern, guaranteed, limited);
         return new IllegalArgumentException(msg);
     }
 
-    public static IllegalArgumentException hasSmallerPeriodButHigherCapacity(BandwidthDefinition first, BandwidthDefinition second) {
-        String pattern = "Misconfiguration detected, bandwidth {0} has lesser period but higher capacity than bandwidth {1}";
+    public static IllegalArgumentException hasOverlaps(BandwidthDefinition first, BandwidthDefinition second) {
+        String pattern = "Overlap detected between {0} and {1}";
         String msg = MessageFormat.format(pattern, first, second);
+        return new IllegalArgumentException(msg);
+    }
+    // ------------------- end of construction time exceptions --------------------------------
+
+    // ------------------- usage time exceptions  ---------------------------------------------
+    public static IllegalArgumentException nonPositiveNanosToWait(long waitIfBusyNanos) {
+        String pattern = "Waiting value should be positive, {0} is wrong waiting period";
+        String msg = MessageFormat.format(pattern, waitIfBusyNanos);
+        return new IllegalArgumentException(msg);
+    }
+
+    public static IllegalArgumentException nonPositiveTokensToConsume(long tokens) {
+        String pattern = "Unable to consume {0} tokens, due to number of tokens to consume should be positive";
+        String msg = MessageFormat.format(pattern, tokens);
+        return new IllegalArgumentException(msg);
+    }
+
+    public static IllegalArgumentException tokensToConsumeGreaterThanCapacityOfSmallestBandwidth(long tokens, long smallestCapacity) {
+        String pattern = "Unable to consume {0} tokens, due to it is grater than {1} - capacity of smaller bandwidth";
+        String msg = MessageFormat.format(pattern, tokens, smallestCapacity);
         return new IllegalArgumentException(msg);
     }
 

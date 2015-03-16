@@ -22,6 +22,8 @@ public final class BandwidthDefinition {
 
     final long capacity;
     final long initialCapacity;
+    private final long period;
+    private final TimeUnit timeUnit;
     final long periodInNanos;
     final RefillStrategy refillStrategy;
     final WaitingStrategy waitingStrategy;
@@ -53,6 +55,8 @@ public final class BandwidthDefinition {
 
         this.capacity = capacity;
         this.initialCapacity = initialCapacity;
+        this.period = period;
+        this.timeUnit = timeUnit;
         this.periodInNanos = timeUnit.toNanos(period);
         this.refillStrategy = refillStrategy;
         this.waitingStrategy = waitingStrategy;
@@ -77,11 +81,11 @@ public final class BandwidthDefinition {
         return "BandwidthDefinition{" +
                 "capacity=" + capacity +
                 ", initialCapacity=" + initialCapacity +
+                ", period=" + period +
+                ", timeUnit=" + timeUnit +
                 ", periodInNanos=" + periodInNanos +
                 ", refillStrategy=" + refillStrategy +
                 ", waitingStrategy=" + waitingStrategy +
-                ", tokensGeneratedInOneNanosecond=" + tokensGeneratedInOneNanosecond +
-                ", nanosecondsToGenerateOneToken=" + nanosecondsToGenerateOneToken +
                 '}';
     }
 

@@ -221,7 +221,7 @@ public class TokenBucketBandwidthLimiter implements BandwidthLimiter {
             throw nonPositiveTokensToConsume(tokensToConsume);
         }
         if (isWaitingLimited && waitIfBusyNanos <= 0) {
-            throw nonPositiveWaitingNanos(waitIfBusyNanos);
+            throw nonPositiveNanosToWait(waitIfBusyNanos);
         }
         if (tokensToConsume > smallestCapacity) {
             if (waitIfBusy) {
@@ -264,10 +264,13 @@ public class TokenBucketBandwidthLimiter implements BandwidthLimiter {
         for (int i = 0; i < limitedBandwidths.length - 1; i++) {
             for (int j = 1; j < limitedBandwidths.length; j++) {
                 BandwidthDefinition first = limitedBandwidths[i];
-                BandwidthDefinition second = limitedBandwidths[i];
-                if (first.periodInNanos < second.periodInNanos
-                        && first.capacity >= second.capacity) {
-                    throw hasSmallerPeriodButHigherCapacity(first, second);
+                BandwidthDefinition second = limitedBandwidths[j];
+                if (first.periodInNanos < second.periodInNanos && first.capacity >= second.capacity) {
+                    throw hasOverlaps(first, second);
+                } else if (first.periodInNanos == second.periodInNanos) {
+                    throw hasOverlaps(first, second);
+                } else if (first.periodInNanos > second.periodInNanos && first.capacity <= second.capacity) {
+                    throw hasOverlaps(first, second);
                 }
             }
         }
