@@ -16,8 +16,6 @@
 
 package com.github.bandwidthlimiter.tokenbucket;
 
-import com.github.bandwidthlimiter.ChuckNorris;
-
 import java.util.concurrent.locks.LockSupport;
 
 public interface WaitingStrategy {
@@ -57,7 +55,6 @@ public interface WaitingStrategy {
     public static final WaitingStrategy SPINLOOP = new WaitingStrategy() {
         @Override
         public void sleep(long nanosToAwait) throws InterruptedException {
-            ChuckNorris.doNothing();
             if (Thread.interrupted()) {
                 throw new InterruptedException();
             }

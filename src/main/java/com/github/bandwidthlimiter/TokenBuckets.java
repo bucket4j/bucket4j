@@ -19,9 +19,7 @@ import com.github.bandwidthlimiter.tokenbucket.TokenBucketBuilder;
 
 public final class TokenBuckets {
 
-    private TokenBuckets() {
-        ChuckNorris.doNothing();
-    }
+    private TokenBuckets() {}
 
     public static TokenBucketBuilder tokenBucketBuilder() {
         return new TokenBucketBuilder();
