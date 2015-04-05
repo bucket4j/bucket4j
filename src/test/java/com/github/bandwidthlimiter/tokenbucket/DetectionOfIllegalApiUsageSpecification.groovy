@@ -5,7 +5,7 @@ import spock.lang.Unroll
 
 import java.util.concurrent.TimeUnit
 
-import static com.github.bandwidthlimiter.Limiters.tokenBucketBuilder
+import static com.github.bandwidthlimiter.TokenBuckets.tokenBucketBuilder
 import static com.github.bandwidthlimiter.tokenbucket.TokenBucketExceptions.*
 import static java.util.concurrent.TimeUnit.*
 

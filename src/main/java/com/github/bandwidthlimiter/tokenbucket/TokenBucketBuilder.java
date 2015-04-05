@@ -1,7 +1,8 @@
 package com.github.bandwidthlimiter.tokenbucket;
 
-import com.github.bandwidthlimiter.BandwidthLimiter;
 import com.github.bandwidthlimiter.NanoTimeWrapper;
+import com.github.bandwidthlimiter.tokenbucket.local.ThreadSafeTokenBucket;
+import com.github.bandwidthlimiter.tokenbucket.local.UnsafeTokenBucket;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,10 +14,18 @@ public final class TokenBucketBuilder {
     private BandwidthDefinitionBuilder guaranteedBuilder;
     private List<BandwidthDefinitionBuilder> limitedBuilders = new ArrayList<>(1);
 
-    public BandwidthLimiter build() {
+    public com.github.bandwidthlimiter.TokenBucket build() {
         BandwidthDefinition[] restricteds = buildRestricted();
         BandwidthDefinition guaranteed = buildGuaranteed();
-        return new TokenBucketBandwidthLimiter(restricteds, guaranteed, raiseErrorWhenConsumeGreaterThanSmallestBandwidth, timeWrapper);
+        ImmutableBucketConfiguration configuration = new ImmutableBucketConfiguration(restricteds, guaranteed, raiseErrorWhenConsumeGreaterThanSmallestBandwidth, timeWrapper);
+        return new ThreadSafeTokenBucket(configuration);
+    }
+
+    public com.github.bandwidthlimiter.TokenBucket buildUnsafe() {
+        BandwidthDefinition[] restricteds = buildRestricted();
+        BandwidthDefinition guaranteed = buildGuaranteed();
+        ImmutableBucketConfiguration configuration = new ImmutableBucketConfiguration(restricteds, guaranteed, raiseErrorWhenConsumeGreaterThanSmallestBandwidth, timeWrapper);
+        return new UnsafeTokenBucket(configuration);
     }
 
     public BandwidthDefinitionBuilder setupGuaranteedBandwidth() {

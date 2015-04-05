@@ -18,17 +18,21 @@ package com.github.bandwidthlimiter.tokenbucket;
 
 import java.util.concurrent.TimeUnit;
 
+import static com.github.bandwidthlimiter.tokenbucket.TokenBucketExceptions.guarantedHasGreaterRateThanLimited;
+import static com.github.bandwidthlimiter.tokenbucket.TokenBucketExceptions.hasOverlaps;
+import static com.github.bandwidthlimiter.tokenbucket.TokenBucketExceptions.restrictionsNotSpecified;
+
 public final class BandwidthDefinition {
 
-    final long capacity;
-    final long initialCapacity;
+    private final long capacity;
+    private final long initialCapacity;
     private final long period;
     private final TimeUnit timeUnit;
-    final long periodInNanos;
-    final RefillStrategy refillStrategy;
-    final WaitingStrategy waitingStrategy;
-    final double tokensGeneratedInOneNanosecond;
-    final double nanosecondsToGenerateOneToken;
+    private final long periodInNanos;
+    private final RefillStrategy refillStrategy;
+    private final WaitingStrategy waitingStrategy;
+    private final double tokensGeneratedInOneNanosecond;
+    private final double nanosecondsToGenerateOneToken;
 
     BandwidthDefinition(long capacity, long initialCapacity, long period, TimeUnit timeUnit, RefillStrategy refillStrategy, WaitingStrategy waitingStrategy) {
         if (capacity <= 0) {
@@ -74,6 +78,71 @@ public final class BandwidthDefinition {
 
     public long nanosRequiredToRefill(long numTokens) {
         return refillStrategy.nanosRequiredToRefill(this, numTokens);
+    }
+
+    public long getInitialCapacity() {
+        return initialCapacity;
+    }
+
+    public WaitingStrategy getWaitingStrategy() {
+        return waitingStrategy;
+    }
+
+    public long getMaxCapacity() {
+        return capacity;
+    }
+
+    public long getPeriodInNanos() {
+        return periodInNanos;
+    }
+
+    public RefillStrategy getRefillStrategy() {
+        return refillStrategy;
+    }
+
+    public double getNanosecondsToGenerateOneToken() {
+        return nanosecondsToGenerateOneToken;
+    }
+
+    public double getTokensGeneratedInOneNanosecond() {
+        return tokensGeneratedInOneNanosecond;
+    }
+
+    public static long getSmallestCapacity(BandwidthDefinition[] definitions) {
+        long minCapacity = Long.MAX_VALUE;
+        for (int i = 0; i < definitions.length; i++) {
+            if (definitions[i].capacity < minCapacity) {
+                minCapacity = definitions[i].capacity;
+            }
+        }
+        return minCapacity;
+    }
+
+    public static void checkBandwidths(BandwidthDefinition[] limitedBandwidths, BandwidthDefinition guaranteedBandwidth) {
+        if (limitedBandwidths == null || limitedBandwidths.length == 0) {
+            throw restrictionsNotSpecified();
+        }
+        for (int i = 0; i < limitedBandwidths.length - 1; i++) {
+            for (int j = 1; j < limitedBandwidths.length; j++) {
+                BandwidthDefinition first = limitedBandwidths[i];
+                BandwidthDefinition second = limitedBandwidths[j];
+                if (first.periodInNanos < second.periodInNanos && first.capacity >= second.capacity) {
+                    throw hasOverlaps(first, second);
+                } else if (first.periodInNanos == second.periodInNanos) {
+                    throw hasOverlaps(first, second);
+                } else if (first.periodInNanos > second.periodInNanos && first.capacity <= second.capacity) {
+                    throw hasOverlaps(first, second);
+                }
+            }
+        }
+        if (guaranteedBandwidth != null) {
+            for (BandwidthDefinition limited : limitedBandwidths) {
+                if (limited.tokensGeneratedInOneNanosecond <= guaranteedBandwidth.tokensGeneratedInOneNanosecond
+                        || limited.nanosecondsToGenerateOneToken > guaranteedBandwidth.nanosecondsToGenerateOneToken) {
+                    throw guarantedHasGreaterRateThanLimited(guaranteedBandwidth, limited);
+                }
+            }
+        }
     }
 
     @Override

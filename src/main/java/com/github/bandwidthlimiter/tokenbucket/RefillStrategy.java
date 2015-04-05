@@ -39,13 +39,13 @@ public interface RefillStrategy {
 
         @Override
         public long refill(BandwidthDefinition bandwidth, long previousRefillNanoTime, long currentNanoTime) {
-            long calculatedRefill = (currentNanoTime - previousRefillNanoTime) * bandwidth.capacity / bandwidth.periodInNanos;
-            return Math.min(bandwidth.capacity, calculatedRefill);
+            long calculatedRefill = (currentNanoTime - previousRefillNanoTime) * bandwidth.getMaxCapacity() / bandwidth.getPeriodInNanos();
+            return Math.min(bandwidth.getMaxCapacity(), calculatedRefill);
         }
 
         @Override
         public long nanosRequiredToRefill(BandwidthDefinition bandwidth, long numTokens) {
-            return bandwidth.periodInNanos * numTokens / bandwidth.capacity;
+            return bandwidth.getPeriodInNanos() * numTokens / bandwidth.getMaxCapacity();
         }
 
     };
@@ -59,15 +59,15 @@ public interface RefillStrategy {
 
         @Override
         public long refill(BandwidthDefinition bandwidth, long previousRefillNanoTime, long currentNanoTime) {
-            if (currentNanoTime - previousRefillNanoTime >= bandwidth.periodInNanos) {
-                return bandwidth.capacity;
+            if (currentNanoTime - previousRefillNanoTime >= bandwidth.getPeriodInNanos()) {
+                return bandwidth.getMaxCapacity();
             }
             return 0;
         }
 
         @Override
         public long nanosRequiredToRefill(BandwidthDefinition bandwidth, long numTokens) {
-            return bandwidth.periodInNanos * numTokens / bandwidth.capacity;
+            return bandwidth.getPeriodInNanos() * numTokens / bandwidth.getMaxCapacity();
         }
 
     };

@@ -19,7 +19,7 @@ package com.github.bandwidthlimiter;
  * A restriction is used for rate limiting access to a portion of code.
  *
  */
-public interface BandwidthLimiter {
+public interface TokenBucket {
     /**
      * Attempt to consumeSingleToken a single token from the bucket.  If it was consumed then {@code true} is returned, otherwise
      * {@code false} is returned.
@@ -36,6 +36,10 @@ public interface BandwidthLimiter {
      * @return {@code true} if the tokens were consumed, {@code false} otherwise.
      */
     boolean tryConsume(long numTokens);
+
+    long consumeAsMuchAsPossible();
+
+    long consumeAsMuchAsPossible(long limit);
 
     /**
      * Consume a single token from the bucket.  If no token is currently available then this method will block until a

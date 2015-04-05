@@ -1,6 +1,6 @@
 package com.github.bandwidthlimiter.tokenbucket;
 
-import com.github.bandwidthlimiter.BandwidthLimiter;
+import com.github.bandwidthlimiter.TokenBucket;
 
 import java.util.concurrent.TimeUnit;
 
@@ -59,7 +59,7 @@ public class BandwidthDefinitionBuilder {
         return this.rootBuilder.setupGuaranteedBandwidth();
     }
 
-    public BandwidthLimiter build() {
+    public TokenBucket build() {
         return rootBuilder.build();
     }
 
