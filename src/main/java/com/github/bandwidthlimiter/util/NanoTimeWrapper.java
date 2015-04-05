@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package com.github.bandwidthlimiter;
+package com.github.bandwidthlimiter.util;
 
 public interface NanoTimeWrapper {
 

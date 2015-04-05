@@ -1,8 +1,8 @@
-package com.github.bandwidthlimiter.genericcellrate;
+package com.github.bandwidthlimiter.leakybucket;
 
 import java.text.MessageFormat;
 
-public class TokenBucketExceptions {
+public class LeakyBucketExceptions {
 
     // ------------------- construction time exceptions --------------------------------
     public static IllegalArgumentException nonPositiveCapacity(long capacity) {

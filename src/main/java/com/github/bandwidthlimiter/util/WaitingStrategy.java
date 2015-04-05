@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package com.github.bandwidthlimiter.genericcellrate;
+package com.github.bandwidthlimiter.util;
 
 import java.util.concurrent.locks.LockSupport;
 

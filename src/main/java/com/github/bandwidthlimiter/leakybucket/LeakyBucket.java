@@ -13,13 +13,13 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package com.github.bandwidthlimiter.genericcellrate;
+package com.github.bandwidthlimiter.leakybucket;
 
 /**
  * A restriction is used for rate limiting access to a portion of code.
  *
  */
-public interface TokenBucket {
+public interface LeakyBucket {
     /**
      * Attempt to consumeSingleToken a single token from the bucket.  If it was consumed then {@code true} is returned, otherwise
      * {@code false} is returned.

@@ -13,7 +13,9 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package com.github.bandwidthlimiter.genericcellrate;
+package com.github.bandwidthlimiter.leakybucket.genericcellrate;
+
+import com.github.bandwidthlimiter.leakybucket.Bandwidth;
 
 /**
  * Encapsulation of a refilling strategy for a token bucket.
@@ -32,8 +34,6 @@ public interface RefillStrategy {
     long refill(Bandwidth bandwidth, long previousRefillNanoTime, long currentNanoTime);
     
     long nanosRequiredToRefill(Bandwidth bandwidth, long numTokens);
-
-
 
     public static RefillStrategy MONOTONE = new RefillStrategy() {
 

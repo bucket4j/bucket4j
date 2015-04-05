@@ -13,28 +13,31 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package com.github.bandwidthlimiter.genericcellrate.local;
+package com.github.bandwidthlimiter.leakybucket.genericcellrate.local;
 
 
-import com.github.bandwidthlimiter.genericcellrate.AbstractTokenBucket;
-import com.github.bandwidthlimiter.genericcellrate.ImmutableConfiguration;
+import com.github.bandwidthlimiter.leakybucket.AbstractLeakyBucket;
+import com.github.bandwidthlimiter.leakybucket.LeakyBucketConfiguration;
+import com.github.bandwidthlimiter.leakybucket.genericcellrate.GenericCellConfiguration;
 
 import java.util.concurrent.atomic.AtomicReference;
 
-public class ThreadSafeTokenBucket extends AbstractTokenBucket {
+public class ThreadSafeGenericCell extends AbstractLeakyBucket {
 
-    private final AtomicReference<TokenBucketState> stateReference;
+    private final AtomicReference<GenericCellState> stateReference;
+    private final GenericCellConfiguration configuration;
 
-    public ThreadSafeTokenBucket(ImmutableConfiguration configuration) {
+    public ThreadSafeGenericCell(GenericCellConfiguration configuration) {
         super(configuration);
-        TokenBucketState initialState = new TokenBucketState(configuration);
+        this.configuration = configuration;
+        GenericCellState initialState = new GenericCellState(configuration);
         this.stateReference = new AtomicReference<>(initialState);
     }
 
     @Override
     protected long consumeAsMuchAsPossibleImpl(long limit) {
-        TokenBucketState previousState = stateReference.get();
-        TokenBucketState newState = new TokenBucketState(previousState);
+        GenericCellState previousState = stateReference.get();
+        GenericCellState newState = new GenericCellState(previousState);
         while (true) {
             long currentNanoTime = nanoTimeWrapper.nanoTime();
             long availableToConsume = newState.refill(currentNanoTime, configuration);
@@ -51,8 +54,8 @@ public class ThreadSafeTokenBucket extends AbstractTokenBucket {
 
     @Override
     protected boolean tryConsumeImpl(long tokensToConsume) {
-        TokenBucketState previousState = stateReference.get();
-        TokenBucketState newState = new TokenBucketState(previousState);
+        GenericCellState previousState = stateReference.get();
+        GenericCellState newState = new GenericCellState(previousState);
 
         while (true) {
             long currentNanoTime = nanoTimeWrapper.nanoTime();
@@ -76,8 +79,8 @@ public class ThreadSafeTokenBucket extends AbstractTokenBucket {
         final long methodStartNanoTime = isWaitingLimited? nanoTimeWrapper.nanoTime(): 0;
         long currentNanoTime = methodStartNanoTime;
         boolean isFirstCycle = true;
-        TokenBucketState previousState = stateReference.get();
-        TokenBucketState newState = new TokenBucketState(previousState);
+        GenericCellState previousState = stateReference.get();
+        GenericCellState newState = new GenericCellState(previousState);
 
         while (true) {
             if (isFirstCycle) {

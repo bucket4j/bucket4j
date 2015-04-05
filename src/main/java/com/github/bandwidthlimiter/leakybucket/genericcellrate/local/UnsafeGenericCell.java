@@ -13,18 +13,21 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package com.github.bandwidthlimiter.genericcellrate.local;
+package com.github.bandwidthlimiter.leakybucket.genericcellrate.local;
 
-import com.github.bandwidthlimiter.genericcellrate.AbstractTokenBucket;
-import com.github.bandwidthlimiter.genericcellrate.ImmutableConfiguration;
+import com.github.bandwidthlimiter.leakybucket.AbstractLeakyBucket;
+import com.github.bandwidthlimiter.leakybucket.LeakyBucketConfiguration;
+import com.github.bandwidthlimiter.leakybucket.genericcellrate.GenericCellConfiguration;
 
-public class UnsafeTokenBucket extends AbstractTokenBucket {
+public class UnsafeGenericCell extends AbstractLeakyBucket {
 
-    private final TokenBucketState state;
+    private final GenericCellState state;
+    private final GenericCellConfiguration configuration;
 
-    public UnsafeTokenBucket(ImmutableConfiguration configuration) {
+    public UnsafeGenericCell(GenericCellConfiguration configuration) {
         super(configuration);
-        this.state = new TokenBucketState(configuration);
+        this.configuration = configuration;
+        this.state = new GenericCellState(configuration);
     }
 
     @Override

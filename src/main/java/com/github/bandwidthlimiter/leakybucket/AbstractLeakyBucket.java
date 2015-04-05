@@ -13,11 +13,11 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package com.github.bandwidthlimiter.genericcellrate;
+package com.github.bandwidthlimiter.leakybucket;
 
-import com.github.bandwidthlimiter.NanoTimeWrapper;
+import com.github.bandwidthlimiter.util.NanoTimeWrapper;
 
-import static com.github.bandwidthlimiter.genericcellrate.TokenBucketExceptions.*;
+import static com.github.bandwidthlimiter.leakybucket.LeakyBucketExceptions.*;
 
 /**
  * A token bucket implementation that is of a leaky bucket in the sense that it has a finite capacity and any added
@@ -36,7 +36,7 @@ import static com.github.bandwidthlimiter.genericcellrate.TokenBucketExceptions.
  * @see <a href="http://en.wikipedia.org/wiki/Token_bucket">Token Bucket on Wikipedia</a>
  * @see <a href="http://en.wikipedia.org/wiki/Leaky_bucket">Leaky Bucket on Wikipedia</a>
  */
-public abstract class AbstractTokenBucket implements TokenBucket {
+public abstract class AbstractLeakyBucket implements LeakyBucket {
 
     protected static final boolean WAIT_IF_BUSY = true;
     protected static final boolean NO_WAIT_IF_BUSY = false;
@@ -48,10 +48,8 @@ public abstract class AbstractTokenBucket implements TokenBucket {
     protected final Bandwidth[] limitedBandwidths;
     protected final Bandwidth guaranteedBandwidth;
     protected final boolean raiseErrorWhenConsumeGreaterThanSmallestBandwidth;
-    protected final ImmutableConfiguration configuration;
 
-    protected AbstractTokenBucket(ImmutableConfiguration configuration) {
-        this.configuration = configuration;
+    protected AbstractLeakyBucket(LeakyBucketConfiguration configuration) {
         this.limitedBandwidths = configuration.getLimitedBandwidths();
         this.guaranteedBandwidth = configuration.getGuaranteedBandwidth();
         this.nanoTimeWrapper = configuration.getNanoTimeWrapper();

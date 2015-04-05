@@ -14,13 +14,13 @@
  *  limitations under the License.
  */
 
-package com.github.bandwidthlimiter.genericcellrate;
+package com.github.bandwidthlimiter.leakybucket;
 
 import java.util.concurrent.TimeUnit;
 
-import static com.github.bandwidthlimiter.genericcellrate.TokenBucketExceptions.guarantedHasGreaterRateThanLimited;
-import static com.github.bandwidthlimiter.genericcellrate.TokenBucketExceptions.hasOverlaps;
-import static com.github.bandwidthlimiter.genericcellrate.TokenBucketExceptions.restrictionsNotSpecified;
+import static com.github.bandwidthlimiter.leakybucket.LeakyBucketExceptions.guarantedHasGreaterRateThanLimited;
+import static com.github.bandwidthlimiter.leakybucket.LeakyBucketExceptions.hasOverlaps;
+import static com.github.bandwidthlimiter.leakybucket.LeakyBucketExceptions.restrictionsNotSpecified;
 
 public final class Bandwidth {
 
@@ -29,32 +29,28 @@ public final class Bandwidth {
     private final long period;
     private final TimeUnit timeUnit;
     private final long periodInNanos;
-    private final RefillStrategy refillStrategy;
-    private final WaitingStrategy waitingStrategy;
     private final double tokensGeneratedInOneNanosecond;
     private final double nanosecondsToGenerateOneToken;
 
-    Bandwidth(long capacity, long initialCapacity, long period, TimeUnit timeUnit, RefillStrategy refillStrategy, WaitingStrategy waitingStrategy) {
+    public Bandwidth(long capacity, long period, TimeUnit timeUnit) {
+        this(capacity, capacity, period, timeUnit);
+    }
+
+    public Bandwidth(long capacity, long initialCapacity, long period, TimeUnit timeUnit) {
         if (capacity <= 0) {
-            throw TokenBucketExceptions.nonPositiveCapacity(capacity);
+            throw LeakyBucketExceptions.nonPositiveCapacity(capacity);
         }
         if (initialCapacity < 0) {
-            throw TokenBucketExceptions.nonPositiveInitialCapacity(initialCapacity);
+            throw LeakyBucketExceptions.nonPositiveInitialCapacity(initialCapacity);
         }
         if (initialCapacity > capacity) {
-            throw TokenBucketExceptions.initialCapacityGreaterThanMaxCapacity(initialCapacity, capacity);
-        }
-        if (refillStrategy == null) {
-            throw TokenBucketExceptions.nullRefillStrategy();
-        }
-        if (waitingStrategy == null) {
-            throw TokenBucketExceptions.nullWaitingStrategy();
+            throw LeakyBucketExceptions.initialCapacityGreaterThanMaxCapacity(initialCapacity, capacity);
         }
         if (timeUnit == null) {
-            throw TokenBucketExceptions.nullTimeUnit();
+            throw LeakyBucketExceptions.nullTimeUnit();
         }
         if (period <= 0) {
-            throw TokenBucketExceptions.nonPositivePeriod(period);
+            throw LeakyBucketExceptions.nonPositivePeriod(period);
         }
 
         this.capacity = capacity;
@@ -62,30 +58,12 @@ public final class Bandwidth {
         this.period = period;
         this.timeUnit = timeUnit;
         this.periodInNanos = timeUnit.toNanos(period);
-        this.refillStrategy = refillStrategy;
-        this.waitingStrategy = waitingStrategy;
         this.tokensGeneratedInOneNanosecond = (double) capacity / (double) periodInNanos;
         this.nanosecondsToGenerateOneToken = (double) periodInNanos / (double) capacity;
     }
 
-    public void sleep(long nanosToAwait) throws InterruptedException {
-        waitingStrategy.sleep(nanosToAwait);
-    }
-
-    public long refill(long previousRefillNanoTime, long currentNanoTime) {
-        return refillStrategy.refill(this, previousRefillNanoTime, currentNanoTime);
-    }
-
-    public long nanosRequiredToRefill(long numTokens) {
-        return refillStrategy.nanosRequiredToRefill(this, numTokens);
-    }
-
     public long getInitialCapacity() {
         return initialCapacity;
-    }
-
-    public WaitingStrategy getWaitingStrategy() {
-        return waitingStrategy;
     }
 
     public long getMaxCapacity() {
@@ -94,18 +72,6 @@ public final class Bandwidth {
 
     public long getPeriodInNanos() {
         return periodInNanos;
-    }
-
-    public RefillStrategy getRefillStrategy() {
-        return refillStrategy;
-    }
-
-    public double getNanosecondsToGenerateOneToken() {
-        return nanosecondsToGenerateOneToken;
-    }
-
-    public double getTokensGeneratedInOneNanosecond() {
-        return tokensGeneratedInOneNanosecond;
     }
 
     public static long getSmallestCapacity(Bandwidth[] definitions) {
@@ -153,8 +119,6 @@ public final class Bandwidth {
                 ", period=" + period +
                 ", timeUnit=" + timeUnit +
                 ", periodInNanos=" + periodInNanos +
-                ", refillStrategy=" + refillStrategy +
-                ", waitingStrategy=" + waitingStrategy +
                 '}';
     }
 
@@ -168,10 +132,6 @@ public final class Bandwidth {
         if (capacity != that.capacity) return false;
         if (initialCapacity != that.initialCapacity) return false;
         if (periodInNanos != that.periodInNanos) return false;
-        if (refillStrategy != null ? !refillStrategy.equals(that.refillStrategy) : that.refillStrategy != null)
-            return false;
-        if (waitingStrategy != null ? !waitingStrategy.equals(that.waitingStrategy) : that.waitingStrategy != null)
-            return false;
         return true;
     }
 
@@ -180,8 +140,6 @@ public final class Bandwidth {
         int result = (int) (capacity ^ (capacity >>> 32));
         result = 31 * result + (int) (initialCapacity ^ (initialCapacity >>> 32));
         result = 31 * result + (int) (periodInNanos ^ (periodInNanos >>> 32));
-        result = 31 * result + (refillStrategy != null ? refillStrategy.hashCode() : 0);
-        result = 31 * result + (waitingStrategy != null ? waitingStrategy.hashCode() : 0);
         return result;
     }
 
