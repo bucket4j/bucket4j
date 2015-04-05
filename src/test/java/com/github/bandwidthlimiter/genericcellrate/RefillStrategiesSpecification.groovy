@@ -13,14 +13,14 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package com.github.bandwidthlimiter.tokenbucket
+package com.github.bandwidthlimiter.genericcellrate
 
 import spock.lang.Specification
 import spock.lang.Unroll
 
 import java.util.concurrent.TimeUnit
 
-import static com.github.bandwidthlimiter.tokenbucket.RefillStrategy.*
+import static com.github.bandwidthlimiter.genericcellrate.RefillStrategy.*
 import static java.util.concurrent.TimeUnit.*
 
 public class RefillStrategiesSpecification extends Specification {
@@ -29,7 +29,7 @@ public class RefillStrategiesSpecification extends Specification {
     def "Refill specification, test number #number"(int number, long capacity, long period, TimeUnit unit, long previousRefillNanos,
             currentNanos, long requiredRefill, RefillStrategy strategy) {
         setup:
-            def bandwidth = new BandwidthDefinitionBuilder().withCapacity(capacity).withInterval(period, unit).buildBandwidth()
+            def bandwidth = new BandwidthBuilder().withCapacity(capacity).withInterval(period, unit).buildBandwidth()
         when:
             def refill = strategy.refill(bandwidth, previousRefillNanos, currentNanos)
         then:
@@ -51,7 +51,7 @@ public class RefillStrategiesSpecification extends Specification {
     def "'Nanos required to Refill' specification, test number #number"(int number, long capacity, long period,
             TimeUnit unit, long tokens, long nanosRequired, RefillStrategy strategy) {
         setup:
-            def bandwidth = new BandwidthDefinitionBuilder().withCapacity(capacity).withInterval(period, unit).buildBandwidth()
+            def bandwidth = new BandwidthBuilder().withCapacity(capacity).withInterval(period, unit).buildBandwidth()
         when:
             def nanosActual = strategy.nanosRequiredToRefill(bandwidth, tokens)
         then:

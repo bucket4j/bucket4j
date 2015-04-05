@@ -14,15 +14,15 @@
  *  limitations under the License.
  */
 
-package com.github.bandwidthlimiter.tokenbucket;
+package com.github.bandwidthlimiter.genericcellrate;
 
 import java.util.concurrent.TimeUnit;
 
-import static com.github.bandwidthlimiter.tokenbucket.TokenBucketExceptions.guarantedHasGreaterRateThanLimited;
-import static com.github.bandwidthlimiter.tokenbucket.TokenBucketExceptions.hasOverlaps;
-import static com.github.bandwidthlimiter.tokenbucket.TokenBucketExceptions.restrictionsNotSpecified;
+import static com.github.bandwidthlimiter.genericcellrate.TokenBucketExceptions.guarantedHasGreaterRateThanLimited;
+import static com.github.bandwidthlimiter.genericcellrate.TokenBucketExceptions.hasOverlaps;
+import static com.github.bandwidthlimiter.genericcellrate.TokenBucketExceptions.restrictionsNotSpecified;
 
-public final class BandwidthDefinition {
+public final class Bandwidth {
 
     private final long capacity;
     private final long initialCapacity;
@@ -34,7 +34,7 @@ public final class BandwidthDefinition {
     private final double tokensGeneratedInOneNanosecond;
     private final double nanosecondsToGenerateOneToken;
 
-    BandwidthDefinition(long capacity, long initialCapacity, long period, TimeUnit timeUnit, RefillStrategy refillStrategy, WaitingStrategy waitingStrategy) {
+    Bandwidth(long capacity, long initialCapacity, long period, TimeUnit timeUnit, RefillStrategy refillStrategy, WaitingStrategy waitingStrategy) {
         if (capacity <= 0) {
             throw TokenBucketExceptions.nonPositiveCapacity(capacity);
         }
@@ -108,7 +108,7 @@ public final class BandwidthDefinition {
         return tokensGeneratedInOneNanosecond;
     }
 
-    public static long getSmallestCapacity(BandwidthDefinition[] definitions) {
+    public static long getSmallestCapacity(Bandwidth[] definitions) {
         long minCapacity = Long.MAX_VALUE;
         for (int i = 0; i < definitions.length; i++) {
             if (definitions[i].capacity < minCapacity) {
@@ -118,14 +118,14 @@ public final class BandwidthDefinition {
         return minCapacity;
     }
 
-    public static void checkBandwidths(BandwidthDefinition[] limitedBandwidths, BandwidthDefinition guaranteedBandwidth) {
+    public static void checkBandwidths(Bandwidth[] limitedBandwidths, Bandwidth guaranteedBandwidth) {
         if (limitedBandwidths == null || limitedBandwidths.length == 0) {
             throw restrictionsNotSpecified();
         }
         for (int i = 0; i < limitedBandwidths.length - 1; i++) {
             for (int j = 1; j < limitedBandwidths.length; j++) {
-                BandwidthDefinition first = limitedBandwidths[i];
-                BandwidthDefinition second = limitedBandwidths[j];
+                Bandwidth first = limitedBandwidths[i];
+                Bandwidth second = limitedBandwidths[j];
                 if (first.periodInNanos < second.periodInNanos && first.capacity >= second.capacity) {
                     throw hasOverlaps(first, second);
                 } else if (first.periodInNanos == second.periodInNanos) {
@@ -136,7 +136,7 @@ public final class BandwidthDefinition {
             }
         }
         if (guaranteedBandwidth != null) {
-            for (BandwidthDefinition limited : limitedBandwidths) {
+            for (Bandwidth limited : limitedBandwidths) {
                 if (limited.tokensGeneratedInOneNanosecond <= guaranteedBandwidth.tokensGeneratedInOneNanosecond
                         || limited.nanosecondsToGenerateOneToken > guaranteedBandwidth.nanosecondsToGenerateOneToken) {
                     throw guarantedHasGreaterRateThanLimited(guaranteedBandwidth, limited);
@@ -163,7 +163,7 @@ public final class BandwidthDefinition {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        BandwidthDefinition that = (BandwidthDefinition) o;
+        Bandwidth that = (Bandwidth) o;
 
         if (capacity != that.capacity) return false;
         if (initialCapacity != that.initialCapacity) return false;

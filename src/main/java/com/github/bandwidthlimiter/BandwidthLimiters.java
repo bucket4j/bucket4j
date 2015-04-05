@@ -15,13 +15,13 @@
  */
 package com.github.bandwidthlimiter;
 
-import com.github.bandwidthlimiter.tokenbucket.TokenBucketBuilder;
+import com.github.bandwidthlimiter.genericcellrate.TokenBucketBuilder;
 
-public final class TokenBuckets {
+public final class BandwidthLimiters {
 
-    private TokenBuckets() {}
+    private BandwidthLimiters() {}
 
-    public static TokenBucketBuilder tokenBucketBuilder() {
+    public static TokenBucketBuilder genericCellRateBuilder() {
         return new TokenBucketBuilder();
     }
 

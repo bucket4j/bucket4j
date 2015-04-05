@@ -13,18 +13,18 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package com.github.bandwidthlimiter.tokenbucket.local;
+package com.github.bandwidthlimiter.genericcellrate.local;
 
-import com.github.bandwidthlimiter.tokenbucket.AbstractTokenBucket;
-import com.github.bandwidthlimiter.tokenbucket.ImmutableBucketConfiguration;
+import com.github.bandwidthlimiter.genericcellrate.AbstractTokenBucket;
+import com.github.bandwidthlimiter.genericcellrate.ImmutableConfiguration;
 
 public class UnsafeTokenBucket extends AbstractTokenBucket {
 
-    private final BucketState state;
+    private final TokenBucketState state;
 
-    public UnsafeTokenBucket(ImmutableBucketConfiguration configuration) {
+    public UnsafeTokenBucket(ImmutableConfiguration configuration) {
         super(configuration);
-        this.state = new BucketState(configuration);
+        this.state = new TokenBucketState(configuration);
     }
 
     @Override

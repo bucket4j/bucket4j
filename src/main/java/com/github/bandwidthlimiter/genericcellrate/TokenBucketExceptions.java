@@ -1,4 +1,4 @@
-package com.github.bandwidthlimiter.tokenbucket;
+package com.github.bandwidthlimiter.genericcellrate;
 
 import java.text.MessageFormat;
 
@@ -59,13 +59,13 @@ public class TokenBucketExceptions {
         return new IllegalArgumentException(msg);
     }
 
-    public static IllegalArgumentException guarantedHasGreaterRateThanLimited(BandwidthDefinition guaranteed, BandwidthDefinition limited) {
+    public static IllegalArgumentException guarantedHasGreaterRateThanLimited(Bandwidth guaranteed, Bandwidth limited) {
         String pattern = "Misconfiguration detected, guaranteed bandwidth {0} has higher rate than limited bandwidth {1}";
         String msg = MessageFormat.format(pattern, guaranteed, limited);
         return new IllegalArgumentException(msg);
     }
 
-    public static IllegalArgumentException hasOverlaps(BandwidthDefinition first, BandwidthDefinition second) {
+    public static IllegalArgumentException hasOverlaps(Bandwidth first, Bandwidth second) {
         String pattern = "Overlap detected between {0} and {1}";
         String msg = MessageFormat.format(pattern, first, second);
         return new IllegalArgumentException(msg);

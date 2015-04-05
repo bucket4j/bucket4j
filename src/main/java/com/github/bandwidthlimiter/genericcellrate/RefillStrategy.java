@@ -13,7 +13,7 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package com.github.bandwidthlimiter.tokenbucket;
+package com.github.bandwidthlimiter.genericcellrate;
 
 /**
  * Encapsulation of a refilling strategy for a token bucket.
@@ -29,22 +29,22 @@ public interface RefillStrategy {
      *
      * @return The number of tokens to add to the token bucket.
      */
-    long refill(BandwidthDefinition bandwidth, long previousRefillNanoTime, long currentNanoTime);
+    long refill(Bandwidth bandwidth, long previousRefillNanoTime, long currentNanoTime);
     
-    long nanosRequiredToRefill(BandwidthDefinition bandwidth, long numTokens);
+    long nanosRequiredToRefill(Bandwidth bandwidth, long numTokens);
 
 
 
     public static RefillStrategy MONOTONE = new RefillStrategy() {
 
         @Override
-        public long refill(BandwidthDefinition bandwidth, long previousRefillNanoTime, long currentNanoTime) {
+        public long refill(Bandwidth bandwidth, long previousRefillNanoTime, long currentNanoTime) {
             long calculatedRefill = (currentNanoTime - previousRefillNanoTime) * bandwidth.getMaxCapacity() / bandwidth.getPeriodInNanos();
             return Math.min(bandwidth.getMaxCapacity(), calculatedRefill);
         }
 
         @Override
-        public long nanosRequiredToRefill(BandwidthDefinition bandwidth, long numTokens) {
+        public long nanosRequiredToRefill(Bandwidth bandwidth, long numTokens) {
             return bandwidth.getPeriodInNanos() * numTokens / bandwidth.getMaxCapacity();
         }
 
@@ -58,7 +58,7 @@ public interface RefillStrategy {
     public static RefillStrategy BURST = new RefillStrategy() {
 
         @Override
-        public long refill(BandwidthDefinition bandwidth, long previousRefillNanoTime, long currentNanoTime) {
+        public long refill(Bandwidth bandwidth, long previousRefillNanoTime, long currentNanoTime) {
             if (currentNanoTime - previousRefillNanoTime >= bandwidth.getPeriodInNanos()) {
                 return bandwidth.getMaxCapacity();
             }
@@ -66,7 +66,7 @@ public interface RefillStrategy {
         }
 
         @Override
-        public long nanosRequiredToRefill(BandwidthDefinition bandwidth, long numTokens) {
+        public long nanosRequiredToRefill(Bandwidth bandwidth, long numTokens) {
             return bandwidth.getPeriodInNanos() * numTokens / bandwidth.getMaxCapacity();
         }
 

@@ -1,12 +1,12 @@
-package com.github.bandwidthlimiter.tokenbucket
+package com.github.bandwidthlimiter.genericcellrate
 
 import spock.lang.Specification
 import spock.lang.Unroll
 
 import java.util.concurrent.TimeUnit
 
-import static com.github.bandwidthlimiter.TokenBuckets.tokenBucketBuilder
-import static com.github.bandwidthlimiter.tokenbucket.TokenBucketExceptions.*
+import static com.github.bandwidthlimiter.BandwidthLimiters.genericCellRateBuilder
+import static com.github.bandwidthlimiter.genericcellrate.TokenBucketExceptions.*
 import static java.util.concurrent.TimeUnit.*
 
 public class DetectionOfIllegalApiUsageSpecification extends Specification {
@@ -107,7 +107,7 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
 
     def "Should check that nano time wrapper is not null"() {
         setup:
-            def builder = tokenBucketBuilder().withNanoTimeWrapper(null).addLimitedBandwidth()
+            def builder = genericCellRateBuilder().withNanoTimeWrapper(null).addLimitedBandwidth()
                 .withInterval(VALID_PERIOD, VALID_TIMEUNIT).withCapacity(VALID_CAPACITY);
         when:
             builder.build()
@@ -118,7 +118,7 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
 
     def  "Should check that limited bandwidth list is not empty"() {
         setup:
-            def builder = tokenBucketBuilder()
+            def builder = genericCellRateBuilder()
         when:
             builder.build()
         then:
@@ -134,7 +134,7 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
 
     def "Should check that guaranteed capacity could not be configured twice"() {
         setup:
-            def builder = tokenBucketBuilder().setupGuaranteedBandwidth().withCapacity(VALID_CAPACITY)
+            def builder = genericCellRateBuilder().setupGuaranteedBandwidth().withCapacity(VALID_CAPACITY)
                     .withInterval(VALID_PERIOD, VALID_TIMEUNIT)
         when:
             builder.setupGuaranteedBandwidth()
@@ -145,9 +145,9 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
 
     def "Should check that guaranteed bandwidth has lesser rate than limited bandwidth"() {
         setup:
-            BandwidthDefinitionBuilder guaranteed = newDefinitionBuilder().withCapacity(1000).withInterval(1, SECONDS)
-            BandwidthDefinitionBuilder limited = newDefinitionBuilder().withCapacity(999).withInterval(1, SECONDS)
-            def builder = tokenBucketBuilder().setGuaranteedBandwidth(guaranteed).addLimitedBandwidth(limited)
+            BandwidthBuilder guaranteed = newDefinitionBuilder().withCapacity(1000).withInterval(1, SECONDS)
+            BandwidthBuilder limited = newDefinitionBuilder().withCapacity(999).withInterval(1, SECONDS)
+            def builder = genericCellRateBuilder().setGuaranteedBandwidth(guaranteed).addLimitedBandwidth(limited)
         when:
             builder.build()
         then:
@@ -156,9 +156,9 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
     }
 
     @Unroll
-    def "Should check for overlaps, test #number"(int number, BandwidthDefinitionBuilder first, BandwidthDefinitionBuilder second) {
+    def "Should check for overlaps, test #number"(int number, BandwidthBuilder first, BandwidthBuilder second) {
         setup:
-            def builder = tokenBucketBuilder().addLimitedBandwidth(first).addLimitedBandwidth(second)
+            def builder = genericCellRateBuilder().addLimitedBandwidth(first).addLimitedBandwidth(second)
         when:
             builder.build()
         then:
@@ -177,7 +177,7 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
 
     def "Should check that tokens to consume should be positive"() {
         setup:
-            def tokenBucket = tokenBucketBuilder().addLimitedBandwidth().withCapacity(VALID_CAPACITY)
+            def tokenBucket = genericCellRateBuilder().addLimitedBandwidth().withCapacity(VALID_CAPACITY)
                 .withInterval(VALID_PERIOD, VALID_TIMEUNIT).build()
         when:
             tokenBucket.consume(0)
@@ -194,7 +194,7 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
 
     def "Should check that nanos to wait should be positive"() {
         setup:
-            def tokenBucket = tokenBucketBuilder().addLimitedBandwidth().withCapacity(VALID_CAPACITY)
+            def tokenBucket = genericCellRateBuilder().addLimitedBandwidth().withCapacity(VALID_CAPACITY)
                 .withInterval(VALID_PERIOD, VALID_TIMEUNIT).build()
         when:
             tokenBucket.tryConsumeSingleToken(0)
@@ -211,7 +211,7 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
 
     def "Should check that unable try to consume number of tokens greater than smallest capacity when user has deprecated this option"() {
         setup:
-            def tokenBucket = tokenBucketBuilder().raiseErrorWhenConsumeGreaterThanSmallestBandwidth()
+            def tokenBucket = genericCellRateBuilder().raiseErrorWhenConsumeGreaterThanSmallestBandwidth()
                 .addLimitedBandwidth().withCapacity(VALID_CAPACITY)
                 .withInterval(VALID_PERIOD, VALID_TIMEUNIT).build()
         when:
@@ -223,7 +223,7 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
 
     def "Should always check when client try to consume number of tokens greater than smallest capacity on invocation of methods with support of waiting"() {
         setup:
-            def tokenBucket = tokenBucketBuilder().addLimitedBandwidth().withCapacity(VALID_CAPACITY)
+            def tokenBucket = genericCellRateBuilder().addLimitedBandwidth().withCapacity(VALID_CAPACITY)
                 .withInterval(VALID_PERIOD, VALID_TIMEUNIT).build()
         when:
             tokenBucket.consume(VALID_CAPACITY + 1)
@@ -238,8 +238,8 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
             ex.message == TokenBucketExceptions.tokensToConsumeGreaterThanCapacityOfSmallestBandwidth(VALID_CAPACITY + 1, VALID_CAPACITY).message
     }
 
-    private static BandwidthDefinitionBuilder newDefinitionBuilder() {
-        return new BandwidthDefinitionBuilder();
+    private static BandwidthBuilder newDefinitionBuilder() {
+        return new BandwidthBuilder();
     }
 
 }

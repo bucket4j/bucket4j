@@ -1,22 +1,22 @@
-package com.github.bandwidthlimiter.tokenbucket;
+package com.github.bandwidthlimiter.genericcellrate;
 
 import com.github.bandwidthlimiter.NanoTimeWrapper;
 
-import static com.github.bandwidthlimiter.tokenbucket.TokenBucketExceptions.*;
+import static com.github.bandwidthlimiter.genericcellrate.TokenBucketExceptions.*;
 
-public class ImmutableBucketConfiguration {
+public class ImmutableConfiguration {
 
-    private final BandwidthDefinition[] limitedBandwidths;
-    private final BandwidthDefinition guaranteedBandwidth;
+    private final Bandwidth[] limitedBandwidths;
+    private final Bandwidth guaranteedBandwidth;
     private final boolean raiseErrorWhenConsumeGreaterThanSmallestBandwidth;
     private final NanoTimeWrapper nanoTimeWrapper;
 
-    public ImmutableBucketConfiguration(BandwidthDefinition[] limitedBandwidths, BandwidthDefinition guaranteedBandwidth, boolean raiseErrorWhenConsumeGreaterThanSmallestBandwidth, NanoTimeWrapper nanoTimeWrapper) {
+    public ImmutableConfiguration(Bandwidth[] limitedBandwidths, Bandwidth guaranteedBandwidth, boolean raiseErrorWhenConsumeGreaterThanSmallestBandwidth, NanoTimeWrapper nanoTimeWrapper) {
         if (nanoTimeWrapper == null) {
             throw nullNanoTimeWrapper();
         }
 
-        BandwidthDefinition.checkBandwidths(limitedBandwidths, guaranteedBandwidth);
+        Bandwidth.checkBandwidths(limitedBandwidths, guaranteedBandwidth);
 
         this.limitedBandwidths = limitedBandwidths;
         this.guaranteedBandwidth = guaranteedBandwidth;
@@ -28,11 +28,11 @@ public class ImmutableBucketConfiguration {
         return nanoTimeWrapper;
     }
 
-    public BandwidthDefinition getGuaranteedBandwidth() {
+    public Bandwidth getGuaranteedBandwidth() {
         return guaranteedBandwidth;
     }
 
-    public BandwidthDefinition[] getLimitedBandwidths() {
+    public Bandwidth[] getLimitedBandwidths() {
         return limitedBandwidths;
     }
 

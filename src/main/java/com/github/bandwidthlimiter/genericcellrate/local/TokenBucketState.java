@@ -1,11 +1,11 @@
-package com.github.bandwidthlimiter.tokenbucket.local;
+package com.github.bandwidthlimiter.genericcellrate.local;
 
-import com.github.bandwidthlimiter.tokenbucket.BandwidthDefinition;
-import com.github.bandwidthlimiter.tokenbucket.ImmutableBucketConfiguration;
+import com.github.bandwidthlimiter.genericcellrate.Bandwidth;
+import com.github.bandwidthlimiter.genericcellrate.ImmutableConfiguration;
 
 import java.util.Arrays;
 
-public class BucketState {
+public class TokenBucketState {
 
     private static final int REFILL_DATE_OFFSET = 0;
     private static final int GUARANTEED_OFFSET = 1;
@@ -13,30 +13,30 @@ public class BucketState {
 
     private final long[] state;
 
-    BucketState(ImmutableBucketConfiguration configuration) {
-        BandwidthDefinition[] limitedBandwidths = configuration.getLimitedBandwidths();
+    TokenBucketState(ImmutableConfiguration configuration) {
+        Bandwidth[] limitedBandwidths = configuration.getLimitedBandwidths();
         this.state = new long[2 + limitedBandwidths.length];
         for (int i = 0; i < limitedBandwidths.length; i++) {
             state[FIRST_LIMITED_OFFSET + i] = limitedBandwidths[i].getInitialCapacity();
         }
 
-        BandwidthDefinition guaranteedBandwidth = configuration.getGuaranteedBandwidth();
+        Bandwidth guaranteedBandwidth = configuration.getGuaranteedBandwidth();
         state[GUARANTEED_OFFSET] = guaranteedBandwidth != null? guaranteedBandwidth.getInitialCapacity(): 0;
 
         state[REFILL_DATE_OFFSET] = configuration.getNanoTimeWrapper().nanoTime();
     }
 
-    BucketState(BucketState previousState) {
+    TokenBucketState(TokenBucketState previousState) {
         this.state = Arrays.copyOf(previousState.state, previousState.state.length);
     }
 
-    void copyState(BucketState state) {
+    void copyState(TokenBucketState state) {
         System.arraycopy(state.state, 0, this.state, 0, this.state.length);
     }
 
-    public long refill(long currentNanoTime, ImmutableBucketConfiguration configuration) {
-        BandwidthDefinition guaranteedBandwidth = configuration.getGuaranteedBandwidth();
-        BandwidthDefinition[] limitedBandwidths = configuration.getLimitedBandwidths();
+    public long refill(long currentNanoTime, ImmutableConfiguration configuration) {
+        Bandwidth guaranteedBandwidth = configuration.getGuaranteedBandwidth();
+        Bandwidth[] limitedBandwidths = configuration.getLimitedBandwidths();
         long previousRefillNanos = state[REFILL_DATE_OFFSET];
 
         long availableByGuarantee = 0l;
@@ -48,7 +48,7 @@ public class BucketState {
 
         long availableByLimitation = Long.MAX_VALUE;
         for (int i = 0; i < limitedBandwidths.length; i++) {
-            BandwidthDefinition bandwidth = limitedBandwidths[i];
+            Bandwidth bandwidth = limitedBandwidths[i];
             long newSize = state[FIRST_LIMITED_OFFSET + i] + bandwidth.refill(previousRefillNanos, currentNanoTime);
             newSize = Math.min(newSize, bandwidth.getMaxCapacity());
             state[FIRST_LIMITED_OFFSET + i] = newSize;
@@ -66,11 +66,11 @@ public class BucketState {
         }
     }
 
-    public boolean sleepUntilRefillIfPossible(long deficit, long sleepLimitNanos, ImmutableBucketConfiguration configuration) throws InterruptedException {
-        BandwidthDefinition guaranteedBandwidth = configuration.getGuaranteedBandwidth();
-        BandwidthDefinition[] limitedBandwidths = configuration.getLimitedBandwidths();
+    public boolean sleepUntilRefillIfPossible(long deficit, long sleepLimitNanos, ImmutableConfiguration configuration) throws InterruptedException {
+        Bandwidth guaranteedBandwidth = configuration.getGuaranteedBandwidth();
+        Bandwidth[] limitedBandwidths = configuration.getLimitedBandwidths();
 
-        BandwidthDefinition bandwidthToSleep = limitedBandwidths[0];
+        Bandwidth bandwidthToSleep = limitedBandwidths[0];
         long sleepToRefill = bandwidthToSleep.nanosRequiredToRefill(deficit);
         for (int i = 1; i < limitedBandwidths.length; i++) {
             long currentSleepProposal = limitedBandwidths[i].nanosRequiredToRefill(deficit);

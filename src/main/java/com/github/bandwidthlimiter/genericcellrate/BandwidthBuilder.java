@@ -1,10 +1,8 @@
-package com.github.bandwidthlimiter.tokenbucket;
-
-import com.github.bandwidthlimiter.TokenBucket;
+package com.github.bandwidthlimiter.genericcellrate;
 
 import java.util.concurrent.TimeUnit;
 
-public class BandwidthDefinitionBuilder {
+public class BandwidthBuilder {
 
     private final TokenBucketBuilder rootBuilder;
 
@@ -16,46 +14,46 @@ public class BandwidthDefinitionBuilder {
     private long period;
     private TimeUnit timeUnit;
 
-    public BandwidthDefinitionBuilder(TokenBucketBuilder rootBuilder) {
+    public BandwidthBuilder(TokenBucketBuilder rootBuilder) {
         this.rootBuilder = rootBuilder;
     }
 
     // visible for testing
-    BandwidthDefinitionBuilder() {
+    BandwidthBuilder() {
         rootBuilder = null;
     }
 
-    public BandwidthDefinitionBuilder withCapacity(long capacity) {
+    public BandwidthBuilder withCapacity(long capacity) {
         this.capacity = capacity;
         return this;
     }
 
-    public BandwidthDefinitionBuilder withInterval(long period, TimeUnit timeUnit) {
+    public BandwidthBuilder withInterval(long period, TimeUnit timeUnit) {
         this.timeUnit = timeUnit;
         this.period = period;
         return this;
     }
 
-    public BandwidthDefinitionBuilder withInitialCapacity(long initialCapacity) {
+    public BandwidthBuilder withInitialCapacity(long initialCapacity) {
         this.initialCapacity = initialCapacity;
         return this;
     }
 
-    public BandwidthDefinitionBuilder withRefillStrategy(RefillStrategy refillStrategy) {
+    public BandwidthBuilder withRefillStrategy(RefillStrategy refillStrategy) {
         this.refillStrategy = refillStrategy;
         return this;
     }
 
-    public BandwidthDefinitionBuilder withWaitingStrategy(WaitingStrategy waitingStrategy) {
+    public BandwidthBuilder withWaitingStrategy(WaitingStrategy waitingStrategy) {
         this.waitingStrategy = waitingStrategy;
         return this;
     }
 
-    public BandwidthDefinitionBuilder setupGuaranteedBandwidth() {
+    public BandwidthBuilder setupGuaranteedBandwidth() {
         return this.rootBuilder.setupGuaranteedBandwidth();
     }
 
-    public BandwidthDefinitionBuilder addLimitedBandwidth() {
+    public BandwidthBuilder addLimitedBandwidth() {
         return this.rootBuilder.setupGuaranteedBandwidth();
     }
 
@@ -63,9 +61,9 @@ public class BandwidthDefinitionBuilder {
         return rootBuilder.build();
     }
 
-    BandwidthDefinition buildBandwidth() {
+    Bandwidth buildBandwidth() {
         long initialCapacity = this.initialCapacity == null? capacity: this.initialCapacity.longValue();
-        return new BandwidthDefinition(capacity, initialCapacity, period, timeUnit, refillStrategy, waitingStrategy);
+        return new Bandwidth(capacity, initialCapacity, period, timeUnit, refillStrategy, waitingStrategy);
     }
 
 }

@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package com.github.bandwidthlimiter.tokenbucket;
+package com.github.bandwidthlimiter.genericcellrate;
 
 import java.util.concurrent.locks.LockSupport;
 

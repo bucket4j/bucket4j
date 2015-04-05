@@ -13,12 +13,11 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package com.github.bandwidthlimiter.tokenbucket;
+package com.github.bandwidthlimiter.genericcellrate;
 
-import com.github.bandwidthlimiter.TokenBucket;
 import com.github.bandwidthlimiter.NanoTimeWrapper;
 
-import static com.github.bandwidthlimiter.tokenbucket.TokenBucketExceptions.*;
+import static com.github.bandwidthlimiter.genericcellrate.TokenBucketExceptions.*;
 
 /**
  * A token bucket implementation that is of a leaky bucket in the sense that it has a finite capacity and any added
@@ -46,18 +45,18 @@ public abstract class AbstractTokenBucket implements TokenBucket {
     protected final NanoTimeWrapper nanoTimeWrapper;
     protected final int limitedDimension;
     protected final long smallestCapacity;
-    protected final BandwidthDefinition[] limitedBandwidths;
-    protected final BandwidthDefinition guaranteedBandwidth;
+    protected final Bandwidth[] limitedBandwidths;
+    protected final Bandwidth guaranteedBandwidth;
     protected final boolean raiseErrorWhenConsumeGreaterThanSmallestBandwidth;
-    protected final ImmutableBucketConfiguration configuration;
+    protected final ImmutableConfiguration configuration;
 
-    protected AbstractTokenBucket(ImmutableBucketConfiguration configuration) {
+    protected AbstractTokenBucket(ImmutableConfiguration configuration) {
         this.configuration = configuration;
         this.limitedBandwidths = configuration.getLimitedBandwidths();
         this.guaranteedBandwidth = configuration.getGuaranteedBandwidth();
         this.nanoTimeWrapper = configuration.getNanoTimeWrapper();
         this.limitedDimension = this.limitedBandwidths.length;
-        this.smallestCapacity = BandwidthDefinition.getSmallestCapacity(limitedBandwidths);
+        this.smallestCapacity = Bandwidth.getSmallestCapacity(limitedBandwidths);
         this.raiseErrorWhenConsumeGreaterThanSmallestBandwidth = configuration.isRaiseErrorWhenConsumeGreaterThanSmallestBandwidth();
     }
 
