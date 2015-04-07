@@ -13,21 +13,21 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package com.github.bandwidthlimiter.leakybucket.genericcellrate.local;
+package com.github.bandwidthlimiter.leakybucket.local;
 
 
 import com.github.bandwidthlimiter.leakybucket.AbstractLeakyBucket;
+import com.github.bandwidthlimiter.leakybucket.GenericCellConfiguration;
 import com.github.bandwidthlimiter.leakybucket.LeakyBucketConfiguration;
-import com.github.bandwidthlimiter.leakybucket.genericcellrate.GenericCellConfiguration;
 
 import java.util.concurrent.atomic.AtomicReference;
 
 public class ThreadSafeGenericCell extends AbstractLeakyBucket {
 
     private final AtomicReference<GenericCellState> stateReference;
-    private final GenericCellConfiguration configuration;
+    private final LeakyBucketConfiguration configuration;
 
-    public ThreadSafeGenericCell(GenericCellConfiguration configuration) {
+    public ThreadSafeGenericCell(LeakyBucketConfiguration configuration) {
         super(configuration);
         this.configuration = configuration;
         GenericCellState initialState = new GenericCellState(configuration);
@@ -39,7 +39,7 @@ public class ThreadSafeGenericCell extends AbstractLeakyBucket {
         GenericCellState previousState = stateReference.get();
         GenericCellState newState = new GenericCellState(previousState);
         while (true) {
-            long currentNanoTime = nanoTimeWrapper.nanoTime();
+            long currentNanoTime = timeMetter.time();
             long availableToConsume = newState.refill(currentNanoTime, configuration);
             long toConsume = Math.min(limit, availableToConsume);
             newState.consume(toConsume);
@@ -58,7 +58,7 @@ public class ThreadSafeGenericCell extends AbstractLeakyBucket {
         GenericCellState newState = new GenericCellState(previousState);
 
         while (true) {
-            long currentNanoTime = nanoTimeWrapper.nanoTime();
+            long currentNanoTime = timeMetter.time();
             long availableToConsume = newState.refill(currentNanoTime, configuration);
             if (tokensToConsume > availableToConsume) {
                 return false;
@@ -76,7 +76,7 @@ public class ThreadSafeGenericCell extends AbstractLeakyBucket {
     @Override
     protected boolean consumeOrAwaitImpl(long tokensToConsume, long waitIfBusyLimitNanos) throws InterruptedException {
         boolean isWaitingLimited = waitIfBusyLimitNanos > 0;
-        final long methodStartNanoTime = isWaitingLimited? nanoTimeWrapper.nanoTime(): 0;
+        final long methodStartNanoTime = isWaitingLimited? timeMetter.time(): 0;
         long currentNanoTime = methodStartNanoTime;
         boolean isFirstCycle = true;
         GenericCellState previousState = stateReference.get();
@@ -86,7 +86,7 @@ public class ThreadSafeGenericCell extends AbstractLeakyBucket {
             if (isFirstCycle) {
                 isFirstCycle = false;
             } else {
-                currentNanoTime = nanoTimeWrapper.nanoTime();
+                currentNanoTime = timeMetter.time();
             }
 
             long methodDurationNanos = currentNanoTime - methodStartNanoTime;

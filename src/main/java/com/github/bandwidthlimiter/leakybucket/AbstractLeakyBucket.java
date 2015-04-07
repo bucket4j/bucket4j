@@ -15,7 +15,7 @@
  */
 package com.github.bandwidthlimiter.leakybucket;
 
-import com.github.bandwidthlimiter.util.NanoTimeWrapper;
+import com.github.bandwidthlimiter.util.TimeMetter;
 
 import static com.github.bandwidthlimiter.leakybucket.LeakyBucketExceptions.*;
 
@@ -42,7 +42,7 @@ public abstract class AbstractLeakyBucket implements LeakyBucket {
     protected static final boolean NO_WAIT_IF_BUSY = false;
     protected static final long UNSPECIFIED_WAITING_LIMIT = -1;
 
-    protected final NanoTimeWrapper nanoTimeWrapper;
+    protected final TimeMetter timeMetter;
     protected final int limitedDimension;
     protected final long smallestCapacity;
     protected final Bandwidth[] limitedBandwidths;
@@ -52,7 +52,7 @@ public abstract class AbstractLeakyBucket implements LeakyBucket {
     protected AbstractLeakyBucket(LeakyBucketConfiguration configuration) {
         this.limitedBandwidths = configuration.getLimitedBandwidths();
         this.guaranteedBandwidth = configuration.getGuaranteedBandwidth();
-        this.nanoTimeWrapper = configuration.getNanoTimeWrapper();
+        this.timeMetter = configuration.getTimeMetter();
         this.limitedDimension = this.limitedBandwidths.length;
         this.smallestCapacity = Bandwidth.getSmallestCapacity(limitedBandwidths);
         this.raiseErrorWhenConsumeGreaterThanSmallestBandwidth = configuration.isRaiseErrorWhenConsumeGreaterThanSmallestBandwidth();

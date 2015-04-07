@@ -13,11 +13,10 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package com.github.bandwidthlimiter.leakybucket.genericcellrate.local;
+package com.github.bandwidthlimiter.leakybucket.local;
 
 import com.github.bandwidthlimiter.leakybucket.AbstractLeakyBucket;
-import com.github.bandwidthlimiter.leakybucket.LeakyBucketConfiguration;
-import com.github.bandwidthlimiter.leakybucket.genericcellrate.GenericCellConfiguration;
+import com.github.bandwidthlimiter.leakybucket.GenericCellConfiguration;
 
 public class UnsafeGenericCell extends AbstractLeakyBucket {
 
@@ -32,7 +31,7 @@ public class UnsafeGenericCell extends AbstractLeakyBucket {
 
     @Override
     protected long consumeAsMuchAsPossibleImpl(long limit) {
-        long currentNanoTime = nanoTimeWrapper.nanoTime();
+        long currentNanoTime = timeMetter.time();
         long availableToConsume = state.refill(currentNanoTime, configuration);
         long toConsume = Math.min(limit, availableToConsume);
         state.consume(toConsume);
@@ -41,7 +40,7 @@ public class UnsafeGenericCell extends AbstractLeakyBucket {
 
     @Override
     protected boolean tryConsumeImpl(long tokensToConsume) {
-        long currentNanoTime = nanoTimeWrapper.nanoTime();
+        long currentNanoTime = timeMetter.time();
         long availableToConsume = state.refill(currentNanoTime, configuration);
         if (tokensToConsume <= availableToConsume) {
             state.consume(tokensToConsume);
@@ -53,7 +52,7 @@ public class UnsafeGenericCell extends AbstractLeakyBucket {
 
     @Override
     protected boolean consumeOrAwaitImpl(long tokensToConsume, long waitIfBusyLimitNanos) throws InterruptedException {
-        long currentNanoTime = nanoTimeWrapper.nanoTime();
+        long currentNanoTime = timeMetter.time();
         long availableToConsume = state.refill(currentNanoTime, configuration);
 
         if (tokensToConsume <= availableToConsume) {
@@ -68,7 +67,7 @@ public class UnsafeGenericCell extends AbstractLeakyBucket {
                 return false;
             }
 
-            currentNanoTime = nanoTimeWrapper.nanoTime();
+            currentNanoTime = timeMetter.time();
             availableToConsume = state.refill(currentNanoTime, configuration);
             if (tokensToConsume <= availableToConsume) {
                 state.consume(tokensToConsume);

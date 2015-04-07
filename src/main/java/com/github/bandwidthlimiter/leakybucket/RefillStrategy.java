@@ -13,18 +13,19 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
+package com.github.bandwidthlimiter.leakybucket;
 
-package com.github.bandwidthlimiter.util;
+import java.util.concurrent.TimeUnit;
 
-public interface NanoTimeWrapper {
+/**
+ * Encapsulation of a refilling strategy for a leaky bucket.
+ */
+public interface RefillStrategy {
 
-    public static final NanoTimeWrapper SYSTEM = new NanoTimeWrapper() {
-        @Override
-        public long nanoTime() {
-            return System.nanoTime();
-        }
-    };
+    void setupInitialState(BandwidthCollection collection, long currentTime, TimeUnit timePrecision);
+
+    void refill(BandwidthCollection collection, long currentTime, TimeUnit timePrecision);
     
-    public long nanoTime();
+    long timeRequiredToRefill(BandwidthCollection collection, int bandwidthIndex, long currentTime, TimeUnit timePrecision, long numTokens);
 
 }

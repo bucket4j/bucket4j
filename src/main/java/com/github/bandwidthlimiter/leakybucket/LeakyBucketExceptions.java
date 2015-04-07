@@ -1,6 +1,7 @@
 package com.github.bandwidthlimiter.leakybucket;
 
 import java.text.MessageFormat;
+import java.util.concurrent.TimeUnit;
 
 public class LeakyBucketExceptions {
 
@@ -68,6 +69,12 @@ public class LeakyBucketExceptions {
     public static IllegalArgumentException hasOverlaps(Bandwidth first, Bandwidth second) {
         String pattern = "Overlap detected between {0} and {1}";
         String msg = MessageFormat.format(pattern, first, second);
+        return new IllegalArgumentException(msg);
+    }
+
+    public static IllegalArgumentException unsupportedTimePrecision(TimeUnit precision) {
+        String pattern = "Time precision{0} is unsupported";
+        String msg = MessageFormat.format(pattern, precision);
         return new IllegalArgumentException(msg);
     }
     // ------------------- end of construction time exceptions --------------------------------

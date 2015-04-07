@@ -1,11 +1,8 @@
-package com.github.bandwidthlimiter.leakybucket.genericcellrate;
+package com.github.bandwidthlimiter.leakybucket;
 
-import com.github.bandwidthlimiter.leakybucket.Bandwidth;
-import com.github.bandwidthlimiter.leakybucket.LeakyBucket;
-import com.github.bandwidthlimiter.leakybucket.LeakyBucketExceptions;
-import com.github.bandwidthlimiter.util.NanoTimeWrapper;
-import com.github.bandwidthlimiter.leakybucket.genericcellrate.local.ThreadSafeGenericCell;
-import com.github.bandwidthlimiter.leakybucket.genericcellrate.local.UnsafeGenericCell;
+import com.github.bandwidthlimiter.util.TimeMetter;
+import com.github.bandwidthlimiter.leakybucket.local.ThreadSafeGenericCell;
+import com.github.bandwidthlimiter.leakybucket.local.UnsafeGenericCell;
 import com.github.bandwidthlimiter.util.WaitingStrategy;
 
 import java.util.ArrayList;
@@ -14,9 +11,9 @@ import java.util.concurrent.TimeUnit;
 
 public final class GenericCellBuilder {
 
-    private RefillStrategy refillStrategy = RefillStrategy.MONOTONE;
+    private RefillStrategy refillStrategy = RefillStrategy.GENERIC_CELL_RATE;
     private WaitingStrategy waitingStrategy = WaitingStrategy.PARKING;
-    private NanoTimeWrapper timeWrapper = NanoTimeWrapper.SYSTEM;
+    private TimeMetter timeWrapper = TimeMetter.SYSTEM_MILLIS;
     private boolean raiseErrorWhenConsumeGreaterThanSmallestBandwidth = false;
 
     private Bandwidth guaranteedBandwidth;
@@ -61,7 +58,7 @@ public final class GenericCellBuilder {
         return this;
     }
 
-    public GenericCellBuilder withNanoTimeWrapper(NanoTimeWrapper timeWrapper) {
+    public GenericCellBuilder withNanoTimeWrapper(TimeMetter timeWrapper) {
         this.timeWrapper = timeWrapper;
         return this;
     }

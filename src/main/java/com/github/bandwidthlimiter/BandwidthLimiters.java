@@ -15,7 +15,7 @@
  */
 package com.github.bandwidthlimiter;
 
-import com.github.bandwidthlimiter.leakybucket.genericcellrate.GenericCellBuilder;
+import com.github.bandwidthlimiter.leakybucket.GenericCellBuilder;
 
 public final class BandwidthLimiters {
 

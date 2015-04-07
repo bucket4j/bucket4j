@@ -1,8 +1,8 @@
-package com.github.bandwidthlimiter.leakybucket.genericcellrate.local;
+package com.github.bandwidthlimiter.leakybucket.local;
 
 import com.github.bandwidthlimiter.leakybucket.Bandwidth;
 import com.github.bandwidthlimiter.leakybucket.LeakyBucketConfiguration;
-import com.github.bandwidthlimiter.leakybucket.genericcellrate.GenericCellConfiguration;
+import com.github.bandwidthlimiter.leakybucket.GenericCellConfiguration;
 
 import java.util.Arrays;
 
@@ -24,7 +24,7 @@ public class GenericCellState {
         Bandwidth guaranteedBandwidth = configuration.getGuaranteedBandwidth();
         state[GUARANTEED_OFFSET] = guaranteedBandwidth != null? guaranteedBandwidth.getInitialCapacity(): 0;
 
-        state[REFILL_DATE_OFFSET] = configuration.getNanoTimeWrapper().nanoTime();
+        state[REFILL_DATE_OFFSET] = configuration.getTimeMetter().time();
     }
 
     GenericCellState(GenericCellState previousState) {
