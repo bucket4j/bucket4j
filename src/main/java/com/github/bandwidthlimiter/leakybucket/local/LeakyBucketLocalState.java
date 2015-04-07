@@ -94,20 +94,20 @@ public class LeakyBucketLocalState implements LeakyBucketState {
         }
     }
 
-    public boolean sleepUntilRefillIfPossible(long deficit, long sleepLimitNanos, GenericCellConfiguration configuration) throws InterruptedException {
+    public boolean sleepUntilRefillIfPossible(long deficit, long sleepLimitNanos, LeakyBucketConfiguration configuration) throws InterruptedException {
         Bandwidth guaranteedBandwidth = configuration.getGuaranteedBandwidth();
         Bandwidth[] limitedBandwidths = configuration.getLimitedBandwidths();
 
-        long sleepToRefill = nanosRequiredToRefill(configuration, limitedBandwidths[0], deficit);
+        long sleepToRefill = timeRequiredToRefill(configuration, limitedBandwidths[0], deficit);
         for (int i = 1; i < limitedBandwidths.length; i++) {
-            long currentSleepProposal = nanosRequiredToRefill(configuration, limitedBandwidths[i], deficit);
+            long currentSleepProposal = timeRequiredToRefill(configuration, limitedBandwidths[i], deficit);
             if (currentSleepProposal > sleepToRefill) {
                 sleepToRefill = currentSleepProposal;
             }
         }
 
         if (guaranteedBandwidth != null && guaranteedBandwidth.getMaxCapacity() - state[GUARANTEED_OFFSET] >= deficit) {
-            long guaranteedSleepToRefill = nanosRequiredToRefill(configuration, guaranteedBandwidth, deficit);
+            long guaranteedSleepToRefill = timeRequiredToRefill(configuration, guaranteedBandwidth, deficit);
             if (guaranteedSleepToRefill < sleepToRefill) {
                 sleepToRefill = guaranteedSleepToRefill;
             }
@@ -121,16 +121,12 @@ public class LeakyBucketLocalState implements LeakyBucketState {
         return true;
     }
 
-    public void sleep(GenericCellConfiguration configuration, long nanosToAwait) throws InterruptedException {
-        configuration.getWaitingStrategy().sleep(nanosToAwait);
+    public void sleep(LeakyBucketConfiguration configuration, long timeToAwait) throws InterruptedException {
+        configuration.getTimeMetter().sleep(timeToAwait);
     }
 
-    public long refill(GenericCellConfiguration configuration, Bandwidth bandwidth, long previousRefillNanoTime, long currentNanoTime) {
-        return configuration.getRefillStrategy().refill(bandwidth, previousRefillNanoTime, currentNanoTime);
-    }
-
-    public long nanosRequiredToRefill(GenericCellConfiguration configuration, Bandwidth bandwidth, long numTokens) {
-        return configuration.getRefillStrategy().nanosRequiredToRefill(bandwidth, numTokens);
+    public long timeRequiredToRefill(LeakyBucketConfiguration configuration, Bandwidth bandwidth, long numTokens) {
+        return configuration.getRefillStrategy().timeRequiredToRefill(bandwidth, numTokens);
     }
 
 }

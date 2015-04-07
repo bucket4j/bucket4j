@@ -17,22 +17,22 @@ package com.github.bandwidthlimiter.leakybucket.local;
 
 import com.github.bandwidthlimiter.leakybucket.AbstractLeakyBucket;
 import com.github.bandwidthlimiter.leakybucket.LeakyBucketConfiguration;
+import com.github.bandwidthlimiter.leakybucket.RefillStrategy;
 
-public class UnsafeGenericCell extends AbstractLeakyBucket {
+public class UnsafeLeakyBucket extends AbstractLeakyBucket {
 
     private final LeakyBucketLocalState state;
-    private final LeakyBucketConfiguration configuration;
 
-    public UnsafeGenericCell(LeakyBucketConfiguration configuration) {
+    public UnsafeLeakyBucket(LeakyBucketConfiguration configuration) {
         super(configuration);
-        this.configuration = configuration;
         this.state = new LeakyBucketLocalState(configuration);
     }
 
     @Override
     protected long consumeAsMuchAsPossibleImpl(long limit) {
-        long currentNanoTime = timeMetter.time();
-        long availableToConsume = state.refill(currentNanoTime, configuration);
+        long currentTime = configuration.getTimeMetter().currentTime();
+        configuration.getRefillStrategy().refill(configuration, state, currentTime);
+        long availableToConsume = state.getAvailableTokens(configuration);
         long toConsume = Math.min(limit, availableToConsume);
         state.consume(toConsume);
         return toConsume;
@@ -40,8 +40,9 @@ public class UnsafeGenericCell extends AbstractLeakyBucket {
 
     @Override
     protected boolean tryConsumeImpl(long tokensToConsume) {
-        long currentNanoTime = timeMetter.time();
-        long availableToConsume = state.refill(currentNanoTime, configuration);
+        long currentTime = configuration.getTimeMetter().currentTime();
+        configuration.getRefillStrategy().refill(configuration, state, currentTime);
+        long availableToConsume = state.getAvailableTokens(configuration);
         if (tokensToConsume <= availableToConsume) {
             state.consume(tokensToConsume);
             return true;
@@ -52,8 +53,10 @@ public class UnsafeGenericCell extends AbstractLeakyBucket {
 
     @Override
     protected boolean consumeOrAwaitImpl(long tokensToConsume, long waitIfBusyLimitNanos) throws InterruptedException {
-        long currentNanoTime = timeMetter.time();
-        long availableToConsume = state.refill(currentNanoTime, configuration);
+        RefillStrategy refillStrategy = configuration.getRefillStrategy();
+        long currentTime = configuration.getTimeMetter().currentTime();
+        refillStrategy.refill(configuration, state, currentTime);
+        long availableToConsume = state.getAvailableTokens(configuration);
 
         if (tokensToConsume <= availableToConsume) {
             state.consume(tokensToConsume);
@@ -67,8 +70,9 @@ public class UnsafeGenericCell extends AbstractLeakyBucket {
                 return false;
             }
 
-            currentNanoTime = timeMetter.time();
-            availableToConsume = state.refill(currentNanoTime, configuration);
+            currentTime = configuration.getTimeMetter().currentTime();
+            refillStrategy.refill(configuration, state, currentTime);
+            availableToConsume = state.getAvailableTokens(configuration);
             if (tokensToConsume <= availableToConsume) {
                 state.consume(tokensToConsume);
                 return true;

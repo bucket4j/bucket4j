@@ -17,17 +17,16 @@ package com.github.bandwidthlimiter.leakybucket.local;
 
 
 import com.github.bandwidthlimiter.leakybucket.AbstractLeakyBucket;
-import com.github.bandwidthlimiter.leakybucket.GenericCellConfiguration;
 import com.github.bandwidthlimiter.leakybucket.LeakyBucketConfiguration;
 
 import java.util.concurrent.atomic.AtomicReference;
 
-public class ThreadSafeGenericCell extends AbstractLeakyBucket {
+public class ThreadSafeLeakyBucket extends AbstractLeakyBucket {
 
     private final AtomicReference<LeakyBucketLocalState> stateReference;
     private final LeakyBucketConfiguration configuration;
 
-    public ThreadSafeGenericCell(LeakyBucketConfiguration configuration) {
+    public ThreadSafeLeakyBucket(LeakyBucketConfiguration configuration) {
         super(configuration);
         this.configuration = configuration;
         LeakyBucketLocalState initialState = new LeakyBucketLocalState(configuration);
@@ -39,8 +38,9 @@ public class ThreadSafeGenericCell extends AbstractLeakyBucket {
         LeakyBucketLocalState previousState = stateReference.get();
         LeakyBucketLocalState newState = new LeakyBucketLocalState(previousState);
         while (true) {
-            long currentNanoTime = timeMetter.time();
-            long availableToConsume = newState.refill(currentNanoTime, configuration);
+            long currentTime = configuration.getTimeMetter().currentTime();
+            configuration.getRefillStrategy().refill(configuration, newState, currentTime);
+            long availableToConsume = newState.getAvailableTokens(configuration);
             long toConsume = Math.min(limit, availableToConsume);
             newState.consume(toConsume);
             if (stateReference.compareAndSet(previousState, newState)) {
@@ -58,8 +58,9 @@ public class ThreadSafeGenericCell extends AbstractLeakyBucket {
         LeakyBucketLocalState newState = new LeakyBucketLocalState(previousState);
 
         while (true) {
-            long currentNanoTime = timeMetter.time();
-            long availableToConsume = newState.refill(currentNanoTime, configuration);
+            long currentTime = configuration.getTimeMetter().currentTime();
+            configuration.getRefillStrategy().refill(configuration, newState, currentTime);
+            long availableToConsume = newState.getAvailableTokens(configuration);
             if (tokensToConsume > availableToConsume) {
                 return false;
             }
@@ -74,10 +75,10 @@ public class ThreadSafeGenericCell extends AbstractLeakyBucket {
     }
 
     @Override
-    protected boolean consumeOrAwaitImpl(long tokensToConsume, long waitIfBusyLimitNanos) throws InterruptedException {
-        boolean isWaitingLimited = waitIfBusyLimitNanos > 0;
-        final long methodStartNanoTime = isWaitingLimited? timeMetter.time(): 0;
-        long currentNanoTime = methodStartNanoTime;
+    protected boolean consumeOrAwaitImpl(long tokensToConsume, long waitIfBusyTimeLimit) throws InterruptedException {
+        boolean isWaitingLimited = waitIfBusyTimeLimit > 0;
+        final long methodStartTime = isWaitingLimited? configuration.getTimeMetter().currentTime(): 0;
+        long currentTime = methodStartTime;
         boolean isFirstCycle = true;
         LeakyBucketLocalState previousState = stateReference.get();
         LeakyBucketLocalState newState = new LeakyBucketLocalState(previousState);
@@ -86,15 +87,16 @@ public class ThreadSafeGenericCell extends AbstractLeakyBucket {
             if (isFirstCycle) {
                 isFirstCycle = false;
             } else {
-                currentNanoTime = timeMetter.time();
+                currentTime = configuration.getTimeMetter().currentTime();
             }
 
-            long methodDurationNanos = currentNanoTime - methodStartNanoTime;
-            if (isWaitingLimited && methodDurationNanos >= waitIfBusyLimitNanos) {
+            long methodDuration = currentTime - methodStartTime;
+            if (isWaitingLimited && methodDuration >= waitIfBusyTimeLimit) {
                 return false;
             }
 
-            long availableToConsume = newState.refill(currentNanoTime, configuration);
+            configuration.getRefillStrategy().refill(configuration, newState, currentTime);
+            long availableToConsume = newState.getAvailableTokens(configuration);
             if (tokensToConsume <= availableToConsume) {
                 newState.consume(tokensToConsume);
                 if (stateReference.compareAndSet(previousState, newState)) {
@@ -107,11 +109,11 @@ public class ThreadSafeGenericCell extends AbstractLeakyBucket {
             }
 
             long deficit = tokensToConsume - availableToConsume;
-            long sleepingLimitNanos = Long.MAX_VALUE;
+            long sleepingTimeLimit = Long.MAX_VALUE;
             if (isWaitingLimited) {
-                sleepingLimitNanos = waitIfBusyLimitNanos - methodDurationNanos;
+                sleepingTimeLimit = waitIfBusyTimeLimit - methodDuration;
             }
-            if (!newState.sleepUntilRefillIfPossible(deficit, sleepingLimitNanos, configuration)) {
+            if (!newState.sleepUntilRefillIfPossible(deficit, sleepingTimeLimit, configuration)) {
                 return false;
             }
         }

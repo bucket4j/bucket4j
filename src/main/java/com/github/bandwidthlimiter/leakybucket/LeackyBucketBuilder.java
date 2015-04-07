@@ -1,7 +1,7 @@
 package com.github.bandwidthlimiter.leakybucket;
 
-import com.github.bandwidthlimiter.leakybucket.local.ThreadSafeGenericCell;
-import com.github.bandwidthlimiter.leakybucket.local.UnsafeGenericCell;
+import com.github.bandwidthlimiter.leakybucket.local.ThreadSafeLeakyBucket;
+import com.github.bandwidthlimiter.leakybucket.local.UnsafeLeakyBucket;
 import com.github.bandwidthlimiter.util.WaitingStrategy;
 
 import java.util.ArrayList;
@@ -20,12 +20,12 @@ public final class LeackyBucketBuilder {
 
     public LeakyBucket build() {
         LeakyBucketConfiguration configuration = createConfiguration();
-        return new ThreadSafeGenericCell(configuration);
+        return new ThreadSafeLeakyBucket(configuration);
     }
 
     public LeakyBucket buildUnsafe() {
         LeakyBucketConfiguration configuration = createConfiguration();
-        return new UnsafeGenericCell(configuration);
+        return new UnsafeLeakyBucket(configuration);
     }
 
     public LeackyBucketBuilder withGuaranteedBandwidth(long capacity, long period, TimeUnit timeUnit) {
