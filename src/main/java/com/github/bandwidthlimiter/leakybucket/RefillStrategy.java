@@ -22,10 +22,10 @@ import java.util.concurrent.TimeUnit;
  */
 public interface RefillStrategy {
 
-    void setupInitialState(BandwidthCollection collection, long currentTime, TimeUnit timePrecision);
+    void setupInitialState(BandwidthCollection collection, long currentTime);
 
-    void refill(BandwidthCollection collection, long currentTime, TimeUnit timePrecision);
+    void refill(BandwidthCollection collection, long currentTime);
     
-    long timeRequiredToRefill(BandwidthCollection collection, int bandwidthIndex, long currentTime, TimeUnit timePrecision, long numTokens);
+    long timeRequiredToRefill(BandwidthCollection collection, int bandwidthIndex, long currentTime, long numTokens);
 
 }

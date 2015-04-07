@@ -17,13 +17,14 @@ package com.github.bandwidthlimiter.leakybucket.local;
 
 import com.github.bandwidthlimiter.leakybucket.AbstractLeakyBucket;
 import com.github.bandwidthlimiter.leakybucket.GenericCellConfiguration;
+import com.github.bandwidthlimiter.leakybucket.LeakyBucketConfiguration;
 
 public class UnsafeGenericCell extends AbstractLeakyBucket {
 
     private final GenericCellState state;
-    private final GenericCellConfiguration configuration;
+    private final LeakyBucketConfiguration configuration;
 
-    public UnsafeGenericCell(GenericCellConfiguration configuration) {
+    public UnsafeGenericCell(LeakyBucketConfiguration configuration) {
         super(configuration);
         this.configuration = configuration;
         this.state = new GenericCellState(configuration);

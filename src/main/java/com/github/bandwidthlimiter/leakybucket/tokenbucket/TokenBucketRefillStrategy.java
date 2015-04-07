@@ -1,15 +1,17 @@
 package com.github.bandwidthlimiter.leakybucket.tokenbucket;
 
 import com.github.bandwidthlimiter.leakybucket.Bandwidth;
-import com.github.bandwidthlimiter.leakybucket.RefillStrategy;
 import com.github.bandwidthlimiter.leakybucket.BandwidthCollection;
-
-import java.util.concurrent.TimeUnit;
+import com.github.bandwidthlimiter.leakybucket.RefillStrategy;
 
 public class TokenBucketRefillStrategy implements RefillStrategy {
 
+    public TokenBucketRefillStrategy() {
+        throw new UnsupportedOperationException();
+    }
+
     @Override
-    public void setupInitialState(BandwidthCollection collection, long currentTime, TimeUnit timePrecision) {
+    public void setupInitialState(BandwidthCollection collection, long currentTime) {
         Bandwidth[] bandwidths = collection.getBandwidths();
         for (int i = 0; i < bandwidths.length; i++) {
             Bandwidth bandwidth = bandwidths[i];
@@ -19,7 +21,7 @@ public class TokenBucketRefillStrategy implements RefillStrategy {
     }
 
     @Override
-    public void refill(BandwidthCollection collection, long currentTime, TimeUnit timePrecision) {
+    public void refill(BandwidthCollection collection, long currentTime) {
         Bandwidth[] bandwidths = collection.getBandwidths();
         for (int i = 0; i < bandwidths.length; i++) {
             Bandwidth bandwidth = bandwidths[i];
@@ -36,9 +38,8 @@ public class TokenBucketRefillStrategy implements RefillStrategy {
     }
 
     @Override
-    public long timeRequiredToRefill(BandwidthCollection collection, int bandwidthIndex, long currentTime, TimeUnit timePrecision, long numTokens) {
+    public long timeRequiredToRefill(BandwidthCollection collection, int bandwidthIndex, long currentTime, long numTokens) {
         Bandwidth bandwidth = collection.getBandwidths()[bandwidthIndex];
         return bandwidth.getPeriodInNanos() * numTokens / bandwidth.getMaxCapacity();
     }
-
 }

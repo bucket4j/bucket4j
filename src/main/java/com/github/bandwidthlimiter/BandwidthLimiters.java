@@ -15,14 +15,14 @@
  */
 package com.github.bandwidthlimiter;
 
-import com.github.bandwidthlimiter.leakybucket.GenericCellBuilder;
+import com.github.bandwidthlimiter.leakybucket.LeackyBucketBuilder;
 
 public final class BandwidthLimiters {
 
     private BandwidthLimiters() {}
 
-    public static GenericCellBuilder genericCellRateBuilder() {
-        return new GenericCellBuilder();
+    public static LeackyBucketBuilder leakyBucketBuilder() {
+        return new LeackyBucketBuilder();
     }
 
 }

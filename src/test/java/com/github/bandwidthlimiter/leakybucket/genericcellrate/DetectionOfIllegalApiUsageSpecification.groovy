@@ -7,7 +7,7 @@ import spock.lang.Unroll
 
 import java.util.concurrent.TimeUnit
 
-import static com.github.bandwidthlimiter.BandwidthLimiters.genericCellRateBuilder
+import static com.github.bandwidthlimiter.BandwidthLimiters.leakyBucketBuilder
 import static com.github.bandwidthlimiter.leakybucket.LeakyBucketExceptions.*
 import static java.util.concurrent.TimeUnit.*
 
@@ -20,7 +20,7 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
     @Unroll
     def "Should detect that capacity #capacity is wrong"(long capacity) {
         when:
-            genericCellRateBuilder().withLimitedBandwidth(capacity, VALID_PERIOD, VALID_TIMEUNIT)
+            leakyBucketBuilder().withLimitedBandwidth(capacity, VALID_PERIOD, VALID_TIMEUNIT)
         then:
             IllegalArgumentException ex = thrown()
             ex.message == LeakyBucketExceptions.nonPositiveCapacity(capacity).message
@@ -31,7 +31,7 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
     @Unroll
     def "Should detect that initial capacity #initialCapacity is wrong"(long initialCapacity) {
         when:
-            genericCellRateBuilder().withLimitedBandwidth(VALID_CAPACITY, VALID_PERIOD, VALID_TIMEUNIT, initialCapacity)
+            leakyBucketBuilder().withLimitedBandwidth(VALID_CAPACITY, VALID_PERIOD, VALID_TIMEUNIT, initialCapacity)
         then:
             IllegalArgumentException ex = thrown()
             ex.message == nonPositiveInitialCapacity(initialCapacity).message
@@ -42,13 +42,13 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
     def "Should check that initial capacity is equal or lesser than max capacity"() {
         when:
             long wrongInitialCapacity = VALID_CAPACITY + 1
-            genericCellRateBuilder().withLimitedBandwidth(VALID_CAPACITY, VALID_PERIOD, VALID_TIMEUNIT, wrongInitialCapacity)
+            leakyBucketBuilder().withLimitedBandwidth(VALID_CAPACITY, VALID_PERIOD, VALID_TIMEUNIT, wrongInitialCapacity)
         then:
             IllegalArgumentException ex = thrown()
             ex.message == initialCapacityGreaterThanMaxCapacity(wrongInitialCapacity, VALID_CAPACITY).message
 
         when:
-            genericCellRateBuilder().withLimitedBandwidth(VALID_CAPACITY, VALID_PERIOD, VALID_TIMEUNIT, VALID_CAPACITY)
+            leakyBucketBuilder().withLimitedBandwidth(VALID_CAPACITY, VALID_PERIOD, VALID_TIMEUNIT, VALID_CAPACITY)
         then:
            notThrown IllegalArgumentException
     }
@@ -56,7 +56,7 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
     @Unroll
     def "Should check that #period is invalid period of bandwidth"(long period) {
         when:
-            genericCellRateBuilder().withLimitedBandwidth(VALID_CAPACITY, period, VALID_TIMEUNIT)
+            leakyBucketBuilder().withLimitedBandwidth(VALID_CAPACITY, period, VALID_TIMEUNIT)
         then:
             IllegalArgumentException ex = thrown()
             ex.message == nonPositivePeriod(period).message
@@ -66,7 +66,7 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
 
     def "Should check than time unit is not null"() {
         when:
-            genericCellRateBuilder().withLimitedBandwidth(VALID_CAPACITY, VALID_PERIOD, null)
+            leakyBucketBuilder().withLimitedBandwidth(VALID_CAPACITY, VALID_PERIOD, null)
         then:
             IllegalArgumentException ex = thrown()
             ex.message == nullTimeUnit().message
@@ -74,9 +74,9 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
 
     def "Should check than refill strategy is not null"() {
         setup:
-            def builder = genericCellRateBuilder().withLimitedBandwidth(VALID_CAPACITY, VALID_PERIOD, VALID_TIMEUNIT)
+            def builder = leakyBucketBuilder().withLimitedBandwidth(VALID_CAPACITY, VALID_PERIOD, VALID_TIMEUNIT)
         when:
-            builder.withRefillStrategy(null).build()
+            builder.withCustomRefillStrategy(null).build()
         then:
             IllegalArgumentException ex = thrown()
             ex.message == nullRefillStrategy().message
@@ -84,7 +84,7 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
 
     def "Should check than waiting strategy is not null"() {
         setup:
-            def builder = genericCellRateBuilder().withLimitedBandwidth(VALID_CAPACITY, VALID_PERIOD, VALID_TIMEUNIT)
+            def builder = leakyBucketBuilder().withLimitedBandwidth(VALID_CAPACITY, VALID_PERIOD, VALID_TIMEUNIT)
         when:
             builder.withWaitingStrategy(null).build()
         then:
@@ -94,9 +94,9 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
 
     def "Should check that nano time wrapper is not null"() {
         setup:
-            def builder = genericCellRateBuilder().withLimitedBandwidth(VALID_CAPACITY, VALID_PERIOD, VALID_TIMEUNIT)
+            def builder = leakyBucketBuilder().withLimitedBandwidth(VALID_CAPACITY, VALID_PERIOD, VALID_TIMEUNIT)
         when:
-            builder.withNanoTimeWrapper().build()
+            builder.withCustomTimeWrapper().build()
         then:
             IllegalArgumentException ex = thrown()
             ex.message == nullNanoTimeWrapper().message
@@ -104,7 +104,7 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
 
     def  "Should check that limited bandwidth list is not empty"() {
         setup:
-            def builder = genericCellRateBuilder()
+            def builder = leakyBucketBuilder()
         when:
             builder.build()
         then:
@@ -120,7 +120,7 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
 
     def "Should check that guaranteed capacity could not be configured twice"() {
         setup:
-            def builder = genericCellRateBuilder().withGuaranteedBandwidth(VALID_CAPACITY, VALID_PERIOD, VALID_TIMEUNIT)
+            def builder = leakyBucketBuilder().withGuaranteedBandwidth(VALID_CAPACITY, VALID_PERIOD, VALID_TIMEUNIT)
         when:
             builder.withGuaranteedBandwidth(VALID_CAPACITY, VALID_PERIOD, VALID_TIMEUNIT)
         then:
@@ -133,7 +133,7 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
             Bandwidth guaranteed = new Bandwidth(1000, 1, SECONDS)
             Bandwidth limited = new Bandwidth(1000, 1, SECONDS)
         when:
-            genericCellRateBuilder().withGuaranteedBandwidth(guaranteed).withLimitedBandwidth(limited).build()
+            leakyBucketBuilder().withGuaranteedBandwidth(guaranteed).withLimitedBandwidth(limited).build()
         then:
             IllegalArgumentException ex = thrown()
             ex.message == guarantedHasGreaterRateThanLimited(guaranteed, limited).message
@@ -142,7 +142,7 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
     @Unroll
     def "Should check for overlaps, test #number"(int number, Bandwidth first, Bandwidth second) {
         setup:
-            def builder = genericCellRateBuilder().withLimitedBandwidth(first).withLimitedBandwidth(second)
+            def builder = leakyBucketBuilder().withLimitedBandwidth(first).withLimitedBandwidth(second)
         when:
             builder.build()
         then:
@@ -161,7 +161,7 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
 
     def "Should check that tokens to consume should be positive"() {
         setup:
-            def tokenBucket = genericCellRateBuilder().withLimitedBandwidth(VALID_CAPACITY, VALID_PERIOD, VALID_TIMEUNIT).build()
+            def tokenBucket = leakyBucketBuilder().withLimitedBandwidth(VALID_CAPACITY, VALID_PERIOD, VALID_TIMEUNIT).build()
         when:
             tokenBucket.consume(0)
         then:
@@ -177,7 +177,7 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
 
     def "Should check that nanos to wait should be positive"() {
         setup:
-            def tokenBucket = genericCellRateBuilder().withLimitedBandwidth(VALID_CAPACITY, VALID_PERIOD, VALID_TIMEUNIT).build()
+            def tokenBucket = leakyBucketBuilder().withLimitedBandwidth(VALID_CAPACITY, VALID_PERIOD, VALID_TIMEUNIT).build()
         when:
             tokenBucket.tryConsumeSingleToken(0)
         then:
@@ -193,7 +193,7 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
 
     def "Should check that unable try to consume number of tokens greater than smallest capacity when user has deprecated this option"() {
         setup:
-            def tokenBucket = genericCellRateBuilder().raiseErrorWhenConsumeGreaterThanSmallestBandwidth()
+            def tokenBucket = leakyBucketBuilder().raiseErrorWhenConsumeGreaterThanSmallestBandwidth()
                 .withLimitedBandwidth(VALID_CAPACITY, VALID_PERIOD, VALID_TIMEUNIT).build()
         when:
             tokenBucket.tryConsume(VALID_CAPACITY + 1)
@@ -204,7 +204,7 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
 
     def "Should always check when client try to consume number of tokens greater than smallest capacity on invocation of methods with support of waiting"() {
         setup:
-            def tokenBucket = genericCellRateBuilder().withLimitedBandwidth(VALID_CAPACITY, VALID_PERIOD, VALID_TIMEUNIT).build()
+            def tokenBucket = leakyBucketBuilder().withLimitedBandwidth(VALID_CAPACITY, VALID_PERIOD, VALID_TIMEUNIT).build()
         when:
             tokenBucket.consume(VALID_CAPACITY + 1)
         then:
