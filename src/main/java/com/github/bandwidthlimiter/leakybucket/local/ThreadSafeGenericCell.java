@@ -24,20 +24,20 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class ThreadSafeGenericCell extends AbstractLeakyBucket {
 
-    private final AtomicReference<GenericCellState> stateReference;
+    private final AtomicReference<LeakyBucketLocalState> stateReference;
     private final LeakyBucketConfiguration configuration;
 
     public ThreadSafeGenericCell(LeakyBucketConfiguration configuration) {
         super(configuration);
         this.configuration = configuration;
-        GenericCellState initialState = new GenericCellState(configuration);
+        LeakyBucketLocalState initialState = new LeakyBucketLocalState(configuration);
         this.stateReference = new AtomicReference<>(initialState);
     }
 
     @Override
     protected long consumeAsMuchAsPossibleImpl(long limit) {
-        GenericCellState previousState = stateReference.get();
-        GenericCellState newState = new GenericCellState(previousState);
+        LeakyBucketLocalState previousState = stateReference.get();
+        LeakyBucketLocalState newState = new LeakyBucketLocalState(previousState);
         while (true) {
             long currentNanoTime = timeMetter.time();
             long availableToConsume = newState.refill(currentNanoTime, configuration);
@@ -54,8 +54,8 @@ public class ThreadSafeGenericCell extends AbstractLeakyBucket {
 
     @Override
     protected boolean tryConsumeImpl(long tokensToConsume) {
-        GenericCellState previousState = stateReference.get();
-        GenericCellState newState = new GenericCellState(previousState);
+        LeakyBucketLocalState previousState = stateReference.get();
+        LeakyBucketLocalState newState = new LeakyBucketLocalState(previousState);
 
         while (true) {
             long currentNanoTime = timeMetter.time();
@@ -79,8 +79,8 @@ public class ThreadSafeGenericCell extends AbstractLeakyBucket {
         final long methodStartNanoTime = isWaitingLimited? timeMetter.time(): 0;
         long currentNanoTime = methodStartNanoTime;
         boolean isFirstCycle = true;
-        GenericCellState previousState = stateReference.get();
-        GenericCellState newState = new GenericCellState(previousState);
+        LeakyBucketLocalState previousState = stateReference.get();
+        LeakyBucketLocalState newState = new LeakyBucketLocalState(previousState);
 
         while (true) {
             if (isFirstCycle) {

@@ -1,10 +1,6 @@
 package com.github.bandwidthlimiter.leakybucket;
 
-import com.github.bandwidthlimiter.leakybucket.Bandwidth;
-
-public interface BandwidthCollection {
-
-    Bandwidth[] getBandwidths();
+public interface LeakyBucketState {
 
     long getRefillMarker(int bandwidthIndex);
 

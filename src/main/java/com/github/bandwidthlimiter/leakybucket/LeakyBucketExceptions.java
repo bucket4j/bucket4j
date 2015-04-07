@@ -29,18 +29,8 @@ public class LeakyBucketExceptions {
         return new IllegalArgumentException(msg);
     }
 
-    public static IllegalArgumentException nullWaitingStrategy() {
-        String msg = "Waiting strategy can not be null";
-        return new IllegalArgumentException(msg);
-    }
-
-    public static IllegalArgumentException nullNanoTimeWrapper() {
-        String msg = "Nanotime wrapper can not be null";
-        return new IllegalArgumentException(msg);
-    }
-
-    public static IllegalArgumentException nullTimeUnit() {
-        String msg = "Time unit of bandwidth can not be null";
+    public static IllegalArgumentException nullTimeMetter() {
+        String msg = "Time metter can not be null";
         return new IllegalArgumentException(msg);
     }
 

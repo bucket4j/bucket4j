@@ -96,10 +96,10 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
         setup:
             def builder = leakyBucketBuilder().withLimitedBandwidth(VALID_CAPACITY, VALID_PERIOD, VALID_TIMEUNIT)
         when:
-            builder.withCustomTimeWrapper().build()
+            builder.withCustomTimeMetter().build()
         then:
             IllegalArgumentException ex = thrown()
-            ex.message == nullNanoTimeWrapper().message
+            ex.message == nullTimeMetter().message
     }
 
     def  "Should check that limited bandwidth list is not empty"() {

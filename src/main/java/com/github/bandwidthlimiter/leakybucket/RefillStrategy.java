@@ -15,17 +15,15 @@
  */
 package com.github.bandwidthlimiter.leakybucket;
 
-import java.util.concurrent.TimeUnit;
-
 /**
  * Encapsulation of a refilling strategy for a leaky bucket.
  */
 public interface RefillStrategy {
 
-    void setupInitialState(BandwidthCollection collection, long currentTime);
+    void setupInitialState(LeakyBucketConfiguration configuration, LeakyBucketState collection, long currentTime);
 
-    void refill(BandwidthCollection collection, long currentTime);
+    void refill(LeakyBucketConfiguration configuration, LeakyBucketState collection, long currentTime);
     
-    long timeRequiredToRefill(BandwidthCollection collection, int bandwidthIndex, long currentTime, long numTokens);
+    long timeRequiredToRefill(Bandwidth bandwidth, long previousRefillMarker, long currentTime, long numTokens);
 
 }

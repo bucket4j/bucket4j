@@ -14,16 +14,17 @@
  *  limitations under the License.
  */
 
-package com.github.bandwidthlimiter.util;
+package com.github.bandwidthlimiter.leakybucket;
 
 
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.LockSupport;
 
 public interface TimeMetter {
 
     long currentTime();
 
-    long toNanos(long units);
+    void sleep(long units) throws InterruptedException;
 
     static final TimeMetter SYSTEM_NANOTIME = new TimeMetter() {
         @Override
@@ -32,9 +33,13 @@ public interface TimeMetter {
         }
 
         @Override
-        public long toNanos(long units) {
-            return units;
+        public void sleep(long units) throws InterruptedException {
+            LockSupport.parkNanos(units);
+            if (Thread.interrupted()) {
+                throw new InterruptedException();
+            }
         }
+
     };
 
     static final TimeMetter SYSTEM_MILLISECONDS = new TimeMetter() {
@@ -44,9 +49,13 @@ public interface TimeMetter {
         }
 
         @Override
-        public long toNanos(long units) {
-            return TimeUnit.MILLISECONDS.toNanos(units);
+        public void sleep(long units) throws InterruptedException {
+            LockSupport.parkNanos(TimeUnit.MILLISECONDS.toNanos(units));
+            if (Thread.interrupted()) {
+                throw new InterruptedException();
+            }
         }
+
     };
 
 }

@@ -16,8 +16,6 @@
 
 package com.github.bandwidthlimiter.leakybucket;
 
-import java.util.concurrent.TimeUnit;
-
 import static com.github.bandwidthlimiter.leakybucket.LeakyBucketExceptions.guarantedHasGreaterRateThanLimited;
 import static com.github.bandwidthlimiter.leakybucket.LeakyBucketExceptions.hasOverlaps;
 import static com.github.bandwidthlimiter.leakybucket.LeakyBucketExceptions.restrictionsNotSpecified;
@@ -27,16 +25,14 @@ public final class Bandwidth {
     private final long capacity;
     private final long initialCapacity;
     private final long period;
-    private final TimeUnit timeUnit;
-    private final long periodInNanos;
-    private final double tokensGeneratedInOneNanosecond;
+    private final double tokensPerTimeUnit;
     private final double nanosecondsToGenerateOneToken;
 
-    public Bandwidth(long capacity, long period, TimeUnit timeUnit) {
-        this(capacity, capacity, period, timeUnit);
+    public Bandwidth(long capacity, long period) {
+        this(capacity, capacity, period);
     }
 
-    public Bandwidth(long capacity, long initialCapacity, long period, TimeUnit timeUnit) {
+    public Bandwidth(long capacity, long initialCapacity, long period) {
         if (capacity <= 0) {
             throw LeakyBucketExceptions.nonPositiveCapacity(capacity);
         }
@@ -46,9 +42,6 @@ public final class Bandwidth {
         if (initialCapacity > capacity) {
             throw LeakyBucketExceptions.initialCapacityGreaterThanMaxCapacity(initialCapacity, capacity);
         }
-        if (timeUnit == null) {
-            throw LeakyBucketExceptions.nullTimeUnit();
-        }
         if (period <= 0) {
             throw LeakyBucketExceptions.nonPositivePeriod(period);
         }
@@ -56,10 +49,12 @@ public final class Bandwidth {
         this.capacity = capacity;
         this.initialCapacity = initialCapacity;
         this.period = period;
-        this.timeUnit = timeUnit;
-        this.periodInNanos = timeUnit.toNanos(period);
-        this.tokensGeneratedInOneNanosecond = (double) capacity / (double) periodInNanos;
-        this.nanosecondsToGenerateOneToken = (double) periodInNanos / (double) capacity;
+        this.tokensPerTimeUnit = (double) capacity / (double) period;
+        this.nanosecondsToGenerateOneToken = (double) period / (double) capacity;
+    }
+
+    public long getPeriod() {
+        return period;
     }
 
     public long getInitialCapacity() {
@@ -68,10 +63,6 @@ public final class Bandwidth {
 
     public long getMaxCapacity() {
         return capacity;
-    }
-
-    public long getPeriodInNanos() {
-        return periodInNanos;
     }
 
     public static long getSmallestCapacity(Bandwidth[] definitions) {
@@ -92,18 +83,18 @@ public final class Bandwidth {
             for (int j = 1; j < limitedBandwidths.length; j++) {
                 Bandwidth first = limitedBandwidths[i];
                 Bandwidth second = limitedBandwidths[j];
-                if (first.periodInNanos < second.periodInNanos && first.capacity >= second.capacity) {
+                if (first.period < second.period && first.capacity >= second.capacity) {
                     throw hasOverlaps(first, second);
-                } else if (first.periodInNanos == second.periodInNanos) {
+                } else if (first.period == second.period) {
                     throw hasOverlaps(first, second);
-                } else if (first.periodInNanos > second.periodInNanos && first.capacity <= second.capacity) {
+                } else if (first.period > second.period && first.capacity <= second.capacity) {
                     throw hasOverlaps(first, second);
                 }
             }
         }
         if (guaranteedBandwidth != null) {
             for (Bandwidth limited : limitedBandwidths) {
-                if (limited.tokensGeneratedInOneNanosecond <= guaranteedBandwidth.tokensGeneratedInOneNanosecond
+                if (limited.tokensPerTimeUnit <= guaranteedBandwidth.tokensPerTimeUnit
                         || limited.nanosecondsToGenerateOneToken > guaranteedBandwidth.nanosecondsToGenerateOneToken) {
                     throw guarantedHasGreaterRateThanLimited(guaranteedBandwidth, limited);
                 }
@@ -117,8 +108,6 @@ public final class Bandwidth {
                 "capacity=" + capacity +
                 ", initialCapacity=" + initialCapacity +
                 ", period=" + period +
-                ", timeUnit=" + timeUnit +
-                ", periodInNanos=" + periodInNanos +
                 '}';
     }
 
@@ -131,7 +120,7 @@ public final class Bandwidth {
 
         if (capacity != that.capacity) return false;
         if (initialCapacity != that.initialCapacity) return false;
-        if (periodInNanos != that.periodInNanos) return false;
+        if (period != that.period) return false;
         return true;
     }
 
@@ -139,7 +128,7 @@ public final class Bandwidth {
     public int hashCode() {
         int result = (int) (capacity ^ (capacity >>> 32));
         result = 31 * result + (int) (initialCapacity ^ (initialCapacity >>> 32));
-        result = 31 * result + (int) (periodInNanos ^ (periodInNanos >>> 32));
+        result = 31 * result + (int) (period ^ (period >>> 32));
         return result;
     }
 

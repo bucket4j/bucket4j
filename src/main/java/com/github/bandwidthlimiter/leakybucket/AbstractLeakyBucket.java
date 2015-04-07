@@ -15,47 +15,18 @@
  */
 package com.github.bandwidthlimiter.leakybucket;
 
-import com.github.bandwidthlimiter.util.TimeMetter;
-
 import static com.github.bandwidthlimiter.leakybucket.LeakyBucketExceptions.*;
 
-/**
- * A token bucket implementation that is of a leaky bucket in the sense that it has a finite capacity and any added
- * tokens that would exceed this capacity will "overflow" out of the bucket and are lost forever.
- * <p/>
- * In this implementation the rules for refilling the bucket are encapsulated in a provided {@code RefillStrategy}
- * instance.  Prior to attempting to consumeSingleToken any tokens the refill strategy will be consulted to see how many tokens
- * should be added to the bucket.
- * <p/>
- * In addition in this implementation the method of yielding CPU control is encapsulated in the provided
- * {@code SleepStrategy} instance.  For high performance applications where tokens are being refilled incredibly quickly
- * and an accurate bucket implementation is required, it may be useful to never yield control of the CPU and to instead
- * busy wait.  This strategy allows the caller to make this decision for themselves instead of the library forcing a
- * decision.
- *
- * @see <a href="http://en.wikipedia.org/wiki/Token_bucket">Token Bucket on Wikipedia</a>
- * @see <a href="http://en.wikipedia.org/wiki/Leaky_bucket">Leaky Bucket on Wikipedia</a>
- */
 public abstract class AbstractLeakyBucket implements LeakyBucket {
 
-    protected static final boolean WAIT_IF_BUSY = true;
-    protected static final boolean NO_WAIT_IF_BUSY = false;
     protected static final long UNSPECIFIED_WAITING_LIMIT = -1;
 
-    protected final TimeMetter timeMetter;
-    protected final int limitedDimension;
     protected final long smallestCapacity;
-    protected final Bandwidth[] limitedBandwidths;
-    protected final Bandwidth guaranteedBandwidth;
-    protected final boolean raiseErrorWhenConsumeGreaterThanSmallestBandwidth;
+    protected final LeakyBucketConfiguration configuration;
 
     protected AbstractLeakyBucket(LeakyBucketConfiguration configuration) {
-        this.limitedBandwidths = configuration.getLimitedBandwidths();
-        this.guaranteedBandwidth = configuration.getGuaranteedBandwidth();
-        this.timeMetter = configuration.getTimeMetter();
-        this.limitedDimension = this.limitedBandwidths.length;
-        this.smallestCapacity = Bandwidth.getSmallestCapacity(limitedBandwidths);
-        this.raiseErrorWhenConsumeGreaterThanSmallestBandwidth = configuration.isRaiseErrorWhenConsumeGreaterThanSmallestBandwidth();
+        this.configuration = configuration;
+        this.smallestCapacity = Bandwidth.getSmallestCapacity(configuration.getLimitedBandwidths());
     }
 
     protected abstract long consumeAsMuchAsPossibleImpl(long limit);
@@ -76,7 +47,7 @@ public abstract class AbstractLeakyBucket implements LeakyBucket {
         }
 
         if (tokensToConsume > smallestCapacity) {
-            if (raiseErrorWhenConsumeGreaterThanSmallestBandwidth) {
+            if (configuration.isRaiseErrorWhenConsumeGreaterThanSmallestBandwidth()) {
                 // illegal api usage detected
                 throw tokensToConsumeGreaterThanCapacityOfSmallestBandwidth(tokensToConsume, smallestCapacity);
             } else {
@@ -132,7 +103,7 @@ public abstract class AbstractLeakyBucket implements LeakyBucket {
         }
 
         if (limit > smallestCapacity) {
-            if (raiseErrorWhenConsumeGreaterThanSmallestBandwidth) {
+            if (configuration.isRaiseErrorWhenConsumeGreaterThanSmallestBandwidth()) {
                 // illegal api usage detected
                 throw tokensToConsumeGreaterThanCapacityOfSmallestBandwidth(limit, smallestCapacity);
             } else {

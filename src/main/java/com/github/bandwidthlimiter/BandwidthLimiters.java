@@ -17,12 +17,19 @@ package com.github.bandwidthlimiter;
 
 import com.github.bandwidthlimiter.leakybucket.LeackyBucketBuilder;
 
+import java.util.Date;
+import java.util.concurrent.TimeUnit;
+
 public final class BandwidthLimiters {
 
     private BandwidthLimiters() {}
 
     public static LeackyBucketBuilder leakyBucketBuilder() {
         return new LeackyBucketBuilder();
+    }
+
+    public static void main(String[] args) {
+        System.out.println(new Date(TimeUnit.NANOSECONDS.toMillis(System.nanoTime())));
     }
 
 }

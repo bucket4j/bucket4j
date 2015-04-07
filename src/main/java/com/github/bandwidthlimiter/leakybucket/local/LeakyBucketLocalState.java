@@ -3,10 +3,11 @@ package com.github.bandwidthlimiter.leakybucket.local;
 import com.github.bandwidthlimiter.leakybucket.Bandwidth;
 import com.github.bandwidthlimiter.leakybucket.LeakyBucketConfiguration;
 import com.github.bandwidthlimiter.leakybucket.GenericCellConfiguration;
+import com.github.bandwidthlimiter.leakybucket.LeakyBucketState;
 
 import java.util.Arrays;
 
-public class GenericCellState {
+public class LeakyBucketLocalState implements LeakyBucketState {
 
     private static final int REFILL_DATE_OFFSET = 0;
     private static final int GUARANTEED_OFFSET = 1;
@@ -14,7 +15,27 @@ public class GenericCellState {
 
     private final long[] state;
 
-    GenericCellState(LeakyBucketConfiguration configuration) {
+    @Override
+    public long getRefillMarker(int bandwidthIndex) {
+        return 0;
+    }
+
+    @Override
+    public void setRefillMarker(int bandwidthIndex, long refillMarker) {
+
+    }
+
+    @Override
+    public long getCurrentSize(int bandwidthIndex) {
+        return 0;
+    }
+
+    @Override
+    public void setCurrentSize(int bandwidthIndex, long size) {
+
+    }
+
+    LeakyBucketLocalState(LeakyBucketConfiguration configuration) {
         Bandwidth[] limitedBandwidths = configuration.getLimitedBandwidths();
         this.state = new long[2 + limitedBandwidths.length];
         for (int i = 0; i < limitedBandwidths.length; i++) {
@@ -27,15 +48,21 @@ public class GenericCellState {
         state[REFILL_DATE_OFFSET] = configuration.getTimeMetter().time();
     }
 
-    GenericCellState(GenericCellState previousState) {
+    LeakyBucketLocalState(LeakyBucketLocalState previousState) {
         this.state = Arrays.copyOf(previousState.state, previousState.state.length);
     }
 
-    void copyState(GenericCellState state) {
+    void copyState(LeakyBucketLocalState state) {
         System.arraycopy(state.state, 0, this.state, 0, this.state.length);
     }
 
-    public long refill(long currentNanoTime, GenericCellConfiguration configuration) {
+    public long getAvailableTokens(LeakyBucketConfiguration configuration) {
+        for (int i = 0; i < ) {
+
+        }
+    }
+
+    public void refill(long currentNanoTime, LeakyBucketConfiguration configuration) {
         Bandwidth guaranteedBandwidth = configuration.getGuaranteedBandwidth();
         Bandwidth[] limitedBandwidths = configuration.getLimitedBandwidths();
         long previousRefillNanos = state[REFILL_DATE_OFFSET];

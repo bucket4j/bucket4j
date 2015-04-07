@@ -1,7 +1,5 @@
 package com.github.bandwidthlimiter.leakybucket;
 
-import com.github.bandwidthlimiter.leakybucket.genericcellrate.GenericCellRateRefillStrategy;
-import com.github.bandwidthlimiter.util.TimeMetter;
 import com.github.bandwidthlimiter.leakybucket.local.ThreadSafeGenericCell;
 import com.github.bandwidthlimiter.leakybucket.local.UnsafeGenericCell;
 import com.github.bandwidthlimiter.util.WaitingStrategy;
@@ -69,7 +67,7 @@ public final class LeackyBucketBuilder {
         return this;
     }
 
-    public LeackyBucketBuilder withCustomTimeWrapper(TimeMetter timeWrapper) {
+    public LeackyBucketBuilder withCustomTimeMetter(TimeMetter timeWrapper) {
         this.timeWrapper = timeWrapper;
         return this;
     }

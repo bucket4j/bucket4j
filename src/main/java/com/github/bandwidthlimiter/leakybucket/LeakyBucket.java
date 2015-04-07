@@ -16,12 +16,25 @@
 package com.github.bandwidthlimiter.leakybucket;
 
 /**
- * A restriction is used for rate limiting access to a portion of code.
+ * A token bucket implementation that is of a leaky bucket in the sense that it has a finite capacity and any added
+ * tokens that would exceed this capacity will "overflow" out of the bucket and are lost forever.
+ * <p/>
+ * In this implementation the rules for refilling the bucket are encapsulated in a provided {@code RefillStrategy}
+ * instance.  Prior to attempting to consumeSingleToken any tokens the refill strategy will be consulted to see how many tokens
+ * should be added to the bucket.
+ * <p/>
+ * In addition in this implementation the method of yielding CPU control is encapsulated in the provided
+ * {@code SleepStrategy} instance.  For high performance applications where tokens are being refilled incredibly quickly
+ * and an accurate bucket implementation is required, it may be useful to never yield control of the CPU and to instead
+ * busy wait.  This strategy allows the caller to make this decision for themselves instead of the library forcing a
+ * decision.
  *
+ * @see <a href="http://en.wikipedia.org/wiki/Token_bucket">Token Bucket on Wikipedia</a>
+ * @see <a href="http://en.wikipedia.org/wiki/Leaky_bucket">Leaky Bucket on Wikipedia</a>
  */
 public interface LeakyBucket {
     /**
-     * Attempt to consumeSingleToken a single token from the bucket.  If it was consumed then {@code true} is returned, otherwise
+     * Attempt to consume a single token from the bucket.  If it was consumed then {@code true} is returned, otherwise
      * {@code false} is returned.
      *
      * @return {@code true} if a token was consumed, {@code false} otherwise.
@@ -29,7 +42,7 @@ public interface LeakyBucket {
     boolean tryConsumeSingleToken();
 
     /**
-     * Attempt to consumeSingleToken a specified number of tokens from the bucket.  If the tokens were consumed then {@code true}
+     * Attempt to consume a specified number of tokens from the bucket.  If the tokens were consumed then {@code true}
      * is returned, otherwise {@code false} is returned.
      *
      * @param numTokens The number of tokens to consumeSingleToken from the bucket, must be a positive number.
