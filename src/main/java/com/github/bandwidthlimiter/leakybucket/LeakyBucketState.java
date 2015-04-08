@@ -2,12 +2,12 @@ package com.github.bandwidthlimiter.leakybucket;
 
 public interface LeakyBucketState {
 
-    long getRefillMarker(int bandwidthIndex);
-
-    void setRefillMarker(int bandwidthIndex, long refillMarker);
-
     long getCurrentSize(int bandwidthIndex);
 
     void setCurrentSize(int bandwidthIndex, long size);
+
+    long getRefillMarker(LeakyBucketConfiguration configuration, int idx);
+
+    void setRefillMarker(LeakyBucketConfiguration configuration, int idx, long refillMarker);
 
 }

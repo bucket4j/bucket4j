@@ -52,31 +52,24 @@ public class UnsafeLeakyBucket extends AbstractLeakyBucket {
     }
 
     @Override
-    protected boolean consumeOrAwaitImpl(long tokensToConsume, long waitIfBusyLimitNanos) throws InterruptedException {
-        RefillStrategy refillStrategy = configuration.getRefillStrategy();
-        long currentTime = configuration.getTimeMetter().currentTime();
-        refillStrategy.refill(configuration, state, currentTime);
-        long availableToConsume = state.getAvailableTokens(configuration);
-
-        if (tokensToConsume <= availableToConsume) {
-            state.consume(tokensToConsume);
-            return true;
-        }
-
-        long sleepingLimitNanos = waitIfBusyLimitNanos > 0? waitIfBusyLimitNanos: Long.MAX_VALUE;
+    protected boolean consumeOrAwaitImpl(long tokensToConsume, long waitIfBusyTimeLimit) throws InterruptedException {
         while (true) {
-            long deficit = tokensToConsume - availableToConsume;
-            if (!state.sleepUntilRefillIfPossible(deficit, sleepingLimitNanos, configuration)) {
-                return false;
-            }
-
-            currentTime = configuration.getTimeMetter().currentTime();
-            refillStrategy.refill(configuration, state, currentTime);
-            availableToConsume = state.getAvailableTokens(configuration);
+            long currentTime = configuration.getTimeMetter().currentTime();
+            configuration.getRefillStrategy().refill(configuration, state, currentTime);
+            long availableToConsume = state.getAvailableTokens(configuration);
             if (tokensToConsume <= availableToConsume) {
                 state.consume(tokensToConsume);
                 return true;
             }
+
+            long deficitTokens = tokensToConsume - availableToConsume;
+            long timeToCloseDeficit = state.calculateTimeToCloseDeficit(configuration, deficitTokens);
+            if (waitIfBusyTimeLimit > 0) {
+                if (timeToCloseDeficit > waitIfBusyTimeLimit) {
+                    return false;
+                }
+            }
+            configuration.getTimeMetter().sleep(timeToCloseDeficit);
         }
     }
 

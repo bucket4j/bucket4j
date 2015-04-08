@@ -9,20 +9,19 @@ import java.util.Arrays;
 
 public class LeakyBucketLocalState implements LeakyBucketState {
 
-    private static final int REFILL_DATE_OFFSET = 0;
-    private static final int GUARANTEED_OFFSET = 1;
-    private static final int FIRST_LIMITED_OFFSET = 2;
+    public static final int SIZE_OFFSET = 0;
+    public static final int MARKER_OFFSET = 1;
 
     private final long[] state;
 
     @Override
     public long getRefillMarker(int bandwidthIndex) {
-        return 0;
+        return state[bandwidthIndex * 2 + MARKER_OFFSET];
     }
 
     @Override
     public void setRefillMarker(int bandwidthIndex, long refillMarker) {
-
+        state[bandwidthIndex * 2 + MARKER_OFFSET] = refillMarker;
     }
 
     @Override
@@ -36,16 +35,12 @@ public class LeakyBucketLocalState implements LeakyBucketState {
     }
 
     LeakyBucketLocalState(LeakyBucketConfiguration configuration) {
-        Bandwidth[] limitedBandwidths = configuration.getLimitedBandwidths();
-        this.state = new long[2 + limitedBandwidths.length];
-        for (int i = 0; i < limitedBandwidths.length; i++) {
-            state[FIRST_LIMITED_OFFSET + i] = limitedBandwidths[i].getInitialCapacity();
-        }
+        this.state = new long[configuration.getAllBandwidths().length * 2];
+        configuration.getRefillStrategy().setupInitialState(configuration, this);
+    }
 
-        Bandwidth guaranteedBandwidth = configuration.getGuaranteedBandwidth();
-        state[GUARANTEED_OFFSET] = guaranteedBandwidth != null? guaranteedBandwidth.getInitialCapacity(): 0;
+    public LeakyBucketLocalState clone() {
 
-        state[REFILL_DATE_OFFSET] = configuration.getTimeMetter().time();
     }
 
     LeakyBucketLocalState(LeakyBucketLocalState previousState) {
@@ -57,35 +52,20 @@ public class LeakyBucketLocalState implements LeakyBucketState {
     }
 
     public long getAvailableTokens(LeakyBucketConfiguration configuration) {
-        for (int i = 0; i < ) {
-
-        }
-    }
-
-    public void refill(long currentNanoTime, LeakyBucketConfiguration configuration) {
-        Bandwidth guaranteedBandwidth = configuration.getGuaranteedBandwidth();
         Bandwidth[] limitedBandwidths = configuration.getLimitedBandwidths();
-        long previousRefillNanos = state[REFILL_DATE_OFFSET];
-
-        long availableByGuarantee = 0l;
-        if (guaranteedBandwidth != null) {
-            availableByGuarantee = state[GUARANTEED_OFFSET] + refill(configuration, guaranteedBandwidth, previousRefillNanos, currentNanoTime);
-            availableByGuarantee = Math.min(availableByGuarantee, guaranteedBandwidth.getMaxCapacity());
-            state[GUARANTEED_OFFSET] = availableByGuarantee;
+        long availableByLimitation = getCurrentSize(FIRST_LIMITED_OFFSET);
+        for (int i = 1; i < limitedBandwidths.length; i++) {
+            long currentTokens = getCurrentSize(FIRST_LIMITED_OFFSET + i);
+            availableByLimitation = Math.min(currentTokens, availableByLimitation);
         }
 
-        long availableByLimitation = Long.MAX_VALUE;
-        for (int i = 0; i < limitedBandwidths.length; i++) {
-            Bandwidth bandwidth = limitedBandwidths[i];
-            long newSize = state[FIRST_LIMITED_OFFSET + i] + refill(configuration, bandwidth, previousRefillNanos, currentNanoTime);
-            newSize = Math.min(newSize, bandwidth.getMaxCapacity());
-            state[FIRST_LIMITED_OFFSET + i] = newSize;
-            availableByLimitation = Math.min(newSize, availableByLimitation);
+        Bandwidth guaranteedBandwidth = configuration.getGuaranteedBandwidth();
+        if (guaranteedBandwidth == null) {
+            return availableByLimitation;
         }
 
-        state[REFILL_DATE_OFFSET] = currentNanoTime;
-
-        return Math.max(availableByGuarantee, availableByLimitation);
+        long availableByGuarantee = getCurrentSize(GUARANTEED_OFFSET);
+        return Math.max(availableByLimitation, availableByGuarantee);
     }
 
     public void consume(long toConsume) {
@@ -94,10 +74,8 @@ public class LeakyBucketLocalState implements LeakyBucketState {
         }
     }
 
-    public boolean sleepUntilRefillIfPossible(long deficit, long sleepLimitNanos, LeakyBucketConfiguration configuration) throws InterruptedException {
-        Bandwidth guaranteedBandwidth = configuration.getGuaranteedBandwidth();
+    public long calculateTimeToCloseDeficit(LeakyBucketConfiguration configuration, long deficit) {
         Bandwidth[] limitedBandwidths = configuration.getLimitedBandwidths();
-
         long sleepToRefill = timeRequiredToRefill(configuration, limitedBandwidths[0], deficit);
         for (int i = 1; i < limitedBandwidths.length; i++) {
             long currentSleepProposal = timeRequiredToRefill(configuration, limitedBandwidths[i], deficit);
@@ -106,6 +84,7 @@ public class LeakyBucketLocalState implements LeakyBucketState {
             }
         }
 
+        Bandwidth guaranteedBandwidth = configuration.getGuaranteedBandwidth();
         if (guaranteedBandwidth != null && guaranteedBandwidth.getMaxCapacity() - state[GUARANTEED_OFFSET] >= deficit) {
             long guaranteedSleepToRefill = timeRequiredToRefill(configuration, guaranteedBandwidth, deficit);
             if (guaranteedSleepToRefill < sleepToRefill) {
@@ -113,16 +92,7 @@ public class LeakyBucketLocalState implements LeakyBucketState {
             }
         }
 
-        if (sleepToRefill >= sleepLimitNanos) {
-            return false;
-        }
-
-        sleep(configuration, sleepToRefill);
-        return true;
-    }
-
-    public void sleep(LeakyBucketConfiguration configuration, long timeToAwait) throws InterruptedException {
-        configuration.getTimeMetter().sleep(timeToAwait);
+        return sleepToRefill;
     }
 
     public long timeRequiredToRefill(LeakyBucketConfiguration configuration, Bandwidth bandwidth, long numTokens) {

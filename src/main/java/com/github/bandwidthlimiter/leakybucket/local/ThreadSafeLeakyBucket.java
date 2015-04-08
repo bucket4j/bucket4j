@@ -77,9 +77,12 @@ public class ThreadSafeLeakyBucket extends AbstractLeakyBucket {
     @Override
     protected boolean consumeOrAwaitImpl(long tokensToConsume, long waitIfBusyTimeLimit) throws InterruptedException {
         boolean isWaitingLimited = waitIfBusyTimeLimit > 0;
+
         final long methodStartTime = isWaitingLimited? configuration.getTimeMetter().currentTime(): 0;
         long currentTime = methodStartTime;
+        long methodDuration = 0;
         boolean isFirstCycle = true;
+
         LeakyBucketLocalState previousState = stateReference.get();
         LeakyBucketLocalState newState = new LeakyBucketLocalState(previousState);
 
@@ -88,11 +91,10 @@ public class ThreadSafeLeakyBucket extends AbstractLeakyBucket {
                 isFirstCycle = false;
             } else {
                 currentTime = configuration.getTimeMetter().currentTime();
-            }
-
-            long methodDuration = currentTime - methodStartTime;
-            if (isWaitingLimited && methodDuration >= waitIfBusyTimeLimit) {
-                return false;
+                methodDuration = currentTime - methodStartTime;
+                if (isWaitingLimited && methodDuration >= waitIfBusyTimeLimit) {
+                    return false;
+                }
             }
 
             configuration.getRefillStrategy().refill(configuration, newState, currentTime);
@@ -108,14 +110,15 @@ public class ThreadSafeLeakyBucket extends AbstractLeakyBucket {
                 }
             }
 
-            long deficit = tokensToConsume - availableToConsume;
-            long sleepingTimeLimit = Long.MAX_VALUE;
+            long deficitTokens = tokensToConsume - availableToConsume;
+            long timeToCloseDeficit = newState.calculateTimeToCloseDeficit(configuration, deficitTokens);
             if (isWaitingLimited) {
-                sleepingTimeLimit = waitIfBusyTimeLimit - methodDuration;
+                long sleepingTimeLimit = waitIfBusyTimeLimit - methodDuration;
+                if (timeToCloseDeficit >= sleepingTimeLimit) {
+                    return false;
+                }
             }
-            if (!newState.sleepUntilRefillIfPossible(deficit, sleepingTimeLimit, configuration)) {
-                return false;
-            }
+            configuration.getTimeMetter().sleep(timeToCloseDeficit);
         }
     }
 
