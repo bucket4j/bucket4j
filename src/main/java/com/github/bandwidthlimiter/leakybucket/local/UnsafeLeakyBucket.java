@@ -17,6 +17,7 @@ package com.github.bandwidthlimiter.leakybucket.local;
 
 import com.github.bandwidthlimiter.leakybucket.AbstractLeakyBucket;
 import com.github.bandwidthlimiter.leakybucket.LeakyBucketConfiguration;
+import com.github.bandwidthlimiter.leakybucket.LeakyBucketState;
 import com.github.bandwidthlimiter.leakybucket.RefillStrategy;
 
 public class UnsafeLeakyBucket extends AbstractLeakyBucket {
@@ -34,7 +35,7 @@ public class UnsafeLeakyBucket extends AbstractLeakyBucket {
         configuration.getRefillStrategy().refill(configuration, state, currentTime);
         long availableToConsume = state.getAvailableTokens(configuration);
         long toConsume = Math.min(limit, availableToConsume);
-        state.consume(toConsume);
+        state.consume(configuration, toConsume);
         return toConsume;
     }
 
@@ -44,7 +45,7 @@ public class UnsafeLeakyBucket extends AbstractLeakyBucket {
         configuration.getRefillStrategy().refill(configuration, state, currentTime);
         long availableToConsume = state.getAvailableTokens(configuration);
         if (tokensToConsume <= availableToConsume) {
-            state.consume(tokensToConsume);
+            state.consume(configuration, tokensToConsume);
             return true;
         } else {
             return false;
@@ -58,7 +59,7 @@ public class UnsafeLeakyBucket extends AbstractLeakyBucket {
             configuration.getRefillStrategy().refill(configuration, state, currentTime);
             long availableToConsume = state.getAvailableTokens(configuration);
             if (tokensToConsume <= availableToConsume) {
-                state.consume(tokensToConsume);
+                state.consume(configuration, tokensToConsume);
                 return true;
             }
 
@@ -71,6 +72,11 @@ public class UnsafeLeakyBucket extends AbstractLeakyBucket {
             }
             configuration.getTimeMetter().sleep(timeToCloseDeficit);
         }
+    }
+
+    @Override
+    public LeakyBucketState createSnapshot() {
+        return state.clone();
     }
 
 }

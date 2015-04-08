@@ -15,7 +15,8 @@
  */
 package com.github.bandwidthlimiter;
 
-import com.github.bandwidthlimiter.leakybucket.LeackyBucketBuilder;
+import com.github.bandwidthlimiter.leakybucket.LeakyBucketBuilder;
+import com.github.bandwidthlimiter.leakybucket.TimeMetter;
 
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
@@ -24,8 +25,16 @@ public final class BandwidthLimiters {
 
     private BandwidthLimiters() {}
 
-    public static LeackyBucketBuilder leakyBucketBuilder() {
-        return new LeackyBucketBuilder();
+    public static LeakyBucketBuilder leakyBucketWithNanoPrecision() {
+        return new LeakyBucketBuilder(TimeMetter.SYSTEM_NANOTIME);
+    }
+
+    public static LeakyBucketBuilder leakyBucketWithMillisPrecision() {
+        return new LeakyBucketBuilder(TimeMetter.SYSTEM_MILLISECONDS);
+    }
+
+    public static LeakyBucketBuilder leakyBucketWithCustomPrecisionPrecision(TimeMetter timeMetter) {
+        return new LeakyBucketBuilder(timeMetter);
     }
 
     public static void main(String[] args) {

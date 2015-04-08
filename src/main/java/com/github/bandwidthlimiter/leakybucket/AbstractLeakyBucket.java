@@ -26,7 +26,7 @@ public abstract class AbstractLeakyBucket implements LeakyBucket {
 
     protected AbstractLeakyBucket(LeakyBucketConfiguration configuration) {
         this.configuration = configuration;
-        this.smallestCapacity = Bandwidth.getSmallestCapacity(configuration.getLimitedBandwidths());
+        this.smallestCapacity = Bandwidth.getSmallestCapacityOfLimitedBandwidth(configuration.getBandwidths());
     }
 
     protected abstract long consumeAsMuchAsPossibleImpl(long limit);
@@ -116,6 +116,11 @@ public abstract class AbstractLeakyBucket implements LeakyBucket {
     @Override
     public long consumeAsMuchAsPossible() {
         return consumeAsMuchAsPossibleImpl(smallestCapacity);
+    }
+
+    @Override
+    public LeakyBucketConfiguration getConfiguration() {
+        return configuration;
     }
 
 }

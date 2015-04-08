@@ -8,6 +8,6 @@ public interface LeakyBucketState {
 
     long getRefillState(LeakyBucketConfiguration configuration, int idx);
 
-    void setRefillState(LeakyBucketConfiguration configuration, int idx, long refillMarker);
+    void setRefillState(LeakyBucketConfiguration configuration, int idx, long refillState);
 
 }

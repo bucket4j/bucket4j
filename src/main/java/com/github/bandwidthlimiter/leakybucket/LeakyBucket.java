@@ -77,4 +77,8 @@ public interface LeakyBucket {
 
     boolean tryConsume(long numTokens, long maxWaitNanos) throws InterruptedException;
 
+    LeakyBucketState createSnapshot();
+
+    LeakyBucketConfiguration getConfiguration();
+
 }

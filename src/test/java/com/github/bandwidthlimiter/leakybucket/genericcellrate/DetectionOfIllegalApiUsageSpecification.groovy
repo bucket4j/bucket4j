@@ -5,22 +5,22 @@ import com.github.bandwidthlimiter.leakybucket.LeakyBucketExceptions
 import spock.lang.Specification
 import spock.lang.Unroll
 
-import java.util.concurrent.TimeUnit
 
-import static com.github.bandwidthlimiter.BandwidthLimiters.leakyBucketBuilder
+import static com.github.bandwidthlimiter.BandwidthLimiters.leakyBucketWithMillisPrecision
+import static com.github.bandwidthlimiter.BandwidthLimiters.leakyBucketWithNanoPrecision
+import static com.github.bandwidthlimiter.BandwidthLimiters.leakyBucketWithCustomPrecisionPrecision
 import static com.github.bandwidthlimiter.leakybucket.LeakyBucketExceptions.*
 import static java.util.concurrent.TimeUnit.*
 
 public class DetectionOfIllegalApiUsageSpecification extends Specification {
 
-    private static final TimeUnit VALID_TIMEUNIT = MINUTES;
     private static final long VALID_PERIOD = 10;
     private static final long VALID_CAPACITY = 1000;
 
     @Unroll
     def "Should detect that capacity #capacity is wrong"(long capacity) {
         when:
-            leakyBucketBuilder().withLimitedBandwidth(capacity, VALID_PERIOD, VALID_TIMEUNIT)
+            leakyBucketWithNanoPrecision().withLimitedBandwidth(capacity, VALID_PERIOD)
         then:
             IllegalArgumentException ex = thrown()
             ex.message == LeakyBucketExceptions.nonPositiveCapacity(capacity).message
@@ -31,7 +31,7 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
     @Unroll
     def "Should detect that initial capacity #initialCapacity is wrong"(long initialCapacity) {
         when:
-            leakyBucketBuilder().withLimitedBandwidth(VALID_CAPACITY, VALID_PERIOD, VALID_TIMEUNIT, initialCapacity)
+            leakyBucketWithNanoPrecision().withLimitedBandwidth(VALID_CAPACITY, VALID_PERIOD, initialCapacity)
         then:
             IllegalArgumentException ex = thrown()
             ex.message == nonPositiveInitialCapacity(initialCapacity).message
@@ -42,13 +42,13 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
     def "Should check that initial capacity is equal or lesser than max capacity"() {
         when:
             long wrongInitialCapacity = VALID_CAPACITY + 1
-            leakyBucketBuilder().withLimitedBandwidth(VALID_CAPACITY, VALID_PERIOD, VALID_TIMEUNIT, wrongInitialCapacity)
+            leakyBucketWithNanoPrecision().withLimitedBandwidth(VALID_CAPACITY, VALID_PERIOD, wrongInitialCapacity)
         then:
             IllegalArgumentException ex = thrown()
             ex.message == initialCapacityGreaterThanMaxCapacity(wrongInitialCapacity, VALID_CAPACITY).message
 
         when:
-            leakyBucketBuilder().withLimitedBandwidth(VALID_CAPACITY, VALID_PERIOD, VALID_TIMEUNIT, VALID_CAPACITY)
+            leakyBucketWithNanoPrecision().withLimitedBandwidth(VALID_CAPACITY, VALID_PERIOD, VALID_CAPACITY)
         then:
            notThrown IllegalArgumentException
     }
@@ -56,7 +56,7 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
     @Unroll
     def "Should check that #period is invalid period of bandwidth"(long period) {
         when:
-            leakyBucketBuilder().withLimitedBandwidth(VALID_CAPACITY, period, VALID_TIMEUNIT)
+            leakyBucketWithNanoPrecision().withLimitedBandwidth(VALID_CAPACITY, period)
         then:
             IllegalArgumentException ex = thrown()
             ex.message == nonPositivePeriod(period).message
@@ -64,12 +64,12 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
             period << [-10, -1, 0]
     }
 
-    def "Should check than time unit is not null"() {
+    def "Should check than time metter is not null"() {
         when:
-            leakyBucketBuilder().withLimitedBandwidth(VALID_CAPACITY, VALID_PERIOD, null)
+            leakyBucketWithCustomPrecisionPrecision(null)
         then:
             IllegalArgumentException ex = thrown()
-            ex.message == nullTimeUnit().message
+            ex.message == nullTimeMetter().message
     }
 
     def "Should check than refill strategy is not null"() {

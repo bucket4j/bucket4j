@@ -2,44 +2,41 @@ package com.github.bandwidthlimiter.leakybucket.local;
 
 import com.github.bandwidthlimiter.leakybucket.Bandwidth;
 import com.github.bandwidthlimiter.leakybucket.LeakyBucketConfiguration;
-import com.github.bandwidthlimiter.leakybucket.GenericCellConfiguration;
 import com.github.bandwidthlimiter.leakybucket.LeakyBucketState;
+import com.github.bandwidthlimiter.leakybucket.RefillStrategy;
 
 import java.util.Arrays;
 
 public class LeakyBucketLocalState implements LeakyBucketState {
 
-    public static final int SIZE_OFFSET = 0;
-    public static final int MARKER_OFFSET = 1;
-
     private final long[] state;
 
     @Override
-    public long getRefillMarker(int bandwidthIndex) {
-        return state[bandwidthIndex * 2 + MARKER_OFFSET];
-    }
-
-    @Override
-    public void setRefillMarker(int bandwidthIndex, long refillMarker) {
-        state[bandwidthIndex * 2 + MARKER_OFFSET] = refillMarker;
-    }
-
-    @Override
     public long getCurrentSize(int bandwidthIndex) {
-        return 0;
+        return state[bandwidthIndex];
     }
 
     @Override
     public void setCurrentSize(int bandwidthIndex, long size) {
+        state[bandwidthIndex] = size;
+    }
 
+    @Override
+    public long getRefillState(LeakyBucketConfiguration configuration, int bandwidthIndex) {
+        return state[configuration.getBandwidthCount() + bandwidthIndex];
+    }
+
+    @Override
+    public void setRefillState(LeakyBucketConfiguration configuration, int bandwidthIndex, long refillState) {
+        state[configuration.getBandwidthCount() + bandwidthIndex] = refillState;
     }
 
     LeakyBucketLocalState(LeakyBucketConfiguration configuration) {
-        this.state = new long[configuration.getAllBandwidths().length * 2];
-        configuration.getRefillStrategy().setupInitialState(configuration, this);
+        final RefillStrategy refillStrategy = configuration.getRefillStrategy();
+        this.state = new long[configuration.getBandwidths().length + refillStrategy.sizeOfState(configuration)];
+        long currentTime = configuration.getTimeMetter().currentTime();
+        refillStrategy.setupInitialState(configuration, this, currentTime);
     }
-
-    private LeakyBucketLocalState() {}
 
     public LeakyBucketLocalState clone() {
         return new LeakyBucketLocalState(this);
@@ -54,51 +51,44 @@ public class LeakyBucketLocalState implements LeakyBucketState {
     }
 
     public long getAvailableTokens(LeakyBucketConfiguration configuration) {
-        Bandwidth[] limitedBandwidths = configuration.getLimitedBandwidths();
-        long availableByLimitation = getCurrentSize(FIRST_LIMITED_OFFSET);
-        for (int i = 1; i < limitedBandwidths.length; i++) {
-            long currentTokens = getCurrentSize(FIRST_LIMITED_OFFSET + i);
-            availableByLimitation = Math.min(currentTokens, availableByLimitation);
+        Bandwidth[] bandwidths = configuration.getBandwidths();
+        long availableByLimitation = Long.MAX_VALUE;
+        long availableByGuarantee = 0;
+        for (int i = 0; i < bandwidths.length; i++) {
+            Bandwidth bandwidth = bandwidths[i];
+            if (bandwidth.isLimited()) {
+                availableByLimitation = Math.min(availableByLimitation, getCurrentSize(i));
+            } else {
+                availableByGuarantee = getCurrentSize(i);
+            }
         }
-
-        Bandwidth guaranteedBandwidth = configuration.getGuaranteedBandwidth();
-        if (guaranteedBandwidth == null) {
-            return availableByLimitation;
-        }
-
-        long availableByGuarantee = getCurrentSize(GUARANTEED_OFFSET);
         return Math.max(availableByLimitation, availableByGuarantee);
     }
 
-    public void consume(long toConsume) {
-        for (int i = GUARANTEED_OFFSET; i < state.length; i++) {
+    public void consume(LeakyBucketConfiguration configuration, long toConsume) {
+        final int bandwidthCount = configuration.getBandwidthCount();
+        for (int i = 0; i < bandwidthCount; i++) {
             state[i]= Math.max(0, state[i] - toConsume);
         }
     }
 
     public long calculateTimeToCloseDeficit(LeakyBucketConfiguration configuration, long deficit) {
-        Bandwidth[] limitedBandwidths = configuration.getLimitedBandwidths();
-        long sleepToRefill = timeRequiredToRefill(configuration, limitedBandwidths[0], deficit);
-        for (int i = 1; i < limitedBandwidths.length; i++) {
-            long currentSleepProposal = timeRequiredToRefill(configuration, limitedBandwidths[i], deficit);
-            if (currentSleepProposal > sleepToRefill) {
-                sleepToRefill = currentSleepProposal;
+        Bandwidth[] bandwidths = configuration.getBandwidths();
+        long sleepToRefillLimited = 0;
+        long sleepToRefillGuaranteed = Long.MAX_VALUE;
+        for (int i = 1; i < bandwidths.length; i++) {
+            Bandwidth bandwidth = bandwidths[i];
+            if (bandwidth.isLimited()) {
+                sleepToRefillLimited = Math.max(sleepToRefillLimited, timeRequiredToRefill(configuration, bandwidth, deficit));
+            } else {
+                sleepToRefillGuaranteed = timeRequiredToRefill(configuration, bandwidth, deficit);
             }
         }
-
-        Bandwidth guaranteedBandwidth = configuration.getGuaranteedBandwidth();
-        if (guaranteedBandwidth != null && guaranteedBandwidth.getMaxCapacity() - state[GUARANTEED_OFFSET] >= deficit) {
-            long guaranteedSleepToRefill = timeRequiredToRefill(configuration, guaranteedBandwidth, deficit);
-            if (guaranteedSleepToRefill < sleepToRefill) {
-                sleepToRefill = guaranteedSleepToRefill;
-            }
-        }
-
-        return sleepToRefill;
+        return Math.min(sleepToRefillLimited, sleepToRefillGuaranteed);
     }
 
     public long timeRequiredToRefill(LeakyBucketConfiguration configuration, Bandwidth bandwidth, long numTokens) {
-        return configuration.getRefillStrategy().timeRequiredToRefill(bandwidth, numTokens);
+        return configuration.getRefillStrategy().timeRequiredToRefill(configuration, bandwidth, numTokens);
     }
 
 }

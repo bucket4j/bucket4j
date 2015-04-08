@@ -61,12 +61,6 @@ public class LeakyBucketExceptions {
         String msg = MessageFormat.format(pattern, first, second);
         return new IllegalArgumentException(msg);
     }
-
-    public static IllegalArgumentException unsupportedTimePrecision(TimeUnit precision) {
-        String pattern = "Time precision{0} is unsupported";
-        String msg = MessageFormat.format(pattern, precision);
-        return new IllegalArgumentException(msg);
-    }
     // ------------------- end of construction time exceptions --------------------------------
 
     // ------------------- usage time exceptions  ---------------------------------------------

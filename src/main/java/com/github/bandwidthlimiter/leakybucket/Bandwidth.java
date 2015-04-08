@@ -16,41 +16,61 @@
 
 package com.github.bandwidthlimiter.leakybucket;
 
+import static com.github.bandwidthlimiter.leakybucket.LeakyBucketExceptions.*;
 import static com.github.bandwidthlimiter.leakybucket.LeakyBucketExceptions.guarantedHasGreaterRateThanLimited;
 import static com.github.bandwidthlimiter.leakybucket.LeakyBucketExceptions.hasOverlaps;
 import static com.github.bandwidthlimiter.leakybucket.LeakyBucketExceptions.restrictionsNotSpecified;
 
 public final class Bandwidth {
 
+    private final int indexInBucket;
     private final long capacity;
     private final long initialCapacity;
     private final long period;
     private final double tokensPerTimeUnit;
     private final double nanosecondsToGenerateOneToken;
+    private final boolean guaranteed;
 
-    public Bandwidth(long capacity, long period) {
-        this(capacity, capacity, period);
+    public Bandwidth(int indexInBucket, long capacity, long period) {
+        this(indexInBucket, capacity, period, false);
     }
 
-    public Bandwidth(long capacity, long initialCapacity, long period) {
+    public Bandwidth(int indexInBucket, long capacity, long period, boolean guaranted) {
+        this(indexInBucket, capacity, capacity, period, guaranted);
+    }
+
+    public Bandwidth(int indexInBucket, long capacity, long initialCapacity, long period, boolean guaranted) {
+        if (indexInBucket < 0) {
+            throw new IndexOutOfBoundsException();
+        }
         if (capacity <= 0) {
-            throw LeakyBucketExceptions.nonPositiveCapacity(capacity);
+            throw nonPositiveCapacity(capacity);
         }
         if (initialCapacity < 0) {
-            throw LeakyBucketExceptions.nonPositiveInitialCapacity(initialCapacity);
+            throw nonPositiveInitialCapacity(initialCapacity);
         }
         if (initialCapacity > capacity) {
-            throw LeakyBucketExceptions.initialCapacityGreaterThanMaxCapacity(initialCapacity, capacity);
+            throw initialCapacityGreaterThanMaxCapacity(initialCapacity, capacity);
         }
         if (period <= 0) {
-            throw LeakyBucketExceptions.nonPositivePeriod(period);
+            throw nonPositivePeriod(period);
         }
 
+        this.indexInBucket = indexInBucket;
         this.capacity = capacity;
         this.initialCapacity = initialCapacity;
         this.period = period;
         this.tokensPerTimeUnit = (double) capacity / (double) period;
         this.nanosecondsToGenerateOneToken = (double) period / (double) capacity;
+        this.guaranteed = guaranted;
+    }
+
+    public boolean isGuaranteed() {
+        return guaranteed;
+    }
+
+    public boolean isLimited() {
+        return !guaranteed;
     }
 
     public long getPeriod() {
@@ -65,24 +85,51 @@ public final class Bandwidth {
         return capacity;
     }
 
-    public static long getSmallestCapacity(Bandwidth[] definitions) {
+    public int getIndexInBucket() {
+        return indexInBucket;
+    }
+
+    public static long getSmallestCapacityOfLimitedBandwidth(Bandwidth[] definitions) {
         long minCapacity = Long.MAX_VALUE;
         for (int i = 0; i < definitions.length; i++) {
-            if (definitions[i].capacity < minCapacity) {
+            if (definitions[i].isLimited() && definitions[i].capacity < minCapacity) {
                 minCapacity = definitions[i].capacity;
             }
         }
         return minCapacity;
     }
 
-    public static void checkBandwidths(Bandwidth[] limitedBandwidths, Bandwidth guaranteedBandwidth) {
-        if (limitedBandwidths == null || limitedBandwidths.length == 0) {
+    public static void checkBandwidths(Bandwidth[] bandwidths) {
+        int countOfLimitedBandwidth = 0;
+        int countOfGuaranteedBandwidth = 0;
+        Bandwidth guaranteedBandwidth = null;
+
+        for (Bandwidth bandwidth: bandwidths) {
+            if (bandwidth.isLimited()) {
+                countOfLimitedBandwidth++;
+            } else {
+                countOfGuaranteedBandwidth++;
+            }
+        }
+
+        if (countOfLimitedBandwidth == 0) {
             throw restrictionsNotSpecified();
         }
-        for (int i = 0; i < limitedBandwidths.length - 1; i++) {
-            for (int j = 1; j < limitedBandwidths.length; j++) {
-                Bandwidth first = limitedBandwidths[i];
-                Bandwidth second = limitedBandwidths[j];
+
+        if (countOfGuaranteedBandwidth > 1) {
+            throw onlyOneGuarantedBandwidthSupported();
+        }
+
+        for (int i = 0; i < bandwidths.length - 1; i++) {
+            Bandwidth first = bandwidths[i];
+            if (first.isGuaranteed()) {
+                continue;
+            }
+            for (int j = i + 1; j < bandwidths.length; j++) {
+                Bandwidth second = bandwidths[j];
+                if (second.isGuaranteed()) {
+                    continue;
+                }
                 if (first.period < second.period && first.capacity >= second.capacity) {
                     throw hasOverlaps(first, second);
                 } else if (first.period == second.period) {
@@ -93,10 +140,13 @@ public final class Bandwidth {
             }
         }
         if (guaranteedBandwidth != null) {
-            for (Bandwidth limited : limitedBandwidths) {
-                if (limited.tokensPerTimeUnit <= guaranteedBandwidth.tokensPerTimeUnit
-                        || limited.nanosecondsToGenerateOneToken > guaranteedBandwidth.nanosecondsToGenerateOneToken) {
-                    throw guarantedHasGreaterRateThanLimited(guaranteedBandwidth, limited);
+            for (Bandwidth bandwidth : bandwidths) {
+                if (bandwidth.isLimited()) {
+                    Bandwidth limited = bandwidth;
+                    if (limited.tokensPerTimeUnit <= guaranteedBandwidth.tokensPerTimeUnit
+                            || limited.nanosecondsToGenerateOneToken > guaranteedBandwidth.nanosecondsToGenerateOneToken) {
+                        throw guarantedHasGreaterRateThanLimited(guaranteedBandwidth, limited);
+                    }
                 }
             }
         }
@@ -104,10 +154,13 @@ public final class Bandwidth {
 
     @Override
     public String toString() {
-        return "BandwidthDefinition{" +
+        return "Bandwidth{" +
                 "capacity=" + capacity +
                 ", initialCapacity=" + initialCapacity +
                 ", period=" + period +
+                ", tokensPerTimeUnit=" + tokensPerTimeUnit +
+                ", nanosecondsToGenerateOneToken=" + nanosecondsToGenerateOneToken +
+                ", guaranteed=" + guaranteed +
                 '}';
     }
 
@@ -116,20 +169,29 @@ public final class Bandwidth {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        Bandwidth that = (Bandwidth) o;
+        Bandwidth bandwidth = (Bandwidth) o;
 
-        if (capacity != that.capacity) return false;
-        if (initialCapacity != that.initialCapacity) return false;
-        if (period != that.period) return false;
-        return true;
+        if (capacity != bandwidth.capacity) return false;
+        if (initialCapacity != bandwidth.initialCapacity) return false;
+        if (period != bandwidth.period) return false;
+        if (Double.compare(bandwidth.tokensPerTimeUnit, tokensPerTimeUnit) != 0) return false;
+        if (Double.compare(bandwidth.nanosecondsToGenerateOneToken, nanosecondsToGenerateOneToken) != 0) return false;
+        return guaranteed == bandwidth.guaranteed;
+
     }
 
     @Override
     public int hashCode() {
-        int result = (int) (capacity ^ (capacity >>> 32));
+        int result;
+        long temp;
+        result = (int) (capacity ^ (capacity >>> 32));
         result = 31 * result + (int) (initialCapacity ^ (initialCapacity >>> 32));
         result = 31 * result + (int) (period ^ (period >>> 32));
+        temp = Double.doubleToLongBits(tokensPerTimeUnit);
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        temp = Double.doubleToLongBits(nanosecondsToGenerateOneToken);
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        result = 31 * result + (guaranteed ? 1 : 0);
         return result;
     }
-
 }

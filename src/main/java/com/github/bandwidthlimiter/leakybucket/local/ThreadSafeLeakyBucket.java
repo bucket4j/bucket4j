@@ -18,6 +18,7 @@ package com.github.bandwidthlimiter.leakybucket.local;
 
 import com.github.bandwidthlimiter.leakybucket.AbstractLeakyBucket;
 import com.github.bandwidthlimiter.leakybucket.LeakyBucketConfiguration;
+import com.github.bandwidthlimiter.leakybucket.LeakyBucketState;
 
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -42,7 +43,7 @@ public class ThreadSafeLeakyBucket extends AbstractLeakyBucket {
             configuration.getRefillStrategy().refill(configuration, newState, currentTime);
             long availableToConsume = newState.getAvailableTokens(configuration);
             long toConsume = Math.min(limit, availableToConsume);
-            newState.consume(toConsume);
+            newState.consume(configuration, toConsume);
             if (stateReference.compareAndSet(previousState, newState)) {
                 return toConsume;
             } else {
@@ -64,7 +65,7 @@ public class ThreadSafeLeakyBucket extends AbstractLeakyBucket {
             if (tokensToConsume > availableToConsume) {
                 return false;
             }
-            newState.consume(tokensToConsume);
+            newState.consume(configuration, tokensToConsume);
             if (stateReference.compareAndSet(previousState, newState)) {
                 return true;
             } else {
@@ -100,7 +101,7 @@ public class ThreadSafeLeakyBucket extends AbstractLeakyBucket {
             configuration.getRefillStrategy().refill(configuration, newState, currentTime);
             long availableToConsume = newState.getAvailableTokens(configuration);
             if (tokensToConsume <= availableToConsume) {
-                newState.consume(tokensToConsume);
+                newState.consume(configuration, tokensToConsume);
                 if (stateReference.compareAndSet(previousState, newState)) {
                     return true;
                 } else {
@@ -122,4 +123,8 @@ public class ThreadSafeLeakyBucket extends AbstractLeakyBucket {
         }
     }
 
+    @Override
+    public LeakyBucketState createSnapshot() {
+        return stateReference.get().clone();
+    }
 }

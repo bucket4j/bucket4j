@@ -24,7 +24,7 @@ public interface RefillStrategy {
 
     void refill(LeakyBucketConfiguration configuration, LeakyBucketState state, long currentTime);
     
-    long timeRequiredToRefill(LeakyBucketConfiguration configuration, int bandwidthIndex, long numTokens);
+    long timeRequiredToRefill(LeakyBucketConfiguration configuration, Bandwidth bandwidth, long numTokens);
 
     int sizeOfState(LeakyBucketConfiguration configuration);
 
