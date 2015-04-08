@@ -108,6 +108,7 @@ public final class Bandwidth {
             if (bandwidth.isLimited()) {
                 countOfLimitedBandwidth++;
             } else {
+                guaranteedBandwidth = bandwidth;
                 countOfGuaranteedBandwidth++;
             }
         }

@@ -75,4 +75,8 @@ public final class LeakyBucketBuilder {
         return new LeakyBucketConfiguration(bandwidths, raiseErrorWhenConsumeGreaterThanSmallestBandwidth, timeMetter, refillStrategy);
     }
 
+    public Bandwidth getBandwidth(int indexInTheBucket) {
+        return bandwidths.get(indexInTheBucket);
+    }
+
 }

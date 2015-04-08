@@ -1,16 +1,13 @@
 package com.github.bandwidthlimiter.leakybucket.genericcellrate
 
-import com.github.bandwidthlimiter.leakybucket.Bandwidth
 import com.github.bandwidthlimiter.leakybucket.LeakyBucketExceptions
 import spock.lang.Specification
 import spock.lang.Unroll
 
 
-import static com.github.bandwidthlimiter.BandwidthLimiters.leakyBucketWithMillisPrecision
 import static com.github.bandwidthlimiter.BandwidthLimiters.leakyBucketWithNanoPrecision
 import static com.github.bandwidthlimiter.BandwidthLimiters.leakyBucketWithCustomPrecisionPrecision
 import static com.github.bandwidthlimiter.leakybucket.LeakyBucketExceptions.*
-import static java.util.concurrent.TimeUnit.*
 
 public class DetectionOfIllegalApiUsageSpecification extends Specification {
 
@@ -40,8 +37,9 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
     }
 
     def "Should check that initial capacity is equal or lesser than max capacity"() {
-        when:
+        setup:
             long wrongInitialCapacity = VALID_CAPACITY + 1
+        when:
             leakyBucketWithNanoPrecision().withLimitedBandwidth(VALID_CAPACITY, VALID_PERIOD, wrongInitialCapacity)
         then:
             IllegalArgumentException ex = thrown()
@@ -65,8 +63,10 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
     }
 
     def "Should check than time metter is not null"() {
+        setup:
+            def builder = leakyBucketWithCustomPrecisionPrecision(null).withLimitedBandwidth(VALID_CAPACITY, VALID_PERIOD)
         when:
-            leakyBucketWithCustomPrecisionPrecision(null)
+            builder.build()
         then:
             IllegalArgumentException ex = thrown()
             ex.message == nullTimeMetter().message
@@ -74,7 +74,7 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
 
     def "Should check than refill strategy is not null"() {
         setup:
-            def builder = leakyBucketBuilder().withLimitedBandwidth(VALID_CAPACITY, VALID_PERIOD, VALID_TIMEUNIT)
+            def builder = leakyBucketWithNanoPrecision().withLimitedBandwidth(VALID_CAPACITY, VALID_PERIOD)
         when:
             builder.withCustomRefillStrategy(null).build()
         then:
@@ -82,29 +82,9 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
             ex.message == nullRefillStrategy().message
     }
 
-    def "Should check than waiting strategy is not null"() {
-        setup:
-            def builder = leakyBucketBuilder().withLimitedBandwidth(VALID_CAPACITY, VALID_PERIOD, VALID_TIMEUNIT)
-        when:
-            builder.withWaitingStrategy(null).build()
-        then:
-            IllegalArgumentException ex = thrown()
-            ex.message == nullWaitingStrategy().message
-    }
-
-    def "Should check that nano time wrapper is not null"() {
-        setup:
-            def builder = leakyBucketBuilder().withLimitedBandwidth(VALID_CAPACITY, VALID_PERIOD, VALID_TIMEUNIT)
-        when:
-            builder.withCustomTimeMetter().build()
-        then:
-            IllegalArgumentException ex = thrown()
-            ex.message == nullTimeMetter().message
-    }
-
     def  "Should check that limited bandwidth list is not empty"() {
         setup:
-            def builder = leakyBucketBuilder()
+            def builder = leakyBucketWithNanoPrecision()
         when:
             builder.build()
         then:
@@ -112,7 +92,7 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
             ex.message == restrictionsNotSpecified().message
 
         when:
-           builder.withGuaranteedBandwidth(VALID_CAPACITY, VALID_PERIOD, VALID_TIMEUNIT).build()
+           builder.withGuaranteedBandwidth(VALID_CAPACITY, VALID_PERIOD).build()
         then:
             ex = thrown()
             ex.message == restrictionsNotSpecified().message
@@ -120,9 +100,12 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
 
     def "Should check that guaranteed capacity could not be configured twice"() {
         setup:
-            def builder = leakyBucketBuilder().withGuaranteedBandwidth(VALID_CAPACITY, VALID_PERIOD, VALID_TIMEUNIT)
+            def builder = leakyBucketWithNanoPrecision()
+                .withLimitedBandwidth(VALID_CAPACITY * 2, VALID_PERIOD)
+                .withGuaranteedBandwidth(VALID_CAPACITY + 1, VALID_PERIOD)
+                .withGuaranteedBandwidth(VALID_CAPACITY, VALID_PERIOD)
         when:
-            builder.withGuaranteedBandwidth(VALID_CAPACITY, VALID_PERIOD, VALID_TIMEUNIT)
+            builder.build()
         then:
             IllegalArgumentException ex = thrown()
             ex.message == onlyOneGuarantedBandwidthSupported().message
@@ -130,62 +113,65 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
 
     def "Should check that guaranteed bandwidth has lesser rate than limited bandwidth"() {
         setup:
-            Bandwidth guaranteed = new Bandwidth(1000, 1, SECONDS)
-            Bandwidth limited = new Bandwidth(1000, 1, SECONDS)
-        when:
-            leakyBucketBuilder().withGuaranteedBandwidth(guaranteed).withLimitedBandwidth(limited).build()
-        then:
-            IllegalArgumentException ex = thrown()
-            ex.message == guarantedHasGreaterRateThanLimited(guaranteed, limited).message
-    }
-
-    @Unroll
-    def "Should check for overlaps, test #number"(int number, Bandwidth first, Bandwidth second) {
-        setup:
-            def builder = leakyBucketBuilder().withLimitedBandwidth(first).withLimitedBandwidth(second)
+            def builder = leakyBucketWithNanoPrecision()
+                .withLimitedBandwidth(VALID_CAPACITY, VALID_PERIOD)
+                .withGuaranteedBandwidth(VALID_CAPACITY, VALID_PERIOD)
         when:
             builder.build()
         then:
             IllegalArgumentException ex = thrown()
-            ex.message == hasOverlaps(first, second).message
+            ex.message == guarantedHasGreaterRateThanLimited(builder.getBandwidth(1), builder.getBandwidth(0)).message
+    }
+
+    @Unroll
+    def "Should check for overlaps, test #number"(int number, long firstCapacity, long firstPeriod, long secondCapacity, long secondPeriod) {
+        setup:
+            def builder = leakyBucketWithNanoPrecision()
+                .withLimitedBandwidth(firstCapacity, firstPeriod)
+                .withLimitedBandwidth(secondCapacity, secondPeriod)
+        when:
+            builder.build()
+        then:
+            IllegalArgumentException ex = thrown()
+            ex.message == hasOverlaps(builder.getBandwidth(0), builder.getBandwidth(1)).message
         where:
-        number |              first               |               second
-           1   |  new Bandwidth(999, 10, SECONDS) | new Bandwidth(999, 10, SECONDS)
-           2   |  new Bandwidth(999, 10, SECONDS) | new Bandwidth(1000, 10, SECONDS)
-           3   |  new Bandwidth(999, 10, SECONDS) | new Bandwidth(998, 10, SECONDS)
-           4   |  new Bandwidth(999, 10, SECONDS) | new Bandwidth(999, 11, SECONDS)
-           5   |  new Bandwidth(999, 10, SECONDS) | new Bandwidth(999, 9, SECONDS)
-           6   |  new Bandwidth(999, 10, SECONDS) | new Bandwidth(1000, 8, SECONDS)
-           7   |  new Bandwidth(999, 10, SECONDS) | new Bandwidth(998, 11, SECONDS)
+            number |  firstCapacity | firstPeriod | secondCapacity | secondPeriod
+               1   |     999        |     10      |      999       |      10
+               2   |     999        |     10      |      1000      |      10
+               3   |     999        |     10      |      998       |      10
+               4   |     999        |     10      |      999       |      11
+               5   |     999        |     10      |      999       |      9
+               6   |     999        |     10      |      1000      |      8
+               7   |     999        |     10      |      998       |      11
     }
 
     def "Should check that tokens to consume should be positive"() {
         setup:
-            def tokenBucket = leakyBucketBuilder().withLimitedBandwidth(VALID_CAPACITY, VALID_PERIOD, VALID_TIMEUNIT).build()
+            def bucket = leakyBucketWithNanoPrecision().withLimitedBandwidth(VALID_CAPACITY, VALID_PERIOD).build()
         when:
-            tokenBucket.consume(0)
+            bucket.consume(0)
         then:
             IllegalArgumentException ex = thrown()
             ex.message == nonPositiveTokensToConsume(0).message
 
         when:
-            tokenBucket.consume(-1)
+            bucket.consume(-1)
         then:
             ex = thrown()
             ex.message == nonPositiveTokensToConsume(-1).message
     }
 
-    def "Should check that nanos to wait should be positive"() {
+    def "Should check that time units to wait should be positive"() {
         setup:
-            def tokenBucket = leakyBucketBuilder().withLimitedBandwidth(VALID_CAPACITY, VALID_PERIOD, VALID_TIMEUNIT).build()
+            def bucket = leakyBucketWithNanoPrecision().withLimitedBandwidth(VALID_CAPACITY, VALID_PERIOD).build()
         when:
-            tokenBucket.tryConsumeSingleToken(0)
+            bucket.tryConsumeSingleToken(0)
         then:
             IllegalArgumentException ex = thrown()
             ex.message == nonPositiveNanosToWait(0).message
 
         when:
-            tokenBucket.tryConsumeSingleToken(-1)
+            bucket.tryConsumeSingleToken(-1)
         then:
             ex = thrown()
             ex.message == nonPositiveNanosToWait(-1).message
@@ -193,10 +179,11 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
 
     def "Should check that unable try to consume number of tokens greater than smallest capacity when user has deprecated this option"() {
         setup:
-            def tokenBucket = leakyBucketBuilder().raiseErrorWhenConsumeGreaterThanSmallestBandwidth()
-                .withLimitedBandwidth(VALID_CAPACITY, VALID_PERIOD, VALID_TIMEUNIT).build()
+            def bucket = leakyBucketWithNanoPrecision()
+                .raiseErrorWhenConsumeGreaterThanSmallestBandwidth()
+                .withLimitedBandwidth(VALID_CAPACITY, VALID_PERIOD).build()
         when:
-            tokenBucket.tryConsume(VALID_CAPACITY + 1)
+            bucket.tryConsume(VALID_CAPACITY + 1)
         then:
             IllegalArgumentException ex = thrown()
             ex.message == LeakyBucketExceptions.tokensToConsumeGreaterThanCapacityOfSmallestBandwidth(VALID_CAPACITY + 1, VALID_CAPACITY).message
@@ -204,18 +191,18 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
 
     def "Should always check when client try to consume number of tokens greater than smallest capacity on invocation of methods with support of waiting"() {
         setup:
-            def tokenBucket = leakyBucketBuilder().withLimitedBandwidth(VALID_CAPACITY, VALID_PERIOD, VALID_TIMEUNIT).build()
+            def bucket = leakyBucketWithNanoPrecision().withLimitedBandwidth(VALID_CAPACITY, VALID_PERIOD).build()
         when:
-            tokenBucket.consume(VALID_CAPACITY + 1)
+            bucket.consume(VALID_CAPACITY + 1)
         then:
             IllegalArgumentException ex = thrown()
-            ex.message == LeakyBucketExceptions.tokensToConsumeGreaterThanCapacityOfSmallestBandwidth(VALID_CAPACITY + 1, VALID_CAPACITY).message
+            ex.message == tokensToConsumeGreaterThanCapacityOfSmallestBandwidth(VALID_CAPACITY + 1, VALID_CAPACITY).message
 
         when:
-            tokenBucket.tryConsume(VALID_CAPACITY + 1, 42)
+            bucket.tryConsume(VALID_CAPACITY + 1, 42)
         then:
             ex = thrown()
-            ex.message == LeakyBucketExceptions.tokensToConsumeGreaterThanCapacityOfSmallestBandwidth(VALID_CAPACITY + 1, VALID_CAPACITY).message
+            ex.message == tokensToConsumeGreaterThanCapacityOfSmallestBandwidth(VALID_CAPACITY + 1, VALID_CAPACITY).message
     }
 
 }
