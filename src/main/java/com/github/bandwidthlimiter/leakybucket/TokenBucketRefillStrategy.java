@@ -17,7 +17,7 @@ public class TokenBucketRefillStrategy implements RefillStrategy {
 //        for (int i = 0; i < bandwidths.length; i++) {
 //            Bandwidth bandwidth = bandwidths[i];
 //            state.setCurrentSize(i, bandwidth.getInitialCapacity());
-//            state.setRefillMarker(i, currentTime);
+//            state.setRefillState(i, currentTime);
 //        }
     }
 
@@ -26,14 +26,14 @@ public class TokenBucketRefillStrategy implements RefillStrategy {
 //        Bandwidth[] bandwidths = configuration.getAllBandwidths();
 //        for (int i = 0; i < bandwidths.length; i++) {
 //            Bandwidth bandwidth = bandwidths[i];
-//            long previousRefillTime = state.getRefillMarker(i);
+//            long previousRefillTime = state.getRefillState(i);
 //            final long maxCapacity = bandwidth.getMaxCapacity();
 //            long calculatedRefill = (currentTime - previousRefillTime) * maxCapacity / bandwidth.getPeriod();
 //            if (calculatedRefill > 0) {
 //                long newSize = state.getCurrentSize(i) + calculatedRefill;
 //                newSize = Math.min(maxCapacity, newSize);
 //                state.setCurrentSize(i, newSize);
-//                state.setRefillMarker(i, currentTime);
+//                state.setRefillState(i, currentTime);
 //            }
 //        }
     }

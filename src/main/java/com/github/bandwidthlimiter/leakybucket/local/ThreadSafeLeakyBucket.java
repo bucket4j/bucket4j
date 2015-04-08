@@ -36,7 +36,7 @@ public class ThreadSafeLeakyBucket extends AbstractLeakyBucket {
     @Override
     protected long consumeAsMuchAsPossibleImpl(long limit) {
         LeakyBucketLocalState previousState = stateReference.get();
-        LeakyBucketLocalState newState = new LeakyBucketLocalState(previousState);
+        LeakyBucketLocalState newState = previousState.clone();
         while (true) {
             long currentTime = configuration.getTimeMetter().currentTime();
             configuration.getRefillStrategy().refill(configuration, newState, currentTime);
@@ -55,7 +55,7 @@ public class ThreadSafeLeakyBucket extends AbstractLeakyBucket {
     @Override
     protected boolean tryConsumeImpl(long tokensToConsume) {
         LeakyBucketLocalState previousState = stateReference.get();
-        LeakyBucketLocalState newState = new LeakyBucketLocalState(previousState);
+        LeakyBucketLocalState newState = previousState.clone();
 
         while (true) {
             long currentTime = configuration.getTimeMetter().currentTime();
@@ -84,7 +84,7 @@ public class ThreadSafeLeakyBucket extends AbstractLeakyBucket {
         boolean isFirstCycle = true;
 
         LeakyBucketLocalState previousState = stateReference.get();
-        LeakyBucketLocalState newState = new LeakyBucketLocalState(previousState);
+        LeakyBucketLocalState newState = previousState.clone();
 
         while (true) {
             if (isFirstCycle) {

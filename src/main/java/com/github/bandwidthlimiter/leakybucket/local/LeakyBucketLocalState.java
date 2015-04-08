@@ -39,11 +39,13 @@ public class LeakyBucketLocalState implements LeakyBucketState {
         configuration.getRefillStrategy().setupInitialState(configuration, this);
     }
 
-    public LeakyBucketLocalState clone() {
+    private LeakyBucketLocalState() {}
 
+    public LeakyBucketLocalState clone() {
+        return new LeakyBucketLocalState(this);
     }
 
-    LeakyBucketLocalState(LeakyBucketLocalState previousState) {
+    private LeakyBucketLocalState(LeakyBucketLocalState previousState) {
         this.state = Arrays.copyOf(previousState.state, previousState.state.length);
     }
 

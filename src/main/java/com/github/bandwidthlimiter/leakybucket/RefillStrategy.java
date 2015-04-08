@@ -20,10 +20,12 @@ package com.github.bandwidthlimiter.leakybucket;
  */
 public interface RefillStrategy {
 
-    void setupInitialState(LeakyBucketConfiguration configuration, LeakyBucketState collection, long currentTime);
+    void setupInitialState(LeakyBucketConfiguration configuration, LeakyBucketState state, long currentTime);
 
-    void refill(LeakyBucketConfiguration configuration, LeakyBucketState collection, long currentTime);
+    void refill(LeakyBucketConfiguration configuration, LeakyBucketState state, long currentTime);
     
-    long timeRequiredToRefill(Bandwidth bandwidth, long previousRefillMarker, long currentTime, long numTokens);
+    long timeRequiredToRefill(LeakyBucketConfiguration configuration, int bandwidthIndex, long numTokens);
+
+    int sizeOfState(LeakyBucketConfiguration configuration);
 
 }

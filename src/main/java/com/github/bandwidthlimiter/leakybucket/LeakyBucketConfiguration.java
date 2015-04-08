@@ -48,12 +48,28 @@ public class LeakyBucketConfiguration {
         return guaranteedBandwidth;
     }
 
+    public boolean hasGuaranteedBandwidth() {
+        return guaranteedBandwidth != null;
+    }
+
+    public int getLimitedBandwidthsCount() {
+        return limitedBandwidths.length;
+    }
+
     public Bandwidth[] getLimitedBandwidths() {
         return limitedBandwidths;
     }
 
     public Bandwidth[] getAllBandwidths() {
         return allBandwidths;
+    }
+
+    public Bandwidth getBandwidths(int bandwidthIndex) {
+        return allBandwidths[bandwidthIndex];
+    }
+
+    public int getBandwidthCount() {
+        return allBandwidths.length;
     }
 
     public boolean isRaiseErrorWhenConsumeGreaterThanSmallestBandwidth() {
@@ -63,5 +79,4 @@ public class LeakyBucketConfiguration {
     public RefillStrategy getRefillStrategy() {
         return refillStrategy;
     }
-
 }

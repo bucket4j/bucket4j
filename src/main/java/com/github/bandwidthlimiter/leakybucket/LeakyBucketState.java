@@ -6,8 +6,8 @@ public interface LeakyBucketState {
 
     void setCurrentSize(int bandwidthIndex, long size);
 
-    long getRefillMarker(LeakyBucketConfiguration configuration, int idx);
+    long getRefillState(LeakyBucketConfiguration configuration, int idx);
 
-    void setRefillMarker(LeakyBucketConfiguration configuration, int idx, long refillMarker);
+    void setRefillState(LeakyBucketConfiguration configuration, int idx, long refillMarker);
 
 }
