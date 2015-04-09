@@ -27,19 +27,17 @@ public final class Bandwidth {
     private final long capacity;
     private final long initialCapacity;
     private final long period;
-    private final double tokensPerTimeUnit;
-    private final double nanosecondsToGenerateOneToken;
     private final boolean guaranteed;
 
     public Bandwidth(int indexInBucket, long capacity, long period) {
         this(indexInBucket, capacity, period, false);
     }
 
-    public Bandwidth(int indexInBucket, long capacity, long period, boolean guaranted) {
-        this(indexInBucket, capacity, capacity, period, guaranted);
+    public Bandwidth(int indexInBucket, long capacity, long period, boolean guaranteed) {
+        this(indexInBucket, capacity, capacity, period, guaranteed);
     }
 
-    public Bandwidth(int indexInBucket, long capacity, long initialCapacity, long period, boolean guaranted) {
+    public Bandwidth(int indexInBucket, long capacity, long initialCapacity, long period, boolean guaranteed) {
         if (indexInBucket < 0) {
             throw new IndexOutOfBoundsException();
         }
@@ -60,9 +58,7 @@ public final class Bandwidth {
         this.capacity = capacity;
         this.initialCapacity = initialCapacity;
         this.period = period;
-        this.tokensPerTimeUnit = (double) capacity / (double) period;
-        this.nanosecondsToGenerateOneToken = (double) period / (double) capacity;
-        this.guaranteed = guaranted;
+        this.guaranteed = guaranteed;
     }
 
     public boolean isGuaranteed() {
@@ -87,6 +83,14 @@ public final class Bandwidth {
 
     public int getIndexInBucket() {
         return indexInBucket;
+    }
+
+    public double getTimeUnitsPerToken() {
+        return (double) period / (double) capacity;
+    }
+
+    public double getTokensPerTimeUnit() {
+        return (double) capacity / (double) period;
     }
 
     public static long getSmallestCapacityOfLimitedBandwidth(Bandwidth[] definitions) {
@@ -144,8 +148,8 @@ public final class Bandwidth {
             for (Bandwidth bandwidth : bandwidths) {
                 if (bandwidth.isLimited()) {
                     Bandwidth limited = bandwidth;
-                    if (limited.tokensPerTimeUnit <= guaranteedBandwidth.tokensPerTimeUnit
-                            || limited.nanosecondsToGenerateOneToken > guaranteedBandwidth.nanosecondsToGenerateOneToken) {
+                    if (limited.getTokensPerTimeUnit() <= guaranteedBandwidth.getTokensPerTimeUnit()
+                            || limited.getTimeUnitsPerToken() > guaranteedBandwidth.getTimeUnitsPerToken()) {
                         throw guarantedHasGreaterRateThanLimited(guaranteedBandwidth, limited);
                     }
                 }
@@ -156,11 +160,10 @@ public final class Bandwidth {
     @Override
     public String toString() {
         return "Bandwidth{" +
-                "capacity=" + capacity +
+                "indexInBucket=" + indexInBucket +
+                ", capacity=" + capacity +
                 ", initialCapacity=" + initialCapacity +
                 ", period=" + period +
-                ", tokensPerTimeUnit=" + tokensPerTimeUnit +
-                ", nanosecondsToGenerateOneToken=" + nanosecondsToGenerateOneToken +
                 ", guaranteed=" + guaranteed +
                 '}';
     }
@@ -172,26 +175,20 @@ public final class Bandwidth {
 
         Bandwidth bandwidth = (Bandwidth) o;
 
+        if (indexInBucket != bandwidth.indexInBucket) return false;
         if (capacity != bandwidth.capacity) return false;
         if (initialCapacity != bandwidth.initialCapacity) return false;
         if (period != bandwidth.period) return false;
-        if (Double.compare(bandwidth.tokensPerTimeUnit, tokensPerTimeUnit) != 0) return false;
-        if (Double.compare(bandwidth.nanosecondsToGenerateOneToken, nanosecondsToGenerateOneToken) != 0) return false;
         return guaranteed == bandwidth.guaranteed;
 
     }
 
     @Override
     public int hashCode() {
-        int result;
-        long temp;
-        result = (int) (capacity ^ (capacity >>> 32));
+        int result = indexInBucket;
+        result = 31 * result + (int) (capacity ^ (capacity >>> 32));
         result = 31 * result + (int) (initialCapacity ^ (initialCapacity >>> 32));
         result = 31 * result + (int) (period ^ (period >>> 32));
-        temp = Double.doubleToLongBits(tokensPerTimeUnit);
-        result = 31 * result + (int) (temp ^ (temp >>> 32));
-        temp = Double.doubleToLongBits(nanosecondsToGenerateOneToken);
-        result = 31 * result + (int) (temp ^ (temp >>> 32));
         result = 31 * result + (guaranteed ? 1 : 0);
         return result;
     }

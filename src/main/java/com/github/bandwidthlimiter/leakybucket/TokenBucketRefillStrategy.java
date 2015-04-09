@@ -1,41 +1,61 @@
 package com.github.bandwidthlimiter.leakybucket;
 
-import com.github.bandwidthlimiter.leakybucket.Bandwidth;
-import com.github.bandwidthlimiter.leakybucket.LeakyBucketConfiguration;
-import com.github.bandwidthlimiter.leakybucket.LeakyBucketState;
-import com.github.bandwidthlimiter.leakybucket.RefillStrategy;
-
 public final class TokenBucketRefillStrategy implements RefillStrategy {
 
-    public static final RefillStrategy INSTANCE = new TokenBucketRefillStrategy();
+    private final long period;
+    private final long tokens;
 
-    public TokenBucketRefillStrategy() {
-        throw new UnsupportedOperationException();
+    public TokenBucketRefillStrategy(long period, long tokens) {
+        // TODO args validation
+        this.period = period;
+        this.tokens = tokens;
     }
 
     @Override
     public void setupInitialState(LeakyBucketConfiguration configuration, LeakyBucketState state, long currentTime) {
-//        for (Bandwidth bandwidth: configuration.getBandwidths()) {
-//            final int i = bandwidth.getIndexInBucket();
-//            state.setCurrentSize(i, bandwidth.getInitialCapacity());
-//            state.setRefillState(configuration, i, currentTime);
-//        }
+        for (Bandwidth bandwidth: configuration.getBandwidths()) {
+            state.setCurrentSize(bandwidth, bandwidth.getInitialCapacity());
+            state.setRefillState(configuration, bandwidth.getIndexInBucket(), currentTime);
+        }
     }
 
     @Override
     public void refill(LeakyBucketConfiguration configuration, LeakyBucketState state, long currentTime) {
-//        for (Bandwidth bandwidth: configuration.getBandwidths()) {
-//            final int i = bandwidth.getIndexInBucket();
-//            long previousRefillTime = state.getRefillState(configuration, i);
-//            final long maxCapacity = bandwidth.getMaxCapacity();
-//            long calculatedRefill = (currentTime - previousRefillTime) * maxCapacity / bandwidth.getPeriod();
-//            if (calculatedRefill > 0) {
-//                long newSize = state.getCurrentSize(i) + calculatedRefill;
-//                newSize = Math.min(maxCapacity, newSize);
-//                state.setCurrentSize(i, newSize);
-//                state.setRefillState(configuration, i, currentTime);
-//            }
-//        }
+        for (Bandwidth bandwidth: configuration.getBandwidths()) {
+            final int i = bandwidth.getIndexInBucket();
+            long previousRefillTime = state.getRefillState(configuration, i);
+            final long maxCapacity = bandwidth.getMaxCapacity();
+
+            long durationSinceLastRefill = currentTime - previousRefillTime;
+            if (durationSinceLastRefill < this.period) {
+                continue;
+            }
+
+            final long bandwidthPeriod = bandwidth.getPeriod();
+            if (durationSinceLastRefill > bandwidthPeriod) {
+                state.setCurrentSize(bandwidth, maxCapacity);
+                state.setRefillState(configuration, i, currentTime);
+                continue;
+            }
+
+            long periodCount = durationSinceLastRefill / this.period;
+            if (periodCount == 0) {
+                continue;
+            }
+
+            long calculatedRefill = tokens * periodCount;
+            long newSize = state.getCurrentSize(bandwidth) + calculatedRefill;
+            if (newSize >= maxCapacity) {
+                state.setCurrentSize(bandwidth, maxCapacity);
+                state.setRefillState(configuration, i, currentTime);
+                continue;
+            }
+
+            state.setCurrentSize(bandwidth, newSize);
+            long durationCorrection = durationSinceLastRefill % this.period;
+            long effectiveRefillTime = currentTime - durationCorrection;
+            state.setRefillState(configuration, i, effectiveRefillTime);
+        }
     }
 
     @Override
@@ -46,6 +66,33 @@ public final class TokenBucketRefillStrategy implements RefillStrategy {
     @Override
     public int sizeOfState(LeakyBucketConfiguration configuration) {
         return configuration.getBandwidthCount();
+    }
+
+    @Override
+    public String toString() {
+        return "TokenBucketRefillStrategy{" +
+                "period=" + period +
+                ", tokens=" + tokens +
+                '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        TokenBucketRefillStrategy that = (TokenBucketRefillStrategy) o;
+
+        if (period != that.period) return false;
+        return tokens == that.tokens;
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = (int) (period ^ (period >>> 32));
+        result = 31 * result + (int) (tokens ^ (tokens >>> 32));
+        return result;
     }
 
 }

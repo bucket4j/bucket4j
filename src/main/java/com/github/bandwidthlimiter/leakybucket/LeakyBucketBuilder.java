@@ -62,8 +62,8 @@ public final class LeakyBucketBuilder {
         return this;
     }
 
-    public LeakyBucketBuilder withTokenBucketRefillStrategy() {
-        this.refillStrategy = TokenBucketRefillStrategy.INSTANCE;
+    public LeakyBucketBuilder withTokenBucketRefillStrategy(long period, long tokens) {
+        this.refillStrategy = new TokenBucketRefillStrategy(period, tokens);
         return this;
     }
 
