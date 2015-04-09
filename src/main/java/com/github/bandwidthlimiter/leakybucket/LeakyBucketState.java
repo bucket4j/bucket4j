@@ -2,12 +2,12 @@ package com.github.bandwidthlimiter.leakybucket;
 
 public interface LeakyBucketState {
 
-    long getCurrentSize(int bandwidthIndex);
+    long getCurrentSize(Bandwidth bandwidth);
 
-    void setCurrentSize(int bandwidthIndex, long size);
+    void setCurrentSize(Bandwidth bandwidth, long size);
 
-    long getRefillState(LeakyBucketConfiguration configuration, int idx);
+    long getRefillState(LeakyBucketConfiguration configuration, int offset);
 
-    void setRefillState(LeakyBucketConfiguration configuration, int idx, long refillState);
+    void setRefillState(LeakyBucketConfiguration configuration, int offset, long value);
 
 }

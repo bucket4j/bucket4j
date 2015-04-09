@@ -1,6 +1,5 @@
-package com.github.bandwidthlimiter.leakybucket.genericcellrate
+package com.github.bandwidthlimiter.leakybucket
 
-import com.github.bandwidthlimiter.leakybucket.LeakyBucketExceptions
 import spock.lang.Specification
 import spock.lang.Unroll
 

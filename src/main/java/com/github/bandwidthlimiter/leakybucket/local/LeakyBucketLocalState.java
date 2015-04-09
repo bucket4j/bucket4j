@@ -12,29 +12,29 @@ public class LeakyBucketLocalState implements LeakyBucketState {
     private final long[] state;
 
     @Override
-    public long getCurrentSize(int bandwidthIndex) {
-        return state[bandwidthIndex];
+    public long getCurrentSize(Bandwidth bandwidth) {
+        return state[bandwidth.getIndexInBucket()];
     }
 
     @Override
-    public void setCurrentSize(int bandwidthIndex, long size) {
-        state[bandwidthIndex] = size;
+    public void setCurrentSize(Bandwidth bandwidth, long size) {
+        state[bandwidth.getIndexInBucket()] = size;
     }
 
     @Override
-    public long getRefillState(LeakyBucketConfiguration configuration, int bandwidthIndex) {
-        return state[configuration.getBandwidthCount() + bandwidthIndex];
+    public long getRefillState(LeakyBucketConfiguration configuration, int offset) {
+        return state[configuration.getBandwidthCount() + offset];
     }
 
     @Override
-    public void setRefillState(LeakyBucketConfiguration configuration, int bandwidthIndex, long refillState) {
-        state[configuration.getBandwidthCount() + bandwidthIndex] = refillState;
+    public void setRefillState(LeakyBucketConfiguration configuration, int offset, long value) {
+        state[configuration.getBandwidthCount() + offset] = value;
     }
 
     LeakyBucketLocalState(LeakyBucketConfiguration configuration) {
         final RefillStrategy refillStrategy = configuration.getRefillStrategy();
         this.state = new long[configuration.getBandwidths().length + refillStrategy.sizeOfState(configuration)];
-        long currentTime = configuration.getTimeMetter().currentTime();
+        long currentTime = configuration.getTimeMeter().currentTime();
         refillStrategy.setupInitialState(configuration, this, currentTime);
     }
 
@@ -51,15 +51,13 @@ public class LeakyBucketLocalState implements LeakyBucketState {
     }
 
     public long getAvailableTokens(LeakyBucketConfiguration configuration) {
-        Bandwidth[] bandwidths = configuration.getBandwidths();
         long availableByLimitation = Long.MAX_VALUE;
         long availableByGuarantee = 0;
-        for (int i = 0; i < bandwidths.length; i++) {
-            Bandwidth bandwidth = bandwidths[i];
+        for (Bandwidth bandwidth : configuration.getBandwidths()) {
             if (bandwidth.isLimited()) {
-                availableByLimitation = Math.min(availableByLimitation, getCurrentSize(i));
+                availableByLimitation = Math.min(availableByLimitation, getCurrentSize(bandwidth));
             } else {
-                availableByGuarantee = getCurrentSize(i);
+                availableByGuarantee = getCurrentSize(bandwidth);
             }
         }
         return Math.max(availableByLimitation, availableByGuarantee);
@@ -68,7 +66,7 @@ public class LeakyBucketLocalState implements LeakyBucketState {
     public void consume(LeakyBucketConfiguration configuration, long toConsume) {
         final int bandwidthCount = configuration.getBandwidthCount();
         for (int i = 0; i < bandwidthCount; i++) {
-            state[i]= Math.max(0, state[i] - toConsume);
+            state[i] = Math.max(0, state[i] - toConsume);
         }
     }
 

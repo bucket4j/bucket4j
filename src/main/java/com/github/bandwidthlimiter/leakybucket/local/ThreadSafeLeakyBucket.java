@@ -39,7 +39,7 @@ public class ThreadSafeLeakyBucket extends AbstractLeakyBucket {
         LeakyBucketLocalState previousState = stateReference.get();
         LeakyBucketLocalState newState = previousState.clone();
         while (true) {
-            long currentTime = configuration.getTimeMetter().currentTime();
+            long currentTime = configuration.getTimeMeter().currentTime();
             configuration.getRefillStrategy().refill(configuration, newState, currentTime);
             long availableToConsume = newState.getAvailableTokens(configuration);
             long toConsume = Math.min(limit, availableToConsume);
@@ -59,7 +59,7 @@ public class ThreadSafeLeakyBucket extends AbstractLeakyBucket {
         LeakyBucketLocalState newState = previousState.clone();
 
         while (true) {
-            long currentTime = configuration.getTimeMetter().currentTime();
+            long currentTime = configuration.getTimeMeter().currentTime();
             configuration.getRefillStrategy().refill(configuration, newState, currentTime);
             long availableToConsume = newState.getAvailableTokens(configuration);
             if (tokensToConsume > availableToConsume) {
@@ -79,7 +79,7 @@ public class ThreadSafeLeakyBucket extends AbstractLeakyBucket {
     protected boolean consumeOrAwaitImpl(long tokensToConsume, long waitIfBusyTimeLimit) throws InterruptedException {
         boolean isWaitingLimited = waitIfBusyTimeLimit > 0;
 
-        final long methodStartTime = isWaitingLimited? configuration.getTimeMetter().currentTime(): 0;
+        final long methodStartTime = isWaitingLimited? configuration.getTimeMeter().currentTime(): 0;
         long currentTime = methodStartTime;
         long methodDuration = 0;
         boolean isFirstCycle = true;
@@ -91,7 +91,7 @@ public class ThreadSafeLeakyBucket extends AbstractLeakyBucket {
             if (isFirstCycle) {
                 isFirstCycle = false;
             } else {
-                currentTime = configuration.getTimeMetter().currentTime();
+                currentTime = configuration.getTimeMeter().currentTime();
                 methodDuration = currentTime - methodStartTime;
                 if (isWaitingLimited && methodDuration >= waitIfBusyTimeLimit) {
                     return false;
@@ -119,7 +119,7 @@ public class ThreadSafeLeakyBucket extends AbstractLeakyBucket {
                     return false;
                 }
             }
-            configuration.getTimeMetter().sleep(timeToCloseDeficit);
+            configuration.getTimeMeter().sleep(timeToCloseDeficit);
         }
     }
 

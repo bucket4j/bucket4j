@@ -18,7 +18,6 @@ package com.github.bandwidthlimiter.leakybucket.local;
 import com.github.bandwidthlimiter.leakybucket.AbstractLeakyBucket;
 import com.github.bandwidthlimiter.leakybucket.LeakyBucketConfiguration;
 import com.github.bandwidthlimiter.leakybucket.LeakyBucketState;
-import com.github.bandwidthlimiter.leakybucket.RefillStrategy;
 
 public class UnsafeLeakyBucket extends AbstractLeakyBucket {
 
@@ -31,7 +30,7 @@ public class UnsafeLeakyBucket extends AbstractLeakyBucket {
 
     @Override
     protected long consumeAsMuchAsPossibleImpl(long limit) {
-        long currentTime = configuration.getTimeMetter().currentTime();
+        long currentTime = configuration.getTimeMeter().currentTime();
         configuration.getRefillStrategy().refill(configuration, state, currentTime);
         long availableToConsume = state.getAvailableTokens(configuration);
         long toConsume = Math.min(limit, availableToConsume);
@@ -41,7 +40,7 @@ public class UnsafeLeakyBucket extends AbstractLeakyBucket {
 
     @Override
     protected boolean tryConsumeImpl(long tokensToConsume) {
-        long currentTime = configuration.getTimeMetter().currentTime();
+        long currentTime = configuration.getTimeMeter().currentTime();
         configuration.getRefillStrategy().refill(configuration, state, currentTime);
         long availableToConsume = state.getAvailableTokens(configuration);
         if (tokensToConsume <= availableToConsume) {
@@ -55,7 +54,7 @@ public class UnsafeLeakyBucket extends AbstractLeakyBucket {
     @Override
     protected boolean consumeOrAwaitImpl(long tokensToConsume, long waitIfBusyTimeLimit) throws InterruptedException {
         while (true) {
-            long currentTime = configuration.getTimeMetter().currentTime();
+            long currentTime = configuration.getTimeMeter().currentTime();
             configuration.getRefillStrategy().refill(configuration, state, currentTime);
             long availableToConsume = state.getAvailableTokens(configuration);
             if (tokensToConsume <= availableToConsume) {
@@ -70,7 +69,7 @@ public class UnsafeLeakyBucket extends AbstractLeakyBucket {
                     return false;
                 }
             }
-            configuration.getTimeMetter().sleep(timeToCloseDeficit);
+            configuration.getTimeMeter().sleep(timeToCloseDeficit);
         }
     }
 

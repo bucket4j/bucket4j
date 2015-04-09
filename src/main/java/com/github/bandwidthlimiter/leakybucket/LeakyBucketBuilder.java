@@ -9,12 +9,12 @@ import java.util.List;
 public final class LeakyBucketBuilder {
 
     private RefillStrategy refillStrategy = GenericCellRateRefillStrategy.INSTANCE;
-    private TimeMetter timeMetter = TimeMetter.SYSTEM_NANOTIME;
+    private TimeMeter timeMeter = TimeMeter.SYSTEM_NANOTIME;
     private boolean raiseErrorWhenConsumeGreaterThanSmallestBandwidth = false;
     private List<Bandwidth> bandwidths = new ArrayList<>(1);
 
-    public LeakyBucketBuilder(TimeMetter timeMetter) {
-        this.timeMetter = timeMetter;
+    public LeakyBucketBuilder(TimeMeter timeMeter) {
+        this.timeMeter = timeMeter;
     }
 
     public LeakyBucket build() {
@@ -62,8 +62,8 @@ public final class LeakyBucketBuilder {
         return this;
     }
 
-    public LeakyBucketBuilder withTokenBucketRefillStrategy() {
-        this.refillStrategy = TokenBucketRefillStrategy.INSTANCE;
+    public LeakyBucketBuilder withTokenBucketRefillStrategy(long period, long tokens) {
+        this.refillStrategy = new TokenBucketRefillStrategy(period, tokens);
         return this;
     }
 
@@ -72,7 +72,7 @@ public final class LeakyBucketBuilder {
         for (int i = 0; i < bandwidths.length; i++) {
             bandwidths[i] = this.bandwidths.get(i);
         }
-        return new LeakyBucketConfiguration(bandwidths, raiseErrorWhenConsumeGreaterThanSmallestBandwidth, timeMetter, refillStrategy);
+        return new LeakyBucketConfiguration(bandwidths, raiseErrorWhenConsumeGreaterThanSmallestBandwidth, timeMeter, refillStrategy);
     }
 
     public Bandwidth getBandwidth(int indexInTheBucket) {
