@@ -20,13 +20,13 @@ package com.github.bandwidthlimiter.leakybucket;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.LockSupport;
 
-public interface TimeMetter {
+public interface TimeMeter {
 
     long currentTime();
 
     void sleep(long units) throws InterruptedException;
 
-    static final TimeMetter SYSTEM_NANOTIME = new TimeMetter() {
+    static final TimeMeter SYSTEM_NANOTIME = new TimeMeter() {
         @Override
         public long currentTime() {
             return System.nanoTime();
@@ -42,7 +42,7 @@ public interface TimeMetter {
 
     };
 
-    static final TimeMetter SYSTEM_MILLISECONDS = new TimeMetter() {
+    static final TimeMeter SYSTEM_MILLISECONDS = new TimeMeter() {
         @Override
         public long currentTime() {
             return System.currentTimeMillis();

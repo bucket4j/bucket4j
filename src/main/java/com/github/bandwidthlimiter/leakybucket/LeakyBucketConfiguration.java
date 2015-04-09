@@ -2,19 +2,19 @@ package com.github.bandwidthlimiter.leakybucket;
 
 import static com.github.bandwidthlimiter.leakybucket.LeakyBucketExceptions.*;
 
-public class LeakyBucketConfiguration {
+public final class LeakyBucketConfiguration {
 
     private final RefillStrategy refillStrategy;
     private final Bandwidth[] bandwidths;
     private final boolean raiseErrorWhenConsumeGreaterThanSmallestBandwidth;
-    private final TimeMetter timeMetter;
+    private final TimeMeter timeMeter;
 
     public LeakyBucketConfiguration(Bandwidth[] bandwidths, boolean raiseErrorWhenConsumeGreaterThanSmallestBandwidth,
-            TimeMetter timeMetter, RefillStrategy refillStrategy) {
-        if (timeMetter == null) {
+            TimeMeter timeMeter, RefillStrategy refillStrategy) {
+        if (timeMeter == null) {
             throw nullTimeMetter();
         }
-        this.timeMetter = timeMetter;
+        this.timeMeter = timeMeter;
 
         if (refillStrategy == null) {
             throw nullRefillStrategy();
@@ -26,8 +26,8 @@ public class LeakyBucketConfiguration {
         this.raiseErrorWhenConsumeGreaterThanSmallestBandwidth = raiseErrorWhenConsumeGreaterThanSmallestBandwidth;
     }
 
-    public TimeMetter getTimeMetter() {
-        return timeMetter;
+    public TimeMeter getTimeMeter() {
+        return timeMeter;
     }
 
     public RefillStrategy getRefillStrategy() {
