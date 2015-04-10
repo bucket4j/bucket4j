@@ -16,15 +16,25 @@
 
 package com.github.bandwidthlimiter.bucket;
 
+import java.io.Serializable;
+
 import static com.github.bandwidthlimiter.bucket.BucketExceptions.*;
 
-public final class Bandwidth {
+public final class Bandwidth implements Serializable {
 
     private final int indexInBucket;
     private final Capacity capacity;
     private final long initialCapacity;
     private final long period;
     private final boolean guaranteed;
+
+    public Bandwidth() {
+        indexInBucket = 0;
+        capacity = null;
+        initialCapacity = 0;
+        period = 0;
+        guaranteed = false;
+    }
 
     public Bandwidth(int indexInBucket, Capacity capacity, long initialCapacity, long period, boolean guaranteed) {
         if (indexInBucket < 0) {

@@ -3,10 +3,9 @@ package com.github.bandwidthlimiter.bucket
 import spock.lang.Specification
 import spock.lang.Unroll
 
-
-import static com.github.bandwidthlimiter.Limiters.bucketWithNanoPrecision
-import static com.github.bandwidthlimiter.Limiters.bucketWithCustomPrecisionPrecision
-import static BucketExceptions.*
+import static com.github.bandwidthlimiter.Limiters.withCustomTimePrecision
+import static com.github.bandwidthlimiter.Limiters.withNanoTimePrecision
+import static com.github.bandwidthlimiter.bucket.BucketExceptions.*
 
 public class DetectionOfIllegalApiUsageSpecification extends Specification {
 
@@ -16,7 +15,7 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
     @Unroll
     def "Should detect that capacity #capacity is wrong"(long capacity) {
         when:
-            bucketWithNanoPrecision().withLimitedBandwidth(capacity, VALID_PERIOD)
+            withNanoTimePrecision().withLimitedBandwidth(capacity, VALID_PERIOD)
         then:
             IllegalArgumentException ex = thrown()
             ex.message == BucketExceptions.nonPositiveCapacity(capacity).message
@@ -27,7 +26,7 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
     @Unroll
     def "Should detect that initial capacity #initialCapacity is wrong"(long initialCapacity) {
         when:
-            bucketWithNanoPrecision().withLimitedBandwidth(VALID_CAPACITY, VALID_PERIOD, initialCapacity)
+            withNanoTimePrecision().withLimitedBandwidth(VALID_CAPACITY, VALID_PERIOD, initialCapacity)
         then:
             IllegalArgumentException ex = thrown()
             ex.message == nonPositiveInitialCapacity(initialCapacity).message
@@ -39,13 +38,13 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
         setup:
             long wrongInitialCapacity = VALID_CAPACITY + 1
         when:
-            bucketWithNanoPrecision().withLimitedBandwidth(VALID_CAPACITY, VALID_PERIOD, wrongInitialCapacity)
+            withNanoTimePrecision().withLimitedBandwidth(VALID_CAPACITY, VALID_PERIOD, wrongInitialCapacity)
         then:
             IllegalArgumentException ex = thrown()
             ex.message == initialCapacityGreaterThanMaxCapacity(wrongInitialCapacity, VALID_CAPACITY).message
 
         when:
-            bucketWithNanoPrecision().withLimitedBandwidth(VALID_CAPACITY, VALID_PERIOD, VALID_CAPACITY)
+            withNanoTimePrecision().withLimitedBandwidth(VALID_CAPACITY, VALID_PERIOD, VALID_CAPACITY)
         then:
            notThrown IllegalArgumentException
     }
@@ -53,7 +52,7 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
     @Unroll
     def "Should check that #period is invalid period of bandwidth"(long period) {
         when:
-            bucketWithNanoPrecision().withLimitedBandwidth(VALID_CAPACITY, period)
+            withNanoTimePrecision().withLimitedBandwidth(VALID_CAPACITY, period)
         then:
             IllegalArgumentException ex = thrown()
             ex.message == nonPositivePeriod(period).message
@@ -63,9 +62,9 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
 
     def "Should check than time metter is not null"() {
         setup:
-            def builder = bucketWithCustomPrecisionPrecision(null).withLimitedBandwidth(VALID_CAPACITY, VALID_PERIOD)
+            def builder = withCustomTimePrecision(null).withLimitedBandwidth(VALID_CAPACITY, VALID_PERIOD)
         when:
-            builder.build()
+            builder.buildLocalThreadSafe()
         then:
             IllegalArgumentException ex = thrown()
             ex.message == nullTimeMetter().message
@@ -73,9 +72,9 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
 
     def "Should check than refill strategy is not null"() {
         setup:
-            def builder = bucketWithNanoPrecision().withLimitedBandwidth(VALID_CAPACITY, VALID_PERIOD)
+            def builder = withNanoTimePrecision().withLimitedBandwidth(VALID_CAPACITY, VALID_PERIOD)
         when:
-            builder.withCustomRefillStrategy(null).build()
+            builder.withCustomRefillStrategy(null).buildLocalThreadSafe()
         then:
             IllegalArgumentException ex = thrown()
             ex.message == nullRefillStrategy().message
@@ -83,15 +82,15 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
 
     def  "Should check that limited bandwidth list is not empty"() {
         setup:
-            def builder = bucketWithNanoPrecision()
+            def builder = withNanoTimePrecision()
         when:
-            builder.build()
+            builder.buildLocalThreadSafe()
         then:
             IllegalArgumentException ex = thrown()
             ex.message == restrictionsNotSpecified().message
 
         when:
-           builder.withGuaranteedBandwidth(VALID_CAPACITY, VALID_PERIOD).build()
+           builder.withGuaranteedBandwidth(VALID_CAPACITY, VALID_PERIOD).buildLocalThreadSafe()
         then:
             ex = thrown()
             ex.message == restrictionsNotSpecified().message
@@ -99,12 +98,12 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
 
     def "Should check that guaranteed capacity could not be configured twice"() {
         setup:
-            def builder = bucketWithNanoPrecision()
+            def builder = withNanoTimePrecision()
                 .withLimitedBandwidth(VALID_CAPACITY * 2, VALID_PERIOD)
                 .withGuaranteedBandwidth(VALID_CAPACITY + 1, VALID_PERIOD)
                 .withGuaranteedBandwidth(VALID_CAPACITY, VALID_PERIOD)
         when:
-            builder.build()
+            builder.buildLocalThreadSafe()
         then:
             IllegalArgumentException ex = thrown()
             ex.message == onlyOneGuarantedBandwidthSupported().message
@@ -112,11 +111,11 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
 
     def "Should check that guaranteed bandwidth has lesser rate than limited bandwidth"() {
         setup:
-            def builder = bucketWithNanoPrecision()
+            def builder = withNanoTimePrecision()
                 .withLimitedBandwidth(VALID_CAPACITY, VALID_PERIOD)
                 .withGuaranteedBandwidth(VALID_CAPACITY, VALID_PERIOD)
         when:
-            builder.build()
+            builder.buildLocalThreadSafe()
         then:
             IllegalArgumentException ex = thrown()
             ex.message == guarantedHasGreaterRateThanLimited(builder.getBandwidth(1), builder.getBandwidth(0)).message
@@ -125,11 +124,11 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
     @Unroll
     def "Should check for overlaps, test #number"(int number, long firstCapacity, long firstPeriod, long secondCapacity, long secondPeriod) {
         setup:
-            def builder = bucketWithNanoPrecision()
+            def builder = withNanoTimePrecision()
                 .withLimitedBandwidth(firstCapacity, firstPeriod)
                 .withLimitedBandwidth(secondCapacity, secondPeriod)
         when:
-            builder.build()
+            builder.buildLocalThreadSafe()
         then:
             IllegalArgumentException ex = thrown()
             ex.message == hasOverlaps(builder.getBandwidth(0), builder.getBandwidth(1)).message
@@ -146,7 +145,7 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
 
     def "Should check that tokens to consume should be positive"() {
         setup:
-            def bucket = bucketWithNanoPrecision().withLimitedBandwidth(VALID_CAPACITY, VALID_PERIOD).build()
+            def bucket = withNanoTimePrecision().withLimitedBandwidth(VALID_CAPACITY, VALID_PERIOD).buildLocalThreadSafe()
         when:
             bucket.consume(0)
         then:
@@ -162,7 +161,7 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
 
     def "Should check that time units to wait should be positive"() {
         setup:
-            def bucket = bucketWithNanoPrecision().withLimitedBandwidth(VALID_CAPACITY, VALID_PERIOD).build()
+            def bucket = withNanoTimePrecision().withLimitedBandwidth(VALID_CAPACITY, VALID_PERIOD).buildLocalThreadSafe()
         when:
             bucket.tryConsumeSingleToken(0)
         then:
@@ -178,9 +177,9 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
 
     def "Should check that unable try to consume number of tokens greater than smallest capacity when user has deprecated this option"() {
         setup:
-            def bucket = bucketWithNanoPrecision()
+            def bucket = withNanoTimePrecision()
                 .raiseErrorWhenConsumeGreaterThanSmallestBandwidth()
-                .withLimitedBandwidth(VALID_CAPACITY, VALID_PERIOD).build()
+                .withLimitedBandwidth(VALID_CAPACITY, VALID_PERIOD).buildLocalThreadSafe()
         when:
             bucket.tryConsume(VALID_CAPACITY + 1)
         then:
@@ -190,7 +189,7 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
 
     def "Should always check when client try to consume number of tokens greater than smallest capacity on invocation of methods with support of waiting"() {
         setup:
-            def bucket = bucketWithNanoPrecision().withLimitedBandwidth(VALID_CAPACITY, VALID_PERIOD).build()
+            def bucket = withNanoTimePrecision().withLimitedBandwidth(VALID_CAPACITY, VALID_PERIOD).buildLocalThreadSafe()
         when:
             bucket.consume(VALID_CAPACITY + 1)
         then:

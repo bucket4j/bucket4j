@@ -1,8 +1,12 @@
 package com.github.bandwidthlimiter.bucket;
 
+import com.github.bandwidthlimiter.bucket.grid.GridBucketState;
+import com.github.bandwidthlimiter.bucket.grid.hazelcast.HazelcastBucket;
 import com.github.bandwidthlimiter.bucket.local.ThreadSafeBucket;
 import com.github.bandwidthlimiter.bucket.local.UnsafeBucket;
+import com.hazelcast.core.IMap;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,14 +21,19 @@ public final class BucketBuilder {
         this.timeMeter = timeMeter;
     }
 
-    public Bucket build() {
+    public Bucket buildLocalThreadSafe() {
         BucketConfiguration configuration = createConfiguration();
         return new ThreadSafeBucket(configuration);
     }
 
-    public Bucket buildUnsafe() {
+    public Bucket buildLocalUnsafe() {
         BucketConfiguration configuration = createConfiguration();
         return new UnsafeBucket(configuration);
+    }
+
+    public Bucket buildHazelcast(IMap<Object, GridBucketState> map, Serializable key) {
+        BucketConfiguration configuration = createConfiguration();
+        return new HazelcastBucket(configuration, map, key);
     }
 
     public BucketBuilder withGuaranteedBandwidth(long maxCapacity, long period) {

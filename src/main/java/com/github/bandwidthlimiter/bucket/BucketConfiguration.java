@@ -1,8 +1,11 @@
 package com.github.bandwidthlimiter.bucket;
 
-import static com.github.bandwidthlimiter.bucket.BucketExceptions.*;
+import java.io.Serializable;
 
-public final class BucketConfiguration {
+import static com.github.bandwidthlimiter.bucket.BucketExceptions.nullRefillStrategy;
+import static com.github.bandwidthlimiter.bucket.BucketExceptions.nullTimeMetter;
+
+public final class BucketConfiguration implements Serializable {
 
     private final RefillStrategy refillStrategy;
     private final Bandwidth[] bandwidths;

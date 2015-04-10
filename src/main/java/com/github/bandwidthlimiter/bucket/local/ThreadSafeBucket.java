@@ -24,20 +24,20 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class ThreadSafeBucket extends AbstractBucket {
 
-    private final AtomicReference<BucketLocalState> stateReference;
+    private final AtomicReference<BucketState> stateReference;
     private final BucketConfiguration configuration;
 
     public ThreadSafeBucket(BucketConfiguration configuration) {
         super(configuration);
         this.configuration = configuration;
-        BucketLocalState initialState = new BucketLocalState(configuration);
+        BucketState initialState = new BucketState(configuration);
         this.stateReference = new AtomicReference<>(initialState);
     }
 
     @Override
     protected long consumeAsMuchAsPossibleImpl(long limit) {
-        BucketLocalState previousState = stateReference.get();
-        BucketLocalState newState = previousState.clone();
+        BucketState previousState = stateReference.get();
+        BucketState newState = previousState.clone();
         while (true) {
             long currentTime = configuration.getTimeMeter().currentTime();
             configuration.getRefillStrategy().refill(configuration, newState, currentTime);
@@ -55,8 +55,8 @@ public class ThreadSafeBucket extends AbstractBucket {
 
     @Override
     protected boolean tryConsumeImpl(long tokensToConsume) {
-        BucketLocalState previousState = stateReference.get();
-        BucketLocalState newState = previousState.clone();
+        BucketState previousState = stateReference.get();
+        BucketState newState = previousState.clone();
 
         while (true) {
             long currentTime = configuration.getTimeMeter().currentTime();
@@ -84,8 +84,8 @@ public class ThreadSafeBucket extends AbstractBucket {
         long methodDuration = 0;
         boolean isFirstCycle = true;
 
-        BucketLocalState previousState = stateReference.get();
-        BucketLocalState newState = previousState.clone();
+        BucketState previousState = stateReference.get();
+        BucketState newState = previousState.clone();
 
         while (true) {
             if (isFirstCycle) {

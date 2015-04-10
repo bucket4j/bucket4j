@@ -21,11 +21,11 @@ import com.github.bandwidthlimiter.bucket.BucketState;
 
 public class UnsafeBucket extends AbstractBucket {
 
-    private final BucketLocalState state;
+    private final BucketState state;
 
     public UnsafeBucket(BucketConfiguration configuration) {
         super(configuration);
-        this.state = new BucketLocalState(configuration);
+        this.state = new BucketState(configuration);
     }
 
     @Override

@@ -8,11 +8,11 @@ class GenericCellRateRefillStrategySpecification extends Specification {
     def "Specification for initialization"() {
         setup:
             def metter = new TimeMeterMock(42);
-            def builder = Limiters.bucketWithCustomPrecisionPrecision(metter)
+            def builder = Limiters.withCustomTimePrecision(metter)
                     .withGenericCellRateRefillStrategy()
                     .withLimitedBandwidth(1000, 1000)
                     .withGuaranteedBandwidth(10, 100)
-            def bucket = builder.build()
+            def bucket = builder.buildLocalThreadSafe()
             def configuration = bucket.getConfiguration()
             def limited = configuration.getBandwidths(0)
             def guaranteed = configuration.getBandwidths(1)
@@ -28,11 +28,11 @@ class GenericCellRateRefillStrategySpecification extends Specification {
     def "Specification for refill"() {
         setup:
             def meter = new TimeMeterMock(10000);
-            def builder = Limiters.bucketWithCustomPrecisionPrecision(meter)
+            def builder = Limiters.withCustomTimePrecision(meter)
                     .withGenericCellRateRefillStrategy()
                     .withLimitedBandwidth(1000, 1000, 0)
                     .withGuaranteedBandwidth(10, 100, 0)
-            def bucket = builder.build()
+            def bucket = builder.buildLocalThreadSafe()
             def configuration = bucket.getConfiguration()
             def state = bucket.createSnapshot()
             def refillStrategy = configuration.getRefillStrategy()

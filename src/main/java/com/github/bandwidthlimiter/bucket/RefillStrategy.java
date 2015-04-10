@@ -15,10 +15,12 @@
  */
 package com.github.bandwidthlimiter.bucket;
 
+import java.io.Serializable;
+
 /**
  * Encapsulation of a refilling strategy for a leaky bucket.
  */
-public interface RefillStrategy {
+public interface RefillStrategy extends Serializable {
 
     void setupInitialState(BucketConfiguration configuration, BucketState state, long currentTime);
 

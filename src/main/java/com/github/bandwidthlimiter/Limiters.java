@@ -25,15 +25,15 @@ public final class Limiters {
 
     private Limiters() {}
 
-    public static BucketBuilder bucketWithNanoPrecision() {
+    public static BucketBuilder withNanoTimePrecision() {
         return new BucketBuilder(TimeMeter.SYSTEM_NANOTIME);
     }
 
-    public static BucketBuilder bucketWithMillisPrecision() {
+    public static BucketBuilder withMillisTimePrecision() {
         return new BucketBuilder(TimeMeter.SYSTEM_MILLISECONDS);
     }
 
-    public static BucketBuilder bucketWithCustomPrecisionPrecision(TimeMeter timeMeter) {
+    public static BucketBuilder withCustomTimePrecision(TimeMeter timeMeter) {
         return new BucketBuilder(timeMeter);
     }
 

@@ -1,6 +1,8 @@
 package com.github.bandwidthlimiter.bucket;
 
-public interface Capacity {
+import java.io.Serializable;
+
+public interface Capacity extends Serializable {
 
     long getValue();
 

@@ -17,10 +17,11 @@
 package com.github.bandwidthlimiter.bucket;
 
 
+import java.io.Serializable;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.LockSupport;
 
-public interface TimeMeter {
+public interface TimeMeter extends Serializable {
 
     long currentTime();
 
