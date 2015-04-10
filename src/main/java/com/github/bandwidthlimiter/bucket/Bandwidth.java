@@ -21,31 +21,23 @@ import static com.github.bandwidthlimiter.bucket.BucketExceptions.*;
 public final class Bandwidth {
 
     private final int indexInBucket;
-    private final long capacity;
+    private final Capacity capacity;
     private final long initialCapacity;
     private final long period;
     private final boolean guaranteed;
 
-    public Bandwidth(int indexInBucket, long capacity, long period) {
-        this(indexInBucket, capacity, period, false);
-    }
-
-    public Bandwidth(int indexInBucket, long capacity, long period, boolean guaranteed) {
-        this(indexInBucket, capacity, capacity, period, guaranteed);
-    }
-
-    public Bandwidth(int indexInBucket, long capacity, long initialCapacity, long period, boolean guaranteed) {
+    public Bandwidth(int indexInBucket, Capacity capacity, long initialCapacity, long period, boolean guaranteed) {
         if (indexInBucket < 0) {
             throw new IndexOutOfBoundsException();
         }
-        if (capacity <= 0) {
-            throw nonPositiveCapacity(capacity);
+        if (capacity.getValue() <= 0) {
+            throw nonPositiveCapacity(capacity.getValue());
         }
         if (initialCapacity < 0) {
             throw nonPositiveInitialCapacity(initialCapacity);
         }
-        if (initialCapacity > capacity) {
-            throw initialCapacityGreaterThanMaxCapacity(initialCapacity, capacity);
+        if (initialCapacity > capacity.getValue()) {
+            throw initialCapacityGreaterThanMaxCapacity(initialCapacity, capacity.getValue());
         }
         if (period <= 0) {
             throw nonPositivePeriod(period);
@@ -75,7 +67,7 @@ public final class Bandwidth {
     }
 
     public long getMaxCapacity() {
-        return capacity;
+        return capacity.getValue();
     }
 
     public int getIndexInBucket() {
@@ -83,18 +75,18 @@ public final class Bandwidth {
     }
 
     public double getTimeUnitsPerToken() {
-        return (double) period / (double) capacity;
+        return (double) period / (double) capacity.getValue();
     }
 
     public double getTokensPerTimeUnit() {
-        return (double) capacity / (double) period;
+        return (double) capacity.getValue() / (double) period;
     }
 
     public static long getSmallestCapacityOfLimitedBandwidth(Bandwidth[] definitions) {
         long minCapacity = Long.MAX_VALUE;
         for (int i = 0; i < definitions.length; i++) {
-            if (definitions[i].isLimited() && definitions[i].capacity < minCapacity) {
-                minCapacity = definitions[i].capacity;
+            if (definitions[i].isLimited() && definitions[i].capacity.getValue() < minCapacity) {
+                minCapacity = definitions[i].capacity.getValue();
             }
         }
         return minCapacity;
@@ -132,11 +124,11 @@ public final class Bandwidth {
                 if (second.isGuaranteed()) {
                     continue;
                 }
-                if (first.period < second.period && first.capacity >= second.capacity) {
+                if (first.period < second.period && first.capacity.getValue() >= second.capacity.getValue()) {
                     throw hasOverlaps(first, second);
                 } else if (first.period == second.period) {
                     throw hasOverlaps(first, second);
-                } else if (first.period > second.period && first.capacity <= second.capacity) {
+                } else if (first.period > second.period && first.capacity.getValue() <= second.capacity.getValue()) {
                     throw hasOverlaps(first, second);
                 }
             }
@@ -154,39 +146,4 @@ public final class Bandwidth {
         }
     }
 
-    @Override
-    public String toString() {
-        return "Bandwidth{" +
-                "indexInBucket=" + indexInBucket +
-                ", capacity=" + capacity +
-                ", initialCapacity=" + initialCapacity +
-                ", period=" + period +
-                ", guaranteed=" + guaranteed +
-                '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        Bandwidth bandwidth = (Bandwidth) o;
-
-        if (indexInBucket != bandwidth.indexInBucket) return false;
-        if (capacity != bandwidth.capacity) return false;
-        if (initialCapacity != bandwidth.initialCapacity) return false;
-        if (period != bandwidth.period) return false;
-        return guaranteed == bandwidth.guaranteed;
-
-    }
-
-    @Override
-    public int hashCode() {
-        int result = indexInBucket;
-        result = 31 * result + (int) (capacity ^ (capacity >>> 32));
-        result = 31 * result + (int) (initialCapacity ^ (initialCapacity >>> 32));
-        result = 31 * result + (int) (period ^ (period >>> 32));
-        result = 31 * result + (guaranteed ? 1 : 0);
-        return result;
-    }
 }

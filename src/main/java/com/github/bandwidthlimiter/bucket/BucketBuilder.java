@@ -27,21 +27,33 @@ public final class BucketBuilder {
         return new UnsafeBucket(configuration);
     }
 
-    public BucketBuilder withGuaranteedBandwidth(long capacity, long period) {
-        return withGuaranteedBandwidth(capacity, period, capacity);
+    public BucketBuilder withGuaranteedBandwidth(long maxCapacity, long period) {
+        return withGuaranteedBandwidth(maxCapacity, period, maxCapacity);
     }
 
-    public BucketBuilder withGuaranteedBandwidth(long capacity, long period, long initialCapacity) {
-        final Bandwidth bandwidth = new Bandwidth(bandwidths.size(), capacity, initialCapacity, period, true);
+    public BucketBuilder withGuaranteedBandwidth(long maxCapacity, long period, long initialCapacity) {
+        final Bandwidth bandwidth = new Bandwidth(bandwidths.size(), new ImmutableCapacity(maxCapacity), initialCapacity, period, true);
         bandwidths.add(bandwidth);
         return this;
     }
 
-    public BucketBuilder withLimitedBandwidth(long capacity, long period) {
-        return withLimitedBandwidth(capacity, period, capacity);
+    public BucketBuilder withGuaranteedDynamicBandwidth(Capacity dynamicMaxCapacity, long period, long initialCapacity) {
+        final Bandwidth bandwidth = new Bandwidth(bandwidths.size(), dynamicMaxCapacity, initialCapacity, period, true);
+        bandwidths.add(bandwidth);
+        return this;
     }
 
-    public BucketBuilder withLimitedBandwidth(long capacity, long period, long initialCapacity) {
+    public BucketBuilder withLimitedBandwidth(long maxCapacity, long period) {
+        return withLimitedBandwidth(maxCapacity, period, maxCapacity);
+    }
+
+    public BucketBuilder withLimitedBandwidth(long maxCapacity, long period, long initialCapacity) {
+        final Bandwidth bandwidth = new Bandwidth(bandwidths.size(), new ImmutableCapacity(maxCapacity), initialCapacity, period, false);
+        bandwidths.add(bandwidth);
+        return this;
+    }
+
+    public BucketBuilder withLimitedDynamicBandwidth(Capacity capacity, long period, long initialCapacity) {
         final Bandwidth bandwidth = new Bandwidth(bandwidths.size(), capacity, initialCapacity, period, false);
         bandwidths.add(bandwidth);
         return this;
