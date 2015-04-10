@@ -1,16 +1,16 @@
-package com.github.bandwidthlimiter.leakybucket;
+package com.github.bandwidthlimiter.bucket;
 
-import static com.github.bandwidthlimiter.leakybucket.LeakyBucketExceptions.*;
+import static com.github.bandwidthlimiter.bucket.BucketExceptions.*;
 
-public final class LeakyBucketConfiguration {
+public final class BucketConfiguration {
 
     private final RefillStrategy refillStrategy;
     private final Bandwidth[] bandwidths;
     private final boolean raiseErrorWhenConsumeGreaterThanSmallestBandwidth;
     private final TimeMeter timeMeter;
 
-    public LeakyBucketConfiguration(Bandwidth[] bandwidths, boolean raiseErrorWhenConsumeGreaterThanSmallestBandwidth,
-            TimeMeter timeMeter, RefillStrategy refillStrategy) {
+    public BucketConfiguration(Bandwidth[] bandwidths, boolean raiseErrorWhenConsumeGreaterThanSmallestBandwidth,
+                               TimeMeter timeMeter, RefillStrategy refillStrategy) {
         if (timeMeter == null) {
             throw nullTimeMetter();
         }
