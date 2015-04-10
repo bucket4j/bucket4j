@@ -17,9 +17,6 @@
 package com.github.bandwidthlimiter.bucket;
 
 import static com.github.bandwidthlimiter.bucket.BucketExceptions.*;
-import static com.github.bandwidthlimiter.bucket.BucketExceptions.guarantedHasGreaterRateThanLimited;
-import static com.github.bandwidthlimiter.bucket.BucketExceptions.hasOverlaps;
-import static com.github.bandwidthlimiter.bucket.BucketExceptions.restrictionsNotSpecified;
 
 public final class Bandwidth {
 
