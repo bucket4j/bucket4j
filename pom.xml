@@ -92,6 +92,13 @@
     <dependencies>
         <!-- Grid dependencies -->
         <dependency>
+            <groupId>com.oracle</groupId>
+            <artifactId>coherence</artifactId>
+            <version>3.7.1.5</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/lib/coherence-3.7.1.5.jar</systemPath>
+        </dependency>
+        <dependency>
             <groupId>com.oracle.coherence.incubator</groupId>
             <artifactId>coherence-common</artifactId>
             <version>12.2.0</version>

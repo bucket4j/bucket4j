@@ -98,7 +98,7 @@ public final class BucketBuilder {
         return this;
     }
 
-    private BucketConfiguration createConfiguration() {
+    public BucketConfiguration createConfiguration() {
         Bandwidth[] bandwidths = new Bandwidth[this.bandwidths.size()];
         for (int i = 0; i < bandwidths.length; i++) {
             bandwidths[i] = this.bandwidths.get(i);

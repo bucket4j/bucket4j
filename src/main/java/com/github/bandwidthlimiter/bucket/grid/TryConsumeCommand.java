@@ -33,9 +33,4 @@ public class TryConsumeCommand implements GridCommand<Boolean> {
         return bucketStateModified;
     }
 
-    @Override
-    public boolean isImmutable() {
-        return false;
-    }
-
 }

@@ -33,9 +33,4 @@ public class ConsumeAsMuchAsPossibleCommand implements GridCommand<Long> {
         return bucketStateModified;
     }
 
-    @Override
-    public boolean isImmutable() {
-        return false;
-    }
-
 }

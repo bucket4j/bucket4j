@@ -15,9 +15,4 @@ public class CreateSnapshotCommand implements GridCommand<long[]> {
         return false;
     }
 
-    @Override
-    public boolean isImmutable() {
-        return true;
-    }
-
 }

@@ -35,9 +35,4 @@ public class ConsumeOrCalculateTimeToCloseDeficitCommand implements GridCommand<
         return bucketStateModified;
     }
 
-    @Override
-    public boolean isImmutable() {
-        return false;
-    }
-
 }

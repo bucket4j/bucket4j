@@ -8,6 +8,4 @@ public interface GridCommand<T extends Serializable> extends Serializable {
 
     boolean isBucketStateModified();
 
-    boolean isImmutable();
-
 }
