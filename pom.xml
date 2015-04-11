@@ -92,12 +92,6 @@
     <dependencies>
         <!-- Grid dependencies -->
         <dependency>
-            <groupId>org.springframework.data</groupId>
-            <artifactId>spring-data-gemfire</artifactId>
-            <version>1.6.0.RELEASE</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
             <groupId>com.oracle.coherence.incubator</groupId>
             <artifactId>coherence-common</artifactId>
             <version>12.2.0</version>
@@ -150,12 +144,4 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-
-    <repositories>
-        <repository>
-            <id>gemfire-repository</id>
-            <name>Gemfire Repository</name>
-            <url>http://dist.gemstone.com/maven/release</url>
-        </repository>
-    </repositories>
 </project>
