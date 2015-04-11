@@ -117,8 +117,9 @@
         </dependency>
         <dependency>
             <groupId>org.gridgain</groupId>
-            <artifactId>gridgain-platform</artifactId>
-            <version>6.6.4</version>
+            <artifactId>gridgain-fabric</artifactId>
+            <version>6.6.0</version>
+            <type>pom</type>
             <scope>provided</scope>
         </dependency>
 

@@ -10,12 +10,12 @@ import org.gridgain.grid.cache.GridCache;
 
 import java.io.Serializable;
 
-public class GridgainGridBucket extends AbstractGridBucket {
+public class GridgainBucket extends AbstractGridBucket {
 
     private final GridCache<Object, GridBucketState> cache;
     private final Object key;
 
-    public GridgainGridBucket(BucketConfiguration configuration, GridCache<Object, GridBucketState> cache, Object key) throws GridException {
+    public GridgainBucket(BucketConfiguration configuration, GridCache<Object, GridBucketState> cache, Object key) throws GridException {
         super(configuration);
         this.cache = cache;
         this.key = key;

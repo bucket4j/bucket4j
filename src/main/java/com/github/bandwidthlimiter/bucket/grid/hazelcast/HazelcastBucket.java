@@ -19,8 +19,8 @@ public class HazelcastBucket extends AbstractGridBucket {
         this.map = map;
         this.key = key;
 
-        GridBucketState gridState = new GridBucketState(configuration, new BucketState(configuration));
-        map.putIfAbsent(key, gridState);
+        GridBucketState initial = new GridBucketState(configuration, new BucketState(configuration));
+        map.putIfAbsent(key, initial);
     }
 
     @Override

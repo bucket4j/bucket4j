@@ -1,11 +1,13 @@
 package com.github.bandwidthlimiter.bucket;
 
 import com.github.bandwidthlimiter.bucket.grid.GridBucketState;
-import com.github.bandwidthlimiter.bucket.grid.gridgain.GridgainGridBucket;
+import com.github.bandwidthlimiter.bucket.grid.gridgain.GridgainBucket;
 import com.github.bandwidthlimiter.bucket.grid.hazelcast.HazelcastBucket;
+import com.github.bandwidthlimiter.bucket.grid.ignite.IgniteBucket;
 import com.github.bandwidthlimiter.bucket.local.ThreadSafeBucket;
 import com.github.bandwidthlimiter.bucket.local.UnsafeBucket;
 import com.hazelcast.core.IMap;
+import org.apache.ignite.IgniteCache;
 import org.gridgain.grid.GridException;
 import org.gridgain.grid.cache.GridCache;
 
@@ -39,9 +41,14 @@ public final class BucketBuilder {
         return new HazelcastBucket(configuration, map, key);
     }
 
-    public Bucket buildHazelcast(GridCache<Object, GridBucketState> cache, Object key) throws GridException {
+    public Bucket buildGridgain(GridCache<Object, GridBucketState> cache, Object key) throws GridException {
         BucketConfiguration configuration = createConfiguration();
-        return new GridgainGridBucket(configuration, cache, key);
+        return new GridgainBucket(configuration, cache, key);
+    }
+
+    public Bucket buildIgnite(IgniteCache<Object, GridBucketState> cache, Object key) throws GridException {
+        BucketConfiguration configuration = createConfiguration();
+        return new IgniteBucket(configuration, cache, key);
     }
 
     public BucketBuilder withGuaranteedBandwidth(long maxCapacity, long period) {
