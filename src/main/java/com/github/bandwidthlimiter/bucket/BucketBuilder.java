@@ -1,10 +1,13 @@
 package com.github.bandwidthlimiter.bucket;
 
 import com.github.bandwidthlimiter.bucket.grid.GridBucketState;
+import com.github.bandwidthlimiter.bucket.grid.gridgain.GridgainGridBucket;
 import com.github.bandwidthlimiter.bucket.grid.hazelcast.HazelcastBucket;
 import com.github.bandwidthlimiter.bucket.local.ThreadSafeBucket;
 import com.github.bandwidthlimiter.bucket.local.UnsafeBucket;
 import com.hazelcast.core.IMap;
+import org.gridgain.grid.GridException;
+import org.gridgain.grid.cache.GridCache;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -34,6 +37,11 @@ public final class BucketBuilder {
     public Bucket buildHazelcast(IMap<Object, GridBucketState> map, Serializable key) {
         BucketConfiguration configuration = createConfiguration();
         return new HazelcastBucket(configuration, map, key);
+    }
+
+    public Bucket buildHazelcast(GridCache<Object, GridBucketState> cache, Object key) throws GridException {
+        BucketConfiguration configuration = createConfiguration();
+        return new GridgainGridBucket(configuration, cache, key);
     }
 
     public BucketBuilder withGuaranteedBandwidth(long maxCapacity, long period) {

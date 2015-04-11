@@ -117,11 +117,11 @@
         </dependency>
         <dependency>
             <groupId>org.gridgain</groupId>
-            <artifactId>gridgain-datagrid</artifactId>
-            <version>6.0.2</version>
-            <type>pom</type>
+            <artifactId>gridgain-platform</artifactId>
+            <version>6.6.4</version>
             <scope>provided</scope>
         </dependency>
+
 
         <!-- Test dependencies -->
         <dependency>
