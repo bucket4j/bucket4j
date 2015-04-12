@@ -34,21 +34,6 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
             initialCapacity << [-10, -1]
     }
 
-    def "Should check that initial capacity is equal or lesser than max capacity"() {
-        setup:
-            long wrongInitialCapacity = VALID_CAPACITY + 1
-        when:
-            withNanoTimePrecision().withLimitedBandwidth(VALID_CAPACITY, VALID_PERIOD, wrongInitialCapacity)
-        then:
-            IllegalArgumentException ex = thrown()
-            ex.message == initialCapacityGreaterThanMaxCapacity(wrongInitialCapacity, VALID_CAPACITY).message
-
-        when:
-            withNanoTimePrecision().withLimitedBandwidth(VALID_CAPACITY, VALID_PERIOD, VALID_CAPACITY)
-        then:
-           notThrown IllegalArgumentException
-    }
-
     @Unroll
     def "Should check that #period is invalid period of bandwidth"(long period) {
         when:
@@ -68,16 +53,6 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
         then:
             IllegalArgumentException ex = thrown()
             ex.message == nullTimeMetter().message
-    }
-
-    def "Should check than refill strategy is not null"() {
-        setup:
-            def builder = withNanoTimePrecision().withLimitedBandwidth(VALID_CAPACITY, VALID_PERIOD)
-        when:
-            builder.withCustomRefillStrategy(null).buildLocalThreadSafe()
-        then:
-            IllegalArgumentException ex = thrown()
-            ex.message == nullRefillStrategy().message
     }
 
     def  "Should check that limited bandwidth list is not empty"() {
@@ -118,7 +93,7 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
             builder.buildLocalThreadSafe()
         then:
             IllegalArgumentException ex = thrown()
-            ex.message == guarantedHasGreaterRateThanLimited(builder.getBandwidth(1), builder.getBandwidth(0)).message
+            ex.message == guarantedHasGreaterRateThanLimited(builder.getBandwidthDefinition(1), builder.getBandwidthDefinition(0)).message
     }
 
     @Unroll
@@ -131,7 +106,7 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
             builder.buildLocalThreadSafe()
         then:
             IllegalArgumentException ex = thrown()
-            ex.message == hasOverlaps(builder.getBandwidth(0), builder.getBandwidth(1)).message
+            ex.message == hasOverlaps(builder.getBandwidthDefinition(0), builder.getBandwidthDefinition(1)).message
         where:
             number |  firstCapacity | firstPeriod | secondCapacity | secondPeriod
                1   |     999        |     10      |      999       |      10
@@ -173,34 +148,6 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
         then:
             ex = thrown()
             ex.message == nonPositiveNanosToWait(-1).message
-    }
-
-    def "Should check that unable try to consume number of tokens greater than smallest capacity when user has deprecated this option"() {
-        setup:
-            def bucket = withNanoTimePrecision()
-                .raiseErrorWhenConsumeGreaterThanSmallestBandwidth()
-                .withLimitedBandwidth(VALID_CAPACITY, VALID_PERIOD).buildLocalThreadSafe()
-        when:
-            bucket.tryConsume(VALID_CAPACITY + 1)
-        then:
-            IllegalArgumentException ex = thrown()
-            ex.message == BucketExceptions.tokensToConsumeGreaterThanCapacityOfSmallestBandwidth(VALID_CAPACITY + 1, VALID_CAPACITY).message
-    }
-
-    def "Should always check when client try to consume number of tokens greater than smallest capacity on invocation of methods with support of waiting"() {
-        setup:
-            def bucket = withNanoTimePrecision().withLimitedBandwidth(VALID_CAPACITY, VALID_PERIOD).buildLocalThreadSafe()
-        when:
-            bucket.consume(VALID_CAPACITY + 1)
-        then:
-            IllegalArgumentException ex = thrown()
-            ex.message == tokensToConsumeGreaterThanCapacityOfSmallestBandwidth(VALID_CAPACITY + 1, VALID_CAPACITY).message
-
-        when:
-            bucket.tryConsume(VALID_CAPACITY + 1, 42)
-        then:
-            ex = thrown()
-            ex.message == tokensToConsumeGreaterThanCapacityOfSmallestBandwidth(VALID_CAPACITY + 1, VALID_CAPACITY).message
     }
 
 }

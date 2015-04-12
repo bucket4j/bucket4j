@@ -72,7 +72,6 @@ public interface Bucket {
      */
     void consume(long numTokens) throws InterruptedException;
 
-
     boolean tryConsumeSingleToken(long maxWaitNanos) throws InterruptedException;
 
     boolean tryConsume(long numTokens, long maxWaitNanos) throws InterruptedException;

@@ -7,10 +7,9 @@ public class BucketState {
     protected final long[] state;
 
     public BucketState(BucketConfiguration configuration) {
-        final RefillStrategy refillStrategy = configuration.getRefillStrategy();
-        this.state = new long[configuration.getBandwidths().length + refillStrategy.sizeOfState(configuration)];
+        this.state = new long[configuration.getStateSize()];
         long currentTime = configuration.getTimeMeter().currentTime();
-        refillStrategy.setupInitialState(configuration, this, currentTime);
+        BandwidthAlgorithms.setupInitialState(configuration.getBandwidths(), this, currentTime);
     }
 
     public BucketState(BucketState previousState) {
@@ -25,20 +24,12 @@ public class BucketState {
         return Arrays.copyOf(state, state.length);
     }
 
-    public long getCurrentSize(Bandwidth bandwidth) {
-        return state[bandwidth.getIndexInBucket()];
+    public long getValue(int offset) {
+        return state[offset];
     }
 
-    public void setCurrentSize(Bandwidth bandwidth, long size) {
-        state[bandwidth.getIndexInBucket()] = size;
-    }
-
-    public long getRefillState(BucketConfiguration configuration, int offset) {
-        return state[configuration.getBandwidthCount() + offset];
-    }
-
-    public void setRefillState(BucketConfiguration configuration, int offset, long value) {
-        state[configuration.getBandwidthCount() + offset] = value;
+    public void setValue(int offset, long value) {
+        state[offset] = value;
     }
 
     @Override
@@ -52,45 +43,6 @@ public class BucketState {
 
     public void copyState(long[] state) {
         System.arraycopy(state, 0, this.state, 0, this.state.length);
-    }
-
-    public long getAvailableTokens(BucketConfiguration configuration) {
-        long availableByLimitation = Long.MAX_VALUE;
-        long availableByGuarantee = 0;
-        for (Bandwidth bandwidth : configuration.getBandwidths()) {
-            if (bandwidth.isLimited()) {
-                availableByLimitation = Math.min(availableByLimitation, getCurrentSize(bandwidth));
-            } else {
-                availableByGuarantee = getCurrentSize(bandwidth);
-            }
-        }
-        return Math.max(availableByLimitation, availableByGuarantee);
-    }
-
-    public void consume(BucketConfiguration configuration, long toConsume) {
-        final int bandwidthCount = configuration.getBandwidthCount();
-        for (int i = 0; i < bandwidthCount; i++) {
-            state[i] = Math.max(0, state[i] - toConsume);
-        }
-    }
-
-    public long calculateTimeToCloseDeficit(BucketConfiguration configuration, long deficit) {
-        Bandwidth[] bandwidths = configuration.getBandwidths();
-        long sleepToRefillLimited = 0;
-        long sleepToRefillGuaranteed = Long.MAX_VALUE;
-        for (int i = 1; i < bandwidths.length; i++) {
-            Bandwidth bandwidth = bandwidths[i];
-            if (bandwidth.isLimited()) {
-                sleepToRefillLimited = Math.max(sleepToRefillLimited, timeRequiredToRefill(configuration, bandwidth, deficit));
-            } else {
-                sleepToRefillGuaranteed = timeRequiredToRefill(configuration, bandwidth, deficit);
-            }
-        }
-        return Math.min(sleepToRefillLimited, sleepToRefillGuaranteed);
-    }
-
-    public long timeRequiredToRefill(BucketConfiguration configuration, Bandwidth bandwidth, long numTokens) {
-        return configuration.getRefillStrategy().timeRequiredToRefill(configuration, bandwidth, numTokens);
     }
 
 }

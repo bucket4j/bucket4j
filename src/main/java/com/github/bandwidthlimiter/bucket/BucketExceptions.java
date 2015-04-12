@@ -17,14 +17,8 @@ public class BucketExceptions {
         return new IllegalArgumentException(msg);
     }
 
-    public static IllegalArgumentException initialCapacityGreaterThanMaxCapacity(long initialCapacity, long maxCapasity) {
-        String pattern = "initial capacity {0} is greater than max capacity {1}";
-        String msg = MessageFormat.format(pattern, initialCapacity, maxCapasity);
-        return new IllegalArgumentException(msg);
-    }
-
-    public static IllegalArgumentException nullRefillStrategy() {
-        String msg = "Refill strategy can not be null";
+    public static IllegalArgumentException nullBandwidthAdjuster() {
+        String msg = "Bandwidth adjuster can not be null";
         return new IllegalArgumentException(msg);
     }
 
@@ -49,13 +43,13 @@ public class BucketExceptions {
         return new IllegalArgumentException(msg);
     }
 
-    public static IllegalArgumentException guarantedHasGreaterRateThanLimited(Bandwidth guaranteed, Bandwidth limited) {
+    public static IllegalArgumentException guarantedHasGreaterRateThanLimited(BandwidthDefinition guaranteed, BandwidthDefinition limited) {
         String pattern = "Misconfiguration detected, guaranteed bandwidth {0} has higher rate than limited bandwidth {1}";
         String msg = MessageFormat.format(pattern, guaranteed, limited);
         return new IllegalArgumentException(msg);
     }
 
-    public static IllegalArgumentException hasOverlaps(Bandwidth first, Bandwidth second) {
+    public static IllegalArgumentException hasOverlaps(BandwidthDefinition first, BandwidthDefinition second) {
         String pattern = "Overlap detected between {0} and {1}";
         String msg = MessageFormat.format(pattern, first, second);
         return new IllegalArgumentException(msg);
@@ -72,12 +66,6 @@ public class BucketExceptions {
     public static IllegalArgumentException nonPositiveTokensToConsume(long tokens) {
         String pattern = "Unable to consume {0} tokens, due to number of tokens to consume should be positive";
         String msg = MessageFormat.format(pattern, tokens);
-        return new IllegalArgumentException(msg);
-    }
-
-    public static IllegalArgumentException tokensToConsumeGreaterThanCapacityOfSmallestBandwidth(long tokens, long smallestCapacity) {
-        String pattern = "Unable to consume {0} tokens, due to it is grater than {1} - capacity of smaller bandwidth";
-        String msg = MessageFormat.format(pattern, tokens, smallestCapacity);
         return new IllegalArgumentException(msg);
     }
 

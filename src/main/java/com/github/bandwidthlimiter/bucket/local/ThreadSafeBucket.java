@@ -16,9 +16,7 @@
 package com.github.bandwidthlimiter.bucket.local;
 
 
-import com.github.bandwidthlimiter.bucket.AbstractBucket;
-import com.github.bandwidthlimiter.bucket.BucketConfiguration;
-import com.github.bandwidthlimiter.bucket.BucketState;
+import com.github.bandwidthlimiter.bucket.*;
 
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -38,12 +36,13 @@ public class ThreadSafeBucket extends AbstractBucket {
     protected long consumeAsMuchAsPossibleImpl(long limit) {
         BucketState previousState = stateReference.get();
         BucketState newState = previousState.clone();
+        Bandwidth[] bandwidths = configuration.getBandwidths();
         while (true) {
             long currentTime = configuration.getTimeMeter().currentTime();
-            configuration.getRefillStrategy().refill(configuration, newState, currentTime);
-            long availableToConsume = newState.getAvailableTokens(configuration);
+            BandwidthAlgorithms.refill(bandwidths, newState, currentTime);
+            long availableToConsume = BandwidthAlgorithms.getAvailableTokens(bandwidths, newState);
             long toConsume = Math.min(limit, availableToConsume);
-            newState.consume(configuration, toConsume);
+            BandwidthAlgorithms.consume(bandwidths, newState, toConsume);
             if (stateReference.compareAndSet(previousState, newState)) {
                 return toConsume;
             } else {
@@ -57,15 +56,16 @@ public class ThreadSafeBucket extends AbstractBucket {
     protected boolean tryConsumeImpl(long tokensToConsume) {
         BucketState previousState = stateReference.get();
         BucketState newState = previousState.clone();
+        Bandwidth[] bandwidths = configuration.getBandwidths();
 
         while (true) {
             long currentTime = configuration.getTimeMeter().currentTime();
-            configuration.getRefillStrategy().refill(configuration, newState, currentTime);
-            long availableToConsume = newState.getAvailableTokens(configuration);
+            BandwidthAlgorithms.refill(bandwidths, newState, currentTime);
+            long availableToConsume = BandwidthAlgorithms.getAvailableTokens(bandwidths, newState);
             if (tokensToConsume > availableToConsume) {
                 return false;
             }
-            newState.consume(configuration, tokensToConsume);
+            BandwidthAlgorithms.consume(bandwidths, newState, tokensToConsume);
             if (stateReference.compareAndSet(previousState, newState)) {
                 return true;
             } else {
@@ -77,6 +77,7 @@ public class ThreadSafeBucket extends AbstractBucket {
 
     @Override
     protected boolean consumeOrAwaitImpl(long tokensToConsume, long waitIfBusyTimeLimit) throws InterruptedException {
+        Bandwidth[] bandwidths = configuration.getBandwidths();
         boolean isWaitingLimited = waitIfBusyTimeLimit > 0;
 
         final long methodStartTime = isWaitingLimited? configuration.getTimeMeter().currentTime(): 0;
@@ -96,23 +97,23 @@ public class ThreadSafeBucket extends AbstractBucket {
                 if (isWaitingLimited && methodDuration >= waitIfBusyTimeLimit) {
                     return false;
                 }
+                previousState = stateReference.get();
+                newState.copyState(previousState);
             }
 
-            configuration.getRefillStrategy().refill(configuration, newState, currentTime);
-            long availableToConsume = newState.getAvailableTokens(configuration);
+            BandwidthAlgorithms.refill(bandwidths, newState, currentTime);
+            long availableToConsume = BandwidthAlgorithms.getAvailableTokens(bandwidths, newState);
             if (tokensToConsume <= availableToConsume) {
-                newState.consume(configuration, tokensToConsume);
+                BandwidthAlgorithms.consume(bandwidths, newState, tokensToConsume);
                 if (stateReference.compareAndSet(previousState, newState)) {
                     return true;
                 } else {
-                    previousState = stateReference.get();
-                    newState.copyState(previousState);
                     continue;
                 }
             }
 
             long deficitTokens = tokensToConsume - availableToConsume;
-            long timeToCloseDeficit = newState.calculateTimeToCloseDeficit(configuration, deficitTokens);
+            long timeToCloseDeficit = BandwidthAlgorithms.calculateTimeToCloseDeficit(bandwidths, newState, deficitTokens);
             if (isWaitingLimited) {
                 long sleepingTimeLimit = waitIfBusyTimeLimit - methodDuration;
                 if (timeToCloseDeficit >= sleepingTimeLimit) {

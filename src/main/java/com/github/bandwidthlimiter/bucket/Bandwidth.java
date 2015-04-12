@@ -18,46 +18,35 @@ package com.github.bandwidthlimiter.bucket;
 
 import java.io.Serializable;
 
-import static com.github.bandwidthlimiter.bucket.BucketExceptions.*;
+import static com.github.bandwidthlimiter.bucket.BucketExceptions.nonPositiveInitialCapacity;
+import static com.github.bandwidthlimiter.bucket.BucketExceptions.nullBandwidthAdjuster;
 
-public final class Bandwidth implements Serializable {
+public class Bandwidth implements Serializable {
 
-    private final int indexInBucket;
-    private final Capacity capacity;
+    public static final int CURRENT_SIZE = 0;
+    public static final int MAX_CAPACITY = CURRENT_SIZE + 1;
+    public static final int REFILL_TIME = MAX_CAPACITY + 1;
+
     private final long initialCapacity;
     private final long period;
     private final boolean guaranteed;
+    private final BandwidthAdjuster adjuster;
+    private final int stateOffset;
 
-    public Bandwidth() {
-        indexInBucket = 0;
-        capacity = null;
-        initialCapacity = 0;
-        period = 0;
-        guaranteed = false;
-    }
-
-    public Bandwidth(int indexInBucket, Capacity capacity, long initialCapacity, long period, boolean guaranteed) {
-        if (indexInBucket < 0) {
-            throw new IndexOutOfBoundsException();
-        }
-        if (capacity.getValue() <= 0) {
-            throw nonPositiveCapacity(capacity.getValue());
-        }
-        if (initialCapacity < 0) {
-            throw nonPositiveInitialCapacity(initialCapacity);
-        }
-        if (initialCapacity > capacity.getValue()) {
-            throw initialCapacityGreaterThanMaxCapacity(initialCapacity, capacity.getValue());
-        }
-        if (period <= 0) {
-            throw nonPositivePeriod(period);
+    public Bandwidth(int stateOffset, BandwidthAdjuster adjuster, long initialCapacity, long period, boolean guaranteed) {
+        this.stateOffset = stateOffset;
+        if (adjuster == null) {
+            throw nullBandwidthAdjuster();
         }
 
-        this.indexInBucket = indexInBucket;
-        this.capacity = capacity;
+        this.adjuster = adjuster;
         this.initialCapacity = initialCapacity;
         this.period = period;
         this.guaranteed = guaranteed;
+
+        if (initialCapacity < 0) {
+            throw nonPositiveInitialCapacity(initialCapacity);
+        }
     }
 
     public boolean isGuaranteed() {
@@ -68,92 +57,79 @@ public final class Bandwidth implements Serializable {
         return !guaranteed;
     }
 
-    public long getPeriod() {
-        return period;
+    public int sizeOfState() {
+        return 3;
     }
 
-    public long getInitialCapacity() {
-        return initialCapacity;
+    public void setupInitialState(BucketState state, long currentTime) {
+        setCurrentSize(state, initialCapacity);
+        setRefillTime(state, currentTime);
+        setMaxCapacity(state, adjuster.getCapacity());
     }
 
-    public long getMaxCapacity() {
-        return capacity.getValue();
+    public void consume(BucketState state, long toConsume) {
+        long currentSize = getCurrentSize(state);
+        currentSize = Math.max(0, currentSize - toConsume);
+        setCurrentSize(state, currentSize);
     }
 
-    public int getIndexInBucket() {
-        return indexInBucket;
-    }
+    public void refill(BucketState state, long currentTime) {
+        long previousRefillTime = getRefillTime(state);
+        final long maxCapacity = adjuster.getCapacity();
+        setMaxCapacity(state, maxCapacity);
+        long durationSinceLastRefill = currentTime - previousRefillTime;
 
-    public double getTimeUnitsPerToken() {
-        return (double) period / (double) capacity.getValue();
-    }
-
-    public double getTokensPerTimeUnit() {
-        return (double) capacity.getValue() / (double) period;
-    }
-
-    public static long getSmallestCapacityOfLimitedBandwidth(Bandwidth[] definitions) {
-        long minCapacity = Long.MAX_VALUE;
-        for (int i = 0; i < definitions.length; i++) {
-            if (definitions[i].isLimited() && definitions[i].capacity.getValue() < minCapacity) {
-                minCapacity = definitions[i].capacity.getValue();
-            }
-        }
-        return minCapacity;
-    }
-
-    public static void checkBandwidths(Bandwidth[] bandwidths) {
-        int countOfLimitedBandwidth = 0;
-        int countOfGuaranteedBandwidth = 0;
-        Bandwidth guaranteedBandwidth = null;
-
-        for (Bandwidth bandwidth: bandwidths) {
-            if (bandwidth.isLimited()) {
-                countOfLimitedBandwidth++;
-            } else {
-                guaranteedBandwidth = bandwidth;
-                countOfGuaranteedBandwidth++;
-            }
+        if (durationSinceLastRefill > period) {
+            setCurrentSize(state, maxCapacity);
+            setRefillTime(state, currentTime);
+            return;
         }
 
-        if (countOfLimitedBandwidth == 0) {
-            throw restrictionsNotSpecified();
+        long calculatedRefill = maxCapacity * durationSinceLastRefill / period;
+        if (calculatedRefill == 0) {
+            return;
         }
 
-        if (countOfGuaranteedBandwidth > 1) {
-            throw onlyOneGuarantedBandwidthSupported();
+        long newSize = getCurrentSize(state) + calculatedRefill;
+        if (newSize >= maxCapacity) {
+            setCurrentSize(state, maxCapacity);
+            setRefillTime(state, currentTime);
+            return;
         }
 
-        for (int i = 0; i < bandwidths.length - 1; i++) {
-            Bandwidth first = bandwidths[i];
-            if (first.isGuaranteed()) {
-                continue;
-            }
-            for (int j = i + 1; j < bandwidths.length; j++) {
-                Bandwidth second = bandwidths[j];
-                if (second.isGuaranteed()) {
-                    continue;
-                }
-                if (first.period < second.period && first.capacity.getValue() >= second.capacity.getValue()) {
-                    throw hasOverlaps(first, second);
-                } else if (first.period == second.period) {
-                    throw hasOverlaps(first, second);
-                } else if (first.period > second.period && first.capacity.getValue() <= second.capacity.getValue()) {
-                    throw hasOverlaps(first, second);
-                }
-            }
-        }
-        if (guaranteedBandwidth != null) {
-            for (Bandwidth bandwidth : bandwidths) {
-                if (bandwidth.isLimited()) {
-                    Bandwidth limited = bandwidth;
-                    if (limited.getTokensPerTimeUnit() <= guaranteedBandwidth.getTokensPerTimeUnit()
-                            || limited.getTimeUnitsPerToken() > guaranteedBandwidth.getTimeUnitsPerToken()) {
-                        throw guarantedHasGreaterRateThanLimited(guaranteedBandwidth, limited);
-                    }
-                }
-            }
-        }
+        setCurrentSize(state, newSize);
+        long effectiveDuration = calculatedRefill * period / maxCapacity;
+        long roundingError = durationSinceLastRefill - effectiveDuration;
+        long effectiveRefillTime = currentTime - roundingError;
+        setRefillTime(state, effectiveRefillTime);
+    }
+
+    public long timeRequiredToRefill(long numTokens) {
+        return period * numTokens / adjuster.getCapacity();
+    }
+
+    public long getCurrentSize(BucketState state) {
+        return state.getValue(stateOffset + CURRENT_SIZE);
+    }
+
+    public void setCurrentSize(BucketState state, long currentSize) {
+        state.setValue(stateOffset + CURRENT_SIZE, currentSize);
+    }
+
+    public long getMaxCapacity(BucketState state) {
+        return state.getValue(stateOffset + MAX_CAPACITY);
+    }
+
+    public void setMaxCapacity(BucketState state, long maxCapacity) {
+        state.setValue(stateOffset + MAX_CAPACITY, maxCapacity);
+    }
+
+    public long getRefillTime(BucketState state) {
+        return state.getValue(stateOffset + REFILL_TIME);
+    }
+
+    public void setRefillTime(BucketState state, long refillTime) {
+        state.setValue(stateOffset + REFILL_TIME, refillTime);
     }
 
 }

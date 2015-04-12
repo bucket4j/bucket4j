@@ -4,22 +4,25 @@ import com.github.bandwidthlimiter.bucket.AbstractBucket;
 import com.github.bandwidthlimiter.bucket.BucketConfiguration;
 import com.github.bandwidthlimiter.bucket.BucketState;
 
-import java.io.Serializable;
+public class GridBucket extends AbstractBucket {
 
-public abstract class AbstractGridBucket extends AbstractBucket {
+    private final GridProxy gridProxy;
 
-    protected AbstractGridBucket(BucketConfiguration configuration) {
+    public GridBucket(BucketConfiguration configuration, GridProxy gridProxy) {
         super(configuration);
+        this.gridProxy = gridProxy;
+        GridBucketState initialState = new GridBucketState(configuration, new BucketState(configuration));
+        gridProxy.setInitialState(initialState);
     }
 
     @Override
     protected long consumeAsMuchAsPossibleImpl(long limit) {
-        return execute(new ConsumeAsMuchAsPossibleCommand(limit));
+        return gridProxy.execute(new ConsumeAsMuchAsPossibleCommand(limit));
     }
 
     @Override
     protected boolean tryConsumeImpl(long tokensToConsume) {
-        return execute(new TryConsumeCommand(tokensToConsume));
+        return gridProxy.execute(new TryConsumeCommand(tokensToConsume));
     }
 
     @Override
@@ -29,7 +32,7 @@ public abstract class AbstractGridBucket extends AbstractBucket {
         final long methodStartTime = isWaitingLimited? configuration.getTimeMeter().currentTime(): 0;
 
         while (true) {
-            long timeToCloseDeficit = execute(consumeCommand);
+            long timeToCloseDeficit = gridProxy.execute(consumeCommand);
             if (timeToCloseDeficit == 0) {
                 return true;
             }
@@ -51,10 +54,8 @@ public abstract class AbstractGridBucket extends AbstractBucket {
 
     @Override
     public BucketState createSnapshot() {
-        long[] snapshotBytes = execute(new CreateSnapshotCommand());
+        long[] snapshotBytes = gridProxy.execute(new CreateSnapshotCommand());
         return new BucketState(snapshotBytes);
     }
-
-    protected abstract <T extends Serializable> T execute(GridCommand<T> command);
 
 }

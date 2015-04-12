@@ -1,33 +1,36 @@
 package com.github.bandwidthlimiter.bucket.grid.gridgain;
 
-import com.github.bandwidthlimiter.bucket.BucketConfiguration;
-import com.github.bandwidthlimiter.bucket.BucketState;
-import com.github.bandwidthlimiter.bucket.grid.AbstractGridBucket;
 import com.github.bandwidthlimiter.bucket.grid.GridBucketState;
 import com.github.bandwidthlimiter.bucket.grid.GridCommand;
+import com.github.bandwidthlimiter.bucket.grid.GridProxy;
 import org.gridgain.grid.GridException;
 import org.gridgain.grid.cache.GridCache;
 
 import java.io.Serializable;
 
-public class GridgainBucket extends AbstractGridBucket {
+public class GridgainProxy implements GridProxy {
 
     private final GridCache<Object, GridBucketState> cache;
     private final Object key;
 
-    public GridgainBucket(BucketConfiguration configuration, GridCache<Object, GridBucketState> cache, Object key) throws GridException {
-        super(configuration);
+    public GridgainProxy(GridCache<Object, GridBucketState> cache, Object key) {
         this.cache = cache;
         this.key = key;
-
-        GridBucketState initial = new GridBucketState(configuration, new BucketState(configuration));
-        cache.putIfAbsent(key, initial);
     }
 
     @Override
-    protected <T extends Serializable> T execute(GridCommand<T> command) {
+    public <T extends Serializable> T execute(GridCommand<T> command) {
         try {
             return cache.transformAndCompute(key, new GridgainCommand<>(command));
+        } catch (GridException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void setInitialState(GridBucketState initialState) {
+        try {
+            cache.putIfAbsent(key, initialState);
         } catch (GridException e) {
             throw new RuntimeException(e);
         }

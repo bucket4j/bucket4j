@@ -15,18 +15,16 @@
  */
 package com.github.bandwidthlimiter.bucket;
 
-import static com.github.bandwidthlimiter.bucket.BucketExceptions.*;
+import static com.github.bandwidthlimiter.bucket.BucketExceptions.nonPositiveNanosToWait;
+import static com.github.bandwidthlimiter.bucket.BucketExceptions.nonPositiveTokensToConsume;
 
 public abstract class AbstractBucket implements Bucket {
 
     protected static final long UNSPECIFIED_WAITING_LIMIT = -1;
-
-    protected final long smallestCapacity;
     protected final BucketConfiguration configuration;
 
     protected AbstractBucket(BucketConfiguration configuration) {
         this.configuration = configuration;
-        this.smallestCapacity = Bandwidth.getSmallestCapacityOfLimitedBandwidth(configuration.getBandwidths());
     }
 
     protected abstract long consumeAsMuchAsPossibleImpl(long limit);
@@ -45,16 +43,6 @@ public abstract class AbstractBucket implements Bucket {
         if (tokensToConsume <= 0) {
             throw nonPositiveTokensToConsume(tokensToConsume);
         }
-
-        if (tokensToConsume > smallestCapacity) {
-            if (configuration.isRaiseErrorWhenConsumeGreaterThanSmallestBandwidth()) {
-                // illegal api usage detected
-                throw tokensToConsumeGreaterThanCapacityOfSmallestBandwidth(tokensToConsume, smallestCapacity);
-            } else {
-                return false;
-            }
-        }
-
         return tryConsumeImpl(tokensToConsume);
     }
 
@@ -67,10 +55,6 @@ public abstract class AbstractBucket implements Bucket {
     public void consume(long tokensToConsume) throws InterruptedException {
         if (tokensToConsume <= 0) {
             throw nonPositiveTokensToConsume(tokensToConsume);
-        }
-        if (tokensToConsume > smallestCapacity) {
-            // limits will be never satisfied
-            throw tokensToConsumeGreaterThanCapacityOfSmallestBandwidth(tokensToConsume, smallestCapacity);
         }
         consumeOrAwaitImpl(tokensToConsume, UNSPECIFIED_WAITING_LIMIT);
     }
@@ -85,9 +69,6 @@ public abstract class AbstractBucket implements Bucket {
         if (tokensToConsume <= 0) {
             throw nonPositiveTokensToConsume(tokensToConsume);
         }
-        if (tokensToConsume > smallestCapacity) {
-            throw tokensToConsumeGreaterThanCapacityOfSmallestBandwidth(tokensToConsume, smallestCapacity);
-        }
 
         if (maxWaitNanos <= 0) {
             throw nonPositiveNanosToWait(maxWaitNanos);
@@ -101,21 +82,12 @@ public abstract class AbstractBucket implements Bucket {
         if (limit <= 0) {
             throw nonPositiveTokensToConsume(limit);
         }
-
-        if (limit > smallestCapacity) {
-            if (configuration.isRaiseErrorWhenConsumeGreaterThanSmallestBandwidth()) {
-                // illegal api usage detected
-                throw tokensToConsumeGreaterThanCapacityOfSmallestBandwidth(limit, smallestCapacity);
-            } else {
-                limit = smallestCapacity;
-            }
-        }
         return consumeAsMuchAsPossibleImpl(limit);
     }
 
     @Override
     public long consumeAsMuchAsPossible() {
-        return consumeAsMuchAsPossibleImpl(smallestCapacity);
+        return consumeAsMuchAsPossibleImpl(Long.MAX_VALUE);
     }
 
     @Override

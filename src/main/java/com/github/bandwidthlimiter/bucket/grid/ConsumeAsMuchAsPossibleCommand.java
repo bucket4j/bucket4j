@@ -1,5 +1,7 @@
 package com.github.bandwidthlimiter.bucket.grid;
 
+import com.github.bandwidthlimiter.bucket.Bandwidth;
+import com.github.bandwidthlimiter.bucket.BandwidthAlgorithms;
 import com.github.bandwidthlimiter.bucket.BucketConfiguration;
 import com.github.bandwidthlimiter.bucket.BucketState;
 
@@ -17,13 +19,14 @@ public class ConsumeAsMuchAsPossibleCommand implements GridCommand<Long> {
         BucketConfiguration configuration = gridState.getBucketConfiguration();
         BucketState state = gridState.getBucketState();
         long currentTime = configuration.getTimeMeter().currentTime();
-        configuration.getRefillStrategy().refill(configuration, state, currentTime);
-        long availableToConsume = state.getAvailableTokens(configuration);
+        Bandwidth[] bandwidths = configuration.getBandwidths();
+        BandwidthAlgorithms.refill(bandwidths, state, currentTime);
+        long availableToConsume = BandwidthAlgorithms.getAvailableTokens(bandwidths, state);
         long toConsume = Math.min(limit, availableToConsume);
         if (toConsume <= 0) {
             return 0l;
         }
-        state.consume(configuration, toConsume);
+        BandwidthAlgorithms.consume(bandwidths, state, toConsume);
         bucketStateModified = true;
         return toConsume;
     }

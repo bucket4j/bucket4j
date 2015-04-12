@@ -15,9 +15,7 @@
  */
 package com.github.bandwidthlimiter.bucket.local;
 
-import com.github.bandwidthlimiter.bucket.AbstractBucket;
-import com.github.bandwidthlimiter.bucket.BucketConfiguration;
-import com.github.bandwidthlimiter.bucket.BucketState;
+import com.github.bandwidthlimiter.bucket.*;
 
 public class UnsafeBucket extends AbstractBucket {
 
@@ -31,20 +29,22 @@ public class UnsafeBucket extends AbstractBucket {
     @Override
     protected long consumeAsMuchAsPossibleImpl(long limit) {
         long currentTime = configuration.getTimeMeter().currentTime();
-        configuration.getRefillStrategy().refill(configuration, state, currentTime);
-        long availableToConsume = state.getAvailableTokens(configuration);
+        Bandwidth[] bandwidths = configuration.getBandwidths();
+        BandwidthAlgorithms.refill(bandwidths, state, currentTime);
+        long availableToConsume = BandwidthAlgorithms.getAvailableTokens(bandwidths, state);
         long toConsume = Math.min(limit, availableToConsume);
-        state.consume(configuration, toConsume);
+        BandwidthAlgorithms.consume(bandwidths, state, toConsume);
         return toConsume;
     }
 
     @Override
     protected boolean tryConsumeImpl(long tokensToConsume) {
         long currentTime = configuration.getTimeMeter().currentTime();
-        configuration.getRefillStrategy().refill(configuration, state, currentTime);
-        long availableToConsume = state.getAvailableTokens(configuration);
+        Bandwidth[] bandwidths = configuration.getBandwidths();
+        BandwidthAlgorithms.refill(bandwidths, state, currentTime);
+        long availableToConsume = BandwidthAlgorithms.getAvailableTokens(bandwidths, state);
         if (tokensToConsume <= availableToConsume) {
-            state.consume(configuration, tokensToConsume);
+            BandwidthAlgorithms.consume(bandwidths, state, tokensToConsume);
             return true;
         } else {
             return false;
@@ -53,17 +53,18 @@ public class UnsafeBucket extends AbstractBucket {
 
     @Override
     protected boolean consumeOrAwaitImpl(long tokensToConsume, long waitIfBusyTimeLimit) throws InterruptedException {
+        Bandwidth[] bandwidths = configuration.getBandwidths();
         while (true) {
             long currentTime = configuration.getTimeMeter().currentTime();
-            configuration.getRefillStrategy().refill(configuration, state, currentTime);
-            long availableToConsume = state.getAvailableTokens(configuration);
+            BandwidthAlgorithms.refill(bandwidths, state, currentTime);
+            long availableToConsume = BandwidthAlgorithms.getAvailableTokens(bandwidths, state);
             if (tokensToConsume <= availableToConsume) {
-                state.consume(configuration, tokensToConsume);
+                BandwidthAlgorithms.consume(bandwidths, state, tokensToConsume);
                 return true;
             }
 
             long deficitTokens = tokensToConsume - availableToConsume;
-            long timeToCloseDeficit = state.calculateTimeToCloseDeficit(configuration, deficitTokens);
+            long timeToCloseDeficit = BandwidthAlgorithms.calculateTimeToCloseDeficit(bandwidths, state, deficitTokens);
             if (waitIfBusyTimeLimit > 0) {
                 if (timeToCloseDeficit > waitIfBusyTimeLimit) {
                     return false;
