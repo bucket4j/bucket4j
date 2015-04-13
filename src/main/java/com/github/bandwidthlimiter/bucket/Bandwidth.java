@@ -23,9 +23,9 @@ import static com.github.bandwidthlimiter.bucket.BucketExceptions.nullBandwidthA
 
 public class Bandwidth implements Serializable {
 
-    public static final int CURRENT_SIZE = 0;
-    public static final int MAX_CAPACITY = CURRENT_SIZE + 1;
-    public static final int REFILL_TIME = MAX_CAPACITY + 1;
+    public static final int CURRENT_SIZE_OFFSET = 0;
+    public static final int MAX_CAPACITY_OFFSET = CURRENT_SIZE_OFFSET + 1;
+    public static final int ROUNDING_ERROR_OFFSET = MAX_CAPACITY_OFFSET + 1;
 
     private final long initialCapacity;
     private final long period;
@@ -63,8 +63,8 @@ public class Bandwidth implements Serializable {
 
     public void setupInitialState(BucketState state, long currentTime) {
         setCurrentSize(state, initialCapacity);
-        setRefillTime(state, currentTime);
         setMaxCapacity(state, adjuster.getCapacity());
+        setRoundingError(state, 0);
     }
 
     public void consume(BucketState state, long toConsume) {
@@ -74,62 +74,70 @@ public class Bandwidth implements Serializable {
     }
 
     public void refill(BucketState state, long currentTime) {
-        long previousRefillTime = getRefillTime(state);
+        long previousRefillTime = state.getRefillTime();
         final long maxCapacity = adjuster.getCapacity();
+        long currentSize = getCurrentSize(state);
+
         setMaxCapacity(state, maxCapacity);
+        if (currentSize >= maxCapacity) {
+            setCurrentSize(state, maxCapacity);
+            setRoundingError(state, 0);
+            return;
+        }
+
         long durationSinceLastRefill = currentTime - previousRefillTime;
 
         if (durationSinceLastRefill > period) {
             setCurrentSize(state, maxCapacity);
-            setRefillTime(state, currentTime);
+            setRoundingError(state, 0);
             return;
         }
 
-        long calculatedRefill = maxCapacity * durationSinceLastRefill / period;
+        long roundingError = getRoundingError(state);
+        long divided = maxCapacity * durationSinceLastRefill + roundingError;
+        long calculatedRefill = divided / period;
         if (calculatedRefill == 0) {
             return;
         }
 
-        long newSize = getCurrentSize(state) + calculatedRefill;
+        long newSize = currentSize + calculatedRefill;
         if (newSize >= maxCapacity) {
             setCurrentSize(state, maxCapacity);
-            setRefillTime(state, currentTime);
+            setRoundingError(state, 0);
             return;
         }
 
+        roundingError = divided % period;
         setCurrentSize(state, newSize);
-        long effectiveDuration = calculatedRefill * period / maxCapacity;
-        long roundingError = durationSinceLastRefill - effectiveDuration;
-        long effectiveRefillTime = currentTime - roundingError;
-        setRefillTime(state, effectiveRefillTime);
+        setRoundingError(state, roundingError);
     }
 
-    public long timeRequiredToRefill(long numTokens) {
-        return period * numTokens / adjuster.getCapacity();
+    public long timeRequiredToRefill(BucketState state, long numTokens) {
+        return period * numTokens / getMaxCapacity(state);
     }
 
     public long getCurrentSize(BucketState state) {
-        return state.getValue(stateOffset + CURRENT_SIZE);
+        return state.getValue(stateOffset + CURRENT_SIZE_OFFSET);
     }
 
     public void setCurrentSize(BucketState state, long currentSize) {
-        state.setValue(stateOffset + CURRENT_SIZE, currentSize);
+        state.setValue(stateOffset + CURRENT_SIZE_OFFSET, currentSize);
     }
 
     public long getMaxCapacity(BucketState state) {
-        return state.getValue(stateOffset + MAX_CAPACITY);
+        return state.getValue(stateOffset + MAX_CAPACITY_OFFSET);
     }
 
     public void setMaxCapacity(BucketState state, long maxCapacity) {
-        state.setValue(stateOffset + MAX_CAPACITY, maxCapacity);
+        state.setValue(stateOffset + MAX_CAPACITY_OFFSET, maxCapacity);
     }
 
-    public long getRefillTime(BucketState state) {
-        return state.getValue(stateOffset + REFILL_TIME);
+    public long getRoundingError(BucketState state) {
+        return state.getValue(stateOffset + ROUNDING_ERROR_OFFSET);
     }
 
-    public void setRefillTime(BucketState state, long refillTime) {
-        state.setValue(stateOffset + REFILL_TIME, refillTime);
+    public void setRoundingError(BucketState state, long roundingError) {
+        state.setValue(stateOffset + ROUNDING_ERROR_OFFSET, roundingError);
     }
 
 }

@@ -2,6 +2,7 @@ package com.github.bandwidthlimiter.bucket
 
 import com.github.bandwidthlimiter.Limiters
 import spock.lang.Specification
+import spock.lang.Unroll
 
 class BandwidthSpecification extends Specification {
 
@@ -24,156 +25,62 @@ class BandwidthSpecification extends Specification {
               10   |    70    |      80         |    10000
     }
 
-//    def "Specification for refill"() {
-//        setup:
-//            def meter = new TimeMeterMock(10000);
-//            def builder = Limiters.withCustomTimePrecision(meter)
-//                    .withGenericCellRateRefillStrategy()
-//                    .withLimitedBandwidth(1000, 1000, 0)
-//                    .withGuaranteedBandwidth(10, 100, 0)
-//            def bucket = builder.buildLocalThreadSafe()
-//            def configuration = bucket.getConfiguration()
-//            def state = bucket.createSnapshot()
-//            def refillStrategy = configuration.getRefillStrategy()
-//            def limited = configuration.getBandwidths(0)
-//            def guaranteed = configuration.getBandwidths(1)
-//        when:
-//            refillStrategy.refill(configuration, state, 10040)
-//        then:
-//            state.getCurrentSize(limited) == 40
-//            refillTime(configuration, state, limited) == 10040
-//            state.getCurrentSize(guaranteed) == 4
-//            refillTime(configuration, state, guaranteed) == 10040
-//
-//        when:
-//            refillStrategy.refill(configuration, state, 10050)
-//        then:
-//            state.getCurrentSize(limited) == 50
-//            refillTime(configuration, state, limited) == 10050
-//            state.getCurrentSize(guaranteed) == 5
-//            refillTime(configuration, state, guaranteed) == 10050
-//
-//        when:
-//            refillStrategy.refill(configuration, state, 10050)
-//        then:
-//            state.getCurrentSize(limited) == 50
-//            refillTime(configuration, state, limited) == 10050
-//            state.getCurrentSize(guaranteed) == 5
-//            refillTime(configuration, state, guaranteed) == 10050
-//
-//        when:
-//            refillStrategy.refill(configuration, state, 10051)
-//        then:
-//            state.getCurrentSize(limited) == 51
-//            refillTime(configuration, state, limited) == 10051
-//            state.getCurrentSize(guaranteed) == 5
-//            refillTime(configuration, state, guaranteed) == 10050
-//
-//        when:
-//            refillStrategy.refill(configuration, state, 10055)
-//        then:
-//            state.getCurrentSize(limited) == 55
-//            refillTime(configuration, state, limited) == 10055
-//            state.getCurrentSize(guaranteed) == 5
-//            refillTime(configuration, state, guaranteed) == 10050
-//
-//        when:
-//            refillStrategy.refill(configuration, state, 10056)
-//        then:
-//            state.getCurrentSize(limited) == 56
-//            refillTime(configuration, state, limited) == 10056
-//            state.getCurrentSize(guaranteed) == 5
-//            refillTime(configuration, state, guaranteed) == 10050
-//
-//        when:
-//            refillStrategy.refill(configuration, state, 10061)
-//        then:
-//            state.getCurrentSize(limited) == 61
-//            refillTime(configuration, state, limited) == 10061
-//            state.getCurrentSize(guaranteed) == 6
-//            refillTime(configuration, state, guaranteed) == 10060
-//
-//        when:
-//            refillStrategy.refill(configuration, state, 10070)
-//        then:
-//            state.getCurrentSize(limited) == 70
-//            refillTime(configuration, state, limited) == 10070
-//            state.getCurrentSize(guaranteed) == 7
-//            refillTime(configuration, state, guaranteed) == 10070
-//
-//        when:
-//            refillStrategy.refill(configuration, state, 10071)
-//        then:
-//            state.getCurrentSize(limited) == 71
-//            refillTime(configuration, state, limited) == 10071
-//            state.getCurrentSize(guaranteed) == 7
-//            refillTime(configuration, state, guaranteed) == 10070
-//
-//        when:
-//            refillStrategy.refill(configuration, state, 10101)
-//        then:
-//            state.getCurrentSize(limited) == 101
-//            refillTime(configuration, state, limited) == 10101
-//            state.getCurrentSize(guaranteed) == 10
-//            refillTime(configuration, state, guaranteed) == 10101
-//
-//        when:
-//            refillStrategy.refill(configuration, state, 10102)
-//        then:
-//            state.getCurrentSize(limited) == 102
-//            refillTime(configuration, state, limited) == 10102
-//            state.getCurrentSize(guaranteed) == 10
-//            refillTime(configuration, state, guaranteed) == 10101
-//
-//        when:
-//            refillStrategy.refill(configuration, state, 10500)
-//        then:
-//            state.getCurrentSize(limited) == 500
-//            refillTime(configuration, state, limited) == 10500
-//            state.getCurrentSize(guaranteed) == 10
-//            refillTime(configuration, state, guaranteed) == 10500
-//
-//        when:
-//            refillStrategy.refill(configuration, state, 11000)
-//        then:
-//            state.getCurrentSize(limited) == 1000
-//            refillTime(configuration, state, limited) == 11000
-//            state.getCurrentSize(guaranteed) == 10
-//            refillTime(configuration, state, guaranteed) == 11000
-//
-//        when:
-//            refillStrategy.refill(configuration, state, 11003)
-//        then:
-//            state.getCurrentSize(limited) == 1000
-//            refillTime(configuration, state, limited) == 11003
-//            state.getCurrentSize(guaranteed) == 10
-//            refillTime(configuration, state, guaranteed) == 11000
-//
-//        when:
-//            refillStrategy.refill(configuration, state, 20000)
-//        then:
-//            state.getCurrentSize(limited) == 1000
-//            refillTime(configuration, state, limited) == 20000
-//            state.getCurrentSize(guaranteed) == 10
-//            refillTime(configuration, state, guaranteed) == 20000
-//    }
-//
-//    def "spec for timeRequiredToRefill"() {
-//        when:
-//            def bucket = Limiters.withMillisTimePrecision()
-//                .withLimitedBandwidth(100, 1000)
-//                .withLimitedBandwidth(10, 10).buildLocalUnsafe()
-//            def configuration = bucket.getConfiguration()
-//            def bandwidth0 = configuration.getBandwidths()[0]
-//            def bandwidth1 = configuration.getBandwidths()[1]
-//            def refillStrategy = bucket.getConfiguration().getRefillStrategy()
-//        then:
-//            refillStrategy.timeRequiredToRefill(configuration, bandwidth0, 100) == 1000
-//            refillStrategy.timeRequiredToRefill(configuration, bandwidth0, 30) == 300
-//
-//            refillStrategy.timeRequiredToRefill(configuration, bandwidth1, 10) == 10
-//            refillStrategy.timeRequiredToRefill(configuration, bandwidth1, 6) == 6
-//    }
+    @Unroll
+    def "Specification for refill #n"(int n, long initialCapacity, long period, long initTime,
+               long maxCapacityBefore, long maxCapacityAfter,
+               long timeRefill, long requiredSize, long requiredTimeRefill) {
+        setup:
+            def meter = new TimeMeterMock(initTime);
+            def adjuster = new AdjusterMock(maxCapacityBefore)
+            def bucket = Limiters.withCustomTimePrecision(meter)
+                    .withLimitedBandwidth(adjuster, period, initialCapacity)
+                    .buildLocalUnsafe()
+            def bandwidth = bucket.getConfiguration().getBandwidth(0)
+            def state = bucket.createSnapshot()
+        when:
+            adjuster.setCapacity(maxCapacityAfter)
+            meter.setCurrentTime(timeRefill)
+            bandwidth.refill(state, timeRefill)
+        then:
+            bandwidth.getCurrentSize(state) == requiredSize
+            bandwidth.getRefillTime(state) == requiredTimeRefill
+            bandwidth.getMaxCapacity(state) == maxCapacityAfter
+        where:
+            n  | initialCapacity | period | initTime | maxCapacityBefore | maxCapacityAfter | timeRefill | requiredSize | requiredTimeRefill
+//            1  |      0          | 1000   | 10000    | 1000              | 1000             | 10040      | 40           | 10040
+//            2  |      0          | 100    | 10000    | 10                | 10               | 10040      | 4            | 10040
+//            3  |     40          | 1000   | 10040    | 1000              | 1000             | 10050      | 50           | 10050
+//            4  |      4          | 100    | 10040    | 10                | 10               | 10050      | 5            | 10050
+//            5  |     50          | 1000   | 10050    | 1000              | 1000             | 10050      | 50           | 10050
+//            6  |      5          | 100    | 10050    | 10                | 10               | 10050      | 5            | 10050
+//            7  |     50          | 1000   | 10050    | 1000              | 1000             | 10051      | 51           | 10051
+//            8  |      5          | 100    | 10050    | 10                | 10               | 10051      | 5            | 10050
+//            9  |     51          | 1000   | 10051    | 1000              | 1000             | 10055      | 55           | 10055
+//            10 |      5          | 100    | 10050    | 10                | 10               | 10055      | 5            | 10050
+//            11 |     55          | 1000   | 10055    | 1000              | 1000             | 10056      | 56           | 10056
+//            12 |      5          | 100    | 10050    | 10                | 10               | 10055      | 5            | 10050
+//            13 |     56          | 1000   | 10056    | 1000              | 1000             | 10061      | 61           | 10061
+//            14 |      5          | 100    | 10050    | 10                | 10               | 10061      | 6            | 10060
+//            15 |     61          | 1000   | 10061    | 1000              | 1000             | 10070      | 70           | 10070
+//            16 |      6          | 100    | 10060    | 10                | 10               | 10070      | 7            | 10070
+//            17 |     70          | 1000   | 10070    | 1000              | 1000             | 10071      | 71           | 10071
+//            18 |      7          | 100    | 10070    | 10                | 10               | 10071      | 7            | 10070
+//            19 |     71          | 1000   | 10071    | 1000              | 1000             | 10101      | 101          | 10101
+//            20 |      7          | 100    | 10070    | 10                | 10               | 10101      | 10           | 10101
+//            21 |    101          | 1000   | 10101    | 1000              | 1000             | 10102      | 102          | 10102
+//            22 |     10          | 100    | 10101    | 10                | 10               | 10102      | 10           | 10102
+//            23 |    102          | 1000   | 10102    | 1000              | 1000             | 10500      | 500          | 10500
+//            24 |     10          | 100    | 10102    | 10                | 10               | 10500      | 10           | 10500
+//            25 |    500          | 1000   | 10500    | 1000              | 1000             | 11000      | 1000         | 11000
+//            26 |     10          | 100    | 10500    | 10                | 10               | 11000      | 10           | 11000
+//            27 |   1000          | 1000   | 11000    | 1000              | 1000             | 11003      | 1000         | 11003
+//            28 |     10          | 100    | 11000    | 10                | 10               | 11003      | 10           | 11003
+//            29 |   1000          | 1000   | 11003    | 1000              | 1000             | 20000      | 1000         | 20000
+//            30 |     10          | 100    | 11003    | 10                | 10               | 20000      | 10           | 20000
+
+            31 |   1000          | 1000   | 20000    | 1000              | 1100             | 20004      | 1005         | 20004
+//            32 |     10          | 100    | 20000    | 10                | 11               | 20005      | 10           | 20000
+    }
 
     private long size(BucketState state, Bandwidth bandwidth) {
         return state.getCurrentSize(bandwidth)

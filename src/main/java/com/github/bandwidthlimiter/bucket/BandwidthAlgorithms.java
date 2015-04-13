@@ -113,7 +113,7 @@ public class BandwidthAlgorithms {
                 continue;
             }
 
-            long timeToRefillCurrent = bandwidth.timeRequiredToRefill(deficit);
+            long timeToRefillCurrent = bandwidth.timeRequiredToRefill(state, deficit);
             if (bandwidth.isLimited()) {
                 sleepToRefillLimited = Math.max(sleepToRefillLimited, timeToRefillCurrent);
             } else {
@@ -127,6 +127,7 @@ public class BandwidthAlgorithms {
         for (Bandwidth bandwidth: bandwidths) {
             bandwidth.setupInitialState(state, currentTime);
         }
+        state.setRefillTime(currentTime);
     }
 
     public static void refill(Bandwidth[] bandwidths, BucketState state, long currentTime) {

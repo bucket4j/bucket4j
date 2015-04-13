@@ -7,13 +7,21 @@ public class BucketState {
     protected final long[] state;
 
     public BucketState(BucketConfiguration configuration) {
-        this.state = new long[configuration.getStateSize()];
+        this.state = new long[configuration.getStateSize() + 1];
         long currentTime = configuration.getTimeMeter().currentTime();
         BandwidthAlgorithms.setupInitialState(configuration.getBandwidths(), this, currentTime);
     }
 
     public BucketState(BucketState previousState) {
         this.state = Arrays.copyOf(previousState.state, previousState.state.length);
+    }
+
+    public long getRefillTime() {
+        return state[0];
+    }
+
+    public void setRefillTime(long refillTime) {
+       state[0] = refillTime;
     }
 
     public BucketState(long[] snapshot) {
@@ -25,11 +33,11 @@ public class BucketState {
     }
 
     public long getValue(int offset) {
-        return state[offset];
+        return state[offset + 1];
     }
 
     public void setValue(int offset, long value) {
-        state[offset] = value;
+        state[offset + 1] = value;
     }
 
     @Override

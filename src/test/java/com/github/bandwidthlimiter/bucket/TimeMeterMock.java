@@ -6,6 +6,7 @@ package com.github.bandwidthlimiter.bucket;
 public class TimeMeterMock implements TimeMeter {
 
     private long currentTime;
+    private long sleeped = 0;
 
     public TimeMeterMock() {
         currentTime = 0;
@@ -19,6 +20,14 @@ public class TimeMeterMock implements TimeMeter {
         currentTime += duration;
     }
 
+    public void setCurrentTime(long currentTime) {
+        this.currentTime = currentTime;
+    }
+
+    public long getSleeped() {
+        return sleeped;
+    }
+
     @Override
     public long currentTime() {
         return currentTime;
@@ -26,7 +35,7 @@ public class TimeMeterMock implements TimeMeter {
 
     @Override
     public void sleep(long units) throws InterruptedException {
-        throw new UnsupportedOperationException();
+        sleeped += units;
     }
 
 }
