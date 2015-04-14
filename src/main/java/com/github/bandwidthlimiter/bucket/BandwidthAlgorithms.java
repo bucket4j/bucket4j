@@ -94,7 +94,7 @@ public class BandwidthAlgorithms {
         }
     }
 
-    public static long calculateTimeToCloseDeficit(Bandwidth[] bandwidths, BucketState state,long deficit) {
+    public static long calculateTimeToCloseDeficit(Bandwidth[] bandwidths, BucketState state, long currentTime, long deficit) {
         long sleepToRefillLimited = 0;
         long sleepToRefillGuaranteed = Long.MAX_VALUE;
         for (int i = 0; i < bandwidths.length; i++) {
@@ -108,12 +108,12 @@ public class BandwidthAlgorithms {
                 }
             }
 
-            long maxCapacity = bandwidth.getMaxCapacity(state);
+            long maxCapacity = bandwidth.getMaxCapacity(currentTime);
             if (currentSize + deficit > maxCapacity) {
                 continue;
             }
 
-            long timeToRefillCurrent = bandwidth.timeRequiredToRefill(state, deficit);
+            long timeToRefillCurrent = bandwidth.timeRequiredToRefill(currentTime, deficit);
             if (bandwidth.isLimited()) {
                 sleepToRefillLimited = Math.max(sleepToRefillLimited, timeToRefillCurrent);
             } else {
@@ -125,7 +125,7 @@ public class BandwidthAlgorithms {
 
     public static void setupInitialState(Bandwidth[] bandwidths, BucketState state, long currentTime) {
         for (Bandwidth bandwidth: bandwidths) {
-            bandwidth.setupInitialState(state, currentTime);
+            bandwidth.setupInitialState(state);
         }
         state.setRefillTime(currentTime);
     }
@@ -134,6 +134,7 @@ public class BandwidthAlgorithms {
         for (Bandwidth bandwidth: bandwidths) {
             bandwidth.refill(state, currentTime);
         }
+        state.setRefillTime(currentTime);
     }
 
 }

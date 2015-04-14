@@ -18,14 +18,10 @@ package com.github.bandwidthlimiter.bucket;
 
 import java.io.Serializable;
 
-import static com.github.bandwidthlimiter.bucket.BucketExceptions.nonPositiveInitialCapacity;
-import static com.github.bandwidthlimiter.bucket.BucketExceptions.nullBandwidthAdjuster;
-
 public class Bandwidth implements Serializable {
 
     public static final int CURRENT_SIZE_OFFSET = 0;
-    public static final int MAX_CAPACITY_OFFSET = CURRENT_SIZE_OFFSET + 1;
-    public static final int ROUNDING_ERROR_OFFSET = MAX_CAPACITY_OFFSET + 1;
+    public static final int ROUNDING_ERROR_OFFSET = CURRENT_SIZE_OFFSET + 1;
 
     private final long initialCapacity;
     private final long period;
@@ -35,18 +31,10 @@ public class Bandwidth implements Serializable {
 
     public Bandwidth(int stateOffset, BandwidthAdjuster adjuster, long initialCapacity, long period, boolean guaranteed) {
         this.stateOffset = stateOffset;
-        if (adjuster == null) {
-            throw nullBandwidthAdjuster();
-        }
-
         this.adjuster = adjuster;
         this.initialCapacity = initialCapacity;
         this.period = period;
         this.guaranteed = guaranteed;
-
-        if (initialCapacity < 0) {
-            throw nonPositiveInitialCapacity(initialCapacity);
-        }
     }
 
     public boolean isGuaranteed() {
@@ -61,24 +49,27 @@ public class Bandwidth implements Serializable {
         return 3;
     }
 
-    public void setupInitialState(BucketState state, long currentTime) {
+    public void setupInitialState(BucketState state) {
         setCurrentSize(state, initialCapacity);
-        setMaxCapacity(state, adjuster.getCapacity());
         setRoundingError(state, 0);
     }
 
     public void consume(BucketState state, long toConsume) {
         long currentSize = getCurrentSize(state);
-        currentSize = Math.max(0, currentSize - toConsume);
-        setCurrentSize(state, currentSize);
+        long newSize = currentSize - toConsume;
+        if (newSize < 0) {
+            setCurrentSize(state, 0);
+            setRoundingError(state, 0);
+        } else {
+            setCurrentSize(state, newSize);
+        }
     }
 
     public void refill(BucketState state, long currentTime) {
         long previousRefillTime = state.getRefillTime();
-        final long maxCapacity = adjuster.getCapacity();
+        final long maxCapacity = adjuster.getCapacity(currentTime);
         long currentSize = getCurrentSize(state);
 
-        setMaxCapacity(state, maxCapacity);
         if (currentSize >= maxCapacity) {
             setCurrentSize(state, maxCapacity);
             setRoundingError(state, 0);
@@ -97,6 +88,8 @@ public class Bandwidth implements Serializable {
         long divided = maxCapacity * durationSinceLastRefill + roundingError;
         long calculatedRefill = divided / period;
         if (calculatedRefill == 0) {
+            roundingError = divided % period;
+            setRoundingError(state, roundingError);
             return;
         }
 
@@ -112,31 +105,27 @@ public class Bandwidth implements Serializable {
         setRoundingError(state, roundingError);
     }
 
-    public long timeRequiredToRefill(BucketState state, long numTokens) {
-        return period * numTokens / getMaxCapacity(state);
+    public long timeRequiredToRefill(long currentTime, long numTokens) {
+        return period * numTokens / getMaxCapacity(currentTime);
     }
 
     public long getCurrentSize(BucketState state) {
         return state.getValue(stateOffset + CURRENT_SIZE_OFFSET);
     }
 
-    public void setCurrentSize(BucketState state, long currentSize) {
+    public long getMaxCapacity(long currentTime) {
+        return adjuster.getCapacity(currentTime);
+    }
+
+    private void setCurrentSize(BucketState state, long currentSize) {
         state.setValue(stateOffset + CURRENT_SIZE_OFFSET, currentSize);
     }
 
-    public long getMaxCapacity(BucketState state) {
-        return state.getValue(stateOffset + MAX_CAPACITY_OFFSET);
-    }
-
-    public void setMaxCapacity(BucketState state, long maxCapacity) {
-        state.setValue(stateOffset + MAX_CAPACITY_OFFSET, maxCapacity);
-    }
-
-    public long getRoundingError(BucketState state) {
+    private long getRoundingError(BucketState state) {
         return state.getValue(stateOffset + ROUNDING_ERROR_OFFSET);
     }
 
-    public void setRoundingError(BucketState state, long roundingError) {
+    private void setRoundingError(BucketState state, long roundingError) {
         state.setValue(stateOffset + ROUNDING_ERROR_OFFSET, roundingError);
     }
 

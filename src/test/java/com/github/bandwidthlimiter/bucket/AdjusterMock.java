@@ -9,7 +9,7 @@ public class AdjusterMock implements BandwidthAdjuster {
     }
 
     @Override
-    public long getCapacity() {
+    public long getCapacity(long currentTime) {
         return capacity;
     }
 

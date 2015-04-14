@@ -17,18 +17,34 @@ class BandwidthSpecification extends Specification {
             def state = bucket.createSnapshot()
         then:
             bandwidth.getCurrentSize(state) == initialCapacity
-            bandwidth.getMaxCapacity(state) == capacity
-            bandwidth.getRefillTime(state) == currentTime
+            state.getRefillTime() == currentTime
         where:
             period | capacity | initialCapacity | currentTime
               10   |   100    |      50         |    10000
               10   |    70    |      80         |    10000
     }
 
+    def "Specification for timeRequiredToRefill"(long period, long capacity, long currentTime,
+                 long tokensToRefill, long requiredRefillTime) {
+        setup:
+            def meter = new TimeMeterMock(currentTime);
+            def builder = Limiters.withCustomTimePrecision(meter)
+                    .withLimitedBandwidth(capacity, period)
+            def bucket = builder.buildLocalThreadSafe()
+            def bandwidth = bucket.getConfiguration().getBandwidth(0)
+            def state = bucket.createSnapshot()
+        expect:
+            bandwidth.timeRequiredToRefill(currentTime, tokensToRefill) == requiredRefillTime
+        where:
+            period | capacity |  currentTime | tokensToRefill | requiredRefillTime
+              10   |   100    |    10000     |      50        |         5
+              10   |    80    |    10000     |      60        |         7
+    }
+
     @Unroll
     def "Specification for refill #n"(int n, long initialCapacity, long period, long initTime,
-               long maxCapacityBefore, long maxCapacityAfter,
-               long timeRefill, long requiredSize, long requiredTimeRefill) {
+               long maxCapacityBefore, long maxCapacityAfter, long timeRefill1, long requiredSize1,
+               long timeRefill2, long requiredSize2, long timeRefill3, long requiredSize3) {
         setup:
             def meter = new TimeMeterMock(initTime);
             def adjuster = new AdjusterMock(maxCapacityBefore)
@@ -36,58 +52,76 @@ class BandwidthSpecification extends Specification {
                     .withLimitedBandwidth(adjuster, period, initialCapacity)
                     .buildLocalUnsafe()
             def bandwidth = bucket.getConfiguration().getBandwidth(0)
+            def bandwidths = bucket.getConfiguration().getBandwidths()
             def state = bucket.createSnapshot()
         when:
             adjuster.setCapacity(maxCapacityAfter)
-            meter.setCurrentTime(timeRefill)
-            bandwidth.refill(state, timeRefill)
+            meter.setCurrentTime(timeRefill1)
+            BandwidthAlgorithms.refill(bandwidths, state, timeRefill1)
         then:
-            bandwidth.getCurrentSize(state) == requiredSize
-            bandwidth.getRefillTime(state) == requiredTimeRefill
-            bandwidth.getMaxCapacity(state) == maxCapacityAfter
+            bandwidth.getCurrentSize(state) == requiredSize1
+            bandwidth.getMaxCapacity(timeRefill1) == maxCapacityAfter
+            state.getRefillTime() == timeRefill1
+        when:
+            adjuster.setCapacity(maxCapacityAfter)
+            meter.setCurrentTime(timeRefill2)
+            BandwidthAlgorithms.refill(bandwidths, state, timeRefill2)
+        then:
+            bandwidth.getCurrentSize(state) == requiredSize2
+            bandwidth.getMaxCapacity(timeRefill1) == maxCapacityAfter
+            state.getRefillTime() == timeRefill2
+        when:
+            adjuster.setCapacity(maxCapacityAfter)
+            meter.setCurrentTime(timeRefill3)
+            BandwidthAlgorithms.refill(bandwidths, state, timeRefill3)
+        then:
+            bandwidth.getCurrentSize(state) == requiredSize3
+            bandwidth.getMaxCapacity(timeRefill1) == maxCapacityAfter
+            state.getRefillTime() == timeRefill3
         where:
-            n  | initialCapacity | period | initTime | maxCapacityBefore | maxCapacityAfter | timeRefill | requiredSize | requiredTimeRefill
-//            1  |      0          | 1000   | 10000    | 1000              | 1000             | 10040      | 40           | 10040
-//            2  |      0          | 100    | 10000    | 10                | 10               | 10040      | 4            | 10040
-//            3  |     40          | 1000   | 10040    | 1000              | 1000             | 10050      | 50           | 10050
-//            4  |      4          | 100    | 10040    | 10                | 10               | 10050      | 5            | 10050
-//            5  |     50          | 1000   | 10050    | 1000              | 1000             | 10050      | 50           | 10050
-//            6  |      5          | 100    | 10050    | 10                | 10               | 10050      | 5            | 10050
-//            7  |     50          | 1000   | 10050    | 1000              | 1000             | 10051      | 51           | 10051
-//            8  |      5          | 100    | 10050    | 10                | 10               | 10051      | 5            | 10050
-//            9  |     51          | 1000   | 10051    | 1000              | 1000             | 10055      | 55           | 10055
-//            10 |      5          | 100    | 10050    | 10                | 10               | 10055      | 5            | 10050
-//            11 |     55          | 1000   | 10055    | 1000              | 1000             | 10056      | 56           | 10056
-//            12 |      5          | 100    | 10050    | 10                | 10               | 10055      | 5            | 10050
-//            13 |     56          | 1000   | 10056    | 1000              | 1000             | 10061      | 61           | 10061
-//            14 |      5          | 100    | 10050    | 10                | 10               | 10061      | 6            | 10060
-//            15 |     61          | 1000   | 10061    | 1000              | 1000             | 10070      | 70           | 10070
-//            16 |      6          | 100    | 10060    | 10                | 10               | 10070      | 7            | 10070
-//            17 |     70          | 1000   | 10070    | 1000              | 1000             | 10071      | 71           | 10071
-//            18 |      7          | 100    | 10070    | 10                | 10               | 10071      | 7            | 10070
-//            19 |     71          | 1000   | 10071    | 1000              | 1000             | 10101      | 101          | 10101
-//            20 |      7          | 100    | 10070    | 10                | 10               | 10101      | 10           | 10101
-//            21 |    101          | 1000   | 10101    | 1000              | 1000             | 10102      | 102          | 10102
-//            22 |     10          | 100    | 10101    | 10                | 10               | 10102      | 10           | 10102
-//            23 |    102          | 1000   | 10102    | 1000              | 1000             | 10500      | 500          | 10500
-//            24 |     10          | 100    | 10102    | 10                | 10               | 10500      | 10           | 10500
-//            25 |    500          | 1000   | 10500    | 1000              | 1000             | 11000      | 1000         | 11000
-//            26 |     10          | 100    | 10500    | 10                | 10               | 11000      | 10           | 11000
-//            27 |   1000          | 1000   | 11000    | 1000              | 1000             | 11003      | 1000         | 11003
-//            28 |     10          | 100    | 11000    | 10                | 10               | 11003      | 10           | 11003
-//            29 |   1000          | 1000   | 11003    | 1000              | 1000             | 20000      | 1000         | 20000
-//            30 |     10          | 100    | 11003    | 10                | 10               | 20000      | 10           | 20000
-
-            31 |   1000          | 1000   | 20000    | 1000              | 1100             | 20004      | 1005         | 20004
-//            32 |     10          | 100    | 20000    | 10                | 11               | 20005      | 10           | 20000
+            n  | initialCapacity | period | initTime | maxCapacityBefore | maxCapacityAfter | timeRefill1 | requiredSize1 | timeRefill2 | requiredSize2 | timeRefill3 | requiredSize3
+            1  |        0        | 1000   | 10000    |      1000         |      1000        | 10040       |       40      |    10050    |    50         |    10090    |      90
+            2  |       50        | 1000   | 10050    |      1000         |      1000        | 10051       |       51      |    10055    |    55         |    10100    |     100
+            3  |       55        | 1000   | 10055    |      1000         |      1000        | 10500       |      500      |    11001    |  1000         |    12000    |    1000
+            4  |     1000        | 1000   | 10000    |      1000         |       900        | 10200       |      900      |    10250    |   900         |    10251    |     900
+            5  |      200        | 1000   | 10000    |      1000         |      1000        | 30000       |     1000      |    30001    |  1000         |    40000    |    1000
+            6  |        0        | 1000   | 10000    |       100         |       100        | 10005       |        0      |    10010    |     1         |    10019    |       1
+            7  |        0        | 1000   | 10000    |       100         |       100        | 10005       |        0      |    10009    |     0         |    10029    |       2
+            8  |        0        | 1000   | 10000    |       100         |       100        | 10004       |        0      |    10009    |     0         |    10010    |       1
     }
 
-    private long size(BucketState state, Bandwidth bandwidth) {
-        return state.getCurrentSize(bandwidth)
-    }
-
-    private long refillTime(BucketConfiguration configuration, BucketState state, Bandwidth bandwidth) {
-        return state.getRefillState(configuration, bandwidth.getIndexInBucket())
+    @Unroll
+    def "Specification for consume #n"(int n, long initialCapacity, long period, long initTime,
+                                      long    capacity , long timeRefill1, long consume1, long requiredSize1,
+                                      long timeRefill2, long consume2, long requiredSize2) {
+        setup:
+            def meter = new TimeMeterMock(initTime);
+            def adjuster = new AdjusterMock(   capacity )
+            def bucket = Limiters.withCustomTimePrecision(meter)
+                    .withLimitedBandwidth(adjuster, period, initialCapacity)
+                    .buildLocalUnsafe()
+            def bandwidth = bucket.getConfiguration().getBandwidth(0)
+            def bandwidths = bucket.getConfiguration().getBandwidths()
+            def state = bucket.createSnapshot()
+        when:
+            meter.setCurrentTime(timeRefill1)
+            BandwidthAlgorithms.refill(bandwidths, state, timeRefill1)
+            BandwidthAlgorithms.consume(bandwidths, state, consume1)
+        then:
+            bandwidth.getCurrentSize(state) == requiredSize1
+            state.getRefillTime() == timeRefill1
+        when:
+            meter.setCurrentTime(timeRefill2)
+            BandwidthAlgorithms.refill(bandwidths, state, timeRefill2)
+            BandwidthAlgorithms.consume(bandwidths, state, consume2)
+        then:
+            bandwidth.getCurrentSize(state) == requiredSize2
+            state.getRefillTime() == timeRefill2
+        where:
+            n  | initialCapacity | period | initTime |    capacity | timeRefill1 |  consume1 | requiredSize1 | timeRefill2 | consume2 | requiredSize2
+            1  |        0        | 1000   | 10000    |      1000   |     10040   |     10    |     30        |    10050    |    20    |       20
+            2  |       50        | 1000   | 10050    |      1000   |     10051   |      2    |     49        |    10055    |     7    |       46
+            3  |       55        | 1000   | 10055    |      1000   |     10500   |     600   |      0        |    10504    |     3    |       1
     }
 
 }

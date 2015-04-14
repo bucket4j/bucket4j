@@ -113,7 +113,7 @@ public class ThreadSafeBucket extends AbstractBucket {
             }
 
             long deficitTokens = tokensToConsume - availableToConsume;
-            long timeToCloseDeficit = BandwidthAlgorithms.calculateTimeToCloseDeficit(bandwidths, newState, deficitTokens);
+            long timeToCloseDeficit = BandwidthAlgorithms.calculateTimeToCloseDeficit(bandwidths, newState, currentTime,  deficitTokens);
             if (isWaitingLimited) {
                 long sleepingTimeLimit = waitIfBusyTimeLimit - methodDuration;
                 if (timeToCloseDeficit >= sleepingTimeLimit) {

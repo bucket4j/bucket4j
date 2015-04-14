@@ -2,10 +2,7 @@ package com.github.bandwidthlimiter.bucket;
 
 import com.github.bandwidthlimiter.bucket.BandwidthAdjuster.ImmutableCapacity;
 
-import java.util.Objects;
-
-import static com.github.bandwidthlimiter.bucket.BucketExceptions.nonPositiveInitialCapacity;
-import static com.github.bandwidthlimiter.bucket.BucketExceptions.nonPositivePeriod;
+import static com.github.bandwidthlimiter.bucket.BucketExceptions.*;
 
 public class BandwidthDefinition {
 
@@ -41,7 +38,9 @@ public class BandwidthDefinition {
         if (period <= 0) {
             throw nonPositivePeriod(period);
         }
-        Objects.requireNonNull(adjuster);
+        if (adjuster == null) {
+            throw nullBandwidthAdjuster();
+        }
         this.capacity = 0;
         this.adjuster = adjuster;
         this.initialCapacity = initialCapacity;

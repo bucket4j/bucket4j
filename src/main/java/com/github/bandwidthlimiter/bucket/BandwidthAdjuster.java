@@ -4,7 +4,7 @@ import java.io.Serializable;
 
 public interface BandwidthAdjuster extends Serializable {
 
-    long getCapacity();
+    long getCapacity(long currentTime);
 
     public static class ImmutableCapacity implements BandwidthAdjuster {
 
@@ -15,7 +15,7 @@ public interface BandwidthAdjuster extends Serializable {
         }
 
         @Override
-        public long getCapacity() {
+        public long getCapacity(long currentTime) {
             return value;
         }
 

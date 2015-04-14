@@ -28,7 +28,7 @@ public class ConsumeOrCalculateTimeToCloseDeficitCommand implements GridCommand<
             return 0l;
         } else {
             long deficitTokens = tokensToConsume - availableToConsume;
-            long timeToCloseDeficit = BandwidthAlgorithms.calculateTimeToCloseDeficit(bandwidths, state, deficitTokens);
+            long timeToCloseDeficit = BandwidthAlgorithms.calculateTimeToCloseDeficit(bandwidths, state, currentTime, deficitTokens);
             return timeToCloseDeficit;
         }
 

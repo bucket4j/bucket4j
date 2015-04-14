@@ -64,7 +64,7 @@ public class UnsafeBucket extends AbstractBucket {
             }
 
             long deficitTokens = tokensToConsume - availableToConsume;
-            long timeToCloseDeficit = BandwidthAlgorithms.calculateTimeToCloseDeficit(bandwidths, state, deficitTokens);
+            long timeToCloseDeficit = BandwidthAlgorithms.calculateTimeToCloseDeficit(bandwidths, state, currentTime, deficitTokens);
             if (waitIfBusyTimeLimit > 0) {
                 if (timeToCloseDeficit > waitIfBusyTimeLimit) {
                     return false;

@@ -45,6 +45,14 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
             period << [-10, -1, 0]
     }
 
+    def "Should check that bandwidth adjuster is not null"() {
+        when:
+            withNanoTimePrecision().withLimitedBandwidth(null, VALID_PERIOD, VALID_CAPACITY)
+        then:
+            IllegalArgumentException ex = thrown()
+            ex.message == nullBandwidthAdjuster().message
+    }
+
     def "Should check than time metter is not null"() {
         setup:
             def builder = withCustomTimePrecision(null).withLimitedBandwidth(VALID_CAPACITY, VALID_PERIOD)
