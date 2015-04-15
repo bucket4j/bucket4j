@@ -23,7 +23,7 @@ public class UnsafeBucket extends AbstractBucket {
 
     public UnsafeBucket(BucketConfiguration configuration) {
         super(configuration);
-        this.state = new BucketState(configuration);
+        this.state = BandwidthAlgorithms.createInitialState(configuration);
     }
 
     @Override

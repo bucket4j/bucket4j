@@ -28,7 +28,7 @@ public class ThreadSafeBucket extends AbstractBucket {
     public ThreadSafeBucket(BucketConfiguration configuration) {
         super(configuration);
         this.configuration = configuration;
-        BucketState initialState = new BucketState(configuration);
+        BucketState initialState = BandwidthAlgorithms.createInitialState(configuration);
         this.stateReference = new AtomicReference<>(initialState);
     }
 

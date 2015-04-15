@@ -6,10 +6,8 @@ public class BucketState {
 
     protected final long[] state;
 
-    public BucketState(BucketConfiguration configuration) {
-        this.state = new long[configuration.getStateSize() + 1];
-        long currentTime = configuration.getTimeMeter().currentTime();
-        BandwidthAlgorithms.setupInitialState(configuration.getBandwidths(), this, currentTime);
+    public BucketState(int sizeOfBandwidthsState) {
+        this.state = new long[sizeOfBandwidthsState + 1];
     }
 
     public BucketState(BucketState previousState) {

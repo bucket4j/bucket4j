@@ -123,11 +123,14 @@ public class BandwidthAlgorithms {
         return Math.min(sleepToRefillLimited, sleepToRefillGuaranteed);
     }
 
-    public static void setupInitialState(Bandwidth[] bandwidths, BucketState state, long currentTime) {
-        for (Bandwidth bandwidth: bandwidths) {
+    public static BucketState createInitialState(BucketConfiguration configuration) {
+        BucketState state = new BucketState(configuration.getStateSize());
+        long currentTime = configuration.getTimeMeter().currentTime();
+        for (Bandwidth bandwidth: configuration.getBandwidths()) {
             bandwidth.setupInitialState(state);
         }
         state.setRefillTime(currentTime);
+        return state;
     }
 
     public static void refill(Bandwidth[] bandwidths, BucketState state, long currentTime) {
