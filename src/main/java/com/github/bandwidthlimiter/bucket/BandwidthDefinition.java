@@ -14,9 +14,14 @@ public class BandwidthDefinition {
     final boolean limited;
 
     public BandwidthDefinition(long capacity, long initialCapacity, long period, boolean guaranteed) {
-        if (capacity <= 0) {
-            throw BucketExceptions.nonPositiveCapacity(capacity);
-        }
+        this(validateCapacity(capacity), null, initialCapacity, period, guaranteed);
+    }
+
+    public BandwidthDefinition(BandwidthAdjuster adjuster, long initialCapacity, long period, boolean guaranteed) {
+        this(0l, validateAdjuster(adjuster), initialCapacity, period, guaranteed);
+    }
+
+    private BandwidthDefinition(long capacity, BandwidthAdjuster adjuster, long initialCapacity, long period, boolean guaranteed) {
         if (initialCapacity < 0) {
             throw nonPositiveInitialCapacity(initialCapacity);
         }
@@ -24,24 +29,6 @@ public class BandwidthDefinition {
             throw nonPositivePeriod(period);
         }
         this.capacity = capacity;
-        this.adjuster = null;
-        this.initialCapacity = initialCapacity;
-        this.period = period;
-        this.guaranteed = guaranteed;
-        this.limited = !guaranteed;
-    }
-
-    public BandwidthDefinition(BandwidthAdjuster adjuster, long initialCapacity, long period, boolean guaranteed) {
-        if (initialCapacity < 0) {
-            throw nonPositiveInitialCapacity(initialCapacity);
-        }
-        if (period <= 0) {
-            throw nonPositivePeriod(period);
-        }
-        if (adjuster == null) {
-            throw nullBandwidthAdjuster();
-        }
-        this.capacity = 0;
         this.adjuster = adjuster;
         this.initialCapacity = initialCapacity;
         this.period = period;
@@ -64,6 +51,20 @@ public class BandwidthDefinition {
 
     public double getTokensPerTimeUnit() {
         return (double) capacity / (double) period;
+    }
+
+    private static long validateCapacity(long capacity) {
+        if (capacity <= 0) {
+            throw nonPositiveCapacity(capacity);
+        }
+        return capacity;
+    }
+
+    private static BandwidthAdjuster validateAdjuster(BandwidthAdjuster adjuster) {
+        if (adjuster == null) {
+            throw nullBandwidthAdjuster();
+        }
+        return adjuster;
     }
 
 }
