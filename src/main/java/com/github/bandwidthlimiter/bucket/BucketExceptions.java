@@ -4,6 +4,8 @@ import java.text.MessageFormat;
 
 public class BucketExceptions {
 
+    private BucketExceptions() {}
+
     // ------------------- construction time exceptions --------------------------------
     public static IllegalArgumentException nonPositiveCapacity(long capacity) {
         String pattern = "{0} is wrong value for capacity, because capacity should be positive";

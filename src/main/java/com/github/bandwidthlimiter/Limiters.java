@@ -18,7 +18,9 @@ package com.github.bandwidthlimiter;
 import com.github.bandwidthlimiter.bucket.BucketBuilder;
 import com.github.bandwidthlimiter.bucket.TimeMeter;
 
-public final class Limiters {
+public  final class Limiters {
+
+    private Limiters() {}
 
     public static BucketBuilder withNanoTimePrecision() {
         return new BucketBuilder(TimeMeter.SYSTEM_NANOTIME);
