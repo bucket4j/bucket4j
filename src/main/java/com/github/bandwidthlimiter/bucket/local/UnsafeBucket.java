@@ -15,7 +15,10 @@
  */
 package com.github.bandwidthlimiter.bucket.local;
 
-import com.github.bandwidthlimiter.bucket.*;
+import com.github.bandwidthlimiter.bucket.AbstractBucket;
+import com.github.bandwidthlimiter.bucket.Bandwidth;
+import com.github.bandwidthlimiter.bucket.BucketConfiguration;
+import com.github.bandwidthlimiter.bucket.BucketState;
 
 public class UnsafeBucket extends AbstractBucket {
 
@@ -23,17 +26,17 @@ public class UnsafeBucket extends AbstractBucket {
 
     public UnsafeBucket(BucketConfiguration configuration) {
         super(configuration);
-        this.state = BandwidthAlgorithms.createInitialState(configuration);
+        this.state = BucketState.createInitialState(configuration);
     }
 
     @Override
     protected long consumeAsMuchAsPossibleImpl(long limit) {
         long currentTime = configuration.getTimeMeter().currentTime();
         Bandwidth[] bandwidths = configuration.getBandwidths();
-        BandwidthAlgorithms.refill(bandwidths, state, currentTime);
-        long availableToConsume = BandwidthAlgorithms.getAvailableTokens(bandwidths, state);
+        state.refill(bandwidths, currentTime);
+        long availableToConsume = state.getAvailableTokens(bandwidths);
         long toConsume = Math.min(limit, availableToConsume);
-        BandwidthAlgorithms.consume(bandwidths, state, toConsume);
+        state.consume(bandwidths, toConsume);
         return toConsume;
     }
 
@@ -41,10 +44,10 @@ public class UnsafeBucket extends AbstractBucket {
     protected boolean tryConsumeImpl(long tokensToConsume) {
         long currentTime = configuration.getTimeMeter().currentTime();
         Bandwidth[] bandwidths = configuration.getBandwidths();
-        BandwidthAlgorithms.refill(bandwidths, state, currentTime);
-        long availableToConsume = BandwidthAlgorithms.getAvailableTokens(bandwidths, state);
+        state.refill(bandwidths, currentTime);
+        long availableToConsume = state.getAvailableTokens(bandwidths);
         if (tokensToConsume <= availableToConsume) {
-            BandwidthAlgorithms.consume(bandwidths, state, tokensToConsume);
+            state.consume(bandwidths, tokensToConsume);
             return true;
         } else {
             return false;
@@ -72,13 +75,13 @@ public class UnsafeBucket extends AbstractBucket {
                 }
             }
 
-            BandwidthAlgorithms.refill(bandwidths, state, currentTime);
-            long timeToCloseDeficit = BandwidthAlgorithms.delayAfterWillBePossibleToConsume(bandwidths, state, currentTime, tokensToConsume);
+            state.refill(bandwidths, currentTime);
+            long timeToCloseDeficit = state.delayAfterWillBePossibleToConsume(bandwidths, currentTime, tokensToConsume);
             if (timeToCloseDeficit == Long.MAX_VALUE) {
                 return false;
             }
             if (timeToCloseDeficit == 0) {
-                BandwidthAlgorithms.consume(bandwidths, state, tokensToConsume);
+                state.consume(bandwidths, tokensToConsume);
                 return true;
             }
 

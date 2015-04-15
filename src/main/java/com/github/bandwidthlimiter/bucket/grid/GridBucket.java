@@ -1,7 +1,6 @@
 package com.github.bandwidthlimiter.bucket.grid;
 
 import com.github.bandwidthlimiter.bucket.AbstractBucket;
-import com.github.bandwidthlimiter.bucket.BandwidthAlgorithms;
 import com.github.bandwidthlimiter.bucket.BucketConfiguration;
 import com.github.bandwidthlimiter.bucket.BucketState;
 
@@ -12,7 +11,7 @@ public class GridBucket extends AbstractBucket {
     public GridBucket(BucketConfiguration configuration, GridProxy gridProxy) {
         super(configuration);
         this.gridProxy = gridProxy;
-        GridBucketState initialState = new GridBucketState(configuration, BandwidthAlgorithms.createInitialState(configuration));
+        GridBucketState initialState = new GridBucketState(configuration, BucketState.createInitialState(configuration));
         gridProxy.setInitialState(initialState);
     }
 

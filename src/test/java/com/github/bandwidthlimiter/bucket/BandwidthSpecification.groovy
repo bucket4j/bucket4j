@@ -36,12 +36,12 @@ class BandwidthSpecification extends Specification {
         expect:
             bandwidth.delayAfterWillBePossibleToConsume(state, currentTime, tokensToConsume) == requiredTime
         where:
-            period | capacity | initialCapacity| currentTime | tokensToConsume | requiredTime
-              10   |   100    |     100        |    10000    |      101        |  Long.MAX_VALUE
-              10   |   100    |     100        |    10000    |      100        |  0
-              10   |   100    |     100        |    10000    |       99        |  0
-              10   |   100    |      80        |    10000    |      100        |  2
-              10   |   100    |      80        |    10000    |       90        |  1
+            period | capacity | initialCapacity | currentTime | tokensToConsume | requiredTime
+              10   |   100    |       100       |    10000    |      101        |  Long.MAX_VALUE
+              10   |   100    |       100       |    10000    |      100        |        0
+              10   |   100    |       100       |    10000    |       99        |        0
+              10   |   100    |        80       |    10000    |      100        |        2
+              10   |   100    |        80       |    10000    |       90        |        1
     }
 
     @Unroll
@@ -60,7 +60,7 @@ class BandwidthSpecification extends Specification {
         when:
             adjuster.setCapacity(maxCapacityAfter)
             meter.setCurrentTime(timeRefill1)
-            BandwidthAlgorithms.refill(bandwidths, state, timeRefill1)
+            state.refill(bandwidths, timeRefill1)
         then:
             bandwidth.getCurrentSize(state) == requiredSize1
             bandwidth.getMaxCapacity(timeRefill1) == maxCapacityAfter
@@ -68,7 +68,7 @@ class BandwidthSpecification extends Specification {
         when:
             adjuster.setCapacity(maxCapacityAfter)
             meter.setCurrentTime(timeRefill2)
-            BandwidthAlgorithms.refill(bandwidths, state, timeRefill2)
+            state.refill(bandwidths, timeRefill2)
         then:
             bandwidth.getCurrentSize(state) == requiredSize2
             bandwidth.getMaxCapacity(timeRefill1) == maxCapacityAfter
@@ -76,7 +76,7 @@ class BandwidthSpecification extends Specification {
         when:
             adjuster.setCapacity(maxCapacityAfter)
             meter.setCurrentTime(timeRefill3)
-            BandwidthAlgorithms.refill(bandwidths, state, timeRefill3)
+            state.refill(bandwidths, timeRefill3)
         then:
             bandwidth.getCurrentSize(state) == requiredSize3
             bandwidth.getMaxCapacity(timeRefill1) == maxCapacityAfter
@@ -108,15 +108,15 @@ class BandwidthSpecification extends Specification {
             def state = bucket.createSnapshot()
         when:
             meter.setCurrentTime(timeRefill1)
-            BandwidthAlgorithms.refill(bandwidths, state, timeRefill1)
-            BandwidthAlgorithms.consume(bandwidths, state, consume1)
+            state.refill(bandwidths, timeRefill1)
+            state.consume(bandwidths, consume1)
         then:
             bandwidth.getCurrentSize(state) == requiredSize1
             state.getRefillTime() == timeRefill1
         when:
             meter.setCurrentTime(timeRefill2)
-            BandwidthAlgorithms.refill(bandwidths, state, timeRefill2)
-            BandwidthAlgorithms.consume(bandwidths, state, consume2)
+            state.refill(bandwidths, timeRefill2)
+            state.consume(bandwidths, consume2)
         then:
             bandwidth.getCurrentSize(state) == requiredSize2
             state.getRefillTime() == timeRefill2
