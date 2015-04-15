@@ -21,17 +21,12 @@ public class ConsumeOrCalculateTimeToCloseDeficitCommand implements GridCommand<
         long currentTime = configuration.getTimeMeter().currentTime();
         Bandwidth[] bandwidths = configuration.getBandwidths();
         BandwidthAlgorithms.refill(bandwidths, state, currentTime);
-        long availableToConsume = BandwidthAlgorithms.getAvailableTokens(bandwidths, state);
-        if (tokensToConsume <= availableToConsume) {
+        long timeToCloseDeficit = BandwidthAlgorithms.delayAfterWillBePossibleToConsume(bandwidths, state, currentTime, tokensToConsume);
+        if (timeToCloseDeficit == 0) {
             BandwidthAlgorithms.consume(bandwidths, state, tokensToConsume);
             bucketStateModified = true;
-            return 0l;
-        } else {
-            long deficitTokens = tokensToConsume - availableToConsume;
-            long timeToCloseDeficit = BandwidthAlgorithms.calculateTimeToCloseDeficit(bandwidths, state, currentTime, deficitTokens);
-            return timeToCloseDeficit;
         }
-
+        return timeToCloseDeficit;
     }
 
     @Override

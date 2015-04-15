@@ -24,21 +24,24 @@ class BandwidthSpecification extends Specification {
               10   |    70    |      80         |    10000
     }
 
-    def "Specification for timeRequiredToRefill"(long period, long capacity, long currentTime,
-                 long tokensToRefill, long requiredRefillTime) {
+    def "Specification for timeRequiredToRefill"(long period, long capacity, long initialCapacity, long currentTime,
+                 long tokensToConsume, long requiredTime) {
         setup:
             def meter = new TimeMeterMock(currentTime);
             def builder = Limiters.withCustomTimePrecision(meter)
-                    .withLimitedBandwidth(capacity, period)
+                    .withLimitedBandwidth(capacity, period, initialCapacity)
             def bucket = builder.buildLocalThreadSafe()
             def bandwidth = bucket.getConfiguration().getBandwidth(0)
             def state = bucket.createSnapshot()
         expect:
-            bandwidth.timeRequiredToRefill(currentTime, tokensToRefill) == requiredRefillTime
+            bandwidth.delayAfterWillBePossibleToConsume(state, currentTime, tokensToConsume) == requiredTime
         where:
-            period | capacity |  currentTime | tokensToRefill | requiredRefillTime
-              10   |   100    |    10000     |      50        |         5
-              10   |    80    |    10000     |      60        |         7
+            period | capacity | initialCapacity| currentTime | tokensToConsume | requiredTime
+              10   |   100    |     100        |    10000    |      101        |  Long.MAX_VALUE
+              10   |   100    |     100        |    10000    |      100        |  0
+              10   |   100    |     100        |    10000    |       99        |  0
+              10   |   100    |      80        |    10000    |      100        |  2
+              10   |   100    |      80        |    10000    |       90        |  1
     }
 
     @Unroll

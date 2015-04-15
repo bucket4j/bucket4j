@@ -54,19 +54,37 @@ public class UnsafeBucket extends AbstractBucket {
     @Override
     protected boolean consumeOrAwaitImpl(long tokensToConsume, long waitIfBusyTimeLimit) throws InterruptedException {
         Bandwidth[] bandwidths = configuration.getBandwidths();
+        boolean isWaitingLimited = waitIfBusyTimeLimit > 0;
+
+        final long methodStartTime = isWaitingLimited? configuration.getTimeMeter().currentTime(): 0;
+        long currentTime = methodStartTime;
+        long methodDuration = 0;
+        boolean isFirstCycle = true;
+
         while (true) {
-            long currentTime = configuration.getTimeMeter().currentTime();
+            if (isFirstCycle) {
+                isFirstCycle = false;
+            } else {
+                currentTime = configuration.getTimeMeter().currentTime();
+                methodDuration = currentTime - methodStartTime;
+                if (isWaitingLimited && methodDuration >= waitIfBusyTimeLimit) {
+                    return false;
+                }
+            }
+
             BandwidthAlgorithms.refill(bandwidths, state, currentTime);
-            long availableToConsume = BandwidthAlgorithms.getAvailableTokens(bandwidths, state);
-            if (tokensToConsume <= availableToConsume) {
+            long timeToCloseDeficit = BandwidthAlgorithms.delayAfterWillBePossibleToConsume(bandwidths, state, currentTime, tokensToConsume);
+            if (timeToCloseDeficit == Long.MAX_VALUE) {
+                return false;
+            }
+            if (timeToCloseDeficit == 0) {
                 BandwidthAlgorithms.consume(bandwidths, state, tokensToConsume);
                 return true;
             }
 
-            long deficitTokens = tokensToConsume - availableToConsume;
-            long timeToCloseDeficit = BandwidthAlgorithms.calculateTimeToCloseDeficit(bandwidths, state, currentTime, deficitTokens);
-            if (waitIfBusyTimeLimit > 0) {
-                if (timeToCloseDeficit > waitIfBusyTimeLimit) {
+            if (isWaitingLimited) {
+                long sleepingTimeLimit = waitIfBusyTimeLimit - methodDuration;
+                if (timeToCloseDeficit >= sleepingTimeLimit) {
                     return false;
                 }
             }

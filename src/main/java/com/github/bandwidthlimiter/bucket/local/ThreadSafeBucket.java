@@ -102,8 +102,11 @@ public class ThreadSafeBucket extends AbstractBucket {
             }
 
             BandwidthAlgorithms.refill(bandwidths, newState, currentTime);
-            long availableToConsume = BandwidthAlgorithms.getAvailableTokens(bandwidths, newState);
-            if (tokensToConsume <= availableToConsume) {
+            long timeToCloseDeficit = BandwidthAlgorithms.delayAfterWillBePossibleToConsume(bandwidths, newState, currentTime, tokensToConsume);
+            if (timeToCloseDeficit == Long.MAX_VALUE) {
+                return false;
+            }
+            if (timeToCloseDeficit == 0) {
                 BandwidthAlgorithms.consume(bandwidths, newState, tokensToConsume);
                 if (stateReference.compareAndSet(previousState, newState)) {
                     return true;
@@ -112,8 +115,6 @@ public class ThreadSafeBucket extends AbstractBucket {
                 }
             }
 
-            long deficitTokens = tokensToConsume - availableToConsume;
-            long timeToCloseDeficit = BandwidthAlgorithms.calculateTimeToCloseDeficit(bandwidths, newState, currentTime,  deficitTokens);
             if (isWaitingLimited) {
                 long sleepingTimeLimit = waitIfBusyTimeLimit - methodDuration;
                 if (timeToCloseDeficit >= sleepingTimeLimit) {

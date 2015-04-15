@@ -105,8 +105,17 @@ public class Bandwidth implements Serializable {
         setRoundingError(state, roundingError);
     }
 
-    public long timeRequiredToRefill(long currentTime, long numTokens) {
-        return period * numTokens / getMaxCapacity(currentTime);
+    public long delayAfterWillBePossibleToConsume(BucketState state, long currentTime, long numTokens) {
+        long currentSize = getCurrentSize(state);
+        if (numTokens <= currentSize) {
+            return 0;
+        }
+        final long maxCapacity = getMaxCapacity(currentTime);
+        if (numTokens > maxCapacity) {
+            return Long.MAX_VALUE;
+        }
+        long deficit = numTokens - currentSize;
+        return period * deficit / maxCapacity;
     }
 
     public long getCurrentSize(BucketState state) {

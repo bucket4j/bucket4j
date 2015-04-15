@@ -37,6 +37,9 @@ public class GridBucket extends AbstractBucket {
             if (timeToCloseDeficit == 0) {
                 return true;
             }
+            if (timeToCloseDeficit == Long.MAX_VALUE) {
+                return false;
+            }
 
             if (isWaitingLimited) {
                 long currentTime = configuration.getTimeMeter().currentTime();

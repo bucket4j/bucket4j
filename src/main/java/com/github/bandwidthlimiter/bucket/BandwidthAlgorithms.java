@@ -94,33 +94,24 @@ public class BandwidthAlgorithms {
         }
     }
 
-    public static long calculateTimeToCloseDeficit(Bandwidth[] bandwidths, BucketState state, long currentTime, long deficit) {
-        long sleepToRefillLimited = 0;
-        long sleepToRefillGuaranteed = Long.MAX_VALUE;
-        for (int i = 0; i < bandwidths.length; i++) {
-            Bandwidth bandwidth = bandwidths[i];
-            long currentSize = bandwidth.getCurrentSize(state);
-            if (currentSize > deficit) {
-                if (bandwidth.isGuaranteed()) {
+    public static long delayAfterWillBePossibleToConsume(Bandwidth[] bandwidths, BucketState state, long currentTime, long tokensToConsume) {
+        long delayAfterWillBePossibleToConsumeLimited = 0;
+        long delayAfterWillBePossibleToConsumeGuaranteed = Long.MAX_VALUE;
+        for (Bandwidth bandwidth: bandwidths) {
+            long delay = bandwidth.delayAfterWillBePossibleToConsume(state, currentTime, tokensToConsume);
+            if (bandwidth.isGuaranteed()) {
+                if (delay == 0) {
                     return 0;
                 } else {
-                    continue;
+                    delayAfterWillBePossibleToConsumeGuaranteed = delay;
                 }
-            }
-
-            long maxCapacity = bandwidth.getMaxCapacity(currentTime);
-            if (currentSize + deficit > maxCapacity) {
                 continue;
             }
-
-            long timeToRefillCurrent = bandwidth.timeRequiredToRefill(currentTime, deficit);
-            if (bandwidth.isLimited()) {
-                sleepToRefillLimited = Math.max(sleepToRefillLimited, timeToRefillCurrent);
-            } else {
-                sleepToRefillGuaranteed = timeToRefillCurrent;
+            if (delay > delayAfterWillBePossibleToConsumeLimited) {
+                delayAfterWillBePossibleToConsumeLimited = delay;
             }
         }
-        return Math.min(sleepToRefillLimited, sleepToRefillGuaranteed);
+        return Math.min(delayAfterWillBePossibleToConsumeLimited, delayAfterWillBePossibleToConsumeGuaranteed);
     }
 
     public static BucketState createInitialState(BucketConfiguration configuration) {

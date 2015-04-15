@@ -24,18 +24,17 @@ class BandwidthAlgorithmsSpecification extends Specification {
                      2              | Limiters.withNanoTimePrecision().withLimitedBandwidth(10, 100, 5).withLimitedBandwidth(2, 10).withGuaranteedBandwidth(1, 1000).buildLocalUnsafe()
     }
 
-    def "calculateTimeToCloseDeficit specification"(long deficit, long requiredTime, Bucket bucket) {
+    def "calculateTimeToCloseDeficit specification"(long toConsume, long requiredTime, Bucket bucket) {
         setup:
             Bandwidth[] bandwidths = bucket.configuration.bandwidths
             BucketState state = bucket.createSnapshot()
-            TimeMeter meter = bucket.configuration.timeMeter
         when:
-            long actualTime = BandwidthAlgorithms.calculateTimeToCloseDeficit(bandwidths, state, meter.currentTime(), deficit)
+            long actualTime = BandwidthAlgorithms.delayAfterWillBePossibleToConsume(bandwidths, state, 0, toConsume)
         then:
             actualTime == requiredTime
         where:
-            deficit | requiredTime |                               bucket
-               10   |    100       | Limiters.withNanoTimePrecision().withLimitedBandwidth(10, 100, 0).buildLocalUnsafe()
+            toConsume | requiredTime |                               bucket
+               10     |    100         | Limiters.withCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(10, 100, 0).buildLocalUnsafe()
 //                4   |     40       | Limiters.withNanoTimePrecision().withLimitedBandwidth(10, 100, 6).buildLocalUnsafe()
 //                 0       | Limiters.withNanoTimePrecision().withLimitedBandwidth(10, 100, 0).buildLocalUnsafe()
 //                 5       | Limiters.withNanoTimePrecision().withLimitedBandwidth(10, 100, 5).buildLocalUnsafe()
