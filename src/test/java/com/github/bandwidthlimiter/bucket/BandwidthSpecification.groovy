@@ -1,6 +1,8 @@
 package com.github.bandwidthlimiter.bucket
 
 import com.github.bandwidthlimiter.Limiters
+import com.github.bandwidthlimiter.bucket.mock.AdjusterMock
+import com.github.bandwidthlimiter.bucket.mock.TimeMeterMock
 import spock.lang.Specification
 import spock.lang.Unroll
 

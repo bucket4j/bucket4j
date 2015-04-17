@@ -1,6 +1,7 @@
 package com.github.bandwidthlimiter.bucket
 
 import com.github.bandwidthlimiter.Limiters
+import com.github.bandwidthlimiter.bucket.mock.TimeMeterMock
 import spock.lang.Specification
 
 import static java.lang.Long.MAX_VALUE

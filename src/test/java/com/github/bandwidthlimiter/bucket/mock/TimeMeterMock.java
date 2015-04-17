@@ -1,4 +1,6 @@
-package com.github.bandwidthlimiter.bucket;
+package com.github.bandwidthlimiter.bucket.mock;
+
+import com.github.bandwidthlimiter.bucket.TimeMeter;
 
 /**
  * Created by vladimir.bukhtoyarov on 09.04.2015.

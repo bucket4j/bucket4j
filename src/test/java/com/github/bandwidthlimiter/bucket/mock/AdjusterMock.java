@@ -1,4 +1,6 @@
-package com.github.bandwidthlimiter.bucket;
+package com.github.bandwidthlimiter.bucket.mock;
+
+import com.github.bandwidthlimiter.bucket.BandwidthAdjuster;
 
 public class AdjusterMock implements BandwidthAdjuster {
 
