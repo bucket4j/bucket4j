@@ -67,4 +67,15 @@ public class BandwidthDefinition {
         return adjuster;
     }
 
+    @Override
+    public String toString() {
+        return "BandwidthDefinition{" +
+                "capacity=" + capacity +
+                ", adjuster=" + adjuster +
+                ", initialCapacity=" + initialCapacity +
+                ", period=" + period +
+                ", guaranteed=" + guaranteed +
+                ", limited=" + limited +
+                '}';
+    }
 }

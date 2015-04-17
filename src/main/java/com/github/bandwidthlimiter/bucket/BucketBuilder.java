@@ -2,6 +2,7 @@ package com.github.bandwidthlimiter.bucket;
 
 import com.github.bandwidthlimiter.bucket.grid.GridBucket;
 import com.github.bandwidthlimiter.bucket.grid.GridBucketState;
+import com.github.bandwidthlimiter.bucket.grid.GridProxy;
 import com.github.bandwidthlimiter.bucket.grid.coherence.CoherenceProxy;
 import com.github.bandwidthlimiter.bucket.grid.gridgain.GridgainProxy;
 import com.github.bandwidthlimiter.bucket.grid.hazelcast.HazelcastProxy;
@@ -56,6 +57,11 @@ public final class BucketBuilder {
         return new GridBucket(configuration, new CoherenceProxy(cache, key));
     }
 
+    public Bucket buildCustomGrid(GridProxy gridProxy) {
+        BucketConfiguration configuration = new BucketConfiguration(this.bandwidths, timeMeter);
+        return new GridBucket(configuration, gridProxy);
+    }
+
     public BucketBuilder withGuaranteedBandwidth(long maxCapacity, long period) {
         return withGuaranteedBandwidth(maxCapacity, period, maxCapacity);
     }
@@ -96,4 +102,11 @@ public final class BucketBuilder {
         return timeMeter;
     }
 
+    @Override
+    public String toString() {
+        return "BucketBuilder{" +
+                "timeMeter=" + timeMeter +
+                ", bandwidths=" + bandwidths +
+                '}';
+    }
 }

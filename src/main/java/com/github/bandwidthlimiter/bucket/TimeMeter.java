@@ -27,7 +27,7 @@ public interface TimeMeter extends Serializable {
 
     void sleep(long units) throws InterruptedException;
 
-    static final TimeMeter SYSTEM_NANOTIME = new TimeMeter() {
+    public static final TimeMeter SYSTEM_NANOTIME = new TimeMeter() {
         @Override
         public long currentTime() {
             return System.nanoTime();
@@ -41,9 +41,13 @@ public interface TimeMeter extends Serializable {
             }
         }
 
+        @Override
+        public String toString() {
+            return "SYSTEM_NANOTIME";
+        }
     };
 
-    static final TimeMeter SYSTEM_MILLISECONDS = new TimeMeter() {
+    public static final TimeMeter SYSTEM_MILLISECONDS = new TimeMeter() {
         @Override
         public long currentTime() {
             return System.currentTimeMillis();
@@ -55,6 +59,11 @@ public interface TimeMeter extends Serializable {
             if (Thread.interrupted()) {
                 throw new InterruptedException();
             }
+        }
+
+        @Override
+        public String toString() {
+            return "SYSTEM_MILLISECONDS";
         }
 
     };
