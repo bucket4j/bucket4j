@@ -19,7 +19,6 @@ class BandwidthSpecification extends Specification {
             def state = bucket.createSnapshot()
         then:
             bandwidth.getCurrentSize(state) == initialCapacity
-            state.getRefillTime() == currentTime
         where:
             period | capacity | initialCapacity | currentTime
               10   |   100    |      50         |    10000
@@ -66,7 +65,6 @@ class BandwidthSpecification extends Specification {
         then:
             bandwidth.getCurrentSize(state) == requiredSize1
             bandwidth.getMaxCapacity(timeRefill1) == maxCapacityAfter
-            state.getRefillTime() == timeRefill1
         when:
             adjuster.setCapacity(maxCapacityAfter)
             meter.setCurrentTime(timeRefill2)
@@ -74,7 +72,6 @@ class BandwidthSpecification extends Specification {
         then:
             bandwidth.getCurrentSize(state) == requiredSize2
             bandwidth.getMaxCapacity(timeRefill1) == maxCapacityAfter
-            state.getRefillTime() == timeRefill2
         when:
             adjuster.setCapacity(maxCapacityAfter)
             meter.setCurrentTime(timeRefill3)
@@ -82,7 +79,6 @@ class BandwidthSpecification extends Specification {
         then:
             bandwidth.getCurrentSize(state) == requiredSize3
             bandwidth.getMaxCapacity(timeRefill1) == maxCapacityAfter
-            state.getRefillTime() == timeRefill3
         where:
             n  | initialCapacity | period | initTime | maxCapacityBefore | maxCapacityAfter | timeRefill1 | requiredSize1 | timeRefill2 | requiredSize2 | timeRefill3 | requiredSize3
             1  |        0        | 1000   | 10000    |      1000         |      1000        | 10040       |       40      |    10050    |    50         |    10090    |      90
@@ -114,14 +110,12 @@ class BandwidthSpecification extends Specification {
             state.consume(bandwidths, consume1)
         then:
             bandwidth.getCurrentSize(state) == requiredSize1
-            state.getRefillTime() == timeRefill1
         when:
             meter.setCurrentTime(timeRefill2)
             state.refill(bandwidths, timeRefill2)
             state.consume(bandwidths, consume2)
         then:
             bandwidth.getCurrentSize(state) == requiredSize2
-            state.getRefillTime() == timeRefill2
         where:
             n  | initialCapacity | period | initTime |    capacity | timeRefill1 |  consume1 | requiredSize1 | timeRefill2 | consume2 | requiredSize2
             1  |        0        | 1000   | 10000    |      1000   |     10040   |     10    |     30        |    10050    |    20    |       20

@@ -37,7 +37,15 @@ public class TimeMeterMock implements TimeMeter {
 
     @Override
     public void sleep(long units) throws InterruptedException {
+        if (Thread.currentThread().isInterrupted()) {
+            throw new InterruptedException();
+        }
+        currentTime += units;
         sleeped += units;
     }
 
+    public void reset() {
+        currentTime = 0;
+        sleeped = 0;
+    }
 }

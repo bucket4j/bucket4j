@@ -46,7 +46,7 @@ public class Bandwidth implements Serializable {
     }
 
     public int sizeOfState() {
-        return 3;
+        return 2;
     }
 
     public void setupInitialState(BucketState state) {
@@ -65,8 +65,7 @@ public class Bandwidth implements Serializable {
         }
     }
 
-    public void refill(BucketState state, long currentTime) {
-        long previousRefillTime = state.getRefillTime();
+    public void refill(BucketState state, long previousRefillTime, long currentTime) {
         final long maxCapacity = adjuster.getCapacity(currentTime);
         long currentSize = getCurrentSize(state);
 

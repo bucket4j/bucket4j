@@ -14,14 +14,6 @@ public class BucketState {
         this.state = Arrays.copyOf(previousState.state, previousState.state.length);
     }
 
-    public long getRefillTime() {
-        return state[0];
-    }
-
-    public void setRefillTime(long refillTime) {
-       state[0] = refillTime;
-    }
-
     public BucketState(long[] snapshot) {
         this.state = snapshot;
     }
@@ -57,7 +49,7 @@ public class BucketState {
         for (Bandwidth bandwidth: configuration.getBandwidths()) {
             bandwidth.setupInitialState(state);
         }
-        state.setRefillTime(currentTime);
+        state.state[0] = currentTime;
         return state;
     }
 
@@ -101,10 +93,14 @@ public class BucketState {
     }
 
     public void refill(Bandwidth[] bandwidths, long currentTime) {
-        for (Bandwidth bandwidth: bandwidths) {
-            bandwidth.refill(this, currentTime);
+        long previousRefillTime = state[0];
+        if (previousRefillTime == currentTime) {
+            return;
         }
-        setRefillTime(currentTime);
+        for (Bandwidth bandwidth: bandwidths) {
+            bandwidth.refill(this, previousRefillTime, currentTime);
+        }
+        state[0] = currentTime;
     }
 
 }
