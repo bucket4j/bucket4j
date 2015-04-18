@@ -1,0 +1,5 @@
+See benchmarks in the package com.github.bandwidthlimiter
+
+mvn clean install -P generate-benchmark
+java -jar target/benchmarks.jar com.github.bandwidthlimiter.CompareThreadSafeAndUnsafeImplementation -wi 5 -i 5 -t 1 -f 3
+java -jar target/benchmarks.jar com.github.bandwidthlimiter.CompareWithGuavaBenchmark -wi 5 -i 5 -t 4 -f 3
