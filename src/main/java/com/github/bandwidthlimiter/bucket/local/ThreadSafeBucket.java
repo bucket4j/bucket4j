@@ -22,6 +22,7 @@ import com.github.bandwidthlimiter.bucket.BucketConfiguration;
 import com.github.bandwidthlimiter.bucket.BucketState;
 
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.atomic.AtomicStampedReference;
 
 public class ThreadSafeBucket extends AbstractBucket {
 
@@ -32,6 +33,7 @@ public class ThreadSafeBucket extends AbstractBucket {
         super(configuration);
         this.configuration = configuration;
         BucketState initialState = BucketState.createInitialState(configuration);
+        AtomicStampedReference<BucketState> r = new AtomicStampedReference<>(initialState, 0);
         this.stateReference = new AtomicReference<>(initialState);
     }
 

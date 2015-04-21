@@ -13,6 +13,7 @@ import com.hazelcast.core.IMap;
 import com.tangosol.net.NamedCache;
 import org.apache.ignite.IgniteCache;
 import org.gridgain.grid.cache.GridCache;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -28,37 +29,42 @@ public final class BucketBuilder {
     }
 
     public Bucket buildLocalThreadSafe() {
-        BucketConfiguration configuration = new BucketConfiguration(this.bandwidths, timeMeter);
+        BucketConfiguration configuration = createConfiguration();
         return new ThreadSafeBucket(configuration);
     }
 
     public Bucket buildLocalUnsafe() {
-        BucketConfiguration configuration = new BucketConfiguration(this.bandwidths, timeMeter);
+        BucketConfiguration configuration = createConfiguration();
         return new UnsafeBucket(configuration);
     }
 
     public Bucket buildHazelcast(IMap<Object, GridBucketState> map, Serializable key) {
-        BucketConfiguration configuration = new BucketConfiguration(this.bandwidths, timeMeter);
+        BucketConfiguration configuration = createConfiguration();
         return new GridBucket(configuration, new HazelcastProxy(map, key));
     }
 
     public Bucket buildGridgain(GridCache<Object, GridBucketState> cache, Object key) {
-        BucketConfiguration configuration = new BucketConfiguration(this.bandwidths, timeMeter);
+        BucketConfiguration configuration = createConfiguration();
         return new GridBucket(configuration, new GridgainProxy(cache, key));
     }
 
+    @NotNull
+    public BucketConfiguration createConfiguration() {
+        return new BucketConfiguration(this.bandwidths, timeMeter);
+    }
+
     public Bucket buildIgnite(IgniteCache<Object, GridBucketState> cache, Object key) {
-        BucketConfiguration configuration = new BucketConfiguration(this.bandwidths, timeMeter);
+        BucketConfiguration configuration = createConfiguration();
         return new GridBucket(configuration, new IgniteProxy(cache, key));
     }
 
     public Bucket buildCoherence(NamedCache cache, Object key) {
-        BucketConfiguration configuration = new BucketConfiguration(this.bandwidths, timeMeter);
+        BucketConfiguration configuration = createConfiguration();
         return new GridBucket(configuration, new CoherenceProxy(cache, key));
     }
 
     public Bucket buildCustomGrid(GridProxy gridProxy) {
-        BucketConfiguration configuration = new BucketConfiguration(this.bandwidths, timeMeter);
+        BucketConfiguration configuration = createConfiguration();
         return new GridBucket(configuration, gridProxy);
     }
 
