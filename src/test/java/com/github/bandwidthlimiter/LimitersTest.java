@@ -5,15 +5,8 @@ import org.junit.Test;
 import static com.github.bandwidthlimiter.bucket.TimeMeter.SYSTEM_MILLISECONDS;
 import static com.github.bandwidthlimiter.bucket.TimeMeter.SYSTEM_NANOTIME;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 
 public class LimitersTest {
-
-    @Test(expected=IllegalAccessException.class)
-    public void testConstructorPrivate() throws Exception {
-        Limiters.class.newInstance();
-        fail("Utility class constructor should be private");
-    }
 
     @Test
     public void testWithNanoTimePrecision() throws Exception {

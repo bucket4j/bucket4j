@@ -7,13 +7,12 @@ import com.github.bandwidthlimiter.bucket.grid.coherence.CoherenceProxy;
 import com.github.bandwidthlimiter.bucket.grid.gridgain.GridgainProxy;
 import com.github.bandwidthlimiter.bucket.grid.hazelcast.HazelcastProxy;
 import com.github.bandwidthlimiter.bucket.grid.ignite.IgniteProxy;
+import com.github.bandwidthlimiter.bucket.local.NonSynchronizedBucket;
 import com.github.bandwidthlimiter.bucket.local.ThreadSafeBucket;
-import com.github.bandwidthlimiter.bucket.local.UnsafeBucket;
 import com.hazelcast.core.IMap;
 import com.tangosol.net.NamedCache;
 import org.apache.ignite.IgniteCache;
 import org.gridgain.grid.cache.GridCache;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -28,14 +27,14 @@ public final class BucketBuilder {
         this.timeMeter = timeMeter;
     }
 
-    public Bucket buildLocalThreadSafe() {
+    public Bucket build() {
         BucketConfiguration configuration = createConfiguration();
         return new ThreadSafeBucket(configuration);
     }
 
-    public Bucket buildLocalUnsafe() {
+    public Bucket buildLocalNonSynchronized() {
         BucketConfiguration configuration = createConfiguration();
-        return new UnsafeBucket(configuration);
+        return new NonSynchronizedBucket(configuration);
     }
 
     public Bucket buildHazelcast(IMap<Object, GridBucketState> map, Serializable key) {
@@ -48,7 +47,6 @@ public final class BucketBuilder {
         return new GridBucket(configuration, new GridgainProxy(cache, key));
     }
 
-    @NotNull
     public BucketConfiguration createConfiguration() {
         return new BucketConfiguration(this.bandwidths, timeMeter);
     }
@@ -115,4 +113,5 @@ public final class BucketBuilder {
                 ", bandwidths=" + bandwidths +
                 '}';
     }
+
 }

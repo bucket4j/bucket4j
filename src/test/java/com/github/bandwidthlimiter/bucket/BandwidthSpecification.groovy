@@ -13,7 +13,7 @@ class BandwidthSpecification extends Specification {
             def meter = new TimeMeterMock(currentTime);
             def builder = Limiters.withCustomTimePrecision(meter)
                 .withLimitedBandwidth(capacity, period, initialCapacity)
-            def bucket = builder.buildLocalThreadSafe()
+            def bucket = builder.build()
             def bandwidth = bucket.getConfiguration().getBandwidth(0)
         when:
             def state = bucket.createSnapshot()
@@ -31,7 +31,7 @@ class BandwidthSpecification extends Specification {
             def meter = new TimeMeterMock(currentTime);
             def builder = Limiters.withCustomTimePrecision(meter)
                     .withLimitedBandwidth(capacity, period, initialCapacity)
-            def bucket = builder.buildLocalThreadSafe()
+            def bucket = builder.build()
             def bandwidth = bucket.getConfiguration().getBandwidth(0)
             def state = bucket.createSnapshot()
         expect:
@@ -54,7 +54,7 @@ class BandwidthSpecification extends Specification {
             def adjuster = new AdjusterMock(maxCapacityBefore)
             def bucket = Limiters.withCustomTimePrecision(meter)
                     .withLimitedBandwidth(adjuster, period, initialCapacity)
-                    .buildLocalUnsafe()
+                    .buildLocalNonSynchronized()
             def bandwidth = bucket.getConfiguration().getBandwidth(0)
             def bandwidths = bucket.getConfiguration().getBandwidths()
             def state = bucket.createSnapshot()
@@ -100,7 +100,7 @@ class BandwidthSpecification extends Specification {
             def adjuster = new AdjusterMock(   capacity )
             def bucket = Limiters.withCustomTimePrecision(meter)
                     .withLimitedBandwidth(adjuster, period, initialCapacity)
-                    .buildLocalUnsafe()
+                    .buildLocalNonSynchronized()
             def bandwidth = bucket.getConfiguration().getBandwidth(0)
             def bandwidths = bucket.getConfiguration().getBandwidths()
             def state = bucket.createSnapshot()

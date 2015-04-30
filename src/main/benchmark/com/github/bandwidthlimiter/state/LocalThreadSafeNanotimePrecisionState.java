@@ -10,6 +10,6 @@ public class LocalThreadSafeNanotimePrecisionState {
 
     public final Bucket bucket = Limiters
             .withNanoTimePrecision().withLimitedBandwidth(Long.MAX_VALUE / 2, Long.MAX_VALUE / 2)
-            .buildLocalThreadSafe();
+            .build();
 
 }

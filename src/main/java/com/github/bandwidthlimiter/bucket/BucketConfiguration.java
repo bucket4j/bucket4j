@@ -94,23 +94,22 @@ public final class BucketConfiguration implements Serializable {
             }
         }
 
-        if (guaranteedBandwidth == null) {
-            return;
-        }
-        if (guaranteedBandwidth.hasDynamicCapacity()) {
-            return;
-        }
-        for (BandwidthDefinition bandwidth : bandwidths) {
-            if (!bandwidth.limited) {
-                continue;
+        if (guaranteedBandwidth != null) {
+            if (guaranteedBandwidth.hasDynamicCapacity()) {
+                return;
             }
-            if (bandwidth.hasDynamicCapacity()) {
-                continue;
-            }
-            BandwidthDefinition limited = bandwidth;
-            if (limited.getTokensPerTimeUnit() <= guaranteedBandwidth.getTokensPerTimeUnit()
-                    || limited.getTimeUnitsPerToken() > guaranteedBandwidth.getTimeUnitsPerToken()) {
-                throw guarantedHasGreaterRateThanLimited(guaranteedBandwidth, limited);
+            for (BandwidthDefinition bandwidth : bandwidths) {
+                if (bandwidth.guaranteed) {
+                    continue;
+                }
+                if (bandwidth.hasDynamicCapacity()) {
+                    continue;
+                }
+                BandwidthDefinition limited = bandwidth;
+                if (limited.getTokensPerTimeUnit() <= guaranteedBandwidth.getTokensPerTimeUnit()
+                        || limited.getTimeUnitsPerToken() > guaranteedBandwidth.getTimeUnitsPerToken()) {
+                    throw guarantedHasGreaterRateThanLimited(guaranteedBandwidth, limited);
+                }
             }
         }
     }

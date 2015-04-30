@@ -2,9 +2,7 @@ package com.github.bandwidthlimiter.bucket;
 
 import java.text.MessageFormat;
 
-public class BucketExceptions {
-
-    private BucketExceptions() {}
+public final class BucketExceptions {
 
     // ------------------- construction time exceptions --------------------------------
     public static IllegalArgumentException nonPositiveCapacity(long capacity) {

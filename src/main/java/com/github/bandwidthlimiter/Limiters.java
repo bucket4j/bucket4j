@@ -20,8 +20,6 @@ import com.github.bandwidthlimiter.bucket.TimeMeter;
 
 public  final class Limiters {
 
-    private Limiters() {}
-
     public static BucketBuilder withNanoTimePrecision() {
         return new BucketBuilder(TimeMeter.SYSTEM_NANOTIME);
     }

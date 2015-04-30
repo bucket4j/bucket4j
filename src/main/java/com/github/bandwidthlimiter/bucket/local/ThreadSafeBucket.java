@@ -47,6 +47,9 @@ public class ThreadSafeBucket extends AbstractBucket {
             newState.refill(bandwidths, currentTime);
             long availableToConsume = newState.getAvailableTokens(bandwidths);
             long toConsume = Math.min(limit, availableToConsume);
+            if (toConsume == 0) {
+                return 0;
+            }
             newState.consume(bandwidths, toConsume);
             if (stateReference.compareAndSet(previousState, newState)) {
                 return toConsume;

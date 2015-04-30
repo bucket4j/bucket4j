@@ -11,13 +11,13 @@ public enum BucketType {
     LOCAL_UNSAFE {
         @Override
         public Bucket createBucket(BucketBuilder builder) {
-            return builder.buildLocalUnsafe();
+            return builder.buildLocalNonSynchronized();
         }
     },
     LOCAL_THREADSAFE {
         @Override
         public Bucket createBucket(BucketBuilder builder) {
-            return builder.buildLocalThreadSafe();
+            return builder.build();
         }
     },
     GRID {

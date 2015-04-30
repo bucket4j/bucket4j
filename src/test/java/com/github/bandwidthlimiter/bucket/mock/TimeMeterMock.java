@@ -9,6 +9,7 @@ public class TimeMeterMock implements TimeMeter {
 
     private long currentTime;
     private long sleeped = 0;
+    private long incrementAfterEachSleep;
 
     public TimeMeterMock() {
         currentTime = 0;
@@ -26,6 +27,10 @@ public class TimeMeterMock implements TimeMeter {
         this.currentTime = currentTime;
     }
 
+    public void setIncrementAfterEachSleep(long incrementAfterEachSleep) {
+        this.incrementAfterEachSleep = incrementAfterEachSleep;
+    }
+
     public long getSleeped() {
         return sleeped;
     }
@@ -40,7 +45,7 @@ public class TimeMeterMock implements TimeMeter {
         if (Thread.currentThread().isInterrupted()) {
             throw new InterruptedException();
         }
-        currentTime += units;
+        currentTime += units + incrementAfterEachSleep;
         sleeped += units;
     }
 

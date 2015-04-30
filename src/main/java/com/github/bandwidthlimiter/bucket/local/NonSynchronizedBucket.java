@@ -20,11 +20,11 @@ import com.github.bandwidthlimiter.bucket.Bandwidth;
 import com.github.bandwidthlimiter.bucket.BucketConfiguration;
 import com.github.bandwidthlimiter.bucket.BucketState;
 
-public class UnsafeBucket extends AbstractBucket {
+public class NonSynchronizedBucket extends AbstractBucket {
 
     private final BucketState state;
 
-    public UnsafeBucket(BucketConfiguration configuration) {
+    public NonSynchronizedBucket(BucketConfiguration configuration) {
         super(configuration);
         this.state = BucketState.createInitialState(configuration);
     }
@@ -36,6 +36,9 @@ public class UnsafeBucket extends AbstractBucket {
         state.refill(bandwidths, currentTime);
         long availableToConsume = state.getAvailableTokens(bandwidths);
         long toConsume = Math.min(limit, availableToConsume);
+        if (toConsume == 0) {
+            return 0;
+        }
         state.consume(bandwidths, toConsume);
         return toConsume;
     }
