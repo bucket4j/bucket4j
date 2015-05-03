@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2015 Vladimir Bukhtoyarov
  *
@@ -15,20 +14,14 @@
  *  limitations under the License.
  */
 
-package com.github.bucket4j;
+package com.github.bucket4j.grid;
 
-public  final class Buckets {
+import java.io.Serializable;
 
-    public static BucketBuilder withNanoTimePrecision() {
-        return new BucketBuilder(TimeMeter.SYSTEM_NANOTIME);
-    }
+public interface GridCommand<T extends Serializable> extends Serializable {
 
-    public static BucketBuilder withMillisTimePrecision() {
-        return new BucketBuilder(TimeMeter.SYSTEM_MILLISECONDS);
-    }
+    T execute(GridBucketState state);
 
-    public static BucketBuilder withCustomTimePrecision(TimeMeter timeMeter) {
-        return new BucketBuilder(timeMeter);
-    }
+    boolean isBucketStateModified();
 
 }

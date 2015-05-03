@@ -16,7 +16,7 @@
 
 package realworld;
 
-import com.github.bucket4j.bucket.Bucket;
+import com.github.bucket4j.Bucket;
 
 import java.util.concurrent.CountDownLatch;
 

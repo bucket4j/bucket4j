@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2015 Vladimir Bukhtoyarov
  *
@@ -15,20 +14,25 @@
  *  limitations under the License.
  */
 
-package com.github.bucket4j;
+package com.github.bucket4j.mock;
 
-public  final class Buckets {
+import com.github.bucket4j.BandwidthAdjuster;
 
-    public static BucketBuilder withNanoTimePrecision() {
-        return new BucketBuilder(TimeMeter.SYSTEM_NANOTIME);
+public class AdjusterMock implements BandwidthAdjuster {
+
+    private long capacity = 0;
+
+    public AdjusterMock(long capacity) {
+        this.capacity = capacity;
     }
 
-    public static BucketBuilder withMillisTimePrecision() {
-        return new BucketBuilder(TimeMeter.SYSTEM_MILLISECONDS);
+    @Override
+    public long getCapacity(long currentTime) {
+        return capacity;
     }
 
-    public static BucketBuilder withCustomTimePrecision(TimeMeter timeMeter) {
-        return new BucketBuilder(timeMeter);
+    public void setCapacity(long capacity) {
+        this.capacity = capacity;
     }
 
 }

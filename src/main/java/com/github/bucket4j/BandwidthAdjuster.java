@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2015 Vladimir Bukhtoyarov
  *
@@ -17,18 +16,32 @@
 
 package com.github.bucket4j;
 
-public  final class Buckets {
+import java.io.Serializable;
 
-    public static BucketBuilder withNanoTimePrecision() {
-        return new BucketBuilder(TimeMeter.SYSTEM_NANOTIME);
-    }
+public interface BandwidthAdjuster extends Serializable {
 
-    public static BucketBuilder withMillisTimePrecision() {
-        return new BucketBuilder(TimeMeter.SYSTEM_MILLISECONDS);
-    }
+    long getCapacity(long currentTime);
 
-    public static BucketBuilder withCustomTimePrecision(TimeMeter timeMeter) {
-        return new BucketBuilder(timeMeter);
+    public static class ImmutableCapacity implements BandwidthAdjuster {
+
+        private final long value;
+
+        public ImmutableCapacity(long value) {
+            this.value = value;
+        }
+
+        @Override
+        public long getCapacity(long currentTime) {
+            return value;
+        }
+
+        @Override
+        public String toString() {
+            return "ImmutableCapacity{" +
+                    "value=" + value +
+                    '}';
+        }
+
     }
 
 }

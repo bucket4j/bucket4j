@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2015 Vladimir Bukhtoyarov
  *
@@ -15,20 +14,27 @@
  *  limitations under the License.
  */
 
-package com.github.bucket4j;
+package com.github.bucket4j.mock;
 
-public  final class Buckets {
 
-    public static BucketBuilder withNanoTimePrecision() {
-        return new BucketBuilder(TimeMeter.SYSTEM_NANOTIME);
+import com.github.bucket4j.grid.GridBucketState;
+import com.github.bucket4j.grid.GridCommand;
+import com.github.bucket4j.grid.GridProxy;
+
+import java.io.Serializable;
+
+public class GridProxyMock implements GridProxy {
+
+    private GridBucketState state;
+
+    @Override
+    public <T extends Serializable> T execute(GridCommand<T> command) {
+        return command.execute(state);
     }
 
-    public static BucketBuilder withMillisTimePrecision() {
-        return new BucketBuilder(TimeMeter.SYSTEM_MILLISECONDS);
-    }
-
-    public static BucketBuilder withCustomTimePrecision(TimeMeter timeMeter) {
-        return new BucketBuilder(timeMeter);
+    @Override
+    public void setInitialState(GridBucketState initialState) {
+        this.state = initialState;
     }
 
 }

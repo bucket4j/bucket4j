@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2015 Vladimir Bukhtoyarov
  *
@@ -17,18 +16,22 @@
 
 package com.github.bucket4j;
 
-public  final class Buckets {
+import org.junit.Test;
 
-    public static BucketBuilder withNanoTimePrecision() {
-        return new BucketBuilder(TimeMeter.SYSTEM_NANOTIME);
+import java.util.concurrent.TimeUnit;
+
+public class TimeMeterTest {
+
+    @Test(expected = InterruptedException.class)
+    public void sleepForMillisecondTimerShouldThrowExceptionWhenThreadInterrupted() throws InterruptedException {
+        Thread.currentThread().interrupt();
+        TimeMeter.SYSTEM_MILLISECONDS.sleep(TimeUnit.SECONDS.toMillis(10));
     }
 
-    public static BucketBuilder withMillisTimePrecision() {
-        return new BucketBuilder(TimeMeter.SYSTEM_MILLISECONDS);
-    }
-
-    public static BucketBuilder withCustomTimePrecision(TimeMeter timeMeter) {
-        return new BucketBuilder(timeMeter);
+    @Test(expected = InterruptedException.class)
+    public void sleepForNanosecondTimerShouldThrowExceptionWhenThreadInterrupted() throws InterruptedException {
+        Thread.currentThread().interrupt();
+        TimeMeter.SYSTEM_NANOTIME.sleep(TimeUnit.SECONDS.toNanos(10));
     }
 
 }
