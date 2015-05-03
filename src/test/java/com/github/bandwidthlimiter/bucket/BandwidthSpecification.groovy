@@ -1,6 +1,6 @@
 package com.github.bandwidthlimiter.bucket
 
-import com.github.bandwidthlimiter.Limiters
+import com.github.bandwidthlimiter.Buckets
 import com.github.bandwidthlimiter.bucket.mock.AdjusterMock
 import com.github.bandwidthlimiter.bucket.mock.TimeMeterMock
 import spock.lang.Specification
@@ -11,7 +11,7 @@ class BandwidthSpecification extends Specification {
     def "Specification for initialization"(long period, long capacity, long initialCapacity, long currentTime) {
         setup:
             def meter = new TimeMeterMock(currentTime);
-            def builder = Limiters.withCustomTimePrecision(meter)
+            def builder = Buckets.withCustomTimePrecision(meter)
                 .withLimitedBandwidth(capacity, period, initialCapacity)
             def bucket = builder.build()
             def bandwidth = bucket.getConfiguration().getBandwidth(0)
@@ -29,7 +29,7 @@ class BandwidthSpecification extends Specification {
                  long tokensToConsume, long requiredTime) {
         setup:
             def meter = new TimeMeterMock(currentTime);
-            def builder = Limiters.withCustomTimePrecision(meter)
+            def builder = Buckets.withCustomTimePrecision(meter)
                     .withLimitedBandwidth(capacity, period, initialCapacity)
             def bucket = builder.build()
             def bandwidth = bucket.getConfiguration().getBandwidth(0)
@@ -52,9 +52,9 @@ class BandwidthSpecification extends Specification {
         setup:
             def meter = new TimeMeterMock(initTime);
             def adjuster = new AdjusterMock(maxCapacityBefore)
-            def bucket = Limiters.withCustomTimePrecision(meter)
+            def bucket = Buckets.withCustomTimePrecision(meter)
                     .withLimitedBandwidth(adjuster, period, initialCapacity)
-                    .buildLocalNonSynchronized()
+                    .build()
             def bandwidth = bucket.getConfiguration().getBandwidth(0)
             def bandwidths = bucket.getConfiguration().getBandwidths()
             def state = bucket.createSnapshot()
@@ -98,9 +98,9 @@ class BandwidthSpecification extends Specification {
         setup:
             def meter = new TimeMeterMock(initTime);
             def adjuster = new AdjusterMock(   capacity )
-            def bucket = Limiters.withCustomTimePrecision(meter)
+            def bucket = Buckets.withCustomTimePrecision(meter)
                     .withLimitedBandwidth(adjuster, period, initialCapacity)
-                    .buildLocalNonSynchronized()
+                    .build()
             def bandwidth = bucket.getConfiguration().getBandwidth(0)
             def bandwidths = bucket.getConfiguration().getBandwidths()
             def state = bucket.createSnapshot()

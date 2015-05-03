@@ -1,7 +1,7 @@
 package com.github.bandwidthlimiter;
 
 import com.github.bandwidthlimiter.state.GuavaNanotimePrecisionLimiterState;
-import com.github.bandwidthlimiter.state.LocalThreadSafeNanotimePrecisionState;
+import com.github.bandwidthlimiter.state.LocalNanotimePrecisionState;
 import com.github.bandwidthlimiter.state.ThreadDistributionState;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
@@ -24,7 +24,7 @@ public class BenchmarkingWithGuavaRateLimiter {
     }
 
     @Benchmark
-    public boolean benchmarkLocalThreadSafe(LocalThreadSafeNanotimePrecisionState state, ThreadDistributionState threadLocalCounter) {
+    public boolean benchmarkLocalThreadSafe(LocalNanotimePrecisionState state, ThreadDistributionState threadLocalCounter) {
         boolean result = state.bucket.tryConsumeSingleToken();
         threadLocalCounter.invocationCount++;
         return result;
@@ -37,12 +37,36 @@ public class BenchmarkingWithGuavaRateLimiter {
         return result;
     }
 
-    public static void main(String[] args) throws RunnerException {
+    public static class OneThread {
+
+        public static void main(String[] args) throws RunnerException {
+            benchmark(1);
+        }
+
+    }
+
+    public static class TwoThreads {
+
+        public static void main(String[] args) throws RunnerException {
+            benchmark(2);
+        }
+
+    }
+
+    public static class FourThreads {
+
+        public static void main(String[] args) throws RunnerException {
+            benchmark(4);
+        }
+
+    }
+
+    private static void benchmark(int threadCount) throws RunnerException {
         Options opt = new OptionsBuilder()
                 .include(BenchmarkingWithGuavaRateLimiter.class.getSimpleName())
                 .warmupIterations(10)
                 .measurementIterations(10)
-                .threads(4)
+                .threads(threadCount)
                 .forks(1)
                 .build();
 

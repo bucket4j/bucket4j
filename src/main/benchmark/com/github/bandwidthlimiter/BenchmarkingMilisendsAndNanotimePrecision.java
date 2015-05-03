@@ -1,7 +1,7 @@
 package com.github.bandwidthlimiter;
 
-import com.github.bandwidthlimiter.state.LocalThreadSafeMillisecondPrecisionState;
-import com.github.bandwidthlimiter.state.LocalThreadSafeNanotimePrecisionState;
+import com.github.bandwidthlimiter.state.LocalMillisecondPrecisionState;
+import com.github.bandwidthlimiter.state.LocalNanotimePrecisionState;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Mode;
@@ -18,12 +18,12 @@ import java.util.concurrent.TimeUnit;
 public class BenchmarkingMilisendsAndNanotimePrecision {
 
     @Benchmark
-    public boolean benchmarkNanosecondPrecision(LocalThreadSafeNanotimePrecisionState state) {
+    public boolean benchmarkNanosecondPrecision(LocalNanotimePrecisionState state) {
         return state.bucket.tryConsumeSingleToken();
     }
 
     @Benchmark
-    public boolean benchmarkMillisecondPrecision(LocalThreadSafeMillisecondPrecisionState state) {
+    public boolean benchmarkMillisecondPrecision(LocalMillisecondPrecisionState state) {
         return state.bucket.tryConsumeSingleToken();
     }
 

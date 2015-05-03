@@ -4,8 +4,8 @@ import com.github.bandwidthlimiter.bucket.mock.AdjusterMock
 import spock.lang.Specification
 import spock.lang.Unroll
 
-import static com.github.bandwidthlimiter.Limiters.withCustomTimePrecision
-import static com.github.bandwidthlimiter.Limiters.withNanoTimePrecision
+import static com.github.bandwidthlimiter.Buckets.withCustomTimePrecision
+import static com.github.bandwidthlimiter.Buckets.withNanoTimePrecision
 import static com.github.bandwidthlimiter.bucket.BucketExceptions.*
 
 public class DetectionOfIllegalApiUsageSpecification extends Specification {

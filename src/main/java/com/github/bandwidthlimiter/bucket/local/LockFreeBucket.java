@@ -22,18 +22,16 @@ import com.github.bandwidthlimiter.bucket.BucketConfiguration;
 import com.github.bandwidthlimiter.bucket.BucketState;
 
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.atomic.AtomicStampedReference;
 
-public class ThreadSafeBucket extends AbstractBucket {
+public class LockFreeBucket extends AbstractBucket {
 
     private final AtomicReference<BucketState> stateReference;
     private final BucketConfiguration configuration;
 
-    public ThreadSafeBucket(BucketConfiguration configuration) {
+    public LockFreeBucket(BucketConfiguration configuration) {
         super(configuration);
         this.configuration = configuration;
         BucketState initialState = BucketState.createInitialState(configuration);
-        AtomicStampedReference<BucketState> r = new AtomicStampedReference<>(initialState, 0);
         this.stateReference = new AtomicReference<>(initialState);
     }
 

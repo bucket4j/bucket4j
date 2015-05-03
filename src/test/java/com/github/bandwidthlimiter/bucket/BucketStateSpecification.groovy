@@ -1,6 +1,6 @@
 package com.github.bandwidthlimiter.bucket
 
-import com.github.bandwidthlimiter.Limiters
+import com.github.bandwidthlimiter.Buckets
 import com.github.bandwidthlimiter.bucket.mock.TimeMeterMock
 import spock.lang.Specification
 
@@ -19,12 +19,12 @@ class BucketStateSpecification extends Specification {
             availableTokens == requiredAvailableTokens
         where:
             requiredAvailableTokens |                    bucket
-                    10              | Limiters.withNanoTimePrecision().withLimitedBandwidth(10, 100).buildLocalNonSynchronized()
-                     0              | Limiters.withNanoTimePrecision().withLimitedBandwidth(10, 100, 0).buildLocalNonSynchronized()
-                     5              | Limiters.withNanoTimePrecision().withLimitedBandwidth(10, 100, 5).buildLocalNonSynchronized()
-                     2              | Limiters.withNanoTimePrecision().withLimitedBandwidth(10, 100, 5).withLimitedBandwidth(2, 10).buildLocalNonSynchronized()
-                     3              | Limiters.withNanoTimePrecision().withLimitedBandwidth(10, 100, 5).withLimitedBandwidth(2, 10).withGuaranteedBandwidth(3, 1000).buildLocalNonSynchronized()
-                     2              | Limiters.withNanoTimePrecision().withLimitedBandwidth(10, 100, 5).withLimitedBandwidth(2, 10).withGuaranteedBandwidth(1, 1000).buildLocalNonSynchronized()
+                    10              | Buckets.withNanoTimePrecision().withLimitedBandwidth(10, 100).build()
+                     0              | Buckets.withNanoTimePrecision().withLimitedBandwidth(10, 100, 0).build()
+                     5              | Buckets.withNanoTimePrecision().withLimitedBandwidth(10, 100, 5).build()
+                     2              | Buckets.withNanoTimePrecision().withLimitedBandwidth(10, 100, 5).withLimitedBandwidth(2, 10).build()
+                     3              | Buckets.withNanoTimePrecision().withLimitedBandwidth(10, 100, 5).withLimitedBandwidth(2, 10).withGuaranteedBandwidth(3, 1000).build()
+                     2              | Buckets.withNanoTimePrecision().withLimitedBandwidth(10, 100, 5).withLimitedBandwidth(2, 10).withGuaranteedBandwidth(1, 1000).build()
     }
 
     def "delayAfterWillBePossibleToConsume specification"(long toConsume, long requiredTime, Bucket bucket) {
@@ -37,15 +37,15 @@ class BucketStateSpecification extends Specification {
             actualTime == requiredTime
         where:
             toConsume | requiredTime |                               bucket
-               10     |    100       | Limiters.withCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(10, 100, 0).buildLocalNonSynchronized()
-                7     |     30       | Limiters.withCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(10, 100, 4).buildLocalNonSynchronized()
-               11     |  MAX_VALUE   | Limiters.withCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(10, 100, 4).buildLocalNonSynchronized()
-                3     |     20       | Limiters.withCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(10, 100, 1).withLimitedBandwidth(5, 10, 2).buildLocalNonSynchronized()
-                3     |     20       | Limiters.withCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(5, 10, 2).withLimitedBandwidth(10, 100, 1).buildLocalNonSynchronized()
-                3     |      0       | Limiters.withCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(5, 10, 2).withGuaranteedBandwidth(10, 100, 9).buildLocalNonSynchronized()
-                6     |      0       | Limiters.withCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(5, 10, 2).withGuaranteedBandwidth(10, 100, 9).buildLocalNonSynchronized()
-                4     |      4       | Limiters.withCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(5, 10, 0).withGuaranteedBandwidth(25, 100, 3).buildLocalNonSynchronized()
-                4     |      2       | Limiters.withCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(5, 10, 3).withGuaranteedBandwidth(25, 100, 3).buildLocalNonSynchronized()
+               10     |    100       | Buckets.withCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(10, 100, 0).build()
+                7     |     30       | Buckets.withCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(10, 100, 4).build()
+               11     |  MAX_VALUE   | Buckets.withCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(10, 100, 4).build()
+                3     |     20       | Buckets.withCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(10, 100, 1).withLimitedBandwidth(5, 10, 2).build()
+                3     |     20       | Buckets.withCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(5, 10, 2).withLimitedBandwidth(10, 100, 1).build()
+                3     |      0       | Buckets.withCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(5, 10, 2).withGuaranteedBandwidth(10, 100, 9).build()
+                6     |      0       | Buckets.withCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(5, 10, 2).withGuaranteedBandwidth(10, 100, 9).build()
+                4     |      4       | Buckets.withCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(5, 10, 0).withGuaranteedBandwidth(25, 100, 3).build()
+                4     |      2       | Buckets.withCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(5, 10, 3).withGuaranteedBandwidth(25, 100, 3).build()
     }
 
 }

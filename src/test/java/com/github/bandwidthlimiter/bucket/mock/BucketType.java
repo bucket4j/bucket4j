@@ -8,13 +8,7 @@ import java.util.List;
 
 public enum BucketType {
 
-    LOCAL_UNSAFE {
-        @Override
-        public Bucket createBucket(BucketBuilder builder) {
-            return builder.buildLocalNonSynchronized();
-        }
-    },
-    LOCAL_THREADSAFE {
+    LOCAL {
         @Override
         public Bucket createBucket(BucketBuilder builder) {
             return builder.build();

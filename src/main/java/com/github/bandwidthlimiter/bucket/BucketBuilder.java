@@ -7,8 +7,7 @@ import com.github.bandwidthlimiter.bucket.grid.coherence.CoherenceProxy;
 import com.github.bandwidthlimiter.bucket.grid.gridgain.GridgainProxy;
 import com.github.bandwidthlimiter.bucket.grid.hazelcast.HazelcastProxy;
 import com.github.bandwidthlimiter.bucket.grid.ignite.IgniteProxy;
-import com.github.bandwidthlimiter.bucket.local.NonSynchronizedBucket;
-import com.github.bandwidthlimiter.bucket.local.ThreadSafeBucket;
+import com.github.bandwidthlimiter.bucket.local.LockFreeBucket;
 import com.hazelcast.core.IMap;
 import com.tangosol.net.NamedCache;
 import org.apache.ignite.IgniteCache;
@@ -29,12 +28,7 @@ public final class BucketBuilder {
 
     public Bucket build() {
         BucketConfiguration configuration = createConfiguration();
-        return new ThreadSafeBucket(configuration);
-    }
-
-    public Bucket buildLocalNonSynchronized() {
-        BucketConfiguration configuration = createConfiguration();
-        return new NonSynchronizedBucket(configuration);
+        return new LockFreeBucket(configuration);
     }
 
     public Bucket buildHazelcast(IMap<Object, GridBucketState> map, Serializable key) {
