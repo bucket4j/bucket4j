@@ -4,14 +4,12 @@ import com.github.bandwidthlimiter.bucket.grid.GridBucket;
 import com.github.bandwidthlimiter.bucket.grid.GridBucketState;
 import com.github.bandwidthlimiter.bucket.grid.GridProxy;
 import com.github.bandwidthlimiter.bucket.grid.coherence.CoherenceProxy;
-import com.github.bandwidthlimiter.bucket.grid.gridgain.GridgainProxy;
 import com.github.bandwidthlimiter.bucket.grid.hazelcast.HazelcastProxy;
 import com.github.bandwidthlimiter.bucket.grid.ignite.IgniteProxy;
 import com.github.bandwidthlimiter.bucket.local.LockFreeBucket;
 import com.hazelcast.core.IMap;
 import com.tangosol.net.NamedCache;
 import org.apache.ignite.IgniteCache;
-import org.gridgain.grid.cache.GridCache;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -34,11 +32,6 @@ public final class BucketBuilder {
     public Bucket buildHazelcast(IMap<Object, GridBucketState> map, Serializable key) {
         BucketConfiguration configuration = createConfiguration();
         return new GridBucket(configuration, new HazelcastProxy(map, key));
-    }
-
-    public Bucket buildGridgain(GridCache<Object, GridBucketState> cache, Object key) {
-        BucketConfiguration configuration = createConfiguration();
-        return new GridBucket(configuration, new GridgainProxy(cache, key));
     }
 
     public BucketConfiguration createConfiguration() {

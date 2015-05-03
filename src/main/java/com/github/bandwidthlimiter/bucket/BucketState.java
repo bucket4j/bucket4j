@@ -1,8 +1,9 @@
 package com.github.bandwidthlimiter.bucket;
 
+import java.io.Serializable;
 import java.util.Arrays;
 
-public class BucketState {
+public class BucketState implements Serializable {
 
     protected final long[] state;
 

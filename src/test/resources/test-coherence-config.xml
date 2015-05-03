@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+
+<cache-config xmlns="http://xmlns.oracle.com/coherence/coherence-cache-config"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="http://xmlns.oracle.com/coherence/coherence-cache-config coherence-cache-config.xsd">
+
+    <caching-scheme-mapping>
+        <cache-mapping>
+            <cache-name>*</cache-name>
+            <scheme-name>simple-distributed-scheme</scheme-name>
+        </cache-mapping>
+    </caching-scheme-mapping>
+
+    <caching-schemes>
+        <distributed-scheme>
+            <scheme-name>simple-distributed-scheme</scheme-name>
+            <backing-map-scheme>
+                <local-scheme/>
+            </backing-map-scheme>
+            <autostart>true</autostart>
+        </distributed-scheme>
+
+        <!--
+            littlegrid uses system properties to enable Extend and control the address and
+            port number that the Extend proxy server runs on.
+
+            Note: if you want to use different system property names, that is fine as littlegrid
+            supports a mapping to your system property names.
+        -->
+        <proxy-scheme>
+            <scheme-name>extend-tcp</scheme-name>
+            <service-name>ExtendProxyServerService</service-name>
+            <acceptor-config>
+                <tcp-acceptor>
+                    <local-address>
+                        <address system-property="tangosol.coherence.extend.address">127.0.0.1</address>
+                        <port system-property="tangosol.coherence.extend.port">9099</port>
+                    </local-address>
+                </tcp-acceptor>
+            </acceptor-config>
+            <autostart system-property="tangosol.coherence.extend.enabled">false</autostart>
+        </proxy-scheme>
+    </caching-schemes>
+</cache-config>
