@@ -1,6 +1,7 @@
 package com.github.bandwidthlimiter.bucket;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.List;
 
 import static com.github.bandwidthlimiter.bucket.BucketExceptions.*;
@@ -114,4 +115,12 @@ public final class BucketConfiguration implements Serializable {
         }
     }
 
+    @Override
+    public String toString() {
+        return "BucketConfiguration{" +
+                "stateSize=" + stateSize +
+                ", bandwidths=" + Arrays.toString(bandwidths) +
+                ", timeMeter=" + timeMeter +
+                '}';
+    }
 }

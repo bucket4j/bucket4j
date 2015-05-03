@@ -137,4 +137,14 @@ public class Bandwidth implements Serializable {
         state.setValue(stateOffset + ROUNDING_ERROR_OFFSET, roundingError);
     }
 
+    @Override
+    public String toString() {
+        return "Bandwidth{" +
+                "initialCapacity=" + initialCapacity +
+                ", period=" + period +
+                ", guaranteed=" + guaranteed +
+                ", adjuster=" + adjuster +
+                ", stateOffset=" + stateOffset +
+                '}';
+    }
 }

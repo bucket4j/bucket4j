@@ -103,4 +103,10 @@ public class BucketState {
         state[0] = currentTime;
     }
 
+    @Override
+    public String toString() {
+        return "BucketState{" +
+                "state=" + Arrays.toString(state) +
+                '}';
+    }
 }

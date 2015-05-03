@@ -135,4 +135,12 @@ public class LockFreeBucket extends AbstractBucket {
     public BucketState createSnapshot() {
         return stateReference.get().clone();
     }
+
+    @Override
+    public String toString() {
+        return "LockFreeBucket{" +
+                "state=" + stateReference.get() +
+                ", configuration=" + configuration +
+                '}';
+    }
 }
