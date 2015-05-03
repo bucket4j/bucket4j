@@ -127,7 +127,7 @@
                         <artifactId>coveralls-maven-plugin</artifactId>
                         <version>3.1.0</version>
                         <configuration>
-                            <repoToken>${env.coverallRepoToken}</repoToken>
+                            <repoToken>${env.coverallToken}</repoToken>
                         </configuration>
                     </plugin>
                 </plugins>
@@ -216,6 +216,14 @@
             </build>
         </profile>
     </profiles>
+
+    <repositories>
+        <repository>
+            <id>jcenter</id>
+            <url>http://jcenter.bintray.com</url>
+        </repository>
+    </repositories>
+
     <dependencies>
         <!-- Grid dependencies -->
         <dependency>
