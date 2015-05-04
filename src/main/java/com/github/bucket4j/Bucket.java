@@ -33,9 +33,10 @@ package com.github.bucket4j;
  * @see <a href="http://en.wikipedia.org/wiki/Leaky_bucket">Leaky Bucket on Wikipedia</a>
  */
 public interface Bucket {
+
     /**
      * Attempt to consume a single token from the bucket.  If it was consumed then {@code true} is returned, otherwise
-     * {@code false} is returned.
+     * {@code false} is returned. This is equivalent for {@code tryConsume(1)}
      *
      * @return {@code true} if a token was consumed, {@code false} otherwise.
      */

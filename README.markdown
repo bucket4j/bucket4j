@@ -1,7 +1,4 @@
-# Warning! Project is under development
-
-Bucket4j - is a java implementation of token/leaky bucket algorithm for rate limiting
-=====================================================================================
+## Bucket4j - is a java implementation of token/leaky bucket algorithm for rate limiting
 [![Build Status](https://travis-ci.org/vladimir-bukhtoyarov/bucket4j.svg?branch=master)](https://travis-ci.org/vladimir-bukhtoyarov/bucket4j)
 [![Coverage Status](https://coveralls.io/repos/vladimir-bukhtoyarov/bucket4j/badge.svg)](https://coveralls.io/r/vladimir-bukhtoyarov/bucket4j)
 
@@ -23,9 +20,10 @@ See for more details:
 ### Advantages of Bucket4j
 
 * Implemented around ideas of well known family of algorithms, which are by de facto standard for rate limiting in the IT industry.
-* Effective lock free implementation without any critical section, Bucket4j is good scalable for multithreading environment.
+* Effective lock free implementation without any critical section, Bucket4j is good scalable for multithreading case.
+* Absolute precision, Bucket4j does not operate with floats or doubles, all calculation are performed in the integer arithmetic.
 * Rich API:
-  * More then one bandwidth per bucket. For example you can limit 1000 events per hours but no often then 100 events per minute. 
+  * More then one bandwidth per bucket. For example you can limit 1000 events per hours but not often then 100 events per minute. 
   * Customizable time measurement. You are able to specify how to time will be measurement: as `System.nanotime()` or `System.currentTimeMillis()`
 or you can to specify own way to measure time.
   * Ability to have guaranteed bandwidth. Think about guaranteed bandwidth like a 911 number which you can to call when no money on your balance.
@@ -36,7 +34,7 @@ At the moment following grids are supported:
   * [Hazelcast](http://hazelcast.com/products/hazelcast/) - The most popular Open Source In-Memory Data Grid.
   * [Apache Ignite(GridGain in the past)](http://www.oracle.com/technetwork/middleware/coherence/overview/index-087514.html) - The Open Source In-Memory Data Grid with most richest API in the world.
 
-### Usage
+### Basic usage
 
 #### Maven Setup
 
@@ -109,13 +107,16 @@ Bucket bucket = Buckets.withNanoTimePrecision()
 
 // ...
 while (true) {
-  // Consume a token from the token bucket.  If a token is not available this method will block until
+  // Consume a token from the token bucket.  
+  // If a token is not available this method will block until
   // the refill adds one to the bucket.
   bucket.consume(1);
 
   poll();
 }
 ```
+
+### Advanced usage
 
 #### Example of multiple bandwidth
 
@@ -141,7 +142,62 @@ while (true) {
 ```
 
 #### Example of guaranteed bandwidth
+
+Let's imagine that you develop mailing server. 
+In order to prevent spam, you want to restrict user to send emails not often than by 1000 times per hour. 
+But in same time, you want to provide guarantee to user that will be able to send 1 email each 10 minute even in the case where the limit by hour is exceeded. 
+In this case you can construct bucket like this:
+
+```java
+
+Bucket bucket = Buckets.withNanoTimePrecision()
+    .withLimitedBandwidth(1000, TimeUnit.HOURS.toNanos(1))
+    .withGuaranteedBandwidth(1, TimeUnit.MINUTES.toNanos(10))
+    .build();
+```
+
+#### Using initial capacity  
+
+By default initial size of bucket is equal to capacity. 
+But sometimes, you may want to have lesser initial size, for example for case of cold start in order to prevent denial of service. 
+You can specify initial size as third parameter during bandwidth construction:
+
+```java
+
+int initialCapacity = 42;
+
+Bucket bucket = Buckets.withNanoTimePrecision()
+    .withLimitedBandwidth(1000, TimeUnit.HOURS.toNanos(1), initialCapacity)
+    .build();
+```
+
+#### Using dynamic capacity  
+
+```java
+
+final long initialCapacity = 100;
+        
+BandwidthAdjuster adjuster = new BandwidthAdjuster() {
+    @Override
+    public long getCapacity(long currentTime) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(currentTime);
+        int hour = calendar.get(Calendar.HOUR_OF_DAY);
+        if (hour >= 18) {
+            return 50;    
+        } else {
+            return initialCapacity;
+        }
+    }
+};
+Buckets.withMillisTimePrecision()
+    .withLimitedBandwidth(adjuster, TimeUnit.MINUTES.toMillis(10), initialCapacity);
+```
+
+#### Using custom time metter  
 ... **TBD**
+
+## Examples of distributed usage 
 
 #### Example of Oracle Coherence integration 
 ... **TBD**
@@ -150,17 +206,6 @@ while (true) {
 ... **TBD**
 
 #### Example of Apache Ignite(GridGain) integration 
-... **TBD**
-
-### Advanced usages
-
-#### Using dynamic capacity  
-... **TBD**
-
-#### Using initial capacity  
-... **TBD**
-
-#### Using custom time metter  
 ... **TBD**
 
 License
