@@ -32,19 +32,19 @@ or you can to specify own way to measure time.
 At the moment following grids are supported:
   * [Oracle Coherence](http://www.oracle.com/technetwork/middleware/coherence/overview/index-087514.html) - One of the oldest and most reliable commercial In-Memory Grid. 
   * [Hazelcast](http://hazelcast.com/products/hazelcast/) - The most popular Open Source In-Memory Data Grid.
-  * [Apache Ignite(GridGain in the past)](http://www.oracle.com/technetwork/middleware/coherence/overview/index-087514.html) - The Open Source In-Memory Data Grid with most richest API in the world.
+  * [Apache Ignite(GridGain in the past)](http://www.oracle.com/technetwork/middleware/coherence/overview/index-087514.html) - The Open Source In-Memory Data Grid with most richest API.
 
-### Basic usage
+### Get Bucket4j library
 
-### Build from sources via maven
+#### You can build Bucket4j from sources
+
 ```bash
 git clone https://github.com/vladimir-bukhtoyarov/bucket4j.git
 cd bucket4j
 mvn clean install
 ```
 
-#### Maven Setup implementation proposals
-NOTE: Sorry, Bucket4j will be uploaded to Bintray as soon as javadocs will be written. Currently please build from sources(see instructions above).
+#### You can add Bucket4j to your project as maven dependency
 
 The bucket4j library is distributed through [Bintray](http://bintray.com/), so you need to add Bintray repository to your `pom.xml`
 
@@ -67,7 +67,12 @@ Then include Bucket4j as dependency to your `pom.xml`
 </dependency>
 ```
 
+
+
+### Basic usage
+
 #### Simple example
+
 Imagine that you develop WEB application and want to limit user to access for application no often then 10 times for second:
 
 ```java
@@ -82,7 +87,7 @@ public class ThrottlingFilter implements javax.servlet.Filter {
         if (bucket == null) {
             // build bucket with required capacity and associate it with particular user
             bucket = Buckets.withNanoTimePrecision()
-                .withLimitedBandwidth(10, TimeUnit.SECONDS)
+                .withLimitedBandwidth(10, TimeUnit.SECONDS, 1)
                 .build();
             session.setAttribute("throttler", bucket);
         }
@@ -110,7 +115,7 @@ Suppose you have a piece of code that polls a website and you would only like to
 
 // Create a token bucket with required capacity.
 Bucket bucket = Buckets.withNanoTimePrecision()
-                .withLimitedBandwidth(100, TimeUnit.MINUTES)
+                .withLimitedBandwidth(100, TimeUnit.MINUTES, 1)
                 .build();
 
 // ...
@@ -181,40 +186,101 @@ Bucket bucket = Buckets.withNanoTimePrecision()
 
 #### Using dynamic capacity  
 
-```java
+Sometimes, you may want to have a bucket with dynamic capacity. For example if you want to have capacity 10 per 1 minute for daily time,
+and 2 per minute for nightly time, then construct bucket like this
 
-final long initialCapacity = 100;
-        
+```java 
 BandwidthAdjuster adjuster = new BandwidthAdjuster() {
     @Override
     public long getCapacity(long currentTime) {
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(currentTime);
         int hour = calendar.get(Calendar.HOUR_OF_DAY);
-        if (hour >= 18) {
-            return 50;    
+        if (hour >= 7 && hour <= 23) {
+            return 10;    
         } else {
-            return initialCapacity;
+            return 2;
         }
     }
 };
 Buckets.withMillisTimePrecision()
-    .withLimitedBandwidth(adjuster, TimeUnit.MINUTES, 10, initialCapacity);
+    .withLimitedBandwidth(adjuster, TimeUnit.MINUTES, 1, 10);
 ```
 
 #### Using custom time metter  
-... **TBD**
+You can specify your custom time meter, if existing nanotime or miliseconds time meters is not enough. For example:
 
-## Examples of distributed usage 
+```java
+
+public class MyCustomTimeMeter implements TimeMeter {
+  ...
+}
+
+Bucket bucket = Buckets.withCustomTimePrecision(new MyCustomTimeMeter())
+                .withLimitedBandwidth(100, TimeUnit.MINUTES, 1)
+                .build();
+
+
+```
+To properly implement your custom time meter, you should read javadocs for `com.github.bucket4j.TimeMeter`, and investigate it source code. 
+
+### Examples of distributed usage 
 
 #### Example of Oracle Coherence integration 
-... **TBD**
+
+``` java
+// Cache with name "my_buckets" should be configured as described in the documentation for Oracle Coherence.  
+NamedCache cache = com.tangosol.net.CacheFactory.getCache("my_buckets");
+
+// Bucket will be stored in the cache by this ID 
+Object bucketId = "42";
+
+// construct bucket
+Bucket bucket = Buckets.withMillisTimePrecision()
+                .withLimitedBandwidth(100, TimeUnit.MINUTES, 1)
+                .buildCoherence(cache, bucketId);
+```
 
 #### Example of Hazelcast integration 
-... **TBD**
+``` java
+  
+HazelcastInstance hazelcastInstance = Hazelcast.newHazelcastInstance();
+
+// In opposite to Coherence, Hazelcast does not require to configure cache before using it,
+// but it would be better to configure map "my_buckets" as described in Hazelcast documentation,
+// because Hazelcast enables backups by default, and backup feature leads to performance degradation. 
+IMap<Object, GridBucketState> imap = hazelcastInstance.getMap("my_buckets");
+
+// Bucket will be stored in the imap by this ID 
+Object bucketId = "666";
+
+// construct bucket
+Bucket bucket = Buckets.withMillisTimePrecision()
+                .withLimitedBandwidth(100, TimeUnit.MINUTES, 1)
+                .buildHazelcast(imap, bucketId);
+```
 
 #### Example of Apache Ignite(GridGain) integration 
-... **TBD**
+
+``` java
+Ignite ignite = Ignition.start();
+...
+
+// You can use spring configuration if do not want to configure cache in the java code  
+CacheConfiguration cfg = new CacheConfiguration("my_buckets");
+
+// setup cache configuration as you wish
+cfg.setXXX...
+cache = ignite.getOrCreateCache(cfg);
+
+// Bucket will be stored in the Ignite cache by this ID 
+Object bucketId = "21";
+
+// construct bucket
+Bucket bucket = Buckets.withMillisTimePrecision()
+                .withLimitedBandwidth(100, TimeUnit.MINUTES, 1)
+                .buildIgnite(cache, bucketId);
+```
 
 License
 -------
