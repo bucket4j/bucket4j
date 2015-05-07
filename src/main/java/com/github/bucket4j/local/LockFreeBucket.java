@@ -40,8 +40,9 @@ public class LockFreeBucket extends AbstractBucket {
         BucketState previousState = stateReference.get();
         BucketState newState = previousState.clone();
         Bandwidth[] bandwidths = configuration.getBandwidths();
+        long currentTime = configuration.getTimeMeter().currentTime();
+
         while (true) {
-            long currentTime = configuration.getTimeMeter().currentTime();
             newState.refill(bandwidths, currentTime);
             long availableToConsume = newState.getAvailableTokens(bandwidths);
             long toConsume = Math.min(limit, availableToConsume);
@@ -63,9 +64,9 @@ public class LockFreeBucket extends AbstractBucket {
         BucketState previousState = stateReference.get();
         BucketState newState = previousState.clone();
         Bandwidth[] bandwidths = configuration.getBandwidths();
+        long currentTime = configuration.getTimeMeter().currentTime();
 
         while (true) {
-            long currentTime = configuration.getTimeMeter().currentTime();
             newState.refill(bandwidths, currentTime);
             long availableToConsume = newState.getAvailableTokens(bandwidths);
             if (tokensToConsume > availableToConsume) {
