@@ -36,7 +36,15 @@ At the moment following grids are supported:
 
 ### Basic usage
 
-#### Maven Setup
+### Build from sources via maven
+```bash
+git clone https://github.com/vladimir-bukhtoyarov/bucket4j.git
+cd bucket4j
+mvn clean install
+```
+
+#### Maven Setup implementation proposals
+NOTE: Sorry, Bucket4j will be uploaded to Bintray as soon as javadocs will be written. Currently please build from sources(see instructions above).
 
 The bucket4j library is distributed through [Bintray](http://bintray.com/), so you need to add Bintray repository to your `pom.xml`
 
@@ -74,7 +82,7 @@ public class ThrottlingFilter implements javax.servlet.Filter {
         if (bucket == null) {
             // build bucket with required capacity and associate it with particular user
             bucket = Buckets.withNanoTimePrecision()
-                .withLimitedBandwidth(10, TimeUnit.SECONDS.toNanos(1))
+                .withLimitedBandwidth(10, TimeUnit.SECONDS)
                 .build();
             session.setAttribute("throttler", bucket);
         }
@@ -102,7 +110,7 @@ Suppose you have a piece of code that polls a website and you would only like to
 
 // Create a token bucket with required capacity.
 Bucket bucket = Buckets.withNanoTimePrecision()
-                .withLimitedBandwidth(100, TimeUnit.MINUTES.toNanos(1))
+                .withLimitedBandwidth(100, TimeUnit.MINUTES)
                 .build();
 
 // ...
@@ -126,9 +134,9 @@ To solve problem you can construct following bucket:
 ```java
 Bucket bucket = Buckets.withNanoTimePrecision()
        // allows 1000 tokens per 1 minute
-       .withLimitedBandwidth(1000, TimeUnit.MINUTES.toNanos(1))
+       .withLimitedBandwidth(1000, TimeUnit.MINUTES, 1)
        // but not often then 50 tokens per 1 second
-       .withLimitedBandwidth(50, TimeUnit.SECOND.toNanos(1))
+       .withLimitedBandwidth(50, TimeUnit.SECOND, 1)
        .build();
 
 // ...
@@ -151,8 +159,8 @@ In this case you can construct bucket like this:
 ```java
 
 Bucket bucket = Buckets.withNanoTimePrecision()
-    .withLimitedBandwidth(1000, TimeUnit.HOURS.toNanos(1))
-    .withGuaranteedBandwidth(1, TimeUnit.MINUTES.toNanos(10))
+    .withLimitedBandwidth(1000, TimeUnit.HOURS, 1)
+    .withGuaranteedBandwidth(1, TimeUnit.MINUTES, 10)
     .build();
 ```
 
@@ -167,7 +175,7 @@ You can specify initial size as third parameter during bandwidth construction:
 int initialCapacity = 42;
 
 Bucket bucket = Buckets.withNanoTimePrecision()
-    .withLimitedBandwidth(1000, TimeUnit.HOURS.toNanos(1), initialCapacity)
+    .withLimitedBandwidth(1000, TimeUnit.HOURS, 1, initialCapacity)
     .build();
 ```
 
@@ -191,7 +199,7 @@ BandwidthAdjuster adjuster = new BandwidthAdjuster() {
     }
 };
 Buckets.withMillisTimePrecision()
-    .withLimitedBandwidth(adjuster, TimeUnit.MINUTES.toMillis(10), initialCapacity);
+    .withLimitedBandwidth(adjuster, TimeUnit.MINUTES, 10, initialCapacity);
 ```
 
 #### Using custom time metter  

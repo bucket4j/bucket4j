@@ -55,8 +55,8 @@ public class CoherenceTest {
     @Test
     public void test15Seconds() throws Exception {
         Bucket bucket = Buckets.withNanoTimePrecision()
-                .withLimitedBandwidth(1_000l, TimeUnit.MINUTES.toNanos(1), 0)
-                .withLimitedBandwidth(200l, TimeUnit.SECONDS.toNanos(10), 0)
+                .withLimitedBandwidth(1_000l, TimeUnit.MINUTES, 1, 0)
+                .withLimitedBandwidth(200l, TimeUnit.SECONDS, 10, 0)
                 .buildCoherence(cache, KEY);
 
         ConsumptionScenario scenario = new ConsumptionScenario(4, TimeUnit.SECONDS.toNanos(15), bucket);

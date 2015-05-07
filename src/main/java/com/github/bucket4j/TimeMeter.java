@@ -27,6 +27,8 @@ public interface TimeMeter extends Serializable {
 
     void sleep(long units) throws InterruptedException;
 
+    long toBandwidthPeriod(TimeUnit timeUnit, long period);
+
     public static final TimeMeter SYSTEM_NANOTIME = new TimeMeter() {
         @Override
         public long currentTime() {
@@ -39,6 +41,11 @@ public interface TimeMeter extends Serializable {
             if (Thread.interrupted()) {
                 throw new InterruptedException();
             }
+        }
+
+        @Override
+        public long toBandwidthPeriod(TimeUnit timeUnit, long period) {
+            return timeUnit.toNanos(period);
         }
 
         @Override
@@ -59,6 +66,11 @@ public interface TimeMeter extends Serializable {
             if (Thread.interrupted()) {
                 throw new InterruptedException();
             }
+        }
+
+        @Override
+        public long toBandwidthPeriod(TimeUnit timeUnit, long period) {
+            return timeUnit.toMillis(period);
         }
 
         @Override

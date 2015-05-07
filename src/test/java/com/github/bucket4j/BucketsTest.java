@@ -44,7 +44,7 @@ public class BucketsTest {
 
     @Test
     public void testToString() throws Exception {
-        Buckets.withMillisTimePrecision().withLimitedBandwidth(100, TimeUnit.MILLISECONDS.toMillis(10)).build().toString();
+        Buckets.withMillisTimePrecision().withLimitedBandwidth(100, TimeUnit.MILLISECONDS, 10).build().toString();
     }
 
 }

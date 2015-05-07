@@ -18,6 +18,8 @@ package com.github.bucket4j.mock;
 
 import com.github.bucket4j.TimeMeter;
 
+import java.util.concurrent.TimeUnit;
+
 /**
  * Created by vladimir.bukhtoyarov on 09.04.2015.
  */
@@ -65,8 +67,14 @@ public class TimeMeterMock implements TimeMeter {
         sleeped += units;
     }
 
+    @Override
+    public long toBandwidthPeriod(TimeUnit timeUnit, long period) {
+        return period;
+    }
+
     public void reset() {
         currentTime = 0;
         sleeped = 0;
     }
+
 }

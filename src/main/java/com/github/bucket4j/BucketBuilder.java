@@ -30,6 +30,9 @@ import org.apache.ignite.IgniteCache;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+
+import static com.github.bucket4j.BucketExceptions.nullTimeMetter;
 
 public final class BucketBuilder {
 
@@ -37,6 +40,9 @@ public final class BucketBuilder {
     private List<BandwidthDefinition> bandwidths = new ArrayList<>(1);
 
     public BucketBuilder(TimeMeter timeMeter) {
+        if (timeMeter == null) {
+            throw nullTimeMetter();
+        }
         this.timeMeter = timeMeter;
     }
 
@@ -69,34 +75,38 @@ public final class BucketBuilder {
         return new GridBucket(configuration, gridProxy);
     }
 
-    public BucketBuilder withGuaranteedBandwidth(long maxCapacity, long period) {
-        return withGuaranteedBandwidth(maxCapacity, period, maxCapacity);
+    public BucketBuilder withGuaranteedBandwidth(long maxCapacity, TimeUnit timeUnit, long period) {
+        return withGuaranteedBandwidth(maxCapacity, timeUnit, period, maxCapacity);
     }
 
-    public BucketBuilder withGuaranteedBandwidth(long maxCapacity, long period, long initialCapacity) {
-        final BandwidthDefinition bandwidth = new BandwidthDefinition(maxCapacity, initialCapacity, period, true);
+    public BucketBuilder withGuaranteedBandwidth(long maxCapacity, TimeUnit timeUnit, long period, long initialCapacity) {
+        final long bandwidthPeriod = timeMeter.toBandwidthPeriod(timeUnit, period);
+        final BandwidthDefinition bandwidth = new BandwidthDefinition(maxCapacity, initialCapacity, bandwidthPeriod, true);
         bandwidths.add(bandwidth);
         return this;
     }
 
-    public BucketBuilder withGuaranteedBandwidth(BandwidthAdjuster bandwidthAdjuster, long period, long initialCapacity) {
-        final BandwidthDefinition bandwidth = new BandwidthDefinition(bandwidthAdjuster, initialCapacity, period, true);
+    public BucketBuilder withGuaranteedBandwidth(BandwidthAdjuster bandwidthAdjuster, TimeUnit timeUnit, long period, long initialCapacity) {
+        final long bandwidthPeriod = timeMeter.toBandwidthPeriod(timeUnit, period);
+        final BandwidthDefinition bandwidth = new BandwidthDefinition(bandwidthAdjuster, initialCapacity, bandwidthPeriod, true);
         bandwidths.add(bandwidth);
         return this;
     }
 
-    public BucketBuilder withLimitedBandwidth(long maxCapacity, long period) {
-        return withLimitedBandwidth(maxCapacity, period, maxCapacity);
+    public BucketBuilder withLimitedBandwidth(long maxCapacity, TimeUnit timeUnit, long period) {
+        return withLimitedBandwidth(maxCapacity, timeUnit, period, maxCapacity);
     }
 
-    public BucketBuilder withLimitedBandwidth(long maxCapacity, long period, long initialCapacity) {
-        final BandwidthDefinition bandwidth = new BandwidthDefinition(maxCapacity, initialCapacity, period, false);
+    public BucketBuilder withLimitedBandwidth(long maxCapacity, TimeUnit timeUnit, long period, long initialCapacity) {
+        final long bandwidthPeriod = timeMeter.toBandwidthPeriod(timeUnit, period);
+        final BandwidthDefinition bandwidth = new BandwidthDefinition(maxCapacity, initialCapacity, bandwidthPeriod, false);
         bandwidths.add(bandwidth);
         return this;
     }
 
-    public BucketBuilder withLimitedBandwidth(BandwidthAdjuster bandwidthAdjuster, long period, long initialCapacity) {
-        final BandwidthDefinition bandwidth = new BandwidthDefinition(bandwidthAdjuster, initialCapacity, period, false);
+    public BucketBuilder withLimitedBandwidth(BandwidthAdjuster bandwidthAdjuster, TimeUnit timeUnit, long period, long initialCapacity) {
+        final long bandwidthPeriod = timeMeter.toBandwidthPeriod(timeUnit, period);
+        final BandwidthDefinition bandwidth = new BandwidthDefinition(bandwidthAdjuster, initialCapacity, bandwidthPeriod, false);
         bandwidths.add(bandwidth);
         return this;
     }

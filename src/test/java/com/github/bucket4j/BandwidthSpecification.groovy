@@ -21,13 +21,15 @@ import com.github.bucket4j.mock.TimeMeterMock
 import spock.lang.Specification
 import spock.lang.Unroll
 
+import java.util.concurrent.TimeUnit
+
 class BandwidthSpecification extends Specification {
 
     def "Specification for initialization"(long period, long capacity, long initialCapacity, long currentTime) {
         setup:
             def meter = new TimeMeterMock(currentTime);
             def builder = Buckets.withCustomTimePrecision(meter)
-                .withLimitedBandwidth(capacity, period, initialCapacity)
+                .withLimitedBandwidth(capacity, TimeUnit.MINUTES, period, initialCapacity)
             def bucket = builder.build()
             def bandwidth = bucket.getConfiguration().getBandwidth(0)
         when:
@@ -45,7 +47,7 @@ class BandwidthSpecification extends Specification {
         setup:
             def meter = new TimeMeterMock(currentTime);
             def builder = Buckets.withCustomTimePrecision(meter)
-                    .withLimitedBandwidth(capacity, period, initialCapacity)
+                    .withLimitedBandwidth(capacity, TimeUnit.NANOSECONDS, period, initialCapacity)
             def bucket = builder.build()
             def bandwidth = bucket.getConfiguration().getBandwidth(0)
             def state = bucket.createSnapshot()
@@ -68,7 +70,7 @@ class BandwidthSpecification extends Specification {
             def meter = new TimeMeterMock(initTime);
             def adjuster = new AdjusterMock(maxCapacityBefore)
             def bucket = Buckets.withCustomTimePrecision(meter)
-                    .withLimitedBandwidth(adjuster, period, initialCapacity)
+                    .withLimitedBandwidth(adjuster, TimeUnit.NANOSECONDS, period, initialCapacity)
                     .build()
             def bandwidth = bucket.getConfiguration().getBandwidth(0)
             def bandwidths = bucket.getConfiguration().getBandwidths()
@@ -114,7 +116,7 @@ class BandwidthSpecification extends Specification {
             def meter = new TimeMeterMock(initTime);
             def adjuster = new AdjusterMock(   capacity )
             def bucket = Buckets.withCustomTimePrecision(meter)
-                    .withLimitedBandwidth(adjuster, period, initialCapacity)
+                    .withLimitedBandwidth(adjuster, TimeUnit.NANOSECONDS, period, initialCapacity)
                     .build()
             def bandwidth = bucket.getConfiguration().getBandwidth(0)
             def bandwidths = bucket.getConfiguration().getBandwidths()
