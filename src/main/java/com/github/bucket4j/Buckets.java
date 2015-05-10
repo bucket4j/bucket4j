@@ -24,6 +24,8 @@ public  final class Buckets {
 
     /**
      * Creates instance of {@link com.github.bucket4j.BucketBuilder} which will create buckets with {@link com.github.bucket4j.TimeMeter#SYSTEM_NANOTIME} as time meter.
+     *
+     * @return
      */
     public static BucketBuilder withNanoTimePrecision() {
         return new BucketBuilder(TimeMeter.SYSTEM_NANOTIME);
@@ -31,6 +33,8 @@ public  final class Buckets {
 
     /**
      * Creates instance of {@link com.github.bucket4j.BucketBuilder} which will create buckets with {@link com.github.bucket4j.TimeMeter#SYSTEM_MILLISECONDS} as time meter.
+     *
+     * @return
      */
     public static BucketBuilder withMillisTimePrecision() {
         return new BucketBuilder(TimeMeter.SYSTEM_MILLISECONDS);
@@ -40,6 +44,8 @@ public  final class Buckets {
      * Creates instance of {@link com.github.bucket4j.BucketBuilder} which will create buckets with {@code customTimeMeter} as time meter.
      *
      * @param customTimeMeter object which will measure time.
+     *
+     * @return
      */
     public static BucketBuilder withCustomTimePrecision(TimeMeter customTimeMeter) {
         return new BucketBuilder(customTimeMeter);

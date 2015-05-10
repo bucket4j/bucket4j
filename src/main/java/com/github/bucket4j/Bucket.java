@@ -56,6 +56,8 @@ public interface Bucket {
      * Consumes as much tokens from bucket as available in the bucket in moment of invocation,
      * but tokens which should be consumed is limited by than not more than {@code limit}.
      *
+     * @param limit maximum nubmer of tokens to consume, should be positive.
+     *
      * @return number of tokens which has been consumed, or zero if was consumed nothing.
      */
     long consumeAsMuchAsPossible(long limit);
@@ -64,7 +66,7 @@ public interface Bucket {
      * Consumes a single token from the bucket.  If no token is currently available then this method will block until a
      * token becomes available or current thread is interrupted. This is equivalent for {@code consume(1)}
      *
-     * @throws InterruptedException
+     * @throws InterruptedException in case of current thread has been interrupted during waiting
      */
     void consumeSingleToken() throws InterruptedException;
 
@@ -74,7 +76,7 @@ public interface Bucket {
      *
      * @param numTokens The number of tokens to consumeSingleToken from teh bucket, must be a positive number.
      *
-     * @throws InterruptedException
+     * @throws InterruptedException in case of current thread has been interrupted during waiting
      */
     void consume(long numTokens) throws InterruptedException;
 
@@ -88,7 +90,7 @@ public interface Bucket {
      *
      * @return true if token has been consumed or false when token has not been consumed
      *
-     * @throws InterruptedException
+     * @throws InterruptedException in case of current thread has been interrupted during waiting
      */
     boolean tryConsumeSingleToken(long maxWaitTime) throws InterruptedException;
 
@@ -101,7 +103,7 @@ public interface Bucket {
      *
      * @return true if {@code numTokens} has been consumed or false when {@code numTokens} has not been consumed
      *
-     * @throws InterruptedException
+     * @throws InterruptedException in case of current thread has been interrupted during waiting
      */
     boolean tryConsume(long numTokens, long maxWaitTime) throws InterruptedException;
 

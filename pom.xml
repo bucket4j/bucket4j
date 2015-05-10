@@ -45,6 +45,7 @@
         <url>http://github.com/vladimir-bukhtoyarov/bandwidth-limiter</url>
         <connection>scm:git:git@github.com:vladimir-bukhtoyarov/bandwidth-limiter</connection>
         <developerConnection>scm:git:git@github.com:vladimir-bukhtoyarov/bandwidth-limiter.git</developerConnection>
+        <tag>HEAD</tag>
     </scm>
 
     <developers>
@@ -215,12 +216,45 @@
                 </plugins>
             </build>
         </profile>
+        <profile>
+            <id>bintray</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>attach-sources</id>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>attach-javadocs</id>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
     </profiles>
 
     <repositories>
         <repository>
-            <id>jcenter</id>
-            <url>http://jcenter.bintray.com</url>
+            <id>bucket4j</id>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+            <name>bintray</name>
+            <url>http://dl.bintray.com/vladimir-bukhtoyarov/maven</url>
         </repository>
     </repositories>
 
@@ -279,4 +313,5 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
 </project>

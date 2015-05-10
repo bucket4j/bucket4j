@@ -61,7 +61,7 @@ public final class BucketBuilder {
     /**
      * Constructs an instance of {@link com.github.bucket4j.local.LockFreeBucket}
      *
-     * @see com.github.bucket4j.local.LockFreeBucket
+     * @return an instance of {@link com.github.bucket4j.local.LockFreeBucket}
      */
     public Bucket build() {
         BucketConfiguration configuration = createConfiguration();
@@ -198,7 +198,7 @@ public final class BucketBuilder {
      * In opposite to method {@link #withGuaranteedBandwidth(long, TimeUnit, long)},
      * this method does not perform checking of limitation
      * which disallow to have greater rate of guaranteed than rate of limited bandwidth,
-     * because rate is dynamic and depends from <code>bandwidthAdjuster<code/>.
+     * because rate is dynamic and depends from <code>bandwidthAdjuster</code>.
      *
      * @param bandwidthAdjuster provider of bandwidth capacity
      * @param timeUnit Unit for period.
@@ -217,7 +217,7 @@ public final class BucketBuilder {
      * Adds limited bandwidth for all buckets which will be constructed by this builder instance.
      * <p>
      * You can specify as many limited bandwidth as needed, but with following limitation: each limited bandwidth should has unique period,
-     * and when period of bandwidth <tt>X<tt/> is greater than bandwidth <tt>Y</tt>,
+     * and when period of bandwidth <tt>X</tt> is greater than bandwidth <tt>Y</tt>,
      * then capacity of bandwidth <tt>X</tt> should be greater capacity of bandwidth <tt>Y</tt>,
      * except cases when capacity of bandwidth <tt>X</tt> or <tt>Y</tt> is dynamic(provided by {@link com.github.bucket4j.BandwidthAdjuster}).
      * <p>
@@ -241,7 +241,7 @@ public final class BucketBuilder {
      * Adds limited bandwidth for all buckets which will be constructed by this builder instance.
      * <p>
      * You can specify as many limited bandwidth as needed, but with following limitation: each limited bandwidth should has unique period,
-     * and when period of bandwidth <tt>X<tt/> is greater than bandwidth <tt>Y</tt>,
+     * and when period of bandwidth <tt>X</tt> is greater than bandwidth <tt>Y</tt>,
      * then capacity of bandwidth <tt>X</tt> should be greater capacity of bandwidth <tt>Y</tt>,
      * except cases when capacity of bandwidth <tt>X</tt> or <tt>Y</tt> is dynamic(provided by {@link com.github.bucket4j.BandwidthAdjuster}).
      * <p>
@@ -269,7 +269,7 @@ public final class BucketBuilder {
      * Adds limited bandwidth for all buckets which will be constructed by this builder instance.
      * <p>
      * You can specify as many limited bandwidth as needed, but with following limitation: each limited bandwidth should has unique period,
-     * and when period of bandwidth <tt>X<tt/> is greater than bandwidth <tt>Y</tt>,
+     * and when period of bandwidth <tt>X</tt> is greater than bandwidth <tt>Y</tt>,
      * then capacity of bandwidth <tt>X</tt> should be greater capacity of bandwidth <tt>Y</tt>,
      * except cases when capacity of bandwidth <tt>X</tt> or <tt>Y</tt> is dynamic(provided by {@link com.github.bucket4j.BandwidthAdjuster}).
      *

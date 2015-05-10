@@ -49,12 +49,16 @@ mvn clean install
 The bucket4j library is distributed through [Bintray](http://bintray.com/), so you need to add Bintray repository to your `pom.xml`
 
 ```xml
-<repositories>
-    <repository>
-        <id>jcenter</id>
-        <url>http://jcenter.bintray.com</url>
-    </repository>
-</repositories>
+     <repositories>
+        <repository>
+            <id>bucket4j</id>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+            <name>bintray</name>
+            <url>http://dl.bintray.com/vladimir-bukhtoyarov/maven</url>
+        </repository>
+    </repositories>
 ```
 
 Then include Bucket4j as dependency to your `pom.xml`
