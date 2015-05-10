@@ -15,18 +15,17 @@
   ~  limitations under the License.
   -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.github</groupId>
     <artifactId>bucket4j</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.0</version>
     <packaging>jar</packaging>
 
     <name>bucket4j</name>
     <description>bucket4j - is a java implementation of token bucket algorithm for rate limiting</description>
-    <url>http://github.com/vladimir-bukhtoyarov/bandwidth-limiter</url>
+    <url>http://github.com/vladimir-bukhtoyarov/bucket4j</url>
     <licenses>
         <license>
             <name>The Apache Software License, Version 2.0</name>
@@ -42,10 +41,9 @@
     </properties>
 
     <scm>
-        <url>http://github.com/vladimir-bukhtoyarov/bandwidth-limiter</url>
-        <connection>scm:git:git@github.com:vladimir-bukhtoyarov/bandwidth-limiter</connection>
-        <developerConnection>scm:git:git@github.com:vladimir-bukhtoyarov/bandwidth-limiter.git</developerConnection>
-        <tag>HEAD</tag>
+        <url>http://github.com/vladimir-bukhtoyarov/bucket4j</url>
+        <connection>scm:git:git@github.com:vladimir-bukhtoyarov/bucket4j</connection>
+        <developerConnection>scm:git:git@github.com:vladimir-bukhtoyarov/bucket4j.git</developerConnection>
     </scm>
 
     <developers>
