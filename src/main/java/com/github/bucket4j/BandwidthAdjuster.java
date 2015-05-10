@@ -18,8 +18,18 @@ package com.github.bucket4j;
 
 import java.io.Serializable;
 
+/**
+ * Provider of bandwidth capacity.
+ */
 public interface BandwidthAdjuster extends Serializable {
 
+    /**
+     * Return capacity of bandwidth which can depends from current time if needs.
+     *
+     * @param currentTime Cuurent time which returned by timeMeter {@link TimeMeter}
+     *
+     * @return
+     */
     long getCapacity(long currentTime);
 
     public static class ImmutableCapacity implements BandwidthAdjuster {

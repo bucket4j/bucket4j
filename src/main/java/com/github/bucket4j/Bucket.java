@@ -16,21 +16,15 @@
 package com.github.bucket4j;
 
 /**
- * A token bucket implementation that is of a leaky bucket in the sense that it has a finite capacity and any added
- * tokens that would exceed this capacity will "overflow" out of the bucket and are lost forever.
- * <p/>
- * In this implementation the rules for refilling the bucket are encapsulated in a provided {@code RefillStrategy}
- * instance.  Prior to attempting to consumeSingleToken any tokens the refill strategy will be consulted to see how many tokens
- * should be added to the bucket.
- * <p/>
- * In addition in this implementation the method of yielding CPU control is encapsulated in the provided
- * {@code SleepStrategy} instance.  For high performance applications where tokens are being refilled incredibly quickly
- * and an accurate bucket implementation is required, it may be useful to never yield control of the CPU and to instead
- * busy wait.  This strategy allows the caller to make this decision for themselves instead of the library forcing a
- * decision.
+ * The continuous-state leaky bucket can be viewed as a finite capacity bucket
+ * whose real-valued content drains out at a continuous rate of 1 unit of content per time unit
+ * and whose content is increased by the increment T for each conforming cell...
+ * If at a cell arrival the content of the bucket is less than or equal to the limit value τ, then the cell is conforming;
+ * otherwise, the cell is non-conforming.
  *
- * @see <a href="http://en.wikipedia.org/wiki/Token_bucket">Token Bucket on Wikipedia</a>
- * @see <a href="http://en.wikipedia.org/wiki/Leaky_bucket">Leaky Bucket on Wikipedia</a>
+ * @see <a href="http://en.wikipedia.org/wiki/Token_bucket">Token Bucket</a>
+ * @see <a href="http://en.wikipedia.org/wiki/Leaky_bucket">Leaky Bucket</a>
+ * @see <a href="http://en.wikipedia.org/wiki/Generic_cell_rate_algorithm">Generic cell rate algorithm</a>
  */
 public interface Bucket {
 
@@ -46,26 +40,37 @@ public interface Bucket {
      * Attempt to consume a specified number of tokens from the bucket.  If the tokens were consumed then {@code true}
      * is returned, otherwise {@code false} is returned.
      *
-     * @param numTokens The number of tokens to consumeSingleToken from the bucket, must be a positive number.
+     * @param numTokens The number of tokens to consume from the bucket, must be a positive number.
      * @return {@code true} if the tokens were consumed, {@code false} otherwise.
      */
     boolean tryConsume(long numTokens);
 
+    /**
+     * Consumes as much tokens from bucket as available in the bucket in moment of invocation.
+     *
+     * @return number of tokens which has been consumed, or zero if was consumed nothing.
+     */
     long consumeAsMuchAsPossible();
 
+    /**
+     * Consumes as much tokens from bucket as available in the bucket in moment of invocation,
+     * but tokens which should be consumed is limited by than not more than {@code limit}.
+     *
+     * @return number of tokens which has been consumed, or zero if was consumed nothing.
+     */
     long consumeAsMuchAsPossible(long limit);
 
     /**
-     * Consume a single token from the bucket.  If no token is currently available then this method will block until a
-     * token becomes available.
+     * Consumes a single token from the bucket.  If no token is currently available then this method will block until a
+     * token becomes available or current thread is interrupted. This is equivalent for {@code consume(1)}
      *
      * @throws InterruptedException
      */
     void consumeSingleToken() throws InterruptedException;
 
     /**
-     * Consumes multiple tokens from the bucket.  If enough tokens are not currently available then this method will block
-     * until
+     * Consumes a single token from the bucket. If enough tokens are not currently available then this method will block
+     * until required number of tokens will be available or current thread is interrupted.
      *
      * @param numTokens The number of tokens to consumeSingleToken from teh bucket, must be a positive number.
      *
@@ -73,9 +78,32 @@ public interface Bucket {
      */
     void consume(long numTokens) throws InterruptedException;
 
-    boolean tryConsumeSingleToken(long maxWaitNanos) throws InterruptedException;
+    /**
+     * Consumes a single token from the bucket. If no token is currently available then this method will block
+     * until  required number of tokens will be available or current thread is interrupted, or {@code maxWaitTime} has elapsed.
+     *
+     * This is equivalent for {@code tryConsume(1, maxWaitTime)}
+     *
+     * @param maxWaitTime limit of time which thread can wait.
+     *
+     * @return true if token has been consumed or false when token has not been consumed
+     *
+     * @throws InterruptedException
+     */
+    boolean tryConsumeSingleToken(long maxWaitTime) throws InterruptedException;
 
-    boolean tryConsume(long numTokens, long maxWaitNanos) throws InterruptedException;
+    /**
+     * Consumes a specified number of tokens from the bucket. If required count of tokens is not currently available then this method will block
+     * until  required number of tokens will be available or current thread is interrupted, or {@code maxWaitTime} has elapsed.
+     *
+     * @param numTokens The number of tokens to consume from the bucket.
+     * @param maxWaitTime limit of time which thread can wait.
+     *
+     * @return true if {@code numTokens} has been consumed or false when {@code numTokens} has not been consumed
+     *
+     * @throws InterruptedException
+     */
+    boolean tryConsume(long numTokens, long maxWaitTime) throws InterruptedException;
 
     BucketState createSnapshot();
 

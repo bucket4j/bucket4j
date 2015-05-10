@@ -21,14 +21,31 @@ import java.io.Serializable;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.LockSupport;
 
+/**
+ * An abstraction over time measurement.
+ *
+ * @see com.github.bucket4j.TimeMeter#SYSTEM_NANOTIME
+ * @see com.github.bucket4j.TimeMeter#SYSTEM_MILLISECONDS
+ */
 public interface TimeMeter extends Serializable {
 
+    /**
+     * @return current time, which can be a milliseconds, nanoseconds, or something else in case of custom implementation.
+     */
     long currentTime();
 
+    /**
+     * Sleep required amount of time.
+     * @param units time to sleep
+     * @throws InterruptedException if current tread is interrupted.
+     */
     void sleep(long units) throws InterruptedException;
 
     long toBandwidthPeriod(TimeUnit timeUnit, long period);
 
+    /**
+     * The implementation of {@link TimeMeter} which works arround {@link java.lang.System#nanoTime}
+     */
     public static final TimeMeter SYSTEM_NANOTIME = new TimeMeter() {
         @Override
         public long currentTime() {
@@ -54,6 +71,9 @@ public interface TimeMeter extends Serializable {
         }
     };
 
+    /**
+     * The implementation of {@link TimeMeter} which works around {@link java.lang.System#currentTimeMillis}
+     */
     public static final TimeMeter SYSTEM_MILLISECONDS = new TimeMeter() {
         @Override
         public long currentTime() {
