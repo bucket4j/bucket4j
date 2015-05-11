@@ -36,6 +36,9 @@ At the moment following grids are supported:
 
 ### Get Bucket4j library
 
+#### By direct link
+[Download compiled jar, sources, javadocs](https://github.com/vladimir-bukhtoyarov/bucket4j/releases/tag/bucket4j-1.0.0)
+
 #### You can build Bucket4j from sources
 
 ```bash
@@ -50,15 +53,11 @@ The bucket4j library is distributed through [Bintray](http://bintray.com/), so y
 
 ```xml
      <repositories>
-        <repository>
-            <id>bucket4j</id>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-            <name>bintray</name>
-            <url>http://dl.bintray.com/vladimir-bukhtoyarov/maven</url>
-        </repository>
-    </repositories>
+         <repository>
+             <id>jcenter</id>
+             <url>http://jcenter.bintray.com</url>
+         </repository>
+     </repositories>
 ```
 
 Then include Bucket4j as dependency to your `pom.xml`
@@ -70,8 +69,6 @@ Then include Bucket4j as dependency to your `pom.xml`
     <version>1.0.0</version>
 </dependency>
 ```
-
-
 
 ### Basic usage
 
