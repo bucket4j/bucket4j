@@ -87,7 +87,7 @@ public class LockFreeBucket extends AbstractBucket {
         Bandwidth[] bandwidths = configuration.getBandwidths();
         boolean isWaitingLimited = waitIfBusyTimeLimit > 0;
 
-        final long methodStartTime = isWaitingLimited? configuration.getTimeMeter().currentTime(): 0;
+        final long methodStartTime = configuration.getTimeMeter().currentTime();
         long currentTime = methodStartTime;
         long methodDuration = 0;
         boolean isFirstCycle = true;
