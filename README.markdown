@@ -37,7 +37,7 @@ At the moment following grids are supported:
 ### Get Bucket4j library
 
 #### By direct link
-[Download compiled jar, sources, javadocs](https://github.com/vladimir-bukhtoyarov/bucket4j/releases/tag/bucket4j-1.0.0)
+[Download compiled jar, sources, javadocs](https://github.com/vladimir-bukhtoyarov/bucket4j/releases/tag/bucket4j-1.0.1)
 
 #### You can build Bucket4j from sources
 
@@ -66,7 +66,7 @@ Then include Bucket4j as dependency to your `pom.xml`
 <dependency>
     <groupId>com.github</groupId>
     <artifactId>bucket4j</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
 </dependency>
 ```
 

@@ -20,7 +20,7 @@
 
     <groupId>com.github</groupId>
     <artifactId>bucket4j</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
     <packaging>jar</packaging>
 
     <name>bucket4j</name>
@@ -44,8 +44,8 @@
         <url>http://github.com/vladimir-bukhtoyarov/bucket4j</url>
         <connection>scm:git:git@github.com:vladimir-bukhtoyarov/bucket4j</connection>
         <developerConnection>scm:git:git@github.com:vladimir-bukhtoyarov/bucket4j.git</developerConnection>
-      <tag>bucket4j-1.0.0</tag>
-  </scm>
+        <tag>bucket4j-1.0.1</tag>
+    </scm>
 
     <developers>
         <developer>
