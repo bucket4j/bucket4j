@@ -32,12 +32,12 @@ or you can to specify own way to measure time.
 At the moment following grids are supported:
   * [Oracle Coherence](http://www.oracle.com/technetwork/middleware/coherence/overview/index-087514.html) - One of the oldest and most reliable commercial In-Memory Grid. 
   * [Hazelcast](http://hazelcast.com/products/hazelcast/) - The most popular Open Source In-Memory Data Grid.
-  * [Apache Ignite(GridGain in the past)](http://www.oracle.com/technetwork/middleware/coherence/overview/index-087514.html) - The Open Source In-Memory Data Grid with most richest API.
+  * [Apache Ignite(GridGain in the past)](http://www.oracle.com/technetwork/middleware/coherence/overview/index-087514.html) - Yet another open source In-Memory Data Grid.
 
 ### Get Bucket4j library
 
 #### By direct link
-[Download compiled jar, sources, javadocs](https://github.com/vladimir-bukhtoyarov/bucket4j/releases/tag/bucket4j-1.0.1)
+[Download compiled jar, sources, javadocs](https://github.com/vladimir-bukhtoyarov/bucket4j/releases/tag/1.0.1)
 
 #### You can build Bucket4j from sources
 
@@ -208,22 +208,46 @@ Buckets.withMillisTimePrecision()
     .withLimitedBandwidth(adjuster, TimeUnit.MINUTES, 1, 10);
 ```
 
-#### Using custom time metter  
-You can specify your custom time meter, if existing nanotime or miliseconds time meters is not enough. For example:
+#### Customizing time measurement 
+You can specify your custom time meter, if existing nanotime or miliseconds time meters is not enough for your purposes. For example:
 
 ```java
 
-public class MyCustomTimeMeter implements TimeMeter {
-  ...
+import java.lang.management.ManagementFactory;
+import java.lang.management.ThreadMXBean;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.LockSupport;
+
+public class CurrentThreadCpuTimeMeter implements TimeMeter {
+
+    private static final ThreadMXBean THREAD_MX_BEAN = ManagementFactory.getThreadMXBean();
+
+    @Override
+    public long currentTime() {
+        return THREAD_MX_BEAN.getCurrentThreadCpuTime();
+    }
+
+    @Override
+    public void sleep(long units) throws InterruptedException {
+        LockSupport.parkNanos(units);
+        if (Thread.interrupted()) {
+            throw new InterruptedException();
+        }
+    }
+
+    @Override
+    public long toBandwidthPeriod(TimeUnit timeUnit, long period) {
+        return timeUnit.toNanos(period);
+    }
+
 }
 
-Bucket bucket = Buckets.withCustomTimePrecision(new MyCustomTimeMeter())
+Bucket bucket = Buckets.withCustomTimePrecision(new CurrentThreadCpuTimeMeter())
                 .withLimitedBandwidth(100, TimeUnit.MINUTES, 1)
                 .build();
 
 
 ```
-To properly implement your custom time meter, you should read javadocs for `com.github.bucket4j.TimeMeter`, and investigate it source code. 
 
 ### Examples of distributed usage 
 
