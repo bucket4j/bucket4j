@@ -17,25 +17,19 @@
 package com.github.bucket4j
 
 import com.github.bucket4j.mock.AdjusterMock
-import com.github.bucket4j.mock.TimeMeterMock
 import spock.lang.Specification
 import spock.lang.Unroll
-
-import java.util.concurrent.TimeUnit
 
 class BandwidthSpecification extends Specification {
 
     def "Specification for initialization"(long period, long capacity, long initialCapacity, long currentTime) {
         setup:
-            def meter = new TimeMeterMock(currentTime);
-            def builder = Buckets.withCustomTimePrecision(meter)
-                .withLimitedBandwidth(capacity, TimeUnit.MINUTES, period, initialCapacity)
-            def bucket = builder.build()
-            def bandwidth = bucket.getConfiguration().getBandwidth(0)
+            Bandwidth bandwidth = bandwidth(capacity, initialCapacity, period);
         when:
-            def state = bucket.createSnapshot()
+            def state = bandwidth.createInitialState()
         then:
-            bandwidth.getCurrentSize(state) == initialCapacity
+            state.currentSize == initialCapacity
+            state.roundingError == 0
         where:
             period | capacity | initialCapacity | currentTime
               10   |   100    |      50         |    10000
@@ -45,14 +39,10 @@ class BandwidthSpecification extends Specification {
     def "Specification for timeRequiredToRefill"(long period, long capacity, long initialCapacity, long currentTime,
                  long tokensToConsume, long requiredTime) {
         setup:
-            def meter = new TimeMeterMock(currentTime);
-            def builder = Buckets.withCustomTimePrecision(meter)
-                    .withLimitedBandwidth(capacity, TimeUnit.NANOSECONDS, period, initialCapacity)
-            def bucket = builder.build()
-            def bandwidth = bucket.getConfiguration().getBandwidth(0)
-            def state = bucket.createSnapshot()
+            Bandwidth bandwidth = bandwidth(capacity, initialCapacity, period);
+            def bandwidthState = bandwidth.createInitialState();
         expect:
-            bandwidth.delayAfterWillBePossibleToConsume(state, currentTime, tokensToConsume) == requiredTime
+            bandwidth.delayNanosAfterWillBePossibleToConsume(bandwidthState, currentTime, tokensToConsume) == requiredTime
         where:
             period | capacity | initialCapacity | currentTime | tokensToConsume | requiredTime
               10   |   100    |       100       |    10000    |      101        |  Long.MAX_VALUE
@@ -67,34 +57,26 @@ class BandwidthSpecification extends Specification {
                long maxCapacityBefore, long maxCapacityAfter, long timeRefill1, long requiredSize1,
                long timeRefill2, long requiredSize2, long timeRefill3, long requiredSize3) {
         setup:
-            def meter = new TimeMeterMock(initTime);
             def adjuster = new AdjusterMock(maxCapacityBefore)
-            def bucket = Buckets.withCustomTimePrecision(meter)
-                    .withLimitedBandwidth(adjuster, TimeUnit.NANOSECONDS, period, initialCapacity)
-                    .build()
-            def bandwidth = bucket.getConfiguration().getBandwidth(0)
-            def bandwidths = bucket.getConfiguration().getBandwidths()
-            def state = bucket.createSnapshot()
+            def bandwidth = new Bandwidth(adjuster, initialCapacity, period, false);
+            def state = bandwidth.createInitialState()
         when:
             adjuster.setCapacity(maxCapacityAfter)
-            meter.setCurrentTime(timeRefill1)
-            state.refill(bandwidths, timeRefill1)
+            bandwidth.refill(state, initTime, timeRefill1)
         then:
-            bandwidth.getCurrentSize(state) == requiredSize1
+            state.getCurrentSize() == requiredSize1
             bandwidth.getMaxCapacity(timeRefill1) == maxCapacityAfter
         when:
             adjuster.setCapacity(maxCapacityAfter)
-            meter.setCurrentTime(timeRefill2)
-            state.refill(bandwidths, timeRefill2)
+            bandwidth.refill(state, timeRefill1, timeRefill2)
         then:
-            bandwidth.getCurrentSize(state) == requiredSize2
+            state.getCurrentSize() == requiredSize2
             bandwidth.getMaxCapacity(timeRefill1) == maxCapacityAfter
         when:
             adjuster.setCapacity(maxCapacityAfter)
-            meter.setCurrentTime(timeRefill3)
-            state.refill(bandwidths, timeRefill3)
+            bandwidth.refill(state, timeRefill2, timeRefill3)
         then:
-            bandwidth.getCurrentSize(state) == requiredSize3
+            state.getCurrentSize() == requiredSize3
             bandwidth.getMaxCapacity(timeRefill1) == maxCapacityAfter
         where:
             n  | initialCapacity | period | initTime | maxCapacityBefore | maxCapacityAfter | timeRefill1 | requiredSize1 | timeRefill2 | requiredSize2 | timeRefill3 | requiredSize3
@@ -110,34 +92,30 @@ class BandwidthSpecification extends Specification {
 
     @Unroll
     def "Specification for consume #n"(int n, long initialCapacity, long period, long initTime,
-                                      long    capacity , long timeRefill1, long consume1, long requiredSize1,
+                                      long capacity , long timeRefill1, long consume1, long requiredSize1,
                                       long timeRefill2, long consume2, long requiredSize2) {
         setup:
-            def meter = new TimeMeterMock(initTime);
-            def adjuster = new AdjusterMock(   capacity )
-            def bucket = Buckets.withCustomTimePrecision(meter)
-                    .withLimitedBandwidth(adjuster, TimeUnit.NANOSECONDS, period, initialCapacity)
-                    .build()
-            def bandwidth = bucket.getConfiguration().getBandwidth(0)
-            def bandwidths = bucket.getConfiguration().getBandwidths()
-            def state = bucket.createSnapshot()
+            Bandwidth bandwidth = bandwidth(capacity, initialCapacity, period)
+            def state = bandwidth.createInitialState();
         when:
-            meter.setCurrentTime(timeRefill1)
-            state.refill(bandwidths, timeRefill1)
-            state.consume(bandwidths, consume1)
+            bandwidth.refill(state, initTime, timeRefill1)
+            bandwidth.consume(state, consume1)
         then:
-            bandwidth.getCurrentSize(state) == requiredSize1
+            state.getCurrentSize() == requiredSize1
         when:
-            meter.setCurrentTime(timeRefill2)
-            state.refill(bandwidths, timeRefill2)
-            state.consume(bandwidths, consume2)
+            bandwidth.refill(state, timeRefill1, timeRefill2)
+            bandwidth.consume(state, consume2)
         then:
-            bandwidth.getCurrentSize(state) == requiredSize2
+            state.getCurrentSize() == requiredSize2
         where:
             n  | initialCapacity | period | initTime |    capacity | timeRefill1 |  consume1 | requiredSize1 | timeRefill2 | consume2 | requiredSize2
             1  |        0        | 1000   | 10000    |      1000   |     10040   |     10    |     30        |    10050    |    20    |       20
             2  |       50        | 1000   | 10050    |      1000   |     10051   |      2    |     49        |    10055    |     7    |       46
             3  |       55        | 1000   | 10055    |      1000   |     10500   |     600   |      0        |    10504    |     3    |       1
+    }
+
+    private Bandwidth bandwidth(long capacity, long initialCapacity, long period) {
+        return new Bandwidth(new CapacityAdjuster.ImmutableCapacity(capacity), initialCapacity, period, false);
     }
 
 }

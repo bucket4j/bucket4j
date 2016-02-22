@@ -21,79 +21,78 @@ import java.util.Arrays;
 
 public class BucketState implements Serializable {
 
-    protected final long[] state;
+    private long lastRefillTimeNanos;
+    private BandwidthState[] bandwidthStates;
 
-    public BucketState(int sizeOfBandwidthsState) {
-        this.state = new long[sizeOfBandwidthsState + 1];
-    }
-
-    public BucketState(BucketState previousState) {
-        this.state = Arrays.copyOf(previousState.state, previousState.state.length);
-    }
-
-    public BucketState(long[] snapshot) {
-        this.state = snapshot;
-    }
-
-    public long[] createSnapshot() {
-        return Arrays.copyOf(state, state.length);
-    }
-
-    public long getValue(int offset) {
-        return state[offset + 1];
-    }
-
-    public void setValue(int offset, long value) {
-        state[offset + 1] = value;
+    private BucketState(long lastRefillTimeNanos, BandwidthState[] bandwidthStates) {
+        this.lastRefillTimeNanos = lastRefillTimeNanos;
+        this.bandwidthStates = bandwidthStates;
     }
 
     @Override
     public BucketState clone() {
-        return new BucketState(this);
+        BandwidthState[] bandwidthStatesClones = new BandwidthState[bandwidthStates.length];
+        for (int i = 0; i < bandwidthStates.length; i++) {
+            bandwidthStatesClones[i] = bandwidthStates[i].clone();
+        }
+        return new BucketState(lastRefillTimeNanos, bandwidthStatesClones);
     }
 
-    public void copyState(BucketState state) {
-        System.arraycopy(state.state, 0, this.state, 0, this.state.length);
+    public BandwidthState getBandwidthState(int index) {
+        return bandwidthStates[index];
     }
 
-    public void copyState(long[] state) {
-        System.arraycopy(state, 0, this.state, 0, this.state.length);
+    public long getLastRefillTimeNanos() {
+        return lastRefillTimeNanos;
+    }
+
+    public void copyStateFrom(BucketState sourceState) {
+        lastRefillTimeNanos = sourceState.lastRefillTimeNanos;
+        for (int i = 0; i < bandwidthStates.length; i++) {
+            bandwidthStates[i].copyStateFrom(sourceState.bandwidthStates[i]);
+        }
     }
 
     public static BucketState createInitialState(BucketConfiguration configuration) {
-        BucketState state = new BucketState(configuration.getStateSize());
-        long currentTime = configuration.getTimeMeter().currentTime();
-        for (Bandwidth bandwidth: configuration.getBandwidths()) {
-            bandwidth.setupInitialState(state);
+        Bandwidth[] bandwidths = configuration.getBandwidths();
+        BandwidthState[] bandwidthStates = new BandwidthState[bandwidths.length];
+        for(int i = 0; i < bandwidthStates.length; i++) {
+            bandwidthStates[i] = bandwidths[i].createInitialState();
         }
-        state.state[0] = currentTime;
-        return state;
+        long currentTimeNanos = configuration.getTimeMeter().currentTimeNanos();
+        return new BucketState(currentTimeNanos, bandwidthStates);
     }
 
     public long getAvailableTokens(Bandwidth[] bandwidths) {
         long availableByLimitation = Long.MAX_VALUE;
         long availableByGuarantee = 0;
-        for (Bandwidth bandwidth : bandwidths) {
+        for (int i = 0; i < bandwidthStates.length; i++) {
+            Bandwidth bandwidth = bandwidths[i];
+            BandwidthState bandwidthState = bandwidthStates[i];
             if (bandwidth.isLimited()) {
-                availableByLimitation = Math.min(availableByLimitation, bandwidth.getCurrentSize(this));
+                availableByLimitation = Math.min(availableByLimitation, bandwidthState.getCurrentSize());
             } else {
-                availableByGuarantee = bandwidth.getCurrentSize(this);
+                availableByGuarantee = bandwidthState.getCurrentSize();
             }
         }
         return Math.max(availableByLimitation, availableByGuarantee);
     }
 
     public void consume(Bandwidth[] bandwidths, long toConsume) {
-        for (Bandwidth bandwidth: bandwidths) {
-            bandwidth.consume(this, toConsume);
+        for (int i = 0; i < bandwidthStates.length; i++) {
+            Bandwidth bandwidth = bandwidths[i];
+            BandwidthState bandwidthState = bandwidthStates[i];
+            bandwidth.consume(bandwidthState, toConsume);
         }
     }
 
-    public long delayAfterWillBePossibleToConsume(Bandwidth[] bandwidths, long currentTime, long tokensToConsume) {
+    public long delayNanosAfterWillBePossibleToConsume(Bandwidth[] bandwidths, long currentTime, long tokensToConsume) {
         long delayAfterWillBePossibleToConsumeLimited = 0;
         long delayAfterWillBePossibleToConsumeGuaranteed = Long.MAX_VALUE;
-        for (Bandwidth bandwidth: bandwidths) {
-            long delay = bandwidth.delayAfterWillBePossibleToConsume(this, currentTime, tokensToConsume);
+        for (int i = 0; i < bandwidthStates.length; i++) {
+            Bandwidth bandwidth = bandwidths[i];
+            BandwidthState bandwidthState = bandwidthStates[i];
+            long delay = bandwidth.delayNanosAfterWillBePossibleToConsume(bandwidthState, currentTime, tokensToConsume);
             if (bandwidth.isGuaranteed()) {
                 if (delay == 0) {
                     return 0;
@@ -109,21 +108,24 @@ public class BucketState implements Serializable {
         return Math.min(delayAfterWillBePossibleToConsumeLimited, delayAfterWillBePossibleToConsumeGuaranteed);
     }
 
-    public void refill(Bandwidth[] bandwidths, long currentTime) {
-        long previousRefillTime = state[0];
-        if (previousRefillTime == currentTime) {
+    public void refill(Bandwidth[] bandwidths, long currentTimeNanos) {
+        if (lastRefillTimeNanos == currentTimeNanos) {
             return;
         }
-        for (Bandwidth bandwidth: bandwidths) {
-            bandwidth.refill(this, previousRefillTime, currentTime);
+        for (int i = 0; i < bandwidthStates.length; i++) {
+            Bandwidth bandwidth = bandwidths[i];
+            BandwidthState bandwidthState = bandwidthStates[i];
+            bandwidth.refill(bandwidthState, lastRefillTimeNanos, currentTimeNanos);
         }
-        state[0] = currentTime;
+        lastRefillTimeNanos = currentTimeNanos;
     }
 
     @Override
     public String toString() {
         return "BucketState{" +
-                "state=" + Arrays.toString(state) +
+                "lastRefillTimeNanos=" + lastRefillTimeNanos +
+                ", bandwidthStates=" + Arrays.toString(bandwidthStates) +
                 '}';
     }
+
 }

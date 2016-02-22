@@ -16,9 +16,9 @@
 
 package com.github.bucket4j.mock;
 
-import com.github.bucket4j.BandwidthAdjuster;
+import com.github.bucket4j.CapacityAdjuster;
 
-public class AdjusterMock implements BandwidthAdjuster {
+public class AdjusterMock implements CapacityAdjuster {
 
     private long capacity = 0;
 

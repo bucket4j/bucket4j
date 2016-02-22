@@ -30,39 +30,33 @@ import java.util.concurrent.locks.LockSupport;
 public interface TimeMeter extends Serializable {
 
     /**
-     * @return current time, which can be a milliseconds, nanoseconds, or something else in case of custom implementation.
+     * Returns current time in nanosecond precision, but not necessarily nanosecond resolution.
+     *
+     * @return current time in nanoseconds
      */
-    long currentTime();
+    long currentTimeNanos();
 
     /**
-     * Sleep required amount of time.
-     * @param units time to sleep
+     * Park current thread to required duration of nanoseconds.
+     *
+     * @param nanos time to park
+     *
      * @throws InterruptedException if current tread is interrupted.
      */
-    void sleep(long units) throws InterruptedException;
-
-    long toBandwidthPeriod(TimeUnit timeUnit, long period);
+    default void parkNanos(long nanos) throws InterruptedException {
+        LockSupport.parkNanos(nanos);
+        if (Thread.interrupted()) {
+            throw new InterruptedException();
+        }
+    }
 
     /**
      * The implementation of {@link TimeMeter} which works arround {@link java.lang.System#nanoTime}
      */
-    public static final TimeMeter SYSTEM_NANOTIME = new TimeMeter() {
+    TimeMeter SYSTEM_NANOTIME = new TimeMeter() {
         @Override
-        public long currentTime() {
+        public long currentTimeNanos() {
             return System.nanoTime();
-        }
-
-        @Override
-        public void sleep(long units) throws InterruptedException {
-            LockSupport.parkNanos(units);
-            if (Thread.interrupted()) {
-                throw new InterruptedException();
-            }
-        }
-
-        @Override
-        public long toBandwidthPeriod(TimeUnit timeUnit, long period) {
-            return timeUnit.toNanos(period);
         }
 
         @Override
@@ -74,30 +68,17 @@ public interface TimeMeter extends Serializable {
     /**
      * The implementation of {@link TimeMeter} which works around {@link java.lang.System#currentTimeMillis}
      */
-    public static final TimeMeter SYSTEM_MILLISECONDS = new TimeMeter() {
+    TimeMeter SYSTEM_MILLISECONDS = new TimeMeter() {
         @Override
-        public long currentTime() {
-            return System.currentTimeMillis();
-        }
-
-        @Override
-        public void sleep(long units) throws InterruptedException {
-            LockSupport.parkNanos(TimeUnit.MILLISECONDS.toNanos(units));
-            if (Thread.interrupted()) {
-                throw new InterruptedException();
-            }
-        }
-
-        @Override
-        public long toBandwidthPeriod(TimeUnit timeUnit, long period) {
-            return timeUnit.toMillis(period);
+        public long currentTimeNanos() {
+            long nowMillis = System.currentTimeMillis();
+            return TimeUnit.MILLISECONDS.toNanos(nowMillis);
         }
 
         @Override
         public String toString() {
             return "SYSTEM_MILLISECONDS";
         }
-
     };
 
 }

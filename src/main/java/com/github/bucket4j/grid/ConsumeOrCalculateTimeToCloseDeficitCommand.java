@@ -33,10 +33,10 @@ public class ConsumeOrCalculateTimeToCloseDeficitCommand implements GridCommand<
     public Long execute(GridBucketState gridState) {
         BucketConfiguration configuration = gridState.getBucketConfiguration();
         BucketState state = gridState.getBucketState();
-        long currentTime = configuration.getTimeMeter().currentTime();
+        long currentTimeNanos = configuration.getTimeMeter().currentTimeNanos();
         Bandwidth[] bandwidths = configuration.getBandwidths();
-        state.refill(bandwidths, currentTime);
-        long timeToCloseDeficit = state.delayAfterWillBePossibleToConsume(bandwidths, currentTime, tokensToConsume);
+        state.refill(bandwidths, currentTimeNanos);
+        long timeToCloseDeficit = state.delayNanosAfterWillBePossibleToConsume(bandwidths, currentTimeNanos, tokensToConsume);
         if (timeToCloseDeficit == 0) {
             state.consume(bandwidths, tokensToConsume);
             bucketStateModified = true;

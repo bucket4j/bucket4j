@@ -45,36 +45,35 @@ public class GridBucket extends AbstractBucket {
     protected boolean consumeOrAwaitImpl(long tokensToConsume, long waitIfBusyTimeLimit) throws InterruptedException {
         final boolean isWaitingLimited = waitIfBusyTimeLimit > 0;
         final ConsumeOrCalculateTimeToCloseDeficitCommand consumeCommand = new ConsumeOrCalculateTimeToCloseDeficitCommand(tokensToConsume);
-        final long methodStartTime = isWaitingLimited? configuration.getTimeMeter().currentTime(): 0;
+        final long methodStartTimeNanos = isWaitingLimited? configuration.getTimeMeter().currentTimeNanos() : 0;
 
         while (true) {
-            long timeToCloseDeficit = gridProxy.execute(consumeCommand);
-            if (timeToCloseDeficit == 0) {
+            long nanosToCloseDeficit = gridProxy.execute(consumeCommand);
+            if (nanosToCloseDeficit == 0) {
                 return true;
             }
-            if (timeToCloseDeficit == Long.MAX_VALUE) {
+            if (nanosToCloseDeficit == Long.MAX_VALUE) {
                 return false;
             }
 
             if (isWaitingLimited) {
-                long currentTime = configuration.getTimeMeter().currentTime();
-                long methodDuration = currentTime - methodStartTime;
+                long currentTimeNanos = configuration.getTimeMeter().currentTimeNanos();
+                long methodDuration = currentTimeNanos - methodStartTimeNanos;
                 if (methodDuration >= waitIfBusyTimeLimit) {
                     return false;
                 }
                 long sleepingTimeLimit = waitIfBusyTimeLimit - methodDuration;
-                if (timeToCloseDeficit >= sleepingTimeLimit) {
+                if (nanosToCloseDeficit >= sleepingTimeLimit) {
                     return false;
                 }
             }
-            configuration.getTimeMeter().sleep(timeToCloseDeficit);
+            configuration.getTimeMeter().parkNanos(nanosToCloseDeficit);
         }
     }
 
     @Override
     public BucketState createSnapshot() {
-        long[] snapshotBytes = gridProxy.execute(new CreateSnapshotCommand());
-        return new BucketState(snapshotBytes);
+        return gridProxy.execute(new CreateSnapshotCommand());
     }
 
 }

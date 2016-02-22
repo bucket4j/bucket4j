@@ -16,43 +16,46 @@
 
 package com.github.bucket4j;
 
+import java.time.Duration;
+
 import static com.github.bucket4j.BucketExceptions.*;
 
 public class BandwidthDefinition {
 
     final long capacity;
-    final BandwidthAdjuster adjuster;
+    final CapacityAdjuster adjuster;
     final long initialCapacity;
-    final long period;
+    final long periodNanos;
     final boolean guaranteed;
     final boolean limited;
 
-    public BandwidthDefinition(long capacity, long initialCapacity, long period, boolean guaranteed) {
+    public BandwidthDefinition(long capacity, long initialCapacity, Duration period, boolean guaranteed) {
         this(validateCapacity(capacity), null, initialCapacity, period, guaranteed);
     }
 
-    public BandwidthDefinition(BandwidthAdjuster adjuster, long initialCapacity, long period, boolean guaranteed) {
+    public BandwidthDefinition(CapacityAdjuster adjuster, long initialCapacity, Duration period, boolean guaranteed) {
         this(0l, validateAdjuster(adjuster), initialCapacity, period, guaranteed);
     }
 
-    private BandwidthDefinition(long capacity, BandwidthAdjuster adjuster, long initialCapacity, long period, boolean guaranteed) {
+    private BandwidthDefinition(long capacity, CapacityAdjuster adjuster, long initialCapacity, Duration period, boolean guaranteed) {
+        long periodNanos = period.toNanos();
         if (initialCapacity < 0) {
             throw nonPositiveInitialCapacity(initialCapacity);
         }
-        if (period <= 0) {
-            throw nonPositivePeriod(period);
+        if (periodNanos <= 0) {
+            throw nonPositivePeriod(periodNanos);
         }
         this.capacity = capacity;
         this.adjuster = adjuster;
         this.initialCapacity = initialCapacity;
-        this.period = period;
+        this.periodNanos = periodNanos;
         this.guaranteed = guaranteed;
         this.limited = !guaranteed;
     }
 
-    public Bandwidth createBandwidth(int offset) {
-        BandwidthAdjuster bandwidthAdjuster = adjuster != null ? adjuster : new BandwidthAdjuster.ImmutableCapacity(capacity);
-        return new Bandwidth(offset, bandwidthAdjuster, initialCapacity, period, guaranteed);
+    public Bandwidth createBandwidth() {
+        CapacityAdjuster capacityAdjuster = adjuster != null ? adjuster : new CapacityAdjuster.ImmutableCapacity(capacity);
+        return new Bandwidth(capacityAdjuster, initialCapacity, periodNanos, guaranteed);
     }
 
     boolean hasDynamicCapacity() {
@@ -60,11 +63,11 @@ public class BandwidthDefinition {
     }
 
     public double getTimeUnitsPerToken() {
-        return (double) period / (double) capacity;
+        return (double) periodNanos / (double) capacity;
     }
 
     public double getTokensPerTimeUnit() {
-        return (double) capacity / (double) period;
+        return (double) capacity / (double) periodNanos;
     }
 
     private static long validateCapacity(long capacity) {
@@ -74,7 +77,7 @@ public class BandwidthDefinition {
         return capacity;
     }
 
-    private static BandwidthAdjuster validateAdjuster(BandwidthAdjuster adjuster) {
+    private static CapacityAdjuster validateAdjuster(CapacityAdjuster adjuster) {
         if (adjuster == null) {
             throw nullBandwidthAdjuster();
         }
@@ -87,9 +90,10 @@ public class BandwidthDefinition {
                 "capacity=" + capacity +
                 ", adjuster=" + adjuster +
                 ", initialCapacity=" + initialCapacity +
-                ", period=" + period +
+                ", periodNanos=" + periodNanos +
                 ", guaranteed=" + guaranteed +
                 ", limited=" + limited +
                 '}';
     }
+
 }

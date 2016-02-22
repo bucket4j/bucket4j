@@ -20,20 +20,15 @@ import java.io.Serializable;
 
 public class Bandwidth implements Serializable {
 
-    public static final int CURRENT_SIZE_OFFSET = 0;
-    public static final int ROUNDING_ERROR_OFFSET = CURRENT_SIZE_OFFSET + 1;
-
     private final long initialCapacity;
-    private final long period;
+    private final long periodNanos;
     private final boolean guaranteed;
-    private final BandwidthAdjuster adjuster;
-    private final int stateOffset;
+    private final CapacityAdjuster adjuster;
 
-    public Bandwidth(int stateOffset, BandwidthAdjuster adjuster, long initialCapacity, long period, boolean guaranteed) {
-        this.stateOffset = stateOffset;
+    public Bandwidth(CapacityAdjuster adjuster, long initialCapacity, long periodNanos, boolean guaranteed) {
         this.adjuster = adjuster;
         this.initialCapacity = initialCapacity;
-        this.period = period;
+        this.periodNanos = periodNanos;
         this.guaranteed = guaranteed;
     }
 
@@ -45,106 +40,85 @@ public class Bandwidth implements Serializable {
         return !guaranteed;
     }
 
-    public int sizeOfState() {
-        return 2;
+    public BandwidthState createInitialState() {
+        return BandwidthState.initialState(initialCapacity);
     }
 
-    public void setupInitialState(BucketState state) {
-        setCurrentSize(state, initialCapacity);
-        setRoundingError(state, 0);
-    }
-
-    public void consume(BucketState state, long toConsume) {
-        long currentSize = getCurrentSize(state);
-        long newSize = currentSize - toConsume;
+    public void consume(BandwidthState state, long tokens) {
+        long currentSize = state.getCurrentSize();
+        long newSize = currentSize - tokens;
         if (newSize < 0) {
-            setCurrentSize(state, 0);
-            setRoundingError(state, 0);
+            state.setCurrentSize(0);
+            state.setRoundingError(0);
         } else {
-            setCurrentSize(state, newSize);
+            state.setCurrentSize(newSize);
         }
     }
 
-    public void refill(BucketState state, long previousRefillTime, long currentTime) {
-        final long maxCapacity = adjuster.getCapacity(currentTime);
-        long currentSize = getCurrentSize(state);
+    public void refill(BandwidthState state, long previousRefillNanos, long currentTimeNanos) {
+        final long maxCapacity = adjuster.getCapacity(currentTimeNanos);
+        long currentSize = state.getCurrentSize();
 
         if (currentSize >= maxCapacity) {
-            setCurrentSize(state, maxCapacity);
-            setRoundingError(state, 0);
+            state.setCurrentSize(maxCapacity);
+            state.setRoundingError(0);
             return;
         }
 
-        long durationSinceLastRefill = currentTime - previousRefillTime;
+        long durationSinceLastRefillNanos = currentTimeNanos - previousRefillNanos;
 
-        if (durationSinceLastRefill > period) {
-            setCurrentSize(state, maxCapacity);
-            setRoundingError(state, 0);
+        if (durationSinceLastRefillNanos > periodNanos) {
+            state.setCurrentSize(maxCapacity);
+            state.setRoundingError(0);
             return;
         }
 
-        long roundingError = getRoundingError(state);
-        long divided = maxCapacity * durationSinceLastRefill + roundingError;
-        long calculatedRefill = divided / period;
+        long roundingError = state.getRoundingError();
+        long divided = maxCapacity * durationSinceLastRefillNanos + roundingError;
+        long calculatedRefill = divided / periodNanos;
         if (calculatedRefill == 0) {
-            roundingError = divided % period;
-            setRoundingError(state, roundingError);
+            roundingError = divided % periodNanos;
+            state.setRoundingError(roundingError);
             return;
         }
 
         long newSize = currentSize + calculatedRefill;
         if (newSize >= maxCapacity) {
-            setCurrentSize(state, maxCapacity);
-            setRoundingError(state, 0);
+            state.setCurrentSize(maxCapacity);
+            state.setRoundingError(0);
             return;
         }
 
-        roundingError = divided % period;
-        setCurrentSize(state, newSize);
-        setRoundingError(state, roundingError);
+        roundingError = divided % periodNanos;
+        state.setCurrentSize(newSize);
+        state.setRoundingError(roundingError);
     }
 
-    public long delayAfterWillBePossibleToConsume(BucketState state, long currentTime, long numTokens) {
-        long currentSize = getCurrentSize(state);
-        if (numTokens <= currentSize) {
+    public long delayNanosAfterWillBePossibleToConsume(BandwidthState state, long currentTimeNanos, long tokens) {
+        long currentSize = state.getCurrentSize();
+        if (tokens <= currentSize) {
             return 0;
         }
-        final long maxCapacity = getMaxCapacity(currentTime);
-        if (numTokens > maxCapacity) {
+        final long maxCapacity = getMaxCapacity(currentTimeNanos);
+        if (tokens > maxCapacity) {
             return Long.MAX_VALUE;
         }
-        long deficit = numTokens - currentSize;
-        return period * deficit / maxCapacity;
-    }
-
-    public long getCurrentSize(BucketState state) {
-        return state.getValue(stateOffset + CURRENT_SIZE_OFFSET);
+        long deficit = tokens - currentSize;
+        return periodNanos * deficit / maxCapacity;
     }
 
     public long getMaxCapacity(long currentTime) {
         return adjuster.getCapacity(currentTime);
     }
 
-    private void setCurrentSize(BucketState state, long currentSize) {
-        state.setValue(stateOffset + CURRENT_SIZE_OFFSET, currentSize);
-    }
-
-    private long getRoundingError(BucketState state) {
-        return state.getValue(stateOffset + ROUNDING_ERROR_OFFSET);
-    }
-
-    private void setRoundingError(BucketState state, long roundingError) {
-        state.setValue(stateOffset + ROUNDING_ERROR_OFFSET, roundingError);
-    }
-
     @Override
     public String toString() {
         return "Bandwidth{" +
                 "initialCapacity=" + initialCapacity +
-                ", period=" + period +
+                ", periodNanos=" + periodNanos +
                 ", guaranteed=" + guaranteed +
                 ", adjuster=" + adjuster +
-                ", stateOffset=" + stateOffset +
                 '}';
     }
+
 }

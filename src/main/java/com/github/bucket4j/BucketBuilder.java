@@ -26,6 +26,7 @@ import com.hazelcast.core.IMap;
 import org.apache.ignite.IgniteCache;
 
 import java.io.Serializable;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -42,6 +43,35 @@ public final class BucketBuilder {
 
     private TimeMeter timeMeter = TimeMeter.SYSTEM_NANOTIME;
     private List<BandwidthDefinition> bandwidths = new ArrayList<>(1);
+
+    /**
+     * Creates instance of {@link com.github.bucket4j.BucketBuilder} which will create buckets with {@link com.github.bucket4j.TimeMeter#SYSTEM_NANOTIME} as time meter.
+     *
+     * @return
+     */
+    public static BucketBuilder forNanosecondPrecision() {
+        return new BucketBuilder(TimeMeter.SYSTEM_NANOTIME);
+    }
+
+    /**
+     * Creates instance of {@link com.github.bucket4j.BucketBuilder} which will create buckets with {@link com.github.bucket4j.TimeMeter#SYSTEM_MILLISECONDS} as time meter.
+     *
+     * @return
+     */
+    public static BucketBuilder forMillisecondPrecision() {
+        return new BucketBuilder(TimeMeter.SYSTEM_MILLISECONDS);
+    }
+
+    /**
+     * Creates instance of {@link com.github.bucket4j.BucketBuilder} which will create buckets with {@code customTimeMeter} as time meter.
+     *
+     * @param customTimeMeter object which will measure time.
+     *
+     * @return
+     */
+    public static BucketBuilder forCustomTimePrecision(TimeMeter customTimeMeter) {
+        return new BucketBuilder(customTimeMeter);
+    }
 
     /**
      * Creates a builder for buckets
@@ -131,8 +161,8 @@ public final class BucketBuilder {
      * @param period Period of bandwidth.
      *
      */
-    public BucketBuilder withGuaranteedBandwidth(long maxCapacity, TimeUnit timeUnit, long period) {
-        return withGuaranteedBandwidth(maxCapacity, timeUnit, period, maxCapacity);
+    public BucketBuilder withGuaranteedBandwidth(long maxCapacity, Duration period) {
+        return withGuaranteedBandwidth(maxCapacity, maxCapacity, period);
     }
 
     /**
@@ -156,13 +186,12 @@ public final class BucketBuilder {
      *
      * @param maxCapacity the maximum capacity of bandwidth
      * @param timeUnit Unit for period.
-     * @param period Period of bandwidth.
      * @param initialCapacity initial capacity of bandwidth.
+     * @param period Period of bandwidth.
      *
      */
-    public BucketBuilder withGuaranteedBandwidth(long maxCapacity, TimeUnit timeUnit, long period, long initialCapacity) {
-        final long bandwidthPeriod = timeMeter.toBandwidthPeriod(timeUnit, period);
-        final BandwidthDefinition bandwidth = new BandwidthDefinition(maxCapacity, initialCapacity, bandwidthPeriod, true);
+    public BucketBuilder withGuaranteedBandwidth(long maxCapacity, long initialCapacity, Duration period) {
+        final BandwidthDefinition bandwidth = new BandwidthDefinition(maxCapacity, initialCapacity, period, true);
         bandwidths.add(bandwidth);
         return this;
     }
@@ -181,15 +210,13 @@ public final class BucketBuilder {
      * which disallow to have greater rate of guaranteed than rate of limited bandwidth,
      * because rate is dynamic and depends from <code>bandwidthAdjuster</code>.
      *
-     * @param bandwidthAdjuster provider of bandwidth capacity
-     * @param timeUnit Unit for period.
-     * @param period Period of bandwidth.
+     * @param capacityAdjuster provider of bandwidth capacity
      * @param initialCapacity initial capacity of bandwidth.
+     * @param period Period of bandwidth.
      *
      */
-    public BucketBuilder withGuaranteedBandwidth(BandwidthAdjuster bandwidthAdjuster, TimeUnit timeUnit, long period, long initialCapacity) {
-        final long bandwidthPeriod = timeMeter.toBandwidthPeriod(timeUnit, period);
-        final BandwidthDefinition bandwidth = new BandwidthDefinition(bandwidthAdjuster, initialCapacity, bandwidthPeriod, true);
+    public BucketBuilder withGuaranteedBandwidth(CapacityAdjuster capacityAdjuster, long initialCapacity, Duration period) {
+        final BandwidthDefinition bandwidth = new BandwidthDefinition(capacityAdjuster, initialCapacity, period, true);
         bandwidths.add(bandwidth);
         return this;
     }
@@ -200,7 +227,7 @@ public final class BucketBuilder {
      * You can specify as many limited bandwidth as needed, but with following limitation: each limited bandwidth should has unique period,
      * and when period of bandwidth <tt>X</tt> is greater than bandwidth <tt>Y</tt>,
      * then capacity of bandwidth <tt>X</tt> should be greater capacity of bandwidth <tt>Y</tt>,
-     * except cases when capacity of bandwidth <tt>X</tt> or <tt>Y</tt> is dynamic(provided by {@link com.github.bucket4j.BandwidthAdjuster}).
+     * except cases when capacity of bandwidth <tt>X</tt> or <tt>Y</tt> is dynamic(provided by {@link CapacityAdjuster}).
      * <p>
      * <pre>
      * {@code
@@ -214,8 +241,8 @@ public final class BucketBuilder {
      * @param period Period of bandwidth.
      *
      */
-    public BucketBuilder withLimitedBandwidth(long maxCapacity, TimeUnit timeUnit, long period) {
-        return withLimitedBandwidth(maxCapacity, timeUnit, period, maxCapacity);
+    public BucketBuilder withLimitedBandwidth(long maxCapacity, Duration period) {
+        return withLimitedBandwidth(maxCapacity, maxCapacity, period);
     }
 
     /**
@@ -224,7 +251,7 @@ public final class BucketBuilder {
      * You can specify as many limited bandwidth as needed, but with following limitation: each limited bandwidth should has unique period,
      * and when period of bandwidth <tt>X</tt> is greater than bandwidth <tt>Y</tt>,
      * then capacity of bandwidth <tt>X</tt> should be greater capacity of bandwidth <tt>Y</tt>,
-     * except cases when capacity of bandwidth <tt>X</tt> or <tt>Y</tt> is dynamic(provided by {@link com.github.bucket4j.BandwidthAdjuster}).
+     * except cases when capacity of bandwidth <tt>X</tt> or <tt>Y</tt> is dynamic(provided by {@link CapacityAdjuster}).
      * <p>
      * <pre>
      * {@code
@@ -234,14 +261,12 @@ public final class BucketBuilder {
      * </pre>
      *
      * @param maxCapacity the maximum capacity of bandwidth
-     * @param timeUnit Unit for period.
-     * @param period Period of bandwidth.
      * @param initialCapacity initial capacity
+     * @param period Period of bandwidth.
      *
      */
-    public BucketBuilder withLimitedBandwidth(long maxCapacity, TimeUnit timeUnit, long period, long initialCapacity) {
-        final long bandwidthPeriod = timeMeter.toBandwidthPeriod(timeUnit, period);
-        final BandwidthDefinition bandwidth = new BandwidthDefinition(maxCapacity, initialCapacity, bandwidthPeriod, false);
+    public BucketBuilder withLimitedBandwidth(long maxCapacity, long initialCapacity, Duration period) {
+        final BandwidthDefinition bandwidth = new BandwidthDefinition(maxCapacity, initialCapacity, period, false);
         bandwidths.add(bandwidth);
         return this;
     }
@@ -252,17 +277,15 @@ public final class BucketBuilder {
      * You can specify as many limited bandwidth as needed, but with following limitation: each limited bandwidth should has unique period,
      * and when period of bandwidth <tt>X</tt> is greater than bandwidth <tt>Y</tt>,
      * then capacity of bandwidth <tt>X</tt> should be greater capacity of bandwidth <tt>Y</tt>,
-     * except cases when capacity of bandwidth <tt>X</tt> or <tt>Y</tt> is dynamic(provided by {@link com.github.bucket4j.BandwidthAdjuster}).
+     * except cases when capacity of bandwidth <tt>X</tt> or <tt>Y</tt> is dynamic(provided by {@link CapacityAdjuster}).
      *
-     * @param bandwidthAdjuster provider of bandwidth capacity
-     * @param timeUnit Unit for period.
-     * @param period Period of bandwidth.
+     * @param capacityAdjuster provider of bandwidth capacity
      * @param initialCapacity initial capacity
+     * @param period Period of bandwidth.
      *
      */
-    public BucketBuilder withLimitedBandwidth(BandwidthAdjuster bandwidthAdjuster, TimeUnit timeUnit, long period, long initialCapacity) {
-        final long bandwidthPeriod = timeMeter.toBandwidthPeriod(timeUnit, period);
-        final BandwidthDefinition bandwidth = new BandwidthDefinition(bandwidthAdjuster, initialCapacity, bandwidthPeriod, false);
+    public BucketBuilder withLimitedBandwidth(CapacityAdjuster capacityAdjuster, long initialCapacity, Duration period) {
+        final BandwidthDefinition bandwidth = new BandwidthDefinition(capacityAdjuster, initialCapacity, period, false);
         bandwidths.add(bandwidth);
         return this;
     }

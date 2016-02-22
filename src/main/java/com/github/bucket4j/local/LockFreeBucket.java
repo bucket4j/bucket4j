@@ -40,10 +40,10 @@ public class LockFreeBucket extends AbstractBucket {
         BucketState previousState = stateReference.get();
         BucketState newState = previousState.clone();
         Bandwidth[] bandwidths = configuration.getBandwidths();
-        long currentTime = configuration.getTimeMeter().currentTime();
+        long currentTimeNanos = configuration.getTimeMeter().currentTimeNanos();
 
         while (true) {
-            newState.refill(bandwidths, currentTime);
+            newState.refill(bandwidths, currentTimeNanos);
             long availableToConsume = newState.getAvailableTokens(bandwidths);
             long toConsume = Math.min(limit, availableToConsume);
             if (toConsume == 0) {
@@ -54,7 +54,7 @@ public class LockFreeBucket extends AbstractBucket {
                 return toConsume;
             } else {
                 previousState = stateReference.get();
-                newState.copyState(previousState);
+                newState.copyStateFrom(previousState);
             }
         }
     }
@@ -64,10 +64,10 @@ public class LockFreeBucket extends AbstractBucket {
         BucketState previousState = stateReference.get();
         BucketState newState = previousState.clone();
         Bandwidth[] bandwidths = configuration.getBandwidths();
-        long currentTime = configuration.getTimeMeter().currentTime();
+        long currentTimeNanos = configuration.getTimeMeter().currentTimeNanos();
 
         while (true) {
-            newState.refill(bandwidths, currentTime);
+            newState.refill(bandwidths, currentTimeNanos);
             long availableToConsume = newState.getAvailableTokens(bandwidths);
             if (tokensToConsume > availableToConsume) {
                 return false;
@@ -77,7 +77,7 @@ public class LockFreeBucket extends AbstractBucket {
                 return true;
             } else {
                 previousState = stateReference.get();
-                newState.copyState(previousState);
+                newState.copyStateFrom(previousState);
             }
         }
     }
@@ -87,8 +87,8 @@ public class LockFreeBucket extends AbstractBucket {
         Bandwidth[] bandwidths = configuration.getBandwidths();
         boolean isWaitingLimited = waitIfBusyTimeLimit > 0;
 
-        final long methodStartTime = configuration.getTimeMeter().currentTime();
-        long currentTime = methodStartTime;
+        final long methodStartTimeNanos = configuration.getTimeMeter().currentTimeNanos();
+        long currentTimeNanos = methodStartTimeNanos;
         long methodDuration = 0;
         boolean isFirstCycle = true;
 
@@ -99,21 +99,21 @@ public class LockFreeBucket extends AbstractBucket {
             if (isFirstCycle) {
                 isFirstCycle = false;
             } else {
-                currentTime = configuration.getTimeMeter().currentTime();
-                methodDuration = currentTime - methodStartTime;
+                currentTimeNanos = configuration.getTimeMeter().currentTimeNanos();
+                methodDuration = currentTimeNanos - methodStartTimeNanos;
                 if (isWaitingLimited && methodDuration >= waitIfBusyTimeLimit) {
                     return false;
                 }
                 previousState = stateReference.get();
-                newState.copyState(previousState);
+                newState.copyStateFrom(previousState);
             }
 
-            newState.refill(bandwidths, currentTime);
-            long timeToCloseDeficit = newState.delayAfterWillBePossibleToConsume(bandwidths, currentTime, tokensToConsume);
-            if (timeToCloseDeficit == Long.MAX_VALUE) {
+            newState.refill(bandwidths, currentTimeNanos);
+            long nanosToCloseDeficit = newState.delayNanosAfterWillBePossibleToConsume(bandwidths, currentTimeNanos, tokensToConsume);
+            if (nanosToCloseDeficit == Long.MAX_VALUE) {
                 return false;
             }
-            if (timeToCloseDeficit == 0) {
+            if (nanosToCloseDeficit == 0) {
                 newState.consume(bandwidths, tokensToConsume);
                 if (stateReference.compareAndSet(previousState, newState)) {
                     return true;
@@ -124,11 +124,11 @@ public class LockFreeBucket extends AbstractBucket {
 
             if (isWaitingLimited) {
                 long sleepingTimeLimit = waitIfBusyTimeLimit - methodDuration;
-                if (timeToCloseDeficit >= sleepingTimeLimit) {
+                if (nanosToCloseDeficit >= sleepingTimeLimit) {
                     return false;
                 }
             }
-            configuration.getTimeMeter().sleep(timeToCloseDeficit);
+            configuration.getTimeMeter().parkNanos(nanosToCloseDeficit);
         }
     }
 
@@ -144,4 +144,5 @@ public class LockFreeBucket extends AbstractBucket {
                 ", configuration=" + configuration +
                 '}';
     }
+
 }

@@ -33,9 +33,9 @@ public class TryConsumeCommand implements GridCommand<Boolean> {
     public Boolean execute(GridBucketState gridState) {
         BucketConfiguration configuration = gridState.getBucketConfiguration();
         BucketState state = gridState.getBucketState();
-        long currentTime = configuration.getTimeMeter().currentTime();
+        long currentTimeNanos = configuration.getTimeMeter().currentTimeNanos();
         Bandwidth[] bandwidths = configuration.getBandwidths();
-        state.refill(bandwidths, currentTime);
+        state.refill(bandwidths, currentTimeNanos);
         long availableToConsume = state.getAvailableTokens(bandwidths);
         if (tokensToConsume <= availableToConsume) {
             state.consume(bandwidths, tokensToConsume);

@@ -22,9 +22,8 @@ import spock.lang.Specification
 import spock.lang.Timeout
 import spock.lang.Unroll
 
+import java.time.Duration
 import java.util.concurrent.TimeUnit
-
-import static java.util.concurrent.TimeUnit.MINUTES
 
 class BucketSpecification extends Specification {
 
@@ -37,8 +36,8 @@ class BucketSpecification extends Specification {
             }
         where:
             n | requiredResult |  builder
-            1 |     false      |  Buckets.withCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(10, MINUTES, 100, 0)
-            2 |      true      |  Buckets.withCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(10, MINUTES, 100, 1)
+            1 |     false      |  BucketBuilder.forCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(10, 0, Duration.ofMinutes(100))
+            2 |      true      |  BucketBuilder.forCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(10, 1, Duration.ofMinutes(100))
     }
 
     @Unroll
@@ -50,8 +49,8 @@ class BucketSpecification extends Specification {
             }
         where:
             n | requiredResult | toConsume | builder
-            1 |     false      |     1     | Buckets.withCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(10, MINUTES, 100, 0)
-            2 |      true      |     1     | Buckets.withCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(10, MINUTES, 100, 1)
+            1 |     false      |     1     | BucketBuilder.forCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(10, 0, Duration.ofMinutes(100))
+            2 |      true      |     1     | BucketBuilder.forCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(10, 1, Duration.ofMinutes(100))
     }
 
     @Unroll
@@ -63,8 +62,8 @@ class BucketSpecification extends Specification {
             }
         where:
             n | requiredResult | builder
-            1 |        0       | Buckets.withCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(10, MINUTES, 100, 0)
-            2 |        1       | Buckets.withCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(10, MINUTES, 100, 1)
+            1 |        0       | BucketBuilder.forCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(10, 0, Duration.ofMinutes(100))
+            2 |        1       | BucketBuilder.forCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(10, 1, Duration.ofMinutes(100))
     }
 
     @Unroll
@@ -76,9 +75,9 @@ class BucketSpecification extends Specification {
             }
         where:
             n | requiredResult |   limit   | builder
-            1 |       4        |     5     | Buckets.withCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(10, MINUTES, 100, 4)
-            2 |       5        |     5     | Buckets.withCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(10, MINUTES, 100, 5)
-            3 |       5        |     5     | Buckets.withCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(10, MINUTES, 100, 6)
+            1 |       4        |     5     | BucketBuilder.forCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(10, 4, Duration.ofMinutes(100))
+            2 |       5        |     5     | BucketBuilder.forCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(10, 5, Duration.ofMinutes(100))
+            3 |       5        |     5     | BucketBuilder.forCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(10, 6, Duration.ofMinutes(100))
     }
 
     @Timeout(value = 2, unit = TimeUnit.SECONDS)
@@ -95,8 +94,8 @@ class BucketSpecification extends Specification {
             }
         where:
             n | requiredSleep |  builder
-            1 |      10       |  Buckets.withCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(10, MINUTES, 100, 0)
-            2 |       0       |  Buckets.withCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(10, MINUTES, 100, 1)
+            1 |      10       |  BucketBuilder.forCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(10, 0, Duration.ofNanos(100))
+            2 |       0       |  BucketBuilder.forCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(10, 1, Duration.ofNanos(100))
     }
 
     @Timeout(value = 2, unit = TimeUnit.SECONDS)
@@ -113,9 +112,9 @@ class BucketSpecification extends Specification {
             }
         where:
             n | requiredSleep | toConsume | builder
-            1 |      10       |     1     | Buckets.withCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(10, MINUTES, 100, 0)
-            2 |       0       |     1     | Buckets.withCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(10, MINUTES, 100, 1)
-            3 |       0       |  1000     | Buckets.withCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(10, MINUTES, 100, 1)
+            1 |      10       |     1     | BucketBuilder.forCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(10, 0, Duration.ofNanos(100))
+            2 |       0       |     1     | BucketBuilder.forCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(10, 1, Duration.ofNanos(100))
+            3 |       0       |  1000     | BucketBuilder.forCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(10, 1, Duration.ofNanos(100))
     }
 
     @Timeout(value = 2, unit = TimeUnit.SECONDS)
@@ -132,8 +131,8 @@ class BucketSpecification extends Specification {
             }
         where:
             n | requiredSleep | requiredResult | sleepLimit | builder
-            1 |      10       |     true       |     11     | Buckets.withCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(10, MINUTES, 100, 0)
-            2 |       0       |     true       |     11     | Buckets.withCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(10, MINUTES, 100, 1)
+            1 |      10       |     true       |     11     | BucketBuilder.forCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(10, 0, Duration.ofNanos(100))
+            2 |       0       |     true       |     11     | BucketBuilder.forCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(10, 1, Duration.ofNanos(100))
     }
 
     @Timeout(value = 2, unit = TimeUnit.SECONDS)
@@ -151,11 +150,11 @@ class BucketSpecification extends Specification {
             }
         where:
             n | requiredSleep | requiredResult | toConsume | sleepLimit | timeIncrementAfterEachSleep | builder
-            1 |      10       |     true       |     1     |     11     |             0               | Buckets.withCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(10, MINUTES, 100, 0)
-            2 |      10       |     false      |     1     |     11     |            500               | Buckets.withCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(10, MINUTES, 100, 0)
-            3 |       0       |     true       |     1     |     11     |             0               | Buckets.withCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(10, MINUTES, 100, 1)
-            4 |       0       |     false      |   1000    |     11     |             0               | Buckets.withCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(10, MINUTES, 100, 1)
-            5 |       0       |     false      |     5     |     11     |             0               | Buckets.withCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(10, MINUTES, 100, 1)
+            1 |      10       |     true       |     1     |     11     |             0               | BucketBuilder.forCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(10, 0, Duration.ofNanos(100))
+            2 |      10       |     false      |     1     |     11     |            500              | BucketBuilder.forCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(10, 0, Duration.ofNanos(100))
+            3 |       0       |     true       |     1     |     11     |             0               | BucketBuilder.forCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(10, 1, Duration.ofNanos(100))
+            4 |       0       |     false      |   1000    |     11     |             0               | BucketBuilder.forCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(10, 1, Duration.ofNanos(100))
+            5 |       0       |     false      |     5     |     11     |             0               | BucketBuilder.forCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(10, 1, Duration.ofNanos(100))
     }
 
 }

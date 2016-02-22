@@ -18,12 +18,11 @@ package com.github.bucket4j.grid;
 
 import com.github.bucket4j.BucketState;
 
-public class CreateSnapshotCommand implements GridCommand<long[]> {
+public class CreateSnapshotCommand implements GridCommand<BucketState> {
 
     @Override
-    public long[] execute(GridBucketState gridState) {
-        BucketState state = gridState.getBucketState();
-        return state.createSnapshot();
+    public BucketState execute(GridBucketState gridState) {
+        return gridState.getBucketState().clone();
     }
 
     @Override

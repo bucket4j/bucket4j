@@ -23,6 +23,6 @@ import org.openjdk.jmh.annotations.State;
 @State(Scope.Benchmark)
 public class GuavaNanotimePrecisionLimiterState {
 
-    public final RateLimiter guavaRateLimiter = RateLimiter.create(Long.MAX_VALUE/2);
+    public final RateLimiter guavaRateLimiter = RateLimiter.create(Long.MAX_VALUE / 2);
 
 }

@@ -25,24 +25,24 @@ import java.util.concurrent.TimeUnit;
  */
 public class TimeMeterMock implements TimeMeter {
 
-    private long currentTime;
+    private long currentTimeNanos;
     private long sleeped = 0;
     private long incrementAfterEachSleep;
 
     public TimeMeterMock() {
-        currentTime = 0;
+        currentTimeNanos = 0;
     }
 
     public TimeMeterMock(long currentTime) {
-        this.currentTime = currentTime;
+        this.currentTimeNanos = currentTime;
     }
 
     public void addTime(long duration) {
-        currentTime += duration;
+        currentTimeNanos += duration;
     }
 
-    public void setCurrentTime(long currentTime) {
-        this.currentTime = currentTime;
+    public void setCurrentTimeNanos(long currentTimeNanos) {
+        this.currentTimeNanos = currentTimeNanos;
     }
 
     public void setIncrementAfterEachSleep(long incrementAfterEachSleep) {
@@ -54,26 +54,21 @@ public class TimeMeterMock implements TimeMeter {
     }
 
     @Override
-    public long currentTime() {
-        return currentTime;
+    public long currentTimeNanos() {
+        return currentTimeNanos;
     }
 
     @Override
-    public void sleep(long units) throws InterruptedException {
+    public void parkNanos(long nanos) throws InterruptedException {
         if (Thread.currentThread().isInterrupted()) {
             throw new InterruptedException();
         }
-        currentTime += units + incrementAfterEachSleep;
-        sleeped += units;
-    }
-
-    @Override
-    public long toBandwidthPeriod(TimeUnit timeUnit, long period) {
-        return period;
+        currentTimeNanos += nanos + incrementAfterEachSleep;
+        sleeped += nanos;
     }
 
     public void reset() {
-        currentTime = 0;
+        currentTimeNanos = 0;
         sleeped = 0;
     }
 

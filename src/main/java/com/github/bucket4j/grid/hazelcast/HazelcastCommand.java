@@ -16,6 +16,7 @@
 
 package com.github.bucket4j.grid.hazelcast;
 
+import com.github.bucket4j.BucketState;
 import com.github.bucket4j.grid.GridBucketState;
 import com.github.bucket4j.grid.GridCommand;
 import com.hazelcast.map.EntryBackupProcessor;
@@ -27,7 +28,7 @@ import java.util.Map;
 public class HazelcastCommand<T extends Serializable> implements EntryProcessor<Object, GridBucketState>, Serializable {
 
     private final GridCommand<T> targetCommand;
-    private long[] snapshotToBackup;
+    private BucketState snapshotToBackup;
 
     public HazelcastCommand(GridCommand<T> targetCommand) {
         this.targetCommand = targetCommand;
@@ -39,7 +40,7 @@ public class HazelcastCommand<T extends Serializable> implements EntryProcessor<
         T result = targetCommand.execute(gridState);
         if (targetCommand.isBucketStateModified()) {
             entry.setValue(gridState);
-            snapshotToBackup = gridState.getBucketState().createSnapshot();
+            snapshotToBackup = gridState.getBucketState().clone();
         }
         return result;
     }

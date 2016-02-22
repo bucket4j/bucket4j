@@ -16,6 +16,7 @@
 
 package com.github.bucket4j.grid.hazelcast;
 
+import com.github.bucket4j.BucketState;
 import com.github.bucket4j.grid.GridBucketState;
 import com.hazelcast.map.EntryBackupProcessor;
 
@@ -24,20 +25,19 @@ import java.util.Map;
 
 public class HazelcastReplicant implements EntryBackupProcessor, Serializable {
 
-    private long[] snapshotToBackup;
+    private BucketState snapshot;
 
-    public HazelcastReplicant(long[] snapshotToBackup) {
-        this.snapshotToBackup = snapshotToBackup;
+    public HazelcastReplicant(BucketState snapshot) {
+        this.snapshot = snapshot;
     }
 
-    public HazelcastReplicant() {
-        return;
-    }
+    public HazelcastReplicant() {}
 
     @Override
     public void processBackup(Map.Entry entry) {
         GridBucketState gridState = (GridBucketState) entry.getValue();
-        gridState.getBucketState().copyState(snapshotToBackup);
+        gridState.getBucketState().copyStateFrom(snapshot);
         entry.setValue(gridState);
     }
+
 }

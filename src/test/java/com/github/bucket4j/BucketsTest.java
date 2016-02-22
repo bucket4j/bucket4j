@@ -18,7 +18,7 @@ package com.github.bucket4j;
 
 import org.junit.Test;
 
-import java.util.concurrent.TimeUnit;
+import java.time.Duration;
 
 import static com.github.bucket4j.TimeMeter.SYSTEM_MILLISECONDS;
 import static com.github.bucket4j.TimeMeter.SYSTEM_NANOTIME;
@@ -28,23 +28,24 @@ public class BucketsTest {
 
     @Test
     public void testWithNanoTimePrecision() throws Exception {
-        assertEquals(SYSTEM_NANOTIME, Buckets.withNanoTimePrecision().getTimeMeter());
+        assertEquals(SYSTEM_NANOTIME, BucketBuilder.forNanosecondPrecision().getTimeMeter());
     }
 
     @Test
     public void testWithMillisTimePrecision() throws Exception {
-        assertEquals(SYSTEM_MILLISECONDS, Buckets.withMillisTimePrecision().getTimeMeter());
+        assertEquals(SYSTEM_MILLISECONDS, BucketBuilder.forMillisecondPrecision().getTimeMeter());
     }
 
     @Test
     public void testWithCustomTimePrecision() throws Exception {
-        assertEquals(SYSTEM_NANOTIME, Buckets.withCustomTimePrecision(SYSTEM_NANOTIME).getTimeMeter());
-        assertEquals(SYSTEM_MILLISECONDS, Buckets.withCustomTimePrecision(SYSTEM_MILLISECONDS).getTimeMeter());
+        assertEquals(SYSTEM_NANOTIME, BucketBuilder.forCustomTimePrecision(SYSTEM_NANOTIME).getTimeMeter());
+        assertEquals(SYSTEM_MILLISECONDS, BucketBuilder.forCustomTimePrecision(SYSTEM_MILLISECONDS).getTimeMeter());
     }
 
     @Test
     public void testToString() throws Exception {
-        Buckets.withMillisTimePrecision().withLimitedBandwidth(100, TimeUnit.MILLISECONDS, 10).build().toString();
+        Bucket bucket = BucketBuilder.forMillisecondPrecision().withLimitedBandwidth(100, Duration.ofMillis(10)).build();
+        System.out.println(bucket);
     }
 
 }

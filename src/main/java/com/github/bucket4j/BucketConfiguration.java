@@ -24,7 +24,6 @@ import static com.github.bucket4j.BucketExceptions.*;
 
 public final class BucketConfiguration implements Serializable {
 
-    private final int stateSize;
     private final Bandwidth[] bandwidths;
     private final TimeMeter timeMeter;
 
@@ -36,15 +35,12 @@ public final class BucketConfiguration implements Serializable {
 
         checkCompatibility(bandwidthDefinitions);
 
-        int offset = 0;
         this.bandwidths = new Bandwidth[bandwidthDefinitions.size()];
         for (int i = 0; i < bandwidthDefinitions.size() ; i++) {
             BandwidthDefinition definition = bandwidthDefinitions.get(i);
-            Bandwidth bandwidth = definition.createBandwidth(offset);
+            Bandwidth bandwidth = definition.createBandwidth();
             this.bandwidths[i] = bandwidth;
-            offset += bandwidth.sizeOfState();
         }
-        this.stateSize = offset;
     }
 
     public TimeMeter getTimeMeter() {
@@ -57,10 +53,6 @@ public final class BucketConfiguration implements Serializable {
 
     public Bandwidth getBandwidth(int index) {
         return bandwidths[index];
-    }
-
-    public int getStateSize() {
-        return stateSize;
     }
 
     public static void checkCompatibility(List<BandwidthDefinition> bandwidths) {
@@ -101,11 +93,11 @@ public final class BucketConfiguration implements Serializable {
                 if (second.hasDynamicCapacity()) {
                     continue;
                 }
-                if (first.period < second.period && first.capacity >= second.capacity) {
+                if (first.periodNanos < second.periodNanos && first.capacity >= second.capacity) {
                     throw hasOverlaps(first, second);
-                } else if (first.period == second.period) {
+                } else if (first.periodNanos == second.periodNanos) {
                     throw hasOverlaps(first, second);
-                } else if (first.period > second.period && first.capacity <= second.capacity) {
+                } else if (first.periodNanos > second.periodNanos && first.capacity <= second.capacity) {
                     throw hasOverlaps(first, second);
                 }
             }
@@ -134,9 +126,9 @@ public final class BucketConfiguration implements Serializable {
     @Override
     public String toString() {
         return "BucketConfiguration{" +
-                "stateSize=" + stateSize +
-                ", bandwidths=" + Arrays.toString(bandwidths) +
+                "bandwidths=" + Arrays.toString(bandwidths) +
                 ", timeMeter=" + timeMeter +
                 '}';
     }
+
 }

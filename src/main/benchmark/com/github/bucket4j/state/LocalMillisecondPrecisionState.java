@@ -16,18 +16,18 @@
 
 package com.github.bucket4j.state;
 
-import com.github.bucket4j.Buckets;
+import com.github.bucket4j.BucketBuilder;
 import com.github.bucket4j.Bucket;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.State;
 
-import java.util.concurrent.TimeUnit;
+import java.time.Duration;
 
 @State(Scope.Benchmark)
 public class LocalMillisecondPrecisionState {
 
-    public final Bucket bucket = Buckets
-            .withMillisTimePrecision().withLimitedBandwidth(Long.MAX_VALUE / 2, TimeUnit.MILLISECONDS, Long.MAX_VALUE / 2)
+    public final Bucket bucket = BucketBuilder
+            .forNanosecondPrecision().withLimitedBandwidth(Long.MAX_VALUE / 2, Duration.ofNanos(Long.MAX_VALUE / 2))
             .build();
 
 }
