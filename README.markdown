@@ -322,7 +322,7 @@ The plans to the future release 2.0.0
 -------------------------------------
 The version 2.0.0 will be released in august 2016 with following new features and enhancements:
 * Support for JDBC compliant databases having "SELECT FOR UPDATE" feature. [Design completed]
-* Pluggable statistics collection with several built-in implementations, including the most popular monitoring library [Metrcis Core](http://metrics.dropwizard.io/3.1.0/manual/core/). [In progress]
+* Pluggable statistics collection with several built-in implementations, including the most popular monitoring library [Metrics Core](http://metrics.dropwizard.io/3.1.0/manual/core/). [In progress]
 * Possibility to warmup from cold state (similar to Guava-RateLimiter). [Done]
 * Migration to Java 8. [Done]
 * Non blocking waiting for bucket refill via [CompletableFuture](https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/CompletableFuture.html). [In progress]
