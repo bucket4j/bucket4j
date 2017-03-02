@@ -38,7 +38,7 @@ At the moment following grids are supported:
 ### Get Bucket4j library
 
 #### By direct link
-[Download compiled jar, sources, javadocs](https://github.com/vladimir-bukhtoyarov/bucket4j/releases/tag/1.0.1)
+[Download compiled jar, sources, javadocs](https://github.com/vladimir-bukhtoyarov/bucket4j/releases/tag/1.1.0)
 
 #### You can build Bucket4j from sources
 
@@ -67,7 +67,7 @@ Then include Bucket4j as dependency to your `pom.xml`
 <dependency>
     <groupId>com.github</groupId>
     <artifactId>bucket4j</artifactId>
-    <version>1.0.1</version>
+    <version>1.1.0</version>
 </dependency>
 ```
 
@@ -299,15 +299,4 @@ License
 -------
 Copyright 2015 Vladimir Bukhtoyarov
 Licensed under the Apache Software License, Version 2.0: <http://www.apache.org/licenses/LICENSE-2.0>.
-
-The plans to the future release 2.0.0
--------------------------------------
-The version 2.0.0 will be released in January 2017 with following new features and enhancements:
-* Support for JDBC compliant databases having "SELECT FOR UPDATE" feature. [Design completed]
-* Pluggable statistics collection with several built-in implementations, including the most popular monitoring library [Metrics Core](http://metrics.dropwizard.io/3.1.0/manual/core/). [In progress]
-* Possibility to warmup from cold state (similar to Guava-RateLimiter). [Done]
-* Migration to Java 8. [Done]
-* Non blocking waiting for bucket refill via [CompletableFuture](https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/CompletableFuture.html). [In progress]
-* The API of Bucket and BucketBuilder will be a less error prone and more type safe. [Done]
-* Abstraction for the time measurement will be simplified. The default time precision will be changed from nanoseconds to milliseconds. [Done]
 
