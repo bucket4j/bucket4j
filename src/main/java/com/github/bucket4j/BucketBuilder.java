@@ -19,17 +19,14 @@ package com.github.bucket4j;
 import com.github.bucket4j.grid.GridBucket;
 import com.github.bucket4j.grid.GridBucketState;
 import com.github.bucket4j.grid.GridProxy;
-import com.github.bucket4j.grid.coherence.CoherenceProxy;
 import com.github.bucket4j.grid.hazelcast.HazelcastProxy;
 import com.github.bucket4j.grid.ignite.IgniteProxy;
 import com.github.bucket4j.local.LockFreeBucket;
 import com.hazelcast.core.IMap;
-import com.tangosol.net.NamedCache;
 import org.apache.ignite.IgniteCache;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -99,21 +96,6 @@ public final class BucketBuilder {
     }
 
     /**
-     * Constructs an instance of {@link com.github.bucket4j.grid.GridBucket} which responsible to limit rate inside Oracle Coherence cluster.
-     *
-     * @param cache distributed cache which will hold bucket inside cluster.
-     *             Feel free to store inside single {@code cache} as mush buckets as you need.
-     * @param key  for storing bucket inside {@code cache}.
-     *             If you plan to store multiple buckets inside single {@code cache}, then each bucket should has own unique {@code key}.
-     *
-     * @see com.github.bucket4j.grid.coherence.CoherenceProxy
-     */
-    public Bucket buildCoherence(NamedCache cache, Object key) {
-        BucketConfiguration configuration = createConfiguration();
-        return new GridBucket(configuration, new CoherenceProxy(cache, key));
-    }
-
-    /**
      * Build distributed bucket for custom grid which is not supported out of the box.
      *
      * @param gridProxy delegate for accessing to your grid.
@@ -121,7 +103,6 @@ public final class BucketBuilder {
      * @see com.github.bucket4j.grid.GridProxy
      */
     public Bucket buildCustomGrid(GridProxy gridProxy) {
-        HashMap map;
         BucketConfiguration configuration = createConfiguration();
         return new GridBucket(configuration, gridProxy);
     }
