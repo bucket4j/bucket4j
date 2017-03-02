@@ -44,7 +44,6 @@
         <url>http://github.com/vladimir-bukhtoyarov/bucket4j</url>
         <connection>scm:git:git@github.com:vladimir-bukhtoyarov/bucket4j</connection>
         <developerConnection>scm:git:git@github.com:vladimir-bukhtoyarov/bucket4j.git</developerConnection>
-        <tag>bucket4j-1.0.1</tag>
     </scm>
 
     <developers>
@@ -60,6 +59,13 @@
             </roles>
         </developer>
     </developers>
+
+    <distributionManagement>
+        <repository>
+            <id>vladimir-bukhtoyarov-bintray-repo</id>
+            <url>https://api.bintray.com/maven/vladimir-bukhtoyarov/maven/bucket4j/</url>
+        </repository>
+    </distributionManagement>
 
     <build>
         <plugins>
