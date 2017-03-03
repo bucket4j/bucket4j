@@ -59,7 +59,9 @@ public class IgniteTest {
 
     @After
     public void shutdown() {
-        ignite.close();
+        if (ignite != null) {
+            ignite.close();
+        }
     }
 
     @Test
