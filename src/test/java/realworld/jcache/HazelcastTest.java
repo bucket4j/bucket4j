@@ -39,6 +39,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class HazelcastTest {
 
@@ -90,7 +91,7 @@ public class HazelcastTest {
         assertTrue(bucket.tryConsumeSingleToken());
     }
 
-    @Test(expected = BucketNotFoundException.class)
+    @Test
     public void testThrowExceptionRecoveryStrategy() {
         // skip test on Travis CI
         if (System.getenv("TRAVIS") != null) {
@@ -107,7 +108,12 @@ public class HazelcastTest {
         // simulate crash
         cache.remove(KEY);
 
-        assertTrue(bucket.tryConsumeSingleToken());
+        try {
+            bucket.tryConsumeSingleToken();
+            fail();
+        } catch (BucketNotFoundException e) {
+            // ok
+        }
     }
 
     @Test
