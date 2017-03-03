@@ -17,24 +17,41 @@
 package com.github.bucket4j.mock;
 
 
+import com.github.bucket4j.grid.CommandResult;
 import com.github.bucket4j.grid.GridBucketState;
 import com.github.bucket4j.grid.GridCommand;
 import com.github.bucket4j.grid.GridProxy;
 
 import java.io.Serializable;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class GridProxyMock implements GridProxy {
 
     private GridBucketState state;
+    private Serializable key = ThreadLocalRandom.current().nextInt(100);
+    private CommandResult predefinedAnswer;
 
     @Override
-    public <T extends Serializable> T execute(GridCommand<T> command) {
-        return command.execute(state);
+    public CommandResult execute(GridCommand command) {
+        if (predefinedAnswer != null) {
+            return predefinedAnswer;
+        }
+        Serializable resultData = command.execute(state);
+        return CommandResult.success(resultData);
     }
 
     @Override
     public void setInitialState(GridBucketState initialState) {
         this.state = initialState;
+    }
+
+    @Override
+    public Serializable getBucketKey() {
+        return key;
+    }
+
+    public void setPredefinedAnswer(CommandResult predefinedAnswer) {
+        this.predefinedAnswer = predefinedAnswer;
     }
 
 }

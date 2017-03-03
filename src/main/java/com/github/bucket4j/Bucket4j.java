@@ -1,7 +1,7 @@
 package com.github.bucket4j;
 
 import com.github.bucket4j.grid.jcache.JCacheBucketBuilder;
-import com.github.bucket4j.grid.jcache.RecoveryStrategy;
+import com.github.bucket4j.grid.RecoveryStrategy;
 import com.github.bucket4j.local.LocalBucketBuilder;
 
 /**

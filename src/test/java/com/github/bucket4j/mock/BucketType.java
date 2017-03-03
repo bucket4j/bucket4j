@@ -20,6 +20,7 @@ import com.github.bucket4j.AbstractBucketBuilder;
 import com.github.bucket4j.Bucket;
 import com.github.bucket4j.BucketConfiguration;
 import com.github.bucket4j.grid.GridBucket;
+import com.github.bucket4j.grid.RecoveryStrategy;
 import com.github.bucket4j.local.LocalBucketBuilder;
 
 import java.util.ArrayList;
@@ -37,7 +38,7 @@ public enum BucketType {
         @Override
         public Bucket createBucket(AbstractBucketBuilder builder) {
             BucketConfiguration configuration = builder.createConfiguration();
-            return new GridBucket(configuration, new GridProxyMock());
+            return new GridBucket(configuration, new GridProxyMock(), RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION);
         }
     };
 

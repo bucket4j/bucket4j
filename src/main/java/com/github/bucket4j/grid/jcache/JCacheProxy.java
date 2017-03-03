@@ -16,6 +16,7 @@
 
 package com.github.bucket4j.grid.jcache;
 
+import com.github.bucket4j.grid.CommandResult;
 import com.github.bucket4j.grid.GridBucketState;
 import com.github.bucket4j.grid.GridCommand;
 import com.github.bucket4j.grid.GridProxy;
@@ -23,7 +24,7 @@ import com.github.bucket4j.grid.GridProxy;
 import javax.cache.Cache;
 import java.io.Serializable;
 
-public class JCacheProxy<K> implements GridProxy {
+public class JCacheProxy<K extends Serializable> implements GridProxy {
 
     private final Cache<K, GridBucketState> cache;
     private final K key;
@@ -34,13 +35,18 @@ public class JCacheProxy<K> implements GridProxy {
     }
 
     @Override
-    public <T extends Serializable> T execute(GridCommand<T> command) {
-        return cache.invoke(key, new JCacheCommand<K, T>(), command);
+    public CommandResult execute(GridCommand command) {
+        return (CommandResult) cache.invoke(key, new JCacheCommand(), command);
     }
 
     @Override
     public void setInitialState(GridBucketState initialState) {
         cache.putIfAbsent(key, initialState);
+    }
+
+    @Override
+    public Serializable getBucketKey() {
+        return key;
     }
 
 }

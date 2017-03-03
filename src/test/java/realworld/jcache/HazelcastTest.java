@@ -19,14 +19,17 @@ package realworld.jcache;
 import com.github.bucket4j.Bucket;
 import com.github.bucket4j.Bucket4j;
 import com.github.bucket4j.BucketState;
+import com.github.bucket4j.grid.BucketNotFoundException;
 import com.github.bucket4j.grid.GridBucketState;
-import com.github.bucket4j.grid.jcache.RecoveryStrategy;
+import com.github.bucket4j.grid.RecoveryStrategy;
 import com.hazelcast.config.CacheSimpleConfig;
 import com.hazelcast.config.Config;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ICacheManager;
+import org.hamcrest.Matcher;
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import realworld.ConsumptionScenario;
@@ -35,6 +38,7 @@ import javax.cache.Cache;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.assertTrue;
 
 public class HazelcastTest {
@@ -45,6 +49,9 @@ public class HazelcastTest {
 
     @Before
     public void setup() {
+        // skip test on Travis CI
+        Assume.assumeThat(System.getenv("TRAVIS"), nullValue());
+
         Config config = new Config();
         CacheSimpleConfig cacheConfig = new CacheSimpleConfig();
         cacheConfig.setName("my_buckets");
@@ -57,7 +64,39 @@ public class HazelcastTest {
 
     @After
     public void shutdown() {
-        hazelcastInstance.shutdown();
+        if (hazelcastInstance != null) {
+            hazelcastInstance.shutdown();
+        }
+    }
+
+    @Test
+    public void testReconstructRecoveryStrategy() {
+        Bucket bucket = Bucket4j.jCacheBuilder(RecoveryStrategy.RECONSTRUCT)
+                .withLimitedBandwidth(1_000, Duration.ofMinutes(1))
+                .withLimitedBandwidth(200, Duration.ofSeconds(10))
+                .build(cache, KEY);
+
+        assertTrue(bucket.tryConsumeSingleToken());
+
+        // simulate crash
+        cache.remove(KEY);
+
+        assertTrue(bucket.tryConsumeSingleToken());
+    }
+
+    @Test(expected = BucketNotFoundException.class)
+    public void testThrowExceptionRecoveryStrategy() {
+        Bucket bucket = Bucket4j.jCacheBuilder(RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION)
+                .withLimitedBandwidth(1_000, Duration.ofMinutes(1))
+                .withLimitedBandwidth(200, Duration.ofSeconds(10))
+                .build(cache, KEY);
+
+        assertTrue(bucket.tryConsumeSingleToken());
+
+        // simulate crash
+        cache.remove(KEY);
+
+        assertTrue(bucket.tryConsumeSingleToken());
     }
 
     @Test

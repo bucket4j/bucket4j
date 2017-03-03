@@ -20,25 +20,28 @@ import com.github.bucket4j.AbstractBucket;
 import com.github.bucket4j.BucketConfiguration;
 import com.github.bucket4j.BucketState;
 
+import java.io.Serializable;
+
 public class GridBucket extends AbstractBucket {
 
     private final GridProxy gridProxy;
+    private final RecoveryStrategy recoveryStrategy;
 
-    public GridBucket(BucketConfiguration configuration, GridProxy gridProxy) {
+    public GridBucket(BucketConfiguration configuration, GridProxy gridProxy, RecoveryStrategy recoveryStrategy) {
         super(configuration);
         this.gridProxy = gridProxy;
-        GridBucketState initialState = new GridBucketState(configuration, BucketState.createInitialState(configuration));
-        gridProxy.setInitialState(initialState);
+        this.recoveryStrategy = recoveryStrategy;
+        initializeBucket();
     }
 
     @Override
     protected long consumeAsMuchAsPossibleImpl(long limit) {
-        return gridProxy.execute(new ConsumeAsMuchAsPossibleCommand(limit));
+        return execute(new ConsumeAsMuchAsPossibleCommand(limit));
     }
 
     @Override
     protected boolean tryConsumeImpl(long tokensToConsume) {
-        return gridProxy.execute(new TryConsumeCommand(tokensToConsume));
+        return execute(new TryConsumeCommand(tokensToConsume));
     }
 
     @Override
@@ -48,7 +51,7 @@ public class GridBucket extends AbstractBucket {
         final long methodStartTimeNanos = isWaitingLimited? configuration.getTimeMeter().currentTimeNanos() : 0;
 
         while (true) {
-            long nanosToCloseDeficit = gridProxy.execute(consumeCommand);
+            long nanosToCloseDeficit = execute(consumeCommand);
             if (nanosToCloseDeficit == 0) {
                 return true;
             }
@@ -73,7 +76,35 @@ public class GridBucket extends AbstractBucket {
 
     @Override
     public BucketState createSnapshot() {
-        return gridProxy.execute(new CreateSnapshotCommand());
+        return execute(new CreateSnapshotCommand());
+    }
+
+    private <T extends Serializable> T execute(GridCommand<T> command) {
+        CommandResult<T> result = gridProxy.execute(command);
+        if (!result.isBucketNotFound()) {
+            return result.getData();
+        }
+
+        // the bucket was removed or lost, it is need to apply recovery strategy
+        if (recoveryStrategy == RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION) {
+            throw new BucketNotFoundException(gridProxy.getBucketKey());
+        } else {
+            initializeBucket();
+        }
+
+        // retry command execution
+        result = gridProxy.execute(command);
+        if (!result.isBucketNotFound()) {
+            return result.getData();
+        } else {
+            // something wrong goes with GRID, reinitialization of bucket has no effect
+            throw new BucketNotFoundException(gridProxy.getBucketKey());
+        }
+    }
+
+    private void initializeBucket() {
+        GridBucketState initialState = new GridBucketState(configuration, BucketState.createInitialState(configuration));
+        gridProxy.setInitialState(initialState);
     }
 
 }

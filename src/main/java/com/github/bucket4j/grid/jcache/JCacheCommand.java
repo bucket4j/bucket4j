@@ -16,6 +16,7 @@
 
 package com.github.bucket4j.grid.jcache;
 
+import com.github.bucket4j.grid.CommandResult;
 import com.github.bucket4j.grid.GridBucketState;
 import com.github.bucket4j.grid.GridCommand;
 
@@ -24,17 +25,22 @@ import javax.cache.processor.EntryProcessorException;
 import javax.cache.processor.MutableEntry;
 import java.io.Serializable;
 
-public class JCacheCommand<K, T extends Serializable> implements EntryProcessor<K, GridBucketState, T> {
+//
+public class JCacheCommand<K, T extends Serializable> implements EntryProcessor<K, GridBucketState, CommandResult> {
 
     @Override
-    public T process(MutableEntry<K, GridBucketState> mutableEntry, Object... arguments) throws EntryProcessorException {
+    public CommandResult<T> process(MutableEntry<K, GridBucketState> mutableEntry, Object... arguments) throws EntryProcessorException {
+        if (!mutableEntry.exists()) {
+            return CommandResult.bucketNotFound();
+        }
+
         GridCommand<T> targetCommand = (GridCommand<T>) arguments[0];
         GridBucketState state = mutableEntry.getValue();
         T result = targetCommand.execute(state);
         if (targetCommand.isBucketStateModified()) {
             mutableEntry.setValue(state);
         }
-        return result;
+        return CommandResult.success(result);
     }
 
 }
