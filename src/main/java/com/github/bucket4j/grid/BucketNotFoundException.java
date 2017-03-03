@@ -20,7 +20,8 @@ package com.github.bucket4j.grid;
 import java.io.Serializable;
 
 /**
- * Created by vladimir.bukhtoyarov on 03.03.2017.
+ * Exception which thrown each time when {@link GridBucket} found that bucket state has been lost,
+ * and {@link GridBucket} is unable to repair bucket state or recovery strategy is {@link RecoveryStrategy#THROW_BUCKET_NOT_FOUND_EXCEPTION}.
  */
 public class BucketNotFoundException extends IllegalStateException {
 
