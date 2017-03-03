@@ -88,8 +88,8 @@ public class ThrottlingFilter implements javax.servlet.Filter {
         Bucket bucket = (Bucket) session.getAttribute("throttler");
         if (bucket == null) {
             // build bucket with required capacity and associate it with particular user
-            bucket = Buckets.withNanoTimePrecision()
-                .withLimitedBandwidth(10, TimeUnit.SECONDS, 1)
+            bucket = BucketBuilder.forMillisecondPrecision()
+                .withLimitedBandwidth(10, Duration.ofSeconds(1))
                 .build();
             session.setAttribute("throttler", bucket);
         }
@@ -116,8 +116,8 @@ Suppose you have a piece of code that polls a website and you would only like to
 ```java
 
 // Create a token bucket with required capacity.
-Bucket bucket = Buckets.withNanoTimePrecision()
-                .withLimitedBandwidth(100, TimeUnit.MINUTES, 1)
+Bucket bucket = BucketBuilder.forMillisecondPrecision()
+                .withLimitedBandwidth(100, Duration.ofMinutes(1))
                 .build();
 
 // ...
@@ -139,11 +139,11 @@ Imagine that you are developing load testing tool, in order to be ensure that te
 But you do not want to randomly kill the testable system by generation all 1000 events in one second instead of 1 minute. 
 To solve problem you can construct following bucket:
 ```java
-Bucket bucket = Buckets.withNanoTimePrecision()
-       // allows 1000 tokens per 1 minute
-       .withLimitedBandwidth(1000, TimeUnit.MINUTES, 1)
+Bucket bucket = BucketBuilder.withNanoTimePrecision()
+       // allows 10000 tokens per 1 minute
+       .withLimitedBandwidth(10000, Duration.ofMinutes(1))
        // but not often then 50 tokens per 1 second
-       .withLimitedBandwidth(50, TimeUnit.SECOND, 1)
+       .withLimitedBandwidth(50, Duration.ofSeconds(1))
        .build();
 
 // ...
@@ -165,9 +165,9 @@ In this case you can construct bucket like this:
 
 ```java
 
-Bucket bucket = Buckets.withNanoTimePrecision()
-    .withLimitedBandwidth(1000, TimeUnit.HOURS, 1)
-    .withGuaranteedBandwidth(1, TimeUnit.MINUTES, 10)
+Bucket bucket = BucketBuilder.forMillisecondPrecision()
+    .withLimitedBandwidth(1000, Duration.ofHours(1))
+    .withGuaranteedBandwidth(1, Duration.ofMinutes(10))
     .build();
 ```
 
@@ -181,8 +181,8 @@ You can specify initial size as third parameter during bandwidth construction:
 
 int initialCapacity = 42;
 
-Bucket bucket = Buckets.withNanoTimePrecision()
-    .withLimitedBandwidth(1000, TimeUnit.HOURS, 1, initialCapacity)
+Bucket bucket = BucketBuilder.forMillisecondPrecision()
+    .withLimitedBandwidth(1000, initialCapacity, Duration.ofHours(1))
     .build();
 ```
 
@@ -205,8 +205,8 @@ BandwidthAdjuster adjuster = new BandwidthAdjuster() {
         }
     }
 };
-Buckets.withMillisTimePrecision()
-    .withLimitedBandwidth(adjuster, TimeUnit.MINUTES, 1, 10);
+BucketBuilder.withMillisTimePrecision()
+    .withLimitedBandwidth(adjuster, 10, Duration.ofMinutes(1));
 ```
 
 #### Customizing time measurement 
@@ -224,27 +224,14 @@ public class CurrentThreadCpuTimeMeter implements TimeMeter {
     private static final ThreadMXBean THREAD_MX_BEAN = ManagementFactory.getThreadMXBean();
 
     @Override
-    public long currentTime() {
+    public long currentTimeNanos() {
         return THREAD_MX_BEAN.getCurrentThreadCpuTime();
-    }
-
-    @Override
-    public void sleep(long units) throws InterruptedException {
-        LockSupport.parkNanos(units);
-        if (Thread.interrupted()) {
-            throw new InterruptedException();
-        }
-    }
-
-    @Override
-    public long toBandwidthPeriod(TimeUnit timeUnit, long period) {
-        return timeUnit.toNanos(period);
     }
 
 }
 
-Bucket bucket = Buckets.withCustomTimePrecision(new CurrentThreadCpuTimeMeter())
-                .withLimitedBandwidth(100, TimeUnit.MINUTES, 1)
+Bucket bucket = BucketBuilder.withCustomTimePrecision(new CurrentThreadCpuTimeMeter())
+                .withLimitedBandwidth(100, Duration.ofMinutes(1))
                 .build();
 
 
@@ -263,8 +250,8 @@ IMap<Object, GridBucketState> imap = hazelcastInstance.getMap("my_buckets");
 Object bucketId = "666";
 
 // construct bucket
-Bucket bucket = Buckets.withMillisTimePrecision()
-                .withLimitedBandwidth(100, TimeUnit.MINUTES, 1)
+Bucket bucket = BucketBuilder.withMillisTimePrecision()
+                .withLimitedBandwidth(100, Duration.ofMinutes(1))
                 .buildHazelcast(imap, bucketId);
 ```
 
@@ -285,8 +272,8 @@ cache = ignite.getOrCreateCache(cfg);
 Object bucketId = "21";
 
 // construct bucket
-Bucket bucket = Buckets.withMillisTimePrecision()
-                .withLimitedBandwidth(100, TimeUnit.MINUTES, 1)
+Bucket bucket = BucketBuilder.withMillisTimePrecision()
+                .withLimitedBandwidth(100, Duration.ofMinutes(1))
                 .buildIgnite(cache, bucketId);
 ```
 
@@ -297,6 +284,6 @@ Feel free to ask in the [gitter chat](https://gitter.im/vladimir-bukhtoyarov/buc
 
 License
 -------
-Copyright 2015 Vladimir Bukhtoyarov
+Copyright 2016 Vladimir Bukhtoyarov
 Licensed under the Apache Software License, Version 2.0: <http://www.apache.org/licenses/LICENSE-2.0>.
 
