@@ -28,7 +28,6 @@ import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ICacheManager;
 import org.junit.After;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import realworld.ConsumptionScenario;
@@ -37,7 +36,6 @@ import javax.cache.Cache;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
-import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -49,11 +47,6 @@ public class HazelcastTest {
 
     @Before
     public void setup() {
-        // skip test on Travis CI
-        if (System.getenv("TRAVIS") != null) {
-            return;
-        }
-
         Config config = new Config();
         CacheSimpleConfig cacheConfig = new CacheSimpleConfig();
         cacheConfig.setName("my_buckets");
@@ -73,11 +66,6 @@ public class HazelcastTest {
 
     @Test
     public void testReconstructRecoveryStrategy() {
-        // skip test on Travis CI
-        if (System.getenv("TRAVIS") != null) {
-            return;
-        }
-
         Bucket bucket = Bucket4j.jCacheBuilder(RecoveryStrategy.RECONSTRUCT)
                 .withLimitedBandwidth(1_000, Duration.ofMinutes(1))
                 .withLimitedBandwidth(200, Duration.ofSeconds(10))
@@ -93,11 +81,6 @@ public class HazelcastTest {
 
     @Test
     public void testThrowExceptionRecoveryStrategy() {
-        // skip test on Travis CI
-        if (System.getenv("TRAVIS") != null) {
-            return;
-        }
-
         Bucket bucket = Bucket4j.jCacheBuilder(RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION)
                 .withLimitedBandwidth(1_000, Duration.ofMinutes(1))
                 .withLimitedBandwidth(200, Duration.ofSeconds(10))
@@ -118,11 +101,6 @@ public class HazelcastTest {
 
     @Test
     public void test15Seconds() throws Exception {
-        // skip test on Travis CI
-        if (System.getenv("TRAVIS") != null) {
-            return;
-        }
-
         Bucket bucket = Bucket4j.jCacheBuilder(RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION)
                 .withLimitedBandwidth(1_000, 0, Duration.ofMinutes(1))
                 .withLimitedBandwidth(200, 0, Duration.ofSeconds(10))

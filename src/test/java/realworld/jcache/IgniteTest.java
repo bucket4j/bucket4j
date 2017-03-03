@@ -26,7 +26,6 @@ import org.apache.ignite.Ignite;
 import org.apache.ignite.Ignition;
 import org.apache.ignite.configuration.CacheConfiguration;
 import org.junit.After;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import realworld.ConsumptionScenario;
@@ -35,7 +34,6 @@ import javax.cache.Cache;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
-import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -47,10 +45,6 @@ public class IgniteTest {
 
     @Before
     public void setup() {
-        // skip test on Travis CI
-        if (System.getenv("TRAVIS") != null) {
-            return;
-        }
         ignite = Ignition.start();
 
         CacheConfiguration cfg = new CacheConfiguration("my_buckets");
@@ -66,11 +60,6 @@ public class IgniteTest {
 
     @Test
     public void testReconstructRecoveryStrategy() {
-        // skip test on Travis CI
-        if (System.getenv("TRAVIS") != null) {
-            return;
-        }
-
         Bucket bucket = Bucket4j.jCacheBuilder(RecoveryStrategy.RECONSTRUCT)
                 .withLimitedBandwidth(1_000, Duration.ofMinutes(1))
                 .withLimitedBandwidth(200, Duration.ofSeconds(10))
@@ -86,11 +75,6 @@ public class IgniteTest {
 
     @Test
     public void testThrowExceptionRecoveryStrategy() {
-        // skip test on Travis CI
-        if (System.getenv("TRAVIS") != null) {
-            return;
-        }
-
         Bucket bucket = Bucket4j.jCacheBuilder(RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION)
                 .withLimitedBandwidth(1_000, Duration.ofMinutes(1))
                 .withLimitedBandwidth(200, Duration.ofSeconds(10))
@@ -111,11 +95,6 @@ public class IgniteTest {
 
     @Test
     public void test15Seconds() throws Exception {
-        // skip test on Travis CI
-        if (System.getenv("TRAVIS") != null) {
-            return;
-        }
-
         Bucket bucket = Bucket4j.jCacheBuilder(RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION)
                 .withLimitedBandwidth(1_000, 0, Duration.ofMinutes(1))
                 .withLimitedBandwidth(200, 0, Duration.ofSeconds(10))
