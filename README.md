@@ -22,23 +22,22 @@ See for more details:
 
 * Implemented around ideas of well known family of algorithms, which are by de facto standard for rate limiting in the IT industry.
 * Effective lock free implementation without any critical section, Bucket4j is good scalable for multithreading case.
-* Absolute precision, Bucket4j does not operate with floats or doubles, all calculation are performed in the integer arithmetic.
+* Absolutely non-compromise precision, Bucket4j does not operate with floats or doubles, all calculation are performed in the integer arithmetic,
+this feature protects end users from calculation errors involved by rounding.
 * Rich API:
   * More then one bandwidth per bucket. For example you can limit 1000 events per hours but not often then 100 events per minute. 
   * Customizable time measurement. You are able to specify how to time will be measurement: as `System.nanotime()` or `System.currentTimeMillis()`
 or you can to specify own way to measure time.
   * Ability to have guaranteed bandwidth. Think about guaranteed bandwidth like a 911 number which you can to call when no money on your balance.
   * Dynamic capacity. If needs capacity of the bucket can be changed over time.
-* Ability to switch from one JVM to cluster in one line of code, so using Bucket4j you are able to limiting something in the JVM cluster.
-At the moment following grids are supported:
-  * [Hazelcast](http://hazelcast.com/products/hazelcast/) - The most popular Open Source In-Memory Data Grid.
-  * [Apache Ignite(GridGain in the past)](http://www.oracle.com/technetwork/middleware/coherence/overview/index-087514.html) - Yet another open source In-Memory Data Grid.
-  * The support of JCache spec is planned to release 1.2
+* Ability to switch from one JVM to cluster in two lines of code. Using Bucket4j you are able to limiting something in the cluster of JVMs.
+Since [release 1.2](https://github.com/vladimir-bukhtoyarov/bucket4j/releases/tag/1.2.0) the ```Bucket4j``` supports any GRID solution which compatible with [JCache API (JSR 107)](https://www.jcp.org/en/jsr/detail?id=107) specification.
+Just use your favorite grid including [Hazelcast](http://hazelcast.com/products/hazelcast/), [Ignite](http://www.oracle.com/technetwork/middleware/coherence/overview/index-087514.html), [Coherence](http://www.oracle.com/technetwork/middleware/coherence/overview/index.html), [Infinispan](http://infinispan.org/) or any other.  
 
 ### Get Bucket4j library
 
 #### By direct link
-[Download compiled jar, sources, javadocs](https://github.com/vladimir-bukhtoyarov/bucket4j/releases/tag/1.1.0)
+[Download compiled jar, sources, javadocs](https://github.com/vladimir-bukhtoyarov/bucket4j/releases/tag/1.2.0)
 
 #### You can build Bucket4j from sources
 
@@ -67,7 +66,7 @@ Then include Bucket4j as dependency to your `pom.xml`
 <dependency>
     <groupId>com.github</groupId>
     <artifactId>bucket4j</artifactId>
-    <version>1.1.0</version>
+    <version>1.2.0</version>
 </dependency>
 ```
 
@@ -78,6 +77,8 @@ Then include Bucket4j as dependency to your `pom.xml`
 Imagine that you develop WEB application and want to limit user to access for application no often then 10 times for second:
 
 ```java
+import com.github.bucket4j.Bucket4j;
+
 public class ThrottlingFilter implements javax.servlet.Filter {
     
     @Override
@@ -88,7 +89,7 @@ public class ThrottlingFilter implements javax.servlet.Filter {
         Bucket bucket = (Bucket) session.getAttribute("throttler");
         if (bucket == null) {
             // build bucket with required capacity and associate it with particular user
-            bucket = BucketBuilder.forMillisecondPrecision()
+            bucket = Bucket4j.builder()
                 .withLimitedBandwidth(10, Duration.ofSeconds(1))
                 .build();
             session.setAttribute("throttler", bucket);
@@ -114,9 +115,10 @@ public class ThrottlingFilter implements javax.servlet.Filter {
 Suppose you have a piece of code that polls a website and you would only like to be able to access the site 100 time per minute: 
 
 ```java
+import com.github.bucket4j.Bucket4j;
 
 // Create a token bucket with required capacity.
-Bucket bucket = BucketBuilder.forMillisecondPrecision()
+Bucket bucket = Bucket4j.builder()
                 .withLimitedBandwidth(100, Duration.ofMinutes(1))
                 .build();
 
@@ -139,7 +141,9 @@ Imagine that you are developing load testing tool, in order to be ensure that te
 But you do not want to randomly kill the testable system by generation all 1000 events in one second instead of 1 minute. 
 To solve problem you can construct following bucket:
 ```java
-Bucket bucket = BucketBuilder.withNanoTimePrecision()
+import com.github.bucket4j.Bucket4j;
+
+Bucket bucket = Bucket4j.builder()
        // allows 10000 tokens per 1 minute
        .withLimitedBandwidth(10000, Duration.ofMinutes(1))
        // but not often then 50 tokens per 1 second
@@ -164,8 +168,9 @@ But in same time, you want to provide guarantee to user that will be able to sen
 In this case you can construct bucket like this:
 
 ```java
+import com.github.bucket4j.Bucket4j;
 
-Bucket bucket = BucketBuilder.forMillisecondPrecision()
+Bucket bucket = Bucket4j.builder()
     .withLimitedBandwidth(1000, Duration.ofHours(1))
     .withGuaranteedBandwidth(1, Duration.ofMinutes(10))
     .build();
@@ -181,7 +186,7 @@ You can specify initial size as third parameter during bandwidth construction:
 
 int initialCapacity = 42;
 
-Bucket bucket = BucketBuilder.forMillisecondPrecision()
+Bucket bucket = Bucket4j.builder()
     .withLimitedBandwidth(1000, initialCapacity, Duration.ofHours(1))
     .build();
 ```
@@ -191,7 +196,8 @@ Bucket bucket = BucketBuilder.forMillisecondPrecision()
 Sometimes, you may want to have a bucket with dynamic capacity. For example if you want to have capacity 10 per 1 minute for daily time,
 and 2 per minute for nightly time, then construct bucket like this
 
-```java 
+```java
+
 BandwidthAdjuster adjuster = new BandwidthAdjuster() {
     @Override
     public long getCapacity(long currentTime) {
@@ -205,12 +211,22 @@ BandwidthAdjuster adjuster = new BandwidthAdjuster() {
         }
     }
 };
-BucketBuilder.withMillisTimePrecision()
+Bucket4j.builder()
     .withLimitedBandwidth(adjuster, 10, Duration.ofMinutes(1));
 ```
 
-#### Customizing time measurement 
-You can specify your custom time meter, if existing nanotime or miliseconds time meters is not enough for your purposes. For example:
+#### Customizing time measurement
+##### Choosing nanotime time resolution
+By default Bucket4j uses millisecond time resolution, it is preferred time measurement strategy. 
+But rarely(for example benchmarking) you wish the nanosecond precision:
+``` java
+Bucket4j.builder().withNanosecondPrecision()
+```
+Be very careful to choose this time measurement strategy, because ```System.nanoTime()``` produces inaccurate results, 
+use this strategy only if period of bandwidth is too small that millisecond resolution will be undesired.
+   
+##### Specify custom time measurement strategy
+You can specify your custom time meter, if existing miliseconds or nanotime time meters is not enough for your purposes. For example:
 
 ```java
 
@@ -230,7 +246,8 @@ public class CurrentThreadCpuTimeMeter implements TimeMeter {
 
 }
 
-Bucket bucket = BucketBuilder.withCustomTimePrecision(new CurrentThreadCpuTimeMeter())
+Bucket bucket = Bucket4j.builder()
+                .withCustomTimePrecision(new CurrentThreadCpuTimeMeter())
                 .withLimitedBandwidth(100, Duration.ofMinutes(1))
                 .build();
 
@@ -238,21 +255,39 @@ Bucket bucket = BucketBuilder.withCustomTimePrecision(new CurrentThreadCpuTimeMe
 ```
 
 ### Examples of distributed usage
+```Bucket4j``` supports any GRID solution which compatible with [JCache API (JSR 107)](https://www.jcp.org/en/jsr/detail?id=107) specification.
+The distributed usage scenario is little bit more complicated than simple usage inside one JVM, 
+because it is need specify the reaction which should be applied in case of bucket state is lost by any reason, for example because of:
+- Split-brain happen.
+- The bucket state was stored on single grid node without replication strategy and this node was crashed.
+- Wrong cache configuration.
+- Pragmatically errors introduced by GRID vendor.
+- Human mistake.
+
+The ```Bucket4j``` make the client to specify recovery strategy from the list:
+- **RECONSTRUCT** Initialize bucket yet another time. Use this strategy if availability is more preferred than consistency.
+- **THROW_BUCKET_NOT_FOUND_EXCEPTION** Throw BucketNotFoundException. Use this strategy if consistency is more preferred than availability. 
 
 #### Example of Hazelcast integration 
 ``` java
   
-HazelcastInstance hazelcastInstance = Hazelcast.newHazelcastInstance();
+Config config = new Config();
+CacheSimpleConfig cacheConfig = new CacheSimpleConfig();
+cacheConfig.setName("my_buckets");
+config.addCacheConfig(cacheConfig);
 
-IMap<Object, GridBucketState> imap = hazelcastInstance.getMap("my_buckets");
+hazelcastInstance = Hazelcast.newHazelcastInstance(config);
+ICacheManager cacheManager = hazelcastInstance.getCacheManager();
+cache = cacheManager.getCache("my_buckets");
 
 // Bucket will be stored in the imap by this ID 
 Object bucketId = "666";
 
 // construct bucket
-Bucket bucket = BucketBuilder.withMillisTimePrecision()
-                .withLimitedBandwidth(100, Duration.ofMinutes(1))
-                .buildHazelcast(imap, bucketId);
+Bucket bucket = Bucket4j.jCacheBuilder(RecoveryStrategy.RECONSTRUCT)
+                .withLimitedBandwidth(1_000, Duration.ofMinutes(1))
+                .withLimitedBandwidth(200, Duration.ofSeconds(10))
+                .build(cache, KEY);
 ```
 
 #### Example of Apache Ignite(GridGain) integration 
@@ -272,9 +307,10 @@ cache = ignite.getOrCreateCache(cfg);
 Object bucketId = "21";
 
 // construct bucket
-Bucket bucket = BucketBuilder.withMillisTimePrecision()
-                .withLimitedBandwidth(100, Duration.ofMinutes(1))
-                .buildIgnite(cache, bucketId);
+Bucket bucket = Bucket4j.jCacheBuilder(RecoveryStrategy.RECONSTRUCT)
+                .withLimitedBandwidth(1_000, Duration.ofMinutes(1))
+                .withLimitedBandwidth(200, Duration.ofSeconds(10))
+                .build(cache, KEY);
 ```
 
 

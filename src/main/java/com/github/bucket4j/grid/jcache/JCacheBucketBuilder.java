@@ -27,6 +27,7 @@ import com.github.bucket4j.grid.RecoveryStrategy;
 
 import javax.cache.Cache;
 import java.io.Serializable;
+import java.util.Objects;
 
 /**
  *  {@inheritDoc}
@@ -44,7 +45,7 @@ public class JCacheBucketBuilder extends AbstractBucketBuilder<JCacheBucketBuild
      * @param recoveryStrategy specifies the reaction which should be applied in case of previously saved state of bucket has been lost.
      */
     public JCacheBucketBuilder(RecoveryStrategy recoveryStrategy) {
-        this.recoveryStrategy = recoveryStrategy;
+        this.recoveryStrategy = Objects.requireNonNull(recoveryStrategy);
     }
 
     /**

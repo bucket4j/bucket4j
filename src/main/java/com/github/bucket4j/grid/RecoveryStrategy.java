@@ -40,7 +40,7 @@ public enum RecoveryStrategy {
     RECONSTRUCT,
 
     /**
-     * Throw new instance of {@link BucketNotFoundException}.
+     * Throw {@link BucketNotFoundException}.
      * Use this strategy if consistency is more preferred than availability.
      */
     THROW_BUCKET_NOT_FOUND_EXCEPTION
