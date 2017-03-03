@@ -28,7 +28,7 @@ public interface CapacityAdjuster extends Serializable {
      *
      * @param currentTime Cuurent time which returned by timeMeter {@link TimeMeter}
      *
-     * @return
+     * @return cuurent capacity of bandwidth
      */
     long getCapacity(long currentTime);
 

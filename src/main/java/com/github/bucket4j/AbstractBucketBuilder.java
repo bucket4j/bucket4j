@@ -44,7 +44,7 @@ public abstract class AbstractBucketBuilder<T extends AbstractBucketBuilder> {
      * <p>
      * Rate(which calculated as {@code maxCapacity/(timeUnit*period)}) of guaranteed bandwidth should be strongly lesser then rate of any limited bandwidth,
      * else you will get {@link java.lang.IllegalArgumentException} during construction of bucket.
-     * <p>
+     *
      * <pre>
      * {@code
      * // Adds bandwidth which guarantees, that client of bucket will be able to consume 1 tokens per 10 minutes,
@@ -72,7 +72,7 @@ public abstract class AbstractBucketBuilder<T extends AbstractBucketBuilder> {
      * <p>
      * Rate(which calculated as {@code maxCapacity/(timeUnit*period)}) of guaranteed bandwidth should be strongly lesser then rate of any limited bandwidth,
      * else you will get {@link java.lang.IllegalArgumentException} during construction of bucket.
-     * <p>
+     *
      * <pre>
      * {@code
      * // Adds bandwidth which guarantees, that client of bucket will be able to consume 1 tokens per 10 minutes,
@@ -102,7 +102,7 @@ public abstract class AbstractBucketBuilder<T extends AbstractBucketBuilder> {
      * Unlike limited bandwidths, you can use only one guaranteed bandwidth per single bucket.
      * <p>
      *
-     * In opposite to method {@link #withGuaranteedBandwidth(long, TimeUnit, long)},
+     * In opposite to method {@link #withGuaranteedBandwidth(long, Duration)},
      * this method does not perform checking of limitation
      * which disallow to have greater rate of guaranteed than rate of limited bandwidth,
      * because rate is dynamic and depends from <code>bandwidthAdjuster</code>.
@@ -126,7 +126,7 @@ public abstract class AbstractBucketBuilder<T extends AbstractBucketBuilder> {
      * and when period of bandwidth <tt>X</tt> is greater than bandwidth <tt>Y</tt>,
      * then capacity of bandwidth <tt>X</tt> should be greater capacity of bandwidth <tt>Y</tt>,
      * except cases when capacity of bandwidth <tt>X</tt> or <tt>Y</tt> is dynamic(provided by {@link CapacityAdjuster}).
-     * <p>
+     *
      * <pre>
      * {@code
      * // Adds bandwidth that restricts to consume not often 1 tokens per 10 minutes,
@@ -150,7 +150,7 @@ public abstract class AbstractBucketBuilder<T extends AbstractBucketBuilder> {
      * and when period of bandwidth <tt>X</tt> is greater than bandwidth <tt>Y</tt>,
      * then capacity of bandwidth <tt>X</tt> should be greater capacity of bandwidth <tt>Y</tt>,
      * except cases when capacity of bandwidth <tt>X</tt> or <tt>Y</tt> is dynamic(provided by {@link CapacityAdjuster}).
-     * <p>
+     *
      * <pre>
      * {@code
      * // Adds bandwidth that restricts to consume not often 1 tokens per 10 minutes, and initial capacity 0.

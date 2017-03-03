@@ -56,7 +56,7 @@ public class JCacheBucketBuilder extends AbstractBucketBuilder<JCacheBucketBuild
      * @param key  for storing bucket inside {@code cache}.
      *             If you plan to store multiple buckets inside single {@code cache}, then each bucket should has own unique {@code key}.
      *
-     * @see JCacheProxy
+     * @return new distributed bucket
      */
     public <K extends Serializable> Bucket build(Cache<K, GridBucketState> cache, K key) {
         BucketConfiguration configuration = createConfiguration();
