@@ -111,6 +111,8 @@
                         <include>**/*Test.class</include>
                         <include>**/*Specification.class</include>
                     </includes>
+                    <!-- Travis build workaround -->
+                    <argLine>-Xms1024m -Xmx2048m</argLine>
                 </configuration>
             </plugin>
         </plugins>
