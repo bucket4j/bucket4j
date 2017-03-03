@@ -47,7 +47,9 @@ public class IgniteTest {
     @Before
     public void setup() {
         // skip test on Travis CI
-        Assume.assumeThat(System.getenv("TRAVIS"), nullValue());
+        if (System.getenv("TRAVIS") != null) {
+            return;
+        }
         ignite = Ignition.start();
 
         CacheConfiguration cfg = new CacheConfiguration("my_buckets");
@@ -61,6 +63,11 @@ public class IgniteTest {
 
     @Test
     public void testReconstructRecoveryStrategy() {
+        // skip test on Travis CI
+        if (System.getenv("TRAVIS") != null) {
+            return;
+        }
+
         Bucket bucket = Bucket4j.jCacheBuilder(RecoveryStrategy.RECONSTRUCT)
                 .withLimitedBandwidth(1_000, Duration.ofMinutes(1))
                 .withLimitedBandwidth(200, Duration.ofSeconds(10))
@@ -76,6 +83,11 @@ public class IgniteTest {
 
     @Test(expected = BucketNotFoundException.class)
     public void testThrowExceptionRecoveryStrategy() {
+        // skip test on Travis CI
+        if (System.getenv("TRAVIS") != null) {
+            return;
+        }
+
         Bucket bucket = Bucket4j.jCacheBuilder(RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION)
                 .withLimitedBandwidth(1_000, Duration.ofMinutes(1))
                 .withLimitedBandwidth(200, Duration.ofSeconds(10))
@@ -91,6 +103,11 @@ public class IgniteTest {
 
     @Test
     public void test15Seconds() throws Exception {
+        // skip test on Travis CI
+        if (System.getenv("TRAVIS") != null) {
+            return;
+        }
+
         Bucket bucket = Bucket4j.jCacheBuilder(RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION)
                 .withLimitedBandwidth(1_000, 0, Duration.ofMinutes(1))
                 .withLimitedBandwidth(200, 0, Duration.ofSeconds(10))

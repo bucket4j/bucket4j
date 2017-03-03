@@ -49,7 +49,9 @@ public class HazelcastTest {
     @Before
     public void setup() {
         // skip test on Travis CI
-        Assume.assumeThat(System.getenv("TRAVIS"), nullValue());
+        if (System.getenv("TRAVIS") != null) {
+            return;
+        }
 
         Config config = new Config();
         CacheSimpleConfig cacheConfig = new CacheSimpleConfig();
@@ -70,6 +72,11 @@ public class HazelcastTest {
 
     @Test
     public void testReconstructRecoveryStrategy() {
+        // skip test on Travis CI
+        if (System.getenv("TRAVIS") != null) {
+            return;
+        }
+
         Bucket bucket = Bucket4j.jCacheBuilder(RecoveryStrategy.RECONSTRUCT)
                 .withLimitedBandwidth(1_000, Duration.ofMinutes(1))
                 .withLimitedBandwidth(200, Duration.ofSeconds(10))
@@ -85,6 +92,11 @@ public class HazelcastTest {
 
     @Test(expected = BucketNotFoundException.class)
     public void testThrowExceptionRecoveryStrategy() {
+        // skip test on Travis CI
+        if (System.getenv("TRAVIS") != null) {
+            return;
+        }
+
         Bucket bucket = Bucket4j.jCacheBuilder(RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION)
                 .withLimitedBandwidth(1_000, Duration.ofMinutes(1))
                 .withLimitedBandwidth(200, Duration.ofSeconds(10))
@@ -100,6 +112,11 @@ public class HazelcastTest {
 
     @Test
     public void test15Seconds() throws Exception {
+        // skip test on Travis CI
+        if (System.getenv("TRAVIS") != null) {
+            return;
+        }
+
         Bucket bucket = Bucket4j.jCacheBuilder(RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION)
                 .withLimitedBandwidth(1_000, 0, Duration.ofMinutes(1))
                 .withLimitedBandwidth(200, 0, Duration.ofSeconds(10))
