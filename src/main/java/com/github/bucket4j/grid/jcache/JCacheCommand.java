@@ -14,33 +14,27 @@
  *  limitations under the License.
  */
 
-package com.github.bucket4j.grid.ignite;
+package com.github.bucket4j.grid.jcache;
 
 import com.github.bucket4j.grid.GridBucketState;
 import com.github.bucket4j.grid.GridCommand;
-import com.github.bucket4j.grid.GridProxy;
-import org.apache.ignite.IgniteCache;
 
+import javax.cache.processor.EntryProcessor;
+import javax.cache.processor.EntryProcessorException;
+import javax.cache.processor.MutableEntry;
 import java.io.Serializable;
 
-public class IgniteProxy implements GridProxy {
-
-    private final IgniteCache<Object, GridBucketState> cache;
-    private final Object key;
-
-    public IgniteProxy(IgniteCache<Object, GridBucketState> cache, Object key) {
-        this.cache = cache;
-        this.key = key;
-    }
+public class JCacheCommand<K, T extends Serializable> implements EntryProcessor<K, GridBucketState, T> {
 
     @Override
-    public <T extends Serializable> T execute(GridCommand<T> command) {
-        return cache.invoke(key, new IgniteCommand<T>(), command);
-    }
-
-    @Override
-    public void setInitialState(GridBucketState initialState) {
-        cache.putIfAbsent(key, initialState);
+    public T process(MutableEntry<K, GridBucketState> mutableEntry, Object... arguments) throws EntryProcessorException {
+        GridCommand<T> targetCommand = (GridCommand<T>) arguments[0];
+        GridBucketState state = mutableEntry.getValue();
+        T result = targetCommand.execute(state);
+        if (targetCommand.isBucketStateModified()) {
+            mutableEntry.setValue(state);
+        }
+        return result;
     }
 
 }

@@ -14,50 +14,58 @@
  *  limitations under the License.
  */
 
-package realworld.grid;
+package realworld.jcache;
 
 import com.github.bucket4j.Bucket;
+import com.github.bucket4j.Bucket4j;
 import com.github.bucket4j.BucketState;
-import com.github.bucket4j.BucketBuilder;
-import org.apache.ignite.Ignite;
-import org.apache.ignite.IgniteCache;
-import org.apache.ignite.Ignition;
-import org.apache.ignite.configuration.CacheConfiguration;
+import com.github.bucket4j.grid.GridBucketState;
+import com.github.bucket4j.grid.jcache.RecoveryStrategy;
+import com.hazelcast.config.CacheSimpleConfig;
+import com.hazelcast.config.Config;
+import com.hazelcast.core.Hazelcast;
+import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.core.ICacheManager;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import realworld.ConsumptionScenario;
 
+import javax.cache.Cache;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertTrue;
 
-public class IgniteTest {
+public class HazelcastTest {
 
     private static final String KEY = "42";
-    private Ignite ignite;
-    private IgniteCache cache;
+    private Cache<String, GridBucketState> cache;
+    private HazelcastInstance hazelcastInstance;
 
     @Before
     public void setup() {
-        ignite = Ignition.start();
+        Config config = new Config();
+        CacheSimpleConfig cacheConfig = new CacheSimpleConfig();
+        cacheConfig.setName("my_buckets");
+        config.addCacheConfig(cacheConfig);
 
-        CacheConfiguration cfg = new CacheConfiguration("my_buckets");
-        cache = ignite.getOrCreateCache(cfg);
+        hazelcastInstance = Hazelcast.newHazelcastInstance(config);
+        ICacheManager cacheManager = hazelcastInstance.getCacheManager();
+        cache = cacheManager.getCache("my_buckets");
     }
 
     @After
     public void shutdown() {
-        ignite.close();
+        hazelcastInstance.shutdown();
     }
 
     @Test
     public void test15Seconds() throws Exception {
-        Bucket bucket = BucketBuilder.forNanosecondPrecision()
+        Bucket bucket = Bucket4j.jCacheBuilder(RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION)
                 .withLimitedBandwidth(1_000, 0, Duration.ofMinutes(1))
                 .withLimitedBandwidth(200, 0, Duration.ofSeconds(10))
-                .buildIgnite(cache, KEY);
+                .build(cache, KEY);
 
         ConsumptionScenario scenario = new ConsumptionScenario(4, TimeUnit.SECONDS.toNanos(15), bucket);
         long consumed = scenario.execute();

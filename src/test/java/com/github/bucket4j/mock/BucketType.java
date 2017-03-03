@@ -16,8 +16,11 @@
 
 package com.github.bucket4j.mock;
 
+import com.github.bucket4j.AbstractBucketBuilder;
 import com.github.bucket4j.Bucket;
-import com.github.bucket4j.BucketBuilder;
+import com.github.bucket4j.BucketConfiguration;
+import com.github.bucket4j.grid.GridBucket;
+import com.github.bucket4j.local.LocalBucketBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,20 +29,21 @@ public enum BucketType {
 
     LOCAL {
         @Override
-        public Bucket createBucket(BucketBuilder builder) {
-            return builder.build();
+        public Bucket createBucket(AbstractBucketBuilder builder) {
+            return ((LocalBucketBuilder) builder).build();
         }
     },
     GRID {
         @Override
-        public Bucket createBucket(BucketBuilder builder) {
-            return builder.buildCustomGrid(new GridProxyMock());
+        public Bucket createBucket(AbstractBucketBuilder builder) {
+            BucketConfiguration configuration = builder.createConfiguration();
+            return new GridBucket(configuration, new GridProxyMock());
         }
     };
 
-    abstract public Bucket createBucket(BucketBuilder builder);
+    abstract public Bucket createBucket(AbstractBucketBuilder builder);
 
-    public static List<Bucket> createBuckets(BucketBuilder builder) {
+    public static List<Bucket> createBuckets(AbstractBucketBuilder builder) {
         List<Bucket> buckets = new ArrayList<>();
         for (BucketType type : values()) {
             Bucket bucket = type.createBucket(builder);

@@ -24,7 +24,7 @@ class BandwidthSpecification extends Specification {
 
     def "Specification for initialization"(long period, long capacity, long initialCapacity, long currentTime) {
         setup:
-            Bandwidth bandwidth = bandwidth(capacity, initialCapacity, period);
+            Bandwidth bandwidth = bandwidth(capacity, initialCapacity, period)
         when:
             def state = bandwidth.createInitialState()
         then:
@@ -39,8 +39,8 @@ class BandwidthSpecification extends Specification {
     def "Specification for timeRequiredToRefill"(long period, long capacity, long initialCapacity, long currentTime,
                  long tokensToConsume, long requiredTime) {
         setup:
-            Bandwidth bandwidth = bandwidth(capacity, initialCapacity, period);
-            def bandwidthState = bandwidth.createInitialState();
+            Bandwidth bandwidth = bandwidth(capacity, initialCapacity, period)
+            def bandwidthState = bandwidth.createInitialState()
         expect:
             bandwidth.delayNanosAfterWillBePossibleToConsume(bandwidthState, currentTime, tokensToConsume) == requiredTime
         where:
@@ -96,7 +96,7 @@ class BandwidthSpecification extends Specification {
                                       long timeRefill2, long consume2, long requiredSize2) {
         setup:
             Bandwidth bandwidth = bandwidth(capacity, initialCapacity, period)
-            def state = bandwidth.createInitialState();
+            def state = bandwidth.createInitialState()
         when:
             bandwidth.refill(state, initTime, timeRefill1)
             bandwidth.consume(state, consume1)

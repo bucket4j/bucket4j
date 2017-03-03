@@ -16,22 +16,12 @@
 
 package com.github.bucket4j;
 
-import com.github.bucket4j.grid.GridBucket;
-import com.github.bucket4j.grid.GridBucketState;
-import com.github.bucket4j.grid.GridProxy;
-import com.github.bucket4j.grid.hazelcast.HazelcastProxy;
-import com.github.bucket4j.grid.ignite.IgniteProxy;
-import com.github.bucket4j.local.LockFreeBucket;
-import com.hazelcast.core.IMap;
-import org.apache.ignite.IgniteCache;
-
-import java.io.Serializable;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static com.github.bucket4j.BucketExceptions.nullTimeMetter;
+import static com.github.bucket4j.BucketExceptions.nullTimeMeter;
 
 /**
  * A builder for buckets. Builder can be reused, i.e. one builder can create multiple buckets with similar configuration.
@@ -39,103 +29,10 @@ import static com.github.bucket4j.BucketExceptions.nullTimeMetter;
  * @see com.github.bucket4j.local.LockFreeBucket
  * @see com.github.bucket4j.grid.GridBucket
  */
-public final class BucketBuilder {
+public abstract class AbstractBucketBuilder<T extends AbstractBucketBuilder> {
 
-    private TimeMeter timeMeter = TimeMeter.SYSTEM_NANOTIME;
+    private TimeMeter timeMeter = TimeMeter.SYSTEM_MILLISECONDS;
     private List<BandwidthDefinition> bandwidths = new ArrayList<>(1);
-
-    /**
-     * Creates instance of {@link com.github.bucket4j.BucketBuilder} which will create buckets with {@link com.github.bucket4j.TimeMeter#SYSTEM_NANOTIME} as time meter.
-     *
-     * @return
-     */
-    public static BucketBuilder forNanosecondPrecision() {
-        return new BucketBuilder(TimeMeter.SYSTEM_NANOTIME);
-    }
-
-    /**
-     * Creates instance of {@link com.github.bucket4j.BucketBuilder} which will create buckets with {@link com.github.bucket4j.TimeMeter#SYSTEM_MILLISECONDS} as time meter.
-     *
-     * @return
-     */
-    public static BucketBuilder forMillisecondPrecision() {
-        return new BucketBuilder(TimeMeter.SYSTEM_MILLISECONDS);
-    }
-
-    /**
-     * Creates instance of {@link com.github.bucket4j.BucketBuilder} which will create buckets with {@code customTimeMeter} as time meter.
-     *
-     * @param customTimeMeter object which will measure time.
-     *
-     * @return
-     */
-    public static BucketBuilder forCustomTimePrecision(TimeMeter customTimeMeter) {
-        return new BucketBuilder(customTimeMeter);
-    }
-
-    /**
-     * Creates a builder for buckets
-     *
-     * @param timeMeter object which will measure time.
-     */
-    public BucketBuilder(TimeMeter timeMeter) {
-        if (timeMeter == null) {
-            throw nullTimeMetter();
-        }
-        this.timeMeter = timeMeter;
-    }
-
-    /**
-     * Constructs an instance of {@link com.github.bucket4j.local.LockFreeBucket}
-     *
-     * @return an instance of {@link com.github.bucket4j.local.LockFreeBucket}
-     */
-    public Bucket build() {
-        BucketConfiguration configuration = createConfiguration();
-        return new LockFreeBucket(configuration);
-    }
-
-    /**
-     * Constructs an instance of {@link com.github.bucket4j.grid.GridBucket} which responsible to limit rate inside Hazelcast cluster.
-     *
-     * @param imap distributed map which will hold bucket inside cluster.
-     *             Feel free to store inside single {@code imap} as mush buckets as you need.
-     * @param key  for storing bucket inside {@code imap}.
-     *             If you plan to store multiple buckets inside single {@code imap}, then each bucket should has own unique {@code key}.
-     *
-     * @see com.github.bucket4j.grid.hazelcast.HazelcastProxy
-     */
-    public Bucket buildHazelcast(IMap<Object, GridBucketState> imap, Serializable key) {
-        BucketConfiguration configuration = createConfiguration();
-        return new GridBucket(configuration, new HazelcastProxy(imap, key));
-    }
-
-    /**
-     * Constructs an instance of {@link com.github.bucket4j.grid.GridBucket} which responsible to limit rate inside Apache Ignite(GridGain) cluster.
-     *
-     * @param cache distributed cache which will hold bucket inside cluster.
-     *             Feel free to store inside single {@code cache} as mush buckets as you need.
-     * @param key  for storing bucket inside {@code cache}.
-     *             If you plan to store multiple buckets inside single {@code cache}, then each bucket should has own unique {@code key}.
-     *
-     * @see com.github.bucket4j.grid.ignite.IgniteProxy
-     */
-    public Bucket buildIgnite(IgniteCache<Object, GridBucketState> cache, Object key) {
-        BucketConfiguration configuration = createConfiguration();
-        return new GridBucket(configuration, new IgniteProxy(cache, key));
-    }
-
-    /**
-     * Build distributed bucket for custom grid which is not supported out of the box.
-     *
-     * @param gridProxy delegate for accessing to your grid.
-     *
-     * @see com.github.bucket4j.grid.GridProxy
-     */
-    public Bucket buildCustomGrid(GridProxy gridProxy) {
-        BucketConfiguration configuration = createConfiguration();
-        return new GridBucket(configuration, gridProxy);
-    }
 
     /**
      * Adds guaranteed bandwidth for all buckets which will be constructed by this builder instance.
@@ -157,11 +54,11 @@ public final class BucketBuilder {
      * </pre>
      *
      * @param maxCapacity the maximum capacity of bandwidth
-     * @param timeUnit Unit for period.
      * @param period Period of bandwidth.
      *
+     * @return this builder instance
      */
-    public BucketBuilder withGuaranteedBandwidth(long maxCapacity, Duration period) {
+    public T withGuaranteedBandwidth(long maxCapacity, Duration period) {
         return withGuaranteedBandwidth(maxCapacity, maxCapacity, period);
     }
 
@@ -185,15 +82,15 @@ public final class BucketBuilder {
      * </pre>
      *
      * @param maxCapacity the maximum capacity of bandwidth
-     * @param timeUnit Unit for period.
      * @param initialCapacity initial capacity of bandwidth.
      * @param period Period of bandwidth.
      *
+     * @return this builder instance
      */
-    public BucketBuilder withGuaranteedBandwidth(long maxCapacity, long initialCapacity, Duration period) {
+    public T withGuaranteedBandwidth(long maxCapacity, long initialCapacity, Duration period) {
         final BandwidthDefinition bandwidth = new BandwidthDefinition(maxCapacity, initialCapacity, period, true);
         bandwidths.add(bandwidth);
-        return this;
+        return (T) this;
     }
 
     /**
@@ -214,11 +111,12 @@ public final class BucketBuilder {
      * @param initialCapacity initial capacity of bandwidth.
      * @param period Period of bandwidth.
      *
+     * @return this builder instance
      */
-    public BucketBuilder withGuaranteedBandwidth(CapacityAdjuster capacityAdjuster, long initialCapacity, Duration period) {
+    public T withGuaranteedBandwidth(CapacityAdjuster capacityAdjuster, long initialCapacity, Duration period) {
         final BandwidthDefinition bandwidth = new BandwidthDefinition(capacityAdjuster, initialCapacity, period, true);
         bandwidths.add(bandwidth);
-        return this;
+        return (T) this;
     }
 
     /**
@@ -237,11 +135,11 @@ public final class BucketBuilder {
      * </pre>
      *
      * @param maxCapacity the maximum capacity of bandwidth
-     * @param timeUnit Unit for period.
      * @param period Period of bandwidth.
      *
+     * @return this builder instance
      */
-    public BucketBuilder withLimitedBandwidth(long maxCapacity, Duration period) {
+    public T withLimitedBandwidth(long maxCapacity, Duration period) {
         return withLimitedBandwidth(maxCapacity, maxCapacity, period);
     }
 
@@ -264,11 +162,12 @@ public final class BucketBuilder {
      * @param initialCapacity initial capacity
      * @param period Period of bandwidth.
      *
+     * @return this builder instance
      */
-    public BucketBuilder withLimitedBandwidth(long maxCapacity, long initialCapacity, Duration period) {
+    public T withLimitedBandwidth(long maxCapacity, long initialCapacity, Duration period) {
         final BandwidthDefinition bandwidth = new BandwidthDefinition(maxCapacity, initialCapacity, period, false);
         bandwidths.add(bandwidth);
-        return this;
+        return (T) this;
     }
 
     /**
@@ -283,18 +182,48 @@ public final class BucketBuilder {
      * @param initialCapacity initial capacity
      * @param period Period of bandwidth.
      *
+     * @return this builder instance
+     *
      */
-    public BucketBuilder withLimitedBandwidth(CapacityAdjuster capacityAdjuster, long initialCapacity, Duration period) {
+    public T withLimitedBandwidth(CapacityAdjuster capacityAdjuster, long initialCapacity, Duration period) {
         final BandwidthDefinition bandwidth = new BandwidthDefinition(capacityAdjuster, initialCapacity, period, false);
         bandwidths.add(bandwidth);
-        return this;
+        return (T) this;
     }
 
     /**
-     * @return Time meter used for time measuring.
+     * Creates instance of {@link AbstractBucketBuilder} which will create buckets with {@link com.github.bucket4j.TimeMeter#SYSTEM_NANOTIME} as time meter.
+     *
+     * @return this builder instance
      */
-    public TimeMeter getTimeMeter() {
-        return timeMeter;
+    public T withNanosecondPrecision() {
+        this.timeMeter = TimeMeter.SYSTEM_NANOTIME;
+        return (T) this;
+    }
+
+    /**
+     * Creates instance of {@link AbstractBucketBuilder} which will create buckets with {@link com.github.bucket4j.TimeMeter#SYSTEM_MILLISECONDS} as time meter.
+     *
+     * @return this builder instance
+     */
+    public T withMillisecondPrecision() {
+        this.timeMeter = TimeMeter.SYSTEM_MILLISECONDS;
+        return (T) this;
+    }
+
+    /**
+     * Creates instance of {@link AbstractBucketBuilder} which will create buckets with {@code customTimeMeter} as time meter.
+     *
+     * @param customTimeMeter object which will measure time.
+     *
+     * @return this builder instance
+     */
+    public T withCustomTimePrecision(TimeMeter customTimeMeter) {
+        if (customTimeMeter == null) {
+            throw nullTimeMeter();
+        }
+        this.timeMeter = customTimeMeter;
+        return (T) this;
     }
 
     /**
@@ -304,16 +233,16 @@ public final class BucketBuilder {
         return new BucketConfiguration(this.bandwidths, timeMeter);
     }
 
+    protected BandwidthDefinition getBandwidthDefinition(int index) {
+        return bandwidths.get(index);
+    }
+
     @Override
     public String toString() {
-        return "BucketBuilder{" +
+        return "AbstractBucketBuilder{" +
                 "timeMeter=" + timeMeter +
                 ", bandwidths=" + bandwidths +
                 '}';
-    }
-
-    BandwidthDefinition getBandwidthDefinition(int index) {
-        return bandwidths.get(index);
     }
 
 }

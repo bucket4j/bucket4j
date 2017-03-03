@@ -1,7 +1,8 @@
 package regression;
 
 import com.github.bucket4j.Bucket;
-import com.github.bucket4j.BucketBuilder;
+import com.github.bucket4j.AbstractBucketBuilder;
+import com.github.bucket4j.Bucket4j;
 import org.junit.Test;
 
 import java.time.Duration;
@@ -17,7 +18,9 @@ public class LocalBucketTest {
      */
     @Test(timeout = 3000)
     public void testConsumeOrAwait() throws InterruptedException {
-        Bucket bucket = BucketBuilder.forNanosecondPrecision().withLimitedBandwidth(100, Duration.ofMillis(1)).build();
+        Bucket bucket = Bucket4j.builder()
+                .withNanosecondPrecision()
+                .withLimitedBandwidth(100, Duration.ofMillis(1)).build();
         bucket.consumeSingleToken();
     }
 

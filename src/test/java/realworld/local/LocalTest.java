@@ -17,7 +17,7 @@
 package realworld.local;
 
 import com.github.bucket4j.Bucket;
-import com.github.bucket4j.BucketBuilder;
+import com.github.bucket4j.Bucket4j;
 import org.junit.Test;
 import realworld.ConsumptionScenario;
 
@@ -30,7 +30,7 @@ public class LocalTest {
 
     @Test
     public void test15Seconds() throws Exception {
-        Bucket bucket = BucketBuilder.forNanosecondPrecision()
+        Bucket bucket = Bucket4j.builder()
                 .withLimitedBandwidth(1_000, 0, Duration.ofMinutes(1))
                 .withLimitedBandwidth(200, 0, Duration.ofSeconds(10))
                 .build();

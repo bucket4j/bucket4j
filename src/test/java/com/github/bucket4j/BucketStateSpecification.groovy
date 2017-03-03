@@ -36,12 +36,12 @@ class BucketStateSpecification extends Specification {
             availableTokens == requiredAvailableTokens
         where:
             requiredAvailableTokens |                    bucket
-                    10              | BucketBuilder.forNanosecondPrecision().withLimitedBandwidth(10, Duration.ofNanos(100)).build()
-                     0              | BucketBuilder.forNanosecondPrecision().withLimitedBandwidth(10, 0, Duration.ofNanos(100)).build()
-                     5              | BucketBuilder.forNanosecondPrecision().withLimitedBandwidth(10, 5, Duration.ofNanos(100)).build()
-                     2              | BucketBuilder.forNanosecondPrecision().withLimitedBandwidth(10, 5, Duration.ofNanos(100)).withLimitedBandwidth(2, Duration.ofNanos(10)).build()
-                     3              | BucketBuilder.forNanosecondPrecision().withLimitedBandwidth(10, 5, Duration.ofNanos(100)).withLimitedBandwidth(2, Duration.ofNanos(10)).withGuaranteedBandwidth(3, Duration.ofNanos(1000)).build()
-                     2              | BucketBuilder.forNanosecondPrecision().withLimitedBandwidth(10, 5, Duration.ofNanos(100)).withLimitedBandwidth(2, Duration.ofNanos(10)).withGuaranteedBandwidth(1, Duration.ofNanos(1000)).build()
+                    10              | Bucket4j.builder().withLimitedBandwidth(10, Duration.ofNanos(100)).build()
+                     0              | Bucket4j.builder().withLimitedBandwidth(10, 0, Duration.ofNanos(100)).build()
+                     5              | Bucket4j.builder().withLimitedBandwidth(10, 5, Duration.ofNanos(100)).build()
+                     2              | Bucket4j.builder().withLimitedBandwidth(10, 5, Duration.ofNanos(100)).withLimitedBandwidth(2, Duration.ofNanos(10)).build()
+                     3              | Bucket4j.builder().withLimitedBandwidth(10, 5, Duration.ofNanos(100)).withLimitedBandwidth(2, Duration.ofNanos(10)).withGuaranteedBandwidth(3, Duration.ofNanos(1000)).build()
+                     2              | Bucket4j.builder().withLimitedBandwidth(10, 5, Duration.ofNanos(100)).withLimitedBandwidth(2, Duration.ofNanos(10)).withGuaranteedBandwidth(1, Duration.ofNanos(1000)).build()
     }
 
     def "delayAfterWillBePossibleToConsume specification"(long toConsume, long requiredTime, Bucket bucket) {
@@ -54,15 +54,15 @@ class BucketStateSpecification extends Specification {
             actualTime == requiredTime
         where:
             toConsume | requiredTime |                               bucket
-               10     |    100       | BucketBuilder.forCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(10, 0, Duration.ofNanos(100)).build()
-                7     |     30       | BucketBuilder.forCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(10, 4, Duration.ofNanos(100)).build()
-               11     |  MAX_VALUE   | BucketBuilder.forCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(10, 4, Duration.ofNanos(100)).build()
-                3     |     20       | BucketBuilder.forCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(10, 1, Duration.ofNanos(100)).withLimitedBandwidth(5, 2, Duration.ofNanos(10)).build()
-                3     |     20       | BucketBuilder.forCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(5, 2, Duration.ofNanos(10)).withLimitedBandwidth(10, 1, Duration.ofNanos(100)).build()
-                3     |      0       | BucketBuilder.forCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(5, 2, Duration.ofNanos(10)).withGuaranteedBandwidth(10, 9, Duration.ofNanos(100)).build()
-                6     |      0       | BucketBuilder.forCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(5, 2, Duration.ofNanos(10)).withGuaranteedBandwidth(10, 9, Duration.ofNanos(100)).build()
-                4     |      4       | BucketBuilder.forCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(5, 0, Duration.ofNanos(10)).withGuaranteedBandwidth(25, 3, Duration.ofNanos(100)).build()
-                4     |      2       | BucketBuilder.forCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(5, 3, Duration.ofNanos(10)).withGuaranteedBandwidth(25, 3, Duration.ofNanos(100)).build()
+               10     |    100       | Bucket4j.builder().withCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(10, 0, Duration.ofNanos(100)).build()
+                7     |     30       | Bucket4j.builder().withCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(10, 4, Duration.ofNanos(100)).build()
+               11     |  MAX_VALUE   | Bucket4j.builder().withCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(10, 4, Duration.ofNanos(100)).build()
+                3     |     20       | Bucket4j.builder().withCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(10, 1, Duration.ofNanos(100)).withLimitedBandwidth(5, 2, Duration.ofNanos(10)).build()
+                3     |     20       | Bucket4j.builder().withCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(5, 2, Duration.ofNanos(10)).withLimitedBandwidth(10, 1, Duration.ofNanos(100)).build()
+                3     |      0       | Bucket4j.builder().withCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(5, 2, Duration.ofNanos(10)).withGuaranteedBandwidth(10, 9, Duration.ofNanos(100)).build()
+                6     |      0       | Bucket4j.builder().withCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(5, 2, Duration.ofNanos(10)).withGuaranteedBandwidth(10, 9, Duration.ofNanos(100)).build()
+                4     |      4       | Bucket4j.builder().withCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(5, 0, Duration.ofNanos(10)).withGuaranteedBandwidth(25, 3, Duration.ofNanos(100)).build()
+                4     |      2       | Bucket4j.builder().withCustomTimePrecision(new TimeMeterMock(0)).withLimitedBandwidth(5, 3, Duration.ofNanos(10)).withGuaranteedBandwidth(25, 3, Duration.ofNanos(100)).build()
     }
 
 }

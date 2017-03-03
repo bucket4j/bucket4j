@@ -29,7 +29,7 @@ public final class BucketConfiguration implements Serializable {
 
     public BucketConfiguration(List<BandwidthDefinition> bandwidthDefinitions, TimeMeter timeMeter) {
         if (timeMeter == null) {
-            throw nullTimeMetter();
+            throw nullTimeMeter();
         }
         this.timeMeter = timeMeter;
 

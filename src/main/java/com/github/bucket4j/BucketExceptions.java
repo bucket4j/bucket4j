@@ -38,7 +38,7 @@ public final class BucketExceptions {
         return new IllegalArgumentException(msg);
     }
 
-    public static IllegalArgumentException nullTimeMetter() {
+    public static IllegalArgumentException nullTimeMeter() {
         String msg = "Time metter can not be null";
         return new IllegalArgumentException(msg);
     }
