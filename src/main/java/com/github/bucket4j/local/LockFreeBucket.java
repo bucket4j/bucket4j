@@ -43,7 +43,7 @@ public class LockFreeBucket extends AbstractBucket {
         long currentTimeNanos = configuration.getTimeMeter().currentTimeNanos();
 
         while (true) {
-            newState.refill(bandwidths, currentTimeNanos);
+            newState.refillAllBandwidth(bandwidths, currentTimeNanos);
             long availableToConsume = newState.getAvailableTokens(bandwidths);
             long toConsume = Math.min(limit, availableToConsume);
             if (toConsume == 0) {
@@ -67,7 +67,7 @@ public class LockFreeBucket extends AbstractBucket {
         long currentTimeNanos = configuration.getTimeMeter().currentTimeNanos();
 
         while (true) {
-            newState.refill(bandwidths, currentTimeNanos);
+            newState.refillAllBandwidth(bandwidths, currentTimeNanos);
             long availableToConsume = newState.getAvailableTokens(bandwidths);
             if (tokensToConsume > availableToConsume) {
                 return false;
@@ -108,7 +108,7 @@ public class LockFreeBucket extends AbstractBucket {
                 newState.copyStateFrom(previousState);
             }
 
-            newState.refill(bandwidths, currentTimeNanos);
+            newState.refillAllBandwidth(bandwidths, currentTimeNanos);
             long nanosToCloseDeficit = newState.delayNanosAfterWillBePossibleToConsume(bandwidths, currentTimeNanos, tokensToConsume);
             if (nanosToCloseDeficit == Long.MAX_VALUE) {
                 return false;

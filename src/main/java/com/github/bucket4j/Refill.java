@@ -1,15 +1,32 @@
 package com.github.bucket4j;
 
 import java.io.Serializable;
+import java.time.Duration;
+
+import static com.github.bucket4j.BucketExceptions.*;
 
 public class Refill implements Serializable {
 
     private final long periodNanos;
     private final long tokens;
 
-    public Refill(long periodNanos, long tokens) {
-        this.periodNanos = periodNanos;
+    private Refill(long tokens, Duration period) {
+        if (tokens <= 0) {
+            throw nonPositivePeriodTokens(tokens);
+        }
         this.tokens = tokens;
+
+        if (period == null) {
+            throw nullPeriod();
+        }
+        this.periodNanos = period.toNanos();
+        if (periodNanos <= 0) {
+            throw nonPositivePeriod(periodNanos);
+        }
+    }
+
+    public static Refill smooth(long tokens, Duration period) {
+        return new Refill(tokens, period);
     }
 
     public long getPeriodNanos() {

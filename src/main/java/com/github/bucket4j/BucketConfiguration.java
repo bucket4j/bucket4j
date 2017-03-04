@@ -27,19 +27,17 @@ public final class BucketConfiguration implements Serializable {
     private final Bandwidth[] bandwidths;
     private final TimeMeter timeMeter;
 
-    public BucketConfiguration(List<BandwidthDefinition> bandwidthDefinitions, TimeMeter timeMeter) {
+    public BucketConfiguration(List<Bandwidth> bandwidths, TimeMeter timeMeter) {
         if (timeMeter == null) {
             throw nullTimeMeter();
         }
         this.timeMeter = timeMeter;
 
-        checkCompatibility(bandwidthDefinitions);
+        checkCompatibility(bandwidths);
 
-        this.bandwidths = new Bandwidth[bandwidthDefinitions.size()];
-        for (int i = 0; i < bandwidthDefinitions.size() ; i++) {
-            BandwidthDefinition definition = bandwidthDefinitions.get(i);
-            Bandwidth bandwidth = definition.createBandwidth();
-            this.bandwidths[i] = bandwidth;
+        this.bandwidths = new Bandwidth[bandwidths.size()];
+        for (int i = 0; i < bandwidths.size() ; i++) {
+            this.bandwidths[i] = bandwidths.get(i);
         }
     }
 
@@ -55,16 +53,14 @@ public final class BucketConfiguration implements Serializable {
         return bandwidths[index];
     }
 
-    public static void checkCompatibility(List<BandwidthDefinition> bandwidths) {
+    public static void checkCompatibility(List<Bandwidth> bandwidths) {
         int countOfLimitedBandwidth = 0;
         int countOfGuaranteedBandwidth = 0;
-        BandwidthDefinition guaranteedBandwidth = null;
 
-        for (BandwidthDefinition bandwidth : bandwidths) {
-            if (bandwidth.limited) {
+        for (Bandwidth bandwidth : bandwidths) {
+            if (bandwidth.isLimited()) {
                 countOfLimitedBandwidth++;
             } else {
-                guaranteedBandwidth = bandwidth;
                 countOfGuaranteedBandwidth++;
             }
         }
@@ -75,51 +71,6 @@ public final class BucketConfiguration implements Serializable {
 
         if (countOfGuaranteedBandwidth > 1) {
             throw onlyOneGuarantedBandwidthSupported();
-        }
-
-        for (int i = 0; i < bandwidths.size() - 1; i++) {
-            BandwidthDefinition first = bandwidths.get(i);
-            if (first.guaranteed) {
-                continue;
-            }
-            if (first.hasDynamicCapacity()) {
-                continue;
-            }
-            for (int j = i + 1; j < bandwidths.size(); j++) {
-                BandwidthDefinition second = bandwidths.get(j);
-                if (second.guaranteed) {
-                    continue;
-                }
-                if (second.hasDynamicCapacity()) {
-                    continue;
-                }
-                if (first.periodNanos < second.periodNanos && first.capacity >= second.capacity) {
-                    throw hasOverlaps(first, second);
-                } else if (first.periodNanos == second.periodNanos) {
-                    throw hasOverlaps(first, second);
-                } else if (first.periodNanos > second.periodNanos && first.capacity <= second.capacity) {
-                    throw hasOverlaps(first, second);
-                }
-            }
-        }
-
-        if (guaranteedBandwidth != null) {
-            if (guaranteedBandwidth.hasDynamicCapacity()) {
-                return;
-            }
-            for (BandwidthDefinition bandwidth : bandwidths) {
-                if (bandwidth.guaranteed) {
-                    continue;
-                }
-                if (bandwidth.hasDynamicCapacity()) {
-                    continue;
-                }
-                BandwidthDefinition limited = bandwidth;
-                if (limited.getTokensPerTimeUnit() <= guaranteedBandwidth.getTokensPerTimeUnit()
-                        || limited.getTimeUnitsPerToken() > guaranteedBandwidth.getTimeUnitsPerToken()) {
-                    throw guarantedHasGreaterRateThanLimited(guaranteedBandwidth, limited);
-                }
-            }
         }
     }
 

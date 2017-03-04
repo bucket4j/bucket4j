@@ -33,19 +33,30 @@ public final class BucketExceptions {
         return new IllegalArgumentException(msg);
     }
 
-    public static IllegalArgumentException nullBandwidthAdjuster() {
+    public static IllegalArgumentException nullBandwidthCapacity() {
         String msg = "Bandwidth capacity can not be null";
         return new IllegalArgumentException(msg);
     }
 
     public static IllegalArgumentException nullTimeMeter() {
-        String msg = "Time metter can not be null";
+        String msg = "Time meter can not be null";
+        return new IllegalArgumentException(msg);
+    }
+
+    public static IllegalArgumentException nullPeriod() {
+        String msg = "Refill period can not be null";
         return new IllegalArgumentException(msg);
     }
 
     public static IllegalArgumentException nonPositivePeriod(long period) {
         String pattern = "{0} is wrong value for period of bandwidth, because period should be positive";
         String msg = MessageFormat.format(pattern, period);
+        return new IllegalArgumentException(msg);
+    }
+
+    public static IllegalArgumentException nonPositivePeriodTokens(long tokens) {
+        String pattern = "{0} is wrong value for period tokens, because tokens should be positive";
+        String msg = MessageFormat.format(pattern, tokens);
         return new IllegalArgumentException(msg);
     }
 
@@ -59,17 +70,6 @@ public final class BucketExceptions {
         return new IllegalArgumentException(msg);
     }
 
-    public static IllegalArgumentException guarantedHasGreaterRateThanLimited(BandwidthDefinition guaranteed, BandwidthDefinition limited) {
-        String pattern = "Misconfiguration detected, guaranteed bandwidth {0} has higher rate than limited bandwidth {1}";
-        String msg = MessageFormat.format(pattern, guaranteed, limited);
-        return new IllegalArgumentException(msg);
-    }
-
-    public static IllegalArgumentException hasOverlaps(BandwidthDefinition first, BandwidthDefinition second) {
-        String pattern = "Overlap detected between {0} and {1}";
-        String msg = MessageFormat.format(pattern, first, second);
-        return new IllegalArgumentException(msg);
-    }
     // ------------------- end of construction time exceptions --------------------------------
 
     // ------------------- usage time exceptions  ---------------------------------------------

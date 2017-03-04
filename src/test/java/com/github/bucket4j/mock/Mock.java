@@ -27,7 +27,7 @@ public class Mock implements Capacity {
     }
 
     @Override
-    public long getCurrent(long currentTime) {
+    public long getValue(long currentTime) {
         return capacity;
     }
 

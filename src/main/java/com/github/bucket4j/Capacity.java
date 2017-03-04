@@ -30,18 +30,22 @@ public interface Capacity extends Serializable {
      *
      * @return cuurent capacity of bandwidth
      */
-    long getCurrent(long currentTime);
+    long getValue(long currentTime);
+
+    static Capacity constant(long value) {
+        return new ImmutableCapacity(value);
+    }
 
     class ImmutableCapacity implements Capacity {
 
         private final long value;
 
-        public ImmutableCapacity(long value) {
+        private ImmutableCapacity(long value) {
             this.value = value;
         }
 
         @Override
-        public long getCurrent(long currentTime) {
+        public long getValue(long currentTime) {
             return value;
         }
 

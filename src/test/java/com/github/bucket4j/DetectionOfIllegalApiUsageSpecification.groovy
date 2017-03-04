@@ -66,7 +66,7 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
             Bucket4j.builder().withLimitedBandwidth(null, VALID_CAPACITY, Duration.ofMinutes(VALID_PERIOD))
         then:
             IllegalArgumentException ex = thrown()
-            ex.message == nullBandwidthAdjuster().message
+            ex.message == nullBandwidthCapacity().message
     }
 
     def "Should check than time meter is not null"() {

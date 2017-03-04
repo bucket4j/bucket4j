@@ -31,7 +31,7 @@ import static com.github.bucket4j.BucketExceptions.nullTimeMeter;
 public abstract class AbstractBucketBuilder<T extends AbstractBucketBuilder> {
 
     private TimeMeter timeMeter = TimeMeter.SYSTEM_MILLISECONDS;
-    private List<BandwidthDefinition> bandwidths = new ArrayList<>(1);
+    private List<Bandwidth> bandwidths = new ArrayList<>(1);
 
     /**
      * Adds guaranteed bandwidth for all buckets which will be constructed by this builder instance.
@@ -87,9 +87,9 @@ public abstract class AbstractBucketBuilder<T extends AbstractBucketBuilder> {
      * @return this builder instance
      */
     public T withGuaranteedBandwidth(long maxCapacity, long initialCapacity, Duration period) {
-        final BandwidthDefinition bandwidth = new BandwidthDefinition(maxCapacity, initialCapacity, period, true);
-        bandwidths.add(bandwidth);
-        return (T) this;
+        Refill refill = Refill.smooth(maxCapacity, period);
+        Capacity capacity = Capacity.constant(maxCapacity);
+        return withGuaranteedBandwidth(capacity, initialCapacity, refill);
     }
 
     /**
@@ -108,12 +108,12 @@ public abstract class AbstractBucketBuilder<T extends AbstractBucketBuilder> {
      *
      * @param capacity provider of bandwidth capacity
      * @param initialCapacity initial capacity of bandwidth.
-     * @param period Period of bandwidth.
+     * @param refill refill policy of bandwidth.
      *
      * @return this builder instance
      */
-    public T withGuaranteedBandwidth(Capacity capacity, long initialCapacity, Duration period) {
-        final BandwidthDefinition bandwidth = new BandwidthDefinition(capacity, initialCapacity, period, true);
+    public T withGuaranteedBandwidth(Capacity capacity, long initialCapacity, Refill refill) {
+        final Bandwidth bandwidth = new Bandwidth(capacity, initialCapacity, refill, true);
         bandwidths.add(bandwidth);
         return (T) this;
     }
@@ -164,9 +164,9 @@ public abstract class AbstractBucketBuilder<T extends AbstractBucketBuilder> {
      * @return this builder instance
      */
     public T withLimitedBandwidth(long maxCapacity, long initialCapacity, Duration period) {
-        final BandwidthDefinition bandwidth = new BandwidthDefinition(maxCapacity, initialCapacity, period, false);
-        bandwidths.add(bandwidth);
-        return (T) this;
+        Refill refill = Refill.smooth(maxCapacity, period);
+        Capacity capacity = Capacity.constant(maxCapacity);
+        return withLimitedBandwidth(capacity, initialCapacity, refill);
     }
 
     /**
@@ -179,13 +179,13 @@ public abstract class AbstractBucketBuilder<T extends AbstractBucketBuilder> {
      *
      * @param capacity provider of bandwidth capacity
      * @param initialCapacity initial capacity
-     * @param period Period of bandwidth.
+     * @param refill policy of bandwidth.
      *
      * @return this builder instance
      *
      */
-    public T withLimitedBandwidth(Capacity capacity, long initialCapacity, Duration period) {
-        final BandwidthDefinition bandwidth = new BandwidthDefinition(capacity, initialCapacity, period, false);
+    public T withLimitedBandwidth(Capacity capacity, long initialCapacity, Refill refill) {
+        final Bandwidth bandwidth = new Bandwidth(capacity, initialCapacity, refill, false);
         bandwidths.add(bandwidth);
         return (T) this;
     }
@@ -230,10 +230,6 @@ public abstract class AbstractBucketBuilder<T extends AbstractBucketBuilder> {
      */
     public BucketConfiguration createConfiguration() {
         return new BucketConfiguration(this.bandwidths, timeMeter);
-    }
-
-    protected BandwidthDefinition getBandwidthDefinition(int index) {
-        return bandwidths.get(index);
     }
 
     @Override
