@@ -19,7 +19,6 @@ package com.github.bucket4j;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import static com.github.bucket4j.BucketExceptions.nullTimeMeter;
 
@@ -107,14 +106,14 @@ public abstract class AbstractBucketBuilder<T extends AbstractBucketBuilder> {
      * which disallow to have greater rate of guaranteed than rate of limited bandwidth,
      * because rate is dynamic and depends from <code>bandwidthAdjuster</code>.
      *
-     * @param capacityAdjuster provider of bandwidth capacity
+     * @param capacity provider of bandwidth capacity
      * @param initialCapacity initial capacity of bandwidth.
      * @param period Period of bandwidth.
      *
      * @return this builder instance
      */
-    public T withGuaranteedBandwidth(CapacityAdjuster capacityAdjuster, long initialCapacity, Duration period) {
-        final BandwidthDefinition bandwidth = new BandwidthDefinition(capacityAdjuster, initialCapacity, period, true);
+    public T withGuaranteedBandwidth(Capacity capacity, long initialCapacity, Duration period) {
+        final BandwidthDefinition bandwidth = new BandwidthDefinition(capacity, initialCapacity, period, true);
         bandwidths.add(bandwidth);
         return (T) this;
     }
@@ -125,7 +124,7 @@ public abstract class AbstractBucketBuilder<T extends AbstractBucketBuilder> {
      * You can specify as many limited bandwidth as needed, but with following limitation: each limited bandwidth should has unique period,
      * and when period of bandwidth <tt>X</tt> is greater than bandwidth <tt>Y</tt>,
      * then capacity of bandwidth <tt>X</tt> should be greater capacity of bandwidth <tt>Y</tt>,
-     * except cases when capacity of bandwidth <tt>X</tt> or <tt>Y</tt> is dynamic(provided by {@link CapacityAdjuster}).
+     * except cases when capacity of bandwidth <tt>X</tt> or <tt>Y</tt> is dynamic(provided by {@link Capacity}).
      *
      * <pre>
      * {@code
@@ -149,7 +148,7 @@ public abstract class AbstractBucketBuilder<T extends AbstractBucketBuilder> {
      * You can specify as many limited bandwidth as needed, but with following limitation: each limited bandwidth should has unique period,
      * and when period of bandwidth <tt>X</tt> is greater than bandwidth <tt>Y</tt>,
      * then capacity of bandwidth <tt>X</tt> should be greater capacity of bandwidth <tt>Y</tt>,
-     * except cases when capacity of bandwidth <tt>X</tt> or <tt>Y</tt> is dynamic(provided by {@link CapacityAdjuster}).
+     * except cases when capacity of bandwidth <tt>X</tt> or <tt>Y</tt> is dynamic(provided by {@link Capacity}).
      *
      * <pre>
      * {@code
@@ -176,17 +175,17 @@ public abstract class AbstractBucketBuilder<T extends AbstractBucketBuilder> {
      * You can specify as many limited bandwidth as needed, but with following limitation: each limited bandwidth should has unique period,
      * and when period of bandwidth <tt>X</tt> is greater than bandwidth <tt>Y</tt>,
      * then capacity of bandwidth <tt>X</tt> should be greater capacity of bandwidth <tt>Y</tt>,
-     * except cases when capacity of bandwidth <tt>X</tt> or <tt>Y</tt> is dynamic(provided by {@link CapacityAdjuster}).
+     * except cases when capacity of bandwidth <tt>X</tt> or <tt>Y</tt> is dynamic(provided by {@link Capacity}).
      *
-     * @param capacityAdjuster provider of bandwidth capacity
+     * @param capacity provider of bandwidth capacity
      * @param initialCapacity initial capacity
      * @param period Period of bandwidth.
      *
      * @return this builder instance
      *
      */
-    public T withLimitedBandwidth(CapacityAdjuster capacityAdjuster, long initialCapacity, Duration period) {
-        final BandwidthDefinition bandwidth = new BandwidthDefinition(capacityAdjuster, initialCapacity, period, false);
+    public T withLimitedBandwidth(Capacity capacity, long initialCapacity, Duration period) {
+        final BandwidthDefinition bandwidth = new BandwidthDefinition(capacity, initialCapacity, period, false);
         bandwidths.add(bandwidth);
         return (T) this;
     }

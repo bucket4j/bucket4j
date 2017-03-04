@@ -20,15 +20,15 @@ import java.io.Serializable;
 
 public class Bandwidth implements Serializable {
 
-    private final long initialCapacity;
-    private final long periodNanos;
+    private final Capacity capacity;
+    private final long initialTokens;
+    private final Refill refill;
     private final boolean guaranteed;
-    private final CapacityAdjuster adjuster;
 
-    public Bandwidth(CapacityAdjuster adjuster, long initialCapacity, long periodNanos, boolean guaranteed) {
-        this.adjuster = adjuster;
-        this.initialCapacity = initialCapacity;
-        this.periodNanos = periodNanos;
+    public Bandwidth(Capacity capacity, long initialTokens, Refill refill, boolean guaranteed) {
+        this.capacity = capacity;
+        this.initialTokens = initialTokens;
+        this.refill = refill;
         this.guaranteed = guaranteed;
     }
 
@@ -40,84 +40,25 @@ public class Bandwidth implements Serializable {
         return !guaranteed;
     }
 
-    public BandwidthState createInitialState() {
-        return BandwidthState.initialState(initialCapacity);
+    public Refill getRefill() {
+        return refill;
     }
 
-    public void consume(BandwidthState state, long tokens) {
-        long currentSize = state.getCurrentSize();
-        long newSize = currentSize - tokens;
-        if (newSize < 0) {
-            state.setCurrentSize(0);
-            state.setRoundingError(0);
-        } else {
-            state.setCurrentSize(newSize);
-        }
+    public Capacity getCapacity() {
+        return capacity;
     }
 
-    public void refill(BandwidthState state, long previousRefillNanos, long currentTimeNanos) {
-        final long maxCapacity = adjuster.getCapacity(currentTimeNanos);
-        long currentSize = state.getCurrentSize();
-
-        if (currentSize >= maxCapacity) {
-            state.setCurrentSize(maxCapacity);
-            state.setRoundingError(0);
-            return;
-        }
-
-        long durationSinceLastRefillNanos = currentTimeNanos - previousRefillNanos;
-
-        if (durationSinceLastRefillNanos > periodNanos) {
-            state.setCurrentSize(maxCapacity);
-            state.setRoundingError(0);
-            return;
-        }
-
-        long roundingError = state.getRoundingError();
-        long divided = maxCapacity * durationSinceLastRefillNanos + roundingError;
-        long calculatedRefill = divided / periodNanos;
-        if (calculatedRefill == 0) {
-            roundingError = divided % periodNanos;
-            state.setRoundingError(roundingError);
-            return;
-        }
-
-        long newSize = currentSize + calculatedRefill;
-        if (newSize >= maxCapacity) {
-            state.setCurrentSize(maxCapacity);
-            state.setRoundingError(0);
-            return;
-        }
-
-        roundingError = divided % periodNanos;
-        state.setCurrentSize(newSize);
-        state.setRoundingError(roundingError);
-    }
-
-    public long delayNanosAfterWillBePossibleToConsume(BandwidthState state, long currentTimeNanos, long tokens) {
-        long currentSize = state.getCurrentSize();
-        if (tokens <= currentSize) {
-            return 0;
-        }
-        final long maxCapacity = getMaxCapacity(currentTimeNanos);
-        if (tokens > maxCapacity) {
-            return Long.MAX_VALUE;
-        }
-        long deficit = tokens - currentSize;
-        return periodNanos * deficit / maxCapacity;
-    }
-
-    public long getMaxCapacity(long currentTime) {
-        return adjuster.getCapacity(currentTime);
+    public long getInitialTokens() {
+        return initialTokens;
     }
 
     @Override
     public String toString() {
         return "Bandwidth{" +
-                "initialCapacity=" + initialCapacity +
-                ", periodNanos=" + periodNanos +
+                "capacity=" + capacity +
+                ", initialTokens=" + initialTokens +
+                ", refill=" + refill +
                 ", guaranteed=" + guaranteed +
-                ", adjuster=" + adjuster +
                 '}';
     }
 

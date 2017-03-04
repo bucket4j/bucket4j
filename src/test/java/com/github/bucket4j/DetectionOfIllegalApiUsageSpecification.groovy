@@ -16,7 +16,7 @@
 
 package com.github.bucket4j
 
-import com.github.bucket4j.mock.AdjusterMock
+import com.github.bucket4j.mock.Mock
 import spock.lang.Specification
 import spock.lang.Unroll
 import java.time.Duration
@@ -45,7 +45,7 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
             Bucket4j.builder().withLimitedBandwidth(VALID_CAPACITY, initialCapacity, Duration.ofMinutes(VALID_PERIOD))
         then:
             IllegalArgumentException ex = thrown()
-            ex.message == nonPositiveInitialCapacity(initialCapacity).message
+            ex.message == nonPositiveInitialTokens(initialCapacity).message
         where:
             initialCapacity << [-10, -1]
     }
@@ -115,11 +115,11 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
                 .withGuaranteedBandwidth(VALID_CAPACITY, Duration.ofMinutes(VALID_PERIOD))
                 .withLimitedBandwidth(VALID_CAPACITY, Duration.ofMinutes(VALID_PERIOD))
             def builder3 = Bucket4j.builder()
-                .withLimitedBandwidth(new AdjusterMock(VALID_CAPACITY), 0, Duration.ofMinutes(VALID_PERIOD))
+                .withLimitedBandwidth(new Mock(VALID_CAPACITY), 0, Duration.ofMinutes(VALID_PERIOD))
                 .withGuaranteedBandwidth(VALID_CAPACITY, Duration.ofMinutes(VALID_PERIOD))
             def builder4 = Bucket4j.builder()
                 .withLimitedBandwidth(VALID_CAPACITY, Duration.ofMinutes(VALID_PERIOD))
-                .withGuaranteedBandwidth(new AdjusterMock(VALID_CAPACITY), 0, Duration.ofMinutes(VALID_PERIOD))
+                .withGuaranteedBandwidth(new Mock(VALID_CAPACITY), 0, Duration.ofMinutes(VALID_PERIOD))
         when:
             builder1.build()
         then:
@@ -147,11 +147,11 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
                 .withLimitedBandwidth(firstCapacity, Duration.ofMinutes(firstPeriod))
                 .withLimitedBandwidth(secondCapacity, Duration.ofMinutes(secondPeriod))
             def builderWithDynamicCapacity1 = Bucket4j.builder()
-                .withLimitedBandwidth(new AdjusterMock(firstCapacity), 0, Duration.ofMinutes(firstPeriod))
+                .withLimitedBandwidth(new Mock(firstCapacity), 0, Duration.ofMinutes(firstPeriod))
                 .withLimitedBandwidth(secondCapacity, Duration.ofMinutes(secondPeriod))
             def builderWithDynamicCapacity2 = Bucket4j.builder()
                 .withLimitedBandwidth(firstCapacity, Duration.ofMinutes(firstPeriod))
-                .withLimitedBandwidth(new AdjusterMock(secondCapacity), 0, Duration.ofMinutes(secondPeriod))
+                .withLimitedBandwidth(new Mock(secondCapacity), 0, Duration.ofMinutes(secondPeriod))
         when:
             builderWithStaticCapacity.build()
         then:

@@ -16,18 +16,18 @@
 
 package com.github.bucket4j.mock;
 
-import com.github.bucket4j.CapacityAdjuster;
+import com.github.bucket4j.Capacity;
 
-public class AdjusterMock implements CapacityAdjuster {
+public class Mock implements Capacity {
 
     private long capacity = 0;
 
-    public AdjusterMock(long capacity) {
+    public Mock(long capacity) {
         this.capacity = capacity;
     }
 
     @Override
-    public long getCapacity(long currentTime) {
+    public long getCurrent(long currentTime) {
         return capacity;
     }
 

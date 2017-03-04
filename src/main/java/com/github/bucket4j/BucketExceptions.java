@@ -27,14 +27,14 @@ public final class BucketExceptions {
         return new IllegalArgumentException(msg);
     }
 
-    public static IllegalArgumentException nonPositiveInitialCapacity(long initialCapacity) {
+    public static IllegalArgumentException nonPositiveInitialTokens(long initialCapacity) {
         String pattern = "{0} is wrong value for initial capacity, because initial capacity should be positive";
         String msg = MessageFormat.format(pattern, initialCapacity);
         return new IllegalArgumentException(msg);
     }
 
     public static IllegalArgumentException nullBandwidthAdjuster() {
-        String msg = "Bandwidth adjuster can not be null";
+        String msg = "Bandwidth capacity can not be null";
         return new IllegalArgumentException(msg);
     }
 
