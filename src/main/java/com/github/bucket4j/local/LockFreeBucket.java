@@ -39,7 +39,7 @@ public class LockFreeBucket extends AbstractBucket {
     protected long consumeAsMuchAsPossibleImpl(long limit) {
         BucketState previousState = stateReference.get();
         BucketState newState = previousState.clone();
-        Bandwidth[] bandwidths = configuration.getBandwidths();
+        Bandwidth[] bandwidths = configuration.getLimitedBandwidths();
         long currentTimeNanos = configuration.getTimeMeter().currentTimeNanos();
 
         while (true) {
@@ -63,7 +63,7 @@ public class LockFreeBucket extends AbstractBucket {
     protected boolean tryConsumeImpl(long tokensToConsume) {
         BucketState previousState = stateReference.get();
         BucketState newState = previousState.clone();
-        Bandwidth[] bandwidths = configuration.getBandwidths();
+        Bandwidth[] bandwidths = configuration.getLimitedBandwidths();
         long currentTimeNanos = configuration.getTimeMeter().currentTimeNanos();
 
         while (true) {
@@ -84,7 +84,7 @@ public class LockFreeBucket extends AbstractBucket {
 
     @Override
     protected boolean consumeOrAwaitImpl(long tokensToConsume, long waitIfBusyTimeLimit) throws InterruptedException {
-        Bandwidth[] bandwidths = configuration.getBandwidths();
+        Bandwidth[] bandwidths = configuration.getLimitedBandwidths();
         boolean isWaitingLimited = waitIfBusyTimeLimit > 0;
 
         final long methodStartTimeNanos = configuration.getTimeMeter().currentTimeNanos();

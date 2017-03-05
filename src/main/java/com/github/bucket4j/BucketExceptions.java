@@ -65,11 +65,6 @@ public final class BucketExceptions {
         return new IllegalArgumentException(msg);
     }
 
-    public static IllegalArgumentException onlyOneGuarantedBandwidthSupported() {
-        String msg = "Only one guaranteed bandwidth supported";
-        return new IllegalArgumentException(msg);
-    }
-
     // ------------------- end of construction time exceptions --------------------------------
 
     // ------------------- usage time exceptions  ---------------------------------------------

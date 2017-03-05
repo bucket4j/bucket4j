@@ -206,13 +206,13 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
             ex.message == nonPositiveTokensToConsume(-1).message
 
         when:
-            bucket.consumeAsMuchAsPossible(0)
+            bucket.tryConsumeAsMuchAsPossible(0)
         then:
             ex = thrown()
             ex.message == nonPositiveTokensToConsume(0).message
 
         when:
-            bucket.consumeAsMuchAsPossible(-1)
+            bucket.tryConsumeAsMuchAsPossible(-1)
         then:
             ex = thrown()
             ex.message == nonPositiveTokensToConsume(-1).message
@@ -236,13 +236,13 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
                     .withLimitedBandwidth(VALID_CAPACITY, Duration.ofMinutes(VALID_PERIOD))
                     .build()
         when:
-            bucket.tryConsumeSingleToken(0)
+            bucket.consumeSingleToken(0)
         then:
             IllegalArgumentException ex = thrown()
             ex.message == nonPositiveNanosToWait(0).message
 
         when:
-            bucket.tryConsumeSingleToken(-1)
+            bucket.consumeSingleToken(-1)
         then:
             ex = thrown()
             ex.message == nonPositiveNanosToWait(-1).message

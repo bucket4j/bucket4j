@@ -30,13 +30,17 @@ public class BucketState implements Serializable {
     }
 
     public BucketState(BucketConfiguration configuration) {
-        Bandwidth[] bandwidths = configuration.getBandwidths();
+        Bandwidth[] bandwidths = configuration.getLimitedBandwidths();
         this.stateData = new long[1 + bandwidths.length];
+        long currentTimeNanos = configuration.getTimeMeter().currentTimeNanos();
         for(int i = 0; i < bandwidths.length; i++) {
             Bandwidth bandwidth = bandwidths[i];
-            setCurrentSize(i, bandwidth.getInitialTokens());
+            Long initialTokens = bandwidth.getInitialTokens();
+            if (initialTokens == null) {
+                initialTokens = bandwidth.getCapacity().getValue(currentTimeNanos);
+            }
+            setCurrentSize(i, initialTokens);
         }
-        long currentTimeNanos = configuration.getTimeMeter().currentTimeNanos();
         setLastRefillTimeNanos(currentTimeNanos);
     }
 

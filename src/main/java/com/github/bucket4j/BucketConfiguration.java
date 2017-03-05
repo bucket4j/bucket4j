@@ -24,60 +24,43 @@ import static com.github.bucket4j.BucketExceptions.*;
 
 public final class BucketConfiguration implements Serializable {
 
-    private final Bandwidth[] bandwidths;
+    private final Bandwidth[] limitedBandwidths;
+    private final Bandwidth guaranteedBandwidth;
     private final TimeMeter timeMeter;
 
-    public BucketConfiguration(List<Bandwidth> bandwidths, TimeMeter timeMeter) {
+    public BucketConfiguration(List<Bandwidth> limitedBandwidths, Bandwidth guaranteedBandwidth, TimeMeter timeMeter) {
         if (timeMeter == null) {
             throw nullTimeMeter();
         }
         this.timeMeter = timeMeter;
 
-        checkCompatibility(bandwidths);
-
-        this.bandwidths = new Bandwidth[bandwidths.size()];
-        for (int i = 0; i < bandwidths.size() ; i++) {
-            this.bandwidths[i] = bandwidths.get(i);
+        if (limitedBandwidths.isEmpty()) {
+            throw restrictionsNotSpecified();
         }
+        this.limitedBandwidths = new Bandwidth[limitedBandwidths.size()];
+        for (int i = 0; i < limitedBandwidths.size() ; i++) {
+            this.limitedBandwidths[i] = limitedBandwidths.get(i);
+        }
+
+        this.guaranteedBandwidth = guaranteedBandwidth;
     }
 
     public TimeMeter getTimeMeter() {
         return timeMeter;
     }
 
-    public Bandwidth[] getBandwidths() {
-        return bandwidths;
+    public Bandwidth[] getLimitedBandwidths() {
+        return limitedBandwidths;
     }
 
-    public Bandwidth getBandwidth(int index) {
-        return bandwidths[index];
-    }
-
-    public static void checkCompatibility(List<Bandwidth> bandwidths) {
-        int countOfLimitedBandwidth = 0;
-        int countOfGuaranteedBandwidth = 0;
-
-        for (Bandwidth bandwidth : bandwidths) {
-            if (bandwidth.isLimited()) {
-                countOfLimitedBandwidth++;
-            } else {
-                countOfGuaranteedBandwidth++;
-            }
-        }
-
-        if (countOfLimitedBandwidth == 0) {
-            throw restrictionsNotSpecified();
-        }
-
-        if (countOfGuaranteedBandwidth > 1) {
-            throw onlyOneGuarantedBandwidthSupported();
-        }
+    public Bandwidth getGuaranteedBandwidth() {
+        return guaranteedBandwidth;
     }
 
     @Override
     public String toString() {
         return "BucketConfiguration{" +
-                "bandwidths=" + Arrays.toString(bandwidths) +
+                "limitedBandwidths=" + Arrays.toString(limitedBandwidths) +
                 ", timeMeter=" + timeMeter +
                 '}';
     }

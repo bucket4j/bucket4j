@@ -28,7 +28,7 @@ class BucketStateSpecification extends Specification {
 
     def "GetAvailableTokens specification"(long requiredAvailableTokens, Bucket bucket) {
         setup:
-            Bandwidth[] bandwidths = bucket.configuration.bandwidths
+            Bandwidth[] bandwidths = bucket.configuration.limitedBandwidths
             BucketState state = bucket.createSnapshot()
         when:
             long availableTokens = state.getAvailableTokens(bandwidths)
@@ -46,7 +46,7 @@ class BucketStateSpecification extends Specification {
 
     def "delayAfterWillBePossibleToConsume specification"(long toConsume, long requiredTime, Bucket bucket) {
         setup:
-            Bandwidth[] bandwidths = bucket.configuration.bandwidths
+            Bandwidth[] bandwidths = bucket.configuration.limitedBandwidths
             BucketState state = bucket.createSnapshot()
         when:
             long actualTime = state.delayNanosAfterWillBePossibleToConsume(bandwidths, 0, toConsume)

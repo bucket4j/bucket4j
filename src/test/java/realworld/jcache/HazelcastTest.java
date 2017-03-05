@@ -118,8 +118,8 @@ public class HazelcastTest {
         assertTrue(msg, actualRate <= permittedRate);
 
         BucketState snapshot = bucket.createSnapshot();
-        long available = snapshot.getAvailableTokens(bucket.getConfiguration().getBandwidths());
-        long rest = bucket.consumeAsMuchAsPossible();
+        long available = snapshot.getAvailableTokens(bucket.getConfiguration().getLimitedBandwidths());
+        long rest = bucket.tryConsumeAsMuchAsPossible();
         assertTrue(rest >= available);
     }
 

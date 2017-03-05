@@ -5,6 +5,9 @@ import java.time.Duration;
 
 import static com.github.bucket4j.BucketExceptions.*;
 
+/**
+ * Specifies the speed of regeneration for consumed tokens.
+ */
 public class Refill implements Serializable {
 
     private final long periodNanos;
