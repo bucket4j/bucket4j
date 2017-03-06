@@ -19,6 +19,7 @@ package com.github.bucket4j;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import static com.github.bucket4j.BucketExceptions.nullTimeMeter;
 
@@ -33,7 +34,9 @@ public abstract class AbstractBucketBuilder<T extends AbstractBucketBuilder> {
 
     private TimeMeter timeMeter = TimeMeter.SYSTEM_MILLISECONDS;
     private List<Bandwidth> limitedBandwidths = new ArrayList<>(1);
+    private List<Long> limitedBandwidthsInitialTokens = new ArrayList<>(1);
     private Bandwidth guaranteedBandwidth;
+    private long guaranteedBandwidthInitialTokens;
 
     /**
      * Adds limited bandwidth for all buckets which will be constructed by this builder instance.

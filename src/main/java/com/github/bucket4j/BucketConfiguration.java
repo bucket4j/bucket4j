@@ -24,8 +24,12 @@ import static com.github.bucket4j.BucketExceptions.*;
 
 public final class BucketConfiguration implements Serializable {
 
+    public static final long INITIAL_TOKENS_UNSPECIFIED = -1;
+
     private final Bandwidth[] limitedBandwidths;
+    private final long[] limitedBandwidthsInitialTokens;
     private final Bandwidth guaranteedBandwidth;
+    private final long guaranteedBandwidthInitialTokens;
     private final TimeMeter timeMeter;
 
     public BucketConfiguration(List<Bandwidth> limitedBandwidths, Bandwidth guaranteedBandwidth, TimeMeter timeMeter) {

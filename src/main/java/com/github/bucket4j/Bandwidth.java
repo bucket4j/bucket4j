@@ -50,36 +50,24 @@ import java.util.Optional;
 public class Bandwidth implements Serializable {
 
     private final Capacity capacity;
-    private final Long initialTokens;
     private final Refill refill;
 
-    private Bandwidth(Capacity capacity, Long initialTokens, Refill refill) {
+    private Bandwidth(Capacity capacity, Refill refill) {
         this.capacity = capacity;
-        this.initialTokens = initialTokens;
         this.refill = refill;
     }
 
-    public static Bandwidth create(long maxCapacity, Duration period) {
-        Long initialCapacity = maxCapacity;
-        Capacity capacity = Capacity.constant(maxCapacity);
-        Refill refill = Refill.smooth(maxCapacity, period);
-        return new Bandwidth(capacity, initialCapacity, refill);
+    public static Bandwidth simple(long capacity, Duration period) {
+        Refill refill = Refill.smooth(capacity, period);
+        return new Bandwidth(Capacity.constant(capacity), refill);
     }
 
-    public static Bandwidth create(long maxCapacity, long initialCapacity, Duration period) {
-        Capacity capacity = Capacity.constant(maxCapacity);
-        Refill refill = Refill.smooth(maxCapacity, period);
-        return new Bandwidth(capacity, initialCapacity, refill);
+    public static Bandwidth classic(long maxCapacity, Refill refill) {
+        return new Bandwidth(Capacity.constant(maxCapacity), refill);
     }
 
-    public static Bandwidth create(long maxCapacity, Refill refill) {
-        Long initialCapacity = maxCapacity;
-        Capacity capacity = Capacity.constant(maxCapacity);
-        return new Bandwidth(capacity, initialCapacity, refill);
-    }
-
-    public static Bandwidth create(Capacity capacity, long initialTokens, Refill refill) {
-        return new Bandwidth(capacity, initialTokens, refill);
+    public static Bandwidth classic(Capacity capacity, Refill refill) {
+        return new Bandwidth(capacity, refill);
     }
 
     public Refill getRefill() {
@@ -90,15 +78,10 @@ public class Bandwidth implements Serializable {
         return capacity;
     }
 
-    public Optional<Long> getInitialTokens() {
-        return Optional.ofNullable(initialTokens);
-    }
-
     @Override
     public String toString() {
         return "Bandwidth{" +
                 "capacity=" + capacity +
-                ", initialTokens=" + initialTokens +
                 ", refill=" + refill +
                 '}';
     }
