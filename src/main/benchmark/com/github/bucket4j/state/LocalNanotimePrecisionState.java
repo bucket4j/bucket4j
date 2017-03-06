@@ -16,6 +16,7 @@
 
 package com.github.bucket4j.state;
 
+import com.github.bucket4j.Bandwidth;
 import com.github.bucket4j.Bucket;
 import com.github.bucket4j.Bucket4j;
 import org.openjdk.jmh.annotations.Scope;
@@ -28,7 +29,8 @@ public class LocalNanotimePrecisionState {
 
     public final Bucket bucket = Bucket4j.builder()
             .withNanosecondPrecision()
-            .withLimitedBandwidth(Long.MAX_VALUE / 2, Duration.ofNanos(Long.MAX_VALUE / 2))
-            .build();
+            .addLimit(
+                    Bandwidth.simple(Long.MAX_VALUE / 2, Duration.ofNanos(Long.MAX_VALUE / 2))
+            ).build();
 
 }

@@ -27,9 +27,9 @@ public final class BucketExceptions {
         return new IllegalArgumentException(msg);
     }
 
-    public static IllegalArgumentException nonPositiveInitialTokens(long initialCapacity) {
-        String pattern = "{0} is wrong value for initial capacity, because initial capacity should be positive";
-        String msg = MessageFormat.format(pattern, initialCapacity);
+    public static IllegalArgumentException nonPositiveInitialTokens(long initialTokens) {
+        String pattern = "{0} is wrong value for initial capacity, because initial tokens count should be positive";
+        String msg = MessageFormat.format(pattern, initialTokens);
         return new IllegalArgumentException(msg);
     }
 

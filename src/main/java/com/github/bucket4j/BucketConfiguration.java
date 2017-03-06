@@ -32,7 +32,7 @@ public final class BucketConfiguration implements Serializable {
     private final long guaranteedBandwidthInitialTokens;
     private final TimeMeter timeMeter;
 
-    public BucketConfiguration(List<Bandwidth> limitedBandwidths, Bandwidth guaranteedBandwidth, TimeMeter timeMeter) {
+    public BucketConfiguration(List<BandwidthDefinition> limitedBandwidths, BandwidthDefinition guaranteedBandwidth, TimeMeter timeMeter) {
         if (timeMeter == null) {
             throw nullTimeMeter();
         }
@@ -42,11 +42,19 @@ public final class BucketConfiguration implements Serializable {
             throw restrictionsNotSpecified();
         }
         this.limitedBandwidths = new Bandwidth[limitedBandwidths.size()];
+        this.limitedBandwidthsInitialTokens = new long[limitedBandwidths.size()];
         for (int i = 0; i < limitedBandwidths.size() ; i++) {
-            this.limitedBandwidths[i] = limitedBandwidths.get(i);
+            this.limitedBandwidths[i] = limitedBandwidths.get(i).getBandwidth();
+            this.limitedBandwidthsInitialTokens[i] = limitedBandwidths.get(i).getInitialTokens();
         }
 
-        this.guaranteedBandwidth = guaranteedBandwidth;
+        if (guaranteedBandwidth == null) {
+            this.guaranteedBandwidth = null;
+            this.guaranteedBandwidthInitialTokens = INITIAL_TOKENS_UNSPECIFIED;
+        } else {
+            this.guaranteedBandwidth = guaranteedBandwidth.getBandwidth();
+            this.guaranteedBandwidthInitialTokens = guaranteedBandwidth.getInitialTokens();
+        }
     }
 
     public TimeMeter getTimeMeter() {
@@ -55,6 +63,14 @@ public final class BucketConfiguration implements Serializable {
 
     public Bandwidth[] getLimitedBandwidths() {
         return limitedBandwidths;
+    }
+
+    public long[] getLimitedBandwidthsInitialTokens() {
+        return limitedBandwidthsInitialTokens;
+    }
+
+    public long getGuaranteedBandwidthInitialTokens() {
+        return guaranteedBandwidthInitialTokens;
     }
 
     public Bandwidth getGuaranteedBandwidth() {

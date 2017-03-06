@@ -61,11 +61,11 @@ public abstract class AbstractBucket implements Bucket {
 
     @Override
     public boolean consumeSingleToken(long maxWaitTime) throws InterruptedException {
-        return tryConsume(1, maxWaitTime);
+        return consume(1, maxWaitTime);
     }
 
     @Override
-    public boolean tryConsume(long tokensToConsume, long maxWaitTime) throws InterruptedException {
+    public boolean consume(long tokensToConsume, long maxWaitTime) throws InterruptedException {
         if (tokensToConsume <= 0) {
             throw nonPositiveTokensToConsume(tokensToConsume);
         }

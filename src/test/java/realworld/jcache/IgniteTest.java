@@ -16,9 +16,7 @@
 
 package realworld.jcache;
 
-import com.github.bucket4j.Bucket;
-import com.github.bucket4j.Bucket4j;
-import com.github.bucket4j.BucketState;
+import com.github.bucket4j.*;
 import com.github.bucket4j.grid.BucketNotFoundException;
 import com.github.bucket4j.grid.GridBucketState;
 import com.github.bucket4j.grid.RecoveryStrategy;
@@ -61,8 +59,8 @@ public class IgniteTest {
     @Test
     public void testReconstructRecoveryStrategy() {
         Bucket bucket = Bucket4j.jCacheBuilder(RecoveryStrategy.RECONSTRUCT)
-                .withLimitedBandwidth(1_000, Duration.ofMinutes(1))
-                .withLimitedBandwidth(200, Duration.ofSeconds(10))
+                .addLimit(Bandwidth.simple(1_000, Duration.ofMinutes(1)))
+                .addLimit(Bandwidth.simple(200, Duration.ofSeconds(10)))
                 .build(cache, KEY);
 
         assertTrue(bucket.tryConsumeSingleToken());
@@ -76,8 +74,8 @@ public class IgniteTest {
     @Test
     public void testThrowExceptionRecoveryStrategy() {
         Bucket bucket = Bucket4j.jCacheBuilder(RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION)
-                .withLimitedBandwidth(1_000, Duration.ofMinutes(1))
-                .withLimitedBandwidth(200, Duration.ofSeconds(10))
+                .addLimit(Bandwidth.simple(1_000, Duration.ofMinutes(1)))
+                .addLimit(Bandwidth.simple(200, Duration.ofSeconds(10)))
                 .build(cache, KEY);
 
         assertTrue(bucket.tryConsumeSingleToken());
@@ -96,8 +94,8 @@ public class IgniteTest {
     @Test
     public void test15Seconds() throws Exception {
         Bucket bucket = Bucket4j.jCacheBuilder(RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION)
-                .withLimitedBandwidth(1_000, 0, Duration.ofMinutes(1))
-                .withLimitedBandwidth(200, 0, Duration.ofSeconds(10))
+                .addLimit(0, Bandwidth.simple(1_000, Duration.ofMinutes(1)))
+                .addLimit(0, Bandwidth.simple(200, Duration.ofSeconds(10)))
                 .build(cache, KEY);
 
         ConsumptionScenario scenario = new ConsumptionScenario(4, TimeUnit.SECONDS.toNanos(15), bucket);
@@ -112,7 +110,8 @@ public class IgniteTest {
         assertTrue(msg, actualRate <= permittedRate);
 
         BucketState snapshot = bucket.createSnapshot();
-        long available = snapshot.getAvailableTokens(bucket.getConfiguration().getLimitedBandwidths());
+        BucketConfiguration configuration = bucket.getConfiguration();
+        long available = snapshot.getAvailableTokens(configuration.getLimitedBandwidths(), configuration.getGuaranteedBandwidth());
         long rest = bucket.tryConsumeAsMuchAsPossible();
         assertTrue(rest >= available);
     }

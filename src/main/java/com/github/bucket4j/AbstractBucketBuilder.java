@@ -19,7 +19,7 @@ package com.github.bucket4j;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
+
 
 import static com.github.bucket4j.BucketExceptions.nullTimeMeter;
 
@@ -33,21 +33,35 @@ import static com.github.bucket4j.BucketExceptions.nullTimeMeter;
 public abstract class AbstractBucketBuilder<T extends AbstractBucketBuilder> {
 
     private TimeMeter timeMeter = TimeMeter.SYSTEM_MILLISECONDS;
-    private List<Bandwidth> limitedBandwidths = new ArrayList<>(1);
-    private List<Long> limitedBandwidthsInitialTokens = new ArrayList<>(1);
-    private Bandwidth guaranteedBandwidth;
-    private long guaranteedBandwidthInitialTokens;
+    private List<BandwidthDefinition> limitedBandwidths = new ArrayList<>(1);
+    private BandwidthDefinition guaranteedBandwidth;
 
     /**
      * Adds limited bandwidth for all buckets which will be constructed by this builder instance.
-     *
      *
      * @param bandwidth limitation
      * @return this builder instance
      */
     public T addLimit(Bandwidth bandwidth) {
         Objects.requireNonNull(bandwidth);
-        limitedBandwidths.add(bandwidth);
+        limitedBandwidths.add(new BandwidthDefinition(bandwidth, BucketConfiguration.INITIAL_TOKENS_UNSPECIFIED));
+        return (T) this;
+    }
+
+    /**
+     * Adds limited bandwidth for all buckets which will be constructed by this builder instance.
+     *
+     * @param bandwidth limitation
+     * @param initialTokens the count of initial tokens
+     *
+     * @return this builder instance
+     */
+    public T addLimit(long initialTokens, Bandwidth bandwidth) {
+        Objects.requireNonNull(bandwidth);
+        if (initialTokens < 0) {
+            throw BucketExceptions.nonPositiveInitialTokens(initialTokens);
+        }
+        limitedBandwidths.add(new BandwidthDefinition(bandwidth, initialTokens));
         return (T) this;
     }
 
@@ -69,7 +83,7 @@ public abstract class AbstractBucketBuilder<T extends AbstractBucketBuilder> {
      */
     public T setGuarantee(Bandwidth bandwidth) {
         Objects.requireNonNull(bandwidth);
-        guaranteedBandwidth = bandwidth;
+        guaranteedBandwidth = new BandwidthDefinition(bandwidth,  BucketConfiguration.INITIAL_TOKENS_UNSPECIFIED);
         return (T) this;
     }
 

@@ -16,6 +16,7 @@
 
 package realworld.local;
 
+import com.github.bucket4j.Bandwidth;
 import com.github.bucket4j.Bucket;
 import com.github.bucket4j.Bucket4j;
 import org.junit.Test;
@@ -31,8 +32,8 @@ public class LocalTest {
     @Test
     public void test15Seconds() throws Exception {
         Bucket bucket = Bucket4j.builder()
-                .withLimitedBandwidth(1_000, 0, Duration.ofMinutes(1))
-                .withLimitedBandwidth(200, 0, Duration.ofSeconds(10))
+                .addLimit(Bandwidth.simple(1_000, Duration.ofMinutes(1)))
+                .addLimit(Bandwidth.simple(200, Duration.ofSeconds(10)))
                 .build();
 
         ConsumptionScenario scenario = new ConsumptionScenario(4, TimeUnit.SECONDS.toNanos(15), bucket);
