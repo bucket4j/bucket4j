@@ -43,8 +43,7 @@ public abstract class AbstractBucketBuilder<T extends AbstractBucketBuilder> {
      * @return this builder instance
      */
     public T addLimit(Bandwidth bandwidth) {
-        Objects.requireNonNull(bandwidth);
-        limitedBandwidths.add(new BandwidthDefinition(bandwidth, BucketConfiguration.INITIAL_TOKENS_UNSPECIFIED));
+        limitedBandwidths.add(new BandwidthDefinition(bandwidth));
         return (T) this;
     }
 
@@ -57,10 +56,6 @@ public abstract class AbstractBucketBuilder<T extends AbstractBucketBuilder> {
      * @return this builder instance
      */
     public T addLimit(long initialTokens, Bandwidth bandwidth) {
-        Objects.requireNonNull(bandwidth);
-        if (initialTokens < 0) {
-            throw BucketExceptions.nonPositiveInitialTokens(initialTokens);
-        }
         limitedBandwidths.add(new BandwidthDefinition(bandwidth, initialTokens));
         return (T) this;
     }
@@ -82,8 +77,7 @@ public abstract class AbstractBucketBuilder<T extends AbstractBucketBuilder> {
      * @return this builder instance
      */
     public T setGuarantee(Bandwidth bandwidth) {
-        Objects.requireNonNull(bandwidth);
-        guaranteedBandwidth = new BandwidthDefinition(bandwidth,  BucketConfiguration.INITIAL_TOKENS_UNSPECIFIED);
+        guaranteedBandwidth = new BandwidthDefinition(bandwidth);
         return (T) this;
     }
 
@@ -137,4 +131,5 @@ public abstract class AbstractBucketBuilder<T extends AbstractBucketBuilder> {
                 ", guaranteedBandwidth=" + guaranteedBandwidth +
                 '}';
     }
+
 }

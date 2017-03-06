@@ -25,16 +25,23 @@ import static com.github.bucket4j.BucketExceptions.*
 
 public class DetectionOfIllegalApiUsageSpecification extends Specification {
 
-    private static final long VALID_PERIOD = 10;
+    private static final Duration VALID_PERIOD = Duration.ofMinutes(10);
     private static final long VALID_CAPACITY = 1000;
 
     @Unroll
     def "Should detect that capacity #capacity is wrong"(long capacity) {
         when:
-             Bucket4j.builder().withLimitedBandwidth(capacity, Duration.ofMinutes(VALID_PERIOD))
+             Bandwidth.simple(capacity, VALID_PERIOD)
         then:
             IllegalArgumentException ex = thrown()
             ex.message == nonPositiveCapacity(capacity).message
+
+        when:
+            Bandwidth.classic(capacity, Refill.smooth(1, VALID_PERIOD))
+        then:
+            ex = thrown()
+            ex.message == nonPositiveCapacity(capacity).message
+
         where:
           capacity << [-10, -5, 0]
     }

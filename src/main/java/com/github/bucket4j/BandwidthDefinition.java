@@ -17,14 +17,30 @@
 
 package com.github.bucket4j;
 
+import java.util.Objects;
+
 class BandwidthDefinition {
 
     private final Bandwidth bandwidth;
     private final long initialTokens;
 
     public BandwidthDefinition(Bandwidth bandwidth, long initialTokens) {
+        if (bandwidth == null) {
+            throw BucketExceptions.nullBandwidth();
+        }
+        if (initialTokens < 0) {
+            throw BucketExceptions.nonPositiveInitialTokens(initialTokens);
+        }
         this.bandwidth = bandwidth;
         this.initialTokens = initialTokens;
+    }
+
+    public BandwidthDefinition(Bandwidth bandwidth) {
+        if (bandwidth == null) {
+            throw BucketExceptions.nullBandwidth();
+        }
+        this.bandwidth = bandwidth;
+        this.initialTokens = BucketConfiguration.INITIAL_TOKENS_UNSPECIFIED;
     }
 
     public Bandwidth getBandwidth() {

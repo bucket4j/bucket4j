@@ -41,6 +41,9 @@ public interface Capacity extends Serializable {
         private final long value;
 
         private ImmutableCapacity(long value) {
+            if (value <= 0) {
+                throw BucketExceptions.nonPositiveCapacity(value);
+            }
             this.value = value;
         }
 

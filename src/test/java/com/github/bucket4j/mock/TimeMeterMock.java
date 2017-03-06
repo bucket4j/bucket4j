@@ -33,12 +33,12 @@ public class TimeMeterMock implements TimeMeter {
         currentTimeNanos = 0;
     }
 
-    public TimeMeterMock(long currentTime) {
-        this.currentTimeNanos = currentTime;
+    public TimeMeterMock(long currentTimeNanos) {
+        this.currentTimeNanos = currentTimeNanos;
     }
 
-    public void addTime(long duration) {
-        currentTimeNanos += duration;
+    public void addTime(long nanos) {
+        currentTimeNanos += nanos;
     }
 
     public void setCurrentTimeNanos(long currentTimeNanos) {
