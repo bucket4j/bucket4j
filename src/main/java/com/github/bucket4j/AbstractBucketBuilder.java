@@ -18,7 +18,6 @@ package com.github.bucket4j;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 
 import static com.github.bucket4j.BucketExceptions.nullTimeMeter;
@@ -43,7 +42,7 @@ public abstract class AbstractBucketBuilder<T extends AbstractBucketBuilder> {
      * @return this builder instance
      */
     public T addLimit(Bandwidth bandwidth) {
-        limitedBandwidths.add(new BandwidthDefinition(bandwidth));
+        limitedBandwidths.add(BandwidthDefinition.unspecifiedInitialTokens(bandwidth));
         return (T) this;
     }
 
@@ -56,7 +55,7 @@ public abstract class AbstractBucketBuilder<T extends AbstractBucketBuilder> {
      * @return this builder instance
      */
     public T addLimit(long initialTokens, Bandwidth bandwidth) {
-        limitedBandwidths.add(new BandwidthDefinition(bandwidth, initialTokens));
+        limitedBandwidths.add(BandwidthDefinition.withInitialTokens(bandwidth, initialTokens));
         return (T) this;
     }
 
@@ -77,7 +76,7 @@ public abstract class AbstractBucketBuilder<T extends AbstractBucketBuilder> {
      * @return this builder instance
      */
     public T setGuarantee(Bandwidth bandwidth) {
-        guaranteedBandwidth = new BandwidthDefinition(bandwidth);
+        guaranteedBandwidth = BandwidthDefinition.unspecifiedInitialTokens(bandwidth);
         return (T) this;
     }
 

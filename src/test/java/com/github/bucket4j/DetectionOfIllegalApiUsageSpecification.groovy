@@ -16,7 +16,6 @@
 
 package com.github.bucket4j
 
-import com.github.bucket4j.mock.Mock
 import spock.lang.Specification
 import spock.lang.Unroll
 import java.time.Duration
@@ -28,16 +27,18 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
     private static final Duration VALID_PERIOD = Duration.ofMinutes(10);
     private static final long VALID_CAPACITY = 1000;
 
+    AbstractBucketBuilder builder = Bucket4j.builder()
+
     @Unroll
     def "Should detect that capacity #capacity is wrong"(long capacity) {
         when:
-             Bandwidth.simple(capacity, VALID_PERIOD)
+            builder.addLimit(Bandwidth.simple(capacity, VALID_PERIOD))
         then:
             IllegalArgumentException ex = thrown()
             ex.message == nonPositiveCapacity(capacity).message
 
         when:
-            Bandwidth.classic(capacity, Refill.smooth(1, VALID_PERIOD))
+            builder.addLimit(Bandwidth.classic(capacity, Refill.smooth(1, VALID_PERIOD)))
         then:
             ex = thrown()
             ex.message == nonPositiveCapacity(capacity).message
@@ -47,33 +48,48 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
     }
 
     @Unroll
-    def "Should detect that initial capacity #initialCapacity is wrong"(long initialCapacity) {
+    def "Should detect that initialTokens #initialTokens is wrong"(long initialTokens) {
         when:
-            Bucket4j.builder().withLimitedBandwidth(VALID_CAPACITY, initialCapacity, Duration.ofMinutes(VALID_PERIOD))
+            builder.addLimit(initialTokens, Bandwidth.simple(VALID_CAPACITY, VALID_PERIOD))
         then:
             IllegalArgumentException ex = thrown()
-            ex.message == nonPositiveInitialTokens(initialCapacity).message
+            ex.message == nonPositiveInitialTokens(initialTokens).message
         where:
-            initialCapacity << [-10, -1]
+            initialTokens << [-10, -1]
     }
 
     @Unroll
     def "Should check that #period is invalid period of bandwidth"(long period) {
         when:
-            Bucket4j.builder().withLimitedBandwidth(VALID_CAPACITY, Duration.ofMinutes(period))
+            builder.addLimit(Bandwidth.simple(VALID_CAPACITY, Duration.ofMinutes(period)))
         then:
             IllegalArgumentException ex = thrown()
             ex.message == nonPositivePeriod(Duration.ofMinutes(period).toNanos()).message
+
+        when:
+            builder.setGuarantee(Bandwidth.simple(VALID_CAPACITY, Duration.ofMinutes(period)))
+        then:
+            ex = thrown()
+            ex.message == nonPositivePeriod(Duration.ofMinutes(period).toNanos()).message
+
         where:
             period << [-10, -1, 0]
     }
 
-    def "Should check that bandwidth adjuster is not null"() {
+    def "Should check that capacity is not null"() {
         when:
-            Bucket4j.builder().withLimitedBandwidth(null, VALID_CAPACITY, Duration.ofMinutes(VALID_PERIOD))
+            builder.addLimit(Bandwidth.classic(null, Refill.smooth(10, Duration.ofSeconds(1))))
         then:
             IllegalArgumentException ex = thrown()
             ex.message == nullBandwidthCapacity().message
+    }
+
+    def "Should check that refill is not null"() {
+        when:
+            builder.addLimit(Bandwidth.classic(42, null))
+        then:
+            IllegalArgumentException ex = thrown()
+            ex.message == nullBandwidthRefill().message
     }
 
     def "Should check than time meter is not null"() {
@@ -94,100 +110,18 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
             ex.message == restrictionsNotSpecified().message
 
         when:
-           builder.withGuaranteedBandwidth(VALID_CAPACITY, Duration.ofMinutes(VALID_PERIOD)).build()
+           builder.setGuarantee(Bandwidth.simple(VALID_CAPACITY, VALID_PERIOD))
+                   .build()
         then:
             ex = thrown()
             ex.message == restrictionsNotSpecified().message
     }
 
-    def "Should check that guaranteed capacity could not be configured twice"() {
-        setup:
-            def builder = Bucket4j.builder()
-                .withLimitedBandwidth(VALID_CAPACITY * 2, Duration.ofMinutes(VALID_PERIOD))
-                .withGuaranteedBandwidth(VALID_CAPACITY + 1, Duration.ofMinutes(VALID_PERIOD))
-                .withGuaranteedBandwidth(VALID_CAPACITY, Duration.ofMinutes(VALID_PERIOD))
-        when:
-            builder.build()
-        then:
-            IllegalArgumentException ex = thrown()
-            ex.message == onlyOneGuarantedBandwidthSupported().message
-    }
-
-    def "Should check that guaranteed bandwidth has lesser rate than limited bandwidth"() {
-        setup:
-            def builder1 = Bucket4j.builder()
-                .withLimitedBandwidth(VALID_CAPACITY, Duration.ofMinutes(VALID_PERIOD))
-                .withGuaranteedBandwidth(VALID_CAPACITY, Duration.ofMinutes(VALID_PERIOD))
-            def builder2 = Bucket4j.builder()
-                .withGuaranteedBandwidth(VALID_CAPACITY, Duration.ofMinutes(VALID_PERIOD))
-                .withLimitedBandwidth(VALID_CAPACITY, Duration.ofMinutes(VALID_PERIOD))
-            def builder3 = Bucket4j.builder()
-                .withLimitedBandwidth(new Mock(VALID_CAPACITY), 0, Duration.ofMinutes(VALID_PERIOD))
-                .withGuaranteedBandwidth(VALID_CAPACITY, Duration.ofMinutes(VALID_PERIOD))
-            def builder4 = Bucket4j.builder()
-                .withLimitedBandwidth(VALID_CAPACITY, Duration.ofMinutes(VALID_PERIOD))
-                .withGuaranteedBandwidth(new Mock(VALID_CAPACITY), 0, Duration.ofMinutes(VALID_PERIOD))
-        when:
-            builder1.build()
-        then:
-            IllegalArgumentException ex = thrown()
-            ex.message == guarantedHasGreaterRateThanLimited(builder1.getBandwidthDefinition(1), builder1.getBandwidthDefinition(0)).message
-        when:
-            builder2.build()
-        then:
-            ex = thrown()
-            ex.message == guarantedHasGreaterRateThanLimited(builder2.getBandwidthDefinition(0), builder2.getBandwidthDefinition(1)).message
-        when:
-            builder3.build()
-        then:
-            notThrown()
-        when:
-            builder4.build()
-        then:
-            notThrown()
-    }
-
-    @Unroll
-    def "Should check for overlaps, test #number"(int number, long firstCapacity, long firstPeriod, long secondCapacity, long secondPeriod) {
-        setup:
-            def builderWithStaticCapacity = Bucket4j.builder()
-                .withLimitedBandwidth(firstCapacity, Duration.ofMinutes(firstPeriod))
-                .withLimitedBandwidth(secondCapacity, Duration.ofMinutes(secondPeriod))
-            def builderWithDynamicCapacity1 = Bucket4j.builder()
-                .withLimitedBandwidth(new Mock(firstCapacity), 0, Duration.ofMinutes(firstPeriod))
-                .withLimitedBandwidth(secondCapacity, Duration.ofMinutes(secondPeriod))
-            def builderWithDynamicCapacity2 = Bucket4j.builder()
-                .withLimitedBandwidth(firstCapacity, Duration.ofMinutes(firstPeriod))
-                .withLimitedBandwidth(new Mock(secondCapacity), 0, Duration.ofMinutes(secondPeriod))
-        when:
-            builderWithStaticCapacity.build()
-        then:
-            IllegalArgumentException ex = thrown()
-            ex.message == hasOverlaps(builderWithStaticCapacity.getBandwidthDefinition(0), builderWithStaticCapacity.getBandwidthDefinition(1)).message
-        when:
-            builderWithDynamicCapacity1.build()
-        then:
-            notThrown()
-        when:
-            builderWithDynamicCapacity2.build()
-        then:
-            notThrown()
-        where:
-            number |  firstCapacity | firstPeriod | secondCapacity | secondPeriod
-               1   |     999        |     10      |      999       |      10
-               2   |     999        |     10      |      1000      |      10
-               3   |     999        |     10      |      998       |      10
-               4   |     999        |     10      |      999       |      11
-               5   |     999        |     10      |      999       |      9
-               6   |     999        |     10      |      1000      |      8
-               7   |     999        |     10      |      998       |      11
-    }
-
     def "Should check that tokens to consume should be positive"() {
         setup:
-            def bucket = Bucket4j.builder()
-                    .withLimitedBandwidth(VALID_CAPACITY, Duration.ofMinutes(VALID_PERIOD))
-                    .build()
+            def bucket = Bucket4j.builder().addLimit(
+                    Bandwidth.simple(VALID_CAPACITY, VALID_PERIOD)
+            ).build()
         when:
             bucket.consume(0)
         then:
@@ -225,13 +159,13 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
             ex.message == nonPositiveTokensToConsume(-1).message
 
         when:
-            bucket.tryConsume(0, VALID_PERIOD)
+            bucket.consume(0L, VALID_PERIOD.toNanos())
         then:
             ex = thrown()
             ex.message == nonPositiveTokensToConsume(0).message
 
         when:
-            bucket.tryConsume(-1, VALID_PERIOD)
+            bucket.consume(-1, VALID_PERIOD.toNanos())
         then:
             ex = thrown()
             ex.message == nonPositiveTokensToConsume(-1).message
@@ -239,9 +173,9 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
 
     def "Should check that time units to wait should be positive"() {
         setup:
-            def bucket = Bucket4j.builder()
-                    .withLimitedBandwidth(VALID_CAPACITY, Duration.ofMinutes(VALID_PERIOD))
-                    .build()
+            def bucket = Bucket4j.builder().addLimit(
+                    Bandwidth.simple(VALID_CAPACITY, VALID_PERIOD)
+            ).build()
         when:
             bucket.consumeSingleToken(0)
         then:

@@ -20,6 +20,10 @@ import java.io.Serializable;
 import java.time.Duration;
 import java.util.Optional;
 
+import static com.github.bucket4j.BucketExceptions.nullBandwidth;
+import static com.github.bucket4j.BucketExceptions.nullBandwidthCapacity;
+import static com.github.bucket4j.BucketExceptions.nullBandwidthRefill;
+
 /**
  * The core term of Bucket4j limiting algorithm is bandwidth.
  * Bucket allow to consume any token only if rate of consumption satisfies the limits specified by each configured bandwidth.
@@ -53,6 +57,12 @@ public class Bandwidth implements Serializable {
     private final Refill refill;
 
     private Bandwidth(Capacity capacity, Refill refill) {
+        if (capacity == null) {
+            throw nullBandwidthCapacity();
+        }
+        if (refill == null) {
+            throw nullBandwidthRefill();
+        }
         this.capacity = capacity;
         this.refill = refill;
     }

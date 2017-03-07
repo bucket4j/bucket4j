@@ -17,30 +17,32 @@
 
 package com.github.bucket4j;
 
-import java.util.Objects;
 
 class BandwidthDefinition {
 
     private final Bandwidth bandwidth;
     private final long initialTokens;
 
-    public BandwidthDefinition(Bandwidth bandwidth, long initialTokens) {
+    private BandwidthDefinition(Bandwidth bandwidth, long initialTokens) {
+        this.bandwidth = bandwidth;
+        this.initialTokens = initialTokens;
+    }
+
+    public static BandwidthDefinition withInitialTokens(Bandwidth bandwidth, long initialTokens) {
         if (bandwidth == null) {
             throw BucketExceptions.nullBandwidth();
         }
         if (initialTokens < 0) {
             throw BucketExceptions.nonPositiveInitialTokens(initialTokens);
         }
-        this.bandwidth = bandwidth;
-        this.initialTokens = initialTokens;
+        return new BandwidthDefinition(bandwidth, initialTokens);
     }
 
-    public BandwidthDefinition(Bandwidth bandwidth) {
+    public static BandwidthDefinition unspecifiedInitialTokens(Bandwidth bandwidth) {
         if (bandwidth == null) {
             throw BucketExceptions.nullBandwidth();
         }
-        this.bandwidth = bandwidth;
-        this.initialTokens = BucketConfiguration.INITIAL_TOKENS_UNSPECIFIED;
+        return new BandwidthDefinition(bandwidth, BucketConfiguration.INITIAL_TOKENS_UNSPECIFIED);
     }
 
     public Bandwidth getBandwidth() {
@@ -49,6 +51,15 @@ class BandwidthDefinition {
 
     public long getInitialTokens() {
         return initialTokens;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("BandwidthDefinition{");
+        sb.append("bandwidth=").append(bandwidth);
+        sb.append(", initialTokens=").append(initialTokens);
+        sb.append('}');
+        return sb.toString();
     }
 
 }

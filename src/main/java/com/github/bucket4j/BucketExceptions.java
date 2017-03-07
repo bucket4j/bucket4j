@@ -43,6 +43,11 @@ public final class BucketExceptions {
         return new IllegalArgumentException(msg);
     }
 
+    public static IllegalArgumentException nullBandwidthRefill() {
+        String msg = "Bandwidth refill can not be null";
+        return new IllegalArgumentException(msg);
+    }
+
     public static IllegalArgumentException nullTimeMeter() {
         String msg = "Time meter can not be null";
         return new IllegalArgumentException(msg);
