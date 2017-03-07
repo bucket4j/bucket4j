@@ -36,7 +36,7 @@ public class BucketState implements Serializable {
         long guarateeInitialTokens = configuration.getGuaranteedBandwidthInitialTokens();
         int totalBandwidthCount = limits.length + (guarantee == null? 0 : 1);
 
-        this.stateData = new long[1 + totalBandwidthCount];
+        this.stateData = new long[1 + totalBandwidthCount * 2];
         long currentTimeNanos = configuration.getTimeMeter().currentTimeNanos();
         for(int i = 0; i < limits.length; i++) {
             Bandwidth bandwidth = limits[i];

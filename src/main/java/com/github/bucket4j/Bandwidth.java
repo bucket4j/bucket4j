@@ -71,8 +71,8 @@ public class Bandwidth implements Serializable {
         return new Bandwidth(Capacity.constant(capacity), Refill.smooth(capacity, period));
     }
 
-    public static Bandwidth classic(long maxCapacity, Refill refill) {
-        return new Bandwidth(Capacity.constant(maxCapacity), refill);
+    public static Bandwidth classic(long capacity, Refill refill) {
+        return new Bandwidth(Capacity.constant(capacity), refill);
     }
 
     public static Bandwidth classic(Capacity capacity, Refill refill) {
