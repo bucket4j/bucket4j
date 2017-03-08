@@ -25,12 +25,16 @@ import static com.github.bucket4j.BucketExceptions.nullBandwidthCapacity;
 import static com.github.bucket4j.BucketExceptions.nullBandwidthRefill;
 
 /**
- * The core term of Bucket4j limiting algorithm is bandwidth.
- * Bucket allow to consume any token only if rate of consumption satisfies the limits specified by each configured bandwidth.
- * The bandwidth consists from {@link Capacity capacity} and {@link Refill refill rate}.
+ * <h3>Anatomy of bandwidth:</h3>
+ * The bandwidth is key building block for bucket.
+ * The bandwidth consists from {@link Capacity capacity} and {@link Refill refill}. Where:
+ * <ul>
+ *     <li><b>Capacity</b> - defines the maximum count of tokens which can be hold by bucket.</li>
+ *     <li><b>Refill</b> - defines the speed in which tokens are regenerated in bucket.</li>
+ * </ul>
  *
- * <p>
- * There are two types different of bandwidth:
+ * <h3>Limited and Guaranteed bandwidths:</h3>
+ * There are two types of bandwidth:
  * <ul>
  *     <li><b>Limited:</b> specifies the limitation.
  * <pre>{@code // Adds bandwidth that restricts to consume not often 1000 tokens per 1 minute
@@ -40,16 +44,28 @@ import static com.github.bucket4j.BucketExceptions.nullBandwidthRefill;
  *     <li><b>Guaranteed:</b> this bandwidth provides following feature - if tokens can be consumed from guaranteed bandwidth,
  * then bucket does not check of any limited bandwidths. Only one guaranteed bandwidth can be specified for bucket:
  * <pre>{@code // Adds bandwidth which guarantees, that client of bucket will be able to consume 1 tokens per 10 minutes, regardless of limitations.
- * builder.withGuaranteedBandwidth(1, TimeUnit.MINUTES, 10);
+ * builder.setGuarantee(Bandwidth.simple(1, Duration.ofMinutes(10)));
  * }</pre>
  * </li>
  * </ul>
  *
+ * <h3>Classic and simple bandwidth definition:</h3>
+ * The bandwidth can be initialized in the two way:
+ * <
+ *
+ * <h3>Multiple bandwidths:</h3>
  * Most likely you will use only one bandwidth per bucket,
  * but in general it is possible to specify more than one bandwidth per bucket,
  * and bucket will handle all bandwidth in strongly atomic way.
  * Strongly atomic means that token will be consumed from all bandwidth or from nothing,
  * in other words any token can not be partially consumed.
+ * <br> Example of multiple bandwidth:
+ * <pre>{@code // Adds bandwidth that restricts to consume not often 1000 tokens per 1 minute and not often than 100 tokens per second
+ * Bucket bucket = Bucket4j.builder().
+ *      .addLimit(Bandwidth.create(1000, Duration.ofMinutes(1)));
+ *      .addLimit(Bandwidth.create(100, Duration.ofSeconds(1)));
+ *      .build()
+ * }</pre>
  */
 public class Bandwidth implements Serializable {
 

@@ -113,8 +113,20 @@ public interface Bucket {
      */
     void consume(long numTokens) throws InterruptedException;
 
+    /**
+     * Creates the copy of internal state.
+     *
+     * <p> This method is designed to be used only for monitoring and testing, you should never use this method for business cases.
+     *
+     * @return snapshot of internal state
+     */
     BucketState createSnapshot();
 
+    /**
+     * Returns configuration of this bucket.
+     *
+     * @return configuration
+     */
     BucketConfiguration getConfiguration();
 
 }
