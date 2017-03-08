@@ -108,7 +108,7 @@ public class BucketState implements Serializable {
 
     public void refillAllBandwidth(Bandwidth[] limits, Bandwidth guarantee, long currentTimeNanos) {
         long lastRefillTimeNanos = getLastRefillTimeNanos();
-        if (lastRefillTimeNanos == currentTimeNanos) {
+        if (currentTimeNanos <= lastRefillTimeNanos) {
             return;
         }
         for (int i = 0; i < limits.length; i++) {
@@ -132,41 +132,35 @@ public class BucketState implements Serializable {
     }
 
     private void refill(int bandwidthIndex, Bandwidth bandwidth, long previousRefillNanos, long currentTimeNanos) {
-        final long maxCapacity = bandwidth.getCapacity().getValue(currentTimeNanos);
+        final long capacity = bandwidth.getCapacity().getValue(currentTimeNanos);
         long currentSize = getCurrentSize(bandwidthIndex);
 
-        if (currentSize >= maxCapacity) {
-            setCurrentSize(bandwidthIndex, maxCapacity);
+        if (currentSize >= capacity) {
+            setCurrentSize(bandwidthIndex, capacity);
             setRoundingError(bandwidthIndex, 0L);
             return;
         }
 
         long durationSinceLastRefillNanos = currentTimeNanos - previousRefillNanos;
 
-        long periodNanos = bandwidth.getRefill().getPeriodNanos();
-        if (durationSinceLastRefillNanos > periodNanos) {
-            setCurrentSize(bandwidthIndex, maxCapacity);
-            setRoundingError(bandwidthIndex, 0L);
-            return;
-        }
-
+        long refillPeriod = bandwidth.getRefill().getPeriodNanos();
+        long refillTokens = bandwidth.getRefill().getTokens();
         long roundingError = getRoundingError(bandwidthIndex);
-        long divided = bandwidth.getRefill().getTokens() * durationSinceLastRefillNanos + roundingError;
-        long calculatedRefill = divided / periodNanos;
+        long divided = refillTokens * durationSinceLastRefillNanos + roundingError;
+        long calculatedRefill = divided / refillPeriod;
         if (calculatedRefill == 0) {
-            roundingError = divided % periodNanos;
-            setRoundingError(bandwidthIndex, roundingError);
+            setRoundingError(bandwidthIndex, divided);
             return;
         }
 
         long newSize = currentSize + calculatedRefill;
-        if (newSize >= maxCapacity) {
-            setCurrentSize(bandwidthIndex, maxCapacity);
+        if (newSize >= capacity) {
+            setCurrentSize(bandwidthIndex, capacity);
             setRoundingError(bandwidthIndex, 0);
             return;
         }
 
-        roundingError = divided % periodNanos;
+        roundingError = divided % refillPeriod;
         setCurrentSize(bandwidthIndex, newSize);
         setRoundingError(bandwidthIndex, roundingError);
     }
@@ -185,11 +179,11 @@ public class BucketState implements Serializable {
         return periodNanos * deficit / bandwidth.getRefill().getTokens();
     }
 
-    private long getCurrentSize(int bandwidth) {
+    long getCurrentSize(int bandwidth) {
         return stateData[1 + bandwidth * 2];
     }
 
-    private long getRoundingError(int bandwidth) {
+    long getRoundingError(int bandwidth) {
         return stateData[2 + bandwidth * 2];
     }
 

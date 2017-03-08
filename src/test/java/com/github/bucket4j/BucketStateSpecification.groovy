@@ -16,7 +16,6 @@
 
 package com.github.bucket4j
 
-import com.github.bucket4j.mock.Mock
 import com.github.bucket4j.mock.TimeMeterMock
 import spock.lang.Specification
 import spock.lang.Unroll
@@ -190,69 +189,81 @@ class BucketStateSpecification extends Specification {
     }
 
     @Unroll
-    def "Specification for refill #n"(int n, long initialCapacity, long period, long initTime,
-                                      long maxCapacityBefore, long maxCapacityAfter, long timeRefill1, long requiredSize1,
-                                      long timeRefill2, long requiredSize2, long timeRefill3, long requiredSize3) {
+    def "Specification for refill simple bandwidth #n"(int n, long initialTokens, long capacity, long period,
+                                                       long initTime, long timeOnRefill, long tokensAfterRefill, long roundingError) {
         setup:
-        def adjuster = new Mock(maxCapacityBefore)
-        def bandwidth = new Bandwidth(adjuster, initialCapacity, period, false);
-        def state = bandwidth.createInitialState()
+            TimeMeterMock mockTimer = new TimeMeterMock(initTime)
+            Bucket bucket = Bucket4j.builder()
+                    .addLimit(initialTokens, Bandwidth.simple(capacity, Duration.ofNanos(period)))
+                    .withCustomTimePrecision(mockTimer)
+                    .build()
+            BucketState state = bucket.createSnapshot()
+            BucketConfiguration configuration = bucket.getConfiguration()
         when:
-        adjuster.setCapacity(maxCapacityAfter)
-        bandwidth.refill(state, initTime, timeRefill1)
+            mockTimer.setCurrentTimeNanos(timeOnRefill)
+            state.refillAllBandwidth(configuration.limitedBandwidths, configuration.guaranteedBandwidth, timeOnRefill)
         then:
-        state.getCurrentSize() == requiredSize1
-        bandwidth.getMaxCapacity(timeRefill1) == maxCapacityAfter
-        when:
-        adjuster.setCapacity(maxCapacityAfter)
-        bandwidth.refill(state, timeRefill1, timeRefill2)
-        then:
-        state.getCurrentSize() == requiredSize2
-        bandwidth.getMaxCapacity(timeRefill1) == maxCapacityAfter
-        when:
-        adjuster.setCapacity(maxCapacityAfter)
-        bandwidth.refill(state, timeRefill2, timeRefill3)
-        then:
-        state.getCurrentSize() == requiredSize3
-        bandwidth.getMaxCapacity(timeRefill1) == maxCapacityAfter
+            state.getCurrentSize(0) == tokensAfterRefill
+            state.getRoundingError(0) == roundingError
         where:
-        n  | initialCapacity | period | initTime | maxCapacityBefore | maxCapacityAfter | timeRefill1 | requiredSize1 | timeRefill2 | requiredSize2 | timeRefill3 | requiredSize3
-        1  |        0        | 1000   | 10000    |      1000         |      1000        | 10040       |       40      |    10050    |    50         |    10090    |      90
-        2  |       50        | 1000   | 10050    |      1000         |      1000        | 10051       |       51      |    10055    |    55         |    10100    |     100
-        3  |       55        | 1000   | 10055    |      1000         |      1000        | 10500       |      500      |    11001    |  1000         |    12000    |    1000
-        4  |     1000        | 1000   | 10000    |      1000         |       900        | 10200       |      900      |    10250    |   900         |    10251    |     900
-        5  |      200        | 1000   | 10000    |      1000         |      1000        | 30000       |     1000      |    30001    |  1000         |    40000    |    1000
-        6  |        0        | 1000   | 10000    |       100         |       100        | 10005       |        0      |    10010    |     1         |    10019    |       1
-        7  |        0        | 1000   | 10000    |       100         |       100        | 10005       |        0      |    10009    |     0         |    10029    |       2
-        8  |        0        | 1000   | 10000    |       100         |       100        | 10004       |        0      |    10009    |     0         |    10010    |       1
+        n  | initialTokens |    capacity    | period | initTime | timeOnRefill | tokensAfterRefill | roundingError
+        1  |        0      |      1000      | 1000   | 10000    |     10040    |       40          |      0
+        2  |       50      |      1000      | 1000   | 10000    |     10001    |       51          |      0
+        3  |       55      |      1000      | 1000   | 10000    |      9999    |       55          |      0
+        4  |      200      |      1000      | 1000   | 10000    |     20000    |     1000          |      0
+        5  |        0      |       100      | 1000   | 10000    |     10003    |        0          |      300
+        6  |       90      |       100      | 1000   | 10000    |     10017    |       91          |      700
+        7  |        0      |       100      | 1000   | 10000    |     28888    |      100          |      0
     }
 
     @Unroll
-    def "Specification for consume #n"(int n, long initialCapacity, long period, long initTime,
-                                       long capacity , long timeRefill1, long consume1, long requiredSize1,
-                                       long timeRefill2, long consume2, long requiredSize2) {
+    def "Specification for refill classic bandwidth #n"(int n, long initialTokens, long capacity, long refillTokens, long refillPeriod,
+                                                       long initTime, long timeOnRefill, long tokensAfterRefill, long roundingError) {
         setup:
-        Bandwidth bandwidth = bandwidth(capacity, initialCapacity, period)
-        def state = bandwidth.createInitialState()
+            TimeMeterMock mockTimer = new TimeMeterMock(initTime)
+            def refill = Refill.smooth(refillTokens, Duration.ofNanos(refillPeriod))
+            Bucket bucket = Bucket4j.builder()
+                    .addLimit(initialTokens, Bandwidth.classic(capacity, refill))
+                    .withCustomTimePrecision(mockTimer)
+                    .build()
+            BucketState state = bucket.createSnapshot()
+            BucketConfiguration configuration = bucket.getConfiguration()
         when:
-        bandwidth.refill(state, initTime, timeRefill1)
-        bandwidth.consume(state, consume1)
+            mockTimer.setCurrentTimeNanos(timeOnRefill)
+            state.refillAllBandwidth(configuration.limitedBandwidths, configuration.guaranteedBandwidth, timeOnRefill)
         then:
-        state.getCurrentSize() == requiredSize1
-        when:
-        bandwidth.refill(state, timeRefill1, timeRefill2)
-        bandwidth.consume(state, consume2)
-        then:
-        state.getCurrentSize() == requiredSize2
+            state.getCurrentSize(0) == tokensAfterRefill
+            state.getRoundingError(0) == roundingError
         where:
-        n  | initialCapacity | period | initTime |    capacity | timeRefill1 |  consume1 | requiredSize1 | timeRefill2 | consume2 | requiredSize2
-        1  |        0        | 1000   | 10000    |      1000   |     10040   |     10    |     30        |    10050    |    20    |       20
-        2  |       50        | 1000   | 10050    |      1000   |     10051   |      2    |     49        |    10055    |     7    |       46
-        3  |       55        | 1000   | 10055    |      1000   |     10500   |     600   |      0        |    10504    |     3    |       1
+        n  | initialTokens |    capacity    | refillTokens | refillPeriod | initTime | timeOnRefill | tokensAfterRefill | roundingError
+        1  |        0      |      1000      |       1      |          1   | 10000    |     10040    |       40          |      0
+        2  |       50      |      1000      |      10      |         10   | 10000    |     10001    |       51          |      0
+        3  |       55      |      1000      |       1      |          1   | 10000    |     10000    |       55          |      0
+        4  |      200      |      1000      |      10      |         10   | 10000    |     20000    |     1000          |      0
+        5  |        0      |       100      |       1      |         10   | 10000    |     10003    |        0          |      3
+        6  |       90      |       100      |       1      |         10   | 10000    |     10017    |       91          |      7
+        7  |        0      |       100      |       1      |         10   | 10000    |     28888    |      100          |      0
     }
 
-    private Bandwidth bandwidth(long capacity, long initialCapacity, long period) {
-        return new Bandwidth(new Capacity.ImmutableCapacity(capacity), initialCapacity, period, false);
+    @Unroll
+    def "Specification for consume #n"(int n, long initialTokens, long period,
+                                       long capacity, long toConsume, long requiredSize
+                                       ) {
+        setup:
+            Bucket bucket = Bucket4j.builder()
+                .addLimit(initialTokens, Bandwidth.simple(capacity, Duration.ofNanos(period)))
+                .build()
+            BucketState state = bucket.createSnapshot()
+            BucketConfiguration configuration = bucket.getConfiguration()
+        when:
+            state.consume(configuration.limitedBandwidths, configuration.guaranteedBandwidth, toConsume)
+        then:
+            state.getCurrentSize(0) == requiredSize
+        where:
+        n  |  initialTokens  | period | capacity | toConsume | requiredSize
+        1  |        0        | 1000   |   1000   |    10     |     0
+        2  |       50        | 1000   |   1000   |     2     |    48
+        3  |       55        | 1000   |   1000   |   1600    |     0
     }
 
 }

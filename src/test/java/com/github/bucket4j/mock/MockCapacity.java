@@ -18,11 +18,11 @@ package com.github.bucket4j.mock;
 
 import com.github.bucket4j.Capacity;
 
-public class Mock implements Capacity {
+public class MockCapacity implements Capacity {
 
     private long capacity = 0;
 
-    public Mock(long capacity) {
+    public MockCapacity(long capacity) {
         this.capacity = capacity;
     }
 
