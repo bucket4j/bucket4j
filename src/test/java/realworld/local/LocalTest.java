@@ -32,8 +32,8 @@ public class LocalTest {
     @Test
     public void test15Seconds() throws Exception {
         Bucket bucket = Bucket4j.builder()
-                .addLimit(Bandwidth.simple(1_000, Duration.ofMinutes(1)))
-                .addLimit(Bandwidth.simple(200, Duration.ofSeconds(10)))
+                .addLimit(0, Bandwidth.simple(1_000, Duration.ofMinutes(1)))
+                .addLimit(0, Bandwidth.simple(200, Duration.ofSeconds(10)))
                 .build();
 
         ConsumptionScenario scenario = new ConsumptionScenario(4, TimeUnit.SECONDS.toNanos(15), bucket);
