@@ -33,8 +33,17 @@ public class LocalBucketBuilder extends AbstractBucketBuilder<LocalBucketBuilder
      * @return an instance of {@link com.github.bucket4j.local.LockFreeBucket}
      */
     public Bucket build() {
+        return build(SynchronizationStrategy.LOCK_FREE);
+    }
+
+    public Bucket build(SynchronizationStrategy strategy) {
         BucketConfiguration configuration = createConfiguration();
-        return new LockFreeBucket(configuration);
+        switch (strategy) {
+            case LOCK_FREE: return new LockFreeBucket(configuration);
+            case SYNCHRONIZED: return new SynchronizedBucket(configuration);
+            case NONE: return new UnsafeBucket(configuration);
+            default: throw new IllegalStateException();
+        }
     }
 
 }

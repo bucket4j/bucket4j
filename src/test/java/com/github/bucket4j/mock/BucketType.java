@@ -22,16 +22,29 @@ import com.github.bucket4j.BucketConfiguration;
 import com.github.bucket4j.grid.GridBucket;
 import com.github.bucket4j.grid.RecoveryStrategy;
 import com.github.bucket4j.local.LocalBucketBuilder;
+import com.github.bucket4j.local.SynchronizationStrategy;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public enum BucketType {
 
-    LOCAL {
+    LOCAL_LOCK_FREE {
         @Override
         public Bucket createBucket(AbstractBucketBuilder builder) {
             return ((LocalBucketBuilder) builder).build();
+        }
+    },
+    LOCAL_SYNCHRONIZED {
+        @Override
+        public Bucket createBucket(AbstractBucketBuilder builder) {
+            return ((LocalBucketBuilder) builder).build(SynchronizationStrategy.SYNCHRONIZED);
+        }
+    },
+    LOCAL_UNSAFE {
+        @Override
+        public Bucket createBucket(AbstractBucketBuilder builder) {
+            return ((LocalBucketBuilder) builder).build(SynchronizationStrategy.NONE);
         }
     },
     GRID {
