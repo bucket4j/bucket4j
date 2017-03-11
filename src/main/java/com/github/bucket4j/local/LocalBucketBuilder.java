@@ -28,17 +28,24 @@ import com.github.bucket4j.BucketConfiguration;
 public class LocalBucketBuilder extends AbstractBucketBuilder<LocalBucketBuilder> {
 
     /**
-     * Constructs an instance of {@link com.github.bucket4j.local.LockFreeBucket}
+     * Constructs the bucket using {@link SynchronizationStrategy#LOCK_FREE} synchronization strategy.
      *
-     * @return an instance of {@link com.github.bucket4j.local.LockFreeBucket}
+     * @return the new bucket
      */
     public Bucket build() {
         return build(SynchronizationStrategy.LOCK_FREE);
     }
 
-    public Bucket build(SynchronizationStrategy strategy) {
+    /**
+     * Constructs the new instance of local bucket which concrete type depends on synchronizationStrategy
+     *
+     * @param synchronizationStrategy the strategy of synchronization which need to be applied to prevent data-races in multithreading usage scenario.
+     *
+     * @return the new bucket
+     */
+    public Bucket build(SynchronizationStrategy synchronizationStrategy) {
         BucketConfiguration configuration = createConfiguration();
-        switch (strategy) {
+        switch (synchronizationStrategy) {
             case LOCK_FREE: return new LockFreeBucket(configuration);
             case SYNCHRONIZED: return new SynchronizedBucket(configuration);
             case NONE: return new UnsafeBucket(configuration);
