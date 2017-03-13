@@ -22,14 +22,14 @@ or you can to specify own way to measure time.
 
 ## Documentation
 The items placed in recommended to read order:
-* [Basic-usage](basic-usage.md) - examples of basic usage, just start from here and most likely you will skip the rest items below. 
-* [Brief overview of token-bucket algorithm](token-bucket-brief-overview.md) - the brief overview of token-bucket algorithm.
-* [Bucket4j high level architecture](bucket4j-key-blocks.md) - high level architecture and key concepts of ```Bucket4j```. 
-* [Jcache integration](jcache-usage.md) - documentation and examples about usage ```Bucket4j``` with in-memory grids which supports [JCache API (JSR 107)](https://www.jcp.org/en/jsr/detail?id=107) specification.
-* [Advanced usage](advanced-usage.md) - examples of advanced usage.
-* [Bucket API reference](bucket-api-reference.md) - TODO
-* [Questions and answers](questions-and-answers.md) the compilation of most interesting questions raised in Gitter and issue tracker.
-* [Release notes](release-notes.md)  - TODO
+* [Basic-usage](doc-pages/basic-usage.md) - examples of basic usage, just start from here and most likely you will skip the rest items below. 
+* [Brief overview of token-bucket algorithm](doc-pages/token-bucket-brief-overview.md) - the brief overview of token-bucket algorithm.
+* [Bucket4j high level architecture](doc-pages/bucket4j-key-blocks.md) - high level architecture and key concepts of ```Bucket4j```. 
+* [Jcache integration](doc-pages/jcache-usage.md) - documentation and examples about usage ```Bucket4j``` with in-memory grids which supports [JCache API (JSR 107)](https://www.jcp.org/en/jsr/detail?id=107) specification.
+* [Advanced usage](doc-pages/advanced-usage.md) - examples of advanced usage.
+* [Bucket API reference](doc-pages/bucket-api-reference.md) - complete API reference including detailed explanation of each method.
+* [Questions and answers](doc-pages/questions-and-answers.md) the compilation of most interesting questions raised in Gitter and issue tracker.
+* [Release notes](doc-pages/release-notes.md)
 
 ## Get Bucket4j library
 
