@@ -27,9 +27,6 @@ The items placed in recommended to read order:
 * [Bucket4j high level architecture](doc-pages/bucket4j-key-blocks.md) - high level architecture and key concepts of ```Bucket4j```. 
 * [Jcache integration](doc-pages/jcache-usage.md) - documentation and examples about usage ```Bucket4j``` with in-memory grids which supports [JCache API (JSR 107)](https://www.jcp.org/en/jsr/detail?id=107) specification.
 * [Advanced usage](doc-pages/advanced-usage.md) - examples of advanced usage.
-* [Bucket API reference](doc-pages/bucket-api-reference.md) - complete API reference including detailed explanation of each method.
-* [Questions and answers](doc-pages/questions-and-answers.md) the compilation of most interesting questions raised in Gitter and issue tracker.
-* [Release notes](doc-pages/release-notes.md)
 
 ## Get Bucket4j library
 
