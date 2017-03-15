@@ -14,14 +14,13 @@ Just use your favorite grid including [Hazelcast](http://hazelcast.com/products/
 * Ability to specify more than one bandwidth per bucket. For example you can limit 1000 events per hours but not often then 100 events per minute.
 * Customizable time measurement. You are able to specify how to time will be measurement: as `System.nanotime()` or `System.currentTimeMillis()`
 or you can to specify own way to measure time.
-* Dynamic capacity. If needs capacity of the bucket can be changed over time.
 
 ## Documentation
 The items placed in recommended to read order:
 * [Basic-usage](doc-pages/basic-usage.md) - examples of basic usage, just start from here and most likely you will skip the rest items below. 
 * [Brief overview of token-bucket algorithm](doc-pages/token-bucket-brief-overview.md) - the brief overview of token-bucket algorithm.
 * [Bucket4j high level architecture](doc-pages/bucket4j-key-blocks.md) - high level architecture and key concepts of ```Bucket4j```. 
-* [Jcache integration](doc-pages/jcache-usage.md) - documentation and examples about usage ```Bucket4j``` with in-memory grids which supports [JCache API (JSR 107)](https://www.jcp.org/en/jsr/detail?id=107) specification.
+* [Jcache integration](doc-pages/jcache-usage.md) - documentation and examples about usage ```Bucket4j``` with in-memory grids which supports ```JCache API (JSR 107)``` specification.
 * [Advanced usage](doc-pages/advanced-usage.md) - examples of advanced usage.
 
 ## Get Bucket4j library
