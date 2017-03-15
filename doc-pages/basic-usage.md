@@ -16,7 +16,7 @@ try {
    executor.execute(anyRunnable);
 } catch (RejectedExecutionException e) {
     // print stacktraces only if limit is not exceeded
-    if (bucket.tryConsumeSingleToken) {
+    if (bucket.tryConsumeSingleToken()) {
         ThreadInfo[] stackTraces = ManagementFactory.getThreadMXBean().dumpAllThreads(true, true);
         StacktraceUtils.print(stackTraces);
     }
