@@ -32,7 +32,7 @@ class BucketStateSpecification extends Specification {
         setup:
             BucketState state = bucket.createSnapshot()
         when:
-            long availableTokens = state.getAvailableTokens(bucket.configuration.limitedBandwidths, bucket.configuration.guaranteedBandwidth)
+            long availableTokens = state.getAvailableTokens(bucket.configuration.bandwidths)
         then:
             availableTokens == requiredAvailableTokens
         where:
@@ -64,22 +64,6 @@ class BucketStateSpecification extends Specification {
                             .build()
                 ], [
                     "#5",
-                    3,
-                    Bucket4j.builder()
-                            .addLimit(5, Bandwidth.simple(10, Duration.ofNanos(100)))
-                            .addLimit(Bandwidth.simple(2, Duration.ofNanos(10)))
-                            .setGuarantee(Bandwidth.simple(3, Duration.ofNanos(1000)))
-                            .build()
-                ], [
-                    "#6",
-                    2,
-                    Bucket4j.builder()
-                            .addLimit(5, Bandwidth.simple(10, Duration.ofNanos(100)))
-                            .addLimit(Bandwidth.simple(2, Duration.ofNanos(10)))
-                            .setGuarantee(Bandwidth.simple(1, Duration.ofNanos(1000)))
-                            .build()
-                ], [
-                    "#7",
                     10,
                     Bucket4j.builder()
                             .addLimit(Bandwidth.classic(10, Refill.smooth(1, Duration.ofSeconds(1))))
@@ -94,7 +78,7 @@ class BucketStateSpecification extends Specification {
         setup:
             BucketState state = bucket.createSnapshot()
         when:
-            long actualTime = state.delayNanosAfterWillBePossibleToConsume(configuration.limitedBandwidths, configuration.guaranteedBandwidth, 0, toConsume)
+            long actualTime = state.delayNanosAfterWillBePossibleToConsume(configuration.bandwidths, 0, toConsume)
         then:
             actualTime == requiredTime
         where:
@@ -164,25 +148,7 @@ class BucketStateSpecification extends Specification {
                     Bucket4j.builder()
                             .withCustomTimePrecision(new TimeMeterMock(0))
                             .addLimit(5, Bandwidth.simple(5, Duration.ofNanos(10)))
-                            .setGuarantee(Bandwidth.simple(10, Duration.ofNanos(100)))
-                            .build()
-                ], [
-                    "#9",
-                    3,
-                    0,
-                    Bucket4j.builder()
-                            .withCustomTimePrecision(new TimeMeterMock(0))
-                            .addLimit(5, Bandwidth.simple(5, Duration.ofNanos(10)))
                             .addLimit(3, Bandwidth.simple(10, Duration.ofNanos(100)))
-                            .build()
-                ], [
-                    "#10",
-                    11,
-                    11,
-                    Bucket4j.builder()
-                            .withCustomTimePrecision(new TimeMeterMock(0))
-                            .addLimit(0, Bandwidth.simple(1000, Duration.ofNanos(1000))) // 1.0
-                            .setGuarantee(Bandwidth.simple(10, Duration.ofNanos(100)))   // 0.1
                             .build()
                 ]
             ]
@@ -201,7 +167,7 @@ class BucketStateSpecification extends Specification {
             BucketConfiguration configuration = bucket.getConfiguration()
         when:
             mockTimer.setCurrentTimeNanos(timeOnRefill)
-            state.refillAllBandwidth(configuration.limitedBandwidths, configuration.guaranteedBandwidth, timeOnRefill)
+            state.refillAllBandwidth(configuration.bandwidths, timeOnRefill)
         then:
             state.getCurrentSize(0) == tokensAfterRefill
             state.getRoundingError(0) == roundingError
@@ -230,7 +196,7 @@ class BucketStateSpecification extends Specification {
             BucketConfiguration configuration = bucket.getConfiguration()
         when:
             mockTimer.setCurrentTimeNanos(timeOnRefill)
-            state.refillAllBandwidth(configuration.limitedBandwidths, configuration.guaranteedBandwidth, timeOnRefill)
+            state.refillAllBandwidth(configuration.bandwidths, timeOnRefill)
         then:
             state.getCurrentSize(0) == tokensAfterRefill
             state.getRoundingError(0) == roundingError
@@ -256,7 +222,7 @@ class BucketStateSpecification extends Specification {
             BucketState state = bucket.createSnapshot()
             BucketConfiguration configuration = bucket.getConfiguration()
         when:
-            state.consume(configuration.limitedBandwidths, configuration.guaranteedBandwidth, toConsume)
+            state.consume(configuration.bandwidths, toConsume)
         then:
             state.getCurrentSize(0) == requiredSize
         where:

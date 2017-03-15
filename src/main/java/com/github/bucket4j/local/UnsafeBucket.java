@@ -21,8 +21,6 @@ import com.github.bucket4j.Bandwidth;
 import com.github.bucket4j.BucketConfiguration;
 import com.github.bucket4j.BucketState;
 
-import java.util.concurrent.atomic.AtomicReference;
-
 public class UnsafeBucket extends AbstractBucket {
 
     private final BucketState state;
@@ -36,39 +34,36 @@ public class UnsafeBucket extends AbstractBucket {
 
     @Override
     protected long consumeAsMuchAsPossibleImpl(long limit) {
-        Bandwidth[] limits = configuration.getLimitedBandwidths();
-        Bandwidth guarantee = configuration.getGuaranteedBandwidth();
+        Bandwidth[] bandwidths = configuration.getBandwidths();
         long currentTimeNanos = configuration.getTimeMeter().currentTimeNanos();
 
-        state.refillAllBandwidth(limits, guarantee, currentTimeNanos);
-        long availableToConsume = state.getAvailableTokens(limits, guarantee);
+        state.refillAllBandwidth(bandwidths, currentTimeNanos);
+        long availableToConsume = state.getAvailableTokens(bandwidths);
         long toConsume = Math.min(limit, availableToConsume);
         if (toConsume == 0) {
             return 0;
         }
-        state.consume(limits, guarantee, toConsume);
+        state.consume(bandwidths, toConsume);
         return toConsume;
     }
 
     @Override
     protected boolean tryConsumeImpl(long tokensToConsume) {
-        Bandwidth[] limits = configuration.getLimitedBandwidths();
-        Bandwidth guarantee = configuration.getGuaranteedBandwidth();
+        Bandwidth[] bandwidths = configuration.getBandwidths();
         long currentTimeNanos = configuration.getTimeMeter().currentTimeNanos();
 
-        state.refillAllBandwidth(limits, guarantee, currentTimeNanos);
-        long availableToConsume = state.getAvailableTokens(limits, guarantee);
+        state.refillAllBandwidth(bandwidths, currentTimeNanos);
+        long availableToConsume = state.getAvailableTokens(bandwidths);
         if (tokensToConsume > availableToConsume) {
             return false;
         }
-        state.consume(limits, guarantee, tokensToConsume);
+        state.consume(bandwidths, tokensToConsume);
         return true;
     }
 
     @Override
     protected boolean consumeOrAwaitImpl(long tokensToConsume, long waitIfBusyTimeLimit) throws InterruptedException {
-        Bandwidth[] limits = configuration.getLimitedBandwidths();
-        Bandwidth guarantee = configuration.getGuaranteedBandwidth();
+        Bandwidth[] bandwidths = configuration.getBandwidths();
         boolean isWaitingLimited = waitIfBusyTimeLimit > 0;
 
         final long methodStartTimeNanos = configuration.getTimeMeter().currentTimeNanos();
@@ -87,13 +82,13 @@ public class UnsafeBucket extends AbstractBucket {
                 }
             }
 
-            state.refillAllBandwidth(limits, guarantee, currentTimeNanos);
-            long nanosToCloseDeficit = state.delayNanosAfterWillBePossibleToConsume(limits, guarantee, currentTimeNanos, tokensToConsume);
+            state.refillAllBandwidth(bandwidths, currentTimeNanos);
+            long nanosToCloseDeficit = state.delayNanosAfterWillBePossibleToConsume(bandwidths, currentTimeNanos, tokensToConsume);
             if (nanosToCloseDeficit == Long.MAX_VALUE) {
                 return false;
             }
             if (nanosToCloseDeficit == 0) {
-                state.consume(limits, guarantee, tokensToConsume);
+                state.consume(bandwidths, tokensToConsume);
                 return true;
             }
 

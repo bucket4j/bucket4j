@@ -32,8 +32,7 @@ import static com.github.bucket4j.BucketExceptions.nullTimeMeter;
 public abstract class AbstractBucketBuilder<T extends AbstractBucketBuilder> {
 
     private TimeMeter timeMeter = TimeMeter.SYSTEM_MILLISECONDS;
-    private List<BandwidthDefinition> limitedBandwidths = new ArrayList<>(1);
-    private BandwidthDefinition guaranteedBandwidth;
+    private List<BandwidthDefinition> bandwidths = new ArrayList<>(1);
 
     /**
      * Adds limited bandwidth for all buckets which will be constructed by this builder instance.
@@ -42,7 +41,7 @@ public abstract class AbstractBucketBuilder<T extends AbstractBucketBuilder> {
      * @return this builder instance
      */
     public T addLimit(Bandwidth bandwidth) {
-        limitedBandwidths.add(BandwidthDefinition.unspecifiedInitialTokens(bandwidth));
+        bandwidths.add(BandwidthDefinition.unspecifiedInitialTokens(bandwidth));
         return (T) this;
     }
 
@@ -55,28 +54,7 @@ public abstract class AbstractBucketBuilder<T extends AbstractBucketBuilder> {
      * @return this builder instance
      */
     public T addLimit(long initialTokens, Bandwidth bandwidth) {
-        limitedBandwidths.add(BandwidthDefinition.withInitialTokens(bandwidth, initialTokens));
-        return (T) this;
-    }
-
-    /**
-     * Specifies guaranteed bandwidth for all buckets which will be constructed by this builder instance.
-     *
-     * <p>
-     * Guaranteed bandwidth provides following feature - if tokens can be consumed from guaranteed bandwidth,
-     * then bucket does not check of any limited bandwidths.
-     * <pre>{@code // Adds bandwidth which guarantees, that client of bucket will be able to consume 1 tokens per 10 minutes, regardless of limitations.
-     * builder.setGuarantee(Bandwidth.create(1, Duration.ofMinutes(10)));
-     * }</pre>
-     *
-     * <p> Only one guaranteed bandwidth can be specified for bucket, if guaranteed bandwidth already specified,
-     * then previous bandwidth will be discarded.
-     *
-     * @param bandwidth guarantee
-     * @return this builder instance
-     */
-    public T setGuarantee(Bandwidth bandwidth) {
-        guaranteedBandwidth = BandwidthDefinition.unspecifiedInitialTokens(bandwidth);
+        bandwidths.add(BandwidthDefinition.withInitialTokens(bandwidth, initialTokens));
         return (T) this;
     }
 
@@ -119,15 +97,14 @@ public abstract class AbstractBucketBuilder<T extends AbstractBucketBuilder> {
      * @return configuration which used for bucket construction.
      */
     public BucketConfiguration createConfiguration() {
-        return new BucketConfiguration(this.limitedBandwidths, guaranteedBandwidth, timeMeter);
+        return new BucketConfiguration(this.bandwidths, timeMeter);
     }
 
     @Override
     public String toString() {
         return "AbstractBucketBuilder{" +
                 "timeMeter=" + timeMeter +
-                ", limitedBandwidths=" + limitedBandwidths +
-                ", guaranteedBandwidth=" + guaranteedBandwidth +
+                ", bandwidths=" + bandwidths +
                 '}';
     }
 

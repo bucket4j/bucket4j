@@ -34,13 +34,12 @@ public class TryConsumeCommand implements GridCommand<Boolean> {
         BucketConfiguration configuration = gridState.getBucketConfiguration();
         BucketState state = gridState.getBucketState();
         long currentTimeNanos = configuration.getTimeMeter().currentTimeNanos();
-        Bandwidth[] limits = configuration.getLimitedBandwidths();
-        Bandwidth guarantee = configuration.getGuaranteedBandwidth();
+        Bandwidth[] bandwidths = configuration.getBandwidths();
 
-        state.refillAllBandwidth(limits, guarantee, currentTimeNanos);
-        long availableToConsume = state.getAvailableTokens(limits, guarantee);
+        state.refillAllBandwidth(bandwidths, currentTimeNanos);
+        long availableToConsume = state.getAvailableTokens(bandwidths);
         if (tokensToConsume <= availableToConsume) {
-            state.consume(limits, guarantee, tokensToConsume);
+            state.consume(bandwidths, tokensToConsume);
             bucketStateModified = true;
             return true;
         } else {

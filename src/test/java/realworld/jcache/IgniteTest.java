@@ -111,7 +111,7 @@ public class IgniteTest {
 
         BucketState snapshot = bucket.createSnapshot();
         BucketConfiguration configuration = bucket.getConfiguration();
-        long available = snapshot.getAvailableTokens(configuration.getLimitedBandwidths(), configuration.getGuaranteedBandwidth());
+        long available = snapshot.getAvailableTokens(configuration.getBandwidths());
         long rest = bucket.tryConsumeAsMuchAsPossible();
         assertTrue(rest >= available);
     }

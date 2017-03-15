@@ -30,27 +30,18 @@ public class BucketState implements Serializable {
     }
 
     public BucketState(BucketConfiguration configuration) {
-        Bandwidth[] limits = configuration.getLimitedBandwidths();
-        long[] limitsInitialTokens = configuration.getLimitedBandwidthsInitialTokens();
-        Bandwidth guarantee = configuration.getGuaranteedBandwidth();
-        long guarateeInitialTokens = configuration.getGuaranteedBandwidthInitialTokens();
-        int totalBandwidthCount = limits.length + (guarantee == null? 0 : 1);
+        Bandwidth[] bandwidths = configuration.getBandwidths();
+        long[] bandwidthsInitialTokens = configuration.getBandwidthsInitialTokens();
 
-        this.stateData = new long[1 + totalBandwidthCount * 2];
+        this.stateData = new long[1 + bandwidths.length * 2];
         long currentTimeNanos = configuration.getTimeMeter().currentTimeNanos();
-        for(int i = 0; i < limits.length; i++) {
-            Bandwidth bandwidth = limits[i];
-            long initialTokens = limitsInitialTokens[i];
+        for(int i = 0; i < bandwidths.length; i++) {
+            Bandwidth bandwidth = bandwidths[i];
+            long initialTokens = bandwidthsInitialTokens[i];
             if (initialTokens == BucketConfiguration.INITIAL_TOKENS_UNSPECIFIED) {
                 initialTokens = bandwidth.getCapacity().getValue(currentTimeNanos);
             }
             setCurrentSize(i, initialTokens);
-        }
-        if (guarantee != null) {
-            if (guarateeInitialTokens == BucketConfiguration.INITIAL_TOKENS_UNSPECIFIED) {
-                guarateeInitialTokens = guarantee.getCapacity().getValue(currentTimeNanos);
-            }
-            setCurrentSize(limits.length, guarateeInitialTokens);
         }
         setLastRefillTimeNanos(currentTimeNanos);
     }
@@ -68,54 +59,40 @@ public class BucketState implements Serializable {
         return new BucketState(configuration);
     }
 
-    public long getAvailableTokens(Bandwidth[] limits, Bandwidth guarantee) {
-        long availableByLimitation = Long.MAX_VALUE;
-        long availableByGuarantee = guarantee == null? 0 : getCurrentSize(limits.length);
-        for (int i = 0; i < limits.length; i++) {
-            availableByLimitation = Math.min(availableByLimitation, getCurrentSize(i));
+    public long getAvailableTokens(Bandwidth[] bandwidths) {
+        long availableTokens = getCurrentSize(0);
+        for (int i = 1; i < bandwidths.length; i++) {
+            availableTokens = Math.min(availableTokens, getCurrentSize(i));
         }
-        return Math.max(availableByLimitation, availableByGuarantee);
+        return availableTokens;
     }
 
-    public void consume(Bandwidth[] limits, Bandwidth guarantee, long toConsume) {
-        for (int i = 0; i < limits.length; i++) {
+    public void consume(Bandwidth[] bandwidths, long toConsume) {
+        for (int i = 0; i < bandwidths.length; i++) {
             consume(i, toConsume);
         }
-        if (guarantee != null) {
-            consume(limits.length, toConsume);
-        }
     }
 
-    public long delayNanosAfterWillBePossibleToConsume(Bandwidth[] limits, Bandwidth guarantee, long currentTime, long tokensToConsume) {
-        long delayAfterWillBePossibleToConsumeGuaranteed = Long.MAX_VALUE;
-        if (guarantee != null) {
-            delayAfterWillBePossibleToConsumeGuaranteed = delayNanosAfterWillBePossibleToConsume(limits.length, guarantee, currentTime, tokensToConsume);
-            if (delayAfterWillBePossibleToConsumeGuaranteed == 0) {
-                return 0;
+    public long delayNanosAfterWillBePossibleToConsume(Bandwidth[] bandwidths, long currentTime, long tokensToConsume) {
+        long delayAfterWillBePossibleToConsume = delayNanosAfterWillBePossibleToConsume(0, bandwidths[0], currentTime, tokensToConsume);
+        for (int i = 1; i < bandwidths.length; i++) {
+            Bandwidth bandwidth = bandwidths[i];
+            long delay = delayNanosAfterWillBePossibleToConsume(i, bandwidth, currentTime, tokensToConsume);
+            delayAfterWillBePossibleToConsume = Math.max(delayAfterWillBePossibleToConsume, delay);
+            if (delay > delayAfterWillBePossibleToConsume) {
+                delayAfterWillBePossibleToConsume = delay;
             }
         }
-
-        long delayAfterWillBePossibleToConsumeLimited = 0;
-        for (int i = 0; i < limits.length; i++) {
-            Bandwidth limit = limits[i];
-            long delay = delayNanosAfterWillBePossibleToConsume(i, limit, currentTime, tokensToConsume);
-            if (delay > delayAfterWillBePossibleToConsumeLimited) {
-                delayAfterWillBePossibleToConsumeLimited = delay;
-            }
-        }
-        return Math.min(delayAfterWillBePossibleToConsumeLimited, delayAfterWillBePossibleToConsumeGuaranteed);
+        return delayAfterWillBePossibleToConsume;
     }
 
-    public void refillAllBandwidth(Bandwidth[] limits, Bandwidth guarantee, long currentTimeNanos) {
+    public void refillAllBandwidth(Bandwidth[] limits, long currentTimeNanos) {
         long lastRefillTimeNanos = getLastRefillTimeNanos();
         if (currentTimeNanos <= lastRefillTimeNanos) {
             return;
         }
         for (int i = 0; i < limits.length; i++) {
             refill(i, limits[i], lastRefillTimeNanos, currentTimeNanos);
-        }
-        if (guarantee != null) {
-            refill(limits.length, guarantee, lastRefillTimeNanos, currentTimeNanos);
         }
         setLastRefillTimeNanos(currentTimeNanos);
     }

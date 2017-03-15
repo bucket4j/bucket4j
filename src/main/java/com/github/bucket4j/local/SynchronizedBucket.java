@@ -35,17 +35,16 @@ public class SynchronizedBucket extends AbstractBucket {
     @Override
     protected long consumeAsMuchAsPossibleImpl(long limit) {
         synchronized (this) {
-            Bandwidth[] limits = configuration.getLimitedBandwidths();
-            Bandwidth guarantee = configuration.getGuaranteedBandwidth();
+            Bandwidth[] bandwidths = configuration.getBandwidths();
             long currentTimeNanos = configuration.getTimeMeter().currentTimeNanos();
 
-            state.refillAllBandwidth(limits, guarantee, currentTimeNanos);
-            long availableToConsume = state.getAvailableTokens(limits, guarantee);
+            state.refillAllBandwidth(bandwidths, currentTimeNanos);
+            long availableToConsume = state.getAvailableTokens(bandwidths);
             long toConsume = Math.min(limit, availableToConsume);
             if (toConsume == 0) {
                 return 0;
             }
-            state.consume(limits, guarantee, toConsume);
+            state.consume(bandwidths, toConsume);
             return toConsume;
         }
     }
@@ -53,24 +52,22 @@ public class SynchronizedBucket extends AbstractBucket {
     @Override
     protected boolean tryConsumeImpl(long tokensToConsume) {
         synchronized (this) {
-            Bandwidth[] limits = configuration.getLimitedBandwidths();
-            Bandwidth guarantee = configuration.getGuaranteedBandwidth();
+            Bandwidth[] bandwidths = configuration.getBandwidths();
             long currentTimeNanos = configuration.getTimeMeter().currentTimeNanos();
 
-            state.refillAllBandwidth(limits, guarantee, currentTimeNanos);
-            long availableToConsume = state.getAvailableTokens(limits, guarantee);
+            state.refillAllBandwidth(bandwidths, currentTimeNanos);
+            long availableToConsume = state.getAvailableTokens(bandwidths);
             if (tokensToConsume > availableToConsume) {
                 return false;
             }
-            state.consume(limits, guarantee, tokensToConsume);
+            state.consume(bandwidths, tokensToConsume);
             return true;
         }
     }
 
     @Override
     protected boolean consumeOrAwaitImpl(long tokensToConsume, long waitIfBusyTimeLimit) throws InterruptedException {
-        Bandwidth[] limits = configuration.getLimitedBandwidths();
-        Bandwidth guarantee = configuration.getGuaranteedBandwidth();
+        Bandwidth[] bandwidths = configuration.getBandwidths();
         boolean isWaitingLimited = waitIfBusyTimeLimit > 0;
 
         final long methodStartTimeNanos = configuration.getTimeMeter().currentTimeNanos();
@@ -91,13 +88,13 @@ public class SynchronizedBucket extends AbstractBucket {
                     }
                 }
 
-                state.refillAllBandwidth(limits, guarantee, currentTimeNanos);
-                nanosToCloseDeficit = state.delayNanosAfterWillBePossibleToConsume(limits, guarantee, currentTimeNanos, tokensToConsume);
+                state.refillAllBandwidth(bandwidths, currentTimeNanos);
+                nanosToCloseDeficit = state.delayNanosAfterWillBePossibleToConsume(bandwidths, currentTimeNanos, tokensToConsume);
                 if (nanosToCloseDeficit == Long.MAX_VALUE) {
                     return false;
                 }
                 if (nanosToCloseDeficit == 0) {
-                    state.consume(limits, guarantee, tokensToConsume);
+                    state.consume(bandwidths, tokensToConsume);
                     return true;
                 }
 

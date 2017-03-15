@@ -34,15 +34,14 @@ public class ConsumeAsMuchAsPossibleCommand implements GridCommand<Long> {
         BucketConfiguration configuration = gridState.getBucketConfiguration();
         BucketState state = gridState.getBucketState();
         long currentTimeNanos = configuration.getTimeMeter().currentTimeNanos();
-        Bandwidth[] limits = configuration.getLimitedBandwidths();
-        Bandwidth guarantee = configuration.getGuaranteedBandwidth();
-        state.refillAllBandwidth(limits, guarantee, currentTimeNanos);
-        long availableToConsume = state.getAvailableTokens(limits, guarantee);
+        Bandwidth[] bandwidths = configuration.getBandwidths();
+        state.refillAllBandwidth(bandwidths, currentTimeNanos);
+        long availableToConsume = state.getAvailableTokens(bandwidths);
         long toConsume = Math.min(limit, availableToConsume);
         if (toConsume <= 0) {
             return 0l;
         }
-        state.consume(limits, guarantee, toConsume);
+        state.consume(bandwidths, toConsume);
         bucketStateModified = true;
         return toConsume;
     }

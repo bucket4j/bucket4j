@@ -26,34 +26,24 @@ public final class BucketConfiguration implements Serializable {
 
     public static final long INITIAL_TOKENS_UNSPECIFIED = -1;
 
-    private final Bandwidth[] limitedBandwidths;
-    private final long[] limitedBandwidthsInitialTokens;
-    private final Bandwidth guaranteedBandwidth;
-    private final long guaranteedBandwidthInitialTokens;
+    private final Bandwidth[] bandwidths;
+    private final long[] bandwidthsInitialTokens;
     private final TimeMeter timeMeter;
 
-    public BucketConfiguration(List<BandwidthDefinition> limitedBandwidths, BandwidthDefinition guaranteedBandwidth, TimeMeter timeMeter) {
+    public BucketConfiguration(List<BandwidthDefinition> bandwidths, TimeMeter timeMeter) {
         if (timeMeter == null) {
             throw nullTimeMeter();
         }
         this.timeMeter = timeMeter;
 
-        if (limitedBandwidths.isEmpty()) {
+        if (bandwidths.isEmpty()) {
             throw restrictionsNotSpecified();
         }
-        this.limitedBandwidths = new Bandwidth[limitedBandwidths.size()];
-        this.limitedBandwidthsInitialTokens = new long[limitedBandwidths.size()];
-        for (int i = 0; i < limitedBandwidths.size() ; i++) {
-            this.limitedBandwidths[i] = limitedBandwidths.get(i).getBandwidth();
-            this.limitedBandwidthsInitialTokens[i] = limitedBandwidths.get(i).getInitialTokens();
-        }
-
-        if (guaranteedBandwidth == null) {
-            this.guaranteedBandwidth = null;
-            this.guaranteedBandwidthInitialTokens = INITIAL_TOKENS_UNSPECIFIED;
-        } else {
-            this.guaranteedBandwidth = guaranteedBandwidth.getBandwidth();
-            this.guaranteedBandwidthInitialTokens = guaranteedBandwidth.getInitialTokens();
+        this.bandwidths = new Bandwidth[bandwidths.size()];
+        this.bandwidthsInitialTokens = new long[bandwidths.size()];
+        for (int i = 0; i < bandwidths.size() ; i++) {
+            this.bandwidths[i] = bandwidths.get(i).getBandwidth();
+            this.bandwidthsInitialTokens[i] = bandwidths.get(i).getInitialTokens();
         }
     }
 
@@ -61,26 +51,18 @@ public final class BucketConfiguration implements Serializable {
         return timeMeter;
     }
 
-    public Bandwidth[] getLimitedBandwidths() {
-        return limitedBandwidths;
+    public Bandwidth[] getBandwidths() {
+        return bandwidths;
     }
 
-    public long[] getLimitedBandwidthsInitialTokens() {
-        return limitedBandwidthsInitialTokens;
-    }
-
-    public long getGuaranteedBandwidthInitialTokens() {
-        return guaranteedBandwidthInitialTokens;
-    }
-
-    public Bandwidth getGuaranteedBandwidth() {
-        return guaranteedBandwidth;
+    public long[] getBandwidthsInitialTokens() {
+        return bandwidthsInitialTokens;
     }
 
     @Override
     public String toString() {
         return "BucketConfiguration{" +
-                "limitedBandwidths=" + Arrays.toString(limitedBandwidths) +
+                "bandwidths=" + Arrays.toString(bandwidths) +
                 ", timeMeter=" + timeMeter +
                 '}';
     }

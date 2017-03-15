@@ -66,12 +66,6 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
             IllegalArgumentException ex = thrown()
             ex.message == nonPositivePeriod(Duration.ofMinutes(period).toNanos()).message
 
-        when:
-            builder.setGuarantee(Bandwidth.simple(VALID_CAPACITY, Duration.ofMinutes(period)))
-        then:
-            ex = thrown()
-            ex.message == nonPositivePeriod(Duration.ofMinutes(period).toNanos()).message
-
         where:
             period << [-10, -1, 0]
     }
@@ -107,13 +101,6 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
             builder.build()
         then:
             IllegalArgumentException ex = thrown()
-            ex.message == restrictionsNotSpecified().message
-
-        when:
-           builder.setGuarantee(Bandwidth.simple(VALID_CAPACITY, VALID_PERIOD))
-                   .build()
-        then:
-            ex = thrown()
             ex.message == restrictionsNotSpecified().message
     }
 

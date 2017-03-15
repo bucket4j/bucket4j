@@ -39,18 +39,17 @@ public class LockFreeBucket extends AbstractBucket {
     protected long consumeAsMuchAsPossibleImpl(long limit) {
         BucketState previousState = stateReference.get();
         BucketState newState = previousState.clone();
-        Bandwidth[] limits = configuration.getLimitedBandwidths();
-        Bandwidth guarantee = configuration.getGuaranteedBandwidth();
+        Bandwidth[] limits = configuration.getBandwidths();
         long currentTimeNanos = configuration.getTimeMeter().currentTimeNanos();
 
         while (true) {
-            newState.refillAllBandwidth(limits, guarantee, currentTimeNanos);
-            long availableToConsume = newState.getAvailableTokens(limits, guarantee);
+            newState.refillAllBandwidth(limits, currentTimeNanos);
+            long availableToConsume = newState.getAvailableTokens(limits);
             long toConsume = Math.min(limit, availableToConsume);
             if (toConsume == 0) {
                 return 0;
             }
-            newState.consume(limits, guarantee, toConsume);
+            newState.consume(limits, toConsume);
             if (stateReference.compareAndSet(previousState, newState)) {
                 return toConsume;
             } else {
@@ -64,17 +63,16 @@ public class LockFreeBucket extends AbstractBucket {
     protected boolean tryConsumeImpl(long tokensToConsume) {
         BucketState previousState = stateReference.get();
         BucketState newState = previousState.clone();
-        Bandwidth[] limits = configuration.getLimitedBandwidths();
-        Bandwidth guarantee = configuration.getGuaranteedBandwidth();
+        Bandwidth[] limits = configuration.getBandwidths();
         long currentTimeNanos = configuration.getTimeMeter().currentTimeNanos();
 
         while (true) {
-            newState.refillAllBandwidth(limits, guarantee, currentTimeNanos);
-            long availableToConsume = newState.getAvailableTokens(limits, guarantee);
+            newState.refillAllBandwidth(limits, currentTimeNanos);
+            long availableToConsume = newState.getAvailableTokens(limits);
             if (tokensToConsume > availableToConsume) {
                 return false;
             }
-            newState.consume(limits, guarantee, tokensToConsume);
+            newState.consume(limits, tokensToConsume);
             if (stateReference.compareAndSet(previousState, newState)) {
                 return true;
             } else {
@@ -86,8 +84,7 @@ public class LockFreeBucket extends AbstractBucket {
 
     @Override
     protected boolean consumeOrAwaitImpl(long tokensToConsume, long waitIfBusyTimeLimit) throws InterruptedException {
-        Bandwidth[] limits = configuration.getLimitedBandwidths();
-        Bandwidth guarantee = configuration.getGuaranteedBandwidth();
+        Bandwidth[] limits = configuration.getBandwidths();
         boolean isWaitingLimited = waitIfBusyTimeLimit > 0;
 
         final long methodStartTimeNanos = configuration.getTimeMeter().currentTimeNanos();
@@ -111,13 +108,13 @@ public class LockFreeBucket extends AbstractBucket {
                 newState.copyStateFrom(previousState);
             }
 
-            newState.refillAllBandwidth(limits, guarantee, currentTimeNanos);
-            long nanosToCloseDeficit = newState.delayNanosAfterWillBePossibleToConsume(limits, guarantee, currentTimeNanos, tokensToConsume);
+            newState.refillAllBandwidth(limits, currentTimeNanos);
+            long nanosToCloseDeficit = newState.delayNanosAfterWillBePossibleToConsume(limits, currentTimeNanos, tokensToConsume);
             if (nanosToCloseDeficit == Long.MAX_VALUE) {
                 return false;
             }
             if (nanosToCloseDeficit == 0) {
-                newState.consume(limits, guarantee, tokensToConsume);
+                newState.consume(limits, tokensToConsume);
                 if (stateReference.compareAndSet(previousState, newState)) {
                     return true;
                 } else {

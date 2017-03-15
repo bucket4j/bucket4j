@@ -25,22 +25,6 @@ while (true) {
 }
 ```
 
-#### Example of guaranteed bandwidth
-
-Let's imagine that you develop mailing server. 
-In order to prevent spam, you want to restrict user to send emails not often than by 1000 times per hour. 
-But in same time, you want to provide guarantee to user that will be able to send 1 email each 10 minute even in the case where the limit by hour is exceeded. 
-In this case you can construct bucket like this:
-
-```java
-import com.github.bucket4j.Bucket4j;
-
-Bucket bucket = Bucket4j.builder()
-    .withLimitedBandwidth(1000, Duration.ofHours(1))
-    .withGuaranteedBandwidth(1, Duration.ofMinutes(10))
-    .build();
-```
-
 #### Using initial capacity  
 
 By default initial size of bucket is equal to capacity. 
