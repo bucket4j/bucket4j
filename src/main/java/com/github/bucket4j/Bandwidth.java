@@ -33,25 +33,17 @@ import static com.github.bucket4j.BucketExceptions.nullBandwidthRefill;
  *     <li><b>Refill</b> - defines the speed in which tokens are regenerated in bucket.</li>
  * </ul>
  *
- * <h3>Limited and Guaranteed bandwidths:</h3>
- * There are two types of bandwidth:
- * <ul>
- *     <li><b>Limited:</b> specifies the limitation.
- * <pre>{@code // Adds bandwidth that restricts to consume not often 1000 tokens per 1 minute
- * builder.addLimit(Bandwidth.create(1000, Duration.ofMinutes(1)));
- * }</pre>
- *     </li>
- *     <li><b>Guaranteed:</b> this bandwidth provides following feature - if tokens can be consumed from guaranteed bandwidth,
- * then bucket does not check of any limited bandwidths. Only one guaranteed bandwidth can be specified for bucket:
- * <pre>{@code // Adds bandwidth which guarantees, that client of bucket will be able to consume 1 tokens per 10 minutes, regardless of limitations.
- * builder.setGuarantee(Bandwidth.simple(1, Duration.ofMinutes(10)));
- * }</pre>
- * </li>
- * </ul>
- *
- * <h3>Classic and simple bandwidth definition:</h3>
+ * <h3>Classic and simple bandwidth definitions:</h3>
  * The bandwidth can be initialized in the two way:
- * <
+ * <ul>
+ *     <li>{@link #simple(long, Duration) Simple} - most popular way, which does not require from you to fully understand the token-bucket algorithm.
+ *     Use this way when you just want to specify easy limitation <tt>N</tt> tokens per <tt>M</tt> time window.
+ *     See <a href="https://github.com/vladimir-bukhtoyarov/bucket4j/blob/1.3/doc-pages/basic-usage.md#example-1---limiting-the-rate-of-heavy-work">this example</a> of usage.
+ *     </li>
+ *     <li>{@link #classic(long, Refill)} Classic} - hard way to specify limitation,
+ *     use it when you want to utilize the whole power of token-bucket. See <a href="https://github.com/vladimir-bukhtoyarov/bucket4j/blob/1.3/doc-pages/basic-usage.md#example-3---limiting-the-rate-of-access-to-rest-api">this example</a> of usage.
+ *     </li>
+ * </ul>
  *
  * <h3>Multiple bandwidths:</h3>
  * Most likely you will use only one bandwidth per bucket,
@@ -83,23 +75,44 @@ public class Bandwidth implements Serializable {
         this.refill = refill;
     }
 
+    /**
+     * Specifies simple limitation <tt>capacity</tt> tokens per <tt>period</tt> time window.
+     *
+     * @param capacity
+     * @param period
+     * @return
+     */
     public static Bandwidth simple(long capacity, Duration period) {
         return new Bandwidth(Capacity.constant(capacity), Refill.smooth(capacity, period));
     }
 
+    /**
+     * Specifies limitation in <a href="https://github.com/vladimir-bukhtoyarov/bucket4j/blob/1.3/doc-pages/token-bucket-brief-overview.md#token-bucket-algorithm">classic interpretation</a> of token-bucket algorithm.
+     *
+     * @param capacity
+     * @param refill
+     * @return
+     */
     public static Bandwidth classic(long capacity, Refill refill) {
         return new Bandwidth(Capacity.constant(capacity), refill);
     }
 
+    /**
+     * Specifies limitation in <a href="https://github.com/vladimir-bukhtoyarov/bucket4j/blob/1.3/doc-pages/token-bucket-brief-overview.md#token-bucket-algorithm">classic interpretation</a> of token-bucket algorithm.
+     *
+     * @param capacity
+     * @param refill
+     * @return
+     */
     public static Bandwidth classic(Capacity capacity, Refill refill) {
         return new Bandwidth(capacity, refill);
     }
 
-    public Refill getRefill() {
+    Refill getRefill() {
         return refill;
     }
 
-    public Capacity getCapacity() {
+    Capacity getCapacity() {
         return capacity;
     }
 

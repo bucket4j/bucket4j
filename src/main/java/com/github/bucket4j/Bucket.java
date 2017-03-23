@@ -16,7 +16,7 @@
 package com.github.bucket4j;
 
 /**
- * Performs rate limiting using algorithm based on top of ideas of <a href="http://en.wikipedia.org/wiki/Token_bucket">Token Bucket</a>.
+ * Performs rate limiting using algorithm based on top of ideas of <a href="https://github.com/vladimir-bukhtoyarov/bucket4j/blob/1.3/doc-pages/token-bucket-brief-overview.md">Token Bucket</a>.
  *
  * <h3><a name="blocking-semantic">Classification of consumption methods:</a></h3>
  * The methods for consumption can be classified in two group:

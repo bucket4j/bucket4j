@@ -9,7 +9,7 @@
 * Absolutely non-compromise precision, Bucket4j does not operate with floats or doubles, all calculation are performed in the integer arithmetic,
 this feature protects end users from calculation errors involved by rounding.
 * Ability to switch from one JVM to cluster in two lines of code. Using Bucket4j you are able to limiting something in the cluster of JVMs.
-Since [release 1.2](https://github.com/vladimir-bukhtoyarov/bucket4j/releases/tag/1.2.0) the ```Bucket4j``` supports any GRID solution which compatible with [JCache API (JSR 107)](https://www.jcp.org/en/jsr/detail?id=107) specification.
+Since [release 1.3](https://github.com/vladimir-bukhtoyarov/bucket4j/releases/tag/1.3.0) the ```Bucket4j``` supports any GRID solution which compatible with [JCache API (JSR 107)](https://www.jcp.org/en/jsr/detail?id=107) specification.
 Just use your favorite grid including [Hazelcast](http://hazelcast.com/products/hazelcast/), [Ignite](http://www.oracle.com/technetwork/middleware/coherence/overview/index-087514.html), [Coherence](http://www.oracle.com/technetwork/middleware/coherence/overview/index.html), [Infinispan](http://infinispan.org/) or any other.
 * Ability to specify more than one bandwidth per bucket. For example you can limit 1000 events per hours but not often then 100 events per minute.
 * Customizable time measurement. You are able to specify how to time will be measurement: as `System.nanotime()` or `System.currentTimeMillis()`
@@ -18,15 +18,14 @@ or you can to specify own way to measure time.
 ## Documentation
 The items placed in recommended to read order:
 * [Basic-usage](doc-pages/basic-usage.md) - examples of basic usage, just start from here and most likely you will skip the rest items below. 
-* [Brief overview of token-bucket algorithm](doc-pages/token-bucket-brief-overview.md) - the brief overview of token-bucket algorithm.
-* [Bucket4j high level architecture](doc-pages/bucket4j-key-blocks.md) - high level architecture and key concepts of ```Bucket4j```. 
+* [Brief overview of token-bucket algorithm](doc-pages/token-bucket-brief-overview.md) - the brief overview of token-bucket algorithm. 
 * [Jcache integration](doc-pages/jcache-usage.md) - documentation and examples about usage ```Bucket4j``` with in-memory grids which supports ```JCache API (JSR 107)``` specification.
 * [Advanced usage](doc-pages/advanced-usage.md) - examples of advanced usage.
 
 ## Get Bucket4j library
 
 #### By direct link
-[Download compiled jar, sources, javadocs](https://github.com/vladimir-bukhtoyarov/bucket4j/releases/tag/1.2.0)
+[Download compiled jar, sources, javadocs](https://github.com/vladimir-bukhtoyarov/bucket4j/releases/tag/1.3.0)
 
 #### You can build Bucket4j from sources
 
@@ -55,7 +54,7 @@ Then include Bucket4j as dependency to your `pom.xml`
 <dependency>
     <groupId>com.github</groupId>
     <artifactId>bucket4j</artifactId>
-    <version>1.2.0</version>
+    <version>1.3.0</version>
 </dependency>
 ```
 

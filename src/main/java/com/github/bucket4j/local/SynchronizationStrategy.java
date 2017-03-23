@@ -26,10 +26,10 @@ package com.github.bucket4j.local;
 public enum SynchronizationStrategy {
 
     /**
-     * Lock-free algorithm based on CAS(compare&swap) of immutable objects.
+     * Lock-free algorithm based on CAS(compare and swap) of immutable objects.
      *
      * <p>Advantages: This strategy is tolerant to high contention usage scenario, threads do not block each other.
-     * <br>Disadvantages: The sequence "read->clone->update->save" needs to allocate one object per each invocation of consumption method.
+     * <br>Disadvantages: The sequence "read-clone-update-save" needs to allocate one object per each invocation of consumption method.
      * <br>Usage recommendations: when you are not sure what kind of strategy is better for you.
      *
      * <p> The {@link LocalBucketBuilder#build()} without parameters uses this strategy.
