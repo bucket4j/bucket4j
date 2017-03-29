@@ -103,6 +103,14 @@ public class UnsafeBucket extends AbstractBucket {
     }
 
     @Override
+    protected void addTokensIml(long tokensToAdd) {
+        Bandwidth[] limits = configuration.getBandwidths();
+        long currentTimeNanos = configuration.getTimeMeter().currentTimeNanos();
+        state.refillAllBandwidth(limits, currentTimeNanos);
+        state.addTokens(limits, tokensToAdd, currentTimeNanos);
+    }
+
+    @Override
     public BucketState createSnapshot() {
         return state.clone();
     }

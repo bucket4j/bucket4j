@@ -97,6 +97,24 @@ public class BucketState implements Serializable {
         setLastRefillTimeNanos(currentTimeNanos);
     }
 
+    public void addTokens(Bandwidth[] limits, long tokensToAdd, long currentTimeNanos) {
+        for (int i = 0; i < limits.length; i++) {
+            addTokens(i, limits[i], tokensToAdd, currentTimeNanos);
+        }
+    }
+
+    private void addTokens(int bandwidthIndex, Bandwidth bandwidth, long tokensToAdd, long currentTimeNanos) {
+        long currentSize = getCurrentSize(bandwidthIndex);
+        long newSize = currentSize + tokensToAdd;
+        long capacity = bandwidth.getCapacity().getValue(currentTimeNanos);
+        if (newSize >= capacity) {
+            setCurrentSize(bandwidthIndex, capacity);
+            setRoundingError(bandwidthIndex, 0L);
+        } else {
+            setCurrentSize(bandwidthIndex, newSize);
+        }
+    }
+
     private void consume(int bandwidth, long tokens) {
         long currentSize = getCurrentSize(bandwidth);
         long newSize = currentSize - tokens;

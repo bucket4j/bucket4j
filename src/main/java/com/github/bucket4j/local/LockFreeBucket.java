@@ -133,6 +133,25 @@ public class LockFreeBucket extends AbstractBucket {
     }
 
     @Override
+    protected void addTokensIml(long tokensToAdd) {
+        BucketState previousState = stateReference.get();
+        BucketState newState = previousState.clone();
+        Bandwidth[] limits = configuration.getBandwidths();
+        long currentTimeNanos = configuration.getTimeMeter().currentTimeNanos();
+
+        while (true) {
+            newState.refillAllBandwidth(limits, currentTimeNanos);
+            newState.addTokens(limits, tokensToAdd, currentTimeNanos);
+            if (stateReference.compareAndSet(previousState, newState)) {
+                return;
+            } else {
+                previousState = stateReference.get();
+                newState.copyStateFrom(previousState);
+            }
+        }
+    }
+
+    @Override
     public BucketState createSnapshot() {
         return stateReference.get().clone();
     }

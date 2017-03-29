@@ -75,6 +75,11 @@ public class GridBucket extends AbstractBucket {
     }
 
     @Override
+    protected void addTokensIml(long tokensToAdd) {
+        execute(new AddTokensCommand(tokensToAdd));
+    }
+
+    @Override
     public BucketState createSnapshot() {
         return execute(new CreateSnapshotCommand());
     }

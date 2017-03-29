@@ -60,6 +60,20 @@ Bucket bucket = Bucket4j.builder()
     .build();
 ```
 
+### Returning tokens back to bucket.
+The [compensating transaction](https://en.wikipedia.org/wiki/Compensating_transaction) is one of obvious use case when you want to return tokens back to bucket:
+```java
+Bucket wallet;
+...
+wallet.consume(50); // get 50 cents from wallet
+try {
+    buyCocaCola();
+} catch(NoCocaColaException e) {
+    // return money to wallet
+    wallet.addTokens(50);
+}
+```
+
 ### Customizing time measurement
 #### Choosing nanotime time resolution
 By default Bucket4j uses millisecond time resolution, it is preferred time measurement strategy. 

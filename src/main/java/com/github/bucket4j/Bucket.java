@@ -114,6 +114,31 @@ public interface Bucket {
     void consume(long numTokens) throws InterruptedException;
 
     /**
+     * Add <tt>tokensToAdd</tt> to each bandwidth of bucket.
+     * Resulted count of tokens are calculated by following formula:
+     * <pre>newTokens = Math.min(capacity, currentTokens + tokensToAdd)</pre>
+     * in other words resulted number of tokens never exceeds capacity independent of <tt>tokensToAdd</tt>.
+     *
+     * <h3>Example of usage</h3>
+     * The "compensating transaction" is one of obvious use case, when any piece of code consumed tokens from bucket, tried to do something and failed, the "addTokens" will be helpful to return tokens back to bucket:
+     * <pre>{@code
+     *      Bucket wallet;
+     *      ...
+     *      wallet.consume(50); // get 50 cents from wallet
+     *      try {
+     *          buyCocaCola();
+     *      } catch(NoCocaColaException e) {
+     *          // return money to wallet
+     *          wallet.addTokens(50);
+     *      }
+     * }</pre>
+     *
+     * @param tokensToAdd number of tokens to add
+     * @throws IllegalArgumentException in case of tokensToAdd <= 0
+     */
+    void addTokens(long tokensToAdd);
+
+    /**
      * Creates the copy of internal state.
      *
      * <p> This method is designed to be used only for monitoring and testing, you should never use this method for business cases.

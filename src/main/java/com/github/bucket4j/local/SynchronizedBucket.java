@@ -110,6 +110,16 @@ public class SynchronizedBucket extends AbstractBucket {
     }
 
     @Override
+    protected void addTokensIml(long tokensToAdd) {
+        synchronized (this) {
+            Bandwidth[] limits = configuration.getBandwidths();
+            long currentTimeNanos = configuration.getTimeMeter().currentTimeNanos();
+            state.refillAllBandwidth(limits, currentTimeNanos);
+            state.addTokens(limits, tokensToAdd, currentTimeNanos);
+        }
+    }
+
+    @Override
     public BucketState createSnapshot() {
         synchronized (this) {
             return state.clone();

@@ -33,6 +33,8 @@ public abstract class AbstractBucket implements Bucket {
 
     protected abstract boolean consumeOrAwaitImpl(long tokensToConsume, long waitIfBusyNanos) throws InterruptedException;
 
+    protected abstract void addTokensIml(long tokensToAdd);
+
     @Override
     public boolean tryConsumeSingleToken() {
         return tryConsumeImpl(1);
@@ -88,6 +90,14 @@ public abstract class AbstractBucket implements Bucket {
     @Override
     public long tryConsumeAsMuchAsPossible() {
         return consumeAsMuchAsPossibleImpl(Long.MAX_VALUE);
+    }
+
+    @Override
+    public void addTokens(long tokensToAdd) {
+        if (tokensToAdd <= 0) {
+            throw new IllegalArgumentException("tokensToAdd should be >= 0");
+        }
+        addTokensIml(tokensToAdd);
     }
 
     @Override
