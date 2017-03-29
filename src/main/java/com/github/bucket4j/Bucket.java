@@ -69,32 +69,32 @@ public interface Bucket {
 
     /**
      * Consumes a single token from the bucket. If no token is currently available then this method will block
-     * until  required number of tokens will be available or current thread is interrupted, or {@code maxWaitTime} has elapsed.
+     * until  required number of tokens will be available or current thread is interrupted, or {@code maxWaitTimeNanos} has elapsed.
      *
      * <p>
-     * This is equivalent for {@code consume(1, maxWaitTime)}
+     * This is equivalent for {@code consume(1, maxWaitTimeNanos)}
      *
-     * @param maxWaitTime limit of time which thread can wait.
+     * @param maxWaitTimeNanos limit of time which thread can wait.
      *
      * @return true if token has been consumed or false when token has not been consumed
      *
      * @throws InterruptedException in case of current thread has been interrupted during waiting
      */
-    boolean consumeSingleToken(long maxWaitTime) throws InterruptedException;
+    boolean consumeSingleToken(long maxWaitTimeNanos) throws InterruptedException;
 
     /**
      * Consumes a specified number of tokens from the bucket. If required count of tokens is not currently available then this method will block
-     * until  required number of tokens will be available or current thread is interrupted, or {@code maxWaitTime} has elapsed.
+     * until  required number of tokens will be available or current thread is interrupted, or {@code maxWaitTimeNanos} has elapsed.
      *
      * @param numTokens The number of tokens to consume from the bucket.
-     * @param maxWaitTime limit of time which thread can wait.
+     * @param maxWaitTimeNanos limit of time which thread can wait.
      *
      * @return true if {@code numTokens} has been consumed or false when {@code numTokens} has not been consumed
      *
      * @throws InterruptedException in case of current thread has been interrupted during waiting
      * @throws IllegalArgumentException if <tt>numTokens</tt> is greater than capacity of bucket
      */
-    boolean consume(long numTokens, long maxWaitTime) throws InterruptedException;
+    boolean consume(long numTokens, long maxWaitTimeNanos) throws InterruptedException;
 
     /**
      * Consumes a single token from the bucket.  If no token is currently available then this method will block until a

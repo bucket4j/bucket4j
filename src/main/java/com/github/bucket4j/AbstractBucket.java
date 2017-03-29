@@ -62,21 +62,21 @@ public abstract class AbstractBucket implements Bucket {
     }
 
     @Override
-    public boolean consumeSingleToken(long maxWaitTime) throws InterruptedException {
-        return consume(1, maxWaitTime);
+    public boolean consumeSingleToken(long maxWaitTimeNanos) throws InterruptedException {
+        return consume(1, maxWaitTimeNanos);
     }
 
     @Override
-    public boolean consume(long tokensToConsume, long maxWaitTime) throws InterruptedException {
+    public boolean consume(long tokensToConsume, long maxWaitTimeNanos) throws InterruptedException {
         if (tokensToConsume <= 0) {
             throw nonPositiveTokensToConsume(tokensToConsume);
         }
 
-        if (maxWaitTime <= 0) {
-            throw nonPositiveNanosToWait(maxWaitTime);
+        if (maxWaitTimeNanos <= 0) {
+            throw nonPositiveNanosToWait(maxWaitTimeNanos);
         }
 
-        return consumeOrAwaitImpl(tokensToConsume, maxWaitTime);
+        return consumeOrAwaitImpl(tokensToConsume, maxWaitTimeNanos);
     }
 
     @Override

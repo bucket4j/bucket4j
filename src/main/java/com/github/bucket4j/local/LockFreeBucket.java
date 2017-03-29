@@ -111,7 +111,7 @@ public class LockFreeBucket extends AbstractBucket {
             newState.refillAllBandwidth(limits, currentTimeNanos);
             long nanosToCloseDeficit = newState.delayNanosAfterWillBePossibleToConsume(limits, currentTimeNanos, tokensToConsume);
             if (nanosToCloseDeficit == Long.MAX_VALUE) {
-                return false;
+                throw new IllegalArgumentException("tokensToConsume should be <= capacity");
             }
             if (nanosToCloseDeficit == 0) {
                 newState.consume(limits, tokensToConsume);

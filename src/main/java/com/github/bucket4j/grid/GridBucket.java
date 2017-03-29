@@ -56,7 +56,7 @@ public class GridBucket extends AbstractBucket {
                 return true;
             }
             if (nanosToCloseDeficit == Long.MAX_VALUE) {
-                return false;
+                throw new IllegalArgumentException("tokensToConsume should be <= capacity");
             }
 
             if (isWaitingLimited) {

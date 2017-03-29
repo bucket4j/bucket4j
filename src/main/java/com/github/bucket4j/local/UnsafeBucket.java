@@ -85,7 +85,7 @@ public class UnsafeBucket extends AbstractBucket {
             state.refillAllBandwidth(bandwidths, currentTimeNanos);
             long nanosToCloseDeficit = state.delayNanosAfterWillBePossibleToConsume(bandwidths, currentTimeNanos, tokensToConsume);
             if (nanosToCloseDeficit == Long.MAX_VALUE) {
-                return false;
+                throw new IllegalArgumentException("tokensToConsume should be <= capacity");
             }
             if (nanosToCloseDeficit == 0) {
                 state.consume(bandwidths, tokensToConsume);
