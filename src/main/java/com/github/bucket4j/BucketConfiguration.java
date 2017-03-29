@@ -24,22 +24,26 @@ import static com.github.bucket4j.BucketExceptions.*;
 
 public final class BucketConfiguration implements Serializable {
 
+    public static final long INITIAL_TOKENS_UNSPECIFIED = -1;
+
     private final Bandwidth[] bandwidths;
+    private final long[] bandwidthsInitialTokens;
     private final TimeMeter timeMeter;
 
-    public BucketConfiguration(List<BandwidthDefinition> bandwidthDefinitions, TimeMeter timeMeter) {
+    public BucketConfiguration(List<BandwidthDefinition> bandwidths, TimeMeter timeMeter) {
         if (timeMeter == null) {
             throw nullTimeMeter();
         }
         this.timeMeter = timeMeter;
 
-        checkCompatibility(bandwidthDefinitions);
-
-        this.bandwidths = new Bandwidth[bandwidthDefinitions.size()];
-        for (int i = 0; i < bandwidthDefinitions.size() ; i++) {
-            BandwidthDefinition definition = bandwidthDefinitions.get(i);
-            Bandwidth bandwidth = definition.createBandwidth();
-            this.bandwidths[i] = bandwidth;
+        if (bandwidths.isEmpty()) {
+            throw restrictionsNotSpecified();
+        }
+        this.bandwidths = new Bandwidth[bandwidths.size()];
+        this.bandwidthsInitialTokens = new long[bandwidths.size()];
+        for (int i = 0; i < bandwidths.size() ; i++) {
+            this.bandwidths[i] = bandwidths.get(i).getBandwidth();
+            this.bandwidthsInitialTokens[i] = bandwidths.get(i).getInitialTokens();
         }
     }
 
@@ -51,76 +55,8 @@ public final class BucketConfiguration implements Serializable {
         return bandwidths;
     }
 
-    public Bandwidth getBandwidth(int index) {
-        return bandwidths[index];
-    }
-
-    public static void checkCompatibility(List<BandwidthDefinition> bandwidths) {
-        int countOfLimitedBandwidth = 0;
-        int countOfGuaranteedBandwidth = 0;
-        BandwidthDefinition guaranteedBandwidth = null;
-
-        for (BandwidthDefinition bandwidth : bandwidths) {
-            if (bandwidth.limited) {
-                countOfLimitedBandwidth++;
-            } else {
-                guaranteedBandwidth = bandwidth;
-                countOfGuaranteedBandwidth++;
-            }
-        }
-
-        if (countOfLimitedBandwidth == 0) {
-            throw restrictionsNotSpecified();
-        }
-
-        if (countOfGuaranteedBandwidth > 1) {
-            throw onlyOneGuarantedBandwidthSupported();
-        }
-
-        for (int i = 0; i < bandwidths.size() - 1; i++) {
-            BandwidthDefinition first = bandwidths.get(i);
-            if (first.guaranteed) {
-                continue;
-            }
-            if (first.hasDynamicCapacity()) {
-                continue;
-            }
-            for (int j = i + 1; j < bandwidths.size(); j++) {
-                BandwidthDefinition second = bandwidths.get(j);
-                if (second.guaranteed) {
-                    continue;
-                }
-                if (second.hasDynamicCapacity()) {
-                    continue;
-                }
-                if (first.periodNanos < second.periodNanos && first.capacity >= second.capacity) {
-                    throw hasOverlaps(first, second);
-                } else if (first.periodNanos == second.periodNanos) {
-                    throw hasOverlaps(first, second);
-                } else if (first.periodNanos > second.periodNanos && first.capacity <= second.capacity) {
-                    throw hasOverlaps(first, second);
-                }
-            }
-        }
-
-        if (guaranteedBandwidth != null) {
-            if (guaranteedBandwidth.hasDynamicCapacity()) {
-                return;
-            }
-            for (BandwidthDefinition bandwidth : bandwidths) {
-                if (bandwidth.guaranteed) {
-                    continue;
-                }
-                if (bandwidth.hasDynamicCapacity()) {
-                    continue;
-                }
-                BandwidthDefinition limited = bandwidth;
-                if (limited.getTokensPerTimeUnit() <= guaranteedBandwidth.getTokensPerTimeUnit()
-                        || limited.getTimeUnitsPerToken() > guaranteedBandwidth.getTimeUnitsPerToken()) {
-                    throw guarantedHasGreaterRateThanLimited(guaranteedBandwidth, limited);
-                }
-            }
-        }
+    public long[] getBandwidthsInitialTokens() {
+        return bandwidthsInitialTokens;
     }
 
     @Override

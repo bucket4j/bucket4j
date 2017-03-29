@@ -18,7 +18,6 @@ package com.github.bucket4j;
 
 import com.github.bucket4j.state.GuavaNanotimePrecisionLimiterState;
 import com.github.bucket4j.state.LocalNanotimePrecisionState;
-import com.github.bucket4j.state.ThreadDistributionState;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Mode;
@@ -35,21 +34,14 @@ import java.util.concurrent.TimeUnit;
 public class BenchmarkingWithGuavaRateLimiter {
 
     @Benchmark
-    public double baseline(ThreadDistributionState threadLocalCounter) {
-        return threadLocalCounter.invocationCount++;
-    }
-
-    @Benchmark
-    public boolean benchmarkLocalThreadSafe(LocalNanotimePrecisionState state, ThreadDistributionState threadLocalCounter) {
+    public boolean benchmarkLocalThreadSafe(LocalNanotimePrecisionState state) {
         boolean result = state.bucket.tryConsumeSingleToken();
-        threadLocalCounter.invocationCount++;
         return result;
     }
 
     @Benchmark
-    public boolean benchmarkGuavaLimiter(GuavaNanotimePrecisionLimiterState state, ThreadDistributionState threadLocalCounter) {
+    public boolean benchmarkGuavaLimiter(GuavaNanotimePrecisionLimiterState state) {
         boolean result = state.guavaRateLimiter.tryAcquire();
-        threadLocalCounter.invocationCount++;
         return result;
     }
 

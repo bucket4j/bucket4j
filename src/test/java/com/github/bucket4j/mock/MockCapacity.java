@@ -14,34 +14,25 @@
  *  limitations under the License.
  */
 
-package com.github.bucket4j.state;
+package com.github.bucket4j.mock;
 
-import org.openjdk.jmh.annotations.*;
+import com.github.bucket4j.Capacity;
 
-@State(Scope.Thread)
-public class ThreadDistributionState {
+public class MockCapacity implements Capacity {
 
-    long threadId = Thread.currentThread().getId();
+    private long capacity = 0;
 
-    public long invocationCount;
-
-    @Setup
-    public void setUp() {
-        threadId = Thread.currentThread().getId();
-    }
-
-    @TearDown(Level.Iteration)
-    public void printDistribution() {
-        System.out.print(this);
-        invocationCount = 0;
+    public MockCapacity(long capacity) {
+        this.capacity = capacity;
     }
 
     @Override
-    public String toString() {
-        return "\nThreadDistributionState{" +
-                "threadId=" + threadId +
-                ", invocationCount=" + invocationCount +
-                '}';
+    public long getValue(long currentTime) {
+        return capacity;
+    }
+
+    public void setCapacity(long capacity) {
+        this.capacity = capacity;
     }
 
 }

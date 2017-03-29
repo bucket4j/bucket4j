@@ -60,12 +60,12 @@ public abstract class AbstractBucket implements Bucket {
     }
 
     @Override
-    public boolean tryConsumeSingleToken(long maxWaitTime) throws InterruptedException {
-        return tryConsume(1, maxWaitTime);
+    public boolean consumeSingleToken(long maxWaitTime) throws InterruptedException {
+        return consume(1, maxWaitTime);
     }
 
     @Override
-    public boolean tryConsume(long tokensToConsume, long maxWaitTime) throws InterruptedException {
+    public boolean consume(long tokensToConsume, long maxWaitTime) throws InterruptedException {
         if (tokensToConsume <= 0) {
             throw nonPositiveTokensToConsume(tokensToConsume);
         }
@@ -78,7 +78,7 @@ public abstract class AbstractBucket implements Bucket {
     }
 
     @Override
-    public long consumeAsMuchAsPossible(long limit) {
+    public long tryConsumeAsMuchAsPossible(long limit) {
         if (limit <= 0) {
             throw nonPositiveTokensToConsume(limit);
         }
@@ -86,7 +86,7 @@ public abstract class AbstractBucket implements Bucket {
     }
 
     @Override
-    public long consumeAsMuchAsPossible() {
+    public long tryConsumeAsMuchAsPossible() {
         return consumeAsMuchAsPossibleImpl(Long.MAX_VALUE);
     }
 

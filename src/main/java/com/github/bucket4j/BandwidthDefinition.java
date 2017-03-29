@@ -1,99 +1,65 @@
 /*
- * Copyright 2015 Vladimir Bukhtoyarov
+ *  Copyright 2015-2017 Vladimir Bukhtoyarov
  *
- *   Licensed under the Apache License, Version 2.0 (the "License");
- *   you may not use this file except in compliance with the License.
- *   You may obtain a copy of the License at
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
  *
- *         http://www.apache.org/licenses/LICENSE-2.0
+ *          http://www.apache.org/licenses/LICENSE-2.0
  *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
  */
 
 package com.github.bucket4j;
 
-import java.time.Duration;
 
-import static com.github.bucket4j.BucketExceptions.*;
+class BandwidthDefinition {
 
-public class BandwidthDefinition {
+    private final Bandwidth bandwidth;
+    private final long initialTokens;
 
-    final long capacity;
-    final CapacityAdjuster adjuster;
-    final long initialCapacity;
-    final long periodNanos;
-    final boolean guaranteed;
-    final boolean limited;
-
-    public BandwidthDefinition(long capacity, long initialCapacity, Duration period, boolean guaranteed) {
-        this(validateCapacity(capacity), null, initialCapacity, period, guaranteed);
+    private BandwidthDefinition(Bandwidth bandwidth, long initialTokens) {
+        this.bandwidth = bandwidth;
+        this.initialTokens = initialTokens;
     }
 
-    public BandwidthDefinition(CapacityAdjuster adjuster, long initialCapacity, Duration period, boolean guaranteed) {
-        this(0l, validateAdjuster(adjuster), initialCapacity, period, guaranteed);
-    }
-
-    private BandwidthDefinition(long capacity, CapacityAdjuster adjuster, long initialCapacity, Duration period, boolean guaranteed) {
-        long periodNanos = period.toNanos();
-        if (initialCapacity < 0) {
-            throw nonPositiveInitialCapacity(initialCapacity);
+    public static BandwidthDefinition withInitialTokens(Bandwidth bandwidth, long initialTokens) {
+        if (bandwidth == null) {
+            throw BucketExceptions.nullBandwidth();
         }
-        if (periodNanos <= 0) {
-            throw nonPositivePeriod(periodNanos);
+        if (initialTokens < 0) {
+            throw BucketExceptions.nonPositiveInitialTokens(initialTokens);
         }
-        this.capacity = capacity;
-        this.adjuster = adjuster;
-        this.initialCapacity = initialCapacity;
-        this.periodNanos = periodNanos;
-        this.guaranteed = guaranteed;
-        this.limited = !guaranteed;
+        return new BandwidthDefinition(bandwidth, initialTokens);
     }
 
-    public Bandwidth createBandwidth() {
-        CapacityAdjuster capacityAdjuster = adjuster != null ? adjuster : new CapacityAdjuster.ImmutableCapacity(capacity);
-        return new Bandwidth(capacityAdjuster, initialCapacity, periodNanos, guaranteed);
-    }
-
-    boolean hasDynamicCapacity() {
-        return adjuster != null;
-    }
-
-    public double getTimeUnitsPerToken() {
-        return (double) periodNanos / (double) capacity;
-    }
-
-    public double getTokensPerTimeUnit() {
-        return (double) capacity / (double) periodNanos;
-    }
-
-    private static long validateCapacity(long capacity) {
-        if (capacity <= 0) {
-            throw nonPositiveCapacity(capacity);
+    public static BandwidthDefinition unspecifiedInitialTokens(Bandwidth bandwidth) {
+        if (bandwidth == null) {
+            throw BucketExceptions.nullBandwidth();
         }
-        return capacity;
+        return new BandwidthDefinition(bandwidth, BucketConfiguration.INITIAL_TOKENS_UNSPECIFIED);
     }
 
-    private static CapacityAdjuster validateAdjuster(CapacityAdjuster adjuster) {
-        if (adjuster == null) {
-            throw nullBandwidthAdjuster();
-        }
-        return adjuster;
+    public Bandwidth getBandwidth() {
+        return bandwidth;
+    }
+
+    public long getInitialTokens() {
+        return initialTokens;
     }
 
     @Override
     public String toString() {
-        return "BandwidthDefinition{" +
-                "capacity=" + capacity +
-                ", adjuster=" + adjuster +
-                ", initialCapacity=" + initialCapacity +
-                ", periodNanos=" + periodNanos +
-                ", guaranteed=" + guaranteed +
-                ", limited=" + limited +
-                '}';
+        final StringBuilder sb = new StringBuilder("BandwidthDefinition{");
+        sb.append("bandwidth=").append(bandwidth);
+        sb.append(", initialTokens=").append(initialTokens);
+        sb.append('}');
+        return sb.toString();
     }
 
 }

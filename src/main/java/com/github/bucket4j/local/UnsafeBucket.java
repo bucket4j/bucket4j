@@ -21,79 +21,55 @@ import com.github.bucket4j.Bandwidth;
 import com.github.bucket4j.BucketConfiguration;
 import com.github.bucket4j.BucketState;
 
-import java.util.concurrent.atomic.AtomicReference;
+public class UnsafeBucket extends AbstractBucket {
 
-public class LockFreeBucket extends AbstractBucket {
-
-    private final AtomicReference<BucketState> stateReference;
+    private final BucketState state;
     private final BucketConfiguration configuration;
 
-    public LockFreeBucket(BucketConfiguration configuration) {
+    public UnsafeBucket(BucketConfiguration configuration) {
         super(configuration);
         this.configuration = configuration;
-        BucketState initialState = BucketState.createInitialState(configuration);
-        this.stateReference = new AtomicReference<>(initialState);
+        this.state = BucketState.createInitialState(configuration);
     }
 
     @Override
     protected long consumeAsMuchAsPossibleImpl(long limit) {
-        BucketState previousState = stateReference.get();
-        BucketState newState = previousState.clone();
-        Bandwidth[] limits = configuration.getBandwidths();
+        Bandwidth[] bandwidths = configuration.getBandwidths();
         long currentTimeNanos = configuration.getTimeMeter().currentTimeNanos();
 
-        while (true) {
-            newState.refillAllBandwidth(limits, currentTimeNanos);
-            long availableToConsume = newState.getAvailableTokens(limits);
-            long toConsume = Math.min(limit, availableToConsume);
-            if (toConsume == 0) {
-                return 0;
-            }
-            newState.consume(limits, toConsume);
-            if (stateReference.compareAndSet(previousState, newState)) {
-                return toConsume;
-            } else {
-                previousState = stateReference.get();
-                newState.copyStateFrom(previousState);
-            }
+        state.refillAllBandwidth(bandwidths, currentTimeNanos);
+        long availableToConsume = state.getAvailableTokens(bandwidths);
+        long toConsume = Math.min(limit, availableToConsume);
+        if (toConsume == 0) {
+            return 0;
         }
+        state.consume(bandwidths, toConsume);
+        return toConsume;
     }
 
     @Override
     protected boolean tryConsumeImpl(long tokensToConsume) {
-        BucketState previousState = stateReference.get();
-        BucketState newState = previousState.clone();
-        Bandwidth[] limits = configuration.getBandwidths();
+        Bandwidth[] bandwidths = configuration.getBandwidths();
         long currentTimeNanos = configuration.getTimeMeter().currentTimeNanos();
 
-        while (true) {
-            newState.refillAllBandwidth(limits, currentTimeNanos);
-            long availableToConsume = newState.getAvailableTokens(limits);
-            if (tokensToConsume > availableToConsume) {
-                return false;
-            }
-            newState.consume(limits, tokensToConsume);
-            if (stateReference.compareAndSet(previousState, newState)) {
-                return true;
-            } else {
-                previousState = stateReference.get();
-                newState.copyStateFrom(previousState);
-            }
+        state.refillAllBandwidth(bandwidths, currentTimeNanos);
+        long availableToConsume = state.getAvailableTokens(bandwidths);
+        if (tokensToConsume > availableToConsume) {
+            return false;
         }
+        state.consume(bandwidths, tokensToConsume);
+        return true;
     }
 
     @Override
     protected boolean consumeOrAwaitImpl(long tokensToConsume, long waitIfBusyTimeLimit) throws InterruptedException {
-        Bandwidth[] limits = configuration.getBandwidths();
+        Bandwidth[] bandwidths = configuration.getBandwidths();
         boolean isWaitingLimited = waitIfBusyTimeLimit > 0;
 
         final long methodStartTimeNanos = configuration.getTimeMeter().currentTimeNanos();
         long currentTimeNanos = methodStartTimeNanos;
         long methodDuration = 0;
         boolean isFirstCycle = true;
-
-        BucketState previousState = stateReference.get();
-        BucketState newState = previousState.clone();
 
         while (true) {
             if (isFirstCycle) {
@@ -104,22 +80,16 @@ public class LockFreeBucket extends AbstractBucket {
                 if (isWaitingLimited && methodDuration >= waitIfBusyTimeLimit) {
                     return false;
                 }
-                previousState = stateReference.get();
-                newState.copyStateFrom(previousState);
             }
 
-            newState.refillAllBandwidth(limits, currentTimeNanos);
-            long nanosToCloseDeficit = newState.delayNanosAfterWillBePossibleToConsume(limits, currentTimeNanos, tokensToConsume);
+            state.refillAllBandwidth(bandwidths, currentTimeNanos);
+            long nanosToCloseDeficit = state.delayNanosAfterWillBePossibleToConsume(bandwidths, currentTimeNanos, tokensToConsume);
             if (nanosToCloseDeficit == Long.MAX_VALUE) {
                 return false;
             }
             if (nanosToCloseDeficit == 0) {
-                newState.consume(limits, tokensToConsume);
-                if (stateReference.compareAndSet(previousState, newState)) {
-                    return true;
-                } else {
-                    continue;
-                }
+                state.consume(bandwidths, tokensToConsume);
+                return true;
             }
 
             if (isWaitingLimited) {
@@ -134,13 +104,13 @@ public class LockFreeBucket extends AbstractBucket {
 
     @Override
     public BucketState createSnapshot() {
-        return stateReference.get().clone();
+        return state.clone();
     }
 
     @Override
     public String toString() {
         return "LockFreeBucket{" +
-                "state=" + stateReference.get() +
+                "state=" + state +
                 ", configuration=" + configuration +
                 '}';
     }

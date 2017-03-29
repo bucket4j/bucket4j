@@ -16,8 +16,10 @@
 
 package realworld.local;
 
+import com.github.bucket4j.Bandwidth;
 import com.github.bucket4j.Bucket;
 import com.github.bucket4j.Bucket4j;
+import com.github.bucket4j.local.SynchronizationStrategy;
 import org.junit.Test;
 import realworld.ConsumptionScenario;
 
@@ -29,13 +31,40 @@ import static org.junit.Assert.assertTrue;
 public class LocalTest {
 
     @Test
-    public void test15Seconds() throws Exception {
+    public void test15SecondsLockFree() throws Exception {
         Bucket bucket = Bucket4j.builder()
-                .withLimitedBandwidth(1_000, 0, Duration.ofMinutes(1))
-                .withLimitedBandwidth(200, 0, Duration.ofSeconds(10))
+                .addLimit(0, Bandwidth.simple(1_000, Duration.ofMinutes(1)))
+                .addLimit(0, Bandwidth.simple(200, Duration.ofSeconds(10)))
                 .build();
 
-        ConsumptionScenario scenario = new ConsumptionScenario(4, TimeUnit.SECONDS.toNanos(15), bucket);
+        int threadCount = 4;
+        test15SecondsLockFree(bucket, threadCount);
+    }
+
+    @Test
+    public void test15SecondsSynchronized() throws Exception {
+        Bucket bucket = Bucket4j.builder()
+                .addLimit(0, Bandwidth.simple(1_000, Duration.ofMinutes(1)))
+                .addLimit(0, Bandwidth.simple(200, Duration.ofSeconds(10)))
+                .build(SynchronizationStrategy.SYNCHRONIZED);
+
+        int threadCount = 4;
+        test15SecondsLockFree(bucket, threadCount);
+    }
+
+    @Test
+    public void test15SecondsUnsafe() throws Exception {
+        Bucket bucket = Bucket4j.builder()
+                .addLimit(0, Bandwidth.simple(1_000, Duration.ofMinutes(1)))
+                .addLimit(0, Bandwidth.simple(200, Duration.ofSeconds(10)))
+                .build(SynchronizationStrategy.NONE);
+
+        int threadCount = 1;
+        test15SecondsLockFree(bucket, threadCount);
+    }
+
+    private void test15SecondsLockFree(Bucket bucket, int threadCount) throws Exception {
+        ConsumptionScenario scenario = new ConsumptionScenario(threadCount, TimeUnit.SECONDS.toNanos(15), bucket);
         long consumed = scenario.execute();
         long duration = scenario.getDurationNanos();
         System.out.println("Consumed " + consumed + " tokens in the " + duration + " nanos");

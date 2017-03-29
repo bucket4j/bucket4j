@@ -21,7 +21,7 @@ import java.io.Serializable;
 /**
  * Provider of bandwidth capacity.
  */
-public interface CapacityAdjuster extends Serializable {
+public interface Capacity extends Serializable {
 
     /**
      * Return capacity of bandwidth which can depends from current time if needs.
@@ -30,18 +30,25 @@ public interface CapacityAdjuster extends Serializable {
      *
      * @return cuurent capacity of bandwidth
      */
-    long getCapacity(long currentTime);
+    long getValue(long currentTime);
 
-    class ImmutableCapacity implements CapacityAdjuster {
+    static Capacity constant(long value) {
+        return new ImmutableCapacity(value);
+    }
+
+    class ImmutableCapacity implements Capacity {
 
         private final long value;
 
-        public ImmutableCapacity(long value) {
+        private ImmutableCapacity(long value) {
+            if (value <= 0) {
+                throw BucketExceptions.nonPositiveCapacity(value);
+            }
             this.value = value;
         }
 
         @Override
-        public long getCapacity(long currentTime) {
+        public long getValue(long currentTime) {
             return value;
         }
 

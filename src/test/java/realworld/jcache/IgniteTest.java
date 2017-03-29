@@ -16,9 +16,7 @@
 
 package realworld.jcache;
 
-import com.github.bucket4j.Bucket;
-import com.github.bucket4j.Bucket4j;
-import com.github.bucket4j.BucketState;
+import com.github.bucket4j.*;
 import com.github.bucket4j.grid.BucketNotFoundException;
 import com.github.bucket4j.grid.GridBucketState;
 import com.github.bucket4j.grid.RecoveryStrategy;
@@ -26,7 +24,6 @@ import org.apache.ignite.Ignite;
 import org.apache.ignite.Ignition;
 import org.apache.ignite.configuration.CacheConfiguration;
 import org.junit.After;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import realworld.ConsumptionScenario;
@@ -35,7 +32,6 @@ import javax.cache.Cache;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
-import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -47,10 +43,6 @@ public class IgniteTest {
 
     @Before
     public void setup() {
-        // skip test on Travis CI
-        if (System.getenv("TRAVIS") != null) {
-            return;
-        }
         ignite = Ignition.start();
 
         CacheConfiguration cfg = new CacheConfiguration("my_buckets");
@@ -59,19 +51,16 @@ public class IgniteTest {
 
     @After
     public void shutdown() {
-        ignite.close();
+        if (ignite != null) {
+            ignite.close();
+        }
     }
 
     @Test
     public void testReconstructRecoveryStrategy() {
-        // skip test on Travis CI
-        if (System.getenv("TRAVIS") != null) {
-            return;
-        }
-
         Bucket bucket = Bucket4j.jCacheBuilder(RecoveryStrategy.RECONSTRUCT)
-                .withLimitedBandwidth(1_000, Duration.ofMinutes(1))
-                .withLimitedBandwidth(200, Duration.ofSeconds(10))
+                .addLimit(Bandwidth.simple(1_000, Duration.ofMinutes(1)))
+                .addLimit(Bandwidth.simple(200, Duration.ofSeconds(10)))
                 .build(cache, KEY);
 
         assertTrue(bucket.tryConsumeSingleToken());
@@ -84,14 +73,9 @@ public class IgniteTest {
 
     @Test
     public void testThrowExceptionRecoveryStrategy() {
-        // skip test on Travis CI
-        if (System.getenv("TRAVIS") != null) {
-            return;
-        }
-
         Bucket bucket = Bucket4j.jCacheBuilder(RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION)
-                .withLimitedBandwidth(1_000, Duration.ofMinutes(1))
-                .withLimitedBandwidth(200, Duration.ofSeconds(10))
+                .addLimit(Bandwidth.simple(1_000, Duration.ofMinutes(1)))
+                .addLimit(Bandwidth.simple(200, Duration.ofSeconds(10)))
                 .build(cache, KEY);
 
         assertTrue(bucket.tryConsumeSingleToken());
@@ -109,14 +93,9 @@ public class IgniteTest {
 
     @Test
     public void test15Seconds() throws Exception {
-        // skip test on Travis CI
-        if (System.getenv("TRAVIS") != null) {
-            return;
-        }
-
         Bucket bucket = Bucket4j.jCacheBuilder(RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION)
-                .withLimitedBandwidth(1_000, 0, Duration.ofMinutes(1))
-                .withLimitedBandwidth(200, 0, Duration.ofSeconds(10))
+                .addLimit(0, Bandwidth.simple(1_000, Duration.ofMinutes(1)))
+                .addLimit(0, Bandwidth.simple(200, Duration.ofSeconds(10)))
                 .build(cache, KEY);
 
         ConsumptionScenario scenario = new ConsumptionScenario(4, TimeUnit.SECONDS.toNanos(15), bucket);
@@ -131,8 +110,9 @@ public class IgniteTest {
         assertTrue(msg, actualRate <= permittedRate);
 
         BucketState snapshot = bucket.createSnapshot();
-        long available = snapshot.getAvailableTokens(bucket.getConfiguration().getBandwidths());
-        long rest = bucket.consumeAsMuchAsPossible();
+        BucketConfiguration configuration = bucket.getConfiguration();
+        long available = snapshot.getAvailableTokens(configuration.getBandwidths());
+        long rest = bucket.tryConsumeAsMuchAsPossible();
         assertTrue(rest >= available);
     }
 

@@ -17,107 +17,110 @@
 package com.github.bucket4j;
 
 import java.io.Serializable;
+import java.time.Duration;
+import java.util.Optional;
 
+import static com.github.bucket4j.BucketExceptions.nullBandwidth;
+import static com.github.bucket4j.BucketExceptions.nullBandwidthCapacity;
+import static com.github.bucket4j.BucketExceptions.nullBandwidthRefill;
+
+/**
+ * <h3>Anatomy of bandwidth:</h3>
+ * The bandwidth is key building block for bucket.
+ * The bandwidth consists from {@link Capacity capacity} and {@link Refill refill}. Where:
+ * <ul>
+ *     <li><b>Capacity</b> - defines the maximum count of tokens which can be hold by bucket.</li>
+ *     <li><b>Refill</b> - defines the speed in which tokens are regenerated in bucket.</li>
+ * </ul>
+ *
+ * <h3>Classic and simple bandwidth definitions:</h3>
+ * The bandwidth can be initialized in the two way:
+ * <ul>
+ *     <li>{@link #simple(long, Duration) Simple} - most popular way, which does not require from you to fully understand the token-bucket algorithm.
+ *     Use this way when you just want to specify easy limitation <tt>N</tt> tokens per <tt>M</tt> time window.
+ *     See <a href="https://github.com/vladimir-bukhtoyarov/bucket4j/blob/1.3/doc-pages/basic-usage.md#example-1---limiting-the-rate-of-heavy-work">this example</a> of usage.
+ *     </li>
+ *     <li>{@link #classic(long, Refill)} Classic} - hard way to specify limitation,
+ *     use it when you want to utilize the whole power of token-bucket. See <a href="https://github.com/vladimir-bukhtoyarov/bucket4j/blob/1.3/doc-pages/basic-usage.md#example-3---limiting-the-rate-of-access-to-rest-api">this example</a> of usage.
+ *     </li>
+ * </ul>
+ *
+ * <h3>Multiple bandwidths:</h3>
+ * Most likely you will use only one bandwidth per bucket,
+ * but in general it is possible to specify more than one bandwidth per bucket,
+ * and bucket will handle all bandwidth in strongly atomic way.
+ * Strongly atomic means that token will be consumed from all bandwidth or from nothing,
+ * in other words any token can not be partially consumed.
+ * <br> Example of multiple bandwidth:
+ * <pre>{@code // Adds bandwidth that restricts to consume not often 1000 tokens per 1 minute and not often than 100 tokens per second
+ * Bucket bucket = Bucket4j.builder().
+ *      .addLimit(Bandwidth.create(1000, Duration.ofMinutes(1)));
+ *      .addLimit(Bandwidth.create(100, Duration.ofSeconds(1)));
+ *      .build()
+ * }</pre>
+ */
 public class Bandwidth implements Serializable {
 
-    private final long initialCapacity;
-    private final long periodNanos;
-    private final boolean guaranteed;
-    private final CapacityAdjuster adjuster;
+    private final Capacity capacity;
+    private final Refill refill;
 
-    public Bandwidth(CapacityAdjuster adjuster, long initialCapacity, long periodNanos, boolean guaranteed) {
-        this.adjuster = adjuster;
-        this.initialCapacity = initialCapacity;
-        this.periodNanos = periodNanos;
-        this.guaranteed = guaranteed;
+    private Bandwidth(Capacity capacity, Refill refill) {
+        if (capacity == null) {
+            throw nullBandwidthCapacity();
+        }
+        if (refill == null) {
+            throw nullBandwidthRefill();
+        }
+        this.capacity = capacity;
+        this.refill = refill;
     }
 
-    public boolean isGuaranteed() {
-        return guaranteed;
+    /**
+     * Specifies simple limitation <tt>capacity</tt> tokens per <tt>period</tt> time window.
+     *
+     * @param capacity
+     * @param period
+     * @return
+     */
+    public static Bandwidth simple(long capacity, Duration period) {
+        return new Bandwidth(Capacity.constant(capacity), Refill.smooth(capacity, period));
     }
 
-    public boolean isLimited() {
-        return !guaranteed;
+    /**
+     * Specifies limitation in <a href="https://github.com/vladimir-bukhtoyarov/bucket4j/blob/1.3/doc-pages/token-bucket-brief-overview.md#token-bucket-algorithm">classic interpretation</a> of token-bucket algorithm.
+     *
+     * @param capacity
+     * @param refill
+     * @return
+     */
+    public static Bandwidth classic(long capacity, Refill refill) {
+        return new Bandwidth(Capacity.constant(capacity), refill);
     }
 
-    public BandwidthState createInitialState() {
-        return BandwidthState.initialState(initialCapacity);
+    /**
+     * Specifies limitation in <a href="https://github.com/vladimir-bukhtoyarov/bucket4j/blob/1.3/doc-pages/token-bucket-brief-overview.md#token-bucket-algorithm">classic interpretation</a> of token-bucket algorithm.
+     *
+     * @param capacity
+     * @param refill
+     * @return
+     */
+    public static Bandwidth classic(Capacity capacity, Refill refill) {
+        return new Bandwidth(capacity, refill);
     }
 
-    public void consume(BandwidthState state, long tokens) {
-        long currentSize = state.getCurrentSize();
-        long newSize = currentSize - tokens;
-        if (newSize < 0) {
-            state.setCurrentSize(0);
-            state.setRoundingError(0);
-        } else {
-            state.setCurrentSize(newSize);
-        }
+    Refill getRefill() {
+        return refill;
     }
 
-    public void refill(BandwidthState state, long previousRefillNanos, long currentTimeNanos) {
-        final long maxCapacity = adjuster.getCapacity(currentTimeNanos);
-        long currentSize = state.getCurrentSize();
-
-        if (currentSize >= maxCapacity) {
-            state.setCurrentSize(maxCapacity);
-            state.setRoundingError(0);
-            return;
-        }
-
-        long durationSinceLastRefillNanos = currentTimeNanos - previousRefillNanos;
-
-        if (durationSinceLastRefillNanos > periodNanos) {
-            state.setCurrentSize(maxCapacity);
-            state.setRoundingError(0);
-            return;
-        }
-
-        long roundingError = state.getRoundingError();
-        long divided = maxCapacity * durationSinceLastRefillNanos + roundingError;
-        long calculatedRefill = divided / periodNanos;
-        if (calculatedRefill == 0) {
-            roundingError = divided % periodNanos;
-            state.setRoundingError(roundingError);
-            return;
-        }
-
-        long newSize = currentSize + calculatedRefill;
-        if (newSize >= maxCapacity) {
-            state.setCurrentSize(maxCapacity);
-            state.setRoundingError(0);
-            return;
-        }
-
-        roundingError = divided % periodNanos;
-        state.setCurrentSize(newSize);
-        state.setRoundingError(roundingError);
-    }
-
-    public long delayNanosAfterWillBePossibleToConsume(BandwidthState state, long currentTimeNanos, long tokens) {
-        long currentSize = state.getCurrentSize();
-        if (tokens <= currentSize) {
-            return 0;
-        }
-        final long maxCapacity = getMaxCapacity(currentTimeNanos);
-        if (tokens > maxCapacity) {
-            return Long.MAX_VALUE;
-        }
-        long deficit = tokens - currentSize;
-        return periodNanos * deficit / maxCapacity;
-    }
-
-    public long getMaxCapacity(long currentTime) {
-        return adjuster.getCapacity(currentTime);
+    Capacity getCapacity() {
+        return capacity;
     }
 
     @Override
     public String toString() {
         return "Bandwidth{" +
-                "initialCapacity=" + initialCapacity +
-                ", periodNanos=" + periodNanos +
-                ", guaranteed=" + guaranteed +
-                ", adjuster=" + adjuster +
+                "capacity=" + capacity +
+                ", refill=" + refill +
                 '}';
     }
 
