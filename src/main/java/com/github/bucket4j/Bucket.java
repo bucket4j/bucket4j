@@ -92,6 +92,7 @@ public interface Bucket {
      * @return true if {@code numTokens} has been consumed or false when {@code numTokens} has not been consumed
      *
      * @throws InterruptedException in case of current thread has been interrupted during waiting
+     * @throws IllegalArgumentException if <tt>numTokens</tt> is greater than capacity of bucket
      */
     boolean consume(long numTokens, long maxWaitTime) throws InterruptedException;
 
@@ -110,6 +111,7 @@ public interface Bucket {
      * @param numTokens The number of tokens to consumeSingleToken from teh bucket, must be a positive number.
      *
      * @throws InterruptedException in case of current thread has been interrupted during waiting
+     * @throws IllegalArgumentException if <tt>numTokens</tt> is greater than capacity of bucket
      */
     void consume(long numTokens) throws InterruptedException;
 
