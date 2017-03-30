@@ -35,7 +35,7 @@ public class BenchmarkingWithGuavaRateLimiter {
 
     @Benchmark
     public boolean benchmarkLocalThreadSafe(LocalNanotimePrecisionState state) {
-        boolean result = state.bucket.tryConsumeSingleToken();
+        boolean result = state.bucket.tryConsume(1);
         return result;
     }
 

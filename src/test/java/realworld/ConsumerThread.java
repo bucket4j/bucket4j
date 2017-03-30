@@ -43,7 +43,7 @@ public class ConsumerThread extends Thread {
             startLatch.await();
             long startTime = System.nanoTime();
             do {
-                if (bucket.tryConsumeSingleToken()) {
+                if (bucket.tryConsume(1)) {
                     consumed++;
                 }
             } while (System.nanoTime() - startTime < workTimeNanos);

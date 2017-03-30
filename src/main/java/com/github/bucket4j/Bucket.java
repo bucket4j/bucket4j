@@ -22,25 +22,15 @@ package com.github.bucket4j;
  * The methods for consumption can be classified in two group:
  * <ul>
  *     <li>All methods which name started from "try" return result immediately,
- *     for example {@link #tryConsumeSingleToken()}, {@link #tryConsumeAsMuchAsPossible()}.</li>
+ *     for example {@link #tryConsume(long)}, {@link #tryConsumeAsMuchAsPossible()}.</li>
  *
  *     <li>All methods which name started from "consume" can block current thread
  *     and wait until requested amount of tokens will be added,
- *     for example {@link #consumeSingleToken()}, {@link #consume(long)}.</li>
+ *     for example {@link #consume(long)}, {@link #consume(long)}.</li>
  * </ul>
  *
  */
 public interface Bucket {
-
-    /**
-     * Tries to consume one token from this bucket.
-     *
-     * <p>
-     * This is equivalent for {@code tryConsume(1)}
-     *
-     * @return {@code true} if a token has been consumed, {@code false} otherwise.
-     */
-    boolean tryConsumeSingleToken();
 
     /**
      * Tries to consume a specified number of tokens from this bucket.
@@ -68,21 +58,6 @@ public interface Bucket {
     long tryConsumeAsMuchAsPossible(long limit);
 
     /**
-     * Consumes a single token from the bucket. If no token is currently available then this method will block
-     * until  required number of tokens will be available or current thread is interrupted, or {@code maxWaitTimeNanos} has elapsed.
-     *
-     * <p>
-     * This is equivalent for {@code consume(1, maxWaitTimeNanos)}
-     *
-     * @param maxWaitTimeNanos limit of time which thread can wait.
-     *
-     * @return true if token has been consumed or false when token has not been consumed
-     *
-     * @throws InterruptedException in case of current thread has been interrupted during waiting
-     */
-    boolean consumeSingleToken(long maxWaitTimeNanos) throws InterruptedException;
-
-    /**
      * Consumes a specified number of tokens from the bucket. If required count of tokens is not currently available then this method will block
      * until  required number of tokens will be available or current thread is interrupted, or {@code maxWaitTimeNanos} has elapsed.
      *
@@ -97,18 +72,10 @@ public interface Bucket {
     boolean consume(long numTokens, long maxWaitTimeNanos) throws InterruptedException;
 
     /**
-     * Consumes a single token from the bucket.  If no token is currently available then this method will block until a
-     * token becomes available or current thread is interrupted. This is equivalent for {@code consume(1)}
-     *
-     * @throws InterruptedException in case of current thread has been interrupted during waiting
-     */
-    void consumeSingleToken() throws InterruptedException;
-
-    /**
      * Consumes {@code numTokens} from the bucket. If enough tokens are not currently available then this method will block
      * until required number of tokens will be available or current thread is interrupted.
      *
-     * @param numTokens The number of tokens to consumeSingleToken from teh bucket, must be a positive number.
+     * @param numTokens The number of tokens to consume from bucket, must be a positive number.
      *
      * @throws InterruptedException in case of current thread has been interrupted during waiting
      * @throws IllegalArgumentException if <tt>numTokens</tt> is greater than capacity of bucket

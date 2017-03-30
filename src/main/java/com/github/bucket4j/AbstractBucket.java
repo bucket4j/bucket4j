@@ -36,11 +36,6 @@ public abstract class AbstractBucket implements Bucket {
     protected abstract void addTokensIml(long tokensToAdd);
 
     @Override
-    public boolean tryConsumeSingleToken() {
-        return tryConsumeImpl(1);
-    }
-
-    @Override
     public boolean tryConsume(long tokensToConsume) {
         if (tokensToConsume <= 0) {
             throw nonPositiveTokensToConsume(tokensToConsume);
@@ -49,21 +44,11 @@ public abstract class AbstractBucket implements Bucket {
     }
 
     @Override
-    public void consumeSingleToken() throws InterruptedException {
-        consume(1);
-    }
-
-    @Override
     public void consume(long tokensToConsume) throws InterruptedException {
         if (tokensToConsume <= 0) {
             throw nonPositiveTokensToConsume(tokensToConsume);
         }
         consumeOrAwaitImpl(tokensToConsume, UNSPECIFIED_WAITING_LIMIT);
-    }
-
-    @Override
-    public boolean consumeSingleToken(long maxWaitTimeNanos) throws InterruptedException {
-        return consume(1, maxWaitTimeNanos);
     }
 
     @Override

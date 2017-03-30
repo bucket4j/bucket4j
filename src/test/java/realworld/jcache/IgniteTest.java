@@ -63,12 +63,12 @@ public class IgniteTest {
                 .addLimit(Bandwidth.simple(200, Duration.ofSeconds(10)))
                 .build(cache, KEY);
 
-        assertTrue(bucket.tryConsumeSingleToken());
+        assertTrue(bucket.tryConsume(1));
 
         // simulate crash
         cache.remove(KEY);
 
-        assertTrue(bucket.tryConsumeSingleToken());
+        assertTrue(bucket.tryConsume(1));
     }
 
     @Test
@@ -78,13 +78,13 @@ public class IgniteTest {
                 .addLimit(Bandwidth.simple(200, Duration.ofSeconds(10)))
                 .build(cache, KEY);
 
-        assertTrue(bucket.tryConsumeSingleToken());
+        assertTrue(bucket.tryConsume(1));
 
         // simulate crash
         cache.remove(KEY);
 
         try {
-            bucket.tryConsumeSingleToken();
+            bucket.tryConsume(1);
             fail();
         } catch (BucketNotFoundException e) {
             // ok

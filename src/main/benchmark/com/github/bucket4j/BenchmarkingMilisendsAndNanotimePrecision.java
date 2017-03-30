@@ -35,12 +35,12 @@ public class BenchmarkingMilisendsAndNanotimePrecision {
 
     @Benchmark
     public boolean benchmarkNanosecondPrecision(LocalNanotimePrecisionState state) {
-        return state.bucket.tryConsumeSingleToken();
+        return state.bucket.tryConsume(1);
     }
 
     @Benchmark
     public boolean benchmarkMillisecondPrecision(LocalMillisecondPrecisionState state) {
-        return state.bucket.tryConsumeSingleToken();
+        return state.bucket.tryConsume(1);
     }
 
     public static void main(String[] args) throws RunnerException {

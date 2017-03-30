@@ -16,7 +16,7 @@ try {
    executor.execute(anyRunnable);
 } catch (RejectedExecutionException e) {
     // print stacktraces only if limit is not exceeded
-    if (bucket.tryConsumeSingleToken()) {
+    if (bucket.tryConsume(1)) {
         ThreadInfo[] stackTraces = ManagementFactory.getThreadMXBean().dumpAllThreads(true, true);
         StacktraceUtils.print(stackTraces);
     }
@@ -85,7 +85,7 @@ public class ThrottlingFilter implements javax.servlet.Filter {
         }
 
         // tryConsumeSingleToken returns false immediately if no tokens available with the bucket
-        if (bucket.tryConsumeSingleToken()) {
+        if (bucket.tryConsume(1)) {
             // the limit is not exceeded
             filterChain.doFilter(servletRequest, servletResponse);
         } else {

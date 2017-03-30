@@ -32,7 +32,7 @@ class BucketSpecification extends Specification {
 			int n, boolean requiredResult, AbstractBucketBuilder builder) {
         expect:
             for (Bucket bucket : BucketType.createBuckets(builder)) {
-                assert bucket.tryConsumeSingleToken() == requiredResult
+                assert bucket.tryConsume(1) == requiredResult
             }
         where:
             n | requiredResult |  builder
@@ -88,7 +88,7 @@ class BucketSpecification extends Specification {
             for (BucketType type : BucketType.values()) {
                 Bucket bucket = type.createBucket(builder)
                 TimeMeterMock meter = bucket.getConfiguration().getTimeMeter()
-                bucket.consumeSingleToken()
+                bucket.consume(1)
                 assert meter.sleeped == requiredSleep
                 meter.reset();
             }
@@ -125,7 +125,7 @@ class BucketSpecification extends Specification {
             for (BucketType type : BucketType.values()) {
                 Bucket bucket = type.createBucket(builder)
                 TimeMeterMock meter = bucket.getConfiguration().getTimeMeter()
-                bucket.consumeSingleToken(sleepLimit) == requiredResult
+                bucket.consume(1, sleepLimit) == requiredResult
                 assert meter.sleeped == requiredSleep
                 meter.reset()
             }

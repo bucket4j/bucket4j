@@ -164,13 +164,13 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
                     Bandwidth.simple(VALID_CAPACITY, VALID_PERIOD)
             ).build()
         when:
-            bucket.consumeSingleToken(0)
+            bucket.consume(1, 0)
         then:
             IllegalArgumentException ex = thrown()
             ex.message == nonPositiveNanosToWait(0).message
 
         when:
-            bucket.consumeSingleToken(-1)
+            bucket.consume(1, -1)
         then:
             ex = thrown()
             ex.message == nonPositiveNanosToWait(-1).message

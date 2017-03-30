@@ -23,7 +23,7 @@ public class LocalBucketTest {
                 .withNanosecondPrecision()
                 .addLimit(0, Bandwidth.simple(100, Duration.ofMillis(1)))
                 .build();
-        bucket.consumeSingleToken();
+        bucket.consume(1);
     }
 
 }
