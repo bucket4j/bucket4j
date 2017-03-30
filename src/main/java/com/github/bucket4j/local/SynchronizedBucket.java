@@ -16,28 +16,25 @@
 package com.github.bucket4j.local;
 
 
-import com.github.bucket4j.AbstractBucket;
-import com.github.bucket4j.Bandwidth;
-import com.github.bucket4j.BucketConfiguration;
-import com.github.bucket4j.BucketState;
+import com.github.bucket4j.*;
 
 public class SynchronizedBucket extends AbstractBucket {
 
     private final BucketState state;
-    private final BucketConfiguration configuration;
+    private final Bandwidth[] bandwidths;
+    private final TimeMeter timeMeter;
 
     public SynchronizedBucket(BucketConfiguration configuration) {
         super(configuration);
-        this.configuration = configuration;
+        this.bandwidths = configuration.getBandwidths();
+        this.timeMeter = configuration.getTimeMeter();
         this.state = BucketState.createInitialState(configuration);
     }
 
     @Override
     protected long consumeAsMuchAsPossibleImpl(long limit) {
+        long currentTimeNanos = timeMeter.currentTimeNanos();
         synchronized (this) {
-            Bandwidth[] bandwidths = configuration.getBandwidths();
-            long currentTimeNanos = configuration.getTimeMeter().currentTimeNanos();
-
             state.refillAllBandwidth(bandwidths, currentTimeNanos);
             long availableToConsume = state.getAvailableTokens(bandwidths);
             long toConsume = Math.min(limit, availableToConsume);
@@ -51,10 +48,8 @@ public class SynchronizedBucket extends AbstractBucket {
 
     @Override
     protected boolean tryConsumeImpl(long tokensToConsume) {
+        long currentTimeNanos = timeMeter.currentTimeNanos();
         synchronized (this) {
-            Bandwidth[] bandwidths = configuration.getBandwidths();
-            long currentTimeNanos = configuration.getTimeMeter().currentTimeNanos();
-
             state.refillAllBandwidth(bandwidths, currentTimeNanos);
             long availableToConsume = state.getAvailableTokens(bandwidths);
             if (tokensToConsume > availableToConsume) {
@@ -67,55 +62,16 @@ public class SynchronizedBucket extends AbstractBucket {
 
     @Override
     protected boolean consumeOrAwaitImpl(long tokensToConsume, long waitIfBusyTimeLimit) throws InterruptedException {
-        Bandwidth[] bandwidths = configuration.getBandwidths();
-        boolean isWaitingLimited = waitIfBusyTimeLimit > 0;
-
-        final long methodStartTimeNanos = configuration.getTimeMeter().currentTimeNanos();
-        long currentTimeNanos = methodStartTimeNanos;
-        long methodDuration = 0;
-        boolean isFirstCycle = true;
-
-        while (true) {
-            long nanosToCloseDeficit;
-            synchronized (this) {
-                if (isFirstCycle) {
-                    isFirstCycle = false;
-                } else {
-                    currentTimeNanos = configuration.getTimeMeter().currentTimeNanos();
-                    methodDuration = currentTimeNanos - methodStartTimeNanos;
-                    if (isWaitingLimited && methodDuration >= waitIfBusyTimeLimit) {
-                        return false;
-                    }
-                }
-
-                state.refillAllBandwidth(bandwidths, currentTimeNanos);
-                nanosToCloseDeficit = state.delayNanosAfterWillBePossibleToConsume(bandwidths, currentTimeNanos, tokensToConsume);
-                if (nanosToCloseDeficit == Long.MAX_VALUE) {
-                    throw new IllegalArgumentException("tokensToConsume should be <= capacity");
-                }
-                if (nanosToCloseDeficit == 0) {
-                    state.consume(bandwidths, tokensToConsume);
-                    return true;
-                }
-
-                if (isWaitingLimited) {
-                    long sleepingTimeLimit = waitIfBusyTimeLimit - methodDuration;
-                    if (nanosToCloseDeficit >= sleepingTimeLimit) {
-                        return false;
-                    }
-                }
-            }
-            configuration.getTimeMeter().parkNanos(nanosToCloseDeficit);
-        }
+        // TODO
+        return false;
     }
 
     @Override
     protected void addTokensIml(long tokensToAdd) {
+        long currentTimeNanos = timeMeter.currentTimeNanos();
         synchronized (this) {
-            Bandwidth[] limits = configuration.getBandwidths();
-            long currentTimeNanos = configuration.getTimeMeter().currentTimeNanos();
-            state.refillAllBandwidth(limits, currentTimeNanos);
-            state.addTokens(limits, tokensToAdd, currentTimeNanos);
+            state.refillAllBandwidth(bandwidths, currentTimeNanos);
+            state.addTokens(bandwidths, tokensToAdd);
         }
     }
 
@@ -131,7 +87,7 @@ public class SynchronizedBucket extends AbstractBucket {
         synchronized (this) {
             return "SynchronizedBucket{" +
                 "state=" + state +
-                ", configuration=" + configuration +
+                ", configuration=" + getConfiguration() +
                 '}';
         }
     }

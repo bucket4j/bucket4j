@@ -38,11 +38,6 @@ public final class BucketExceptions {
         return new IllegalArgumentException(msg);
     }
 
-    public static IllegalArgumentException nullBandwidthCapacity() {
-        String msg = "Bandwidth capacity can not be null";
-        return new IllegalArgumentException(msg);
-    }
-
     public static IllegalArgumentException nullBandwidthRefill() {
         String msg = "Bandwidth refill can not be null";
         return new IllegalArgumentException(msg);

@@ -32,15 +32,9 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
     @Unroll
     def "Should detect that capacity #capacity is wrong"(long capacity) {
         when:
-            builder.addLimit(Bandwidth.simple(capacity, VALID_PERIOD))
-        then:
-            IllegalArgumentException ex = thrown()
-            ex.message == nonPositiveCapacity(capacity).message
-
-        when:
             builder.addLimit(Bandwidth.classic(capacity, Refill.smooth(1, VALID_PERIOD)))
         then:
-            ex = thrown()
+            IllegalArgumentException ex = thrown()
             ex.message == nonPositiveCapacity(capacity).message
 
         where:
@@ -68,14 +62,6 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
 
         where:
             period << [-10, -1, 0]
-    }
-
-    def "Should check that capacity is not null"() {
-        when:
-            builder.addLimit(Bandwidth.classic(null, Refill.smooth(10, Duration.ofSeconds(1))))
-        then:
-            IllegalArgumentException ex = thrown()
-            ex.message == nullBandwidthCapacity().message
     }
 
     def "Should check that refill is not null"() {

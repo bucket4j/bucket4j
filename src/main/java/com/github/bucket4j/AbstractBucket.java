@@ -21,7 +21,8 @@ import static com.github.bucket4j.BucketExceptions.nonPositiveTokensToConsume;
 public abstract class AbstractBucket implements Bucket {
 
     protected static final long UNSPECIFIED_WAITING_LIMIT = -1;
-    protected final BucketConfiguration configuration;
+
+    private final BucketConfiguration configuration;
 
     protected AbstractBucket(BucketConfiguration configuration) {
         this.configuration = configuration;

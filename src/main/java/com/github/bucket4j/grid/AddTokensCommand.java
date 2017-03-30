@@ -38,7 +38,7 @@ public class AddTokensCommand implements GridCommand<Long> {
         long currentTimeNanos = configuration.getTimeMeter().currentTimeNanos();
 
         state.refillAllBandwidth(bandwidths, currentTimeNanos);
-        state.addTokens(bandwidths, tokensToAdd, currentTimeNanos);
+        state.addTokens(bandwidths, tokensToAdd);
         return null;
     }
 

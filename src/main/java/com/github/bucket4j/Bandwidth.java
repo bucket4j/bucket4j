@@ -20,14 +20,12 @@ import java.io.Serializable;
 import java.time.Duration;
 import java.util.Optional;
 
-import static com.github.bucket4j.BucketExceptions.nullBandwidth;
-import static com.github.bucket4j.BucketExceptions.nullBandwidthCapacity;
-import static com.github.bucket4j.BucketExceptions.nullBandwidthRefill;
+import static com.github.bucket4j.BucketExceptions.*;
 
 /**
  * <h3>Anatomy of bandwidth:</h3>
  * The bandwidth is key building block for bucket.
- * The bandwidth consists from {@link Capacity capacity} and {@link Refill refill}. Where:
+ * The bandwidth consists from {@link #capacity} and {@link Refill refill}. Where:
  * <ul>
  *     <li><b>Capacity</b> - defines the maximum count of tokens which can be hold by bucket.</li>
  *     <li><b>Refill</b> - defines the speed in which tokens are regenerated in bucket.</li>
@@ -61,12 +59,12 @@ import static com.github.bucket4j.BucketExceptions.nullBandwidthRefill;
  */
 public class Bandwidth implements Serializable {
 
-    private final Capacity capacity;
-    private final Refill refill;
+    final long capacity;
+    final Refill refill;
 
-    private Bandwidth(Capacity capacity, Refill refill) {
-        if (capacity == null) {
-            throw nullBandwidthCapacity();
+    private Bandwidth(long capacity, Refill refill) {
+        if (capacity <= 0) {
+            throw nonPositiveCapacity(capacity);
         }
         if (refill == null) {
             throw nullBandwidthRefill();
@@ -83,7 +81,8 @@ public class Bandwidth implements Serializable {
      * @return
      */
     public static Bandwidth simple(long capacity, Duration period) {
-        return new Bandwidth(Capacity.constant(capacity), Refill.smooth(capacity, period));
+        Refill refill = Refill.smooth(capacity, period);
+        return classic(capacity, refill);
     }
 
     /**
@@ -94,26 +93,7 @@ public class Bandwidth implements Serializable {
      * @return
      */
     public static Bandwidth classic(long capacity, Refill refill) {
-        return new Bandwidth(Capacity.constant(capacity), refill);
-    }
-
-    /**
-     * Specifies limitation in <a href="https://github.com/vladimir-bukhtoyarov/bucket4j/blob/1.3/doc-pages/token-bucket-brief-overview.md#token-bucket-algorithm">classic interpretation</a> of token-bucket algorithm.
-     *
-     * @param capacity
-     * @param refill
-     * @return
-     */
-    public static Bandwidth classic(Capacity capacity, Refill refill) {
         return new Bandwidth(capacity, refill);
-    }
-
-    Refill getRefill() {
-        return refill;
-    }
-
-    Capacity getCapacity() {
-        return capacity;
     }
 
     @Override

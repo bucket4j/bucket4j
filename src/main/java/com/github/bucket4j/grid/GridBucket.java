@@ -46,32 +46,34 @@ public class GridBucket extends AbstractBucket {
 
     @Override
     protected boolean consumeOrAwaitImpl(long tokensToConsume, long waitIfBusyTimeLimit) throws InterruptedException {
-        final boolean isWaitingLimited = waitIfBusyTimeLimit > 0;
-        final ConsumeOrCalculateTimeToCloseDeficitCommand consumeCommand = new ConsumeOrCalculateTimeToCloseDeficitCommand(tokensToConsume);
-        final long methodStartTimeNanos = isWaitingLimited? configuration.getTimeMeter().currentTimeNanos() : 0;
-
-        while (true) {
-            long nanosToCloseDeficit = execute(consumeCommand);
-            if (nanosToCloseDeficit == 0) {
-                return true;
-            }
-            if (nanosToCloseDeficit == Long.MAX_VALUE) {
-                throw new IllegalArgumentException("tokensToConsume should be <= capacity");
-            }
-
-            if (isWaitingLimited) {
-                long currentTimeNanos = configuration.getTimeMeter().currentTimeNanos();
-                long methodDuration = currentTimeNanos - methodStartTimeNanos;
-                if (methodDuration >= waitIfBusyTimeLimit) {
-                    return false;
-                }
-                long sleepingTimeLimit = waitIfBusyTimeLimit - methodDuration;
-                if (nanosToCloseDeficit >= sleepingTimeLimit) {
-                    return false;
-                }
-            }
-            configuration.getTimeMeter().parkNanos(nanosToCloseDeficit);
-        }
+//        final boolean isWaitingLimited = waitIfBusyTimeLimit > 0;
+//        final ConsumeOrCalculateTimeToCloseDeficitCommand consumeCommand = new ConsumeOrCalculateTimeToCloseDeficitCommand(tokensToConsume);
+//        final long methodStartTimeNanos = isWaitingLimited? configuration.getTimeMeter().currentTimeNanos() : 0;
+//
+//        while (true) {
+//            long nanosToCloseDeficit = execute(consumeCommand);
+//            if (nanosToCloseDeficit == 0) {
+//                return true;
+//            }
+//            if (nanosToCloseDeficit == Long.MAX_VALUE) {
+//                throw new IllegalArgumentException("tokensToConsume should be <= capacity");
+//            }
+//
+//            if (isWaitingLimited) {
+//                long currentTimeNanos = configuration.getTimeMeter().currentTimeNanos();
+//                long methodDuration = currentTimeNanos - methodStartTimeNanos;
+//                if (methodDuration >= waitIfBusyTimeLimit) {
+//                    return false;
+//                }
+//                long sleepingTimeLimit = waitIfBusyTimeLimit - methodDuration;
+//                if (nanosToCloseDeficit >= sleepingTimeLimit) {
+//                    return false;
+//                }
+//            }
+//            configuration.getTimeMeter().parkNanos(nanosToCloseDeficit);
+//        }
+        // TODO
+        return false;
     }
 
     @Override
@@ -108,6 +110,7 @@ public class GridBucket extends AbstractBucket {
     }
 
     private void initializeBucket() {
+        BucketConfiguration configuration = getConfiguration();
         GridBucketState initialState = new GridBucketState(configuration, BucketState.createInitialState(configuration));
         gridProxy.setInitialState(initialState);
     }

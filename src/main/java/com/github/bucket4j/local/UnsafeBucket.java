@@ -63,43 +63,8 @@ public class UnsafeBucket extends AbstractBucket {
 
     @Override
     protected boolean consumeOrAwaitImpl(long tokensToConsume, long waitIfBusyTimeLimit) throws InterruptedException {
-        Bandwidth[] bandwidths = configuration.getBandwidths();
-        boolean isWaitingLimited = waitIfBusyTimeLimit > 0;
-
-        final long methodStartTimeNanos = configuration.getTimeMeter().currentTimeNanos();
-        long currentTimeNanos = methodStartTimeNanos;
-        long methodDuration = 0;
-        boolean isFirstCycle = true;
-
-        while (true) {
-            if (isFirstCycle) {
-                isFirstCycle = false;
-            } else {
-                currentTimeNanos = configuration.getTimeMeter().currentTimeNanos();
-                methodDuration = currentTimeNanos - methodStartTimeNanos;
-                if (isWaitingLimited && methodDuration >= waitIfBusyTimeLimit) {
-                    return false;
-                }
-            }
-
-            state.refillAllBandwidth(bandwidths, currentTimeNanos);
-            long nanosToCloseDeficit = state.delayNanosAfterWillBePossibleToConsume(bandwidths, currentTimeNanos, tokensToConsume);
-            if (nanosToCloseDeficit == Long.MAX_VALUE) {
-                throw new IllegalArgumentException("tokensToConsume should be <= capacity");
-            }
-            if (nanosToCloseDeficit == 0) {
-                state.consume(bandwidths, tokensToConsume);
-                return true;
-            }
-
-            if (isWaitingLimited) {
-                long sleepingTimeLimit = waitIfBusyTimeLimit - methodDuration;
-                if (nanosToCloseDeficit >= sleepingTimeLimit) {
-                    return false;
-                }
-            }
-            configuration.getTimeMeter().parkNanos(nanosToCloseDeficit);
-        }
+        // TODO
+        return false;
     }
 
     @Override
@@ -107,7 +72,7 @@ public class UnsafeBucket extends AbstractBucket {
         Bandwidth[] limits = configuration.getBandwidths();
         long currentTimeNanos = configuration.getTimeMeter().currentTimeNanos();
         state.refillAllBandwidth(limits, currentTimeNanos);
-        state.addTokens(limits, tokensToAdd, currentTimeNanos);
+        state.addTokens(limits, tokensToAdd);
     }
 
     @Override
