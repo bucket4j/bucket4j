@@ -25,7 +25,7 @@ import org.openjdk.jmh.annotations.State;
 import java.time.Duration;
 
 @State(Scope.Benchmark)
-public class LocalMillisecondPrecisionState {
+public class LocalLockFreeState {
 
     public final Bucket bucket = Bucket4j.builder()
             .withMillisecondPrecision()

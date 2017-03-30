@@ -16,8 +16,9 @@
 
 package com.github.bucket4j;
 
-import com.github.bucket4j.state.GuavaNanotimePrecisionLimiterState;
-import com.github.bucket4j.state.LocalNanotimePrecisionState;
+import com.github.bucket4j.state.GuavaLimiterState;
+import com.github.bucket4j.state.LocalLockFreeState;
+import com.github.bucket4j.state.LocalSynchronizedState;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Mode;
@@ -34,15 +35,18 @@ import java.util.concurrent.TimeUnit;
 public class BenchmarkingWithGuavaRateLimiter {
 
     @Benchmark
-    public boolean benchmarkLocalThreadSafe(LocalNanotimePrecisionState state) {
-        boolean result = state.bucket.tryConsume(1);
-        return result;
+    public boolean benchmarkLocalLockFree(LocalLockFreeState state) {
+        return state.bucket.tryConsume(1);
     }
 
     @Benchmark
-    public boolean benchmarkGuavaLimiter(GuavaNanotimePrecisionLimiterState state) {
-        boolean result = state.guavaRateLimiter.tryAcquire();
-        return result;
+    public boolean benchmarkLocalSynchronized(LocalSynchronizedState state) {
+        return state.bucket.tryConsume(1);
+    }
+
+    @Benchmark
+    public boolean benchmarkGuavaLimiter(GuavaLimiterState state) {
+        return state.guavaRateLimiter.tryAcquire();
     }
 
     public static class OneThread {
