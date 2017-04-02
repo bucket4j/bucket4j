@@ -23,9 +23,9 @@ public class BucketState implements Serializable {
 
     private static final int LAST_REFILL_TIME_OFFSET = 0;
 
-    private final long[] stateData;
+    final long[] stateData;
 
-    private BucketState(long[] stateData) {
+    BucketState(long[] stateData) {
         this.stateData = stateData;
     }
 
@@ -73,12 +73,6 @@ public class BucketState implements Serializable {
         }
     }
 
-    public void reserve(Bandwidth[] bandwidths, long tokensToReserve) {
-        for (int i = 0; i < bandwidths.length; i++) {
-            reserve(i, tokensToReserve);
-        }
-    }
-
     public long delayNanosAfterWillBePossibleToConsume(Bandwidth[] bandwidths, long tokensToConsume) {
         long delayAfterWillBePossibleToConsume = delayNanosAfterWillBePossibleToConsume(0, bandwidths[0], tokensToConsume);
         for (int i = 1; i < bandwidths.length; i++) {
@@ -122,17 +116,6 @@ public class BucketState implements Serializable {
 
     private void consume(int bandwidth, long tokens) {
         stateData[1 + bandwidth * 2] -= tokens;
-    }
-
-    private void reserve(int bandwidth, long tokens) {
-        long currentSize = getCurrentSize(bandwidth);
-        long newSize = currentSize - tokens;
-        if (newSize < 0) {
-            setCurrentSize(bandwidth, 0L);
-            setRoundingError(bandwidth, 0L);
-        } else {
-            setCurrentSize(bandwidth, newSize);
-        }
     }
 
     private void refill(int bandwidthIndex, Bandwidth bandwidth, long previousRefillNanos, long currentTimeNanos) {

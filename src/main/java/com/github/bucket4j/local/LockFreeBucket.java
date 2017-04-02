@@ -103,7 +103,7 @@ public class LockFreeBucket extends AbstractBucket {
                 return false;
             }
 
-            newState.reserve(bandwidths, tokensToConsume);
+            newState.consume(bandwidths, tokensToConsume);
             if (stateReference.compareAndSet(previousState, newState)) {
                 timeMeter.parkNanos(nanosToCloseDeficit);
                 return true;
@@ -115,7 +115,7 @@ public class LockFreeBucket extends AbstractBucket {
     }
 
     @Override
-    protected void addTokensIml(long tokensToAdd) {
+    protected void addTokensImpl(long tokensToAdd) {
         BucketState previousState = stateReference.get();
         BucketState newState = previousState.clone();
         long currentTimeNanos = timeMeter.currentTimeNanos();

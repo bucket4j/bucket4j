@@ -16,26 +16,24 @@
 package com.github.bucket4j.local;
 
 
-import com.github.bucket4j.AbstractBucket;
-import com.github.bucket4j.Bandwidth;
-import com.github.bucket4j.BucketConfiguration;
-import com.github.bucket4j.BucketState;
+import com.github.bucket4j.*;
 
 public class UnsafeBucket extends AbstractBucket {
 
     private final BucketState state;
-    private final BucketConfiguration configuration;
+    private final Bandwidth[] bandwidths;
+    private final TimeMeter timeMeter;
 
     public UnsafeBucket(BucketConfiguration configuration) {
         super(configuration);
-        this.configuration = configuration;
+        this.bandwidths = configuration.getBandwidths();
+        this.timeMeter = configuration.getTimeMeter();
         this.state = BucketState.createInitialState(configuration);
     }
 
     @Override
     protected long consumeAsMuchAsPossibleImpl(long limit) {
-        Bandwidth[] bandwidths = configuration.getBandwidths();
-        long currentTimeNanos = configuration.getTimeMeter().currentTimeNanos();
+        long currentTimeNanos = timeMeter.currentTimeNanos();
 
         state.refillAllBandwidth(bandwidths, currentTimeNanos);
         long availableToConsume = state.getAvailableTokens(bandwidths);
@@ -49,8 +47,7 @@ public class UnsafeBucket extends AbstractBucket {
 
     @Override
     protected boolean tryConsumeImpl(long tokensToConsume) {
-        Bandwidth[] bandwidths = configuration.getBandwidths();
-        long currentTimeNanos = configuration.getTimeMeter().currentTimeNanos();
+        long currentTimeNanos = timeMeter.currentTimeNanos();
 
         state.refillAllBandwidth(bandwidths, currentTimeNanos);
         long availableToConsume = state.getAvailableTokens(bandwidths);
@@ -62,17 +59,30 @@ public class UnsafeBucket extends AbstractBucket {
     }
 
     @Override
-    protected boolean consumeOrAwaitImpl(long tokensToConsume, long waitIfBusyTimeLimit) throws InterruptedException {
-        // TODO
-        return false;
+    protected boolean consumeOrAwaitImpl(long tokensToConsume, long waitIfBusyNanosLimit) throws InterruptedException {
+        long currentTimeNanos = timeMeter.currentTimeNanos();
+
+        state.refillAllBandwidth(bandwidths, currentTimeNanos);
+        long nanosToCloseDeficit = state.delayNanosAfterWillBePossibleToConsume(bandwidths, tokensToConsume);
+        if (nanosToCloseDeficit == 0) {
+            state.consume(bandwidths, tokensToConsume);
+            return true;
+        }
+
+        if (waitIfBusyNanosLimit > 0 && nanosToCloseDeficit > waitIfBusyNanosLimit) {
+            return false;
+        }
+
+        state.consume(bandwidths, tokensToConsume);
+        timeMeter.parkNanos(nanosToCloseDeficit);
+        return true;
     }
 
     @Override
-    protected void addTokensIml(long tokensToAdd) {
-        Bandwidth[] limits = configuration.getBandwidths();
-        long currentTimeNanos = configuration.getTimeMeter().currentTimeNanos();
-        state.refillAllBandwidth(limits, currentTimeNanos);
-        state.addTokens(limits, tokensToAdd);
+    protected void addTokensImpl(long tokensToAdd) {
+        long currentTimeNanos = timeMeter.currentTimeNanos();
+        state.refillAllBandwidth(bandwidths, currentTimeNanos);
+        state.addTokens(bandwidths, tokensToAdd);
     }
 
     @Override
@@ -84,7 +94,7 @@ public class UnsafeBucket extends AbstractBucket {
     public String toString() {
         return "LockFreeBucket{" +
                 "state=" + state +
-                ", configuration=" + configuration +
+                ", configuration=" + getConfiguration() +
                 '}';
     }
 

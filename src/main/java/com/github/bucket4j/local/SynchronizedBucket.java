@@ -61,13 +61,30 @@ public class SynchronizedBucket extends AbstractBucket {
     }
 
     @Override
-    protected boolean consumeOrAwaitImpl(long tokensToConsume, long waitIfBusyTimeLimit) throws InterruptedException {
-        // TODO
-        return false;
+    protected boolean consumeOrAwaitImpl(long tokensToConsume, long waitIfBusyNanosLimit) throws InterruptedException {
+        long currentTimeNanos = timeMeter.currentTimeNanos();
+        long nanosToCloseDeficit;
+
+        synchronized (this) {
+            state.refillAllBandwidth(bandwidths, currentTimeNanos);
+            nanosToCloseDeficit = state.delayNanosAfterWillBePossibleToConsume(bandwidths, tokensToConsume);
+            if (nanosToCloseDeficit == 0) {
+                state.consume(bandwidths, tokensToConsume);
+                return true;
+            }
+
+            if (waitIfBusyNanosLimit > 0 && nanosToCloseDeficit > waitIfBusyNanosLimit) {
+                return false;
+            }
+
+            state.consume(bandwidths, tokensToConsume);
+        }
+        timeMeter.parkNanos(nanosToCloseDeficit);
+        return true;
     }
 
     @Override
-    protected void addTokensIml(long tokensToAdd) {
+    protected void addTokensImpl(long tokensToAdd) {
         long currentTimeNanos = timeMeter.currentTimeNanos();
         synchronized (this) {
             state.refillAllBandwidth(bandwidths, currentTimeNanos);

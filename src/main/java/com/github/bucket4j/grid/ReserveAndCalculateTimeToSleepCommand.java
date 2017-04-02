@@ -20,13 +20,15 @@ import com.github.bucket4j.Bandwidth;
 import com.github.bucket4j.BucketConfiguration;
 import com.github.bucket4j.BucketState;
 
-public class ConsumeOrCalculateTimeToCloseDeficitCommand implements GridCommand<Long> {
+public class ReserveAndCalculateTimeToSleepCommand implements GridCommand<Long> {
 
     private long tokensToConsume;
+    private long waitIfBusyNanosLimit;
     private boolean bucketStateModified;
 
-    public ConsumeOrCalculateTimeToCloseDeficitCommand(long tokensToConsume) {
+    public ReserveAndCalculateTimeToSleepCommand(long tokensToConsume, long waitIfBusyNanosLimit) {
         this.tokensToConsume = tokensToConsume;
+        this.waitIfBusyNanosLimit = waitIfBusyNanosLimit;
     }
 
     @Override
@@ -36,12 +38,15 @@ public class ConsumeOrCalculateTimeToCloseDeficitCommand implements GridCommand<
         long currentTimeNanos = configuration.getTimeMeter().currentTimeNanos();
         Bandwidth[] bandwidths = configuration.getBandwidths();
         state.refillAllBandwidth(bandwidths, currentTimeNanos);
-        long timeToCloseDeficit = state.delayNanosAfterWillBePossibleToConsume(bandwidths, tokensToConsume);
-        if (timeToCloseDeficit == 0) {
+
+        long nanosToCloseDeficit = state.delayNanosAfterWillBePossibleToConsume(bandwidths, tokensToConsume);
+        if (waitIfBusyNanosLimit > 0 && nanosToCloseDeficit > waitIfBusyNanosLimit) {
+            return Long.MAX_VALUE;
+        } else {
             state.consume(bandwidths, tokensToConsume);
             bucketStateModified = true;
+            return nanosToCloseDeficit;
         }
-        return timeToCloseDeficit;
     }
 
     @Override
