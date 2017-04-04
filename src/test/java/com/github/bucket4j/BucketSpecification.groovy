@@ -157,4 +157,25 @@ class BucketSpecification extends Specification {
             5 |       0       |     false      |     5     |     11     |             0               | Bucket4j.builder().withCustomTimePrecision(new TimeMeterMock(0)).addLimit(1, Bandwidth.simple(10, Duration.ofNanos(100)))
     }
 
+    @Unroll
+    def "#n Add tokens spec"(
+            int n, long tokensToAdd, long nanosIncrement, long requiredResult, AbstractBucketBuilder builder) {
+        expect:
+        for (BucketType type : BucketType.values()) {
+            TimeMeterMock mock = new TimeMeterMock(0)
+            builder.withCustomTimePrecision(mock)
+            Bucket bucket = type.createBucket(builder)
+            mock.addTime(nanosIncrement)
+            bucket.addTokens(tokensToAdd)
+            assert bucket.createSnapshot().getAvailableTokens(bucket.configuration.bandwidths) == requiredResult
+        }
+        where:
+        n | tokensToAdd | nanosIncrement | requiredResult | builder
+        1 |     49      |     50         |        99      | Bucket4j.builder().addLimit(0, Bandwidth.simple(100, Duration.ofNanos(100)))
+        2 |     50      |     50         |       100      | Bucket4j.builder().addLimit(0, Bandwidth.simple(100, Duration.ofNanos(100)))
+        3 |     50      |     0          |        50      | Bucket4j.builder().addLimit(0, Bandwidth.simple(100, Duration.ofNanos(100)))
+        4 |     120     |     0          |       100      | Bucket4j.builder().addLimit(0, Bandwidth.simple(100, Duration.ofNanos(100)))
+        5 |     120     |     110        |       100      | Bucket4j.builder().addLimit(0, Bandwidth.simple(100, Duration.ofNanos(100)))
+    }
+
 }

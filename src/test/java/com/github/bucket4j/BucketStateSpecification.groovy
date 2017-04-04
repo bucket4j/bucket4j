@@ -73,6 +73,57 @@ class BucketStateSpecification extends Specification {
     }
 
     @Unroll
+    def "addTokens specification #testNumber"(String testNumber, long tokensToAdd, long requiredAvailableTokens, Bucket bucket) {
+        setup:
+            BucketState state = bucket.createSnapshot()
+        when:
+            state.addTokens(bucket.configuration.bandwidths, tokensToAdd)
+            long availableTokens = state.getAvailableTokens(bucket.configuration.bandwidths)
+        then:
+            availableTokens == requiredAvailableTokens
+        where:
+            [testNumber, tokensToAdd, requiredAvailableTokens, bucket] << [
+                [
+                        "#1",
+                        10,
+                        10,
+                        Bucket4j.builder()
+                                .addLimit(0, Bandwidth.simple(10, Duration.ofNanos(100)))
+                                .build()
+                ], [
+                        "#2",
+                        1,
+                        10,
+                        Bucket4j.builder()
+                                .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)))
+                                .build()
+                ], [
+                        "#3",
+                        6,
+                        10,
+                        Bucket4j.builder()
+                                .addLimit(5, Bandwidth.simple(10, Duration.ofNanos(100)))
+                                .build()
+                ], [
+                        "#4",
+                        3,
+                        2,
+                        Bucket4j.builder()
+                                .addLimit(5, Bandwidth.simple(10, Duration.ofNanos(100)))
+                                .addLimit(Bandwidth.simple(2, Duration.ofNanos(100)))
+                                .build()
+                ], [
+                        "#5",
+                        4,
+                        5,
+                        Bucket4j.builder()
+                                .addLimit(1, Bandwidth.classic(10, Refill.smooth(1, Duration.ofSeconds(1))))
+                                .build()
+                ]
+        ]
+    }
+
+    @Unroll
     def "delayAfterWillBePossibleToConsume specification #testNumber"(String testNumber, long toConsume, long requiredTime, Bucket bucket) {
         def configuration = bucket.configuration
         setup:
