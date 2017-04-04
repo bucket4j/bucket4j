@@ -20,6 +20,7 @@ package com.github.bucket4j.state;
 import com.github.bucket4j.Bandwidth;
 import com.github.bucket4j.Bucket;
 import com.github.bucket4j.Bucket4j;
+import com.github.bucket4j.TimeMeter;
 import com.github.bucket4j.local.SynchronizationStrategy;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.State;
@@ -34,5 +35,14 @@ public class LocalUnsafeState {
             .addLimit(
                     Bandwidth.simple(Long.MAX_VALUE / 2, Duration.ofNanos(Long.MAX_VALUE / 2))
             ).build(SynchronizationStrategy.NONE);
+
+
+    public final Bucket bucketWithoutRefill = Bucket4j.builder()
+            .withMillisecondPrecision()
+            .withCustomTimePrecision((TimeMeter) () -> 0)
+            .addLimit(
+                    Bandwidth.simple(Long.MAX_VALUE / 2, Duration.ofNanos(Long.MAX_VALUE / 2))
+            ).build(SynchronizationStrategy.NONE);
+
 
 }

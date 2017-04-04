@@ -39,7 +39,12 @@ public class BaseLineWithoutSynchronization {
     }
 
     @Benchmark
-    public long baseLine() {
+    public boolean tryConsumeOneToken_alwaysSuccess_withoutRefill(LocalUnsafeState state) {
+        return state.bucketWithoutRefill.tryConsume(1);
+    }
+
+    @Benchmark
+    public long baseLineGetCurrentTimeMillis() {
         return System.currentTimeMillis();
     }
 
