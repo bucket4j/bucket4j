@@ -22,8 +22,6 @@ import spock.lang.Unroll
 
 import java.time.Duration
 
-import static java.lang.Long.MAX_VALUE
-
 
 class BucketStateSpecification extends Specification {
 
@@ -129,7 +127,7 @@ class BucketStateSpecification extends Specification {
         setup:
             BucketState state = bucket.createSnapshot()
         when:
-            long actualTime = state.delayNanosAfterWillBePossibleToConsume(configuration.bandwidths, 0, toConsume)
+            long actualTime = state.delayNanosAfterWillBePossibleToConsume(configuration.bandwidths, toConsume)
         then:
             actualTime == requiredTime
         where:
@@ -169,7 +167,7 @@ class BucketStateSpecification extends Specification {
                 ], [
                     "#5",
                     11,
-                    MAX_VALUE,
+                    70,
                     Bucket4j.builder()
                             .withCustomTimePrecision(new TimeMeterMock(0))
                             .addLimit(4, Bandwidth.simple(10, Duration.ofNanos(100)))
@@ -278,9 +276,9 @@ class BucketStateSpecification extends Specification {
             state.getCurrentSize(0) == requiredSize
         where:
         n  |  initialTokens  | period | capacity | toConsume | requiredSize
-        1  |        0        | 1000   |   1000   |    10     |     0
+        1  |        0        | 1000   |   1000   |    10     |   -10
         2  |       50        | 1000   |   1000   |     2     |    48
-        3  |       55        | 1000   |   1000   |   1600    |     0
+        3  |       55        | 1000   |   1000   |   1600    |   -1545
     }
 
 }

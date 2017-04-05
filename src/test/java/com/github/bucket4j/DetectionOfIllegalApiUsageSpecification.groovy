@@ -22,7 +22,7 @@ import java.time.Duration
 
 import static com.github.bucket4j.BucketExceptions.*
 
-public class DetectionOfIllegalApiUsageSpecification extends Specification {
+class DetectionOfIllegalApiUsageSpecification extends Specification {
 
     private static final Duration VALID_PERIOD = Duration.ofMinutes(10);
     private static final long VALID_CAPACITY = 1000;
@@ -160,6 +160,20 @@ public class DetectionOfIllegalApiUsageSpecification extends Specification {
         then:
             ex = thrown()
             ex.message == nonPositiveNanosToWait(-1).message
+    }
+
+    @Unroll
+    def "Should check that #tokens tokens is not positive to add"(long tokens) {
+        setup:
+            def bucket = Bucket4j.builder().addLimit(
+                    Bandwidth.simple(VALID_CAPACITY, VALID_PERIOD)
+            ).build()
+        when:
+            bucket.addTokens(tokens)
+        then:
+            thrown(IllegalArgumentException)
+        where:
+            tokens << [0, -1, -10]
     }
 
 }

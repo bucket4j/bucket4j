@@ -108,13 +108,13 @@ class BucketSpecification extends Specification {
                 TimeMeterMock meter = bucket.getConfiguration().getTimeMeter()
                 bucket.consume(toConsume)
                 assert meter.sleeped == requiredSleep
-                meter.reset();
+                meter.reset()
             }
         where:
             n | requiredSleep | toConsume | builder
             1 |      10       |     1     | Bucket4j.builder().withCustomTimePrecision(new TimeMeterMock(0)).addLimit(0, Bandwidth.simple(10, Duration.ofNanos(100)))
             2 |       0       |     1     | Bucket4j.builder().withCustomTimePrecision(new TimeMeterMock(0)).addLimit(1, Bandwidth.simple(10, Duration.ofNanos(100)))
-            3 |       0       |  1000     | Bucket4j.builder().withCustomTimePrecision(new TimeMeterMock(0)).addLimit(1, Bandwidth.simple(10, Duration.ofNanos(100)))
+            3 |    9990       |  1000     | Bucket4j.builder().withCustomTimePrecision(new TimeMeterMock(0)).addLimit(1, Bandwidth.simple(10, Duration.ofNanos(100)))
     }
 
     @Timeout(value = 2, unit = TimeUnit.SECONDS)
