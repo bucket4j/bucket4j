@@ -66,6 +66,17 @@ public abstract class AbstractBucket implements Bucket {
     }
 
     @Override
+    public boolean consumeUninterruptibly(long numTokens, long maxWaitTimeNanos) {
+        // TODO
+        return false;
+    }
+
+    @Override
+    public void consumeUninterruptibly(long numTokens) {
+        // TODO
+    }
+
+    @Override
     public long tryConsumeAsMuchAsPossible(long limit) {
         if (limit <= 0) {
             throw nonPositiveTokensToConsume(limit);

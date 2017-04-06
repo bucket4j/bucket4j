@@ -83,6 +83,29 @@ public interface Bucket {
     void consume(long numTokens) throws InterruptedException;
 
     /**
+     * Consumes a specified number of tokens from the bucket. If required count of tokens is not currently available then this method will block
+     * until  required number of tokens will be available or current thread is interrupted.
+     *
+     * @param numTokens The number of tokens to consume from the bucket.
+     * @param maxWaitTimeNanos limit of time which thread can wait.
+     *
+     * @return true if {@code numTokens} has been consumed or false when {@code numTokens} has not been consumed
+     *
+     * @throws IllegalArgumentException if <tt>numTokens</tt> is greater than capacity of bucket
+     */
+    boolean consumeUninterruptibly(long numTokens, long maxWaitTimeNanos);
+
+    /**
+     * Consumes {@code numTokens} from the bucket. If enough tokens are not currently available then this method will block
+     * until required number of tokens will be available or current thread is interrupted.
+     *
+     * @param numTokens The number of tokens to consume from bucket, must be a positive number.
+     *
+     * @throws IllegalArgumentException if <tt>numTokens</tt> is greater than capacity of bucket
+     */
+    void consumeUninterruptibly(long numTokens);
+
+    /**
      * Add <tt>tokensToAdd</tt> to each bandwidth of bucket.
      * Resulted count of tokens are calculated by following formula:
      * <pre>newTokens = Math.min(capacity, currentTokens + tokensToAdd)</pre>
