@@ -1,9 +1,8 @@
 package regression;
 
-import com.github.bucket4j.Bandwidth;
-import com.github.bucket4j.Bucket;
-import com.github.bucket4j.AbstractBucketBuilder;
-import com.github.bucket4j.Bucket4j;
+import io.github.bucket4j.Bandwidth;
+import io.github.bucket4j.Bucket;
+import io.github.bucket4j.Bucket4j;
 import org.junit.Test;
 
 import java.time.Duration;

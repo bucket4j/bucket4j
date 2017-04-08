@@ -16,10 +16,10 @@
 
 package realworld.jcache;
 
-import com.github.bucket4j.*;
-import com.github.bucket4j.grid.BucketNotFoundException;
-import com.github.bucket4j.grid.GridBucketState;
-import com.github.bucket4j.grid.RecoveryStrategy;
+import io.github.bucket4j.*;
+import io.github.bucket4j.grid.BucketNotFoundException;
+import io.github.bucket4j.grid.GridBucketState;
+import io.github.bucket4j.grid.RecoveryStrategy;
 import com.hazelcast.config.CacheSimpleConfig;
 import com.hazelcast.config.Config;
 import com.hazelcast.core.Hazelcast;

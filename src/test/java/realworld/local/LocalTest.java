@@ -16,10 +16,10 @@
 
 package realworld.local;
 
-import com.github.bucket4j.Bandwidth;
-import com.github.bucket4j.Bucket;
-import com.github.bucket4j.Bucket4j;
-import com.github.bucket4j.local.SynchronizationStrategy;
+import io.github.bucket4j.Bandwidth;
+import io.github.bucket4j.Bucket;
+import io.github.bucket4j.Bucket4j;
+import io.github.bucket4j.local.SynchronizationStrategy;
 import org.junit.Test;
 import realworld.ConsumptionScenario;
 
