@@ -61,7 +61,7 @@ and moreover client have overdraft equals to 50 calls which can be used if avera
 Constructing the bucket to satisfy the requirements above is little bit more complicated that for previous examples, 
 because we have deal with overdraft, but it is not rocket science:
 ```java
-import com.github.bucket4j.Bucket4j;
+import io.github.bucket4j.Bucket4j;
 
 public class ThrottlingFilter implements javax.servlet.Filter {
 
