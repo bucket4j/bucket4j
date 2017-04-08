@@ -21,13 +21,9 @@ import com.github.bucket4j.*;
 public class SynchronizedBucket extends AbstractBucket {
 
     private final BucketState state;
-    private final Bandwidth[] bandwidths;
-    private final TimeMeter timeMeter;
 
     public SynchronizedBucket(BucketConfiguration configuration) {
         super(configuration);
-        this.bandwidths = configuration.getBandwidths();
-        this.timeMeter = configuration.getTimeMeter();
         this.state = BucketState.createInitialState(configuration);
     }
 
@@ -61,7 +57,7 @@ public class SynchronizedBucket extends AbstractBucket {
     }
 
     @Override
-    protected boolean consumeOrAwaitImpl(long tokensToConsume, long waitIfBusyNanosLimit) throws InterruptedException {
+    protected boolean consumeOrAwaitImpl(long tokensToConsume, long waitIfBusyNanosLimit, boolean uninterruptibly) throws InterruptedException {
         long currentTimeNanos = timeMeter.currentTimeNanos();
         long nanosToCloseDeficit;
 
@@ -79,7 +75,11 @@ public class SynchronizedBucket extends AbstractBucket {
 
             state.consume(bandwidths, tokensToConsume);
         }
-        timeMeter.parkNanos(nanosToCloseDeficit);
+        if (uninterruptibly) {
+            timeMeter.parkUninterruptibly(nanosToCloseDeficit);
+        } else {
+            timeMeter.park(nanosToCloseDeficit);
+        }
         return true;
     }
 

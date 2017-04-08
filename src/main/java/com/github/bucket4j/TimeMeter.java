@@ -38,15 +38,57 @@ public interface TimeMeter extends Serializable {
 
     /**
      * Park current thread to required duration of nanoseconds.
+     * Throws {@link InterruptedException} in case of current thread was interrupted.
      *
-     * @param nanos time to park
+     * @param nanosToPark time to park
      *
      * @throws InterruptedException if current tread is interrupted.
      */
-    default void parkNanos(long nanos) throws InterruptedException {
-        LockSupport.parkNanos(nanos);
-        if (Thread.interrupted()) {
-            throw new InterruptedException();
+    default void park(long nanosToPark) throws InterruptedException {
+        final long endNanos = System.nanoTime() + nanosToPark;
+        while (true) {
+            LockSupport.parkNanos(nanosToPark);
+            if (Thread.interrupted()) {
+                throw new InterruptedException();
+            }
+
+            long currentTimeNanos = System.nanoTime();
+            // it is need to compare deltas instead of direct values in order to solve potential overflow of nano-time
+            if (currentTimeNanos - endNanos >= 0) {
+                return;
+            }
+            nanosToPark = endNanos - currentTimeNanos;
+        }
+    }
+
+    /**
+     * Parks current thread to required duration of nanoseconds ignoring all interrupts,
+     * if interrupt was happen then interruption flag will be restored on the current thread.
+     *
+     * @param nanosToPark nanos to park
+     */
+    default void parkUninterruptibly(long nanosToPark) {
+        final long endNanos = System.nanoTime() + nanosToPark;
+        boolean interrupted = Thread.interrupted();
+        try {
+            while (true) {
+                LockSupport.parkNanos(nanosToPark);
+                if (Thread.interrupted()) {
+                    interrupted = true;
+                }
+
+                long currentTimeNanos = System.nanoTime();
+                // it is need to compare deltas instead of direct values in order to solve potential overflow of nano-time
+                if (currentTimeNanos - endNanos >= 0) {
+                    return;
+                }
+                nanosToPark = endNanos - currentTimeNanos;
+            }
+        } finally {
+            if (interrupted) {
+                // restore interrupted status
+                Thread.currentThread().interrupt();
+            }
         }
     }
 

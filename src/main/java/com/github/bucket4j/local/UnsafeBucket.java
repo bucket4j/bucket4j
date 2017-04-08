@@ -21,13 +21,9 @@ import com.github.bucket4j.*;
 public class UnsafeBucket extends AbstractBucket {
 
     private final BucketState state;
-    private final Bandwidth[] bandwidths;
-    private final TimeMeter timeMeter;
 
     public UnsafeBucket(BucketConfiguration configuration) {
         super(configuration);
-        this.bandwidths = configuration.getBandwidths();
-        this.timeMeter = configuration.getTimeMeter();
         this.state = BucketState.createInitialState(configuration);
     }
 
@@ -59,7 +55,7 @@ public class UnsafeBucket extends AbstractBucket {
     }
 
     @Override
-    protected boolean consumeOrAwaitImpl(long tokensToConsume, long waitIfBusyNanosLimit) throws InterruptedException {
+    protected boolean consumeOrAwaitImpl(long tokensToConsume, long waitIfBusyNanosLimit, boolean uninterruptibly) throws InterruptedException {
         long currentTimeNanos = timeMeter.currentTimeNanos();
 
         state.refillAllBandwidth(bandwidths, currentTimeNanos);
@@ -74,7 +70,11 @@ public class UnsafeBucket extends AbstractBucket {
         }
 
         state.consume(bandwidths, tokensToConsume);
-        timeMeter.parkNanos(nanosToCloseDeficit);
+        if (uninterruptibly) {
+            timeMeter.parkUninterruptibly(nanosToCloseDeficit);
+        } else {
+            timeMeter.park(nanosToCloseDeficit);
+        }
         return true;
     }
 

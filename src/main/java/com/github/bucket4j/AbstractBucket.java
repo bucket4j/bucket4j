@@ -22,17 +22,21 @@ public abstract class AbstractBucket implements Bucket {
 
     protected static final long UNSPECIFIED_WAITING_LIMIT = -1;
 
-    private final BucketConfiguration configuration;
+    protected final BucketConfiguration configuration;
+    protected final Bandwidth[] bandwidths;
+    protected final TimeMeter timeMeter;
 
     protected AbstractBucket(BucketConfiguration configuration) {
         this.configuration = configuration;
+        this.bandwidths = configuration.getBandwidths();
+        this.timeMeter = configuration.getTimeMeter();
     }
 
     protected abstract long consumeAsMuchAsPossibleImpl(long limit);
 
     protected abstract boolean tryConsumeImpl(long tokensToConsume);
 
-    protected abstract boolean consumeOrAwaitImpl(long tokensToConsume, long waitIfBusyNanos) throws InterruptedException;
+    protected abstract boolean consumeOrAwaitImpl(long tokensToConsume, long waitIfBusyNanos, boolean uninterruptibly) throws InterruptedException;
 
     protected abstract void addTokensImpl(long tokensToAdd);
 
@@ -49,7 +53,7 @@ public abstract class AbstractBucket implements Bucket {
         if (tokensToConsume <= 0) {
             throw nonPositiveTokensToConsume(tokensToConsume);
         }
-        consumeOrAwaitImpl(tokensToConsume, UNSPECIFIED_WAITING_LIMIT);
+        consumeOrAwaitImpl(tokensToConsume, UNSPECIFIED_WAITING_LIMIT, false);
     }
 
     @Override
@@ -62,18 +66,37 @@ public abstract class AbstractBucket implements Bucket {
             throw nonPositiveNanosToWait(maxWaitTimeNanos);
         }
 
-        return consumeOrAwaitImpl(tokensToConsume, maxWaitTimeNanos);
+        return consumeOrAwaitImpl(tokensToConsume, maxWaitTimeNanos, false);
     }
 
     @Override
-    public boolean consumeUninterruptibly(long numTokens, long maxWaitTimeNanos) {
-        // TODO
-        return false;
+    public void consumeUninterruptibly(long tokensToConsume) {
+        if (tokensToConsume <= 0) {
+            throw nonPositiveTokensToConsume(tokensToConsume);
+        }
+
+        try {
+            consumeOrAwaitImpl(tokensToConsume, UNSPECIFIED_WAITING_LIMIT, true);
+        } catch (InterruptedException e) {
+            throw new IllegalStateException("Should never come here", e);
+        }
     }
 
     @Override
-    public void consumeUninterruptibly(long numTokens) {
-        // TODO
+    public boolean consumeUninterruptibly(long tokensToConsume, long maxWaitTimeNanos) {
+        if (tokensToConsume <= 0) {
+            throw nonPositiveTokensToConsume(tokensToConsume);
+        }
+
+        if (maxWaitTimeNanos <= 0) {
+            throw nonPositiveNanosToWait(maxWaitTimeNanos);
+        }
+
+        try {
+            return consumeOrAwaitImpl(tokensToConsume, maxWaitTimeNanos, true);
+        } catch (InterruptedException e) {
+            throw new IllegalStateException("Should never come here", e);
+        }
     }
 
     @Override

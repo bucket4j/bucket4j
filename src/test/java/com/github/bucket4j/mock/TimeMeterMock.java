@@ -18,8 +18,6 @@ package com.github.bucket4j.mock;
 
 import com.github.bucket4j.TimeMeter;
 
-import java.util.concurrent.TimeUnit;
-
 /**
  * Created by vladimir.bukhtoyarov on 09.04.2015.
  */
@@ -27,7 +25,6 @@ public class TimeMeterMock implements TimeMeter {
 
     private long currentTimeNanos;
     private long sleeped = 0;
-    private long incrementAfterEachSleep;
 
     public TimeMeterMock() {
         currentTimeNanos = 0;
@@ -45,10 +42,6 @@ public class TimeMeterMock implements TimeMeter {
         this.currentTimeNanos = currentTimeNanos;
     }
 
-    public void setIncrementAfterEachSleep(long incrementAfterEachSleep) {
-        this.incrementAfterEachSleep = incrementAfterEachSleep;
-    }
-
     public long getSleeped() {
         return sleeped;
     }
@@ -59,12 +52,18 @@ public class TimeMeterMock implements TimeMeter {
     }
 
     @Override
-    public void parkNanos(long nanos) throws InterruptedException {
+    public void parkUninterruptibly(long nanosToPark) {
+        currentTimeNanos += nanosToPark;
+        sleeped += nanosToPark;
+    }
+
+    @Override
+    public void park(long nanosToPark) throws InterruptedException {
         if (Thread.currentThread().isInterrupted()) {
             throw new InterruptedException();
         }
-        currentTimeNanos += nanos + incrementAfterEachSleep;
-        sleeped += nanos;
+        currentTimeNanos += nanosToPark;
+        sleeped += nanosToPark;
     }
 
     public void reset() {

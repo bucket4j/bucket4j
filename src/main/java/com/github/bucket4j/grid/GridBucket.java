@@ -45,14 +45,18 @@ public class GridBucket extends AbstractBucket {
     }
 
     @Override
-    protected boolean consumeOrAwaitImpl(long tokensToConsume, long waitIfBusyNanosLimit) throws InterruptedException {
+    protected boolean consumeOrAwaitImpl(long tokensToConsume, long waitIfBusyNanosLimit, boolean uninterruptibly) throws InterruptedException {
         final ReserveAndCalculateTimeToSleepCommand consumeCommand = new ReserveAndCalculateTimeToSleepCommand(tokensToConsume, waitIfBusyNanosLimit);
         long nanosToSleep = execute(consumeCommand);
         if (nanosToSleep == Long.MAX_VALUE) {
             return false;
         }
         if (nanosToSleep > 0) {
-            getConfiguration().getTimeMeter().parkNanos(nanosToSleep);
+            if (uninterruptibly) {
+                getConfiguration().getTimeMeter().parkUninterruptibly(nanosToSleep);
+            } else {
+                getConfiguration().getTimeMeter().park(nanosToSleep);
+            }
         }
         return true;
     }

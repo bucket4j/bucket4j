@@ -23,13 +23,9 @@ import java.util.concurrent.atomic.AtomicReference;
 public class LockFreeBucket extends AbstractBucket {
 
     private final AtomicReference<BucketState> stateReference;
-    private final Bandwidth[] bandwidths;
-    private final TimeMeter timeMeter;
 
     public LockFreeBucket(BucketConfiguration configuration) {
         super(configuration);
-        this.bandwidths = configuration.getBandwidths();
-        this.timeMeter = configuration.getTimeMeter();
         BucketState initialState = BucketState.createInitialState(configuration);
         this.stateReference = new AtomicReference<>(initialState);
     }
@@ -80,7 +76,7 @@ public class LockFreeBucket extends AbstractBucket {
     }
 
     @Override
-    protected boolean consumeOrAwaitImpl(long tokensToConsume, long waitIfBusyNanosLimit) throws InterruptedException {
+    protected boolean consumeOrAwaitImpl(long tokensToConsume, long waitIfBusyNanosLimit, boolean uninterruptibly) throws InterruptedException {
         BucketState previousState = stateReference.get();
         BucketState newState = previousState.clone();
         long currentTimeNanos = timeMeter.currentTimeNanos();
@@ -105,7 +101,11 @@ public class LockFreeBucket extends AbstractBucket {
 
             newState.consume(bandwidths, tokensToConsume);
             if (stateReference.compareAndSet(previousState, newState)) {
-                timeMeter.parkNanos(nanosToCloseDeficit);
+                if (uninterruptibly) {
+                    timeMeter.parkUninterruptibly(nanosToCloseDeficit);
+                } else {
+                    timeMeter.park(nanosToCloseDeficit);
+                }
                 return true;
             } else {
                 previousState = stateReference.get();
