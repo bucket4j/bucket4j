@@ -9,7 +9,7 @@
 * Absolutely non-compromise precision, Bucket4j does not operate with floats or doubles, all calculation are performed in the integer arithmetic,
 this feature protects end users from calculation errors involved by rounding.
 * Ability to switch from one JVM to cluster in two lines of code. Using Bucket4j you are able to limiting something in the cluster of JVMs.
-Since [release 1.3](https://github.com/vladimir-bukhtoyarov/bucket4j/releases/tag/1.4.0) the ```Bucket4j``` supports any GRID solution which compatible with [JCache API (JSR 107)](https://www.jcp.org/en/jsr/detail?id=107) specification.
+Since [release 1.2](https://github.com/vladimir-bukhtoyarov/bucket4j/releases/tag/1.2.0) the ```Bucket4j``` supports any GRID solution which compatible with [JCache API (JSR 107)](https://www.jcp.org/en/jsr/detail?id=107) specification.
 Just use your favorite grid including [Hazelcast](http://hazelcast.com/products/hazelcast/), [Ignite](http://www.oracle.com/technetwork/middleware/coherence/overview/index-087514.html), [Coherence](http://www.oracle.com/technetwork/middleware/coherence/overview/index.html), [Infinispan](http://infinispan.org/) or any other.
 * Ability to specify more than one bandwidth per bucket. For example you can limit 1000 events per hours but not often then 100 events per minute.
 * Customizable time measurement. You are able to specify how to time will be measurement: as `System.nanotime()` or `System.currentTimeMillis()`
@@ -25,10 +25,9 @@ The items placed in recommended to read order:
 ## Get Bucket4j library
 
 #### By direct link
-[Download compiled jar, sources, javadocs](https://github.com/vladimir-bukhtoyarov/bucket4j/releases/tag/1.4.0)
+[Download compiled jar, sources, javadocs](https://github.com/vladimir-bukhtoyarov/bucket4j/releases/tag/2.0.0)
 
 #### You can build Bucket4j from sources
-
 ```bash
 git clone https://github.com/vladimir-bukhtoyarov/bucket4j.git
 cd bucket4j
@@ -36,25 +35,13 @@ mvn clean install
 ```
 
 #### You can add Bucket4j to your project as maven dependency
-
-The bucket4j library is distributed through [Bintray](http://bintray.com/), so you need to add Bintray repository to your `pom.xml`
-
-```xml
-     <repositories>
-         <repository>
-             <id>jcenter</id>
-             <url>http://jcenter.bintray.com</url>
-         </repository>
-     </repositories>
-```
-
-Then include Bucket4j as dependency to your `pom.xml`
-
+The Bucket4j is distributed through both [JCenter](https://bintray.com/bintray/jcenter) and [Maven Central](http://search.maven.org/),
+use any of them:
 ```xml
 <dependency>
-    <groupId>com.github</groupId>
-    <artifactId>bucket4j</artifactId>
-    <version>1.4.0</version>
+    <groupId>com.github.vladimir-bukhtoyarov</groupId>
+    <artifactId>bucket4j-core</artifactId>
+    <version>2.0.0</version>
 </dependency>
 ```
 
