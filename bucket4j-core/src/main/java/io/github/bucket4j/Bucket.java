@@ -128,7 +128,7 @@ public interface Bucket {
      * }</pre>
      *
      * @param tokensToAdd number of tokens to add
-     * @throws IllegalArgumentException in case of tokensToAdd <= 0
+     * @throws IllegalArgumentException in case of tokensToAdd less than 1
      */
     void addTokens(long tokensToAdd);
 
