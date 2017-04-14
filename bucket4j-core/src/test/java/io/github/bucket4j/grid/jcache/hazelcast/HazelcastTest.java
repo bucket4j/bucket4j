@@ -26,14 +26,17 @@ import com.hazelcast.config.Config;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ICacheManager;
+import io.github.bucket4j.grid.jcache.JCacheBucketBuilder;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import realworld.ConsumptionScenario;
+import io.github.bucket4j.util.ConsumptionScenario;
 
 import javax.cache.Cache;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -43,6 +46,10 @@ public class HazelcastTest {
     private static final String KEY = "42";
     private Cache<String, GridBucketState> cache;
     private HazelcastInstance hazelcastInstance;
+    private JCacheBucketBuilder builder = Bucket4j.jCacheBuilder(RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION)
+            .addLimit(0, Bandwidth.simple(1_000, Duration.ofMinutes(1)))
+            .addLimit(0, Bandwidth.simple(200, Duration.ofSeconds(10)));
+    private double permittedRatePerSecond = Math.min(1_000d / 60, 200.0 / 10);
 
     @Before
     public void setup() {
@@ -99,28 +106,22 @@ public class HazelcastTest {
     }
 
     @Test
-    public void test15Seconds() throws Exception {
-        Bucket bucket = Bucket4j.jCacheBuilder(RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION)
-                .addLimit(0, Bandwidth.simple(1_000, Duration.ofMinutes(1)))
-                .addLimit(0, Bandwidth.simple(200, Duration.ofSeconds(10)))
-                .build(cache, KEY);
+    public void testTryConsume() throws Exception {
+        Function<Bucket, Long> action = bucket -> bucket.tryConsume(1)? 1L : 0L;
+        Supplier<Bucket> bucketSupplier = () -> builder.build(cache, KEY);
+        ConsumptionScenario scenario = new ConsumptionScenario(4, TimeUnit.SECONDS.toNanos(15), bucketSupplier, action, permittedRatePerSecond);
+        scenario.executeAndValidateRate();
+    }
 
-        ConsumptionScenario scenario = new ConsumptionScenario(4, TimeUnit.SECONDS.toNanos(15), bucket);
-        long consumed = scenario.execute();
-        long duration = scenario.getDurationNanos();
-        System.out.println("Consumed " + consumed + " tokens in the " + duration + " nanos");
-
-        float actualRate = (float) consumed / (float) duration;
-        float permittedRate = 200.0f / (float) TimeUnit.SECONDS.toNanos(10);
-
-        String msg = "Actual rate " + actualRate + " is greater then permitted rate " + permittedRate;
-        assertTrue(msg, actualRate <= permittedRate);
-
-        BucketState snapshot = bucket.createSnapshot();
-        BucketConfiguration configuration = bucket.getConfiguration();
-        long available = snapshot.getAvailableTokens(configuration.getBandwidths());
-        long rest = bucket.tryConsumeAsMuchAsPossible();
-        assertTrue(rest >= available);
+    @Test
+    public void testConsume() throws Exception {
+        Function<Bucket, Long> action = bucket -> {
+            bucket.consumeUninterruptibly(1);
+            return 1L;
+        };
+        Supplier<Bucket> bucketSupplier = () -> builder.build(cache, KEY);
+        ConsumptionScenario scenario = new ConsumptionScenario(4, TimeUnit.SECONDS.toNanos(15), bucketSupplier, action, permittedRatePerSecond);
+        scenario.executeAndValidateRate();
     }
 
 }
