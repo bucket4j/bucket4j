@@ -29,10 +29,13 @@ import java.time.Duration;
 @State(Scope.Benchmark)
 public class LocalSynchronizedState {
 
-    public final Bucket bucket = Bucket4j.builder()
+    public final Bucket unlimitedBucket = Bucket4j.builder()
             .withMillisecondPrecision()
             .addLimit(
                     Bandwidth.simple(Long.MAX_VALUE / 2, Duration.ofNanos(Long.MAX_VALUE / 2))
             ).build(SynchronizationStrategy.SYNCHRONIZED);
 
+    public final Bucket _10_milion_rps_Bucket = Bucket4j.builder()
+            .addLimit(0, Bandwidth.simple(10_000_000, Duration.ofSeconds(1)))
+            .build(SynchronizationStrategy.SYNCHRONIZED);
 }

@@ -33,21 +33,21 @@ import java.util.concurrent.TimeUnit;
 
 @BenchmarkMode({Mode.Throughput, Mode.AverageTime})
 @OutputTimeUnit(TimeUnit.MICROSECONDS)
-public class BenchmarkingWithGuavaRateLimiter {
+public class ConsumeMostlySuccess {
 
     @Benchmark
-    public boolean benchmarkLocalLockFree(LocalLockFreeState state) {
-        return state.bucket.tryConsume(1);
+    public void consumeOneToken_mostlySuccess_LockFree(LocalLockFreeState state) {
+        state._10_milion_rps_Bucket.consumeUninterruptibly(1);
     }
 
     @Benchmark
-    public boolean benchmarkLocalSynchronized(LocalSynchronizedState state) {
-        return state.bucket.tryConsume(1);
+    public void consumeOneToken_mostlySuccess_Synchronized(LocalSynchronizedState state) {
+        state._10_milion_rps_Bucket.consumeUninterruptibly(1);
     }
 
     @Benchmark
-    public boolean benchmarkGuavaLimiter(GuavaLimiterState state) {
-        return state.guavaRateLimiter.tryAcquire();
+    public void consumeOneToken_mostlySuccess_GuavaLimiter(GuavaLimiterState state) {
+        state._10_milion_rps_RateLimiter.acquire();
     }
 
     public static class OneThread {
@@ -76,7 +76,7 @@ public class BenchmarkingWithGuavaRateLimiter {
 
     private static void benchmark(int threadCount) throws RunnerException {
         Options opt = new OptionsBuilder()
-                .include(BenchmarkingWithGuavaRateLimiter.class.getSimpleName())
+                .include(ConsumeMostlySuccess.class.getSimpleName())
                 .warmupIterations(10)
                 .measurementIterations(10)
                 .threads(threadCount)

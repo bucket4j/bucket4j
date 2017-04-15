@@ -26,4 +26,6 @@ public class GuavaLimiterState {
 
     public final RateLimiter guavaRateLimiter = RateLimiter.create(Long.MAX_VALUE / 2);
 
+    public final RateLimiter _10_milion_rps_RateLimiter = RateLimiter.create(10_000_000);
+
 }
