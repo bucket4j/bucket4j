@@ -28,7 +28,7 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
     private static final Duration VALID_PERIOD = Duration.ofMinutes(10);
     private static final long VALID_CAPACITY = 1000;
 
-    AbstractBucketBuilder builder = Bucket4j.builder()
+    ConfigurationBuilder builder = Bucket4j.builder()
 
     @Unroll
     def "Should detect that capacity #capacity is wrong"(long capacity) {

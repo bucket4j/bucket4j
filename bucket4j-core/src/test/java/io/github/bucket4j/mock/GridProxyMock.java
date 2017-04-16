@@ -29,11 +29,14 @@ import java.util.concurrent.ThreadLocalRandom;
 public class GridProxyMock implements GridProxy {
 
     private GridBucketState state;
-    private Serializable key = ThreadLocalRandom.current().nextInt(100);
     private CommandResult predefinedAnswer;
 
+    public void setPredefinedAnswer(CommandResult predefinedAnswer) {
+        this.predefinedAnswer = predefinedAnswer;
+    }
+
     @Override
-    public CommandResult execute(GridCommand command) {
+    public CommandResult execute(Serializable key, GridCommand command) {
         if (predefinedAnswer != null) {
             return predefinedAnswer;
         }
@@ -42,17 +45,8 @@ public class GridProxyMock implements GridProxy {
     }
 
     @Override
-    public void setInitialState(GridBucketState initialState) {
+    public void setInitialState(Serializable key, GridBucketState initialState) {
         this.state = initialState;
-    }
-
-    @Override
-    public Serializable getBucketKey() {
-        return key;
-    }
-
-    public void setPredefinedAnswer(CommandResult predefinedAnswer) {
-        this.predefinedAnswer = predefinedAnswer;
     }
 
 }

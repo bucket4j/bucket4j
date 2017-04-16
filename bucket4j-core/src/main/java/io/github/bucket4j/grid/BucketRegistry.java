@@ -17,12 +17,12 @@
 
 package io.github.bucket4j.grid;
 
+import io.github.bucket4j.Bucket;
+
 import java.io.Serializable;
 
-public interface GridProxy<K extends Serializable> {
+public interface BucketRegistry<K extends Serializable> {
 
-    <T extends Serializable> CommandResult<T> execute(K key, GridCommand<T> command);
-
-    void setInitialState(K key, GridBucketState initialState);
+    Bucket getProxy(K key);
 
 }

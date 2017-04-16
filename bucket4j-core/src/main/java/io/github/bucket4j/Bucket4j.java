@@ -19,8 +19,8 @@
 package io.github.bucket4j;
 
 import io.github.bucket4j.grid.RecoveryStrategy;
-import io.github.bucket4j.grid.jcache.JCacheBucketBuilder;
-import io.github.bucket4j.local.LocalBucketBuilder;
+import io.github.bucket4j.grid.jcache.JCacheConfigurationBuilder;
+import io.github.bucket4j.local.LocalConfigurationBuilder;
 
 /**
  * This is entry point for functionality provided bucket4j library.
@@ -32,10 +32,14 @@ public class Bucket4j {
     /**
      * Creates the new builder of in-memory buckets.
      *
-     * @return new instance of {@link LocalBucketBuilder}
+     * @return new instance of {@link LocalConfigurationBuilder}
      */
-    public static LocalBucketBuilder builder() {
-        return new LocalBucketBuilder();
+    public static LocalConfigurationBuilder builder() {
+        return new LocalConfigurationBuilder();
+    }
+
+    public static ConfigurationBuilder configurationBuilder() {
+        return new ConfigurationBuilder();
     }
 
     /**
@@ -43,10 +47,10 @@ public class Bucket4j {
      *
      * @param recoveryStrategy specifies the reaction which should be applied in case of previously saved state of bucket has been lost.
      *
-     * @return new instance of {@link JCacheBucketBuilder}
+     * @return new instance of {@link JCacheConfigurationBuilder}
      */
-    public static JCacheBucketBuilder jCacheBuilder(RecoveryStrategy recoveryStrategy) {
-        return new JCacheBucketBuilder(recoveryStrategy);
+    public static JCacheConfigurationBuilder jCacheBuilder(RecoveryStrategy recoveryStrategy) {
+        return new JCacheConfigurationBuilder(recoveryStrategy);
     }
 
 }

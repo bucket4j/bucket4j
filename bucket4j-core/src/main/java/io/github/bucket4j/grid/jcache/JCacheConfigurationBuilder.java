@@ -21,7 +21,7 @@ package io.github.bucket4j.grid.jcache;
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.grid.GridBucket;
 import io.github.bucket4j.grid.RecoveryStrategy;
-import io.github.bucket4j.AbstractBucketBuilder;
+import io.github.bucket4j.ConfigurationBuilder;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.grid.GridBucketState;
 
@@ -35,16 +35,16 @@ import java.util.Objects;
  * This builder creates the buckets backed by any <a href="https://www.jcp.org/en/jsr/detail?id=107">JCache API (JSR 107)</a> implementation.
  *
  */
-public class JCacheBucketBuilder extends AbstractBucketBuilder<JCacheBucketBuilder> {
+public class JCacheConfigurationBuilder extends ConfigurationBuilder<JCacheConfigurationBuilder> {
 
     private final RecoveryStrategy recoveryStrategy;
 
     /**
-     * Creates the new instance of {@link JCacheBucketBuilder} with configured recovery strategy
+     * Creates the new instance of {@link JCacheConfigurationBuilder} with configured recovery strategy
      *
      * @param recoveryStrategy specifies the reaction which should be applied in case of previously saved state of bucket has been lost.
      */
-    public JCacheBucketBuilder(RecoveryStrategy recoveryStrategy) {
+    public JCacheConfigurationBuilder(RecoveryStrategy recoveryStrategy) {
         this.recoveryStrategy = Objects.requireNonNull(recoveryStrategy);
     }
 
@@ -60,7 +60,8 @@ public class JCacheBucketBuilder extends AbstractBucketBuilder<JCacheBucketBuild
      */
     public <K extends Serializable> Bucket build(Cache<K, GridBucketState> cache, K key) {
         BucketConfiguration configuration = createConfiguration();
-        return new GridBucket(configuration, new JCacheProxy(cache, key), recoveryStrategy);
+        JCacheProxy<K> gridProxy = new JCacheProxy<>(cache);
+        return GridBucket.createInitializedBucket(key, configuration, gridProxy, recoveryStrategy);
     }
 
 }

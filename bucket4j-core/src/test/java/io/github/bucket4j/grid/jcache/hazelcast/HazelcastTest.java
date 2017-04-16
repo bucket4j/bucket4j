@@ -19,6 +19,7 @@ package io.github.bucket4j.grid.jcache.hazelcast;
 
 import io.github.bucket4j.*;
 import io.github.bucket4j.grid.BucketNotFoundException;
+import io.github.bucket4j.grid.BucketRegistry;
 import io.github.bucket4j.grid.GridBucketState;
 import io.github.bucket4j.grid.RecoveryStrategy;
 import com.hazelcast.config.CacheSimpleConfig;
@@ -26,7 +27,8 @@ import com.hazelcast.config.Config;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ICacheManager;
-import io.github.bucket4j.grid.jcache.JCacheBucketBuilder;
+import io.github.bucket4j.grid.jcache.JCacheBucketRegistry;
+import io.github.bucket4j.grid.jcache.JCacheConfigurationBuilder;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -38,15 +40,17 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 public class HazelcastTest {
 
     private static final String KEY = "42";
+    private static final String ANOTHER_KEY = "666";
     private Cache<String, GridBucketState> cache;
     private HazelcastInstance hazelcastInstance;
-    private JCacheBucketBuilder builder = Bucket4j.jCacheBuilder(RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION)
+    private JCacheConfigurationBuilder builder = Bucket4j.jCacheBuilder(RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION)
             .addLimit(0, Bandwidth.simple(1_000, Duration.ofMinutes(1)))
             .addLimit(0, Bandwidth.simple(200, Duration.ofSeconds(10)));
     private double permittedRatePerSecond = Math.min(1_000d / 60, 200.0 / 10);
@@ -68,6 +72,46 @@ public class HazelcastTest {
         if (hazelcastInstance != null) {
             hazelcastInstance.shutdown();
         }
+    }
+
+    @Test
+    public void testJCacheBucketRegistryWithKeyIndependentConfiguration() {
+        BucketConfiguration configuration = Bucket4j.configurationBuilder()
+                .addLimit(Bandwidth.simple(10, Duration.ofDays(1)))
+                .createConfiguration();
+
+        BucketRegistry<String> registry = JCacheBucketRegistry.withKeyIndependentConfiguration(cache, configuration);
+        Bucket bucket1 = registry.getProxy(KEY);
+        assertTrue(bucket1.tryConsume(10));
+        assertFalse(bucket1.tryConsume(1));
+
+        Bucket bucket2 = registry.getProxy(ANOTHER_KEY);
+        assertTrue(bucket2.tryConsume(10));
+        assertFalse(bucket2.tryConsume(1));
+    }
+
+    @Test
+    public void testJCacheBucketRegistryWithKeyDependentConfiguration() {
+        Function<String, BucketConfiguration> supplier = (key) -> {
+            if (key.equals(KEY)) {
+                return Bucket4j.configurationBuilder()
+                        .addLimit(Bandwidth.simple(10, Duration.ofDays(1)))
+                        .createConfiguration();
+            }
+            if (key.equals(ANOTHER_KEY)) {
+                return Bucket4j.configurationBuilder()
+                        .addLimit(Bandwidth.simple(100, Duration.ofDays(1)))
+                        .createConfiguration();
+            }
+            throw new IllegalStateException();
+        };
+
+        BucketRegistry<String> registry = JCacheBucketRegistry.withKeyDependentConfiguration(cache, supplier);
+        Bucket bucket1 = registry.getProxy(KEY);
+        assertFalse(bucket1.tryConsume(11));
+
+        Bucket bucket2 = registry.getProxy(ANOTHER_KEY);
+        assertTrue(bucket2.tryConsume(11));
     }
 
     @Test

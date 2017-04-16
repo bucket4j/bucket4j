@@ -22,17 +22,31 @@ import io.github.bucket4j.AbstractBucket;
 import io.github.bucket4j.BucketState;
 
 import java.io.Serializable;
+import java.util.function.Supplier;
 
-public class GridBucket extends AbstractBucket {
+public class GridBucket<K extends Serializable> extends AbstractBucket {
 
-    private final GridProxy gridProxy;
+    private final K key;
+    private final GridProxy<K> gridProxy;
     private final RecoveryStrategy recoveryStrategy;
+    private final Supplier<BucketConfiguration> configurationSupplier;
 
-    public GridBucket(BucketConfiguration configuration, GridProxy gridProxy, RecoveryStrategy recoveryStrategy) {
-        super(configuration);
+    public static <T extends Serializable> GridBucket<T> createLazyBucket(T key, Supplier<BucketConfiguration> configurationSupplier, GridProxy<T> gridProxy) {
+        return new GridBucket<>(key, configurationSupplier, gridProxy, RecoveryStrategy.RECONSTRUCT, false);
+    }
+
+    public static <T extends Serializable> GridBucket<T> createInitializedBucket(T key, BucketConfiguration configuration, GridProxy<T> gridProxy, RecoveryStrategy recoveryStrategy) {
+        return new GridBucket<>(key, () -> configuration, gridProxy, recoveryStrategy, true);
+    }
+
+    private GridBucket(K key, Supplier<BucketConfiguration> configurationSupplier, GridProxy<K> gridProxy, RecoveryStrategy recoveryStrategy, boolean initializeBucket) {
+        this.key = key;
         this.gridProxy = gridProxy;
         this.recoveryStrategy = recoveryStrategy;
-        initializeBucket();
+        this.configurationSupplier = configurationSupplier;
+        if (initializeBucket) {
+            initializeBucket();
+        }
     }
 
     @Override
@@ -72,33 +86,38 @@ public class GridBucket extends AbstractBucket {
         return execute(new CreateSnapshotCommand());
     }
 
+    @Override
+    public BucketConfiguration getConfiguration() {
+        return configurationSupplier.get();
+    }
+
     private <T extends Serializable> T execute(GridCommand<T> command) {
-        CommandResult<T> result = gridProxy.execute(command);
+        CommandResult<T> result = gridProxy.execute(key, command);
         if (!result.isBucketNotFound()) {
             return result.getData();
         }
 
         // the bucket was removed or lost, it is need to apply recovery strategy
         if (recoveryStrategy == RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION) {
-            throw new BucketNotFoundException(gridProxy.getBucketKey());
+            throw new BucketNotFoundException(key);
         } else {
             initializeBucket();
         }
 
         // retry command execution
-        result = gridProxy.execute(command);
+        result = gridProxy.execute(key, command);
         if (!result.isBucketNotFound()) {
             return result.getData();
         } else {
             // something wrong goes with GRID, reinitialization of bucket has no effect
-            throw new BucketNotFoundException(gridProxy.getBucketKey());
+            throw new BucketNotFoundException(key);
         }
     }
 
     private void initializeBucket() {
         BucketConfiguration configuration = getConfiguration();
         GridBucketState initialState = new GridBucketState(configuration, BucketState.createInitialState(configuration));
-        gridProxy.setInitialState(initialState);
+        gridProxy.setInitialState(key, initialState);
     }
 
 }

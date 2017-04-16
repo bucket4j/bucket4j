@@ -17,12 +17,12 @@
 
 package io.github.bucket4j.mock;
 
-import io.github.bucket4j.AbstractBucketBuilder;
+import io.github.bucket4j.ConfigurationBuilder;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.grid.GridBucket;
 import io.github.bucket4j.grid.RecoveryStrategy;
-import io.github.bucket4j.local.LocalBucketBuilder;
+import io.github.bucket4j.local.LocalConfigurationBuilder;
 import io.github.bucket4j.local.SynchronizationStrategy;
 
 import java.util.ArrayList;
@@ -32,33 +32,33 @@ public enum BucketType {
 
     LOCAL_LOCK_FREE {
         @Override
-        public Bucket createBucket(AbstractBucketBuilder builder) {
-            return ((LocalBucketBuilder) builder).build();
+        public Bucket createBucket(ConfigurationBuilder builder) {
+            return ((LocalConfigurationBuilder) builder).build();
         }
     },
     LOCAL_SYNCHRONIZED {
         @Override
-        public Bucket createBucket(AbstractBucketBuilder builder) {
-            return ((LocalBucketBuilder) builder).build(SynchronizationStrategy.SYNCHRONIZED);
+        public Bucket createBucket(ConfigurationBuilder builder) {
+            return ((LocalConfigurationBuilder) builder).build(SynchronizationStrategy.SYNCHRONIZED);
         }
     },
     LOCAL_UNSAFE {
         @Override
-        public Bucket createBucket(AbstractBucketBuilder builder) {
-            return ((LocalBucketBuilder) builder).build(SynchronizationStrategy.NONE);
+        public Bucket createBucket(ConfigurationBuilder builder) {
+            return ((LocalConfigurationBuilder) builder).build(SynchronizationStrategy.NONE);
         }
     },
     GRID {
         @Override
-        public Bucket createBucket(AbstractBucketBuilder builder) {
+        public Bucket createBucket(ConfigurationBuilder builder) {
             BucketConfiguration configuration = builder.createConfiguration();
-            return new GridBucket(configuration, new GridProxyMock(), RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION);
+            return GridBucket.createInitializedBucket(42, configuration, new GridProxyMock(), RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION);
         }
     };
 
-    abstract public Bucket createBucket(AbstractBucketBuilder builder);
+    abstract public Bucket createBucket(ConfigurationBuilder builder);
 
-    public static List<Bucket> createBuckets(AbstractBucketBuilder builder) {
+    public static List<Bucket> createBuckets(ConfigurationBuilder builder) {
         List<Bucket> buckets = new ArrayList<>();
         for (BucketType type : values()) {
             Bucket bucket = type.createBucket(builder);

@@ -25,10 +25,22 @@ import java.util.List;
  * A builder for buckets. Builder can be reused, i.e. one builder can create multiple buckets with similar configuration.
  *
  */
-public abstract class AbstractBucketBuilder<T extends AbstractBucketBuilder> {
+public class ConfigurationBuilder<T extends ConfigurationBuilder> {
 
-    private TimeMeter timeMeter = TimeMeter.SYSTEM_MILLISECONDS;
-    private List<BandwidthDefinition> bandwidths = new ArrayList<>(1);
+    private TimeMeter timeMeter;
+    private List<BandwidthDefinition> bandwidths;
+
+    protected ConfigurationBuilder() {
+        timeMeter = TimeMeter.SYSTEM_MILLISECONDS;
+        bandwidths = new ArrayList<>(1);
+    }
+
+    /**
+     * @return configuration which used for bucket construction.
+     */
+    public BucketConfiguration createConfiguration() {
+        return new BucketConfiguration(this.bandwidths, timeMeter);
+    }
 
     /**
      * Adds limited bandwidth for all buckets which will be constructed by this builder instance.
@@ -55,7 +67,7 @@ public abstract class AbstractBucketBuilder<T extends AbstractBucketBuilder> {
     }
 
     /**
-     * Creates instance of {@link AbstractBucketBuilder} which will create buckets with {@link TimeMeter#SYSTEM_NANOTIME} as time meter.
+     * Creates instance of {@link ConfigurationBuilder} which will create buckets with {@link TimeMeter#SYSTEM_NANOTIME} as time meter.
      *
      * @return this builder instance
      */
@@ -65,7 +77,7 @@ public abstract class AbstractBucketBuilder<T extends AbstractBucketBuilder> {
     }
 
     /**
-     * Creates instance of {@link AbstractBucketBuilder} which will create buckets with {@link TimeMeter#SYSTEM_MILLISECONDS} as time meter.
+     * Creates instance of {@link ConfigurationBuilder} which will create buckets with {@link TimeMeter#SYSTEM_MILLISECONDS} as time meter.
      *
      * @return this builder instance
      */
@@ -75,7 +87,7 @@ public abstract class AbstractBucketBuilder<T extends AbstractBucketBuilder> {
     }
 
     /**
-     * Creates instance of {@link AbstractBucketBuilder} which will create buckets with {@code customTimeMeter} as time meter.
+     * Creates instance of {@link ConfigurationBuilder} which will create buckets with {@code customTimeMeter} as time meter.
      *
      * @param customTimeMeter object which will measure time.
      *
@@ -87,13 +99,6 @@ public abstract class AbstractBucketBuilder<T extends AbstractBucketBuilder> {
         }
         this.timeMeter = customTimeMeter;
         return (T) this;
-    }
-
-    /**
-     * @return configuration which used for bucket construction.
-     */
-    public BucketConfiguration createConfiguration() {
-        return new BucketConfiguration(this.bandwidths, timeMeter);
     }
 
     @Override

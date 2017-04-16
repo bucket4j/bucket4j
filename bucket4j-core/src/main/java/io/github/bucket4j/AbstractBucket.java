@@ -21,16 +21,6 @@ public abstract class AbstractBucket implements Bucket {
 
     protected static final long UNSPECIFIED_WAITING_LIMIT = -1;
 
-    protected final BucketConfiguration configuration;
-    protected final Bandwidth[] bandwidths;
-    protected final TimeMeter timeMeter;
-
-    protected AbstractBucket(BucketConfiguration configuration) {
-        this.configuration = configuration;
-        this.bandwidths = configuration.getBandwidths();
-        this.timeMeter = configuration.getTimeMeter();
-    }
-
     protected abstract long consumeAsMuchAsPossibleImpl(long limit);
 
     protected abstract boolean tryConsumeImpl(long tokensToConsume);
@@ -117,11 +107,6 @@ public abstract class AbstractBucket implements Bucket {
             throw new IllegalArgumentException("tokensToAdd should be >= 0");
         }
         addTokensImpl(tokensToAdd);
-    }
-
-    @Override
-    public BucketConfiguration getConfiguration() {
-        return configuration;
     }
 
 }

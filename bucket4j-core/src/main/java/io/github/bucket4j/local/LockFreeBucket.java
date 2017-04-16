@@ -18,18 +18,21 @@
 package io.github.bucket4j.local;
 
 
-import io.github.bucket4j.AbstractBucket;
-import io.github.bucket4j.BucketConfiguration;
-import io.github.bucket4j.BucketState;
+import io.github.bucket4j.*;
 
 import java.util.concurrent.atomic.AtomicReference;
 
 public class LockFreeBucket extends AbstractBucket {
 
+    private final BucketConfiguration configuration;
+    private final Bandwidth[] bandwidths;
+    private final TimeMeter timeMeter;
     private final AtomicReference<BucketState> stateReference;
 
     public LockFreeBucket(BucketConfiguration configuration) {
-        super(configuration);
+        this.configuration = configuration;
+        this.bandwidths = configuration.getBandwidths();
+        this.timeMeter = configuration.getTimeMeter();
         BucketState initialState = BucketState.createInitialState(configuration);
         this.stateReference = new AtomicReference<>(initialState);
     }
@@ -139,6 +142,11 @@ public class LockFreeBucket extends AbstractBucket {
     @Override
     public BucketState createSnapshot() {
         return stateReference.get().clone();
+    }
+
+    @Override
+    public BucketConfiguration getConfiguration() {
+        return configuration;
     }
 
     @Override

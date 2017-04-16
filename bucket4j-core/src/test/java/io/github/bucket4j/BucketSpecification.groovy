@@ -30,7 +30,7 @@ class BucketSpecification extends Specification {
 
     @Unroll
     def "#n Should return #requiredResult when trying to consume single token from Bucket #builder"(
-            int n, boolean requiredResult, AbstractBucketBuilder builder) {
+            int n, boolean requiredResult, ConfigurationBuilder builder) {
         expect:
             for (Bucket bucket : BucketType.createBuckets(builder)) {
                 assert bucket.tryConsume(1) == requiredResult
@@ -43,7 +43,7 @@ class BucketSpecification extends Specification {
 
     @Unroll
     def "#n Should return #requiredResult when trying to consume #toConsume tokens from Bucket #builder"(
-            int n, boolean requiredResult, long toConsume, AbstractBucketBuilder builder) {
+            int n, boolean requiredResult, long toConsume, ConfigurationBuilder builder) {
         expect:
             for (Bucket bucket : BucketType.createBuckets(builder)) {
                 assert bucket.tryConsume(toConsume) == requiredResult
@@ -56,7 +56,7 @@ class BucketSpecification extends Specification {
 
     @Unroll
     def "#n Should return #requiredResult when consumeAsMuchAsPossible tokens from Bucket #builder"(
-            int n, long requiredResult, AbstractBucketBuilder builder) {
+            int n, long requiredResult, ConfigurationBuilder builder) {
         expect:
             for (Bucket bucket : BucketType.createBuckets(builder)) {
                 assert bucket.tryConsumeAsMuchAsPossible() == requiredResult
@@ -69,7 +69,7 @@ class BucketSpecification extends Specification {
 
     @Unroll
     def "#n Should return #requiredResult when trying to consumeAsMuchAsPossible with limit #limit tokens from Bucket #builder"(
-            int n, long requiredResult, long limit, AbstractBucketBuilder builder) {
+            int n, long requiredResult, long limit, ConfigurationBuilder builder) {
         expect:
             for (Bucket bucket : BucketType.createBuckets(builder)) {
                 assert bucket.tryConsumeAsMuchAsPossible(limit) == requiredResult
@@ -84,7 +84,7 @@ class BucketSpecification extends Specification {
     @Timeout(value = 2, unit = TimeUnit.SECONDS)
     @Unroll
     def "#n Should sleep #requiredSleep when trying to consuming #toConsume tokens from Bucket #builder"(
-            int n, long requiredSleep, long toConsume, AbstractBucketBuilder builder) {
+            int n, long requiredSleep, long toConsume, ConfigurationBuilder builder) {
         expect:
             for (BucketType type : BucketType.values()) {
                 for (boolean uniterruptible : Arrays.asList(false, true)) {
@@ -109,7 +109,7 @@ class BucketSpecification extends Specification {
     @Timeout(value = 2, unit = TimeUnit.SECONDS)
     @Unroll
     def "#n Should sleep #requiredSleep and return #requiredResult when trying to consume single token with limit #sleepLimit from Bucket #builder"(
-            int n, long requiredSleep, boolean requiredResult, long sleepLimit, AbstractBucketBuilder builder) {
+            int n, long requiredSleep, boolean requiredResult, long sleepLimit, ConfigurationBuilder builder) {
         expect:
             for (BucketType type : BucketType.values()) {
                 for (boolean uniterruptible : Arrays.asList(false, true)) {
@@ -134,7 +134,7 @@ class BucketSpecification extends Specification {
     @Timeout(value = 2, unit = TimeUnit.SECONDS)
     @Unroll
     def "#n Should sleep #requiredSleep and return #requiredResult when trying to consume #toConsume tokens with limit #sleepLimit from Bucket #builder"(
-            int n, long requiredSleep, boolean requiredResult, long toConsume, long sleepLimit, AbstractBucketBuilder builder) {
+            int n, long requiredSleep, boolean requiredResult, long toConsume, long sleepLimit, ConfigurationBuilder builder) {
         expect:
             for (BucketType type : BucketType.values()) {
                 for (boolean uniterruptible : Arrays.asList(false, true)) {
@@ -161,7 +161,7 @@ class BucketSpecification extends Specification {
 
     @Unroll
     def "#n Add tokens spec"(
-            int n, long tokensToAdd, long nanosIncrement, long requiredResult, AbstractBucketBuilder builder) {
+            int n, long tokensToAdd, long nanosIncrement, long requiredResult, ConfigurationBuilder builder) {
         expect:
             for (BucketType type : BucketType.values()) {
                 TimeMeterMock mock = new TimeMeterMock(0)

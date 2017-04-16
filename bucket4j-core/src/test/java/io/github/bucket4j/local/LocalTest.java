@@ -20,7 +20,6 @@ package io.github.bucket4j.local;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.Bucket4j;
-import io.github.bucket4j.util.Formatter;
 import org.junit.Test;
 import io.github.bucket4j.util.ConsumptionScenario;
 
@@ -33,7 +32,7 @@ import static org.junit.Assert.assertTrue;
 
 public class LocalTest {
 
-    private LocalBucketBuilder builder = Bucket4j.builder()
+    private LocalConfigurationBuilder builder = Bucket4j.builder()
             .addLimit(0, Bandwidth.simple(1_000, Duration.ofMinutes(1)))
             .addLimit(0, Bandwidth.simple(200, Duration.ofSeconds(10)));
 

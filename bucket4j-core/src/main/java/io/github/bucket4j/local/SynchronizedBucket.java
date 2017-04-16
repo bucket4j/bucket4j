@@ -18,16 +18,19 @@
 package io.github.bucket4j.local;
 
 
-import io.github.bucket4j.AbstractBucket;
-import io.github.bucket4j.BucketConfiguration;
-import io.github.bucket4j.BucketState;
+import io.github.bucket4j.*;
 
 public class SynchronizedBucket extends AbstractBucket {
 
+    private final BucketConfiguration configuration;
+    private final Bandwidth[] bandwidths;
+    private final TimeMeter timeMeter;
     private final BucketState state;
 
     public SynchronizedBucket(BucketConfiguration configuration) {
-        super(configuration);
+        this.configuration = configuration;
+        this.bandwidths = configuration.getBandwidths();
+        this.timeMeter = configuration.getTimeMeter();
         this.state = BucketState.createInitialState(configuration);
     }
 
@@ -101,6 +104,11 @@ public class SynchronizedBucket extends AbstractBucket {
         synchronized (this) {
             return state.clone();
         }
+    }
+
+    @Override
+    public BucketConfiguration getConfiguration() {
+        return configuration;
     }
 
     @Override
