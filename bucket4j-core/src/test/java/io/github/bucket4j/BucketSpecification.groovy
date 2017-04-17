@@ -19,6 +19,7 @@ package io.github.bucket4j
 
 import io.github.bucket4j.mock.BucketType
 import io.github.bucket4j.mock.TimeMeterMock
+import spock.lang.Ignore
 import spock.lang.Specification
 import spock.lang.Timeout
 import spock.lang.Unroll
@@ -81,6 +82,7 @@ class BucketSpecification extends Specification {
             3 |       5        |     5     | Bucket4j.builder().withCustomTimePrecision(new TimeMeterMock(0)).addLimit(6, Bandwidth.simple(10, Duration.ofMinutes(100)))
     }
 
+    @Ignore
     @Timeout(value = 2, unit = TimeUnit.SECONDS)
     @Unroll
     def "#n Should sleep #requiredSleep when trying to consuming #toConsume tokens from Bucket #builder"(
@@ -106,6 +108,7 @@ class BucketSpecification extends Specification {
             3 |    9990       |  1000     | Bucket4j.builder().addLimit(1, Bandwidth.simple(10, Duration.ofNanos(100)))
     }
 
+    @Ignore
     @Timeout(value = 2, unit = TimeUnit.SECONDS)
     @Unroll
     def "#n Should sleep #requiredSleep and return #requiredResult when trying to consume single token with limit #sleepLimit from Bucket #builder"(
@@ -131,6 +134,7 @@ class BucketSpecification extends Specification {
             2 |       0       |     true       |     11     | Bucket4j.builder().addLimit(1, Bandwidth.simple(10, Duration.ofNanos(100)))
     }
 
+    @Ignore
     @Timeout(value = 2, unit = TimeUnit.SECONDS)
     @Unroll
     def "#n Should sleep #requiredSleep and return #requiredResult when trying to consume #toConsume tokens with limit #sleepLimit from Bucket #builder"(
