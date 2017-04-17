@@ -27,34 +27,26 @@ import io.github.bucket4j.util.LazySupplier;
 
 import javax.cache.Cache;
 import java.io.Serializable;
-import java.util.Objects;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 public class JCacheBucketRegistry<K extends Serializable> implements BucketRegistry<K> {
 
     private final GridProxy<K> gridProxy;
-    private final Function<K, BucketConfiguration> configurationSupplier;
 
-    public static <T extends Serializable> JCacheBucketRegistry<T> withKeyIndependentConfiguration(Cache<T, GridBucketState> cache, BucketConfiguration configuration) {
-        Objects.requireNonNull(configuration);
-        Function<T, BucketConfiguration> configurationSupplier = (key) -> configuration;
-        return new JCacheBucketRegistry<>(cache, configurationSupplier);
+    public static <T extends Serializable> JCacheBucketRegistry<T> forCache(Cache<T, GridBucketState> cache) {
+        return new JCacheBucketRegistry<>(cache);
     }
 
-    public static <T extends Serializable> JCacheBucketRegistry<T> withKeyDependentConfiguration(Cache<T, GridBucketState> cache, Function<T, BucketConfiguration> configurationSupplier) {
-        return new JCacheBucketRegistry<>(cache, configurationSupplier);
-    }
-
-    private JCacheBucketRegistry(Cache<K, GridBucketState> cache, Function<K, BucketConfiguration> configurationSupplier) {
+    private JCacheBucketRegistry(Cache<K, GridBucketState> cache) {
         this.gridProxy = new JCacheProxy<>(cache);
-        this.configurationSupplier = configurationSupplier;
     }
 
     @Override
-    public Bucket getProxy(K key) {
-        Supplier<BucketConfiguration> lazyConfigurationSupplier = new LazySupplier<>(() -> configurationSupplier.apply(key));
-        return GridBucket.createLazyBucket(key, lazyConfigurationSupplier, gridProxy);
+    public Bucket getProxy(K key, Supplier<BucketConfiguration> configurationLazySupplier) {
+        if (!(configurationLazySupplier instanceof LazySupplier)) {
+            configurationLazySupplier = new LazySupplier<>(configurationLazySupplier);
+        }
+        return GridBucket.createLazyBucket(key, configurationLazySupplier, gridProxy);
     }
 
 }

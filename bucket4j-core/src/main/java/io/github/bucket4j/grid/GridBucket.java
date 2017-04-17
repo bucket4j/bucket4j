@@ -20,6 +20,7 @@ package io.github.bucket4j.grid;
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.AbstractBucket;
 import io.github.bucket4j.BucketState;
+import io.github.bucket4j.TimeMeter;
 
 import java.io.Serializable;
 import java.util.function.Supplier;
@@ -68,9 +69,9 @@ public class GridBucket<K extends Serializable> extends AbstractBucket {
         }
         if (nanosToSleep > 0) {
             if (uninterruptibly) {
-                getConfiguration().getTimeMeter().parkUninterruptibly(nanosToSleep);
+                TimeMeter.SYSTEM_MILLISECONDS.parkUninterruptibly(nanosToSleep);
             } else {
-                getConfiguration().getTimeMeter().park(nanosToSleep);
+                TimeMeter.SYSTEM_MILLISECONDS.park(nanosToSleep);
             }
         }
         return true;

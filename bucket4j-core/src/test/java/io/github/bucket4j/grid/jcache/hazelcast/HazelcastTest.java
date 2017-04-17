@@ -80,37 +80,27 @@ public class HazelcastTest {
                 .addLimit(Bandwidth.simple(10, Duration.ofDays(1)))
                 .createConfiguration();
 
-        BucketRegistry<String> registry = JCacheBucketRegistry.withKeyIndependentConfiguration(cache, configuration);
-        Bucket bucket1 = registry.getProxy(KEY);
+        BucketRegistry<String> registry = JCacheBucketRegistry.forCache(cache);
+        Bucket bucket1 = registry.getProxy(KEY, () -> configuration);
         assertTrue(bucket1.tryConsume(10));
         assertFalse(bucket1.tryConsume(1));
 
-        Bucket bucket2 = registry.getProxy(ANOTHER_KEY);
+        Bucket bucket2 = registry.getProxy(ANOTHER_KEY, () -> configuration);
         assertTrue(bucket2.tryConsume(10));
         assertFalse(bucket2.tryConsume(1));
     }
 
     @Test
     public void testJCacheBucketRegistryWithKeyDependentConfiguration() {
-        Function<String, BucketConfiguration> supplier = (key) -> {
-            if (key.equals(KEY)) {
-                return Bucket4j.configurationBuilder()
-                        .addLimit(Bandwidth.simple(10, Duration.ofDays(1)))
-                        .createConfiguration();
-            }
-            if (key.equals(ANOTHER_KEY)) {
-                return Bucket4j.configurationBuilder()
-                        .addLimit(Bandwidth.simple(100, Duration.ofDays(1)))
-                        .createConfiguration();
-            }
-            throw new IllegalStateException();
-        };
-
-        BucketRegistry<String> registry = JCacheBucketRegistry.withKeyDependentConfiguration(cache, supplier);
-        Bucket bucket1 = registry.getProxy(KEY);
+        BucketRegistry<String> registry = JCacheBucketRegistry.forCache(cache);
+        Bucket bucket1 = registry.getProxy(KEY, () -> Bucket4j.configurationBuilder()
+                .addLimit(Bandwidth.simple(10, Duration.ofDays(1)))
+                .createConfiguration());
         assertFalse(bucket1.tryConsume(11));
 
-        Bucket bucket2 = registry.getProxy(ANOTHER_KEY);
+        Bucket bucket2 = registry.getProxy(ANOTHER_KEY, () -> Bucket4j.configurationBuilder()
+                .addLimit(Bandwidth.simple(100, Duration.ofDays(1)))
+                .createConfiguration());
         assertTrue(bucket2.tryConsume(11));
     }
 

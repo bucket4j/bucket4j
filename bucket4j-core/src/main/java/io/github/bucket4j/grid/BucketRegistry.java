@@ -18,11 +18,13 @@
 package io.github.bucket4j.grid;
 
 import io.github.bucket4j.Bucket;
+import io.github.bucket4j.BucketConfiguration;
 
 import java.io.Serializable;
+import java.util.function.Supplier;
 
 public interface BucketRegistry<K extends Serializable> {
 
-    Bucket getProxy(K key);
+    Bucket getProxy(K key, Supplier<BucketConfiguration> configurationLazySupplier);
 
 }
