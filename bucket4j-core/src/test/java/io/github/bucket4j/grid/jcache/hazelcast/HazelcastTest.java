@@ -19,7 +19,7 @@ package io.github.bucket4j.grid.jcache.hazelcast;
 
 import io.github.bucket4j.*;
 import io.github.bucket4j.grid.BucketNotFoundException;
-import io.github.bucket4j.grid.BucketRegistry;
+import io.github.bucket4j.grid.ProxyManager;
 import io.github.bucket4j.grid.GridBucketState;
 import io.github.bucket4j.grid.RecoveryStrategy;
 import com.hazelcast.config.CacheSimpleConfig;
@@ -27,7 +27,7 @@ import com.hazelcast.config.Config;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ICacheManager;
-import io.github.bucket4j.grid.jcache.JCacheBucketRegistry;
+import io.github.bucket4j.grid.jcache.JCacheProxyManager;
 import io.github.bucket4j.grid.jcache.JCacheConfigurationBuilder;
 import org.junit.After;
 import org.junit.Before;
@@ -80,7 +80,7 @@ public class HazelcastTest {
                 .addLimit(Bandwidth.simple(10, Duration.ofDays(1)))
                 .createConfiguration();
 
-        BucketRegistry<String> registry = JCacheBucketRegistry.forCache(cache);
+        ProxyManager<String> registry = JCacheProxyManager.forCache(cache);
         Bucket bucket1 = registry.getProxy(KEY, () -> configuration);
         assertTrue(bucket1.tryConsume(10));
         assertFalse(bucket1.tryConsume(1));
@@ -92,7 +92,7 @@ public class HazelcastTest {
 
     @Test
     public void testJCacheBucketRegistryWithKeyDependentConfiguration() {
-        BucketRegistry<String> registry = JCacheBucketRegistry.forCache(cache);
+        ProxyManager<String> registry = JCacheProxyManager.forCache(cache);
         Bucket bucket1 = registry.getProxy(KEY, () -> Bucket4j.configurationBuilder()
                 .addLimit(Bandwidth.simple(10, Duration.ofDays(1)))
                 .createConfiguration());

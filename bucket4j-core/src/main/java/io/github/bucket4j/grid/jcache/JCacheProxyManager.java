@@ -19,7 +19,7 @@ package io.github.bucket4j.grid.jcache;
 
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketConfiguration;
-import io.github.bucket4j.grid.BucketRegistry;
+import io.github.bucket4j.grid.ProxyManager;
 import io.github.bucket4j.grid.GridBucket;
 import io.github.bucket4j.grid.GridBucketState;
 import io.github.bucket4j.grid.GridProxy;
@@ -29,15 +29,27 @@ import javax.cache.Cache;
 import java.io.Serializable;
 import java.util.function.Supplier;
 
-public class JCacheBucketRegistry<K extends Serializable> implements BucketRegistry<K> {
+/**
+ * JCache specific implementation of {@link ProxyManager}
+ *
+ * @param <K> type of key for buckets
+ */
+public class JCacheProxyManager<K extends Serializable> implements ProxyManager<K> {
 
     private final GridProxy<K> gridProxy;
 
-    public static <T extends Serializable> JCacheBucketRegistry<T> forCache(Cache<T, GridBucketState> cache) {
-        return new JCacheBucketRegistry<>(cache);
+    /**
+     * Creates {@link ProxyManager} for specified cache.
+     *
+     * @param cache cache for storing state of buckets
+     * @param <T> type of keys in the cache
+     * @return {@link ProxyManager} for specified cache.
+     */
+    public static <T extends Serializable> ProxyManager<T> forCache(Cache<T, GridBucketState> cache) {
+        return new JCacheProxyManager<>(cache);
     }
 
-    private JCacheBucketRegistry(Cache<K, GridBucketState> cache) {
+    private JCacheProxyManager(Cache<K, GridBucketState> cache) {
         this.gridProxy = new JCacheProxy<>(cache);
     }
 
