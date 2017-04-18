@@ -38,62 +38,6 @@ public interface TimeMeter extends Serializable {
     long currentTimeNanos();
 
     /**
-     * Park current thread to required duration of nanoseconds.
-     * Throws {@link InterruptedException} in case of current thread was interrupted.
-     *
-     * @param nanosToPark time to park
-     *
-     * @throws InterruptedException if current tread is interrupted.
-     */
-    default void park(long nanosToPark) throws InterruptedException {
-        final long endNanos = System.nanoTime() + nanosToPark;
-        while (true) {
-            LockSupport.parkNanos(nanosToPark);
-            if (Thread.interrupted()) {
-                throw new InterruptedException();
-            }
-
-            long currentTimeNanos = System.nanoTime();
-            // it is need to compare deltas instead of direct values in order to solve potential overflow of nano-time
-            if (currentTimeNanos - endNanos >= 0) {
-                return;
-            }
-            nanosToPark = endNanos - currentTimeNanos;
-        }
-    }
-
-    /**
-     * Parks current thread to required duration of nanoseconds ignoring all interrupts,
-     * if interrupt was happen then interruption flag will be restored on the current thread.
-     *
-     * @param nanosToPark nanos to park
-     */
-    default void parkUninterruptibly(long nanosToPark) {
-        final long endNanos = System.nanoTime() + nanosToPark;
-        boolean interrupted = Thread.interrupted();
-        try {
-            while (true) {
-                LockSupport.parkNanos(nanosToPark);
-                if (Thread.interrupted()) {
-                    interrupted = true;
-                }
-
-                long currentTimeNanos = System.nanoTime();
-                // it is need to compare deltas instead of direct values in order to solve potential overflow of nano-time
-                if (currentTimeNanos - endNanos >= 0) {
-                    return;
-                }
-                nanosToPark = endNanos - currentTimeNanos;
-            }
-        } finally {
-            if (interrupted) {
-                // restore interrupted status
-                Thread.currentThread().interrupt();
-            }
-        }
-    }
-
-    /**
      * The implementation of {@link TimeMeter} which works arround {@link java.lang.System#nanoTime}
      */
     TimeMeter SYSTEM_NANOTIME = new TimeMeter() {

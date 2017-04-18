@@ -28,7 +28,7 @@ package io.github.bucket4j;
  *
  *     <li>All methods which name started from "consume" can block current thread
  *     and wait until requested amount of tokens will be added,
- *     for example {@link #consume(long)}, {@link #consume(long)}.</li>
+ *     for example {@link #consume(long, BlockingStrategy)}, {@link #consume(long, BlockingStrategy)}.</li>
  * </ul>
  *
  */
@@ -65,24 +65,26 @@ public interface Bucket {
      *
      * @param numTokens The number of tokens to consume from the bucket.
      * @param maxWaitTimeNanos limit of time which thread can wait.
+     * @param blockingStrategy specifies the way to block current thread to amount of time required to refill missed number of tokens in the bucket
      *
      * @return true if {@code numTokens} has been consumed or false when {@code numTokens} has not been consumed
      *
      * @throws InterruptedException in case of current thread has been interrupted during waiting
      * @throws IllegalArgumentException if <tt>numTokens</tt> is greater than capacity of bucket
      */
-    boolean consume(long numTokens, long maxWaitTimeNanos) throws InterruptedException;
+    boolean consume(long numTokens, long maxWaitTimeNanos, BlockingStrategy blockingStrategy) throws InterruptedException;
 
     /**
      * Consumes {@code numTokens} from the bucket. If enough tokens are not currently available then this method will block
      * until required number of tokens will be available or current thread is interrupted.
      *
      * @param numTokens The number of tokens to consume from bucket, must be a positive number.
+     * @param blockingStrategy specifies the way to block current thread to amount of time required to refill missed number of tokens in the bucket
      *
      * @throws InterruptedException in case of current thread has been interrupted during waiting
      * @throws IllegalArgumentException if <tt>numTokens</tt> is greater than capacity of bucket
      */
-    void consume(long numTokens) throws InterruptedException;
+    void consume(long numTokens, BlockingStrategy blockingStrategy) throws InterruptedException;
 
     /**
      * Consumes a specified number of tokens from the bucket. If required count of tokens is not currently available then this method will block
@@ -90,22 +92,24 @@ public interface Bucket {
      *
      * @param numTokens The number of tokens to consume from the bucket.
      * @param maxWaitTimeNanos limit of time which thread can wait.
+     * @param blockingStrategy specifies the way to block current thread to amount of time required to refill missed number of tokens in the bucket
      *
      * @return true if {@code numTokens} has been consumed or false when {@code numTokens} has not been consumed
      *
      * @throws IllegalArgumentException if <tt>numTokens</tt> is greater than capacity of bucket
      */
-    boolean consumeUninterruptibly(long numTokens, long maxWaitTimeNanos);
+    boolean consumeUninterruptibly(long numTokens, long maxWaitTimeNanos, BlockingStrategy blockingStrategy);
 
     /**
      * Consumes {@code numTokens} from the bucket. If enough tokens are not currently available then this method will block
      * until required number of tokens will be available or current thread is interrupted.
      *
      * @param numTokens The number of tokens to consume from bucket, must be a positive number.
+     * @param blockingStrategy specifies the way to block current thread to amount of time required to refill missed number of tokens in the bucket
      *
      * @throws IllegalArgumentException if <tt>numTokens</tt> is greater than capacity of bucket
      */
-    void consumeUninterruptibly(long numTokens);
+    void consumeUninterruptibly(long numTokens, BlockingStrategy blockingStrategy);
 
     /**
      * Add <tt>tokensToAdd</tt> to each bandwidth of bucket.

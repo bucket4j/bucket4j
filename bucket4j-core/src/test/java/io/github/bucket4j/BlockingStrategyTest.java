@@ -20,46 +20,26 @@ package io.github.bucket4j;
 import org.junit.Test;
 
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.LockSupport;
 
 import static org.junit.Assert.assertTrue;
 
-public class TimeMeterTest {
-
-
-    @Test(expected = InterruptedException.class, timeout = 1000)
-    public void sleepForMillisecondTimerShouldThrowExceptionWhenThreadInterrupted() throws InterruptedException {
-        Thread.currentThread().interrupt();
-        TimeMeter.SYSTEM_MILLISECONDS.park(TimeUnit.SECONDS.toNanos(10));
-    }
+public class BlockingStrategyTest {
 
     @Test(expected = InterruptedException.class, timeout = 1000)
-    public void sleepForNanosecondTimerShouldThrowExceptionWhenThreadInterrupted() throws InterruptedException {
+    public void sleepShouldThrowExceptionWhenThreadInterrupted() throws InterruptedException {
         Thread.currentThread().interrupt();
-        TimeMeter.SYSTEM_NANOTIME.park(TimeUnit.SECONDS.toNanos(10));
+        BlockingStrategy.PARKING.park(TimeUnit.SECONDS.toNanos(10));
     }
 
     @Test(timeout = 3000)
-    public void sleepForMillisecondTimerShouldHandleSpuriousWakeup() throws InterruptedException {
+    public void sleepShouldHandleSpuriousWakeup() throws InterruptedException {
         // two lines bellow lead to spurious wakeup at first invocation of park
         Thread.currentThread().interrupt();
         Thread.interrupted();
 
         long startNanos = System.nanoTime();
         long nanosToPark = TimeUnit.SECONDS.toNanos(1);
-        TimeMeter.SYSTEM_MILLISECONDS.park(nanosToPark);
-        assertTrue(System.nanoTime() - startNanos >= nanosToPark);
-    }
-
-    @Test(timeout = 3000)
-    public void sleepForNanosecondTimerShouldHandleSpuriousWakeup() throws InterruptedException {
-        // two lines bellow lead to spurious wakeup at first invocation of park
-        Thread.currentThread().interrupt();
-        Thread.interrupted();
-
-        long startNanos = System.nanoTime();
-        long nanosToPark = TimeUnit.SECONDS.toNanos(1);
-        TimeMeter.SYSTEM_NANOTIME.park(nanosToPark);
+        BlockingStrategy.PARKING.park(nanosToPark);
         assertTrue(System.nanoTime() - startNanos >= nanosToPark);
     }
 
@@ -68,19 +48,9 @@ public class TimeMeterTest {
         long nanosToPark = TimeUnit.SECONDS.toNanos(1);
         Thread.currentThread().interrupt();
         long startNanos = System.nanoTime();
-        TimeMeter.SYSTEM_NANOTIME.parkUninterruptibly(nanosToPark);
+        BlockingStrategy.PARKING.parkUninterruptibly(nanosToPark);
         assertTrue(System.nanoTime() - startNanos >= nanosToPark);
         assertTrue(Thread.currentThread().isInterrupted());
-    }
-
-    public static void main(String[] args) {
-        Thread.currentThread().interrupt();
-        Thread.interrupted();
-
-        long start = System.nanoTime();
-        LockSupport.parkNanos(TimeUnit.SECONDS.toNanos(1));
-        LockSupport.parkNanos(TimeUnit.SECONDS.toNanos(1));
-        System.out.println(System.nanoTime() - start);
     }
 
 }

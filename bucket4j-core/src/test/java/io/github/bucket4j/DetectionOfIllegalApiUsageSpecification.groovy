@@ -97,13 +97,13 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
                     Bandwidth.simple(VALID_CAPACITY, VALID_PERIOD)
             ).build()
         when:
-            bucket.consume(0)
+            bucket.consume(0, BlockingStrategy.PARKING)
         then:
             IllegalArgumentException ex = thrown()
             ex.message == nonPositiveTokensToConsume(0).message
 
         when:
-            bucket.consume(-1)
+            bucket.consume(-1, BlockingStrategy.PARKING)
         then:
             ex = thrown()
             ex.message == nonPositiveTokensToConsume(-1).message
@@ -133,13 +133,13 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
             ex.message == nonPositiveTokensToConsume(-1).message
 
         when:
-            bucket.consume(0L, VALID_PERIOD.toNanos())
+            bucket.consume(0L, VALID_PERIOD.toNanos(), BlockingStrategy.PARKING)
         then:
             ex = thrown()
             ex.message == nonPositiveTokensToConsume(0).message
 
         when:
-            bucket.consume(-1, VALID_PERIOD.toNanos())
+            bucket.consume(-1, VALID_PERIOD.toNanos(), BlockingStrategy.PARKING)
         then:
             ex = thrown()
             ex.message == nonPositiveTokensToConsume(-1).message
@@ -151,13 +151,13 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
                     Bandwidth.simple(VALID_CAPACITY, VALID_PERIOD)
             ).build()
         when:
-            bucket.consume(1, 0)
+            bucket.consume(1, 0, BlockingStrategy.PARKING)
         then:
             IllegalArgumentException ex = thrown()
             ex.message == nonPositiveNanosToWait(0).message
 
         when:
-            bucket.consume(1, -1)
+            bucket.consume(1, -1, BlockingStrategy.PARKING)
         then:
             ex = thrown()
             ex.message == nonPositiveNanosToWait(-1).message

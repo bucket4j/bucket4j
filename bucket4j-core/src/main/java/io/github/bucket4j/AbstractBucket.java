@@ -25,7 +25,7 @@ public abstract class AbstractBucket implements Bucket {
 
     protected abstract boolean tryConsumeImpl(long tokensToConsume);
 
-    protected abstract boolean consumeOrAwaitImpl(long tokensToConsume, long waitIfBusyNanos, boolean uninterruptibly) throws InterruptedException;
+    protected abstract boolean consumeOrAwaitImpl(long tokensToConsume, long waitIfBusyNanos, boolean uninterruptibly, BlockingStrategy blockingStrategy) throws InterruptedException;
 
     protected abstract void addTokensImpl(long tokensToAdd);
 
@@ -38,15 +38,15 @@ public abstract class AbstractBucket implements Bucket {
     }
 
     @Override
-    public void consume(long tokensToConsume) throws InterruptedException {
+    public void consume(long tokensToConsume, BlockingStrategy blockingStrategy) throws InterruptedException {
         if (tokensToConsume <= 0) {
             throw BucketExceptions.nonPositiveTokensToConsume(tokensToConsume);
         }
-        consumeOrAwaitImpl(tokensToConsume, UNSPECIFIED_WAITING_LIMIT, false);
+        consumeOrAwaitImpl(tokensToConsume, UNSPECIFIED_WAITING_LIMIT, false, blockingStrategy);
     }
 
     @Override
-    public boolean consume(long tokensToConsume, long maxWaitTimeNanos) throws InterruptedException {
+    public boolean consume(long tokensToConsume, long maxWaitTimeNanos, BlockingStrategy blockingStrategy) throws InterruptedException {
         if (tokensToConsume <= 0) {
             throw BucketExceptions.nonPositiveTokensToConsume(tokensToConsume);
         }
@@ -55,24 +55,24 @@ public abstract class AbstractBucket implements Bucket {
             throw BucketExceptions.nonPositiveNanosToWait(maxWaitTimeNanos);
         }
 
-        return consumeOrAwaitImpl(tokensToConsume, maxWaitTimeNanos, false);
+        return consumeOrAwaitImpl(tokensToConsume, maxWaitTimeNanos, false, blockingStrategy);
     }
 
     @Override
-    public void consumeUninterruptibly(long tokensToConsume) {
+    public void consumeUninterruptibly(long tokensToConsume, BlockingStrategy blockingStrategy) {
         if (tokensToConsume <= 0) {
             throw BucketExceptions.nonPositiveTokensToConsume(tokensToConsume);
         }
 
         try {
-            consumeOrAwaitImpl(tokensToConsume, UNSPECIFIED_WAITING_LIMIT, true);
+            consumeOrAwaitImpl(tokensToConsume, UNSPECIFIED_WAITING_LIMIT, true, blockingStrategy);
         } catch (InterruptedException e) {
             throw new IllegalStateException("Should never come here", e);
         }
     }
 
     @Override
-    public boolean consumeUninterruptibly(long tokensToConsume, long maxWaitTimeNanos) {
+    public boolean consumeUninterruptibly(long tokensToConsume, long maxWaitTimeNanos, BlockingStrategy blockingStrategy) {
         if (tokensToConsume <= 0) {
             throw BucketExceptions.nonPositiveTokensToConsume(tokensToConsume);
         }
@@ -82,7 +82,7 @@ public abstract class AbstractBucket implements Bucket {
         }
 
         try {
-            return consumeOrAwaitImpl(tokensToConsume, maxWaitTimeNanos, true);
+            return consumeOrAwaitImpl(tokensToConsume, maxWaitTimeNanos, true, blockingStrategy);
         } catch (InterruptedException e) {
             throw new IllegalStateException("Should never come here", e);
         }

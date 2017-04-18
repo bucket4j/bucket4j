@@ -17,10 +17,7 @@
 
 package io.github.bucket4j.grid;
 
-import io.github.bucket4j.BucketConfiguration;
-import io.github.bucket4j.AbstractBucket;
-import io.github.bucket4j.BucketState;
-import io.github.bucket4j.TimeMeter;
+import io.github.bucket4j.*;
 
 import java.io.Serializable;
 import java.util.function.Supplier;
@@ -61,7 +58,7 @@ public class GridBucket<K extends Serializable> extends AbstractBucket {
     }
 
     @Override
-    protected boolean consumeOrAwaitImpl(long tokensToConsume, long waitIfBusyNanosLimit, boolean uninterruptibly) throws InterruptedException {
+    protected boolean consumeOrAwaitImpl(long tokensToConsume, long waitIfBusyNanosLimit, boolean uninterruptibly, BlockingStrategy blockingStrategy) throws InterruptedException {
         final ReserveAndCalculateTimeToSleepCommand consumeCommand = new ReserveAndCalculateTimeToSleepCommand(tokensToConsume, waitIfBusyNanosLimit);
         long nanosToSleep = execute(consumeCommand);
         if (nanosToSleep == Long.MAX_VALUE) {
@@ -69,9 +66,9 @@ public class GridBucket<K extends Serializable> extends AbstractBucket {
         }
         if (nanosToSleep > 0) {
             if (uninterruptibly) {
-                TimeMeter.SYSTEM_MILLISECONDS.parkUninterruptibly(nanosToSleep);
+                blockingStrategy.parkUninterruptibly(nanosToSleep);
             } else {
-                TimeMeter.SYSTEM_MILLISECONDS.park(nanosToSleep);
+                blockingStrategy.park(nanosToSleep);
             }
         }
         return true;

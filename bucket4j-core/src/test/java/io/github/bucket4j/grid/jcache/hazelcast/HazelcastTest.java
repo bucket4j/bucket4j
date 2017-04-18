@@ -150,7 +150,7 @@ public class HazelcastTest {
     @Test
     public void testConsume() throws Exception {
         Function<Bucket, Long> action = bucket -> {
-            bucket.consumeUninterruptibly(1);
+            bucket.consumeUninterruptibly(1, BlockingStrategy.PARKING);
             return 1L;
         };
         Supplier<Bucket> bucketSupplier = () -> builder.build(cache, KEY);

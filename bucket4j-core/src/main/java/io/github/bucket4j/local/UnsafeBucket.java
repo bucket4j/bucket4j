@@ -61,7 +61,7 @@ public class UnsafeBucket extends AbstractBucket {
     }
 
     @Override
-    protected boolean consumeOrAwaitImpl(long tokensToConsume, long waitIfBusyNanosLimit, boolean uninterruptibly) throws InterruptedException {
+    protected boolean consumeOrAwaitImpl(long tokensToConsume, long waitIfBusyNanosLimit, boolean uninterruptibly, BlockingStrategy blockingStrategy) throws InterruptedException {
         long currentTimeNanos = timeMeter.currentTimeNanos();
 
         state.refillAllBandwidth(bandwidths, currentTimeNanos);
@@ -77,9 +77,9 @@ public class UnsafeBucket extends AbstractBucket {
 
         state.consume(bandwidths, tokensToConsume);
         if (uninterruptibly) {
-            timeMeter.parkUninterruptibly(nanosToCloseDeficit);
+            blockingStrategy.parkUninterruptibly(nanosToCloseDeficit);
         } else {
-            timeMeter.park(nanosToCloseDeficit);
+            blockingStrategy.park(nanosToCloseDeficit);
         }
         return true;
     }

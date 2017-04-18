@@ -23,7 +23,6 @@ import io.github.bucket4j.TimeMeter;
 public class TimeMeterMock implements TimeMeter {
 
     private long currentTimeNanos;
-    private long sleeped = 0;
 
     public TimeMeterMock() {
         currentTimeNanos = 0;
@@ -41,33 +40,9 @@ public class TimeMeterMock implements TimeMeter {
         this.currentTimeNanos = currentTimeNanos;
     }
 
-    public long getSleeped() {
-        return sleeped;
-    }
-
     @Override
     public long currentTimeNanos() {
         return currentTimeNanos;
-    }
-
-    @Override
-    public void parkUninterruptibly(long nanosToPark) {
-        currentTimeNanos += nanosToPark;
-        sleeped += nanosToPark;
-    }
-
-    @Override
-    public void park(long nanosToPark) throws InterruptedException {
-        if (Thread.currentThread().isInterrupted()) {
-            throw new InterruptedException();
-        }
-        currentTimeNanos += nanosToPark;
-        sleeped += nanosToPark;
-    }
-
-    public void reset() {
-        currentTimeNanos = 0;
-        sleeped = 0;
     }
 
 }

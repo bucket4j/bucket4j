@@ -18,7 +18,9 @@
 package io.github.bucket4j
 
 import io.github.bucket4j.mock.BucketType
+import io.github.bucket4j.mock.BlockingStrategyMock
 import io.github.bucket4j.mock.TimeMeterMock
+import org.junit.After
 import spock.lang.Ignore
 import spock.lang.Specification
 import spock.lang.Timeout
@@ -82,7 +84,6 @@ class BucketSpecification extends Specification {
             3 |       5        |     5     | Bucket4j.builder().withCustomTimePrecision(new TimeMeterMock(0)).addLimit(6, Bandwidth.simple(10, Duration.ofMinutes(100)))
     }
 
-    @Ignore
     @Timeout(value = 2, unit = TimeUnit.SECONDS)
     @Unroll
     def "#n Should sleep #requiredSleep when trying to consuming #toConsume tokens from Bucket #builder"(
@@ -91,14 +92,15 @@ class BucketSpecification extends Specification {
             for (BucketType type : BucketType.values()) {
                 for (boolean uniterruptible : Arrays.asList(false, true)) {
                     TimeMeterMock meter = new TimeMeterMock(0)
+                    BlockingStrategyMock sleepStrategy = new BlockingStrategyMock(meter)
                     builder.withCustomTimePrecision(meter)
                     Bucket bucket = type.createBucket(builder)
                     if (uniterruptible) {
-                        bucket.consumeUninterruptibly(toConsume)
+                        bucket.consumeUninterruptibly(toConsume, sleepStrategy)
                     } else {
-                        bucket.consume(toConsume)
+                        bucket.consume(toConsume, sleepStrategy)
                     }
-                    assert meter.sleeped == requiredSleep
+                    assert sleepStrategy.sleeped == requiredSleep
                 }
             }
         where:
@@ -108,7 +110,6 @@ class BucketSpecification extends Specification {
             3 |    9990       |  1000     | Bucket4j.builder().addLimit(1, Bandwidth.simple(10, Duration.ofNanos(100)))
     }
 
-    @Ignore
     @Timeout(value = 2, unit = TimeUnit.SECONDS)
     @Unroll
     def "#n Should sleep #requiredSleep and return #requiredResult when trying to consume single token with limit #sleepLimit from Bucket #builder"(
@@ -117,15 +118,16 @@ class BucketSpecification extends Specification {
             for (BucketType type : BucketType.values()) {
                 for (boolean uniterruptible : Arrays.asList(false, true)) {
                     TimeMeterMock meter = new TimeMeterMock(0)
+                    BlockingStrategyMock sleepStrategy = new BlockingStrategyMock(meter)
                     builder.withCustomTimePrecision(meter)
                     Bucket bucket = type.createBucket(builder)
 
                     if (uniterruptible) {
-                        bucket.consumeUninterruptibly(1, sleepLimit) == requiredResult
+                        bucket.consumeUninterruptibly(1, sleepLimit, sleepStrategy) == requiredResult
                     } else {
-                        bucket.consume(1, sleepLimit) == requiredResult
+                        bucket.consume(1, sleepLimit, sleepStrategy) == requiredResult
                     }
-                    assert meter.sleeped == requiredSleep
+                    assert sleepStrategy.sleeped == requiredSleep
                 }
             }
         where:
@@ -143,15 +145,16 @@ class BucketSpecification extends Specification {
             for (BucketType type : BucketType.values()) {
                 for (boolean uniterruptible : Arrays.asList(false, true)) {
                     TimeMeterMock meter = new TimeMeterMock(0)
+                    BlockingStrategyMock sleepStrategy = new BlockingStrategyMock(meter)
                     builder.withCustomTimePrecision(meter)
                     Bucket bucket = type.createBucket(builder)
 
                     if (uniterruptible) {
-                        bucket.consumeUninterruptibly(1, sleepLimit) == requiredResult
+                        bucket.consumeUninterruptibly(1, sleepLimit, sleepStrategy) == requiredResult
                     } else {
-                        bucket.consume(1, sleepLimit) == requiredResult
+                        bucket.consume(1, sleepLimit, sleepStrategy) == requiredResult
                     }
-                    assert meter.sleeped == requiredSleep
+                    assert sleepStrategy.sleeped == requiredSleep
                 }
             }
         where:
@@ -197,7 +200,7 @@ class BucketSpecification extends Specification {
                     Thread.currentThread().interrupt()
                     InterruptedException thrown
                     try {
-                        bucket.consume(1)
+                        bucket.consume(1, BlockingStrategy.PARKING)
                     } catch (InterruptedException e) {
                         thrown = e
                     }
@@ -206,7 +209,7 @@ class BucketSpecification extends Specification {
                     thrown = null
                     Thread.currentThread().interrupt()
                     try {
-                        bucket.consume(1, TimeUnit.HOURS.toNanos(1))
+                        bucket.consume(1, TimeUnit.HOURS.toNanos(1), BlockingStrategy.PARKING)
                     } catch (InterruptedException e) {
                         thrown = e
                     }

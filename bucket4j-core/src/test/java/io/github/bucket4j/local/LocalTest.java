@@ -20,6 +20,7 @@ package io.github.bucket4j.local;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.Bucket4j;
+import io.github.bucket4j.BlockingStrategy;
 import org.junit.Test;
 import io.github.bucket4j.util.ConsumptionScenario;
 
@@ -49,7 +50,7 @@ public class LocalTest {
     public void testConsume_lockFree() throws Exception {
         int threadCount = 4;
         Function<Bucket, Long> action = b -> {
-            b.consumeUninterruptibly(1);
+            b.consumeUninterruptibly(1, BlockingStrategy.PARKING);
             return 1L;
         };
         test15Seconds(() -> builder.build(), threadCount, action);
@@ -66,7 +67,7 @@ public class LocalTest {
     public void testConsume_Synchronized() throws Exception {
         int threadCount = 4;
         Function<Bucket, Long> action = b -> {
-            b.consumeUninterruptibly(1);
+            b.consumeUninterruptibly(1, BlockingStrategy.PARKING);
             return 1L;
         };
         test15Seconds(() -> builder.build(SynchronizationStrategy.SYNCHRONIZED), threadCount, action);
@@ -83,7 +84,7 @@ public class LocalTest {
     public void testConsume_Unsafe() throws Exception {
         int threadCount = 1;
         Function<Bucket, Long> action = b -> {
-            b.consumeUninterruptibly(1);
+            b.consumeUninterruptibly(1, BlockingStrategy.PARKING);
             return 1L;
         };
         test15Seconds(() -> builder.build(SynchronizationStrategy.NONE), threadCount, action);
