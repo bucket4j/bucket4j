@@ -17,9 +17,53 @@
 
 package io.github.bucket4j
 
+import io.github.bucket4j.mock.TimeMeterMock
+import spock.lang.Specification
 
-class BucketRoundingRulesSpecification {
+import java.time.Duration
 
 
+class BucketRoundingRulesSpecification extends Specification {
+
+    def "rest of division should not be missed on next consumption"() {
+        setup:
+            TimeMeterMock meter = new TimeMeterMock(0)
+            Bucket bucket = Bucket4j.builder()
+                                .withCustomTimePrecision(meter)
+                                .addLimit(0, Bandwidth.simple(10, Duration.ofNanos(100)))
+                                .build()
+        when:
+            meter.setCurrentTimeNanos(97)
+        then:
+            bucket.tryConsume(9)
+            !bucket.tryConsume(1)
+        when:
+            meter.addTime(3)
+        then:
+            bucket.tryConsume(1)
+            !bucket.tryConsume(1)
+    }
+
+    def "rest of division should cleared when addTokens increases bucket to maximum"() {
+        setup:
+            TimeMeterMock meter = new TimeMeterMock(0)
+            Bucket bucket = Bucket4j.builder()
+                    .withCustomTimePrecision(meter)
+                    .addLimit(0, Bandwidth.simple(10, Duration.ofNanos(100)))
+                    .build()
+        when:
+            meter.setCurrentTimeNanos(97)
+        then:
+            bucket.tryConsume(9)
+            !bucket.tryConsume(1)
+        when:
+            bucket.addTokens(10)
+        then:
+            bucket.tryConsume(10)
+        when:
+            meter.addTime(3)
+        then:
+            !bucket.tryConsume(1)
+    }
 
 }
