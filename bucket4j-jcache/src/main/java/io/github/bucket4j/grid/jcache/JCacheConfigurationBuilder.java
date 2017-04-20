@@ -1,19 +1,19 @@
 
 /*
+ *  Copyright 2015-2017 Vladimir Bukhtoyarov
  *
- *   Copyright 2015-2017 Vladimir Bukhtoyarov
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
  *
- *     Licensed under the Apache License, Version 2.0 (the "License");
- *     you may not use this file except in compliance with the License.
- *     You may obtain a copy of the License at
+ *          http://www.apache.org/licenses/LICENSE-2.0
  *
- *           http://www.apache.org/licenses/LICENSE-2.0
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
  *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *    See the License for the specific language governing permissions and
- *    limitations under the License.
  */
 
 package io.github.bucket4j.grid.jcache;
@@ -30,22 +30,18 @@ import java.io.Serializable;
 import java.util.Objects;
 
 /**
- *  {@inheritDoc}
+ * {@inheritDoc}
  *
  * This builder creates the buckets backed by any <a href="https://www.jcp.org/en/jsr/detail?id=107">JCache API (JSR 107)</a> implementation.
  *
  */
 public class JCacheConfigurationBuilder extends ConfigurationBuilder<JCacheConfigurationBuilder> {
 
-    private final RecoveryStrategy recoveryStrategy;
-
     /**
-     * Creates the new instance of {@link JCacheConfigurationBuilder} with configured recovery strategy
-     *
-     * @param recoveryStrategy specifies the reaction which should be applied in case of previously saved state of bucket has been lost.
+     * Creates the new instance of {@link JCacheConfigurationBuilder}
      */
-    public JCacheConfigurationBuilder(RecoveryStrategy recoveryStrategy) {
-        this.recoveryStrategy = Objects.requireNonNull(recoveryStrategy);
+    public JCacheConfigurationBuilder() {
+        super();
     }
 
     /**
@@ -55,10 +51,11 @@ public class JCacheConfigurationBuilder extends ConfigurationBuilder<JCacheConfi
      *             Feel free to store inside single {@code cache} as mush buckets as you need.
      * @param key  for storing bucket inside {@code cache}.
      *             If you plan to store multiple buckets inside single {@code cache}, then each bucket should has own unique {@code key}.
+     * @param recoveryStrategy specifies the reaction which should be applied in case of previously saved state of bucket has been lost.
      *
      * @return new distributed bucket
      */
-    public <K extends Serializable> Bucket build(Cache<K, GridBucketState> cache, K key) {
+    public <K extends Serializable> Bucket build(Cache<K, GridBucketState> cache, K key, RecoveryStrategy recoveryStrategy) {
         BucketConfiguration configuration = createConfiguration();
         JCacheProxy<K> gridProxy = new JCacheProxy<>(cache);
         return GridBucket.createInitializedBucket(key, configuration, gridProxy, recoveryStrategy);

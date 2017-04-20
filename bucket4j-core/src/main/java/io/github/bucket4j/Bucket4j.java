@@ -18,9 +18,11 @@
 
 package io.github.bucket4j;
 
-import io.github.bucket4j.grid.RecoveryStrategy;
-import io.github.bucket4j.grid.jcache.JCacheConfigurationBuilder;
 import io.github.bucket4j.local.LocalConfigurationBuilder;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.ServiceLoader;
 
 /**
  * This is entry point for functionality provided bucket4j library.
@@ -28,6 +30,14 @@ import io.github.bucket4j.local.LocalConfigurationBuilder;
  * It is always better to initialize the buckets through this class.
  */
 public class Bucket4j {
+
+    private static final Map<Class, Extension> extensions;
+    static {
+        extensions = new HashMap<>();
+        for (Extension extension : ServiceLoader.load(Extension.class)) {
+            extensions.put(extension.getClass(), extension);
+        }
+    }
 
     /**
      * Creates the new builder of in-memory buckets.
@@ -38,19 +48,24 @@ public class Bucket4j {
         return new LocalConfigurationBuilder();
     }
 
+    /**
+     * Creates new instance of {@link ConfigurationBuilder}
+     *
+     * @return instance of {@link ConfigurationBuilder}
+     */
     public static ConfigurationBuilder configurationBuilder() {
         return new ConfigurationBuilder();
     }
 
-    /**
-     * Creates the new builder for buckets backed by any <a href="https://www.jcp.org/en/jsr/detail?id=107">JCache API (JSR 107)</a> implementation.
-     *
-     * @param recoveryStrategy specifies the reaction which should be applied in case of previously saved state of bucket has been lost.
-     *
-     * @return new instance of {@link JCacheConfigurationBuilder}
-     */
-    public static JCacheConfigurationBuilder jCacheBuilder(RecoveryStrategy recoveryStrategy) {
-        return new JCacheConfigurationBuilder(recoveryStrategy);
+    public static <T extends ConfigurationBuilder<T>, E extends Extension<T>> E extension(Class<E> extensionClass) {
+        if (!Extension.class.isAssignableFrom(extensionClass)) {
+            throw new IllegalArgumentException("extensionClass must inherit from io.github.bucket4j.Extension");
+        }
+        E extension = (E) extensions.get(extensionClass);
+        if (extension == null) {
+            throw new IllegalArgumentException("extension with class [" + extensionClass + "] is not registered");
+        }
+        return extension;
     }
 
 }

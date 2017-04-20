@@ -24,6 +24,7 @@
     <modules>
         <module>bucket4j-parent</module>
         <module>bucket4j-core</module>
+        <module>bucket4j-jcache</module>
         <!--<module>bucket4j-benchmarks</module>-->
     </modules>
     <packaging>pom</packaging>
