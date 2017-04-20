@@ -1,34 +1,56 @@
 # JCache integration
 ```Bucket4j``` supports any GRID solution which compatible with [JCache API (JSR 107)](https://www.jcp.org/en/jsr/detail?id=107) specification.
+To use JCache extension you also need to add following dependency:
+```xml
+<dependency>
+    <groupId>com.github.vladimir-bukhtoyarov</groupId>
+    <artifactId>bucket4j-jcache</artifactId>
+    <version>${bucket4j.version}</version>
+</dependency>
+```
 
-## Is the provided JCache integration safe across multiple JVMs?
-Original question was raised in this issue [#6](https://github.com/vladimir-bukhtoyarov/bucket4j/issues/6).
+## Overview of JCache integration
+In case of JCache usage scenario bucket divided in two logical parts:
+- [GridBucketState](https://github.com/vladimir-bukhtoyarov/bucket4j/blob/master/src/main/java/com/github/bucket4j/grid/GridBucketState.java) has one-to-one logical relation with bucket and stored in data-grid, most likely you should not worry about this part, JCache will manage (and replicate if configured) for you.
+- [GridBucket](https://github.com/vladimir-bukhtoyarov/bucket4j/blob/master/src/main/java/com/github/bucket4j/grid/GridBucket.java) acts like proxy and just issues commands for bucket mutation, then commands serialized and executed on the JCache node which holds the GridBucketState instance. In opposite to GridBucketState, GridBucket has many-to-one relation with bucket, because bucket can be accessible from multiple client node, 
+and even multiple times on same(as in your example) if client has no rational strategy to cache the instance of GridBucket.
 
-Question:
+[Question](https://github.com/vladimir-bukhtoyarov/bucket4j/issues/6):
 > is the provided JCache integration safe across multiple JVMs? I mean, does it ensure that two nodes creating a bucket simultaneously on a given Cache<K, V> will only actually create one single bucket (without resetting a previously created one with the same key)?
- 
-Answer:
-> Yes, JCache integration is safe, independently of used JCache provider, Bucket4j never replaces bucket which already exists:
 
+**Answer:**
+Yes, JCache integration is safe, independently of used JCache provider, Bucket4j never replaces bucket which already exists:
 ```java
 public class JCacheProxy<K extends Serializable> implements GridProxy {
-
     private final Cache<K, GridBucketState> cache;
     private final K key;
-
     ...
-
     @Override
     public void setInitialState(GridBucketState initialState) {
         cache.putIfAbsent(key, initialState);
     }
-
     ...
-
 }
 ```
-This behavior is guaranteed by [putIfAbsent](http://static.javadoc.io/javax.cache/cache-api/1.0.0/javax/cache/Cache.html#putIfAbsent(K, V)) method contract, 
-of class [javax.cache.Cache](http://static.javadoc.io/javax.cache/cache-api/1.0.0/javax/cache/Cache.html).
+This behavior is guaranteed by **putIfAbsent** method contract of [javax.cache.Cache](http://static.javadoc.io/javax.cache/cache-api/1.0.0/javax/cache/Cache.html) class.
+
+[Question:](https://github.com/vladimir-bukhtoyarov/bucket4j/issues/26)
+> Do I need to cache grid-buckets?
+
+**Answer:**
+GridBucket can be created multiple time and this will not lead to logical error, 
+because the main part of bucket GridBucketState is strongly protected from duplication, 
+but this will lead to significant performance degradation, 
+because GridBucket [issues network request](https://github.com/vladimir-bukhtoyarov/bucket4j/blob/master/src/main/java/com/github/bucket4j/grid/GridBucket.java#L34) to grid at the moment of bucket initialization, so you will pay at least twice for non-optimized code. 
+So, **GridBucket must not be treated as light-weight entity**, it is better to cache its instance and reuse between invocations.
+Fortunately, you can work through ProxyManager(described below) and do not worry about caching the proxies, because ProxyManager operates with light-weight versions of JCache buckets.
+
+## Working through ProxyManager
+TODO
+
+## 
+TODO
+
 
 ## Handling split-brain and similar problems
 The distributed usage scenario is little bit more complicated than simple usage inside one JVM, 

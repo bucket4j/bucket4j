@@ -27,7 +27,6 @@ import io.github.bucket4j.grid.GridBucketState;
 
 import javax.cache.Cache;
 import java.io.Serializable;
-import java.util.Objects;
 
 /**
  * {@inheritDoc}
@@ -35,17 +34,28 @@ import java.util.Objects;
  * This builder creates the buckets backed by any <a href="https://www.jcp.org/en/jsr/detail?id=107">JCache API (JSR 107)</a> implementation.
  *
  */
-public class JCacheConfigurationBuilder extends ConfigurationBuilder<JCacheConfigurationBuilder> {
+public class JCacheBucketBuilder extends ConfigurationBuilder<JCacheBucketBuilder> {
 
     /**
-     * Creates the new instance of {@link JCacheConfigurationBuilder}
+     * Creates the new instance of {@link JCacheBucketBuilder}
      */
-    public JCacheConfigurationBuilder() {
+    public JCacheBucketBuilder() {
         super();
     }
 
     /**
-     * Constructs an instance of {@link GridBucket} which responsible to limit rate inside Apache Ignite(GridGain) cluster.
+     * Constructs an instance of {@link GridBucket} which state actually stored inside in-memory data-grid,
+     * the bucket stored in the grid immediately, so one network request will be issued to grid.
+     * Due to this method performs network IO, returned result must not be treated as light-weight entity,
+     * it will be a performance anti-pattern to use this method multiple times for same key,
+     * you need to cache result somewhere and reuse between invocations,
+     * else performance of all operation with bucket will be 2-x times slower.
+     *
+     * <p>
+     * Use this method if and only if you need to full control over bucket lifecycle(especially specify {@link RecoveryStrategy}),
+     * and you have clean caching strategy which suitable for storing buckets,
+     * else it would be better to work through {@link JCache#proxyManagerForCache(Cache) ProxyManager},
+     * which does not require any caching, because ProxyManager operates with light-weight versions of buckets.
      *
      * @param cache distributed cache which will hold bucket inside cluster.
      *             Feel free to store inside single {@code cache} as mush buckets as you need.

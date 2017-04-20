@@ -21,7 +21,7 @@ import io.github.bucket4j.*;
 import io.github.bucket4j.grid.BucketNotFoundException;
 import io.github.bucket4j.grid.GridBucketState;
 import io.github.bucket4j.grid.jcache.JCache;
-import io.github.bucket4j.grid.jcache.JCacheConfigurationBuilder;
+import io.github.bucket4j.grid.jcache.JCacheBucketBuilder;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.Ignition;
 import org.apache.ignite.configuration.CacheConfiguration;
@@ -45,7 +45,7 @@ public class IgniteTest {
     private static final String KEY = "42";
     private Ignite ignite;
     private Cache<String, GridBucketState> cache;
-    private JCacheConfigurationBuilder builder = Bucket4j.extension(JCache.class).builder()
+    private JCacheBucketBuilder builder = Bucket4j.extension(JCache.class).builder()
             .addLimit(0, Bandwidth.simple(1_000, Duration.ofMinutes(1)))
             .addLimit(0, Bandwidth.simple(200, Duration.ofSeconds(10)));
     private double permittedRatePerSecond = Math.min(1_000d / 60, 200.0 / 10);

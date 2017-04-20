@@ -17,6 +17,7 @@
 
 package io.github.bucket4j
 
+import io.github.bucket4j.local.LocalBucketBuilder
 import spock.lang.Specification
 import spock.lang.Unroll
 import java.time.Duration
@@ -175,6 +176,20 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
             thrown(IllegalArgumentException)
         where:
             tokens << [0, -1, -10]
+    }
+
+    def "Should detect when extension unregistered"() {
+        when:
+            Bucket4j.extension(FakeExtension.class)
+        then:
+            thrown(IllegalArgumentException)
+    }
+
+    private static class FakeExtension implements Extension {
+        @Override
+        ConfigurationBuilder builder() {
+            return new LocalBucketBuilder()
+        }
     }
 
 }

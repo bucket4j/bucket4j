@@ -27,16 +27,16 @@ import java.io.Serializable;
 /**
  * The extension of Bucket4j library addressed to support <a href="https://www.jcp.org/en/jsr/detail?id=107">JCache API (JSR 107)</a> specification.
  */
-public class JCache implements Extension<JCacheConfigurationBuilder> {
+public class JCache implements Extension<JCacheBucketBuilder> {
 
     /**
      * {@inheritDoc}
      *
-     * @return new instance of {@link JCacheConfigurationBuilder}
+     * @return new instance of {@link JCacheBucketBuilder}
      */
     @Override
-    public JCacheConfigurationBuilder builder() {
-        return new JCacheConfigurationBuilder();
+    public JCacheBucketBuilder builder() {
+        return new JCacheBucketBuilder();
     }
 
     /**

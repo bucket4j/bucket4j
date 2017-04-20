@@ -5,15 +5,13 @@
 
 ## Advantages of Bucket4j
 * Implemented on top of ideas of well known algorithm, which are by de-facto standard for rate limiting in the IT industry.
-* Effective lock free implementation without any critical section, Bucket4j is good scalable for multithreading case.
+* Effective lock-free implementation, Bucket4j is good scalable for multithreading case.
 * Absolutely non-compromise precision, Bucket4j does not operate with floats or doubles, all calculation are performed in the integer arithmetic,
 this feature protects end users from calculation errors involved by rounding.
 * Ability to switch from one JVM to cluster in two lines of code. Using Bucket4j you are able to limiting something in the cluster of JVMs.
 Since [release 1.2](https://github.com/vladimir-bukhtoyarov/bucket4j/releases/tag/1.2.0) the ```Bucket4j``` supports any GRID solution which compatible with [JCache API (JSR 107)](https://www.jcp.org/en/jsr/detail?id=107) specification.
-Just use your favorite grid including [Hazelcast](http://hazelcast.com/products/hazelcast/), [Ignite](http://www.oracle.com/technetwork/middleware/coherence/overview/index-087514.html), [Coherence](http://www.oracle.com/technetwork/middleware/coherence/overview/index.html), [Infinispan](http://infinispan.org/) or any other.
+Just use your favorite grid including [Hazelcast](http://hazelcast.com/products/hazelcast/), [Ignite](https://ignite.apache.org/), [Coherence](http://www.oracle.com/technetwork/middleware/coherence/overview/index.html), [Infinispan](http://infinispan.org/) or any other.
 * Ability to specify more than one bandwidth per bucket. For example you can limit 1000 events per hours but not often then 100 events per minute.
-* Customizable time measurement. You are able to specify how to time will be measurement: as `System.nanotime()` or `System.currentTimeMillis()`
-or you can to specify own way to measure time.
 
 ## Documentation
 The items placed in recommended to read order:
@@ -44,7 +42,14 @@ use any of them:
     <version>2.0.0</version>
 </dependency>
 ```
-
+To use JCache extension you also need to add following dependency:
+```xml
+<dependency>
+    <groupId>com.github.vladimir-bukhtoyarov</groupId>
+    <artifactId>bucket4j-jcache</artifactId>
+    <version>2.0.0</version>
+</dependency>
+```
 
 ## Have a question?
 Feel free to ask in the [gitter chat](https://gitter.im/vladimir-bukhtoyarov/bucket4j) 

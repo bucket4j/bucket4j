@@ -27,7 +27,7 @@ import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ICacheManager;
 import io.github.bucket4j.grid.jcache.JCache;
-import io.github.bucket4j.grid.jcache.JCacheConfigurationBuilder;
+import io.github.bucket4j.grid.jcache.JCacheBucketBuilder;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -50,7 +50,7 @@ public class HazelcastTest {
     private static final String ANOTHER_KEY = "666";
     private Cache<String, GridBucketState> cache;
     private HazelcastInstance hazelcastInstance;
-    private JCacheConfigurationBuilder builder = Bucket4j.extension(JCache.class).builder()
+    private JCacheBucketBuilder builder = Bucket4j.extension(JCache.class).builder()
             .addLimit(0, Bandwidth.simple(1_000, Duration.ofMinutes(1)))
             .addLimit(0, Bandwidth.simple(200, Duration.ofSeconds(10)));
     private double permittedRatePerSecond = Math.min(1_000d / 60, 200.0 / 10);

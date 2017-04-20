@@ -33,7 +33,7 @@ import static org.junit.Assert.assertTrue;
 
 public class LocalTest {
 
-    private LocalConfigurationBuilder builder = Bucket4j.builder()
+    private LocalBucketBuilder builder = Bucket4j.builder()
             .addLimit(0, Bandwidth.simple(1_000, Duration.ofMinutes(1)))
             .addLimit(0, Bandwidth.simple(200, Duration.ofSeconds(10)));
 

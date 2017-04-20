@@ -18,7 +18,7 @@
 
 package io.github.bucket4j;
 
-import io.github.bucket4j.local.LocalConfigurationBuilder;
+import io.github.bucket4j.local.LocalBucketBuilder;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -42,10 +42,10 @@ public class Bucket4j {
     /**
      * Creates the new builder of in-memory buckets.
      *
-     * @return new instance of {@link LocalConfigurationBuilder}
+     * @return new instance of {@link LocalBucketBuilder}
      */
-    public static LocalConfigurationBuilder builder() {
-        return new LocalConfigurationBuilder();
+    public static LocalBucketBuilder builder() {
+        return new LocalBucketBuilder();
     }
 
     /**
@@ -57,13 +57,20 @@ public class Bucket4j {
         return new ConfigurationBuilder();
     }
 
+    /**
+     * Locates Bucket4j extension by class {@code extensionClass}.
+     *
+     * @param extensionClass must be registered in "/META-INF/services/io.github.bucket4j.Extension" according to java SPI rules.
+     * @param <T>
+     * @param <E>
+     *
+     * @return library extension
+     */
     public static <T extends ConfigurationBuilder<T>, E extends Extension<T>> E extension(Class<E> extensionClass) {
-        if (!Extension.class.isAssignableFrom(extensionClass)) {
-            throw new IllegalArgumentException("extensionClass must inherit from io.github.bucket4j.Extension");
-        }
         E extension = (E) extensions.get(extensionClass);
         if (extension == null) {
-            throw new IllegalArgumentException("extension with class [" + extensionClass + "] is not registered");
+            String msg = "extension with class [" + extensionClass + "] is not registered";
+            throw new IllegalArgumentException(msg);
         }
         return extension;
     }
