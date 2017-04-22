@@ -44,7 +44,7 @@ while (true) {
   // Consume a token from the token bucket.  
   // If a token is not available this method will block until
   // the refill adds one to the bucket.
-  bucket.consume(1);
+  bucket.consume(1, BlockingStrategy.PARKING);
 
   exchangeRate = pollExchangeRate();
 }
@@ -84,7 +84,7 @@ public class ThrottlingFilter implements javax.servlet.Filter {
             session.setAttribute("throttler-" + appKey, bucket);
         }
 
-        // tryConsumeSingleToken returns false immediately if no tokens available with the bucket
+        // tryConsume returns false immediately if no tokens available with the bucket
         if (bucket.tryConsume(1)) {
             // the limit is not exceeded
             filterChain.doFilter(servletRequest, servletResponse);

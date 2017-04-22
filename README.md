@@ -20,6 +20,12 @@ The items placed in recommended to read order:
 * [Jcache integration](doc-pages/jcache-usage.md) - documentation and examples about usage ```Bucket4j``` with in-memory grids which supports ```JCache API (JSR 107)``` specification.
 * [Advanced usage](doc-pages/advanced-usage.md) - examples of advanced usage.
 
+Documentation for previous versions:
+* [1.0](https://github.com/vladimir-bukhtoyarov/bucket4j/tree/release_1-0) ```10 May 2015``` First version of bucket4j library
+* [1.1](https://github.com/vladimir-bukhtoyarov/bucket4j/tree/1.1) ```2 Mar 2017``` Removing intrusive support of Oracle Coherence
+* [1.2](https://github.com/vladimir-bukhtoyarov/bucket4j/tree/1.2) ```3 Mar 2017``` Support of JCache and java 8
+* [1.3](https://github.com/vladimir-bukhtoyarov/bucket4j/tree/1.3) ```23 Mar 2017``` Support different styles of synchronization for local bucket
+
 ## Get Bucket4j library
 
 #### By direct link

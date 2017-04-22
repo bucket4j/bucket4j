@@ -24,7 +24,7 @@
 
     <groupId>com.github.vladimir-bukhtoyarov</groupId>
     <artifactId>release-reactor</artifactId>
-    <version>2.0.0-alpha</version>
+    <version>2.0.0</version>
     <packaging>pom</packaging>
 
     <properties>
@@ -34,6 +34,7 @@
     <modules>
         <module>../bucket4j-parent</module>
         <module>../bucket4j-core</module>
+        <module>../bucket4j-jcache</module>
     </modules>
 
 </project>
