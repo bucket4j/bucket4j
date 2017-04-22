@@ -44,7 +44,7 @@ public class LocalBucketBuilder extends ConfigurationBuilder<LocalBucketBuilder>
      * @return the new bucket
      */
     public Bucket build(SynchronizationStrategy synchronizationStrategy) {
-        BucketConfiguration configuration = createConfiguration();
+        BucketConfiguration configuration = buildConfiguration();
         switch (synchronizationStrategy) {
             case LOCK_FREE: return new LockFreeBucket(configuration);
             case SYNCHRONIZED: return new SynchronizedBucket(configuration);

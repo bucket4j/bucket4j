@@ -51,7 +51,7 @@ public enum BucketType {
     GRID {
         @Override
         public Bucket createBucket(ConfigurationBuilder builder) {
-            BucketConfiguration configuration = builder.createConfiguration();
+            BucketConfiguration configuration = builder.buildConfiguration();
             return GridBucket.createInitializedBucket(42, configuration, new GridProxyMock(), RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION);
         }
     };

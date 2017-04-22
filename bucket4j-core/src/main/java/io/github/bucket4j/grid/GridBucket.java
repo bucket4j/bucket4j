@@ -22,6 +22,11 @@ import io.github.bucket4j.*;
 import java.io.Serializable;
 import java.util.function.Supplier;
 
+/**
+ * Represents the bucket which state actually stored outside current JVM.
+ *
+ * @param <K>
+ */
 public class GridBucket<K extends Serializable> extends AbstractBucket {
 
     private final K key;

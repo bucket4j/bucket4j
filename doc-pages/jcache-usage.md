@@ -9,107 +9,133 @@ To use JCache extension you also need to add following dependency:
 </dependency>
 ```
 
-## Overview of JCache integration
-In case of JCache usage scenario bucket divided in two logical parts:
-- [GridBucketState](https://github.com/vladimir-bukhtoyarov/bucket4j/blob/master/src/main/java/com/github/bucket4j/grid/GridBucketState.java) has one-to-one logical relation with bucket and stored in data-grid, most likely you should not worry about this part, JCache will manage (and replicate if configured) for you.
-- [GridBucket](https://github.com/vladimir-bukhtoyarov/bucket4j/blob/master/src/main/java/com/github/bucket4j/grid/GridBucket.java) acts like proxy and just issues commands for bucket mutation, 
-then commands serialized and executed on the JCache node which holds the GridBucketState instance. 
-In opposite to GridBucketState, GridBucket has many-to-one relation with bucket, 
-because bucket can be accessible from multiple client JVM, 
-and even multiple times on same JVM, if client has no rational strategy to cache the instance of GridBucket.
-
-[Question](https://github.com/vladimir-bukhtoyarov/bucket4j/issues/6):
-> is the provided JCache integration safe across multiple JVMs? I mean, does it ensure that two nodes creating a bucket simultaneously on a given Cache<K, V> will only actually create one single bucket (without resetting a previously created one with the same key)?
-
-**Answer:**
-Yes, JCache integration is safe, independently of used JCache provider, Bucket4j never replaces bucket which already exists:
+## Example 1 - limiting access to HTTP server by IP address
+Imaging that you develop any Servlet based WEB application and want to limit access per IP basis.
+The limitation depends on country to which IP belongs, you want to allow less tokens to democratic countries and more tokens for normal countries, 
+and a very small amount of tokens for Russia in order to protect your service from russian hackers.
+ServletFilter would be obvious place to check limits:
 ```java
-public class JCacheProxy<K extends Serializable> implements GridProxy {
-    private final Cache<K, GridBucketState> cache;
-    private final K key;
-    ...
+public class IpThrottlingFilter implements javax.servlet.Filter {
+
+    // service to find alpha-3 country code by IP
+    @Inject
+    private GeoLocationService geoLocationService;
+    
+    // service to provide per country limits
+    @Inject
+    private LimitProvider limitProvider;
+    
+    // cache for storing token buckets, where IP is key.
+    @Inject
+    private javax.cache.Cache<String, GridBucketState> cache;
+    
+    private ProxyManager<String> buckets;
+    
     @Override
-    public void setInitialState(GridBucketState initialState) {
-        cache.putIfAbsent(key, initialState);
+    public void init(FilterConfig filterConfig) throws ServletException {
+         // init bucket registry
+         buckets = Bucket4j.extension(JCache.class).proxyManagerForCache(cache);
     }
-    ...
+    
+    @Override
+    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
+        HttpServletRequest httpRequest = (HttpServletRequest) servletRequest;
+        String ip = IpHelper.getIpFromRequest(httpRequest);
+        
+        // prepare configuration supplier which will be called(on first interaction with proxy) iff bucket was not saved yet previously. 
+        Supplier<BucketConfiguration> configurationLazySupplier = getConfigSupplierForIp(ip);
+        
+        // acquire cheap proxy to bucket, the real  
+        Bucket bucket = buckets.getProxy(ip, configurationLazySupplier);
+
+        // tryConsume returns false immediately if no tokens available with the bucket
+        if (bucket.tryConsume(1)) {
+            // the limit is not exceeded
+            filterChain.doFilter(servletRequest, servletResponse);
+        } else {
+            // limit is exceeded
+            HttpServletResponse httpResponse = (HttpServletResponse) servletResponse;
+            httpResponse.setContentType("text/plain");
+            httpResponse.setStatus(429);
+            httpResponse.getWriter().append("Too many requests");
+        }
+    }
+    
+    private Supplier<BucketConfiguration> getConfigSupplierForIp(String ip) {
+         return () -> {
+             String countryAlpha3 = geoLocationService.getCountryCodeByIp(ip);
+             long tokensPerMinute = limitProvider.getPerMinuteRate(countryAlpha3);
+             return Bucket4j.configurationBuilder()
+                         .addLimit(Bandwidth.simple(tokensPerMinute, Duration.ofMinutes(1)))
+                         .buildConfiguration()
+         };
+    }
+
 }
 ```
+**Question:** is the provided JCache integration safe across multiple JVMs? Does it ensure that two nodes creating a bucket simultaneously on a given Cache<K, V> will only actually create one single bucket (without resetting a previously created one with the same key)?
+
+**Answer:** Yes. JCache integration is safe for multi node environment, Bucket4j never replaces bucket which already exists.
 This behavior is guaranteed by **putIfAbsent** method contract of [javax.cache.Cache](http://static.javadoc.io/javax.cache/cache-api/1.0.0/javax/cache/Cache.html) class.
 
-[Question:](https://github.com/vladimir-bukhtoyarov/bucket4j/issues/26)
-> Do I need to cache grid-buckets?
+**Question:** Does ProxyManager store buckets internally, could be this a reason of OutOfMemoryError? 
 
-**Answer:**
-Yes, but only in case when you do not ProxyManager. 
-GridBucket can be created multiple time and this will not lead to logical error, 
-because the main part of bucket GridBucketState is strongly protected from duplication, 
-but this will lead to significant performance degradation, 
-because GridBucket [issues network request](https://github.com/vladimir-bukhtoyarov/bucket4j/blob/master/src/main/java/com/github/bucket4j/grid/GridBucket.java#L34) to grid at the moment of bucket initialization, so you will pay at least twice for non-optimized code. 
-So, **GridBucket must not be treated as light-weight entity**, it is better to cache its instance and reuse between invocations.
-Fortunately, you can work through ProxyManager(described below) and do not worry about caching the proxies, 
-because ProxyManager operates with light-weight versions of JCache buckets.
+**Answer:** No. ProxyManager stores nothing about buckets which it returns, the buckets actually stored in in-memory GRID outside client JVM.
+Think about proxy returned by ```ProxyManager#getBucket``` just about very cheap pointer to data which actually stored somewhere outside.
+So, independently of count of buckets ProxyManager will never be a reason of crash or extreme memory consumption.
 
-## Working through ProxyManager
-TODO
+**Question:** what will happen if bucket state will be lost in the GRID  because of split-brain, human mistake or pragmatically errors introduced by GRID vendor?
+                                                                        
+**Answer:** ProxyManager automatically detect this kind of situations and save bucket yet another time, to reconstruct bucket it uses provided configuration supplier.
+Reconstructed bucket remembers nothing about previously consumed tokens, so limit can be exceeded in this kind of GRID failures.
 
-## 
-TODO
+**Question:** should I always work with JCache through ProxyManager?
 
-
-## Handling split-brain and similar problems
-The distributed usage scenario is little bit more complicated than simple usage inside one JVM, 
-because it is need specify the reaction which should be applied in case of bucket state is lost by any reason, for example because of:
-- Split-brain happen.
-- The bucket state was stored on single grid node without replication strategy and this node was crashed.
-- Wrong cache configuration.
-- Pragmatically errors introduced by GRID vendor.
-- Human mistake.
-
-The ```Bucket4j``` make the client to specify recovery strategy from the list:
-- **RECONSTRUCT** Initialize bucket yet another time. Use this strategy if availability is more preferred than consistency.
-- **THROW_BUCKET_NOT_FOUND_EXCEPTION** Throw BucketNotFoundException. Use this strategy if consistency is more preferred than availability. 
-
-
-## Examples of distributed usage
-### Example of Hazelcast integration 
+**Answer:** It depends. When you have deal with potentially huge and unpredictable amount of buckets, it is always better to use ProxyManager.
+ProxyManager protects you from common performance pitfalls(like described in [this issue](https://github.com/vladimir-bukhtoyarov/bucket4j/issues/26)).
+But when you have deal with one or few buckets which well known at development time, then it would be better to avoid ProxyManager 
+and work directly with [GridBucket](https://github.com/vladimir-bukhtoyarov/bucket4j/blob/2.0/bucket4j-core/src/main/java/io/github/bucket4j/grid/GridBucket.java) as described in the next example.
+ 
+## Example 2 - working with JCache without ProxyManager abstraction
+Imagine yet another time that you develop WEB application and want to protect the whole cluster by 1000 requests per second, independently from request source,
+in other words you need one single bucket which protects the system at whole. Lets create ServletFilter to check limits similar to ```Example 1```:
 ```java
-  
-Config config = new Config();
-CacheSimpleConfig cacheConfig = new CacheSimpleConfig();
-cacheConfig.setName("my_buckets");
-config.addCacheConfig(cacheConfig);
+public class GlobalThrottlingFilter implements javax.servlet.Filter {
 
-hazelcastInstance = Hazelcast.newHazelcastInstance(config);
-ICacheManager cacheManager = hazelcastInstance.getCacheManager();
-cache = cacheManager.getCache("my_buckets");
+    private static final String BUCKET_ID = "global-limit";
+    
+    @Inject
+    private javax.cache.Cache<String, GridBucketState> cache;
+    
+    private Bucket bucket;
+    
+    @Override
+    public void init(FilterConfig filterConfig) throws ServletException {
+         // create bucket
+         bucket = Bucket4j.extension(JCache.class).builder()
+             .addLimit(Bandwidth.simple(1000, Duration.ofSeconds(1)))
+             .build(cache, BUCKET_ID, RecoveryStrategy.RECONSTRUCT);
+    }
+    
+    @Override
+    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
+        // tryConsume returns false immediately if no tokens available with the bucket
+        if (bucket.tryConsume(1)) {
+            // the limit is not exceeded
+            filterChain.doFilter(servletRequest, servletResponse);
+        } else {
+            // limit is exceeded
+            HttpServletResponse httpResponse = (HttpServletResponse) servletResponse;
+            httpResponse.setContentType("text/plain");
+            httpResponse.setStatus(429);
+            httpResponse.getWriter().append("Too many requests");
+        }
+    }
 
-// Bucket will be stored in the imap by this ID 
-Object bucketId = "666";
-
-// construct bucket
-Bucket bucket = Bucket4j.jCacheBuilder(RecoveryStrategy.RECONSTRUCT)
-                .addLimit(Bandwidth.simple(1_000, Duration.ofMinutes(1)))
-                .build(cache, KEY);
+}
 ```
+As you can see the code is simpler when you work with Bucket directly without ProxyManager, so use this way always when all buckets are known at development time. 
 
-### Example of Apache Ignite(GridGain) integration 
-```java
-Ignite ignite = Ignition.start();
-...
+## Runnable examples of JCache integration
+Bucket4j has been well tested with ```Hazelcast``` and ```Apache Ignite/GridGain```, you can use integration tests from [this folder](https://github.com/vladimir-bukhtoyarov/bucket4j/tree/2.0/bucket4j-jcache/src/test/java/io/github/bucket4j/grid/jcache) as live examples.
 
-// You can use spring configuration if do not want to configure cache in the java code  
-CacheConfiguration cfg = new CacheConfiguration("my_buckets");
-
-// setup cache configuration as you wish
-cfg.setXXX...
-cache = ignite.getOrCreateCache(cfg);
-
-// Bucket will be stored in the Ignite cache by this ID 
-Object bucketId = "21";
-
-// construct bucket
-Bucket bucket = Bucket4j.jCacheBuilder(RecoveryStrategy.RECONSTRUCT)
-                .addLimit(Bandwidth.simple(1_000, Duration.ofMinutes(1)))
-                .build(cache, KEY);
-```

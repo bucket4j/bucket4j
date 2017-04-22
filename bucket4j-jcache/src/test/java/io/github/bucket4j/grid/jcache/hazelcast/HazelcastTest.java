@@ -78,7 +78,7 @@ public class HazelcastTest {
     public void testJCacheBucketRegistryWithKeyIndependentConfiguration() {
         BucketConfiguration configuration = Bucket4j.configurationBuilder()
                 .addLimit(Bandwidth.simple(10, Duration.ofDays(1)))
-                .createConfiguration();
+                .buildConfiguration();
 
         ProxyManager<String> registry = Bucket4j.extension(JCache.class).proxyManagerForCache(cache);
         Bucket bucket1 = registry.getProxy(KEY, () -> configuration);
@@ -95,12 +95,12 @@ public class HazelcastTest {
         ProxyManager<String> registry = Bucket4j.extension(JCache.class).proxyManagerForCache(cache);
         Bucket bucket1 = registry.getProxy(KEY, () -> Bucket4j.configurationBuilder()
                 .addLimit(Bandwidth.simple(10, Duration.ofDays(1)))
-                .createConfiguration());
+                .buildConfiguration());
         assertFalse(bucket1.tryConsume(11));
 
         Bucket bucket2 = registry.getProxy(ANOTHER_KEY, () -> Bucket4j.configurationBuilder()
                 .addLimit(Bandwidth.simple(100, Duration.ofDays(1)))
-                .createConfiguration());
+                .buildConfiguration());
         assertTrue(bucket2.tryConsume(11));
     }
 

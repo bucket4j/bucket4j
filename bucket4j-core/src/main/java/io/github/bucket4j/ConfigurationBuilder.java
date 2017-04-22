@@ -38,7 +38,7 @@ public class ConfigurationBuilder<T extends ConfigurationBuilder> {
     /**
      * @return configuration which used for bucket construction.
      */
-    public BucketConfiguration createConfiguration() {
+    public BucketConfiguration buildConfiguration() {
         return new BucketConfiguration(this.bandwidths, timeMeter);
     }
 

@@ -66,7 +66,7 @@ public class JCacheBucketBuilder extends ConfigurationBuilder<JCacheBucketBuilde
      * @return new distributed bucket
      */
     public <K extends Serializable> Bucket build(Cache<K, GridBucketState> cache, K key, RecoveryStrategy recoveryStrategy) {
-        BucketConfiguration configuration = createConfiguration();
+        BucketConfiguration configuration = buildConfiguration();
         JCacheProxy<K> gridProxy = new JCacheProxy<>(cache);
         return GridBucket.createInitializedBucket(key, configuration, gridProxy, recoveryStrategy);
     }
