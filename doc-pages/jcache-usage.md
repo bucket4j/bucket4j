@@ -10,7 +10,7 @@ To use JCache extension you also need to add following dependency:
 ```
 
 ## Example 1 - limiting access to HTTP server by IP address
-Imaging that you develop any Servlet based WEB application and want to limit access per IP basis.
+Imagine that you develop any Servlet based WEB application and want to limit access per IP basis.
 The limitation depends on country to which IP belongs, you want to allow less tokens to democratic countries and more tokens for normal countries, 
 and a very small amount of tokens for Russia in order to protect your service from russian hackers.
 ServletFilter would be obvious place to check limits:
