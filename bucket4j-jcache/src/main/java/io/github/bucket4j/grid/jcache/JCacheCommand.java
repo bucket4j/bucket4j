@@ -28,7 +28,7 @@ import javax.cache.processor.MutableEntry;
 import java.io.Serializable;
 
 
-public class JCacheCommand<K, T extends Serializable> implements EntryProcessor<K, GridBucketState, CommandResult> {
+public class JCacheCommand<K, T extends Serializable> implements Serializable, EntryProcessor<K, GridBucketState, CommandResult> {
 
     @Override
     public CommandResult<T> process(MutableEntry<K, GridBucketState> mutableEntry, Object... arguments) throws EntryProcessorException {

@@ -53,7 +53,6 @@ public class IgniteTest {
     private Cache<String, GridBucketState> cache;
     private Cloud cloud;
 
-
     private JCacheBucketBuilder builder = Bucket4j.extension(JCache.class).builder()
             .addLimit(0, Bandwidth.simple(1_000, Duration.ofMinutes(1)))
             .addLimit(0, Bandwidth.simple(200, Duration.ofSeconds(10)));
@@ -61,22 +60,19 @@ public class IgniteTest {
 
     @Before
     public void setup() {
-        // start ignite server on current host
+        // start ignite server in separated JVM on current host
         cloud = CloudFactory.createCloud();
         cloud.node("**").x(VX.TYPE).setLocal();
         ViNode igniteServer = cloud.node("ignite-server");
-        igniteServer.x(VX.JVM).addJvmArg("-DIGNITE_QUIET=false"); // show verbose output
-//        igniteServer.x(VX.CONSOLE).bindErr(System.err);
-//        igniteServer.x(VX.CONSOLE).bindOut(System.out);
-
+        // verbose output of Ignite
+        igniteServer.x(VX.JVM).addJvmArg("-DIGNITE_QUIET=false");
         Runnable startIgniteServer = getStartIgniteServerCommand();
         igniteServer.exec(startIgniteServer);
 
-        // start ignite client which works inside current JVM
+        // start ignite client which works inside current JVM and does not hold data
         IgniteConfiguration igniteConfiguration = new IgniteConfiguration();
         igniteConfiguration.setClientMode(true);
         ignite = Ignition.start(igniteConfiguration);
-
         CacheConfiguration cacheConfiguration = new CacheConfiguration("my_buckets");
         cache = ignite.getOrCreateCache(cacheConfiguration);
     }

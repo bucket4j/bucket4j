@@ -28,12 +28,21 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ICacheManager;
 import io.github.bucket4j.grid.jcache.JCache;
 import io.github.bucket4j.grid.jcache.JCacheBucketBuilder;
+import org.apache.ignite.Ignite;
+import org.apache.ignite.Ignition;
+import org.apache.ignite.configuration.CacheConfiguration;
+import org.apache.ignite.configuration.IgniteConfiguration;
+import org.gridkit.nanocloud.Cloud;
+import org.gridkit.nanocloud.CloudFactory;
+import org.gridkit.nanocloud.VX;
+import org.gridkit.vicluster.ViNode;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import io.github.bucket4j.util.ConsumptionScenario;
 
 import javax.cache.Cache;
+import java.io.Serializable;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
@@ -50,6 +59,8 @@ public class HazelcastTest {
     private static final String ANOTHER_KEY = "666";
     private Cache<String, GridBucketState> cache;
     private HazelcastInstance hazelcastInstance;
+    private Cloud cloud;
+
     private JCacheBucketBuilder builder = Bucket4j.extension(JCache.class).builder()
             .addLimit(0, Bandwidth.simple(1_000, Duration.ofMinutes(1)))
             .addLimit(0, Bandwidth.simple(200, Duration.ofSeconds(10)));
@@ -57,20 +68,44 @@ public class HazelcastTest {
 
     @Before
     public void setup() {
-        Config config = new Config();
-        CacheSimpleConfig cacheConfig = new CacheSimpleConfig();
-        cacheConfig.setName("my_buckets");
-        config.addCacheConfig(cacheConfig);
+        // start Hazelcast server in separated JVM on current host
+        cloud = CloudFactory.createCloud();
+        cloud.node("**").x(VX.TYPE).setLocal();
+        ViNode hazelcastServer = cloud.node("hazelcast-server");
+        Runnable startIgniteServer = getStartHazelcastServerCommand();
+        hazelcastServer.exec(startIgniteServer);
 
+        // start ignite client which works inside current JVM and does not hold data
+        Config config = new Config();
+        config.setLiteMember(true);
         hazelcastInstance = Hazelcast.newHazelcastInstance(config);
         ICacheManager cacheManager = hazelcastInstance.getCacheManager();
         cache = cacheManager.getCache("my_buckets");
     }
 
+    private static Runnable getStartHazelcastServerCommand() {
+        return (Runnable & Serializable) () -> {
+            Config config = new Config();
+            CacheSimpleConfig cacheConfig = new CacheSimpleConfig();
+            cacheConfig.setName("my_buckets");
+            config.addCacheConfig(cacheConfig);
+
+            HazelcastInstance hazelcastInstance = Hazelcast.newHazelcastInstance(config);
+            ICacheManager cacheManager = hazelcastInstance.getCacheManager();
+            cacheManager.getCache("my_buckets");
+        };
+    }
+
     @After
     public void shutdown() {
-        if (hazelcastInstance != null) {
-            hazelcastInstance.shutdown();
+        try {
+            if (cloud != null) {
+                cloud.shutdown();
+            }
+        } finally {
+            if (hazelcastInstance != null) {
+                hazelcastInstance.shutdown();
+            }
         }
     }
 
