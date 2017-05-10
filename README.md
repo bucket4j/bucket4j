@@ -31,13 +31,13 @@ or you can to specify own way to measure time.
   * Ability to have guaranteed bandwidth. Think about guaranteed bandwidth like a 911 number which you can to call when no money on your balance.
   * Dynamic capacity. If needs capacity of the bucket can be changed over time.
 * Ability to switch from one JVM to cluster in two lines of code. Using Bucket4j you are able to limiting something in the cluster of JVMs.
-Since [release 1.2](https://github.com/vladimir-bukhtoyarov/bucket4j/releases/tag/1.2.0) the ```Bucket4j``` supports any GRID solution which compatible with [JCache API (JSR 107)](https://www.jcp.org/en/jsr/detail?id=107) specification.
+Since [release 1.2](https://github.com/vladimir-bukhtoyarov/bucket4j/releases/tag/1.2.1) the ```Bucket4j``` supports any GRID solution which compatible with [JCache API (JSR 107)](https://www.jcp.org/en/jsr/detail?id=107) specification.
 Just use your favorite grid including [Hazelcast](http://hazelcast.com/products/hazelcast/), [Ignite](http://www.oracle.com/technetwork/middleware/coherence/overview/index-087514.html), [Coherence](http://www.oracle.com/technetwork/middleware/coherence/overview/index.html), [Infinispan](http://infinispan.org/) or any other.  
 
 ### Get Bucket4j library
 
 #### By direct link
-[Download compiled jar, sources, javadocs](https://github.com/vladimir-bukhtoyarov/bucket4j/releases/tag/1.2.0)
+[Download compiled jar, sources, javadocs](https://github.com/vladimir-bukhtoyarov/bucket4j/releases/tag/1.2.1)
 
 #### You can build Bucket4j from sources
 
@@ -66,7 +66,7 @@ Then include Bucket4j as dependency to your `pom.xml`
 <dependency>
     <groupId>com.github</groupId>
     <artifactId>bucket4j</artifactId>
-    <version>1.2.0</version>
+    <version>1.2.1</version>
 </dependency>
 ```
 
