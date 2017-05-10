@@ -71,6 +71,11 @@
             <version>1.8.0</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.gridkit.lab</groupId>
+            <artifactId>nanocloud</artifactId>
+            <version>0.8.12</version>
+        </dependency>
     </dependencies>
 
 </project>
