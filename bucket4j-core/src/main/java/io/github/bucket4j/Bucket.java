@@ -43,6 +43,14 @@ public interface Bucket {
     boolean tryConsume(long numTokens);
 
     /**
+     * Tries to consume a specified number of tokens from this bucket.
+     *
+     * @param numTokens The number of tokens to consume from the bucket, must be a positive number.
+     * @return {@link ConsumptionResult} which describes both result of consumption and tokens remaining in the bucket after consumption.
+     */
+    ConsumptionResult tryConsumeAndReturnRemainingTokens(long numTokens);
+
+    /**
      * Tries to consume as much tokens from this bucket as available at the moment of invocation.
      *
      * @return number of tokens which has been consumed, or zero if was consumed nothing.
@@ -58,6 +66,16 @@ public interface Bucket {
      * @return number of tokens which has been consumed, or zero if was consumed nothing.
      */
     long tryConsumeAsMuchAsPossible(long limit);
+
+    /**
+     * Tries to consume as much tokens from bucket as available in the bucket at the moment of invocation,
+     * but tokens which should be consumed is limited by than not more than {@code limit}.
+     *
+     * @param limit maximum number of tokens to consume, should be positive.
+     *
+     * @return {@link ConsumptionResult} which describes both result of consumption and tokens remaining in the bucket after consumption.
+     */
+    ConsumptionResult tryConsumeAsMuchAsPossibleAndReturnRemainingTokens(long limit);
 
     /**
      * Consumes a specified number of tokens from the bucket. If required count of tokens is not currently available then this method will block
@@ -135,6 +153,15 @@ public interface Bucket {
      * @throws IllegalArgumentException in case of tokensToAdd less than 1
      */
     void addTokens(long tokensToAdd);
+
+    /**
+     * Returns amount of available tokens in this bucket.
+
+     * <p> This method designed to be used only for monitoring and testing, you should never use this method for business cases.
+     *
+     * @return amount of available tokens
+     */
+    long getAvailableTokens();
 
     /**
      * Creates the copy of internal state.
