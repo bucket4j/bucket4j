@@ -39,6 +39,10 @@ public class Bucket4j {
         }
     }
 
+    private Bucket4j() {
+        // to avoid initialization of utility class
+    }
+
     /**
      * Creates the new builder of in-memory buckets.
      *
