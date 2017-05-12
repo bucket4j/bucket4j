@@ -23,7 +23,7 @@ public class CreateSnapshotCommand implements GridCommand<BucketState> {
 
     @Override
     public BucketState execute(GridBucketState gridState) {
-        return gridState.getBucketState().clone();
+        return gridState.getBucketState().copy();
     }
 
     @Override

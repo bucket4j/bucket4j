@@ -40,7 +40,7 @@ public class LockFreeBucket extends AbstractBucket {
     @Override
     protected long consumeAsMuchAsPossibleImpl(long limit) {
         BucketState previousState = stateReference.get();
-        BucketState newState = previousState.clone();
+        BucketState newState = previousState.copy();
         long currentTimeNanos = timeMeter.currentTimeNanos();
 
         while (true) {
@@ -63,7 +63,7 @@ public class LockFreeBucket extends AbstractBucket {
     @Override
     protected boolean tryConsumeImpl(long tokensToConsume) {
         BucketState previousState = stateReference.get();
-        BucketState newState = previousState.clone();
+        BucketState newState = previousState.copy();
         long currentTimeNanos = timeMeter.currentTimeNanos();
 
         while (true) {
@@ -85,7 +85,7 @@ public class LockFreeBucket extends AbstractBucket {
     @Override
     protected boolean consumeOrAwaitImpl(long tokensToConsume, long waitIfBusyNanosLimit, boolean uninterruptibly, BlockingStrategy blockingStrategy) throws InterruptedException {
         BucketState previousState = stateReference.get();
-        BucketState newState = previousState.clone();
+        BucketState newState = previousState.copy();
         long currentTimeNanos = timeMeter.currentTimeNanos();
 
         while (true) {
@@ -124,7 +124,7 @@ public class LockFreeBucket extends AbstractBucket {
     @Override
     protected void addTokensImpl(long tokensToAdd) {
         BucketState previousState = stateReference.get();
-        BucketState newState = previousState.clone();
+        BucketState newState = previousState.copy();
         long currentTimeNanos = timeMeter.currentTimeNanos();
 
         while (true) {
@@ -141,7 +141,7 @@ public class LockFreeBucket extends AbstractBucket {
 
     @Override
     public BucketState createSnapshot() {
-        return stateReference.get().clone();
+        return stateReference.get().copy();
     }
 
     @Override

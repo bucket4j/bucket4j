@@ -102,7 +102,7 @@ public class SynchronizedBucket extends AbstractBucket {
     @Override
     public BucketState createSnapshot() {
         synchronized (this) {
-            return state.clone();
+            return state.copy();
         }
     }
 

@@ -93,7 +93,7 @@ public class UnsafeBucket extends AbstractBucket {
 
     @Override
     public BucketState createSnapshot() {
-        return state.clone();
+        return state.copy();
     }
 
     @Override
