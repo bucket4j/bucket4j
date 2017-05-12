@@ -20,7 +20,6 @@ package io.github.bucket4j;
 
 import java.io.Serializable;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.LockSupport;
 
 /**
  * An abstraction over time measurement.
