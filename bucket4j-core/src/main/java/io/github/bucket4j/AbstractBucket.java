@@ -67,6 +67,7 @@ public abstract class AbstractBucket implements Bucket {
         try {
             consumeOrAwaitImpl(tokensToConsume, UNSPECIFIED_WAITING_LIMIT, true, blockingStrategy);
         } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             throw new IllegalStateException("Should never come here", e);
         }
     }
