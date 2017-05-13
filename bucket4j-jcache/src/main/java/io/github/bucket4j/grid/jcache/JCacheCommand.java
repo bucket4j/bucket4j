@@ -1,4 +1,3 @@
-
 /*
  *
  *   Copyright 2015-2017 Vladimir Bukhtoyarov
@@ -23,7 +22,6 @@ import io.github.bucket4j.grid.GridBucketState;
 import io.github.bucket4j.grid.GridCommand;
 
 import javax.cache.processor.EntryProcessor;
-import javax.cache.processor.EntryProcessorException;
 import javax.cache.processor.MutableEntry;
 import java.io.Serializable;
 
@@ -31,7 +29,7 @@ import java.io.Serializable;
 public class JCacheCommand<K, T extends Serializable> implements Serializable, EntryProcessor<K, GridBucketState, CommandResult> {
 
     @Override
-    public CommandResult<T> process(MutableEntry<K, GridBucketState> mutableEntry, Object... arguments) throws EntryProcessorException {
+    public CommandResult<T> process(MutableEntry<K, GridBucketState> mutableEntry, Object... arguments) {
         if (!mutableEntry.exists()) {
             return CommandResult.bucketNotFound();
         }

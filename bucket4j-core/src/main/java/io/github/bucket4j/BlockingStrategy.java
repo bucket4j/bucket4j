@@ -49,40 +49,34 @@ public interface BlockingStrategy {
     BlockingStrategy PARKING = new BlockingStrategy() {
 
         @Override
-        public void park(long nanosToPark) throws InterruptedException {
+        public void park(final long nanosToPark) throws InterruptedException {
             final long endNanos = System.nanoTime() + nanosToPark;
+            long remainingParkNanos = nanosToPark;
             while (true) {
-                LockSupport.parkNanos(nanosToPark);
+                remainingParkNanos = parkAndCalculateRemaining(remainingParkNanos, endNanos);
                 if (Thread.interrupted()) {
                     throw new InterruptedException();
                 }
-
-                long currentTimeNanos = System.nanoTime();
-                // it is need to compare deltas instead of direct values in order to solve potential overflow of nano-time
-                if (currentTimeNanos - endNanos >= 0) {
+                if (remainingParkNanos <= 0) {
                     return;
                 }
-                nanosToPark = endNanos - currentTimeNanos;
             }
         }
 
         @Override
-        public void parkUninterruptibly(long nanosToPark) {
+        public void parkUninterruptibly(final long nanosToPark) {
             final long endNanos = System.nanoTime() + nanosToPark;
-            boolean interrupted = Thread.interrupted();
+            long remainingParkNanos = nanosToPark;
+            boolean interrupted = false;
             try {
                 while (true) {
-                    LockSupport.parkNanos(nanosToPark);
+                    remainingParkNanos = parkAndCalculateRemaining(remainingParkNanos, endNanos);
+                    if (remainingParkNanos <= 0) {
+                        return;
+                    }
                     if (Thread.interrupted()) {
                         interrupted = true;
                     }
-
-                    long currentTimeNanos = System.nanoTime();
-                    // it is need to compare deltas instead of direct values in order to solve potential overflow of nano-time
-                    if (currentTimeNanos - endNanos >= 0) {
-                        return;
-                    }
-                    nanosToPark = endNanos - currentTimeNanos;
                 }
             } finally {
                 if (interrupted) {
@@ -91,6 +85,13 @@ public interface BlockingStrategy {
                 }
             }
         }
+
+        private long parkAndCalculateRemaining(long remainingParkNanos, long endNanos) {
+            LockSupport.parkNanos(remainingParkNanos);
+            long currentTimeNanos = System.nanoTime();
+            return endNanos - currentTimeNanos;
+        }
+
     };
 
 }
