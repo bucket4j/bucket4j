@@ -110,12 +110,6 @@ public abstract class AbstractBucket implements Bucket {
     }
 
     @Override
-    public ConsumptionResult tryConsumeAsMuchAsPossibleAndReturnRemainingTokens(long limit) {
-        // TODO
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public long getAvailableTokens() {
         // TODO
         throw new UnsupportedOperationException();

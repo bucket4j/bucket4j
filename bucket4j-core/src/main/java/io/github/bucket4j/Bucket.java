@@ -68,16 +68,6 @@ public interface Bucket {
     long tryConsumeAsMuchAsPossible(long limit);
 
     /**
-     * Tries to consume as much tokens from bucket as available in the bucket at the moment of invocation,
-     * but tokens which should be consumed is limited by than not more than {@code limit}.
-     *
-     * @param limit maximum number of tokens to consume, should be positive.
-     *
-     * @return {@link ConsumptionResult} which describes both result of consumption and tokens remaining in the bucket after consumption.
-     */
-    ConsumptionResult tryConsumeAsMuchAsPossibleAndReturnRemainingTokens(long limit);
-
-    /**
      * Consumes a specified number of tokens from the bucket. If required count of tokens is not currently available then this method will block
      * until  required number of tokens will be available or current thread is interrupted, or {@code maxWaitTimeNanos} has elapsed.
      *

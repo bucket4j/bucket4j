@@ -4,16 +4,25 @@ package io.github.bucket4j;
  * Describes both result of consumption and tokens remaining in the bucket after consumption.
  *
  * @see Bucket#tryConsumeAndReturnRemainingTokens(long)
- * @see Bucket#tryConsumeAsMuchAsPossibleAndReturnRemainingTokens(long)
  */
 public class ConsumptionResult {
 
     private final boolean consumed;
     private final long remainingTokens;
+    private final long nanosToWaitForRefill;
 
-    public ConsumptionResult(boolean consumed, long remainingTokens) {
+    public static ConsumptionResult consumed(long remainingTokens) {
+        return new ConsumptionResult(true, remainingTokens, 0);
+    }
+
+    public static ConsumptionResult rejected(long remainingTokens, long nanosToWaitForRefill) {
+        return new ConsumptionResult(false, remainingTokens, nanosToWaitForRefill);
+    }
+
+    private ConsumptionResult(boolean consumed, long remainingTokens, long nanosToWaitForRefill) {
         this.consumed = consumed;
-        this.remainingTokens = remainingTokens;
+        this.remainingTokens = Math.max(0L, remainingTokens);
+        this.nanosToWaitForRefill = nanosToWaitForRefill;
     }
 
     /**
@@ -34,13 +43,22 @@ public class ConsumptionResult {
         return remainingTokens;
     }
 
+    /**
+     * Returns time in nanos which need to wait until requested amount of tokens will be refilled
+     *
+     * @return time in nanos which need to wait until requested amount of tokens will be refilled
+     */
+    public long getNanosToWaitForRefill() {
+        return nanosToWaitForRefill;
+    }
+
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder("ConsumptionResult{");
-        sb.append("consumed=").append(consumed);
-        sb.append(", remainingTokens=").append(remainingTokens);
-        sb.append('}');
-        return sb.toString();
+        return "ConsumptionResult{" +
+                "consumed=" + consumed +
+                ", remainingTokens=" + remainingTokens +
+                ", nanosToWaitForRefill=" + nanosToWaitForRefill +
+                '}';
     }
 
 }
