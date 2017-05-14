@@ -95,11 +95,10 @@ public class LockFreeBucket extends AbstractBucket {
                 newState.consume(bandwidths, tokensToConsume);
                 if (stateReference.compareAndSet(previousState, newState)) {
                     return true;
-                } else {
-                    previousState = stateReference.get();
-                    newState.copyStateFrom(previousState);
-                    continue;
                 }
+                previousState = stateReference.get();
+                newState.copyStateFrom(previousState);
+                continue;
             }
 
             if (waitIfBusyNanosLimit > 0 && nanosToCloseDeficit > waitIfBusyNanosLimit) {
@@ -108,16 +107,19 @@ public class LockFreeBucket extends AbstractBucket {
 
             newState.consume(bandwidths, tokensToConsume);
             if (stateReference.compareAndSet(previousState, newState)) {
-                if (uninterruptibly) {
-                    blockingStrategy.parkUninterruptibly(nanosToCloseDeficit);
-                } else {
-                    blockingStrategy.park(nanosToCloseDeficit);
-                }
+                park(blockingStrategy, nanosToCloseDeficit, uninterruptibly);
                 return true;
-            } else {
-                previousState = stateReference.get();
-                newState.copyStateFrom(previousState);
             }
+            previousState = stateReference.get();
+            newState.copyStateFrom(previousState);
+        }
+    }
+
+    private void park(BlockingStrategy blockingStrategy, long nanosToCloseDeficit, boolean uninterruptibly) throws InterruptedException {
+        if (uninterruptibly) {
+            blockingStrategy.parkUninterruptibly(nanosToCloseDeficit);
+        } else {
+            blockingStrategy.park(nanosToCloseDeficit);
         }
     }
 
