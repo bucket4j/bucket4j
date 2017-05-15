@@ -142,6 +142,14 @@ public class LockFreeBucket extends AbstractBucket {
     }
 
     @Override
+    public long getAvailableTokens() {
+        long currentTimeNanos = timeMeter.currentTimeNanos();
+        BucketState snapshot = stateReference.get().copy();
+        snapshot.refillAllBandwidth(bandwidths, currentTimeNanos);
+        return snapshot.getAvailableTokens(bandwidths);
+    }
+
+    @Override
     public BucketState createSnapshot() {
         return stateReference.get().copy();
     }

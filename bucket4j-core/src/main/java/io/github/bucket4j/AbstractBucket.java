@@ -110,12 +110,6 @@ public abstract class AbstractBucket implements Bucket {
     }
 
     @Override
-    public long getAvailableTokens() {
-        // TODO
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public void addTokens(long tokensToAdd) {
         if (tokensToAdd <= 0) {
             throw new IllegalArgumentException("tokensToAdd should be >= 0");

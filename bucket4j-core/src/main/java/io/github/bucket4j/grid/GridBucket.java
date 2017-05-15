@@ -85,6 +85,11 @@ public class GridBucket<K extends Serializable> extends AbstractBucket {
     }
 
     @Override
+    public long getAvailableTokens() {
+        return execute(new GetAvailableTokensCommand());
+    }
+
+    @Override
     public BucketState createSnapshot() {
         return execute(new CreateSnapshotCommand());
     }
