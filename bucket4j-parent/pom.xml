@@ -49,6 +49,7 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <benchmark.jar.name>benchmarks</benchmark.jar.name>
+        <argLine></argLine>
     </properties>
 
     <scm>
