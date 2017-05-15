@@ -1,11 +1,13 @@
 package io.github.bucket4j;
 
+import java.io.Serializable;
+
 /**
  * Describes both result of consumption and tokens remaining in the bucket after consumption.
  *
  * @see Bucket#tryConsumeAndReturnRemainingTokens(long)
  */
-public class ConsumptionResult {
+public class ConsumptionResult implements Serializable {
 
     private final boolean consumed;
     private final long remainingTokens;

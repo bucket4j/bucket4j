@@ -83,6 +83,29 @@ public class LockFreeBucket extends AbstractBucket {
     }
 
     @Override
+    protected ConsumptionResult tryConsumeAndReturnRemainingTokensImpl(long tokensToConsume) {
+        BucketState previousState = stateReference.get();
+        BucketState newState = previousState.copy();
+        long currentTimeNanos = timeMeter.currentTimeNanos();
+
+        while (true) {
+            newState.refillAllBandwidth(bandwidths, currentTimeNanos);
+            long availableToConsume = newState.getAvailableTokens(bandwidths);
+            if (tokensToConsume > availableToConsume) {
+                long nanosToWaitForRefill = newState.delayNanosAfterWillBePossibleToConsume(bandwidths, tokensToConsume);
+                return ConsumptionResult.rejected(availableToConsume, nanosToWaitForRefill);
+            }
+            newState.consume(bandwidths, tokensToConsume);
+            if (stateReference.compareAndSet(previousState, newState)) {
+                return ConsumptionResult.consumed(availableToConsume - tokensToConsume);
+            } else {
+                previousState = stateReference.get();
+                newState.copyStateFrom(previousState);
+            }
+        }
+    }
+
+    @Override
     protected boolean consumeOrAwaitImpl(long tokensToConsume, long waitIfBusyNanosLimit, boolean uninterruptibly, BlockingStrategy blockingStrategy) throws InterruptedException {
         BucketState previousState = stateReference.get();
         BucketState newState = previousState.copy();

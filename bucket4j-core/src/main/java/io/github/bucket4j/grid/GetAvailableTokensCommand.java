@@ -20,7 +20,7 @@ public class GetAvailableTokensCommand implements GridCommand<Long> {
 
     @Override
     public boolean isBucketStateModified() {
-        return true;
+        return false;
     }
 
 }

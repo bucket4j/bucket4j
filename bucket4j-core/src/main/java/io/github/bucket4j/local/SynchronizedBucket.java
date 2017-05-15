@@ -64,6 +64,21 @@ public class SynchronizedBucket extends AbstractBucket {
     }
 
     @Override
+    protected ConsumptionResult tryConsumeAndReturnRemainingTokensImpl(long tokensToConsume) {
+        long currentTimeNanos = timeMeter.currentTimeNanos();
+        synchronized (this) {
+            state.refillAllBandwidth(bandwidths, currentTimeNanos);
+            long availableToConsume = state.getAvailableTokens(bandwidths);
+            if (tokensToConsume > availableToConsume) {
+                long nanosToWaitForRefill = state.delayNanosAfterWillBePossibleToConsume(bandwidths, tokensToConsume);
+                return ConsumptionResult.rejected(availableToConsume, nanosToWaitForRefill);
+            }
+            state.consume(bandwidths, tokensToConsume);
+            return ConsumptionResult.consumed(availableToConsume - tokensToConsume);
+        }
+    }
+
+    @Override
     protected boolean consumeOrAwaitImpl(long tokensToConsume, long waitIfBusyNanosLimit, boolean uninterruptibly, BlockingStrategy blockingStrategy) throws InterruptedException {
         long currentTimeNanos = timeMeter.currentTimeNanos();
         long nanosToCloseDeficit;
