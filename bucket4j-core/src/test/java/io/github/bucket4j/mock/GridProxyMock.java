@@ -23,30 +23,40 @@ import io.github.bucket4j.grid.GridBucketState;
 import io.github.bucket4j.grid.GridCommand;
 import io.github.bucket4j.grid.GridProxy;
 
-import java.io.Serializable;
+import java.io.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class GridProxyMock implements GridProxy {
 
     private GridBucketState state;
-    private CommandResult predefinedAnswer;
-
-    public void setPredefinedAnswer(CommandResult predefinedAnswer) {
-        this.predefinedAnswer = predefinedAnswer;
-    }
 
     @Override
     public CommandResult execute(Serializable key, GridCommand command) {
-        if (predefinedAnswer != null) {
-            return predefinedAnswer;
-        }
+        emulateSerialization(key);
+        command = emulateSerialization(command);
         Serializable resultData = command.execute(state);
+        resultData = emulateSerialization(resultData);
         return CommandResult.success(resultData);
     }
 
     @Override
     public void setInitialState(Serializable key, GridBucketState initialState) {
         this.state = initialState;
+    }
+
+    private static <T> T emulateSerialization(T object) {
+        try {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ObjectOutputStream oos = new ObjectOutputStream(baos);
+            oos.writeObject(object);
+            byte[] bytes = baos.toByteArray();
+
+            ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+            ObjectInputStream ois = new ObjectInputStream(bais);
+            return (T) ois.readObject();
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
     }
 
 }

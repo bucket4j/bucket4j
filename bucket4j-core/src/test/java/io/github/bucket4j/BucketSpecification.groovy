@@ -187,6 +187,25 @@ class BucketSpecification extends Specification {
             5 |     120     |     110        |       100      | Bucket4j.builder().addLimit(0, Bandwidth.simple(100, Duration.ofNanos(100)))
     }
 
+    @Unroll
+    def "#n getAvailableTokens specification"(int n, long nanosSinceBucketCreation, long expectedTokens,  ConfigurationBuilder builder) {
+        expect:
+            for (BucketType type : BucketType.values()) {
+                TimeMeterMock mock = new TimeMeterMock(0)
+                builder.withCustomTimePrecision(mock)
+                Bucket bucket = type.createBucket(builder)
+                mock.addTime(nanosSinceBucketCreation)
+                assert bucket.getAvailableTokens() == expectedTokens
+            }
+        where:
+            n | nanosSinceBucketCreation | expectedTokens |  builder
+            1 |             49           |     50         | Bucket4j.builder().addLimit(1, Bandwidth.simple(100, Duration.ofNanos(100)))
+            2 |             50           |     50         | Bucket4j.builder().addLimit(0, Bandwidth.simple(100, Duration.ofNanos(100)))
+            3 |             50           |    100         | Bucket4j.builder().addLimit(70, Bandwidth.simple(100, Duration.ofNanos(100)))
+            4 |              0           |      0         | Bucket4j.builder().addLimit(0, Bandwidth.simple(100, Duration.ofNanos(100)))
+            5 |            120           |    100         | Bucket4j.builder().addLimit(0, Bandwidth.simple(100, Duration.ofNanos(100)))
+    }
+
     @Timeout(value = 2, unit = TimeUnit.SECONDS)
     def "Should throw InterruptedException when thread interrupted during waiting for token refill"() {
         expect:
