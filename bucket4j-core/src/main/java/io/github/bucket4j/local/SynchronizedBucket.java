@@ -20,24 +20,34 @@ package io.github.bucket4j.local;
 
 import io.github.bucket4j.*;
 
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
 public class SynchronizedBucket extends AbstractBucket {
 
     private final BucketConfiguration configuration;
     private final Bandwidth[] bandwidths;
     private final TimeMeter timeMeter;
     private final BucketState state;
+    private final Lock lock;
 
     public SynchronizedBucket(BucketConfiguration configuration) {
+        this(configuration, new ReentrantLock());
+    }
+
+    public SynchronizedBucket(BucketConfiguration configuration, Lock lock) {
         this.configuration = configuration;
         this.bandwidths = configuration.getBandwidths();
         this.timeMeter = configuration.getTimeMeter();
         this.state = BucketState.createInitialState(configuration);
+        this.lock = lock;
     }
 
     @Override
     protected long consumeAsMuchAsPossibleImpl(long limit) {
         long currentTimeNanos = timeMeter.currentTimeNanos();
-        synchronized (this) {
+        lock.lock();
+        try {
             state.refillAllBandwidth(bandwidths, currentTimeNanos);
             long availableToConsume = state.getAvailableTokens(bandwidths);
             long toConsume = Math.min(limit, availableToConsume);
@@ -46,13 +56,16 @@ public class SynchronizedBucket extends AbstractBucket {
             }
             state.consume(bandwidths, toConsume);
             return toConsume;
+        } finally {
+            lock.unlock();
         }
     }
 
     @Override
     protected boolean tryConsumeImpl(long tokensToConsume) {
         long currentTimeNanos = timeMeter.currentTimeNanos();
-        synchronized (this) {
+        lock.lock();
+        try {
             state.refillAllBandwidth(bandwidths, currentTimeNanos);
             long availableToConsume = state.getAvailableTokens(bandwidths);
             if (tokensToConsume > availableToConsume) {
@@ -60,13 +73,16 @@ public class SynchronizedBucket extends AbstractBucket {
             }
             state.consume(bandwidths, tokensToConsume);
             return true;
+        } finally {
+            lock.unlock();
         }
     }
 
     @Override
     protected ConsumptionResult tryConsumeAndReturnRemainingTokensImpl(long tokensToConsume) {
         long currentTimeNanos = timeMeter.currentTimeNanos();
-        synchronized (this) {
+        lock.lock();
+        try {
             state.refillAllBandwidth(bandwidths, currentTimeNanos);
             long availableToConsume = state.getAvailableTokens(bandwidths);
             if (tokensToConsume > availableToConsume) {
@@ -75,6 +91,8 @@ public class SynchronizedBucket extends AbstractBucket {
             }
             state.consume(bandwidths, tokensToConsume);
             return ConsumptionResult.consumed(availableToConsume - tokensToConsume);
+        } finally {
+            lock.unlock();
         }
     }
 
@@ -83,7 +101,8 @@ public class SynchronizedBucket extends AbstractBucket {
         long currentTimeNanos = timeMeter.currentTimeNanos();
         long nanosToCloseDeficit;
 
-        synchronized (this) {
+        lock.lock();
+        try {
             state.refillAllBandwidth(bandwidths, currentTimeNanos);
             nanosToCloseDeficit = state.delayNanosAfterWillBePossibleToConsume(bandwidths, tokensToConsume);
             if (nanosToCloseDeficit == 0) {
@@ -96,6 +115,8 @@ public class SynchronizedBucket extends AbstractBucket {
             }
 
             state.consume(bandwidths, tokensToConsume);
+        } finally {
+            lock.unlock();
         }
         if (uninterruptibly) {
             blockingStrategy.parkUninterruptibly(nanosToCloseDeficit);
@@ -108,25 +129,34 @@ public class SynchronizedBucket extends AbstractBucket {
     @Override
     protected void addTokensImpl(long tokensToAdd) {
         long currentTimeNanos = timeMeter.currentTimeNanos();
-        synchronized (this) {
+        lock.lock();
+        try {
             state.refillAllBandwidth(bandwidths, currentTimeNanos);
             state.addTokens(bandwidths, tokensToAdd);
+        } finally {
+            lock.unlock();
         }
     }
 
     @Override
     public long getAvailableTokens() {
         long currentTimeNanos = timeMeter.currentTimeNanos();
-        synchronized (this) {
+        lock.lock();
+        try {
             state.refillAllBandwidth(bandwidths, currentTimeNanos);
             return state.getAvailableTokens(bandwidths);
+        } finally {
+            lock.unlock();
         }
     }
 
     @Override
     public BucketState createSnapshot() {
-        synchronized (this) {
+        lock.lock();
+        try {
             return state.copy();
+        } finally {
+            lock.unlock();
         }
     }
 

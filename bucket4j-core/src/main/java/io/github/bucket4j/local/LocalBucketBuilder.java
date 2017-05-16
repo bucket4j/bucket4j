@@ -47,7 +47,7 @@ public class LocalBucketBuilder extends ConfigurationBuilder<LocalBucketBuilder>
         switch (synchronizationStrategy) {
             case LOCK_FREE: return new LockFreeBucket(configuration);
             case SYNCHRONIZED: return new SynchronizedBucket(configuration);
-            case NONE: return new UnsafeBucket(configuration);
+            case NONE: return new SynchronizedBucket(configuration, FakeLock.INSTANCE);
             default: throw new IllegalStateException();
         }
     }
