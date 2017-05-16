@@ -9,7 +9,7 @@ import java.util.concurrent.locks.Lock;
  */
 public class FakeLock implements Lock {
 
-    public static Lock INSTANCE = new FakeLock();
+    public static final Lock INSTANCE = new FakeLock();
 
     private FakeLock() {}
 
