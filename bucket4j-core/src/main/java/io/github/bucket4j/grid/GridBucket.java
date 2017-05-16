@@ -63,7 +63,7 @@ public class GridBucket<K extends Serializable> extends AbstractBucket {
     }
 
     @Override
-    protected ConsumptionResult tryConsumeAndReturnRemainingTokensImpl(long tokensToConsume) {
+    protected ConsumptionProbe tryConsumeAndReturnRemainingTokensImpl(long tokensToConsume) {
         return execute(new TryConsumeAndReturnRemainingTokensCommand(tokensToConsume));
     }
 

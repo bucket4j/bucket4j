@@ -20,7 +20,6 @@ package io.github.bucket4j
 import io.github.bucket4j.mock.BucketType
 import io.github.bucket4j.mock.BlockingStrategyMock
 import io.github.bucket4j.mock.TimeMeterMock
-import org.junit.After
 import spock.lang.Ignore
 import spock.lang.Specification
 import spock.lang.Timeout
@@ -55,6 +54,28 @@ class BucketSpecification extends Specification {
             n | requiredResult | toConsume | builder
             1 |     false      |     1     | Bucket4j.builder().withCustomTimePrecision(new TimeMeterMock(0)).addLimit(0, Bandwidth.simple(10, Duration.ofMinutes(100)))
             2 |      true      |     1     | Bucket4j.builder().withCustomTimePrecision(new TimeMeterMock(0)).addLimit(1, Bandwidth.simple(10, Duration.ofMinutes(100)))
+    }
+
+    @Unroll
+    def "#n tryConsumeAndReturnRemaining specification"(int n, long toConsume, boolean result, long expectedRemaining, long expectedWait, ConfigurationBuilder builder) {
+        expect:
+            for (BucketType type : BucketType.values()) {
+                TimeMeterMock mock = new TimeMeterMock(0)
+                builder.withCustomTimePrecision(mock)
+                Bucket bucket = type.createBucket(builder)
+                ConsumptionProbe probe = bucket.tryConsumeAndReturnRemaining(toConsume)
+
+                assert probe.consumed == result
+                assert probe.remainingTokens == expectedRemaining
+                assert probe.nanosToWaitForRefill == expectedWait
+            }
+        where:
+            n | toConsume | result  |  expectedRemaining | expectedWait | builder
+            1 |    49     |   true  |           51       |       0      | Bucket4j.builder().addLimit(100, Bandwidth.simple(100, Duration.ofNanos(100)))
+            2 |     1     |   true  |            0       |       0      | Bucket4j.builder().addLimit(1, Bandwidth.simple(100, Duration.ofNanos(100)))
+            3 |    80     |   false |           70       |      10      | Bucket4j.builder().addLimit(70, Bandwidth.simple(100, Duration.ofNanos(100)))
+            4 |    10     |   false |            0       |      10      | Bucket4j.builder().addLimit(0, Bandwidth.simple(100, Duration.ofNanos(100)))
+            5 |   120     |   false |           10       |     110      | Bucket4j.builder().addLimit(10, Bandwidth.simple(100, Duration.ofNanos(100)))
     }
 
     @Unroll

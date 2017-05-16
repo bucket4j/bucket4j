@@ -5,23 +5,23 @@ import java.io.Serializable;
 /**
  * Describes both result of consumption and tokens remaining in the bucket after consumption.
  *
- * @see Bucket#tryConsumeAndReturnRemainingTokens(long)
+ * @see Bucket#tryConsumeAndReturnRemaining(long)
  */
-public class ConsumptionResult implements Serializable {
+public class ConsumptionProbe implements Serializable {
 
     private final boolean consumed;
     private final long remainingTokens;
     private final long nanosToWaitForRefill;
 
-    public static ConsumptionResult consumed(long remainingTokens) {
-        return new ConsumptionResult(true, remainingTokens, 0);
+    public static ConsumptionProbe consumed(long remainingTokens) {
+        return new ConsumptionProbe(true, remainingTokens, 0);
     }
 
-    public static ConsumptionResult rejected(long remainingTokens, long nanosToWaitForRefill) {
-        return new ConsumptionResult(false, remainingTokens, nanosToWaitForRefill);
+    public static ConsumptionProbe rejected(long remainingTokens, long nanosToWaitForRefill) {
+        return new ConsumptionProbe(false, remainingTokens, nanosToWaitForRefill);
     }
 
-    private ConsumptionResult(boolean consumed, long remainingTokens, long nanosToWaitForRefill) {
+    private ConsumptionProbe(boolean consumed, long remainingTokens, long nanosToWaitForRefill) {
         this.consumed = consumed;
         this.remainingTokens = Math.max(0L, remainingTokens);
         this.nanosToWaitForRefill = nanosToWaitForRefill;
@@ -46,9 +46,9 @@ public class ConsumptionResult implements Serializable {
     }
 
     /**
-     * Returns time in nanos which need to wait until requested amount of tokens will be refilled
+     * Returns zero if {@link #isConsumed()} returns true, else time in nanos which need to wait until requested amount of tokens will be refilled
      *
-     * @return time in nanos which need to wait until requested amount of tokens will be refilled
+     * @return Zero if {@link #isConsumed()} returns true, else time in nanos which need to wait until requested amount of tokens will be refilled
      */
     public long getNanosToWaitForRefill() {
         return nanosToWaitForRefill;

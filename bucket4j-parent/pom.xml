@@ -49,7 +49,7 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <benchmark.jar.name>benchmarks</benchmark.jar.name>
-        <argLine></argLine>
+        <argLine/>
     </properties>
 
     <scm>
@@ -115,7 +115,7 @@
                         <include>**/*Specification.class</include>
                     </includes>
                     <!-- Travis build workaround -->
-                    <argLine>@{argLine} -Xms1024m -Xmx2048m</argLine>
+                    <argLine>-Xms1024m -Xmx2048m</argLine>
                 </configuration>
             </plugin>
         </plugins>
@@ -124,6 +124,9 @@
     <profiles>
         <profile>
             <id>bintray</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
             <build>
                 <plugins>
                     <plugin>
@@ -147,6 +150,23 @@
                                 </goals>
                             </execution>
                         </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>sonar</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <version>2.20</version>
+                        <configuration>
+                            <argLine>@{argLine} -Xms1024m -Xmx2048m</argLine>
+                        </configuration>
                     </plugin>
                 </plugins>
             </build>

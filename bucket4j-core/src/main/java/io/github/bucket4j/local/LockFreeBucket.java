@@ -83,7 +83,7 @@ public class LockFreeBucket extends AbstractBucket {
     }
 
     @Override
-    protected ConsumptionResult tryConsumeAndReturnRemainingTokensImpl(long tokensToConsume) {
+    protected ConsumptionProbe tryConsumeAndReturnRemainingTokensImpl(long tokensToConsume) {
         BucketState previousState = stateReference.get();
         BucketState newState = previousState.copy();
         long currentTimeNanos = timeMeter.currentTimeNanos();
@@ -93,11 +93,11 @@ public class LockFreeBucket extends AbstractBucket {
             long availableToConsume = newState.getAvailableTokens(bandwidths);
             if (tokensToConsume > availableToConsume) {
                 long nanosToWaitForRefill = newState.delayNanosAfterWillBePossibleToConsume(bandwidths, tokensToConsume);
-                return ConsumptionResult.rejected(availableToConsume, nanosToWaitForRefill);
+                return ConsumptionProbe.rejected(availableToConsume, nanosToWaitForRefill);
             }
             newState.consume(bandwidths, tokensToConsume);
             if (stateReference.compareAndSet(previousState, newState)) {
-                return ConsumptionResult.consumed(availableToConsume - tokensToConsume);
+                return ConsumptionProbe.consumed(availableToConsume - tokensToConsume);
             } else {
                 previousState = stateReference.get();
                 newState.copyStateFrom(previousState);

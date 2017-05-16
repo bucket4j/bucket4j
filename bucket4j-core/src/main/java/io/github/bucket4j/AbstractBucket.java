@@ -25,7 +25,7 @@ public abstract class AbstractBucket implements Bucket {
 
     protected abstract boolean tryConsumeImpl(long tokensToConsume);
 
-    protected abstract ConsumptionResult tryConsumeAndReturnRemainingTokensImpl(long tokensToConsume);
+    protected abstract ConsumptionProbe tryConsumeAndReturnRemainingTokensImpl(long tokensToConsume);
 
     protected abstract boolean consumeOrAwaitImpl(long tokensToConsume, long waitIfBusyNanos, boolean uninterruptibly, BlockingStrategy blockingStrategy) throws InterruptedException;
 
@@ -106,7 +106,7 @@ public abstract class AbstractBucket implements Bucket {
     }
 
     @Override
-    public ConsumptionResult tryConsumeAndReturnRemainingTokens(long tokensToConsume) {
+    public ConsumptionProbe tryConsumeAndReturnRemaining(long tokensToConsume) {
         if (tokensToConsume <= 0) {
             throw BucketExceptions.nonPositiveTokensToConsume(tokensToConsume);
         }

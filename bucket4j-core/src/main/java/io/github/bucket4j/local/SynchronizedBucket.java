@@ -79,7 +79,7 @@ public class SynchronizedBucket extends AbstractBucket {
     }
 
     @Override
-    protected ConsumptionResult tryConsumeAndReturnRemainingTokensImpl(long tokensToConsume) {
+    protected ConsumptionProbe tryConsumeAndReturnRemainingTokensImpl(long tokensToConsume) {
         long currentTimeNanos = timeMeter.currentTimeNanos();
         lock.lock();
         try {
@@ -87,10 +87,10 @@ public class SynchronizedBucket extends AbstractBucket {
             long availableToConsume = state.getAvailableTokens(bandwidths);
             if (tokensToConsume > availableToConsume) {
                 long nanosToWaitForRefill = state.delayNanosAfterWillBePossibleToConsume(bandwidths, tokensToConsume);
-                return ConsumptionResult.rejected(availableToConsume, nanosToWaitForRefill);
+                return ConsumptionProbe.rejected(availableToConsume, nanosToWaitForRefill);
             }
             state.consume(bandwidths, tokensToConsume);
-            return ConsumptionResult.consumed(availableToConsume - tokensToConsume);
+            return ConsumptionProbe.consumed(availableToConsume - tokensToConsume);
         } finally {
             lock.unlock();
         }

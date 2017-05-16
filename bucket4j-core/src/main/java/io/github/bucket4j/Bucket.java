@@ -46,9 +46,9 @@ public interface Bucket {
      * Tries to consume a specified number of tokens from this bucket.
      *
      * @param numTokens The number of tokens to consume from the bucket, must be a positive number.
-     * @return {@link ConsumptionResult} which describes both result of consumption and tokens remaining in the bucket after consumption.
+     * @return {@link ConsumptionProbe} which describes both result of consumption and tokens remaining in the bucket after consumption.
      */
-    ConsumptionResult tryConsumeAndReturnRemainingTokens(long numTokens);
+    ConsumptionProbe tryConsumeAndReturnRemaining(long numTokens);
 
     /**
      * Tries to consume as much tokens from this bucket as available at the moment of invocation.

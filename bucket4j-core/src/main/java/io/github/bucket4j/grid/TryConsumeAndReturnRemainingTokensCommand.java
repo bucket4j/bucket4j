@@ -3,12 +3,12 @@ package io.github.bucket4j.grid;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.BucketState;
-import io.github.bucket4j.ConsumptionResult;
+import io.github.bucket4j.ConsumptionProbe;
 
 /**
  * Created by vladimir.bukhtoyarov on 15.05.2017.
  */
-public class TryConsumeAndReturnRemainingTokensCommand implements GridCommand<ConsumptionResult> {
+public class TryConsumeAndReturnRemainingTokensCommand implements GridCommand<ConsumptionProbe> {
 
     private long tokensToConsume;
     private boolean bucketStateModified = false;
@@ -18,7 +18,7 @@ public class TryConsumeAndReturnRemainingTokensCommand implements GridCommand<Co
     }
 
     @Override
-    public ConsumptionResult execute(GridBucketState gridState) {
+    public ConsumptionProbe execute(GridBucketState gridState) {
         BucketConfiguration configuration = gridState.getBucketConfiguration();
         BucketState state = gridState.getBucketState();
         long currentTimeNanos = configuration.getTimeMeter().currentTimeNanos();
@@ -29,10 +29,10 @@ public class TryConsumeAndReturnRemainingTokensCommand implements GridCommand<Co
         if (tokensToConsume <= availableToConsume) {
             state.consume(bandwidths, tokensToConsume);
             bucketStateModified = true;
-            return ConsumptionResult.consumed(availableToConsume - tokensToConsume);
+            return ConsumptionProbe.consumed(availableToConsume - tokensToConsume);
         } else {
             long nanosToWaitForRefill = state.delayNanosAfterWillBePossibleToConsume(bandwidths, tokensToConsume);
-            return ConsumptionResult.rejected(availableToConsume, nanosToWaitForRefill);
+            return ConsumptionProbe.rejected(availableToConsume, nanosToWaitForRefill);
         }
     }
 
