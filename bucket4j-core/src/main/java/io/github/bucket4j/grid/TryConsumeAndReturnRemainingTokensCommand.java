@@ -5,9 +5,7 @@ import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.BucketState;
 import io.github.bucket4j.ConsumptionProbe;
 
-/**
- * Created by vladimir.bukhtoyarov on 15.05.2017.
- */
+
 public class TryConsumeAndReturnRemainingTokensCommand implements GridCommand<ConsumptionProbe> {
 
     private long tokensToConsume;

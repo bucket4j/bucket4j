@@ -24,7 +24,6 @@ import io.github.bucket4j.grid.GridCommand;
 import io.github.bucket4j.grid.GridProxy;
 
 import java.io.*;
-import java.util.concurrent.ThreadLocalRandom;
 
 public class GridProxyMock implements GridProxy {
 

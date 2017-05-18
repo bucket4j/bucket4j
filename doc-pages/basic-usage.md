@@ -90,6 +90,7 @@ public class ThrottlingFilter implements javax.servlet.Filter {
             filterChain.doFilter(servletRequest, servletResponse);
         } else {
             // limit is exceeded
+            HttpServletResponse httpResponse = (HttpServletResponse) servletResponse;
             httpResponse.setContentType("text/plain");
             httpResponse.setStatus(429);
             httpResponse.getWriter().append("Too many requests");
