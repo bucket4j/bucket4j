@@ -44,15 +44,7 @@ public class JCacheProxyManager<K extends Serializable> implements ProxyManager<
 
     @Override
     public Bucket getProxy(K key, Supplier<BucketConfiguration> supplier) {
-        return GridBucket.createLazyBucket(key, decorateSupplier(supplier), gridProxy);
-    }
-
-    private Supplier<BucketConfiguration> decorateSupplier(Supplier<BucketConfiguration> supplier) {
-        if (supplier instanceof LazySupplier) {
-            return supplier;
-        } else {
-            return new LazySupplier<>(supplier);
-        }
+        return GridBucket.createLazyBucket(key, new LazySupplier<>(supplier), gridProxy);
     }
 
 }

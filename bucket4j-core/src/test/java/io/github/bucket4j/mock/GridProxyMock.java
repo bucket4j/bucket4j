@@ -34,7 +34,11 @@ public class GridProxyMock implements GridProxy {
     public CommandResult execute(Serializable key, GridCommand command) {
         emulateSerialization(key);
         command = emulateSerialization(command);
-        Serializable resultData = command.execute(state);
+        GridBucketState newState = emulateSerialization(state);
+        Serializable resultData = command.execute(newState);
+        if (command.isBucketStateModified()) {
+            state = newState;
+        }
         resultData = emulateSerialization(resultData);
         return CommandResult.success(resultData);
     }
