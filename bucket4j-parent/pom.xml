@@ -49,6 +49,7 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <benchmark.jar.name>benchmarks</benchmark.jar.name>
+        <sonar.jacoco.reportPath>${project.basedir}/../bucket4j-parent/target/jacoco-merged.exec</sonar.jacoco.reportPath>
         <argLine/>
     </properties>
 
@@ -155,12 +156,45 @@
             </build>
         </profile>
         <profile>
-            <id>sonar</id>
+            <id>coverage</id>
             <activation>
                 <activeByDefault>false</activeByDefault>
             </activation>
             <build>
                 <plugins>
+                    <plugin>
+                        <groupId>org.jacoco</groupId>
+                        <artifactId>jacoco-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>agent-for-ut</id>
+                                <goals>
+                                    <goal>prepare-agent</goal>
+                                </goals>
+                                <configuration>
+                                    <append>true</append>
+                                    <destFile>${sonar.jacoco.reportPath}</destFile>
+                                </configuration>
+                            </execution>
+                            <!--<execution>-->
+                                <!--<id>agent-for-it</id>-->
+                                <!--<goals>-->
+                                    <!--<goal>prepare-agent-integration</goal>-->
+                                <!--</goals>-->
+                            <!--</execution>-->
+                            <execution>
+                                <id>jacoco-site</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>report</goal>
+                                    <goal>report-aggregate</goal>
+                                </goals>
+                                <configuration>
+                                    <dataFile>${sonar.jacoco.reportPath}</dataFile>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
                     <plugin>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <version>2.20</version>
