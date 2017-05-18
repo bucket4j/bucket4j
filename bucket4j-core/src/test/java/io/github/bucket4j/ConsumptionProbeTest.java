@@ -15,20 +15,26 @@
  *    limitations under the License.
  */
 
-package io.github.bucket4j.grid;
+package io.github.bucket4j;
 
-import io.github.bucket4j.BucketState;
+import org.junit.Test;
 
-public class CreateSnapshotCommand implements GridCommand<BucketState> {
+import static org.junit.Assert.*;
 
-    @Override
-    public BucketState execute(GridBucketState gridState) {
-        return gridState.getBucketState().copy();
+
+public class ConsumptionProbeTest {
+
+    @Test
+    public void getRemainingTokens() throws Exception {
+        assertEquals(0, ConsumptionProbe.rejected(-1, 10).getRemainingTokens());
+        assertEquals(0, ConsumptionProbe.rejected(0, 10).getRemainingTokens());
     }
 
-    @Override
-    public boolean isBucketStateModified() {
-        return false;
+    @Test
+    public void testToString() throws Exception {
+        System.out.println(ConsumptionProbe.consumed(1));
+        System.out.println(ConsumptionProbe.rejected(-1, 10));
+        System.out.println(ConsumptionProbe.rejected(0, 10));
     }
 
 }

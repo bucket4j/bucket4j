@@ -1,4 +1,3 @@
-
 /*
  *
  *   Copyright 2015-2017 Vladimir Bukhtoyarov
@@ -20,7 +19,7 @@ package io.github.bucket4j.grid;
 
 import java.io.Serializable;
 
-public class CommandResult<T> implements Serializable {
+public class CommandResult<T extends Serializable> implements Serializable {
 
     private static final CommandResult NOT_FOUND = new CommandResult(null, true);
 
@@ -32,11 +31,11 @@ public class CommandResult<T> implements Serializable {
         this.bucketNotFound = bucketNotFound;
     }
 
-    public static <R> CommandResult<R> success(R data) {
-        return new CommandResult<R>(data, false);
+    public static <R extends Serializable> CommandResult<R> success(R data) {
+        return new CommandResult<>(data, false);
     }
 
-    public static <R> CommandResult<R> bucketNotFound() {
+    public static <R extends Serializable> CommandResult<R> bucketNotFound() {
         return NOT_FOUND;
     }
 

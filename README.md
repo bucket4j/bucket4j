@@ -29,7 +29,7 @@ Documentation for previous versions:
 ## Get Bucket4j library
 
 #### By direct link
-[Download compiled jar, sources, javadocs](https://github.com/vladimir-bukhtoyarov/bucket4j/releases/tag/2.0.1)
+[Download compiled jar, sources, javadocs](https://github.com/vladimir-bukhtoyarov/bucket4j/releases/tag/2.1.0)
 
 #### You can build Bucket4j from sources
 ```bash
@@ -45,7 +45,7 @@ use any of them:
 <dependency>
     <groupId>com.github.vladimir-bukhtoyarov</groupId>
     <artifactId>bucket4j-core</artifactId>
-    <version>2.0.1</version>
+    <version>2.1.0</version>
 </dependency>
 ```
 To use JCache extension you also need to add following dependency:
@@ -53,7 +53,7 @@ To use JCache extension you also need to add following dependency:
 <dependency>
     <groupId>com.github.vladimir-bukhtoyarov</groupId>
     <artifactId>bucket4j-jcache</artifactId>
-    <version>2.0.1</version>
+    <version>2.1.0</version>
 </dependency>
 ```
 

@@ -30,17 +30,17 @@ public class LazySupplier<T> implements Supplier<T> {
 
     @Override
     public T get() {
-        Holder<T> holder = this.holder;
-        if (holder == null) {
+        Holder<T> localHolder = this.holder;
+        if (localHolder == null) {
             synchronized (this) {
-                holder = this.holder;
-                if (holder == null) {
-                    holder = new Holder<>(supplier.get());
-                    this.holder = holder;
+                localHolder = this.holder;
+                if (localHolder == null) {
+                    localHolder = new Holder<>(supplier.get());
+                    this.holder = localHolder;
                 }
             }
         }
-        return holder.value;
+        return localHolder.value;
     }
 
     private static final class Holder<T> {

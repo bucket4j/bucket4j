@@ -21,7 +21,7 @@
 
     <groupId>com.github.vladimir-bukhtoyarov</groupId>
     <artifactId>bucket4j-parent</artifactId>
-    <version>2.0.1</version>
+    <version>2.1.0</version>
     <packaging>pom</packaging>
 
     <name>bucket4-parent</name>
@@ -49,6 +49,8 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <benchmark.jar.name>benchmarks</benchmark.jar.name>
+        <sonar.jacoco.reportPath>${project.basedir}/../bucket4j-parent/target/jacoco-merged.exec</sonar.jacoco.reportPath>
+        <argLine/>
     </properties>
 
     <scm>
@@ -122,38 +124,10 @@
 
     <profiles>
         <profile>
-            <id>coverall</id>
+            <id>bintray</id>
             <activation>
                 <activeByDefault>false</activeByDefault>
             </activation>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.jacoco</groupId>
-                        <artifactId>jacoco-maven-plugin</artifactId>
-                        <version>0.7.2.201409121644</version>
-                        <executions>
-                            <execution>
-                                <id>prepare-agent</id>
-                                <goals>
-                                    <goal>prepare-agent</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.eluder.coveralls</groupId>
-                        <artifactId>coveralls-maven-plugin</artifactId>
-                        <version>3.1.0</version>
-                        <configuration>
-                            <repoToken>${env.coverallToken}</repoToken>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
-            <id>bintray</id>
             <build>
                 <plugins>
                     <plugin>
@@ -177,6 +151,56 @@
                                 </goals>
                             </execution>
                         </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>coverage</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.jacoco</groupId>
+                        <artifactId>jacoco-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>agent-for-ut</id>
+                                <goals>
+                                    <goal>prepare-agent</goal>
+                                </goals>
+                                <configuration>
+                                    <append>true</append>
+                                    <destFile>${sonar.jacoco.reportPath}</destFile>
+                                </configuration>
+                            </execution>
+                            <!--<execution>-->
+                                <!--<id>agent-for-it</id>-->
+                                <!--<goals>-->
+                                    <!--<goal>prepare-agent-integration</goal>-->
+                                <!--</goals>-->
+                            <!--</execution>-->
+                            <execution>
+                                <id>jacoco-site</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>report</goal>
+                                    <goal>report-aggregate</goal>
+                                </goals>
+                                <configuration>
+                                    <dataFile>${sonar.jacoco.reportPath}</dataFile>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <version>2.20</version>
+                        <configuration>
+                            <argLine>@{argLine} -Xms1024m -Xmx2048m</argLine>
+                        </configuration>
                     </plugin>
                 </plugins>
             </build>

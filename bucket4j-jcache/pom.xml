@@ -23,7 +23,7 @@
     <parent>
         <groupId>com.github.vladimir-bukhtoyarov</groupId>
         <artifactId>bucket4j-parent</artifactId>
-        <version>2.0.1</version>
+        <version>2.1.0</version>
         <relativePath>../bucket4j-parent</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -70,6 +70,11 @@
             <artifactId>ignite-core</artifactId>
             <version>1.8.0</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.gridkit.lab</groupId>
+            <artifactId>nanocloud</artifactId>
+            <version>0.8.12</version>
         </dependency>
     </dependencies>
 

@@ -86,4 +86,8 @@ public final class BucketExceptions {
         return new IllegalArgumentException(msg);
     }
 
+    private BucketExceptions() {
+        // private constructor for utility class
+    }
+
 }

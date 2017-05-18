@@ -1,4 +1,3 @@
-
 /*
  *
  *   Copyright 2015-2017 Vladimir Bukhtoyarov
@@ -37,6 +36,10 @@ public class Bucket4j {
         for (Extension extension : ServiceLoader.load(Extension.class)) {
             extensions.put(extension.getClass(), extension);
         }
+    }
+
+    private Bucket4j() {
+        // to avoid initialization of utility class
     }
 
     /**

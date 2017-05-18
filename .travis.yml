@@ -1,5 +1,3 @@
 language: java
 jdk:
   - oraclejdk8
-after_success:
-  - mvn clean test jacoco:report coveralls:report -P coverall

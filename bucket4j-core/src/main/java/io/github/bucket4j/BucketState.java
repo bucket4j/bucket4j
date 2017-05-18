@@ -47,8 +47,7 @@ public class BucketState implements Serializable {
         setLastRefillTimeNanos(currentTimeNanos);
     }
 
-    @Override
-    public BucketState clone() {
+    public BucketState copy() {
         return new BucketState(stateData.clone());
     }
 

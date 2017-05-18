@@ -90,7 +90,6 @@ public class ThrottlingFilter implements javax.servlet.Filter {
             filterChain.doFilter(servletRequest, servletResponse);
         } else {
             // limit is exceeded
-            HttpServletResponse httpResponse = (HttpServletResponse) servletResponse;
             httpResponse.setContentType("text/plain");
             httpResponse.setStatus(429);
             httpResponse.getWriter().append("Too many requests");
@@ -98,4 +97,21 @@ public class ThrottlingFilter implements javax.servlet.Filter {
     }
 
 }
+```
+If you want provide more information to end user about the state of bucket, then last fragment of code above can be rewritten in following way:
+```java
+        HttpServletResponse httpResponse = (HttpServletResponse) servletResponse;
+        ConsumptionProbe probe = bucket.tryConsumeAndReturnRemaining(1);
+        if (probe.isConsumed()) {
+            // the limit is not exceeded
+            httpResponse.setHeader("X-Rate-Limit-Remaining", "" + probe.getRemainingTokens());
+            filterChain.doFilter(servletRequest, servletResponse);
+        } else {
+            // limit is exceeded
+            HttpServletResponse httpResponse = (HttpServletResponse) servletResponse;
+            httpResponse.setStatus(429);
+            httpResponse.setHeader("X-Rate-Limit-Retry-After-Seconds", "" + TimeUnit.NANOSECONDS.toSeconds(probe.getNanosToWaitForRefill()));
+            httpResponse.setContentType("text/plain");
+            httpResponse.getWriter().append("Too many requests");
+        }
 ```

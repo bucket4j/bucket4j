@@ -63,6 +63,11 @@ public class GridBucket<K extends Serializable> extends AbstractBucket {
     }
 
     @Override
+    protected ConsumptionProbe tryConsumeAndReturnRemainingTokensImpl(long tokensToConsume) {
+        return execute(new TryConsumeAndReturnRemainingTokensCommand(tokensToConsume));
+    }
+
+    @Override
     protected boolean consumeOrAwaitImpl(long tokensToConsume, long waitIfBusyNanosLimit, boolean uninterruptibly, BlockingStrategy blockingStrategy) throws InterruptedException {
         final ReserveAndCalculateTimeToSleepCommand consumeCommand = new ReserveAndCalculateTimeToSleepCommand(tokensToConsume, waitIfBusyNanosLimit);
         long nanosToSleep = execute(consumeCommand);
@@ -82,6 +87,11 @@ public class GridBucket<K extends Serializable> extends AbstractBucket {
     @Override
     protected void addTokensImpl(long tokensToAdd) {
         execute(new AddTokensCommand(tokensToAdd));
+    }
+
+    @Override
+    public long getAvailableTokens() {
+        return execute(new GetAvailableTokensCommand());
     }
 
     @Override

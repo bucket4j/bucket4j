@@ -25,6 +25,8 @@ public abstract class AbstractBucket implements Bucket {
 
     protected abstract boolean tryConsumeImpl(long tokensToConsume);
 
+    protected abstract ConsumptionProbe tryConsumeAndReturnRemainingTokensImpl(long tokensToConsume);
+
     protected abstract boolean consumeOrAwaitImpl(long tokensToConsume, long waitIfBusyNanos, boolean uninterruptibly, BlockingStrategy blockingStrategy) throws InterruptedException;
 
     protected abstract void addTokensImpl(long tokensToAdd);
@@ -67,6 +69,7 @@ public abstract class AbstractBucket implements Bucket {
         try {
             consumeOrAwaitImpl(tokensToConsume, UNSPECIFIED_WAITING_LIMIT, true, blockingStrategy);
         } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             throw new IllegalStateException("Should never come here", e);
         }
     }
@@ -84,6 +87,7 @@ public abstract class AbstractBucket implements Bucket {
         try {
             return consumeOrAwaitImpl(tokensToConsume, maxWaitTimeNanos, true, blockingStrategy);
         } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             throw new IllegalStateException("Should never come here", e);
         }
     }
@@ -99,6 +103,14 @@ public abstract class AbstractBucket implements Bucket {
     @Override
     public long tryConsumeAsMuchAsPossible() {
         return consumeAsMuchAsPossibleImpl(Long.MAX_VALUE);
+    }
+
+    @Override
+    public ConsumptionProbe tryConsumeAndReturnRemaining(long tokensToConsume) {
+        if (tokensToConsume <= 0) {
+            throw BucketExceptions.nonPositiveTokensToConsume(tokensToConsume);
+        }
+        return tryConsumeAndReturnRemainingTokensImpl(tokensToConsume);
     }
 
     @Override
