@@ -59,6 +59,7 @@ To use JCache extension you also need to add following dependency:
 
 ## Third-party libraries which uses bucket4j
 - [JHipster API Gateway](https://jhipster.github.io/api-gateway/#rate_limiting)
+- [Spring Boot Starter for Bucket4j](https://github.com/MarcGiffing/bucket4j-spring-boot-starter)
 - [Dropwizard Ratelimit](https://github.com/zivver/dropwizard-ratelimit)
 
 ## Have a question?
