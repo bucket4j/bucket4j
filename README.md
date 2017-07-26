@@ -19,6 +19,7 @@ The items placed in recommended to read order:
 * [Brief overview of token-bucket algorithm](doc-pages/token-bucket-brief-overview.md) - the brief overview of token-bucket algorithm. 
 * [Jcache integration](doc-pages/jcache-usage.md) - documentation and examples about usage ```Bucket4j``` with in-memory grids which supports ```JCache API (JSR 107)``` specification.
 * [Advanced usage](doc-pages/advanced-usage.md) - examples of advanced usage.
+* [Spring Boot integration](https://github.com/MarcGiffing/bucket4j-spring-boot-starter) - third-party library developed by @MarcGiffing.
 
 Documentation for previous versions:
 * [1.0](https://github.com/vladimir-bukhtoyarov/bucket4j/tree/release_1-0) ```10 May 2015``` First version of bucket4j library
