@@ -70,8 +70,11 @@ public class ConfigurationBuilder<T extends ConfigurationBuilder> {
      * Creates instance of {@link ConfigurationBuilder} which will create buckets with {@link TimeMeter#SYSTEM_NANOTIME} as time meter.
      *
      * @return this builder instance
+     *
+     * @throws UnsupportedOperationException if particular extension behind the bucket does not support the time measurement customization.
+     * @see Extension#isCustomTimeMeasurementSupported()
      */
-    public T withNanosecondPrecision() {
+    public T withNanosecondPrecision() throws UnsupportedOperationException {
         this.timeMeter = TimeMeter.SYSTEM_NANOTIME;
         return (T) this;
     }
@@ -80,8 +83,10 @@ public class ConfigurationBuilder<T extends ConfigurationBuilder> {
      * Creates instance of {@link ConfigurationBuilder} which will create buckets with {@link TimeMeter#SYSTEM_MILLISECONDS} as time meter.
      *
      * @return this builder instance
+     * @throws UnsupportedOperationException if particular extension behind the bucket does not support the time measurement customization.
+     * @see Extension#isCustomTimeMeasurementSupported()
      */
-    public T withMillisecondPrecision() {
+    public T withMillisecondPrecision() throws UnsupportedOperationException {
         this.timeMeter = TimeMeter.SYSTEM_MILLISECONDS;
         return (T) this;
     }
@@ -92,8 +97,10 @@ public class ConfigurationBuilder<T extends ConfigurationBuilder> {
      * @param customTimeMeter object which will measure time.
      *
      * @return this builder instance
+     * @throws UnsupportedOperationException if particular extension behind the bucket does not support the time measurement customization.
+     * @see Extension#isCustomTimeMeasurementSupported()
      */
-    public T withCustomTimePrecision(TimeMeter customTimeMeter) {
+    public T withCustomTimePrecision(TimeMeter customTimeMeter) throws UnsupportedOperationException {
         if (customTimeMeter == null) {
             throw BucketExceptions.nullTimeMeter();
         }

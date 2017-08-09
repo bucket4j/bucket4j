@@ -35,6 +35,17 @@ package io.github.bucket4j;
 public interface Bucket {
 
     /**
+     * Gets asynchronous view of this bucket.
+     *
+     * <p>If asynchronous mode is not supported by extension(see {@link Extension#isAsyncModeSupported()}) any attempt to call {@link Bucket#asAsync()} will fail with {@link UnsupportedOperationException}
+     *
+     * @return Instance of this bucket with asynchronous mode enabled.
+     *
+     * @throws UnsupportedOperationException if particular extension behind the bucket does not support asynchronous mode.
+     */
+    AsyncBucket asAsync() throws UnsupportedOperationException;
+
+    /**
      * Tries to consume a specified number of tokens from this bucket.
      *
      * @param numTokens The number of tokens to consume from the bucket, must be a positive number.
