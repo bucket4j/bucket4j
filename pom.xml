@@ -20,11 +20,17 @@
 
     <groupId>com.github.vladimir-bukhtoyarov</groupId>
     <artifactId>bucket4j</artifactId>
-    <version>2.1.0</version>
+    <version>2.2.0</version>
     <modules>
         <module>bucket4j-parent</module>
         <module>bucket4j-core</module>
         <module>bucket4j-jcache</module>
+        <module>bucket4j-hazelcast</module>
+        <module>bucket4j-ignite</module>
+        <module>bucket4j-infinispan</module>
+        <module>bucket4j-redis</module>
+        <module>bucket4j-mysql</module>
+        <module>bucket4j-postgresql</module>
         <!--<module>bucket4j-benchmarks</module>-->
     </modules>
     <packaging>pom</packaging>

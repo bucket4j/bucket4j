@@ -24,7 +24,7 @@
 
     <groupId>com.github.vladimir-bukhtoyarov</groupId>
     <artifactId>release-reactor</artifactId>
-    <version>2.1.0</version>
+    <version>2.2.0</version>
     <packaging>pom</packaging>
 
     <properties>
@@ -35,6 +35,9 @@
         <module>../bucket4j-parent</module>
         <module>../bucket4j-core</module>
         <module>../bucket4j-jcache</module>
+        <module>../bucket4j-hazelcast</module>
+        <module>../bucket4j-ignite</module>
+        <module>../bucket4j-infinispan</module>
     </modules>
 
 </project>
