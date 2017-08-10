@@ -18,6 +18,9 @@
 package io.github.bucket4j.mock;
 
 
+import io.github.bucket4j.BucketConfiguration;
+import io.github.bucket4j.BucketState;
+import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.grid.CommandResult;
 import io.github.bucket4j.grid.GridBucketState;
 import io.github.bucket4j.grid.GridCommand;
@@ -27,14 +30,19 @@ import java.io.*;
 
 public class GridProxyMock implements GridProxy {
 
+    private final TimeMeter timeMeter;
     private GridBucketState state;
+
+    public GridProxyMock(TimeMeter timeMeter) {
+        this.timeMeter = timeMeter;
+    }
 
     @Override
     public CommandResult execute(Serializable key, GridCommand command) {
         emulateSerialization(key);
         command = emulateSerialization(command);
         GridBucketState newState = emulateSerialization(state);
-        Serializable resultData = command.execute(newState);
+        Serializable resultData = command.execute(newState, timeMeter.currentTimeNanos());
         if (command.isBucketStateModified()) {
             state = newState;
         }
@@ -43,8 +51,9 @@ public class GridProxyMock implements GridProxy {
     }
 
     @Override
-    public void setInitialState(Serializable key, GridBucketState initialState) {
-        this.state = initialState;
+    public void createInitialState(Serializable key, BucketConfiguration configuration) {
+        BucketState bucketState = BucketState.createInitialState(configuration, timeMeter.currentTimeNanos());
+        this.state = new GridBucketState(configuration, bucketState);
     }
 
     @Override

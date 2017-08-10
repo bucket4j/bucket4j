@@ -37,16 +37,54 @@ public abstract class AbstractBucket implements Bucket {
     private final AsyncBucket asyncView;
 
     public AbstractBucket() {
-        if (isAsyncModeSupported()) {
-            asyncView = createAsyncView();
-        } else {
-            asyncView = null;
-        }
+        asyncView = new AsyncBucket() {
+            @Override
+            public CompletableFuture<Boolean> tryConsume(long numTokens) {
+                // TODO
+                return null;
+            }
+
+            @Override
+            public CompletableFuture<ConsumptionProbe> tryConsumeAndReturnRemaining(long numTokens) {
+                // TODO
+                return null;
+            }
+
+            @Override
+            public CompletableFuture<Long> tryConsumeAsMuchAsPossible() {
+                // TODO
+                return null;
+            }
+
+            @Override
+            public CompletableFuture<Long> tryConsumeAsMuchAsPossible(long limit) {
+                // TODO
+                return null;
+            }
+
+            @Override
+            public CompletableFuture<Void> addTokens(long tokensToAdd) {
+                // TODO
+                return null;
+            }
+
+            @Override
+            public CompletableFuture<Boolean> consume(long numTokens, long maxWaitTimeNanos, ScheduledExecutorService scheduler) throws InterruptedException {
+                // TODO
+                return null;
+            }
+
+            @Override
+            public CompletableFuture<Void> consume(long numTokens, ScheduledExecutorService scheduler) throws InterruptedException {
+                // TODO
+                return null;
+            }
+        };
     }
 
     @Override
     public AsyncBucket asAsync() throws UnsupportedOperationException {
-        if (asyncView == null) {
+        if (!isAsyncModeSupported()) {
             throw new UnsupportedOperationException();
         }
         return asyncView;
@@ -140,53 +178,6 @@ public abstract class AbstractBucket implements Bucket {
             throw new IllegalArgumentException("tokensToAdd should be >= 0");
         }
         addTokensImpl(tokensToAdd);
-    }
-
-
-    private AsyncBucket createAsyncView() {
-        return new AsyncBucket() {
-            @Override
-            public CompletableFuture<Boolean> tryConsume(long numTokens) {
-                // TODO
-                return null;
-            }
-
-            @Override
-            public CompletableFuture<ConsumptionProbe> tryConsumeAndReturnRemaining(long numTokens) {
-                // TODO
-                return null;
-            }
-
-            @Override
-            public CompletableFuture<Long> tryConsumeAsMuchAsPossible() {
-                // TODO
-                return null;
-            }
-
-            @Override
-            public CompletableFuture<Long> tryConsumeAsMuchAsPossible(long limit) {
-                // TODO
-                return null;
-            }
-
-            @Override
-            public CompletableFuture<Void> addTokens(long tokensToAdd) {
-                // TODO
-                return null;
-            }
-
-            @Override
-            public CompletableFuture<Boolean> consume(long numTokens, long maxWaitTimeNanos, ScheduledExecutorService scheduler) throws InterruptedException {
-                // TODO
-                return null;
-            }
-
-            @Override
-            public CompletableFuture<Void> consume(long numTokens, ScheduledExecutorService scheduler) throws InterruptedException {
-                // TODO
-                return null;
-            }
-        };
     }
 
 }
