@@ -3,11 +3,11 @@ package io.github.bucket4j.local;
 import io.github.bucket4j.Extension;
 
 /**
- *
+ * TODO
  */
-public class InMemoryExtension implements Extension<LocalBucketBuilder> {
+public class LocalExtension implements Extension<LocalBucketBuilder> {
 
-    public static InMemoryExtension INSTANCE = new InMemoryExtension();
+    public static LocalExtension INSTANCE = new LocalExtension();
 
     @Override
     public LocalBucketBuilder builder() {

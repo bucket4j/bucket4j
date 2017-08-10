@@ -25,4 +25,5 @@ public interface GridProxy<K extends Serializable> {
 
     void setInitialState(K key, GridBucketState initialState);
 
+    boolean isAsyncModeSupported();
 }

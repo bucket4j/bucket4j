@@ -36,6 +36,7 @@ public class SynchronizedBucket extends AbstractBucket {
     }
 
     public SynchronizedBucket(BucketConfiguration configuration, Lock lock) {
+        super(true);
         this.configuration = configuration;
         this.bandwidths = configuration.getBandwidths();
         this.timeMeter = configuration.getTimeMeter();

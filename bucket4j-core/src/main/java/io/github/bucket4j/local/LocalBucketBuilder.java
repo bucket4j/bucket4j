@@ -20,11 +20,16 @@ package io.github.bucket4j.local;
 import io.github.bucket4j.ConfigurationBuilder;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketConfiguration;
+import io.github.bucket4j.Extension;
 
 /**
  * This builder creates in-memory buckets ({@link LockFreeBucket}).
  */
 public class LocalBucketBuilder extends ConfigurationBuilder<LocalBucketBuilder> {
+
+    protected LocalBucketBuilder() {
+        super(LocalExtension.INSTANCE);
+    }
 
     /**
      * Constructs the bucket using {@link SynchronizationStrategy#LOCK_FREE} synchronization strategy.

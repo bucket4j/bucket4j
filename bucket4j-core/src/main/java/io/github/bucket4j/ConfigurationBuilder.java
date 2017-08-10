@@ -20,6 +20,7 @@ package io.github.bucket4j;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * A builder for buckets. Builder can be reused, i.e. one builder can create multiple buckets with similar configuration.
@@ -27,12 +28,14 @@ import java.util.List;
  */
 public class ConfigurationBuilder<T extends ConfigurationBuilder> {
 
+    private final Extension extension;
     private TimeMeter timeMeter;
     private List<BandwidthDefinition> bandwidths;
 
-    protected ConfigurationBuilder() {
-        timeMeter = TimeMeter.SYSTEM_MILLISECONDS;
-        bandwidths = new ArrayList<>(1);
+    protected ConfigurationBuilder(Extension extension) {
+        this.extension = Objects.requireNonNull(extension); // TODO unit tests for null checking
+        this.timeMeter = TimeMeter.SYSTEM_MILLISECONDS;
+        this.bandwidths = new ArrayList<>(1);
     }
 
     /**
@@ -75,6 +78,10 @@ public class ConfigurationBuilder<T extends ConfigurationBuilder> {
      * @see Extension#isCustomTimeMeasurementSupported()
      */
     public T withNanosecondPrecision() throws UnsupportedOperationException {
+        if (!extension.isCustomTimeMeasurementSupported()) {
+            // TODO add unit test
+            throw new UnsupportedOperationException();
+        }
         this.timeMeter = TimeMeter.SYSTEM_NANOTIME;
         return (T) this;
     }
@@ -87,6 +94,10 @@ public class ConfigurationBuilder<T extends ConfigurationBuilder> {
      * @see Extension#isCustomTimeMeasurementSupported()
      */
     public T withMillisecondPrecision() throws UnsupportedOperationException {
+        if (!extension.isCustomTimeMeasurementSupported()) {
+            // TODO add unit test
+            throw new UnsupportedOperationException();
+        }
         this.timeMeter = TimeMeter.SYSTEM_MILLISECONDS;
         return (T) this;
     }
@@ -101,6 +112,10 @@ public class ConfigurationBuilder<T extends ConfigurationBuilder> {
      * @see Extension#isCustomTimeMeasurementSupported()
      */
     public T withCustomTimePrecision(TimeMeter customTimeMeter) throws UnsupportedOperationException {
+        if (!extension.isCustomTimeMeasurementSupported()) {
+            // TODO add unit test
+            throw new UnsupportedOperationException();
+        }
         if (customTimeMeter == null) {
             throw BucketExceptions.nullTimeMeter();
         }

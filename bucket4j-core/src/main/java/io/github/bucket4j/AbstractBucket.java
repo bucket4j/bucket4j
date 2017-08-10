@@ -17,6 +17,9 @@
 
 package io.github.bucket4j;
 
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ScheduledExecutorService;
+
 public abstract class AbstractBucket implements Bucket {
 
     protected static final long UNSPECIFIED_WAITING_LIMIT = -1;
@@ -30,6 +33,24 @@ public abstract class AbstractBucket implements Bucket {
     protected abstract boolean consumeOrAwaitImpl(long tokensToConsume, long waitIfBusyNanos, boolean uninterruptibly, BlockingStrategy blockingStrategy) throws InterruptedException;
 
     protected abstract void addTokensImpl(long tokensToAdd);
+
+    private final AsyncBucket asyncView;
+
+    public AbstractBucket(boolean asyncSupported) {
+        if (asyncSupported) {
+            asyncView = createAsyncView();
+        } else {
+            asyncView = null;
+        }
+    }
+
+    @Override
+    public AsyncBucket asAsync() throws UnsupportedOperationException {
+        if (asyncView == null) {
+            throw new UnsupportedOperationException();
+        }
+        return asyncView;
+    }
 
     @Override
     public boolean tryConsume(long tokensToConsume) {
@@ -119,6 +140,53 @@ public abstract class AbstractBucket implements Bucket {
             throw new IllegalArgumentException("tokensToAdd should be >= 0");
         }
         addTokensImpl(tokensToAdd);
+    }
+
+
+    private AsyncBucket createAsyncView() {
+        return new AsyncBucket() {
+            @Override
+            public CompletableFuture<Boolean> tryConsume(long numTokens) {
+                // TODO
+                return null;
+            }
+
+            @Override
+            public CompletableFuture<ConsumptionProbe> tryConsumeAndReturnRemaining(long numTokens) {
+                // TODO
+                return null;
+            }
+
+            @Override
+            public CompletableFuture<Long> tryConsumeAsMuchAsPossible() {
+                // TODO
+                return null;
+            }
+
+            @Override
+            public CompletableFuture<Long> tryConsumeAsMuchAsPossible(long limit) {
+                // TODO
+                return null;
+            }
+
+            @Override
+            public CompletableFuture<Void> addTokens(long tokensToAdd) {
+                // TODO
+                return null;
+            }
+
+            @Override
+            public CompletableFuture<Boolean> consume(long numTokens, long maxWaitTimeNanos, ScheduledExecutorService scheduler) throws InterruptedException {
+                // TODO
+                return null;
+            }
+
+            @Override
+            public CompletableFuture<Void> consume(long numTokens, ScheduledExecutorService scheduler) throws InterruptedException {
+                // TODO
+                return null;
+            }
+        };
     }
 
 }

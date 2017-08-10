@@ -30,6 +30,7 @@ public class LockFreeBucket extends AbstractBucket {
     private final AtomicReference<BucketState> stateReference;
 
     public LockFreeBucket(BucketConfiguration configuration) {
+        super(true);
         this.configuration = configuration;
         this.bandwidths = configuration.getBandwidths();
         this.timeMeter = configuration.getTimeMeter();

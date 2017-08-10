@@ -43,6 +43,7 @@ public class GridBucket<K extends Serializable> extends AbstractBucket {
     }
 
     private GridBucket(K key, Supplier<BucketConfiguration> configurationSupplier, GridProxy<K> gridProxy, RecoveryStrategy recoveryStrategy, boolean initializeBucket) {
+        super(gridProxy.isAsyncModeSupported());
         this.key = key;
         this.gridProxy = gridProxy;
         this.recoveryStrategy = recoveryStrategy;

@@ -47,6 +47,11 @@ public class GridProxyMock implements GridProxy {
         this.state = initialState;
     }
 
+    @Override
+    public boolean isAsyncModeSupported() {
+        return true;
+    }
+
     private static <T> T emulateSerialization(T object) {
         try {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();

@@ -44,4 +44,9 @@ public class JCacheProxy<K extends Serializable> implements GridProxy<K> {
         cache.putIfAbsent(key, initialState);
     }
 
+    @Override
+    public boolean isAsyncModeSupported() {
+        return false;
+    }
+
 }
