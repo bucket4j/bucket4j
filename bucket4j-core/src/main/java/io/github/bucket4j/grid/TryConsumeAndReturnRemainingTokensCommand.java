@@ -6,7 +6,7 @@ import io.github.bucket4j.BucketState;
 import io.github.bucket4j.ConsumptionProbe;
 
 
-public class TryConsumeAndReturnRemainingTokensCommand extends AbstractGridCommand<ConsumptionProbe> {
+public class TryConsumeAndReturnRemainingTokensCommand implements GridCommand<ConsumptionProbe> {
 
     private long tokensToConsume;
     private boolean bucketStateModified = false;
@@ -16,10 +16,9 @@ public class TryConsumeAndReturnRemainingTokensCommand extends AbstractGridComma
     }
 
     @Override
-    public ConsumptionProbe execute(GridBucketState gridState) {
+    public ConsumptionProbe execute(GridBucketState gridState, long currentTimeNanos) {
         BucketConfiguration configuration = gridState.getBucketConfiguration();
         BucketState state = gridState.getBucketState();
-        long currentTimeNanos = getCurrentTimeNanos();
         Bandwidth[] bandwidths = configuration.getBandwidths();
 
         state.refillAllBandwidth(bandwidths, currentTimeNanos);

@@ -37,7 +37,7 @@ public class JCacheCommand<K, T extends Serializable> implements Serializable, E
 
         GridCommand<T> targetCommand = (GridCommand<T>) arguments[0];
         GridBucketState state = mutableEntry.getValue();
-        T result = targetCommand.execute(state);
+        T result = targetCommand.execute(state, System.currentTimeMillis() * 1_000_000);
         if (targetCommand.isBucketStateModified()) {
             mutableEntry.setValue(state);
         }

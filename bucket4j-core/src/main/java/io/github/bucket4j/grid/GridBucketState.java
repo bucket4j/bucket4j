@@ -27,22 +27,15 @@ public class GridBucketState implements Serializable {
 
     private final BucketConfiguration bucketConfiguration;
     private final BucketState bucketState;
-    private final TimeMeter timeMeter;
 
     public GridBucketState() {
         bucketConfiguration = null;
         bucketState = null;
-        timeMeter = null;
     }
 
     public GridBucketState(BucketConfiguration bucketConfiguration, BucketState bucketState) {
-        this(bucketConfiguration, bucketState, null);
-    }
-
-    public GridBucketState(BucketConfiguration bucketConfiguration, BucketState bucketState, TimeMeter timeMeter) {
         this.bucketConfiguration = bucketConfiguration;
         this.bucketState = bucketState;
-        this.timeMeter = timeMeter;
     }
 
     public BucketConfiguration getBucketConfiguration() {

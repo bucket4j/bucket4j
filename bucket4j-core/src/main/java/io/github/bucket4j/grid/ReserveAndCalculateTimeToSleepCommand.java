@@ -21,7 +21,7 @@ import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.BucketState;
 
-public class ReserveAndCalculateTimeToSleepCommand extends AbstractGridCommand<Long> {
+public class ReserveAndCalculateTimeToSleepCommand implements GridCommand<Long> {
 
     private long tokensToConsume;
     private long waitIfBusyNanosLimit;
@@ -33,10 +33,9 @@ public class ReserveAndCalculateTimeToSleepCommand extends AbstractGridCommand<L
     }
 
     @Override
-    public Long execute(GridBucketState gridState) {
+    public Long execute(GridBucketState gridState, long currentTimeNanos) {
         BucketConfiguration configuration = gridState.getBucketConfiguration();
         BucketState state = gridState.getBucketState();
-        long currentTimeNanos = getCurrentTimeNanos();
         Bandwidth[] bandwidths = configuration.getBandwidths();
         state.refillAllBandwidth(bandwidths, currentTimeNanos);
 

@@ -17,12 +17,17 @@
 
 package io.github.bucket4j.grid.jcache;
 
+import io.github.bucket4j.BucketConfiguration;
+import io.github.bucket4j.BucketState;
 import io.github.bucket4j.grid.CommandResult;
 import io.github.bucket4j.grid.GridCommand;
 import io.github.bucket4j.grid.GridProxy;
 import io.github.bucket4j.grid.GridBucketState;
 
 import javax.cache.Cache;
+import javax.cache.processor.EntryProcessor;
+import javax.cache.processor.EntryProcessorException;
+import javax.cache.processor.MutableEntry;
 import java.io.Serializable;
 import java.util.Objects;
 
@@ -40,8 +45,21 @@ public class JCacheProxy<K extends Serializable> implements GridProxy<K> {
     }
 
     @Override
-    public void setInitialState(K key, GridBucketState initialState) {
-        cache.putIfAbsent(key, initialState);
+    public void createInitialState(K key, BucketConfiguration configuration) {
+        EntryProcessor<K, GridBucketState, Object> createIfNotExistsEntryProcessor = new EntryProcessor<K, GridBucketState, Object>() {
+            @Override
+            public Object process(MutableEntry<K, GridBucketState> entry, Object... arguments) throws EntryProcessorException {
+                if (entry.exists()) {
+                    return null;
+                }
+                BucketConfiguration configuration = (BucketConfiguration) arguments[0];
+                BucketState bucketState = BucketState.createInitialState(configuration, System.currentTimeMillis() * 1_000_000);
+                GridBucketState gridBucketState = new GridBucketState(configuration, bucketState);
+                entry.setValue(gridBucketState);
+                return null;
+            }
+        };
+        cache.invoke(key, createIfNotExistsEntryProcessor, configuration);
     }
 
     @Override

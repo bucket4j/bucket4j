@@ -134,7 +134,7 @@ public class GridBucket<K extends Serializable> extends AbstractBucket {
 
     private void initializeBucket() {
         BucketConfiguration configuration = getConfiguration();
-        gridProxy.setInitialState(key, configuration);
+        gridProxy.createInitialState(key, configuration);
     }
 
 }

@@ -20,6 +20,7 @@ package io.github.bucket4j.mock;
 import io.github.bucket4j.ConfigurationBuilder;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketConfiguration;
+import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.grid.GridBucket;
 import io.github.bucket4j.grid.RecoveryStrategy;
 import io.github.bucket4j.local.LocalBucketBuilder;
@@ -56,7 +57,7 @@ public enum BucketType {
         }
     };
 
-    abstract public Bucket createBucket(ConfigurationBuilder builder);
+    abstract public Bucket createBucket(ConfigurationBuilder builder, TimeMeter timeMeter);
 
     public static List<Bucket> createBuckets(ConfigurationBuilder builder) {
         List<Bucket> buckets = new ArrayList<>();

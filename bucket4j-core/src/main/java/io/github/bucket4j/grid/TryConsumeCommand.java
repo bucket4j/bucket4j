@@ -21,7 +21,7 @@ import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.BucketState;
 import io.github.bucket4j.Bandwidth;
 
-public class TryConsumeCommand extends AbstractGridCommand<Boolean> {
+public class TryConsumeCommand implements GridCommand<Boolean> {
 
     private long tokensToConsume;
     private boolean bucketStateModified;
@@ -31,10 +31,9 @@ public class TryConsumeCommand extends AbstractGridCommand<Boolean> {
     }
 
     @Override
-    public Boolean execute(GridBucketState gridState) {
+    public Boolean execute(GridBucketState gridState, long currentTimeNanos) {
         BucketConfiguration configuration = gridState.getBucketConfiguration();
         BucketState state = gridState.getBucketState();
-        long currentTimeNanos = getCurrentTimeNanos();
         Bandwidth[] bandwidths = configuration.getBandwidths();
 
         state.refillAllBandwidth(bandwidths, currentTimeNanos);

@@ -22,7 +22,7 @@ import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.BucketState;
 
-public class AddTokensCommand extends AbstractGridCommand<Long> {
+public class AddTokensCommand implements GridCommand<Long> {
 
     private long tokensToAdd;
 
@@ -31,11 +31,10 @@ public class AddTokensCommand extends AbstractGridCommand<Long> {
     }
 
     @Override
-    public Long execute(GridBucketState gridState) {
+    public Long execute(GridBucketState gridState, long currentTimeNanos) {
         BucketConfiguration configuration = gridState.getBucketConfiguration();
         BucketState state = gridState.getBucketState();
         Bandwidth[] bandwidths = configuration.getBandwidths();
-        long currentTimeNanos = getCurrentTimeNanos();
 
         state.refillAllBandwidth(bandwidths, currentTimeNanos);
         state.addTokens(bandwidths, tokensToAdd);

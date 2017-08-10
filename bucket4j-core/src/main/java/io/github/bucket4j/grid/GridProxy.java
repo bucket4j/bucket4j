@@ -25,7 +25,7 @@ public interface GridProxy<K extends Serializable> {
 
     <T extends Serializable> CommandResult<T> execute(K key, GridCommand<T> command);
 
-    void setInitialState(K key, BucketConfiguration bucketConfiguration);
+    void createInitialState(K key, BucketConfiguration configuration);
 
     boolean isAsyncModeSupported();
 
