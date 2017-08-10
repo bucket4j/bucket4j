@@ -17,7 +17,6 @@
 
 package io.github.bucket4j;
 
-import io.github.bucket4j.local.LocalExtension;
 import io.github.bucket4j.local.LocalBucketBuilder;
 
 import java.util.HashMap;
@@ -49,7 +48,7 @@ public class Bucket4j {
      * @return new instance of {@link LocalBucketBuilder}
      */
     public static LocalBucketBuilder builder() {
-        return LocalExtension.INSTANCE.builder();
+        return new LocalBucketBuilder();
     }
 
     /**

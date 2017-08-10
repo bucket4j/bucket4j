@@ -5,14 +5,14 @@ import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.BucketState;
 
-public class GetAvailableTokensCommand implements GridCommand<Long> {
+public class GetAvailableTokensCommand extends AbstractGridCommand<Long> {
 
     @Override
     public Long execute(GridBucketState gridState) {
         BucketConfiguration configuration = gridState.getBucketConfiguration();
         BucketState state = gridState.getBucketState();
         Bandwidth[] bandwidths = configuration.getBandwidths();
-        long currentTimeNanos = configuration.getTimeMeter().currentTimeNanos();
+        long currentTimeNanos = getCurrentTimeNanos();
 
         state.refillAllBandwidth(bandwidths, currentTimeNanos);
         return state.getAvailableTokens(bandwidths);

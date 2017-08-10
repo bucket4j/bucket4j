@@ -36,8 +36,8 @@ public abstract class AbstractBucket implements Bucket {
 
     private final AsyncBucket asyncView;
 
-    public AbstractBucket(boolean asyncSupported) {
-        if (asyncSupported) {
+    public AbstractBucket() {
+        if (isAsyncModeSupported()) {
             asyncView = createAsyncView();
         } else {
             asyncView = null;

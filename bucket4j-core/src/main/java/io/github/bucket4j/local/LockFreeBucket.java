@@ -29,13 +29,17 @@ public class LockFreeBucket extends AbstractBucket {
     private final TimeMeter timeMeter;
     private final AtomicReference<BucketState> stateReference;
 
-    public LockFreeBucket(BucketConfiguration configuration) {
-        super(true);
+    public LockFreeBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
         this.configuration = configuration;
         this.bandwidths = configuration.getBandwidths();
-        this.timeMeter = configuration.getTimeMeter();
-        BucketState initialState = BucketState.createInitialState(configuration);
+        this.timeMeter = timeMeter;
+        BucketState initialState = BucketState.createInitialState(configuration, timeMeter.currentTimeNanos());
         this.stateReference = new AtomicReference<>(initialState);
+    }
+
+    @Override
+    public boolean isAsyncModeSupported() {
+        return true;
     }
 
     @Override

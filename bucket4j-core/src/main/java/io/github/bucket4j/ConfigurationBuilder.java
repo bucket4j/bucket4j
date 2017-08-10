@@ -28,13 +28,9 @@ import java.util.Objects;
  */
 public class ConfigurationBuilder<T extends ConfigurationBuilder> {
 
-    private final Extension extension;
-    private TimeMeter timeMeter;
     private List<BandwidthDefinition> bandwidths;
 
-    protected ConfigurationBuilder(Extension extension) {
-        this.extension = Objects.requireNonNull(extension); // TODO unit tests for null checking
-        this.timeMeter = TimeMeter.SYSTEM_MILLISECONDS;
+    protected ConfigurationBuilder() {
         this.bandwidths = new ArrayList<>(1);
     }
 
@@ -42,7 +38,7 @@ public class ConfigurationBuilder<T extends ConfigurationBuilder> {
      * @return configuration which used for bucket construction.
      */
     public BucketConfiguration buildConfiguration() {
-        return new BucketConfiguration(this.bandwidths, timeMeter);
+        return new BucketConfiguration(this.bandwidths);
     }
 
     /**
@@ -69,64 +65,9 @@ public class ConfigurationBuilder<T extends ConfigurationBuilder> {
         return (T) this;
     }
 
-    /**
-     * Creates instance of {@link ConfigurationBuilder} which will create buckets with {@link TimeMeter#SYSTEM_NANOTIME} as time meter.
-     *
-     * @return this builder instance
-     *
-     * @throws UnsupportedOperationException if particular extension behind the bucket does not support the time measurement customization.
-     * @see Extension#isCustomTimeMeasurementSupported()
-     */
-    public T withNanosecondPrecision() throws UnsupportedOperationException {
-        if (!extension.isCustomTimeMeasurementSupported()) {
-            // TODO add unit test
-            throw new UnsupportedOperationException();
-        }
-        this.timeMeter = TimeMeter.SYSTEM_NANOTIME;
-        return (T) this;
-    }
-
-    /**
-     * Creates instance of {@link ConfigurationBuilder} which will create buckets with {@link TimeMeter#SYSTEM_MILLISECONDS} as time meter.
-     *
-     * @return this builder instance
-     * @throws UnsupportedOperationException if particular extension behind the bucket does not support the time measurement customization.
-     * @see Extension#isCustomTimeMeasurementSupported()
-     */
-    public T withMillisecondPrecision() throws UnsupportedOperationException {
-        if (!extension.isCustomTimeMeasurementSupported()) {
-            // TODO add unit test
-            throw new UnsupportedOperationException();
-        }
-        this.timeMeter = TimeMeter.SYSTEM_MILLISECONDS;
-        return (T) this;
-    }
-
-    /**
-     * Creates instance of {@link ConfigurationBuilder} which will create buckets with {@code customTimeMeter} as time meter.
-     *
-     * @param customTimeMeter object which will measure time.
-     *
-     * @return this builder instance
-     * @throws UnsupportedOperationException if particular extension behind the bucket does not support the time measurement customization.
-     * @see Extension#isCustomTimeMeasurementSupported()
-     */
-    public T withCustomTimePrecision(TimeMeter customTimeMeter) throws UnsupportedOperationException {
-        if (!extension.isCustomTimeMeasurementSupported()) {
-            // TODO add unit test
-            throw new UnsupportedOperationException();
-        }
-        if (customTimeMeter == null) {
-            throw BucketExceptions.nullTimeMeter();
-        }
-        this.timeMeter = customTimeMeter;
-        return (T) this;
-    }
-
     @Override
     public String toString() {
         return "AbstractBucketBuilder{" +
-                "timeMeter=" + timeMeter +
                 ", bandwidths=" + bandwidths +
                 '}';
     }

@@ -31,22 +31,4 @@ public interface Extension<T extends ConfigurationBuilder<T>> {
      */
     T builder();
 
-    /**
-     * Describes whether or not this extension supports asynchronous mode.
-     *
-     * <p>If asynchronous mode is  not supported any attempt to call {@link Bucket#asAsync()} will fail with {@link UnsupportedOperationException}
-     *
-     * @return true if this extension supports asynchronous mode.
-     */
-    boolean isAsyncModeSupported();
-
-    /**
-     * Describes whether or not this extension supports the customization of time measurement.
-     *
-     * <p>If customization of time measurement is  not supported any attempt to call {@link ConfigurationBuilder#withCustomTimePrecision(TimeMeter)}, {@link ConfigurationBuilder#withMillisecondPrecision()}, {@link ConfigurationBuilder#withNanosecondPrecision()} will fail with {@link UnsupportedOperationException}
-     *
-     * @return true if this extension supports the customization of time measurement.
-     */
-    boolean isCustomTimeMeasurementSupported();
-
 }

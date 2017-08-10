@@ -17,13 +17,16 @@
 
 package io.github.bucket4j.grid;
 
+import io.github.bucket4j.BucketConfiguration;
+
 import java.io.Serializable;
 
 public interface GridProxy<K extends Serializable> {
 
     <T extends Serializable> CommandResult<T> execute(K key, GridCommand<T> command);
 
-    void setInitialState(K key, GridBucketState initialState);
+    void setInitialState(K key, BucketConfiguration bucketConfiguration);
 
     boolean isAsyncModeSupported();
+
 }

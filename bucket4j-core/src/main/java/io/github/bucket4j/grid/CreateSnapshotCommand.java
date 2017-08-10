@@ -19,7 +19,7 @@ package io.github.bucket4j.grid;
 
 import io.github.bucket4j.BucketState;
 
-public class CreateSnapshotCommand implements GridCommand<BucketState> {
+public class CreateSnapshotCommand extends AbstractGridCommand<BucketState> {
 
     @Override
     public BucketState execute(GridBucketState gridState) {

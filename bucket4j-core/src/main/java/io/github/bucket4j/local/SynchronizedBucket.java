@@ -31,17 +31,21 @@ public class SynchronizedBucket extends AbstractBucket {
     private final BucketState state;
     private final Lock lock;
 
-    public SynchronizedBucket(BucketConfiguration configuration) {
-        this(configuration, new ReentrantLock());
+    public SynchronizedBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
+        this(configuration, timeMeter, new ReentrantLock());
     }
 
-    public SynchronizedBucket(BucketConfiguration configuration, Lock lock) {
-        super(true);
+    public SynchronizedBucket(BucketConfiguration configuration, TimeMeter timeMeter, Lock lock) {
         this.configuration = configuration;
         this.bandwidths = configuration.getBandwidths();
-        this.timeMeter = configuration.getTimeMeter();
-        this.state = BucketState.createInitialState(configuration);
+        this.timeMeter = timeMeter;
+        this.state = BucketState.createInitialState(configuration, timeMeter.currentTimeNanos());
         this.lock = lock;
+    }
+
+    @Override
+    public boolean isAsyncModeSupported() {
+        return true;
     }
 
     @Override

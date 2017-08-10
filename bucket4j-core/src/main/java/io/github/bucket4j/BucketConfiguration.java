@@ -27,14 +27,8 @@ public final class BucketConfiguration implements Serializable {
 
     private final Bandwidth[] bandwidths;
     private final long[] bandwidthsInitialTokens;
-    private final TimeMeter timeMeter;
 
-    public BucketConfiguration(List<BandwidthDefinition> bandwidths, TimeMeter timeMeter) {
-        if (timeMeter == null) {
-            throw BucketExceptions.nullTimeMeter();
-        }
-        this.timeMeter = timeMeter;
-
+    public BucketConfiguration(List<BandwidthDefinition> bandwidths) {
         if (bandwidths.isEmpty()) {
             throw BucketExceptions.restrictionsNotSpecified();
         }
@@ -44,10 +38,6 @@ public final class BucketConfiguration implements Serializable {
             this.bandwidths[i] = bandwidths.get(i).getBandwidth();
             this.bandwidthsInitialTokens[i] = bandwidths.get(i).getInitialTokens();
         }
-    }
-
-    public TimeMeter getTimeMeter() {
-        return timeMeter;
     }
 
     public Bandwidth[] getBandwidths() {
@@ -62,7 +52,6 @@ public final class BucketConfiguration implements Serializable {
     public String toString() {
         return "BucketConfiguration{" +
                 "bandwidths=" + Arrays.toString(bandwidths) +
-                ", timeMeter=" + timeMeter +
                 '}';
     }
 

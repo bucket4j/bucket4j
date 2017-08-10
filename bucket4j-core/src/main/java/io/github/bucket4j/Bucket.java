@@ -35,6 +35,15 @@ package io.github.bucket4j;
 public interface Bucket {
 
     /**
+     * Describes whether or not this bucket supports asynchronous mode.
+     *
+     * <p>If asynchronous mode is  not supported any attempt to call {@link #asAsync()} will fail with {@link UnsupportedOperationException}
+     *
+     * @return true if this extension supports asynchronous mode.
+     */
+    boolean isAsyncModeSupported();
+
+    /**
      * Gets asynchronous view of this bucket.
      *
      * <p>If asynchronous mode is not supported by extension(see {@link Extension#isAsyncModeSupported()}) any attempt to call {@link Bucket#asAsync()} will fail with {@link UnsupportedOperationException}

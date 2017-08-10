@@ -43,7 +43,6 @@ public class GridBucket<K extends Serializable> extends AbstractBucket {
     }
 
     private GridBucket(K key, Supplier<BucketConfiguration> configurationSupplier, GridProxy<K> gridProxy, RecoveryStrategy recoveryStrategy, boolean initializeBucket) {
-        super(gridProxy.isAsyncModeSupported());
         this.key = key;
         this.gridProxy = gridProxy;
         this.recoveryStrategy = recoveryStrategy;
@@ -51,6 +50,11 @@ public class GridBucket<K extends Serializable> extends AbstractBucket {
         if (initializeBucket) {
             initializeBucket();
         }
+    }
+
+    @Override
+    public boolean isAsyncModeSupported() {
+        return gridProxy.isAsyncModeSupported();
     }
 
     @Override
@@ -130,8 +134,7 @@ public class GridBucket<K extends Serializable> extends AbstractBucket {
 
     private void initializeBucket() {
         BucketConfiguration configuration = getConfiguration();
-        GridBucketState initialState = new GridBucketState(configuration, BucketState.createInitialState(configuration));
-        gridProxy.setInitialState(key, initialState);
+        gridProxy.setInitialState(key, configuration);
     }
 
 }

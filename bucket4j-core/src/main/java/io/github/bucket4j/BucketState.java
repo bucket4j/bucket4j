@@ -30,12 +30,11 @@ public class BucketState implements Serializable {
         this.stateData = stateData;
     }
 
-    public BucketState(BucketConfiguration configuration) {
+    public BucketState(BucketConfiguration configuration, long currentTimeNanos) {
         Bandwidth[] bandwidths = configuration.getBandwidths();
         long[] bandwidthsInitialTokens = configuration.getBandwidthsInitialTokens();
 
         this.stateData = new long[1 + bandwidths.length * 2];
-        long currentTimeNanos = configuration.getTimeMeter().currentTimeNanos();
         for(int i = 0; i < bandwidths.length; i++) {
             Bandwidth bandwidth = bandwidths[i];
             long initialTokens = bandwidthsInitialTokens[i];
@@ -55,8 +54,8 @@ public class BucketState implements Serializable {
         System.arraycopy(sourceState.stateData, 0, stateData, 0, stateData.length);
     }
 
-    public static BucketState createInitialState(BucketConfiguration configuration) {
-        return new BucketState(configuration);
+    public static BucketState createInitialState(BucketConfiguration configuration, long currentTimeNanos) {
+        return new BucketState(configuration, currentTimeNanos);
     }
 
     public long getAvailableTokens(Bandwidth[] bandwidths) {
