@@ -20,6 +20,7 @@ package io.github.bucket4j.local;
 
 import io.github.bucket4j.*;
 
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -102,33 +103,22 @@ public class SynchronizedBucket extends AbstractBucket {
     }
 
     @Override
-    protected boolean consumeOrAwaitImpl(long tokensToConsume, long waitIfBusyNanosLimit, boolean uninterruptibly, BlockingStrategy blockingStrategy) throws InterruptedException {
+    protected long reserveAndCalculateTimeToSleepImpl(long tokensToConsume, long waitIfBusyNanosLimit) {
         long currentTimeNanos = timeMeter.currentTimeNanos();
-        long nanosToCloseDeficit;
-
         lock.lock();
         try {
             state.refillAllBandwidth(bandwidths, currentTimeNanos);
-            nanosToCloseDeficit = state.delayNanosAfterWillBePossibleToConsume(bandwidths, tokensToConsume);
-            if (nanosToCloseDeficit == 0) {
-                state.consume(bandwidths, tokensToConsume);
-                return true;
-            }
+            long nanosToCloseDeficit = state.delayNanosAfterWillBePossibleToConsume(bandwidths, tokensToConsume);
 
             if (waitIfBusyNanosLimit > 0 && nanosToCloseDeficit > waitIfBusyNanosLimit) {
-                return false;
+                return Long.MAX_VALUE;
             }
 
             state.consume(bandwidths, tokensToConsume);
+            return nanosToCloseDeficit;
         } finally {
             lock.unlock();
         }
-        if (uninterruptibly) {
-            blockingStrategy.parkUninterruptibly(nanosToCloseDeficit);
-        } else {
-            blockingStrategy.park(nanosToCloseDeficit);
-        }
-        return true;
     }
 
     @Override
@@ -154,6 +144,37 @@ public class SynchronizedBucket extends AbstractBucket {
             lock.unlock();
         }
     }
+
+    @Override
+    protected CompletableFuture<Boolean> tryConsumeAsyncImpl(long tokensToConsume) throws UnsupportedOperationException {
+        boolean result = tryConsumeImpl(tokensToConsume);
+        return CompletableFuture.completedFuture(result);
+    }
+
+    @Override
+    protected CompletableFuture<Void> addTokensAsyncImpl(long tokensToAdd) throws UnsupportedOperationException {
+        addTokensImpl(tokensToAdd);
+        return CompletableFuture.completedFuture(null);
+    }
+
+    @Override
+    protected CompletableFuture<ConsumptionProbe> tryConsumeAndReturnRemainingTokensAsyncImpl(long tokensToConsume) throws UnsupportedOperationException {
+        ConsumptionProbe result = tryConsumeAndReturnRemainingTokensImpl(tokensToConsume);
+        return CompletableFuture.completedFuture(result);
+    }
+
+    @Override
+    protected CompletableFuture<Long> tryConsumeAsMuchAsPossibleAsyncImpl(long limit) throws UnsupportedOperationException {
+        long result = tryConsumeAsMuchAsPossible(limit);
+        return CompletableFuture.completedFuture(result);
+    }
+
+    @Override
+    protected CompletableFuture<Long> reserveAndCalculateTimeToSleepAsyncImpl(long tokensToConsume, long maxWaitTimeNanos) throws UnsupportedOperationException {
+        long result = reserveAndCalculateTimeToSleepImpl(tokensToConsume, maxWaitTimeNanos);
+        return CompletableFuture.completedFuture(result);
+    }
+
 
     @Override
     public BucketState createSnapshot() {

@@ -20,6 +20,7 @@ package io.github.bucket4j.local;
 
 import io.github.bucket4j.*;
 
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class LockFreeBucket extends AbstractBucket {
@@ -111,7 +112,7 @@ public class LockFreeBucket extends AbstractBucket {
     }
 
     @Override
-    protected boolean consumeOrAwaitImpl(long tokensToConsume, long waitIfBusyNanosLimit, boolean uninterruptibly, BlockingStrategy blockingStrategy) throws InterruptedException {
+    protected long reserveAndCalculateTimeToSleepImpl(long tokensToConsume, long waitIfBusyNanosLimit) {
         BucketState previousState = stateReference.get();
         BucketState newState = previousState.copy();
         long currentTimeNanos = timeMeter.currentTimeNanos();
@@ -122,7 +123,7 @@ public class LockFreeBucket extends AbstractBucket {
             if (nanosToCloseDeficit == 0) {
                 newState.consume(bandwidths, tokensToConsume);
                 if (stateReference.compareAndSet(previousState, newState)) {
-                    return true;
+                    return 0L;
                 }
                 previousState = stateReference.get();
                 newState.copyStateFrom(previousState);
@@ -130,24 +131,15 @@ public class LockFreeBucket extends AbstractBucket {
             }
 
             if (waitIfBusyNanosLimit > 0 && nanosToCloseDeficit > waitIfBusyNanosLimit) {
-                return false;
+                return Long.MAX_VALUE;
             }
 
             newState.consume(bandwidths, tokensToConsume);
             if (stateReference.compareAndSet(previousState, newState)) {
-                park(blockingStrategy, nanosToCloseDeficit, uninterruptibly);
-                return true;
+                return nanosToCloseDeficit;
             }
             previousState = stateReference.get();
             newState.copyStateFrom(previousState);
-        }
-    }
-
-    private void park(BlockingStrategy blockingStrategy, long nanosToCloseDeficit, boolean uninterruptibly) throws InterruptedException {
-        if (uninterruptibly) {
-            blockingStrategy.parkUninterruptibly(nanosToCloseDeficit);
-        } else {
-            blockingStrategy.park(nanosToCloseDeficit);
         }
     }
 
@@ -175,6 +167,36 @@ public class LockFreeBucket extends AbstractBucket {
         BucketState snapshot = stateReference.get().copy();
         snapshot.refillAllBandwidth(bandwidths, currentTimeNanos);
         return snapshot.getAvailableTokens(bandwidths);
+    }
+
+    @Override
+    protected CompletableFuture<Boolean> tryConsumeAsyncImpl(long tokensToConsume) throws UnsupportedOperationException {
+        boolean result = tryConsumeImpl(tokensToConsume);
+        return CompletableFuture.completedFuture(result);
+    }
+
+    @Override
+    protected CompletableFuture<Void> addTokensAsyncImpl(long tokensToAdd) throws UnsupportedOperationException {
+        addTokensImpl(tokensToAdd);
+        return CompletableFuture.completedFuture(null);
+    }
+
+    @Override
+    protected CompletableFuture<ConsumptionProbe> tryConsumeAndReturnRemainingTokensAsyncImpl(long tokensToConsume) throws UnsupportedOperationException {
+        ConsumptionProbe result = tryConsumeAndReturnRemainingTokensImpl(tokensToConsume);
+        return CompletableFuture.completedFuture(result);
+    }
+
+    @Override
+    protected CompletableFuture<Long> tryConsumeAsMuchAsPossibleAsyncImpl(long limit) throws UnsupportedOperationException {
+        long result = tryConsumeAsMuchAsPossible(limit);
+        return CompletableFuture.completedFuture(result);
+    }
+
+    @Override
+    protected CompletableFuture<Long> reserveAndCalculateTimeToSleepAsyncImpl(long tokensToConsume, long maxWaitTimeNanos) throws UnsupportedOperationException {
+        long result = reserveAndCalculateTimeToSleepImpl(tokensToConsume, maxWaitTimeNanos);
+        return CompletableFuture.completedFuture(result);
     }
 
     @Override

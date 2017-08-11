@@ -73,20 +73,9 @@ public class GridBucket<K extends Serializable> extends AbstractBucket {
     }
 
     @Override
-    protected boolean consumeOrAwaitImpl(long tokensToConsume, long waitIfBusyNanosLimit, boolean uninterruptibly, BlockingStrategy blockingStrategy) throws InterruptedException {
-        final ReserveAndCalculateTimeToSleepCommand consumeCommand = new ReserveAndCalculateTimeToSleepCommand(tokensToConsume, waitIfBusyNanosLimit);
-        long nanosToSleep = execute(consumeCommand);
-        if (nanosToSleep == Long.MAX_VALUE) {
-            return false;
-        }
-        if (nanosToSleep > 0) {
-            if (uninterruptibly) {
-                blockingStrategy.parkUninterruptibly(nanosToSleep);
-            } else {
-                blockingStrategy.park(nanosToSleep);
-            }
-        }
-        return true;
+    protected long reserveAndCalculateTimeToSleepImpl(long tokensToConsume, long waitIfBusyNanosLimit) {
+        ReserveAndCalculateTimeToSleepCommand consumeCommand = new ReserveAndCalculateTimeToSleepCommand(tokensToConsume, waitIfBusyNanosLimit);
+        return execute(consumeCommand);
     }
 
     @Override
