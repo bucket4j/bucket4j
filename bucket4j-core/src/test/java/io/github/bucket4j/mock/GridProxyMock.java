@@ -27,6 +27,7 @@ import io.github.bucket4j.grid.GridCommand;
 import io.github.bucket4j.grid.GridProxy;
 
 import java.io.*;
+import java.util.concurrent.CompletableFuture;
 
 public class GridProxyMock implements GridProxy {
 
@@ -54,6 +55,22 @@ public class GridProxyMock implements GridProxy {
     public void createInitialState(Serializable key, BucketConfiguration configuration) {
         BucketState bucketState = BucketState.createInitialState(configuration, timeMeter.currentTimeNanos());
         this.state = new GridBucketState(configuration, bucketState);
+    }
+
+    @Override
+    public Serializable createInitialStateAndExecute(Serializable key, BucketConfiguration configuration, GridCommand command) {
+        createInitialState(key, configuration);
+        return execute(key, command);
+    }
+
+    @Override
+    public CompletableFuture createInitialStateAndExecuteAsync(Serializable key, BucketConfiguration configuration, GridCommand command) throws UnsupportedOperationException {
+        return CompletableFuture.completedFuture(createInitialStateAndExecute(key, configuration, command));
+    }
+
+    @Override
+    public CompletableFuture<CommandResult> executeAsync(Serializable key, GridCommand command) throws UnsupportedOperationException {
+        return CompletableFuture.completedFuture(execute(key, command));
     }
 
     @Override

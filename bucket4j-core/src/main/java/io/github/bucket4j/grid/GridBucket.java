@@ -20,6 +20,10 @@ package io.github.bucket4j.grid;
 import io.github.bucket4j.*;
 
 import java.io.Serializable;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
@@ -48,7 +52,8 @@ public class GridBucket<K extends Serializable> extends AbstractBucket {
         this.recoveryStrategy = recoveryStrategy;
         this.configurationSupplier = configurationSupplier;
         if (initializeBucket) {
-            initializeBucket();
+            BucketConfiguration configuration = getConfiguration();
+            gridProxy.createInitialState(key, configuration);
         }
     }
 
@@ -63,13 +68,28 @@ public class GridBucket<K extends Serializable> extends AbstractBucket {
     }
 
     @Override
+    protected CompletableFuture<Long> tryConsumeAsMuchAsPossibleAsyncImpl(long limit) throws UnsupportedOperationException {
+        return executeAsync(new ConsumeAsMuchAsPossibleCommand(limit));
+    }
+
+    @Override
     protected boolean tryConsumeImpl(long tokensToConsume) {
         return execute(new TryConsumeCommand(tokensToConsume));
     }
 
     @Override
+    protected CompletableFuture<Boolean> tryConsumeAsyncImpl(long tokensToConsume) throws UnsupportedOperationException {
+        return executeAsync(new TryConsumeCommand(tokensToConsume));
+    }
+
+    @Override
     protected ConsumptionProbe tryConsumeAndReturnRemainingTokensImpl(long tokensToConsume) {
         return execute(new TryConsumeAndReturnRemainingTokensCommand(tokensToConsume));
+    }
+
+    @Override
+    protected CompletableFuture<ConsumptionProbe> tryConsumeAndReturnRemainingTokensAsyncImpl(long tokensToConsume) throws UnsupportedOperationException {
+        return executeAsync(new TryConsumeAndReturnRemainingTokensCommand(tokensToConsume));
     }
 
     @Override
@@ -79,8 +99,21 @@ public class GridBucket<K extends Serializable> extends AbstractBucket {
     }
 
     @Override
+    protected CompletableFuture<Long> reserveAndCalculateTimeToSleepAsyncImpl(long tokensToConsume, long maxWaitTimeNanos) throws UnsupportedOperationException {
+        ReserveAndCalculateTimeToSleepCommand consumeCommand = new ReserveAndCalculateTimeToSleepCommand(tokensToConsume, maxWaitTimeNanos);
+        return executeAsync(consumeCommand);
+    }
+
+    @Override
     protected void addTokensImpl(long tokensToAdd) {
         execute(new AddTokensCommand(tokensToAdd));
+    }
+
+    @Override
+    protected CompletableFuture<Void> addTokensAsyncImpl(long tokensToAdd) throws UnsupportedOperationException {
+        CompletableFuture future = executeAsync(new AddTokensCommand(tokensToAdd));
+        // TODO fix unchecked assignment
+        return future;
     }
 
     @Override
@@ -107,23 +140,26 @@ public class GridBucket<K extends Serializable> extends AbstractBucket {
         // the bucket was removed or lost, it is need to apply recovery strategy
         if (recoveryStrategy == RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION) {
             throw new BucketNotFoundException(key);
-        } else {
-            initializeBucket();
         }
 
         // retry command execution
-        result = gridProxy.execute(key, command);
-        if (!result.isBucketNotFound()) {
-            return result.getData();
-        } else {
-            // something wrong goes with GRID, reinitialization of bucket has no effect
-            throw new BucketNotFoundException(key);
-        }
+        return gridProxy.createInitialStateAndExecute(key, getConfiguration(), command);
     }
 
-    private void initializeBucket() {
-        BucketConfiguration configuration = getConfiguration();
-        gridProxy.createInitialState(key, configuration);
+    private <T extends Serializable> CompletableFuture<T> executeAsync(GridCommand<T> command) {
+        CompletableFuture<CommandResult<T>> futureResult = gridProxy.executeAsync(key, command);
+        return futureResult.thenCompose(cmdResult -> {
+            if (!cmdResult.isBucketNotFound()) {
+                T resultDate = cmdResult.getData();
+                return CompletableFuture.completedFuture(resultDate);
+            }
+            if (recoveryStrategy == RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION) {
+                CompletableFuture<T> failedFuture = new CompletableFuture<>();
+                failedFuture.completeExceptionally(new BucketNotFoundException(key));
+                return failedFuture;
+            }
+            return gridProxy.createInitialStateAndExecuteAsync(key, getConfiguration(), command);
+        });
     }
 
 }
