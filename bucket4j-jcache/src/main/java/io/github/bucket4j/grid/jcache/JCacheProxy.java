@@ -18,18 +18,16 @@
 package io.github.bucket4j.grid.jcache;
 
 import io.github.bucket4j.BucketConfiguration;
-import io.github.bucket4j.BucketState;
+import io.github.bucket4j.Nothing;
 import io.github.bucket4j.grid.CommandResult;
 import io.github.bucket4j.grid.GridCommand;
 import io.github.bucket4j.grid.GridProxy;
 import io.github.bucket4j.grid.GridBucketState;
 
 import javax.cache.Cache;
-import javax.cache.processor.EntryProcessor;
-import javax.cache.processor.EntryProcessorException;
-import javax.cache.processor.MutableEntry;
 import java.io.Serializable;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 
 public class JCacheProxy<K extends Serializable> implements GridProxy<K> {
 
@@ -41,29 +39,38 @@ public class JCacheProxy<K extends Serializable> implements GridProxy<K> {
 
     @Override
     public <T extends Serializable> CommandResult<T> execute(K key, GridCommand<T> command) {
-        return cache.invoke(key, new JCacheCommand<>(), command);
+        JCacheEntryProcessor<K, T> entryProcessor = JCacheEntryProcessor.executeProcessor(command);
+        return cache.invoke(key, entryProcessor);
     }
 
     @Override
     public void createInitialState(K key, BucketConfiguration configuration) {
-        EntryProcessor<K, GridBucketState, Object> createIfNotExistsEntryProcessor = new EntryProcessor<K, GridBucketState, Object>() {
-            @Override
-            public Object process(MutableEntry<K, GridBucketState> entry, Object... arguments) throws EntryProcessorException {
-                if (entry.exists()) {
-                    return null;
-                }
-                BucketConfiguration configuration = (BucketConfiguration) arguments[0];
-                BucketState bucketState = BucketState.createInitialState(configuration, System.currentTimeMillis() * 1_000_000);
-                GridBucketState gridBucketState = new GridBucketState(configuration, bucketState);
-                entry.setValue(gridBucketState);
-                return null;
-            }
-        };
-        cache.invoke(key, createIfNotExistsEntryProcessor, configuration);
+        JCacheEntryProcessor<K, Nothing> entryProcessor = JCacheEntryProcessor.initStateProcessor(configuration);
+        cache.invoke(key, entryProcessor);
+    }
+
+    @Override
+    public <T extends Serializable> T createInitialStateAndExecute(K key, BucketConfiguration configuration, GridCommand<T> command) {
+        JCacheEntryProcessor<K, T> entryProcessor = JCacheEntryProcessor.initStateAndExecuteProcessor(command, configuration);
+        CommandResult<T> result = cache.invoke(key, entryProcessor);
+        return result.getData();
+    }
+
+    @Override
+    public <T extends Serializable> CompletableFuture<CommandResult<T>> executeAsync(K key, GridCommand<T> command) throws UnsupportedOperationException {
+        // because JCache does not specify async API
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public <T extends Serializable> CompletableFuture<T> createInitialStateAndExecuteAsync(K key, BucketConfiguration configuration, GridCommand<T> command) throws UnsupportedOperationException {
+        // because JCache does not specify async API
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public boolean isAsyncModeSupported() {
+        // because JCache does not specify async API
         return false;
     }
 
