@@ -36,30 +36,6 @@ Bucket bucket = Bucket4j.builder()
     .build();
 ```
 
-### Using dynamic capacity  
-
-Sometimes, you may want to have a bucket with dynamic capacity. For example if you want to have capacity 10 per 1 minute for daily time,
-and 2 per minute for nightly time, then construct bucket like this
-
-```java
-Capacity dynamicCapacity = new Capacity() {
-    @Override
-    public long getValue(long currentTime) {
-        int hour = LocalTime.now().getHour();
-        if (hour >= 7 && hour <= 23) {
-            return 10;    
-        } else {
-            return 2;
-        }
-    }
-};
-Refill refill = ...;
-Bandwidth limit = Bandwidth.classic(dynamicCapacity, refill)
-Bucket bucket = Bucket4j.builder()
-    .addLimit(limit)
-    .build();
-```
-
 ### Returning tokens back to bucket.
 The [compensating transaction](https://en.wikipedia.org/wiki/Compensating_transaction) is one of obvious use case when you want to return tokens back to bucket:
 ```java
