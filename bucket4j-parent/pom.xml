@@ -51,6 +51,9 @@
         <benchmark.jar.name>benchmarks</benchmark.jar.name>
         <sonar.jacoco.reportPath>${project.basedir}/../bucket4j-parent/target/jacoco-merged.exec</sonar.jacoco.reportPath>
         <argLine/>
+        <jcache.version>1.0.0</jcache.version>
+        <ignite.version>1.8.0</ignite.version>
+        <nanocloud.version>0.8.12</nanocloud.version>
     </properties>
 
     <scm>
@@ -231,6 +234,12 @@
             <groupId>cglib</groupId>
             <artifactId>cglib-nodep</artifactId>
             <version>3.1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.gridkit.lab</groupId>
+            <artifactId>nanocloud</artifactId>
+            <version>${nanocloud.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
