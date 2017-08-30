@@ -15,7 +15,7 @@
  *
  */
 
-package io.github.bucket4j.grid.hazelcast;
+package io.github.bucket4j.grid.ignite;
 
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketConfiguration;

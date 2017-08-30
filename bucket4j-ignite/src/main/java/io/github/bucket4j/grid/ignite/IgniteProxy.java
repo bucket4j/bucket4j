@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package io.github.bucket4j.grid.hazelcast;
+package io.github.bucket4j.grid.ignite;
 
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.Nothing;
