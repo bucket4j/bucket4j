@@ -14,5 +14,38 @@
     <groupId>com.github.vladimir-bukhtoyarov</groupId>
     <artifactId>bucket4j-infinispan</artifactId>
     <version>2.2.0</version>
-    
+
+    <!-- https://mvnrepository.com/artifact/org.infinispan/infinispan-core -->
+    <dependencies>
+        <dependency>
+            <groupId>com.github.vladimir-bukhtoyarov</groupId>
+            <artifactId>bucket4j-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.vladimir-bukhtoyarov</groupId>
+            <artifactId>bucket4j-jcache</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.vladimir-bukhtoyarov</groupId>
+            <artifactId>bucket4j-core</artifactId>
+            <version>${project.version}</version>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>javax.cache</groupId>
+            <artifactId>cache-api</artifactId>
+            <version>${jcache.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.infinispan</groupId>
+            <artifactId>infinispan-core</artifactId>
+            <version>${infinispan.version}</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+
 </project>

@@ -54,6 +54,7 @@
         <jcache.version>1.0.0</jcache.version>
         <ignite.version>1.8.0</ignite.version>
         <hazelcast.version>3.8</hazelcast.version>
+        <infinispan.version>9.1.0.Final</infinispan.version>
         <nanocloud.version>0.8.12</nanocloud.version>
     </properties>
 
