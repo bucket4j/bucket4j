@@ -36,11 +36,9 @@ import java.util.concurrent.CompletableFuture;
 public class IgniteProxy<K extends Serializable> implements GridProxy<K> {
 
     private final IgniteCache<K, GridBucketState> cache;
-    private final K key;
 
-    public IgniteProxy(IgniteCache<K, GridBucketState> cache, K key) {
+    public IgniteProxy(IgniteCache<K, GridBucketState> cache) {
         this.cache = cache;
-        this.key = key;
     }
 
     @Override

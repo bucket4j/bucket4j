@@ -17,12 +17,20 @@
 
 package io.github.bucket4j.grid.ignite;
 
+import io.github.bucket4j.Bucket;
+import io.github.bucket4j.BucketConfiguration;
+import io.github.bucket4j.grid.GridBucket;
+import io.github.bucket4j.grid.GridBucketState;
+import io.github.bucket4j.grid.GridProxy;
 import io.github.bucket4j.grid.ProxyManager;
+import io.github.bucket4j.util.LazySupplier;
+import org.apache.ignite.IgniteCache;
 
 import java.io.Serializable;
+import java.util.function.Supplier;
 
 /**
- * JCache specific implementation of {@link ProxyManager}
+ * Ignite specific implementation of {@link ProxyManager}
  *
  * @param <K> type of key for buckets
  */
@@ -30,8 +38,8 @@ public class IgniteProxyManager<K extends Serializable> implements ProxyManager<
 
     private final GridProxy<K> gridProxy;
 
-    IgniteProxyManager(Cache<K, GridBucketState> cache) {
-        this.gridProxy = new JCacheProxy<>(cache);
+    IgniteProxyManager(IgniteCache<K, GridBucketState> cache) {
+        this.gridProxy = new IgniteProxy<>(cache);
     }
 
     @Override

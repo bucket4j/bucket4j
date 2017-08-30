@@ -23,6 +23,7 @@ import io.github.bucket4j.ConfigurationBuilder;
 import io.github.bucket4j.grid.GridBucket;
 import io.github.bucket4j.grid.GridBucketState;
 import io.github.bucket4j.grid.RecoveryStrategy;
+import org.apache.ignite.IgniteCache;
 
 import javax.cache.Cache;
 import java.io.Serializable;
@@ -30,7 +31,9 @@ import java.io.Serializable;
 /**
  * {@inheritDoc}
  *
- * This builder creates the buckets backed by any <a href="https://www.jcp.org/en/jsr/detail?id=107">JCache API (JSR 107)</a> implementation.
+ * This builder creates the buckets backed by <a href="https://ignite.apache.org/">Apache ignite</a> in-memory computing platform.
+ *
+ * @see io.github.bucket4j.grid.jcache.JCacheBucketBuilder
  *
  */
 public class IgniteBucketBuilder extends ConfigurationBuilder<IgniteBucketBuilder> {
@@ -44,29 +47,13 @@ public class IgniteBucketBuilder extends ConfigurationBuilder<IgniteBucketBuilde
 
     /**
      * Constructs an instance of {@link GridBucket} which state actually stored inside in-memory data-grid,
-     * the bucket stored in the grid immediately, so one network request will be issued to grid.
-     * Due to this method performs network IO, returned result must not be treated as light-weight entity,
-     * it will be a performance anti-pattern to use this method multiple times for same key,
-     * you need to cache result somewhere and reuse between invocations,
-     * else performance of all operation with bucket will be 2-x times slower.
-     *
-     * <p>
-     * Use this method if and only if you need to full control over bucket lifecycle(especially specify {@link RecoveryStrategy}),
-     * and you have clean caching strategy which suitable for storing buckets,
-     * else it would be better to work through {@link JCache#proxyManagerForCache(Cache) ProxyManager},
-     * which does not require any caching, because ProxyManager operates with light-weight versions of buckets.
-     *
-     * @param cache distributed cache which will hold bucket inside cluster.
-     *             Feel free to store inside single {@code cache} as mush buckets as you need.
-     * @param key  for storing bucket inside {@code cache}.
-     *             If you plan to store multiple buckets inside single {@code cache}, then each bucket should has own unique {@code key}.
-     * @param recoveryStrategy specifies the reaction which should be applied in case of previously saved state of bucket has been lost.
+     * semantic of this method is fully equals to {@link io.github.bucket4j.grid.jcache.JCacheBucketBuilder#build(Cache, Serializable, RecoveryStrategy)}
      *
      * @return new distributed bucket
      */
-    public <K extends Serializable> Bucket build(Cache<K, GridBucketState> cache, K key, RecoveryStrategy recoveryStrategy) {
+    public <K extends Serializable> Bucket build(IgniteCache<K, GridBucketState> cache, K key, RecoveryStrategy recoveryStrategy) {
         BucketConfiguration configuration = buildConfiguration();
-        JCacheProxy<K> gridProxy = new JCacheProxy<>(cache);
+        IgniteProxy<K> gridProxy = new IgniteProxy<>(cache);
         return GridBucket.createInitializedBucket(key, configuration, gridProxy, recoveryStrategy);
     }
 
