@@ -52,6 +52,10 @@ public class JCacheEntryProcessor<K extends Serializable, T extends Serializable
         this.configuration = configuration;
     }
 
+    public GridCommand<T> getTargetCommand() {
+        return targetCommand;
+    }
+
     @Override
     public CommandResult<T> process(MutableEntry<K, GridBucketState> mutableEntry, Object... arguments) {
         long currentTimeNanos = currentTimeNanos();

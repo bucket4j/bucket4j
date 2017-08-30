@@ -15,15 +15,15 @@
  *
  */
 
-package io.github.bucket4j.grid.ignite;
+package io.github.bucket4j.grid.hazelcast;
 
+import com.hazelcast.core.IMap;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.ConfigurationBuilder;
 import io.github.bucket4j.grid.GridBucket;
 import io.github.bucket4j.grid.GridBucketState;
 import io.github.bucket4j.grid.RecoveryStrategy;
-import org.apache.ignite.IgniteCache;
 
 import javax.cache.Cache;
 import java.io.Serializable;
@@ -36,12 +36,12 @@ import java.io.Serializable;
  * @see io.github.bucket4j.grid.jcache.JCacheBucketBuilder
  *
  */
-public class IgniteBucketBuilder extends ConfigurationBuilder<IgniteBucketBuilder> {
+public class HazelcastBucketBuilder extends ConfigurationBuilder<HazelcastBucketBuilder> {
 
     /**
-     * Creates the new instance of {@link IgniteBucketBuilder}
+     * Creates the new instance of {@link HazelcastBucketBuilder}
      */
-    public IgniteBucketBuilder() {
+    public HazelcastBucketBuilder() {
         super();
     }
 
@@ -51,9 +51,9 @@ public class IgniteBucketBuilder extends ConfigurationBuilder<IgniteBucketBuilde
      *
      * @return new distributed bucket
      */
-    public <K extends Serializable> Bucket build(IgniteCache<K, GridBucketState> cache, K key, RecoveryStrategy recoveryStrategy) {
+    public <K extends Serializable> Bucket build(IMap<K, GridBucketState> map, K key, RecoveryStrategy recoveryStrategy) {
         BucketConfiguration configuration = buildConfiguration();
-        IgniteProxy<K> gridProxy = new IgniteProxy<>(cache);
+        HazelcastProxy<K> gridProxy = new HazelcastProxy<>(map);
         return GridBucket.createInitializedBucket(key, configuration, gridProxy, recoveryStrategy);
     }
 

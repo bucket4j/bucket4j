@@ -15,8 +15,9 @@
  *
  */
 
-package io.github.bucket4j.grid.ignite;
+package io.github.bucket4j.grid.hazelcast;
 
+import com.hazelcast.core.IMap;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.grid.GridBucket;
@@ -24,7 +25,6 @@ import io.github.bucket4j.grid.GridBucketState;
 import io.github.bucket4j.grid.GridProxy;
 import io.github.bucket4j.grid.ProxyManager;
 import io.github.bucket4j.util.LazySupplier;
-import org.apache.ignite.IgniteCache;
 
 import java.io.Serializable;
 import java.util.function.Supplier;
@@ -34,12 +34,12 @@ import java.util.function.Supplier;
  *
  * @param <K> type of key for buckets
  */
-public class IgniteProxyManager<K extends Serializable> implements ProxyManager<K> {
+public class HazelcastProxyManager<K extends Serializable> implements ProxyManager<K> {
 
     private final GridProxy<K> gridProxy;
 
-    IgniteProxyManager(IgniteCache<K, GridBucketState> cache) {
-        this.gridProxy = new IgniteProxy<>(cache);
+    HazelcastProxyManager(IMap<K, GridBucketState> map) {
+        this.gridProxy = new HazelcastProxy<>(map);
     }
 
     @Override

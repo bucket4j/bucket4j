@@ -15,42 +15,41 @@
  *
  */
 
-package io.github.bucket4j.grid.ignite;
+package io.github.bucket4j.grid.hazelcast;
 
 
+import com.hazelcast.core.IMap;
 import io.github.bucket4j.Extension;
 import io.github.bucket4j.grid.GridBucketState;
 import io.github.bucket4j.grid.ProxyManager;
-import org.apache.ignite.IgniteCache;
-
 import java.io.Serializable;
 
 /**
- * The extension of Bucket4j library addressed to support <a href="https://ignite.apache.org/">Apache ignite</a> in-memory computing platform.
+ * The extension of Bucket4j library addressed to support <a href="https://hazelcast.com//">Hazelcast</a> in-memory data grid.
  *
  * Use this extension only if you need in asynchronous API, else stay at {@link io.github.bucket4j.grid.jcache.JCache}
  */
-public class Ignite implements Extension<IgniteBucketBuilder> {
+public class Hazelcast implements Extension<HazelcastBucketBuilder> {
 
     /**
      * {@inheritDoc}
      *
-     * @return new instance of {@link IgniteBucketBuilder}
+     * @return new instance of {@link HazelcastBucketBuilder}
      */
     @Override
-    public IgniteBucketBuilder builder() {
-        return new IgniteBucketBuilder();
+    public HazelcastBucketBuilder builder() {
+        return new HazelcastBucketBuilder();
     }
 
     /**
-     * Creates {@link IgniteProxyManager} for specified cache.
+     * Creates {@link HazelcastProxyManager} for specified map.
      *
-     * @param cache cache for storing state of buckets
-     * @param <T> type of keys in the cache
-     * @return {@link ProxyManager} for specified cache.
+     * @param map map for storing state of buckets
+     * @param <T> type of keys in the map
+     * @return {@link ProxyManager} for specified map.
      */
-    public <T extends Serializable> ProxyManager<T> proxyManagerForCache(IgniteCache<T, GridBucketState> cache) {
-        return new IgniteProxyManager<>(cache);
+    public <T extends Serializable> ProxyManager<T> proxyManagerForCache(IMap<T, GridBucketState> map) {
+        return new HazelcastProxyManager<>(map);
     }
 
 }
