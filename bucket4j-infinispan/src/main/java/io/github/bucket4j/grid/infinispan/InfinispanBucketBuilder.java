@@ -35,12 +35,12 @@ import java.io.Serializable;
  * @see io.github.bucket4j.grid.jcache.JCacheBucketBuilder
  *
  */
-public class IgniteBucketBuilder extends ConfigurationBuilder<IgniteBucketBuilder> {
+public class InfinispanBucketBuilder extends ConfigurationBuilder<InfinispanBucketBuilder> {
 
     /**
-     * Creates the new instance of {@link IgniteBucketBuilder}
+     * Creates the new instance of {@link InfinispanBucketBuilder}
      */
-    public IgniteBucketBuilder() {
+    public InfinispanBucketBuilder() {
         super();
     }
 

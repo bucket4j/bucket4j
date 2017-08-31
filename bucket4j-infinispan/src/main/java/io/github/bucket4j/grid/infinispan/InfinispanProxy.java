@@ -23,37 +23,39 @@ import io.github.bucket4j.grid.GridBucketState;
 import io.github.bucket4j.grid.GridCommand;
 import io.github.bucket4j.grid.GridProxy;
 import io.github.bucket4j.grid.jcache.JCacheEntryProcessor;
-
+import org.infinispan.remoting.transport.Address;
 
 import javax.cache.Cache;
-import javax.cache.processor.EntryProcessor;
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.concurrent.CompletableFuture;
 
 public class InfinispanProxy<K extends Serializable> implements GridProxy<K> {
 
     private final Cache<K, GridBucketState> cache;
+    private final org.infinispan.Cache<K, GridBucketState> nativeCache;
 
     public InfinispanProxy(Cache<K, GridBucketState> cache) {
         this.cache = cache;
+        this.nativeCache = cache.unwrap(org.infinispan.Cache.class);
     }
 
     @Override
     public <T extends Serializable> CommandResult<T> execute(K key, GridCommand<T> command) {
         JCacheEntryProcessor<K, T> entryProcessor = JCacheEntryProcessor.executeProcessor(command);
-        return cache.invoke(key, adoptEntryProcessor(entryProcessor));
+        return cache.invoke(key, entryProcessor);
     }
 
     @Override
     public void createInitialState(K key, BucketConfiguration configuration) {
         JCacheEntryProcessor<K, Nothing> entryProcessor = JCacheEntryProcessor.initStateProcessor(configuration);
-        cache.invoke(key, adoptEntryProcessor(entryProcessor));
+        cache.invoke(key, entryProcessor);
     }
 
     @Override
     public <T extends Serializable> T createInitialStateAndExecute(K key, BucketConfiguration configuration, GridCommand<T> command) {
         JCacheEntryProcessor<K, T> entryProcessor = JCacheEntryProcessor.initStateAndExecuteProcessor(command, configuration);
-        CommandResult<T> result = cache.invoke(key, adoptEntryProcessor(entryProcessor));
+        CommandResult<T> result = cache.invoke(key, entryProcessor);
         return result.getData();
     }
 
@@ -72,18 +74,26 @@ public class InfinispanProxy<K extends Serializable> implements GridProxy<K> {
 
     @Override
     public boolean isAsyncModeSupported() {
-        // because JCache does not specify async API
         return true;
     }
 
-    private <T> EntryProcessor<K, GridBucketState, T> adoptEntryProcessor(final EntryProcessor<K, GridBucketState, T> entryProcessor) {
-        // TODO
-        return entryProcessor;
-    }
+    private <T extends Serializable> CompletableFuture<CommandResult<T>> invokeAsync(final K key, final JCacheEntryProcessor<K, T> entryProcessor) {
+        Address primaryNodeForKey = nativeCache.getAdvancedCache().getDistributionManager().getCacheTopology().getDistribution(key).primary();
 
-    private <T extends Serializable> CompletableFuture<CommandResult<T>> invokeAsync(K key, JCacheEntryProcessor<K, T> entryProcessor) {
-        // TODO
-        return null;
+        CompletableFuture<CommandResult<T>> resultFuture = new CompletableFuture<>();
+        String cacheName = nativeCache.getName();
+
+        InfinispanEntryProcessorAdapter<K, T> infinispanEntryProcessorAdapter = new InfinispanEntryProcessorAdapter<>(entryProcessor, cacheName, key);
+        nativeCache.getCacheManager().executor()
+                .filterTargets(Collections.singleton(primaryNodeForKey))
+                .submitConsumer(infinispanEntryProcessorAdapter, (address, result, throwable) -> {
+                    if (throwable != null) {
+                        resultFuture.completeExceptionally(throwable);
+                    } else {
+                        resultFuture.complete(result);
+                    }
+                });
+        return resultFuture;
     }
 
 }

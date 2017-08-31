@@ -46,6 +46,12 @@
             <version>${infinispan.version}</version>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>org.infinispan</groupId>
+            <artifactId>infinispan-jcache</artifactId>
+            <version>${infinispan.version}</version>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 
 </project>

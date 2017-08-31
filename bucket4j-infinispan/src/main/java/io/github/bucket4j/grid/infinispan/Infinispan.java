@@ -31,16 +31,16 @@ import java.io.Serializable;
  *
  * Use this extension only if you need in asynchronous API, else stay at {@link io.github.bucket4j.grid.jcache.JCache}
  */
-public class Infinispan implements Extension<IgniteBucketBuilder> {
+public class Infinispan implements Extension<InfinispanBucketBuilder> {
 
     /**
      * {@inheritDoc}
      *
-     * @return new instance of {@link IgniteBucketBuilder}
+     * @return new instance of {@link InfinispanBucketBuilder}
      */
     @Override
-    public IgniteBucketBuilder builder() {
-        return new IgniteBucketBuilder();
+    public InfinispanBucketBuilder builder() {
+        return new InfinispanBucketBuilder();
     }
 
     /**
