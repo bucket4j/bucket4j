@@ -72,7 +72,6 @@ public class IgniteProxy<K extends Serializable> implements GridProxy<K> {
 
     @Override
     public boolean isAsyncModeSupported() {
-        // because JCache does not specify async API
         return true;
     }
 

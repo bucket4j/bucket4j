@@ -23,12 +23,14 @@ import io.github.bucket4j.grid.GridBucketState;
 import io.github.bucket4j.grid.GridCommand;
 import io.github.bucket4j.grid.GridProxy;
 import io.github.bucket4j.grid.jcache.JCacheEntryProcessor;
+import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.remoting.transport.Address;
 
 import javax.cache.Cache;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
 
 public class InfinispanProxy<K extends Serializable> implements GridProxy<K> {
 
@@ -83,16 +85,17 @@ public class InfinispanProxy<K extends Serializable> implements GridProxy<K> {
         CompletableFuture<CommandResult<T>> resultFuture = new CompletableFuture<>();
         String cacheName = nativeCache.getName();
 
-        InfinispanEntryProcessorAdapter<K, T> infinispanEntryProcessorAdapter = new InfinispanEntryProcessorAdapter<>(entryProcessor, cacheName, key);
+        Function<EmbeddedCacheManager, CommandResult<T>> callable = new SerializableRemoteFunction<>(key, cacheName, entryProcessor);
+
         nativeCache.getCacheManager().executor()
-                .filterTargets(Collections.singleton(primaryNodeForKey))
-                .submitConsumer(infinispanEntryProcessorAdapter, (address, result, throwable) -> {
-                    if (throwable != null) {
-                        resultFuture.completeExceptionally(throwable);
-                    } else {
-                        resultFuture.complete(result);
-                    }
-                });
+            .filterTargets(Collections.singleton(primaryNodeForKey))
+            .submitConsumer(callable, (address, result, throwable) -> {
+                if (throwable != null) {
+                    resultFuture.completeExceptionally(throwable);
+                } else {
+                    resultFuture.complete(result);
+                }
+            });
         return resultFuture;
     }
 
