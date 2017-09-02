@@ -24,11 +24,9 @@ import io.github.bucket4j.grid.GridCommand;
 import io.github.bucket4j.grid.GridProxy;
 import io.github.bucket4j.grid.jcache.JCacheEntryProcessor;
 import org.apache.ignite.IgniteCache;
-import org.apache.ignite.cache.CacheEntryProcessor;
 import org.apache.ignite.lang.IgniteFuture;
 import org.apache.ignite.lang.IgniteInClosure;
 
-import javax.cache.processor.EntryProcessor;
 import java.io.Serializable;
 import java.util.concurrent.CompletableFuture;
 
@@ -43,19 +41,19 @@ public class IgniteProxy<K extends Serializable> implements GridProxy<K> {
     @Override
     public <T extends Serializable> CommandResult<T> execute(K key, GridCommand<T> command) {
         JCacheEntryProcessor<K, T> entryProcessor = JCacheEntryProcessor.executeProcessor(command);
-        return cache.invoke(key, adoptEntryProcessor(entryProcessor));
+        return cache.invoke(key, entryProcessor);
     }
 
     @Override
     public void createInitialState(K key, BucketConfiguration configuration) {
         JCacheEntryProcessor<K, Nothing> entryProcessor = JCacheEntryProcessor.initStateProcessor(configuration);
-        cache.invoke(key, adoptEntryProcessor(entryProcessor));
+        cache.invoke(key, entryProcessor);
     }
 
     @Override
     public <T extends Serializable> T createInitialStateAndExecute(K key, BucketConfiguration configuration, GridCommand<T> command) {
         JCacheEntryProcessor<K, T> entryProcessor = JCacheEntryProcessor.initStateAndExecuteProcessor(command, configuration);
-        CommandResult<T> result = cache.invoke(key, adoptEntryProcessor(entryProcessor));
+        CommandResult<T> result = cache.invoke(key, entryProcessor);
         return result.getData();
     }
 
@@ -78,30 +76,19 @@ public class IgniteProxy<K extends Serializable> implements GridProxy<K> {
         return true;
     }
 
-    private <T> CacheEntryProcessor<K, GridBucketState, T> adoptEntryProcessor(final EntryProcessor<K, GridBucketState, T> entryProcessor) {
-        return (CacheEntryProcessor<K, GridBucketState, T>) (entry, arguments) -> entryProcessor.process(entry, arguments);
+    private <T extends Serializable> CompletableFuture<CommandResult<T>> invokeAsync(K key, JCacheEntryProcessor<K, T> entryProcessor) {
+        return convertFuture(cache.invokeAsync(key, entryProcessor));
     }
 
-    private <T extends Serializable> CompletableFuture<CommandResult<T>> invokeAsync(K key, JCacheEntryProcessor<K, T> entryProcessor) {
-        IgniteCache<K, GridBucketState> asyncCache = cache.withAsync();
-        asyncCache.invoke(key, adoptEntryProcessor(entryProcessor));
-        CompletableFuture<CommandResult<T>> completableFuture = new CompletableFuture<>();
-        IgniteFuture<CommandResult<T>> igniteFuture = asyncCache.future();
-        IgniteInClosure<? super IgniteFuture<CommandResult<T>>> listener = (IgniteInClosure<IgniteFuture<CommandResult<T>>>) completedIgniteFuture -> {
-            Throwable exception = null;
-            CommandResult<T> result = null;
+    private static <T> CompletableFuture<T> convertFuture(IgniteFuture<T> igniteFuture) {
+        CompletableFuture<T> completableFuture = new CompletableFuture<>();
+        igniteFuture.listen((IgniteInClosure<IgniteFuture<T>>) completedIgniteFuture -> {
             try {
-                result = completedIgniteFuture.get();
+                completableFuture.complete(completedIgniteFuture.get());
             } catch (Throwable t) {
-                exception = t;
+                completableFuture.completeExceptionally(t);
             }
-            if (exception != null) {
-                completableFuture.completeExceptionally(exception);
-            } else {
-                completableFuture.complete(result);
-            }
-        };
-        igniteFuture.listen(listener);
+        });
         return completableFuture;
     }
 
