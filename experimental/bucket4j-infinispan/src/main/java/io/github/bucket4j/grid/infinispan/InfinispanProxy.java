@@ -35,11 +35,9 @@ import java.util.function.Function;
 public class InfinispanProxy<K extends Serializable> implements GridProxy<K> {
 
     private final Cache<K, GridBucketState> cache;
-    private final org.infinispan.Cache<K, GridBucketState> nativeCache;
 
     public InfinispanProxy(Cache<K, GridBucketState> cache) {
         this.cache = cache;
-        this.nativeCache = cache.unwrap(org.infinispan.Cache.class);
     }
 
     @Override
@@ -80,23 +78,7 @@ public class InfinispanProxy<K extends Serializable> implements GridProxy<K> {
     }
 
     private <T extends Serializable> CompletableFuture<CommandResult<T>> invokeAsync(final K key, final JCacheEntryProcessor<K, T> entryProcessor) {
-        Address primaryNodeForKey = nativeCache.getAdvancedCache().getDistributionManager().getCacheTopology().getDistribution(key).primary();
-
-        CompletableFuture<CommandResult<T>> resultFuture = new CompletableFuture<>();
-        String cacheName = nativeCache.getName();
-
-        Function<EmbeddedCacheManager, CommandResult<T>> callable = new SerializableRemoteFunction<>(key, cacheName, entryProcessor);
-
-        nativeCache.getCacheManager().executor()
-            .filterTargets(Collections.singleton(primaryNodeForKey))
-            .submitConsumer(callable, (address, result, throwable) -> {
-                if (throwable != null) {
-                    resultFuture.completeExceptionally(throwable);
-                } else {
-                    resultFuture.complete(result);
-                }
-            });
-        return resultFuture;
+        return InfinispanAsyncHelper.invokeAsync(key, cache, entryProcessor);
     }
 
 }

@@ -27,11 +27,8 @@
         <module>bucket4j-jcache</module>
         <module>bucket4j-hazelcast</module>
         <module>bucket4j-ignite</module>
-        <module>bucket4j-infinispan</module>
-        <module>bucket4j-redis</module>
-        <module>bucket4j-mysql</module>
-        <module>bucket4j-postgresql</module>
-        <!--<module>bucket4j-benchmarks</module>-->
+        <module>experimental</module>
+        <module>bucket4j-benchmarks</module>
     </modules>
     <packaging>pom</packaging>
 

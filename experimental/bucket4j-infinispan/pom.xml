@@ -8,7 +8,7 @@
         <groupId>com.github.vladimir-bukhtoyarov</groupId>
         <artifactId>bucket4j-parent</artifactId>
         <version>2.2.0</version>
-        <relativePath>../bucket4j-parent</relativePath>
+        <relativePath>../../bucket4j-parent</relativePath>
     </parent>
 
     <groupId>com.github.vladimir-bukhtoyarov</groupId>
@@ -51,27 +51,6 @@
             <artifactId>infinispan-jcache</artifactId>
             <version>${infinispan.version}</version>
             <scope>provided</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.spockframework</groupId>
-            <artifactId>spock-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.codehaus.groovy</groupId>
-            <artifactId>groovy-all</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>cglib</groupId>
-            <artifactId>cglib-nodep</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.gridkit.lab</groupId>
-            <artifactId>nanocloud</artifactId>
         </dependency>
     </dependencies>
 
