@@ -12,6 +12,8 @@ import java.util.Map;
 
 class HazelcastEntryProcessorAdapter<K extends Serializable, T extends Serializable> implements EntryProcessor<K, GridBucketState> {
 
+    private static final long serialVersionUID = 1L;
+
     private final JCacheEntryProcessor<K, T> entryProcessor;
     private EntryBackupProcessor<K, GridBucketState> backupProcessor;
 
@@ -21,10 +23,11 @@ class HazelcastEntryProcessorAdapter<K extends Serializable, T extends Serializa
 
     @Override
     public Object process(Map.Entry<K, GridBucketState> entry) {
-        CommandResult<T> result = entryProcessor.process(new HazelcastMutableEntryAdapter<>(entry));
-        if (entryProcessor.getTargetCommand().isBucketStateModified()) {
+        HazelcastMutableEntryAdapter<K> entryAdapter = new HazelcastMutableEntryAdapter<>(entry);
+        CommandResult<T> result = entryProcessor.process(entryAdapter);
+        if (entryAdapter.isModified()) {
             GridBucketState state = entry.getValue();
-            backupProcessor = new SimpleBackupProcessor(state);
+            backupProcessor = new SimpleBackupProcessor<>(state);
         }
         return result;
     }

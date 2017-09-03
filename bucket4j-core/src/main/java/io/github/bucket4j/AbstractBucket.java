@@ -23,7 +23,7 @@ import java.util.concurrent.TimeUnit;
 
 public abstract class AbstractBucket implements Bucket {
 
-    protected static final long UNSPECIFIED_WAITING_LIMIT = -1;
+    protected static final long UNSPECIFIED_WAITING_LIMIT = Long.MAX_VALUE;
 
     protected abstract long consumeAsMuchAsPossibleImpl(long limit);
 
