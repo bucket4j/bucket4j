@@ -21,6 +21,8 @@ import io.github.bucket4j.BucketState;
 
 public class CreateSnapshotCommand implements GridCommand<BucketState> {
 
+    private static final long serialVersionUID = 1L;
+
     @Override
     public BucketState execute(GridBucketState gridState, long currentTimeNanos) {
         return gridState.getBucketState().copy();

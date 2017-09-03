@@ -25,6 +25,8 @@ import java.io.Serializable;
  */
 public class BucketNotFoundException extends IllegalStateException {
 
+    private static final long serialVersionUID = 1L;
+
     private final Serializable bucketId;
 
     public BucketNotFoundException(Serializable bucketId) {

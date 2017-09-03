@@ -41,7 +41,7 @@ public class InitStateAndExecuteProcessor<K extends Serializable, T extends Seri
     @Override
     public CommandResult<T> process(MutableEntry<K, GridBucketState> mutableEntry, Object... arguments) {
         boolean newStateCreated = false;
-        long currentTimeNanos = JCacheEntryProcessor.currentTimeNanos();
+        long currentTimeNanos = currentTimeNanos();
         GridBucketState gridBucketState;
         if (mutableEntry.exists()) {
             gridBucketState = mutableEntry.getValue();

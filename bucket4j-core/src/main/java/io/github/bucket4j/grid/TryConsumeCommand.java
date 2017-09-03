@@ -23,6 +23,8 @@ import io.github.bucket4j.Bandwidth;
 
 public class TryConsumeCommand implements GridCommand<Boolean> {
 
+    private static final long serialVersionUID = 1L;
+
     private long tokensToConsume;
     private boolean bucketStateModified;
 

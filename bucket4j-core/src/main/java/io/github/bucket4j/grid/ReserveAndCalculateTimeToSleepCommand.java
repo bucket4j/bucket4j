@@ -23,6 +23,8 @@ import io.github.bucket4j.BucketState;
 
 public class ReserveAndCalculateTimeToSleepCommand implements GridCommand<Long> {
 
+    private static final long serialVersionUID = 1L;
+
     private long tokensToConsume;
     private long waitIfBusyNanosLimit;
     private boolean bucketStateModified;

@@ -24,6 +24,8 @@ import io.github.bucket4j.BucketState;
 
 public class AddTokensCommand implements GridCommand<Long> {
 
+    private static final long serialVersionUID = 1L;
+
     private long tokensToAdd;
 
     public AddTokensCommand(long tokensToAdd) {

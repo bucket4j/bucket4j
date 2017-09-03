@@ -23,6 +23,8 @@ import io.github.bucket4j.BucketState;
 
 public class ConsumeAsMuchAsPossibleCommand implements GridCommand<Long> {
 
+    private static final long serialVersionUID = 1L;
+
     private long limit;
     private boolean bucketStateModified;
 

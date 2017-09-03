@@ -39,7 +39,7 @@ public class ExecuteProcessor<K extends Serializable, T extends Serializable> im
         if (!mutableEntry.exists()) {
             return CommandResult.bucketNotFound();
         }
-        long currentTimeNanos = JCacheEntryProcessor.currentTimeNanos();
+        long currentTimeNanos = currentTimeNanos();
         GridBucketState gridBucketState = mutableEntry.getValue();
 
         T result = targetCommand.execute(gridBucketState, currentTimeNanos);

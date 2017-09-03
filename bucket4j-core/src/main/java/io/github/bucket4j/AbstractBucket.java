@@ -91,7 +91,7 @@ public abstract class AbstractBucket implements Bucket {
                     }
                     try {
                         Runnable delayedComplection = () -> resultFuture.complete(true);
-                        scheduler.schedule(delayedComplection, nanosToSleep, TimeUnit.SECONDS);
+                        scheduler.schedule(delayedComplection, nanosToSleep, TimeUnit.NANOSECONDS);
                     } catch (Throwable t) {
                         resultFuture.completeExceptionally(t);
                     }

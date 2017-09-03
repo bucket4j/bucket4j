@@ -41,7 +41,7 @@ public class InitStateProcessor<K extends Serializable> implements JCacheEntryPr
         if (mutableEntry.exists()) {
             return CommandResult.success(null);
         }
-        long currentTimeNanos = JCacheEntryProcessor.currentTimeNanos();
+        long currentTimeNanos = currentTimeNanos();
         BucketState bucketState = BucketState.createInitialState(configuration, currentTimeNanos);
         GridBucketState gridBucketState = new GridBucketState(configuration, bucketState);
         mutableEntry.setValue(gridBucketState);

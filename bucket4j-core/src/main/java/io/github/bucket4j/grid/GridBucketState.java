@@ -25,6 +25,8 @@ import java.io.Serializable;
 
 public class GridBucketState implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     private final BucketConfiguration bucketConfiguration;
     private final BucketState bucketState;
 

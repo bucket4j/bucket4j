@@ -7,6 +7,8 @@ import io.github.bucket4j.BucketState;
 
 public class GetAvailableTokensCommand implements GridCommand<Long> {
 
+    private static final long serialVersionUID = 1L;
+
     @Override
     public Long execute(GridBucketState gridState, long currentTimeNanos) {
         BucketConfiguration configuration = gridState.getBucketConfiguration();

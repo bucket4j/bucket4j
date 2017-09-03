@@ -48,6 +48,15 @@ public abstract class AbstractJCacheTest {
         assertTrue(bucket.tryConsume(1));
     }
 
+    @Test(expected = UnsupportedOperationException.class)
+    public void testThatAsyncNotSupported() {
+        Bucket bucket = Bucket4j.extension(JCache.class).builder()
+                .addLimit(Bandwidth.simple(1_000, Duration.ofMinutes(1)))
+                .build(jCacheFixture.getCache(), key, RECONSTRUCT);
+
+        bucket.asAsync();
+    }
+
     @Test
     public void testThrowExceptionRecoveryStrategy() {
         Bucket bucket = Bucket4j.extension(JCache.class).builder()

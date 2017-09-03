@@ -42,7 +42,7 @@ public interface JCacheEntryProcessor<K extends Serializable, T extends Serializ
         return new InitStateAndExecuteProcessor<>(targetCommand, configuration);
     }
 
-    static long currentTimeNanos() {
+    default long currentTimeNanos() {
         return System.currentTimeMillis() * 1_000_000;
     }
 

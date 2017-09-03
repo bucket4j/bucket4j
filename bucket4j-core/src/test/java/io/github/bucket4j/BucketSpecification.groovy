@@ -19,6 +19,7 @@ package io.github.bucket4j
 
 import io.github.bucket4j.mock.BucketType
 import io.github.bucket4j.mock.BlockingStrategyMock
+import io.github.bucket4j.mock.SchedulerMock
 import io.github.bucket4j.mock.TimeMeterMock
 import spock.lang.Specification
 import spock.lang.Timeout
@@ -34,9 +35,15 @@ class BucketSpecification extends Specification {
             int n, boolean requiredResult, ConfigurationBuilder builder) {
         expect:
             for (BucketType type : BucketType.values()) {
-                def timeMeter = new TimeMeterMock(0)
-                Bucket bucket = type.createBucket(builder, timeMeter)
-                assert bucket.tryConsume(1) == requiredResult
+                for (boolean sync : [true, false]) {
+                    def timeMeter = new TimeMeterMock(0)
+                    Bucket bucket = type.createBucket(builder, timeMeter)
+                    if (sync) {
+                        assert bucket.tryConsume(1) == requiredResult
+                    } else {
+                        assert bucket.asAsync().tryConsume(1).get() == requiredResult
+                    }
+                }
             }
         where:
             n | requiredResult |  builder
@@ -49,9 +56,15 @@ class BucketSpecification extends Specification {
             int n, boolean requiredResult, long toConsume, ConfigurationBuilder builder) {
         expect:
             for (BucketType type : BucketType.values()) {
-                def timeMeter = new TimeMeterMock(0)
-                Bucket bucket = type.createBucket(builder, timeMeter)
-                assert bucket.tryConsume(toConsume) == requiredResult
+                for (boolean sync : [true, false]) {
+                    def timeMeter = new TimeMeterMock(0)
+                    Bucket bucket = type.createBucket(builder, timeMeter)
+                    if (sync) {
+                        assert bucket.tryConsume(toConsume) == requiredResult
+                    } else {
+                        assert bucket.asAsync().tryConsume(toConsume).get() == requiredResult
+                    }
+                }
             }
         where:
             n | requiredResult | toConsume | builder
@@ -63,13 +76,19 @@ class BucketSpecification extends Specification {
     def "#n tryConsumeAndReturnRemaining specification"(int n, long toConsume, boolean result, long expectedRemaining, long expectedWait, ConfigurationBuilder builder) {
         expect:
             for (BucketType type : BucketType.values()) {
-                TimeMeterMock timeMeter = new TimeMeterMock(0)
-                Bucket bucket = type.createBucket(builder, timeMeter)
-                ConsumptionProbe probe = bucket.tryConsumeAndReturnRemaining(toConsume)
-
-                assert probe.consumed == result
-                assert probe.remainingTokens == expectedRemaining
-                assert probe.nanosToWaitForRefill == expectedWait
+                for (boolean sync : [true, false]) {
+                    TimeMeterMock timeMeter = new TimeMeterMock(0)
+                    Bucket bucket = type.createBucket(builder, timeMeter)
+                    ConsumptionProbe probe
+                    if (sync) {
+                        probe = bucket.tryConsumeAndReturnRemaining(toConsume)
+                    } else {
+                        probe = bucket.asAsync().tryConsumeAndReturnRemaining(toConsume).get()
+                    }
+                    assert probe.consumed == result
+                    assert probe.remainingTokens == expectedRemaining
+                    assert probe.nanosToWaitForRefill == expectedWait
+                }
             }
         where:
             n | toConsume | result  |  expectedRemaining | expectedWait | builder
@@ -85,9 +104,15 @@ class BucketSpecification extends Specification {
             int n, long requiredResult, ConfigurationBuilder builder) {
         expect:
             for (BucketType bucketType : BucketType.values()) {
-                TimeMeterMock timeMeter = new TimeMeterMock(0)
-                Bucket bucket = bucketType.createBucket(builder, timeMeter)
-                assert bucket.tryConsumeAsMuchAsPossible() == requiredResult
+                for (boolean sync : [true, false]) {
+                    TimeMeterMock timeMeter = new TimeMeterMock(0)
+                    Bucket bucket = bucketType.createBucket(builder, timeMeter)
+                    if (sync) {
+                        assert bucket.tryConsumeAsMuchAsPossible() == requiredResult
+                    } else {
+                        assert bucket.asAsync().tryConsumeAsMuchAsPossible().get() == requiredResult
+                    }
+                }
             }
         where:
             n | requiredResult | builder
@@ -100,9 +125,15 @@ class BucketSpecification extends Specification {
             int n, long requiredResult, long limit, ConfigurationBuilder builder) {
         expect:
             for (BucketType bucketType : BucketType.values()) {
-                TimeMeterMock timeMeter = new TimeMeterMock(0)
-                Bucket bucket = bucketType.createBucket(builder, timeMeter)
-                assert bucket.tryConsumeAsMuchAsPossible(limit) == requiredResult
+                for (boolean sync : [true, false]) {
+                    TimeMeterMock timeMeter = new TimeMeterMock(0)
+                    Bucket bucket = bucketType.createBucket(builder, timeMeter)
+                    if (sync) {
+                        assert bucket.tryConsumeAsMuchAsPossible(limit) == requiredResult
+                    } else {
+                        assert bucket.asAsync().tryConsumeAsMuchAsPossible(limit).get() == requiredResult
+                    }
+                }
             }
         where:
             n | requiredResult |   limit   | builder
@@ -117,16 +148,24 @@ class BucketSpecification extends Specification {
             int n, long requiredSleep, long toConsume, ConfigurationBuilder builder) {
         expect:
             for (BucketType type : BucketType.values()) {
-                for (boolean uniterruptible : Arrays.asList(false, true)) {
-                    TimeMeterMock meter = new TimeMeterMock(0)
-                    BlockingStrategyMock sleepStrategy = new BlockingStrategyMock(meter)
-                    Bucket bucket = type.createBucket(builder, meter)
-                    if (uniterruptible) {
-                        bucket.consumeUninterruptibly(toConsume, sleepStrategy)
-                    } else {
-                        bucket.consume(toConsume, sleepStrategy)
+                for (boolean sync : [true, false]) {
+                    for (boolean uniterruptible : [true, false]) {
+                        TimeMeterMock meter = new TimeMeterMock(0)
+                        Bucket bucket = type.createBucket(builder, meter)
+                        if (sync) {
+                            BlockingStrategyMock sleepStrategy = new BlockingStrategyMock(meter)
+                            if (uniterruptible) {
+                                bucket.consumeUninterruptibly(toConsume, sleepStrategy)
+                            } else {
+                                bucket.consume(toConsume, sleepStrategy)
+                            }
+                            assert sleepStrategy.sleeped == requiredSleep
+                        } else {
+                            SchedulerMock scheduler = new SchedulerMock()
+                            bucket.asAsync().consume(toConsume, scheduler).get()
+                            assert scheduler.acummulatedDelayNanos == requiredSleep
+                        }
                     }
-                    assert sleepStrategy.sleeped == requiredSleep
                 }
             }
         where:
@@ -138,47 +177,28 @@ class BucketSpecification extends Specification {
 
     @Timeout(value = 2, unit = TimeUnit.SECONDS)
     @Unroll
-    def "#n Should sleep #requiredSleep and return #requiredResult when trying to consume single token with limit #sleepLimit from Bucket #builder"(
-            int n, long requiredSleep, boolean requiredResult, long sleepLimit, ConfigurationBuilder builder) {
-        expect:
-            for (BucketType type : BucketType.values()) {
-                for (boolean uniterruptible : Arrays.asList(false, true)) {
-                    TimeMeterMock meter = new TimeMeterMock(0)
-                    BlockingStrategyMock sleepStrategy = new BlockingStrategyMock(meter)
-                    Bucket bucket = type.createBucket(builder, meter)
-
-                    if (uniterruptible) {
-                        bucket.consumeUninterruptibly(1, sleepLimit, sleepStrategy) == requiredResult
-                    } else {
-                        bucket.consume(1, sleepLimit, sleepStrategy) == requiredResult
-                    }
-                    assert sleepStrategy.sleeped == requiredSleep
-                }
-            }
-        where:
-            n | requiredSleep | requiredResult | sleepLimit | builder
-            1 |      10       |     true       |     11     | Bucket4j.builder().addLimit(0, Bandwidth.simple(10, Duration.ofNanos(100)))
-            2 |       0       |     true       |     11     | Bucket4j.builder().addLimit(1, Bandwidth.simple(10, Duration.ofNanos(100)))
-    }
-
-
-    @Timeout(value = 2, unit = TimeUnit.SECONDS)
-    @Unroll
-    def "#n Should sleep #requiredSleep and return #requiredResult when trying to consume #toConsume tokens with limit #sleepLimit from Bucket #builder"(
+    def "#n Should sleep #requiredSleep and return #requiredResult when trying to synchronous consume #toConsume tokens with limit #sleepLimit from Bucket #builder"(
             int n, long requiredSleep, boolean requiredResult, long toConsume, long sleepLimit, ConfigurationBuilder builder) {
         expect:
             for (BucketType type : BucketType.values()) {
-                for (boolean uniterruptible : Arrays.asList(false, true)) {
-                    TimeMeterMock meter = new TimeMeterMock(0)
-                    BlockingStrategyMock sleepStrategy = new BlockingStrategyMock(meter)
-                    Bucket bucket = type.createBucket(builder, meter)
-
-                    if (uniterruptible) {
-                        bucket.consumeUninterruptibly(1, sleepLimit, sleepStrategy) == requiredResult
-                    } else {
-                        bucket.consume(1, sleepLimit, sleepStrategy) == requiredResult
+                for (boolean sync : [true, false]) {
+                    for (boolean uniterruptible : Arrays.asList(false, true)) {
+                        TimeMeterMock meter = new TimeMeterMock(0)
+                        Bucket bucket = type.createBucket(builder, meter)
+                        if (sync) {
+                            BlockingStrategyMock sleepStrategy = new BlockingStrategyMock(meter)
+                            if (uniterruptible) {
+                                assert bucket.consumeUninterruptibly(toConsume, sleepLimit, sleepStrategy) == requiredResult
+                            } else {
+                                assert bucket.consume(toConsume, sleepLimit, sleepStrategy) == requiredResult
+                            }
+                            assert sleepStrategy.sleeped == requiredSleep
+                        } else {
+                            SchedulerMock scheduler = new SchedulerMock()
+                            assert bucket.asAsync().consume(toConsume, sleepLimit, scheduler).get() == requiredResult
+                            assert scheduler.acummulatedDelayNanos == requiredSleep
+                        }
                     }
-                    assert sleepStrategy.sleeped == requiredSleep
                 }
             }
         where:
@@ -195,11 +215,17 @@ class BucketSpecification extends Specification {
             int n, long tokensToAdd, long nanosIncrement, long requiredResult, ConfigurationBuilder builder) {
         expect:
             for (BucketType type : BucketType.values()) {
-                TimeMeterMock timeMeter = new TimeMeterMock(0)
-                Bucket bucket = type.createBucket(builder, timeMeter)
-                timeMeter.addTime(nanosIncrement)
-                bucket.addTokens(tokensToAdd)
-                assert bucket.createSnapshot().getAvailableTokens(bucket.configuration.bandwidths) == requiredResult
+                for (boolean sync : [true, false]) {
+                    TimeMeterMock timeMeter = new TimeMeterMock(0)
+                    Bucket bucket = type.createBucket(builder, timeMeter)
+                    timeMeter.addTime(nanosIncrement)
+                    if (sync) {
+                        bucket.addTokens(tokensToAdd)
+                    } else {
+                        bucket.asAsync().addTokens(tokensToAdd).get()
+                    }
+                    assert bucket.createSnapshot().getAvailableTokens(bucket.configuration.bandwidths) == requiredResult
+                }
             }
         where:
             n | tokensToAdd | nanosIncrement | requiredResult | builder

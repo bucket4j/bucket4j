@@ -8,6 +8,8 @@ import io.github.bucket4j.ConsumptionProbe;
 
 public class TryConsumeAndReturnRemainingTokensCommand implements GridCommand<ConsumptionProbe> {
 
+    private static final long serialVersionUID = 1L;
+
     private long tokensToConsume;
     private boolean bucketStateModified = false;
 
