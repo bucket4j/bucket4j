@@ -182,7 +182,7 @@ class BucketSpecification extends Specification {
         expect:
             for (BucketType type : BucketType.values()) {
                 for (boolean sync : [true, false]) {
-                    for (boolean uniterruptible : Arrays.asList(false, true)) {
+                    for (boolean uniterruptible : [true, false]) {
                         TimeMeterMock meter = new TimeMeterMock(0)
                         Bucket bucket = type.createBucket(builder, meter)
                         if (sync) {
@@ -204,10 +204,12 @@ class BucketSpecification extends Specification {
         where:
             n | requiredSleep | requiredResult | toConsume | sleepLimit |  builder
             1 |      10       |     true       |     1     |     11     |  Bucket4j.builder().addLimit(0, Bandwidth.simple(10, Duration.ofNanos(100)))
-            2 |      10       |     false      |     1     |     11     |  Bucket4j.builder().addLimit(0, Bandwidth.simple(10, Duration.ofNanos(100)))
+            2 |      10       |     true       |     1     |     11     |  Bucket4j.builder().addLimit(0, Bandwidth.simple(10, Duration.ofNanos(100)))
             3 |       0       |     true       |     1     |     11     |  Bucket4j.builder().addLimit(1, Bandwidth.simple(10, Duration.ofNanos(100)))
             4 |       0       |     false      |   1000    |     11     |  Bucket4j.builder().addLimit(1, Bandwidth.simple(10, Duration.ofNanos(100)))
-            5 |       0       |     false      |     5     |     11     |  Bucket4j.builder().addLimit(1, Bandwidth.simple(10, Duration.ofNanos(100)))
+            5 |      40       |     true       |     5     |     40     |  Bucket4j.builder().addLimit(1, Bandwidth.simple(10, Duration.ofNanos(100)))
+            6 |      40       |     true       |     5     |     41     |  Bucket4j.builder().addLimit(1, Bandwidth.simple(10, Duration.ofNanos(100)))
+            6 |       0       |     false      |     5     |     39     |  Bucket4j.builder().addLimit(1, Bandwidth.simple(10, Duration.ofNanos(100)))
     }
 
     @Unroll
