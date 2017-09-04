@@ -22,6 +22,9 @@ import io.github.bucket4j.Extension;
 import io.github.bucket4j.grid.GridBucketState;
 import io.github.bucket4j.grid.ProxyManager;
 import org.infinispan.distexec.DistributedExecutorService;
+import org.infinispan.functional.EntryView;
+import org.infinispan.functional.FunctionalMap;
+import org.infinispan.util.function.SerializableFunction;
 
 import javax.cache.Cache;
 import java.io.Serializable;
@@ -51,6 +54,15 @@ public class Infinispan implements Extension<InfinispanBucketBuilder> {
      * @return {@link ProxyManager} for specified cache.
      */
     public <T extends Serializable> ProxyManager<T> proxyManagerForCache(Cache<T, GridBucketState> cache, DistributedExecutorService service) {
+        FunctionalMap.ReadWriteMap<Integer, String> map = null;
+        map.eval(42, new SerializableFunction<EntryView.ReadWriteEntryView<Integer, String>, Long>() {
+            @Override
+            public Long apply(EntryView.ReadWriteEntryView<Integer, String> integerStringReadWriteEntryView) {
+
+                return null;
+            }
+        });
+
         return new InfinispanProxyManager<>(cache);
     }
 

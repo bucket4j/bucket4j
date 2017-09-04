@@ -23,7 +23,6 @@ import io.github.bucket4j.ConfigurationBuilder;
 import io.github.bucket4j.grid.GridBucket;
 import io.github.bucket4j.grid.GridBucketState;
 import io.github.bucket4j.grid.RecoveryStrategy;
-import org.infinispan.distexec.DistributedExecutorService;
 
 import javax.cache.Cache;
 import java.io.Serializable;

@@ -17,6 +17,9 @@
 
 package io.github.bucket4j.grid.infinispan;
 
+import org.infinispan.functional.FunctionalMap.ReadWriteMap;
+import org.infinispan.functional.impl.FunctionalMapImpl;
+import org.infinispan.functional.impl.ReadWriteMapImpl;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -38,8 +41,13 @@ import static org.junit.Assert.assertEquals;
 public class InfinispanAsyncHelperTest {
 
     private static Cache<String, Integer> localCache;
+    private static ReadWriteMap<String, Integer> localReadWriteMap;
     private static Cache<String, Integer> distributedCache1;
+    private static ReadWriteMap<String, Integer> readWriteMap1;
     private static Cache<String, Integer> distributedCache2;
+    private static ReadWriteMap<String, Integer> readWriteMap2;
+
+
     private static CacheManager cacheManagerLocal;
     private static CacheManager cacheManager1;
     private static CacheManager cacheManager2;
@@ -48,6 +56,7 @@ public class InfinispanAsyncHelperTest {
     public static void init() throws MalformedURLException, URISyntaxException {
         cacheManagerLocal = Caching.getCachingProvider(). getCacheManager();
         localCache = cacheManagerLocal.createCache("localCache", new MutableConfiguration<String, Integer>());
+        localReadWriteMap = toMap(localCache);
 
         URI configurationUri = InfinispanAsyncHelperTest.class.getResource("/infinispan-jcache-cluster.xml").toURI();
         ClassLoader tccl = InfinispanAsyncHelperTest.class.getClassLoader();
@@ -55,8 +64,18 @@ public class InfinispanAsyncHelperTest {
         cacheManager2 = Caching.getCachingProvider().getCacheManager(configurationUri, new TestClassLoader(tccl));
 
         distributedCache1 = cacheManager1.getCache("namedCache");
+        readWriteMap1 = toMap(distributedCache1);
+
         distributedCache2 = cacheManager2.getCache("namedCache");
+        readWriteMap2 = toMap(distributedCache2);
     }
+
+    private static ReadWriteMap<String, Integer> toMap(Cache<String, Integer> cache) {
+        org.infinispan.Cache<String, Integer> nativeCache = cache.unwrap(org.infinispan.Cache.class);
+        FunctionalMapImpl<String, Integer> functionalMap = FunctionalMapImpl.create(nativeCache.getAdvancedCache());
+        return ReadWriteMapImpl.create(functionalMap);
+    }
+
 
     public static class TestClassLoader extends ClassLoader {
         public TestClassLoader(ClassLoader parent) {
@@ -74,12 +93,14 @@ public class InfinispanAsyncHelperTest {
             }
             return (long) entry.getValue() * 10;
         };
-        assertEquals(10L, invokeAsync("42", localCache, entryProcessor).get().longValue());
-        assertEquals(20L, invokeAsync("42", localCache, entryProcessor).get().longValue());
+        assertEquals(10L, invokeAsync("42", localReadWriteMap, entryProcessor).get().longValue());
+        assertEquals(20L, invokeAsync("42", localReadWriteMap, entryProcessor).get().longValue());
 
-//        assertEquals(10L, invokeAsync("42", distributedCache1, entryProcessor).get().longValue());
-//        assertEquals(20L, invokeAsync("42", distributedCache2, entryProcessor).get().longValue());
+        assertEquals(10L, invokeAsync("42", readWriteMap1, entryProcessor).get().longValue());
+        assertEquals(20L, invokeAsync("42", readWriteMap2, entryProcessor).get().longValue());
     }
+
+
 
 
 }

@@ -30,7 +30,6 @@
     <packaging>pom</packaging>
 
     <modules>
-        <module>bucket4j-infinispan</module>
         <module>bucket4j-redis</module>
         <module>bucket4j-mysql</module>
         <module>bucket4j-postgresql</module>

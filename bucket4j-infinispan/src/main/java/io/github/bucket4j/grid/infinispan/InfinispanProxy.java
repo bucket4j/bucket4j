@@ -23,21 +23,24 @@ import io.github.bucket4j.grid.GridBucketState;
 import io.github.bucket4j.grid.GridCommand;
 import io.github.bucket4j.grid.GridProxy;
 import io.github.bucket4j.grid.jcache.JCacheEntryProcessor;
-import org.infinispan.manager.EmbeddedCacheManager;
-import org.infinispan.remoting.transport.Address;
+import org.infinispan.functional.FunctionalMap.ReadWriteMap;
+import org.infinispan.functional.impl.FunctionalMapImpl;
+import org.infinispan.functional.impl.ReadWriteMapImpl;
 
 import javax.cache.Cache;
 import java.io.Serializable;
-import java.util.Collections;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Function;
 
 public class InfinispanProxy<K extends Serializable> implements GridProxy<K> {
 
     private final Cache<K, GridBucketState> cache;
+    private final ReadWriteMap<K, GridBucketState> readWriteMap;
 
     public InfinispanProxy(Cache<K, GridBucketState> cache) {
         this.cache = cache;
+        org.infinispan.Cache<K, GridBucketState> nativeCache = cache.unwrap(org.infinispan.Cache.class);
+        FunctionalMapImpl<K, GridBucketState> functionalMap = FunctionalMapImpl.create(nativeCache.getAdvancedCache());
+        this.readWriteMap = ReadWriteMapImpl.create(functionalMap);
     }
 
     @Override
@@ -78,7 +81,7 @@ public class InfinispanProxy<K extends Serializable> implements GridProxy<K> {
     }
 
     private <T extends Serializable> CompletableFuture<CommandResult<T>> invokeAsync(final K key, final JCacheEntryProcessor<K, T> entryProcessor) {
-        return InfinispanAsyncHelper.invokeAsync(key, cache, entryProcessor);
+        return InfinispanAsyncHelper.invokeAsync(key, readWriteMap, entryProcessor);
     }
 
 }
