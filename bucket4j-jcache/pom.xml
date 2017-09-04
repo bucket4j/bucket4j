@@ -77,6 +77,12 @@
             <version>${infinispan.version}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.infinispan</groupId>
+            <artifactId>infinispan-jcache</artifactId>
+            <version>${infinispan.version}</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
 </project>

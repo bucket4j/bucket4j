@@ -53,6 +53,7 @@ public class ConsumerThread extends Thread {
                 consumed += action.apply(bucket);
             }
         } catch (Exception e) {
+            exception.printStackTrace();
             exception = e;
         } finally {
             endLatch.countDown();

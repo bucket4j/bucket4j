@@ -17,22 +17,38 @@
 
 package io.github.bucket4j.grid.jcache.ignite;
 
+import io.github.bucket4j.grid.GridBucketState;
 import io.github.bucket4j.grid.jcache.AbstractJCacheTest;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.IgniteCache;
 import org.apache.ignite.Ignition;
 import org.apache.ignite.configuration.CacheConfiguration;
 import org.apache.ignite.configuration.IgniteConfiguration;
+import org.gridkit.nanocloud.Cloud;
+import org.gridkit.nanocloud.CloudFactory;
+import org.gridkit.nanocloud.VX;
+import org.gridkit.vicluster.ViNode;
 import org.junit.*;
+
+import javax.cache.Cache;
 import java.io.Serializable;
 
-public class IgniteTest extends AbstractJCacheTest {
+public class IgniteJCacheTest extends AbstractJCacheTest {
+
+    private static Cache<String, GridBucketState> cache;
+    private static Cloud cloud;
+    private static ViNode server;
 
     private static Ignite ignite;
 
     @BeforeClass
     public static void setup() {
-        jCacheFixture.startGridOnServer((Runnable & Serializable) () -> {
+        // start separated JVM on current host
+        cloud = CloudFactory.createCloud();
+        cloud.node("**").x(VX.TYPE).setLocal();
+        server = cloud.node("stateful-ignite-server");
+
+        server.exec((Runnable & Serializable) () -> {
             IgniteConfiguration igniteConfiguration = new IgniteConfiguration();
             igniteConfiguration.setClientMode(false);
             CacheConfiguration cacheConfiguration = new CacheConfiguration("my_buckets");
@@ -45,8 +61,7 @@ public class IgniteTest extends AbstractJCacheTest {
         igniteConfiguration.setClientMode(true);
         ignite = Ignition.start(igniteConfiguration);
         CacheConfiguration cacheConfiguration = new CacheConfiguration("my_buckets");
-        IgniteCache cache = ignite.getOrCreateCache(cacheConfiguration);
-        jCacheFixture.setCache(cache);
+        cache = ignite.getOrCreateCache(cacheConfiguration);
     }
 
     @AfterClass
@@ -54,6 +69,14 @@ public class IgniteTest extends AbstractJCacheTest {
         if (ignite != null) {
             ignite.close();
         }
+        if (cloud != null) {
+            cloud.shutdown();
+        }
+    }
+
+    @Override
+    protected Cache<String, GridBucketState> getCache() {
+        return cache;
     }
 
 }
