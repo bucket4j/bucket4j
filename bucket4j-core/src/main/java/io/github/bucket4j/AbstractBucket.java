@@ -83,6 +83,12 @@ public abstract class AbstractBucket implements Bucket {
             }
 
             @Override
+            public CompletableFuture<Void> replaceConfiguration(BucketConfiguration newConfiguration) {
+                // TODO
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
             public CompletableFuture<Void> addTokens(long tokensToAdd) {
                 checkTokensToAdd(tokensToAdd);
                 return addTokensAsyncImpl(tokensToAdd);
@@ -175,6 +181,12 @@ public abstract class AbstractBucket implements Bucket {
     public void addTokens(long tokensToAdd) {
         checkTokensToAdd(tokensToAdd);
         addTokensImpl(tokensToAdd);
+    }
+
+    @Override
+    public void replaceConfiguration(BucketConfiguration newConfiguration) {
+        // TODO
+        throw new UnsupportedOperationException();
     }
 
     private void checkTokensToAdd(long tokensToAdd) {

@@ -103,4 +103,16 @@ public interface AsyncBucket {
      */
     CompletableFuture<Void> consume(long numTokens, ScheduledExecutorService scheduler) throws InterruptedException;
 
+    /**
+     * Asynchronous variance of {@link Bucket#replaceConfiguration(BucketConfiguration)}, follows the same rules and semantic.
+     *
+     * @param newConfiguration new configuration
+     *
+     * @return Future which completed normally when reconfiguration done normally.
+     * Future will be completed with {@link IncompatibleConfigurationException} if new configuration is incompatible with previous.
+     *
+     * @see Bucket#replaceConfiguration(BucketConfiguration)
+     */
+    CompletableFuture<Void> replaceConfiguration(BucketConfiguration newConfiguration);
+
 }

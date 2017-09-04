@@ -174,6 +174,36 @@ public interface Bucket {
     long getAvailableTokens();
 
     /**
+     * Replaces configuration of this bucket instance.
+     *
+     * <p>Rules of reconfiguration:
+     * <ul>
+     *    <li>
+     *      New configuration can be applied if and only if it describes same count of bandwidths which already configured,
+     *      else {@link IncompatibleConfigurationException} will be thrown.
+     *      In other words you must not try to reduce or increase count of bandwidths,
+     *      it is impossible to create bucket with one bandwidth and reconfigure to use two bandwidths and wise versa.
+     *    </li>
+     *    <li>
+     *        If new configuration defines capacity which greater than current available tokens,
+     *        then current available tokens stay unchanged.
+     *    </li>
+     *    <li>
+     *        If new configuration defines capacity which lesser than current available tokens,
+     *        then current available tokens will be reduced to capacity.
+     *        For example: if bandwidth at moment of reconfiguration has 90 tokens,
+     *        and new capacity is 70 tokens then available tokens will be reduced from 90 to 70 according to new rules.
+     *    </li>
+     * </ul>
+     *
+     * @param newConfiguration the new configuration for this bucket
+     *
+     * @throws IncompatibleConfigurationException if {@code newConfiguration} incompatible with previous configuration
+     *
+     */
+     void replaceConfiguration(BucketConfiguration newConfiguration);
+
+    /**
      * Creates the copy of internal state.
      *
      * <p> This method is designed to be used only for monitoring and testing, you should never use this method for business cases.
