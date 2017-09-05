@@ -15,4 +15,4 @@
 #
 #
 
-hazelcast.Hazelcast
+io.github.bucket4j.grid.hazelcast.Hazelcast

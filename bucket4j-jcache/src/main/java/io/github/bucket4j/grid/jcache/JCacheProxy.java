@@ -25,6 +25,8 @@ import io.github.bucket4j.grid.GridProxy;
 import io.github.bucket4j.grid.GridBucketState;
 
 import javax.cache.Cache;
+import javax.cache.CacheManager;
+import javax.cache.spi.CachingProvider;
 import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -81,7 +83,17 @@ public class JCacheProxy<K extends Serializable> implements GridProxy<K> {
     }
 
     private void checkProviders(Cache<K, GridBucketState> cache) {
-        String providerClassName = cache.getCacheManager().getCachingProvider().getClass().getName();
+        CacheManager cacheManager = cache.getCacheManager();
+        if (cacheManager == null) {
+            return;
+        }
+
+        CachingProvider cachingProvider = cacheManager.getCachingProvider();
+        if (cachingProvider == null) {
+            return;
+        }
+
+        String providerClassName = cachingProvider.getClass().getName();
         for (String prefix : incompatibleProviders.keySet()) {
             if (providerClassName.startsWith(prefix)) {
                 String message = "The Cache provider " + providerClassName + " is incompatible with Bucket4j " +

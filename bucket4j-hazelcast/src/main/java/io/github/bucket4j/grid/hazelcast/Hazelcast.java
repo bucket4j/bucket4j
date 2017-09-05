@@ -48,7 +48,7 @@ public class Hazelcast implements Extension<HazelcastBucketBuilder> {
      * @param <T> type of keys in the map
      * @return {@link ProxyManager} for specified map.
      */
-    public <T extends Serializable> ProxyManager<T> proxyManagerForCache(IMap<T, GridBucketState> map) {
+    public <T extends Serializable> ProxyManager<T> proxyManagerForMap(IMap<T, GridBucketState> map) {
         return new HazelcastProxyManager<>(map);
     }
 

@@ -25,6 +25,9 @@ import org.junit.Test;
 
 import java.time.Duration;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -115,7 +118,13 @@ public abstract class AbstractDistributedBucketTest<B extends ConfigurationBuild
             return;
         }
 
-        Function<Bucket, Long> action = bucket -> bucket.tryConsume(1)? 1L : 0L;
+        Function<Bucket, Long> action = bucket -> {
+            try {
+                return bucket.asAsync().tryConsume(1).get() ? 1L : 0L;
+            } catch (InterruptedException | ExecutionException e) {
+                throw new RuntimeException(e);
+            }
+        };
         Supplier<Bucket> bucketSupplier = () -> build(builder, key, THROW_BUCKET_NOT_FOUND_EXCEPTION);
         ConsumptionScenario scenario = new ConsumptionScenario(4, TimeUnit.SECONDS.toNanos(15), bucketSupplier, action, permittedRatePerSecond);
         scenario.executeAndValidateRate();
@@ -128,8 +137,13 @@ public abstract class AbstractDistributedBucketTest<B extends ConfigurationBuild
             return;
         }
 
+        ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
         Function<Bucket, Long> action = bucket -> {
-            bucket.consumeUninterruptibly(1, BlockingStrategy.PARKING);
+            try {
+                bucket.asAsync().consume(1, scheduler).get();
+            } catch (InterruptedException | ExecutionException e) {
+                throw new RuntimeException(e);
+            }
             return 1L;
         };
         Supplier<Bucket> bucketSupplier = () -> build(builder, key, THROW_BUCKET_NOT_FOUND_EXCEPTION);

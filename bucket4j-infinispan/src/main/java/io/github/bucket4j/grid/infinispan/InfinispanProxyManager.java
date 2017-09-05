@@ -24,8 +24,8 @@ import io.github.bucket4j.grid.GridBucketState;
 import io.github.bucket4j.grid.GridProxy;
 import io.github.bucket4j.grid.ProxyManager;
 import io.github.bucket4j.util.LazySupplier;
+import org.infinispan.functional.FunctionalMap;
 
-import javax.cache.Cache;
 import java.io.Serializable;
 import java.util.function.Supplier;
 
@@ -38,8 +38,8 @@ public class InfinispanProxyManager<K extends Serializable> implements ProxyMana
 
     private final GridProxy<K> gridProxy;
 
-    InfinispanProxyManager(Cache<K, GridBucketState> cache) {
-        this.gridProxy = new InfinispanProxy<>(cache);
+    InfinispanProxyManager(FunctionalMap.ReadWriteMap<K, GridBucketState> readWriteMap) {
+        this.gridProxy = new InfinispanProxy<>(readWriteMap);
     }
 
     @Override

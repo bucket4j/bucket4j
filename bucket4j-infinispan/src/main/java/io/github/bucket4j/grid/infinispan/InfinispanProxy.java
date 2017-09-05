@@ -29,8 +29,6 @@ import java.io.Serializable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
-import static com.sun.corba.se.impl.util.RepositoryId.cache;
-
 public class InfinispanProxy<K extends Serializable> implements GridProxy<K> {
 
     private final ReadWriteMap<K, GridBucketState> readWriteMap;
