@@ -49,5 +49,8 @@ public class GridBucketState implements Serializable {
     }
 
 
+    public GridBucketState deepCopy() {
+        return new GridBucketState(bucketConfiguration, bucketState.copy());
+    }
 
 }

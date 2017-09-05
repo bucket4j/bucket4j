@@ -26,15 +26,21 @@ import io.github.bucket4j.grid.GridBucketState;
 
 import javax.cache.Cache;
 import java.io.Serializable;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 public class JCacheProxy<K extends Serializable> implements GridProxy<K> {
+
+    public static Map<String, String> incompatibleProviders = new HashMap<>();
+    static {
+        incompatibleProviders.put("org.infinispan", "bucket4j-infinispan");
+    }
 
     private final Cache<K, GridBucketState> cache;
 
     public JCacheProxy(Cache<K, GridBucketState> cache) {
         this.cache = Objects.requireNonNull(cache);
+        checkProviders(cache);
     }
 
     @Override
@@ -72,6 +78,17 @@ public class JCacheProxy<K extends Serializable> implements GridProxy<K> {
     public boolean isAsyncModeSupported() {
         // because JCache does not specify async API
         return false;
+    }
+
+    private void checkProviders(Cache<K, GridBucketState> cache) {
+        String providerClassName = cache.getCacheManager().getCachingProvider().getClass().getName();
+        for (String prefix : incompatibleProviders.keySet()) {
+            if (providerClassName.startsWith(prefix)) {
+                String message = "The Cache provider " + providerClassName + " is incompatible with Bucket4j " +
+                        " use module " + incompatibleProviders.get(prefix) + " directly";
+                throw new UnsupportedOperationException(message);
+            }
+        }
     }
 
 }

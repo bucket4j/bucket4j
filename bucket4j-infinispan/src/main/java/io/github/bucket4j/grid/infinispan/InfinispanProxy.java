@@ -24,41 +24,37 @@ import io.github.bucket4j.grid.GridCommand;
 import io.github.bucket4j.grid.GridProxy;
 import io.github.bucket4j.grid.jcache.JCacheEntryProcessor;
 import org.infinispan.functional.FunctionalMap.ReadWriteMap;
-import org.infinispan.functional.impl.FunctionalMapImpl;
-import org.infinispan.functional.impl.ReadWriteMapImpl;
 
-import javax.cache.Cache;
 import java.io.Serializable;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+
+import static com.sun.corba.se.impl.util.RepositoryId.cache;
 
 public class InfinispanProxy<K extends Serializable> implements GridProxy<K> {
 
-    private final Cache<K, GridBucketState> cache;
     private final ReadWriteMap<K, GridBucketState> readWriteMap;
 
-    public InfinispanProxy(Cache<K, GridBucketState> cache) {
-        this.cache = cache;
-        org.infinispan.Cache<K, GridBucketState> nativeCache = cache.unwrap(org.infinispan.Cache.class);
-        FunctionalMapImpl<K, GridBucketState> functionalMap = FunctionalMapImpl.create(nativeCache.getAdvancedCache());
-        this.readWriteMap = ReadWriteMapImpl.create(functionalMap);
+    public InfinispanProxy(ReadWriteMap<K, GridBucketState> readWriteMap) {
+        this.readWriteMap = readWriteMap;
     }
 
     @Override
     public <T extends Serializable> CommandResult<T> execute(K key, GridCommand<T> command) {
         JCacheEntryProcessor<K, T> entryProcessor = JCacheEntryProcessor.executeProcessor(command);
-        return cache.invoke(key, entryProcessor);
+        return invokeSync(key, entryProcessor);
     }
 
     @Override
     public void createInitialState(K key, BucketConfiguration configuration) {
         JCacheEntryProcessor<K, Nothing> entryProcessor = JCacheEntryProcessor.initStateProcessor(configuration);
-        cache.invoke(key, entryProcessor);
+        invokeSync(key, entryProcessor);
     }
 
     @Override
     public <T extends Serializable> T createInitialStateAndExecute(K key, BucketConfiguration configuration, GridCommand<T> command) {
         JCacheEntryProcessor<K, T> entryProcessor = JCacheEntryProcessor.initStateAndExecuteProcessor(command, configuration);
-        CommandResult<T> result = cache.invoke(key, entryProcessor);
+        CommandResult<T> result = invokeSync(key, entryProcessor);
         return result.getData();
     }
 
@@ -80,8 +76,16 @@ public class InfinispanProxy<K extends Serializable> implements GridProxy<K> {
         return true;
     }
 
+    private <T extends Serializable> CommandResult<T> invokeSync(final K key, final JCacheEntryProcessor<K, T> entryProcessor) {
+        try {
+            return readWriteMap.eval(key, new SerializableFunctionAdapter<>(entryProcessor)).get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     private <T extends Serializable> CompletableFuture<CommandResult<T>> invokeAsync(final K key, final JCacheEntryProcessor<K, T> entryProcessor) {
-        return InfinispanAsyncHelper.invokeAsync(key, readWriteMap, entryProcessor);
+        return readWriteMap.eval(key, new SerializableFunctionAdapter<>(entryProcessor));
     }
 
 }
