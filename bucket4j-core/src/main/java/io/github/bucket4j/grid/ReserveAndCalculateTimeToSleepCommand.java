@@ -17,10 +17,6 @@
 
 package io.github.bucket4j.grid;
 
-import io.github.bucket4j.Bandwidth;
-import io.github.bucket4j.BucketConfiguration;
-import io.github.bucket4j.BucketState;
-
 public class ReserveAndCalculateTimeToSleepCommand implements GridCommand<Long> {
 
     private static final long serialVersionUID = 1L;
@@ -35,17 +31,14 @@ public class ReserveAndCalculateTimeToSleepCommand implements GridCommand<Long> 
     }
 
     @Override
-    public Long execute(GridBucketState gridState, long currentTimeNanos) {
-        BucketConfiguration configuration = gridState.getBucketConfiguration();
-        BucketState state = gridState.getBucketState();
-        Bandwidth[] bandwidths = configuration.getBandwidths();
-        state.refillAllBandwidth(bandwidths, currentTimeNanos);
+    public Long execute(GridBucketState state, long currentTimeNanos) {
+        state.refillAllBandwidth(currentTimeNanos);
 
-        long nanosToCloseDeficit = state.delayNanosAfterWillBePossibleToConsume(bandwidths, tokensToConsume);
+        long nanosToCloseDeficit = state.delayNanosAfterWillBePossibleToConsume(tokensToConsume);
         if (waitIfBusyNanosLimit > 0 && nanosToCloseDeficit > waitIfBusyNanosLimit) {
             return Long.MAX_VALUE;
         } else {
-            state.consume(bandwidths, tokensToConsume);
+            state.consume(tokensToConsume);
             bucketStateModified = true;
             return nanosToCloseDeficit;
         }

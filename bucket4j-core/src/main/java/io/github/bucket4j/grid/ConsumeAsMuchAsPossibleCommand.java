@@ -17,9 +17,6 @@
 
 package io.github.bucket4j.grid;
 
-import io.github.bucket4j.Bandwidth;
-import io.github.bucket4j.BucketConfiguration;
-import io.github.bucket4j.BucketState;
 
 public class ConsumeAsMuchAsPossibleCommand implements GridCommand<Long> {
 
@@ -33,17 +30,14 @@ public class ConsumeAsMuchAsPossibleCommand implements GridCommand<Long> {
     }
 
     @Override
-    public Long execute(GridBucketState gridState, long currentTimeNanos) {
-        BucketConfiguration configuration = gridState.getBucketConfiguration();
-        BucketState state = gridState.getBucketState();
-        Bandwidth[] bandwidths = configuration.getBandwidths();
-        state.refillAllBandwidth(bandwidths, currentTimeNanos);
-        long availableToConsume = state.getAvailableTokens(bandwidths);
+    public Long execute(GridBucketState state, long currentTimeNanos) {
+        state.refillAllBandwidth(currentTimeNanos);
+        long availableToConsume = state.getAvailableTokens();
         long toConsume = Math.min(limit, availableToConsume);
         if (toConsume <= 0) {
             return 0l;
         }
-        state.consume(bandwidths, toConsume);
+        state.consume(toConsume);
         bucketStateModified = true;
         return toConsume;
     }

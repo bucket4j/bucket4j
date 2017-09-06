@@ -19,7 +19,6 @@ package io.github.bucket4j.grid;
 
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.BucketState;
-import io.github.bucket4j.TimeMeter;
 
 import java.io.Serializable;
 
@@ -27,34 +26,52 @@ public class GridBucketState implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    private BucketConfiguration bucketConfiguration;
-    private BucketState bucketState;
+    private BucketConfiguration configuration;
+    private BucketState state;
 
     public GridBucketState() {
-        bucketConfiguration = null;
-        bucketState = null;
+        configuration = null;
+        state = null;
     }
 
-    public GridBucketState(BucketConfiguration bucketConfiguration, BucketState bucketState) {
-        this.bucketConfiguration = bucketConfiguration;
-        this.bucketState = bucketState;
+    public GridBucketState(BucketConfiguration configuration, BucketState state) {
+        this.configuration = configuration;
+        this.state = state;
     }
-
-    public BucketConfiguration getBucketConfiguration() {
-        return bucketConfiguration;
-    }
-
-    public BucketState getBucketState() {
-        return bucketState;
-    }
-
 
     public GridBucketState deepCopy() {
-        return new GridBucketState(bucketConfiguration, bucketState.copy());
+        return new GridBucketState(configuration, state.copy());
     }
 
-    public void setConfiguration(BucketConfiguration newConfiguration) {
-        this.bucketConfiguration = newConfiguration;
+    public void refillAllBandwidth(long currentTimeNanos) {
+        state.refillAllBandwidth(configuration.getBandwidths(), currentTimeNanos);
     }
 
+    public long getAvailableTokens() {
+        return state.getAvailableTokens(configuration.getBandwidths());
+    }
+
+    public void consume(long tokensToConsume) {
+        state.consume(configuration.getBandwidths(), tokensToConsume);
+    }
+
+    public long delayNanosAfterWillBePossibleToConsume(long tokensToConsume) {
+        return state.delayNanosAfterWillBePossibleToConsume(configuration.getBandwidths(), tokensToConsume);
+    }
+
+    public void addTokens(long tokensToAdd) {
+        state.addTokens(configuration.getBandwidths(), tokensToAdd);
+    }
+
+    public BucketState copyBucketState() {
+        return state.copy();
+    }
+
+    public BucketConfiguration replaceConfigurationOrReturnPrevious(BucketConfiguration newConfiguration) {
+        if (!configuration.isCompatible(newConfiguration)) {
+            return configuration;
+        }
+        configuration = newConfiguration;
+        return null;
+    }
 }

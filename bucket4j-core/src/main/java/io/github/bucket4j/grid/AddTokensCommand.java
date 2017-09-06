@@ -17,10 +17,6 @@
 
 package io.github.bucket4j.grid;
 
-
-import io.github.bucket4j.Bandwidth;
-import io.github.bucket4j.BucketConfiguration;
-import io.github.bucket4j.BucketState;
 import io.github.bucket4j.Nothing;
 
 public class AddTokensCommand implements GridCommand<Nothing> {
@@ -34,13 +30,9 @@ public class AddTokensCommand implements GridCommand<Nothing> {
     }
 
     @Override
-    public Nothing execute(GridBucketState gridState, long currentTimeNanos) {
-        BucketConfiguration configuration = gridState.getBucketConfiguration();
-        BucketState state = gridState.getBucketState();
-        Bandwidth[] bandwidths = configuration.getBandwidths();
-
-        state.refillAllBandwidth(bandwidths, currentTimeNanos);
-        state.addTokens(bandwidths, tokensToAdd);
+    public Nothing execute(GridBucketState state, long currentTimeNanos) {
+        state.refillAllBandwidth(currentTimeNanos);
+        state.addTokens(tokensToAdd);
         return Nothing.INSTANCE;
     }
 

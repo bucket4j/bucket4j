@@ -22,6 +22,8 @@ import io.github.bucket4j.BucketConfiguration;
 
 public class ReplaceConfigurationOrReturnPreviousCommand implements GridCommand<BucketConfiguration> {
 
+    private static final long serialVersionUID = 8183759647555953907L;
+
     private BucketConfiguration newConfiguration;
     private boolean replaced;
 
@@ -31,12 +33,11 @@ public class ReplaceConfigurationOrReturnPreviousCommand implements GridCommand<
 
     @Override
     public BucketConfiguration execute(GridBucketState state, long currentTimeNanos) {
-        BucketConfiguration previousConfiguration = state.getBucketConfiguration();
-        if (!previousConfiguration.isCompatible(newConfiguration)) {
+        BucketConfiguration previousConfiguration = state.replaceConfigurationOrReturnPrevious(newConfiguration);
+        if (previousConfiguration != null) {
             return previousConfiguration;
         }
-        state.setConfiguration(newConfiguration);
-        state.getBucketState().refillAllBandwidth(newConfiguration.getBandwidths(), currentTimeNanos);
+        state.refillAllBandwidth(currentTimeNanos);
         replaced = true;
         return null;
     }

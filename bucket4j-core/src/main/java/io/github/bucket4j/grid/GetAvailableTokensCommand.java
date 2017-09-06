@@ -1,22 +1,14 @@
 package io.github.bucket4j.grid;
 
 
-import io.github.bucket4j.Bandwidth;
-import io.github.bucket4j.BucketConfiguration;
-import io.github.bucket4j.BucketState;
-
 public class GetAvailableTokensCommand implements GridCommand<Long> {
 
     private static final long serialVersionUID = 1L;
 
     @Override
-    public Long execute(GridBucketState gridState, long currentTimeNanos) {
-        BucketConfiguration configuration = gridState.getBucketConfiguration();
-        BucketState state = gridState.getBucketState();
-        Bandwidth[] bandwidths = configuration.getBandwidths();
-
-        state.refillAllBandwidth(bandwidths, currentTimeNanos);
-        return state.getAvailableTokens(bandwidths);
+    public Long execute(GridBucketState state, long currentTimeNanos) {
+        state.refillAllBandwidth(currentTimeNanos);
+        return state.getAvailableTokens();
     }
 
     @Override

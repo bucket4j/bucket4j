@@ -1,8 +1,5 @@
 package io.github.bucket4j.grid;
 
-import io.github.bucket4j.Bandwidth;
-import io.github.bucket4j.BucketConfiguration;
-import io.github.bucket4j.BucketState;
 import io.github.bucket4j.ConsumptionProbe;
 
 
@@ -18,19 +15,15 @@ public class TryConsumeAndReturnRemainingTokensCommand implements GridCommand<Co
     }
 
     @Override
-    public ConsumptionProbe execute(GridBucketState gridState, long currentTimeNanos) {
-        BucketConfiguration configuration = gridState.getBucketConfiguration();
-        BucketState state = gridState.getBucketState();
-        Bandwidth[] bandwidths = configuration.getBandwidths();
-
-        state.refillAllBandwidth(bandwidths, currentTimeNanos);
-        long availableToConsume = state.getAvailableTokens(bandwidths);
+    public ConsumptionProbe execute(GridBucketState state, long currentTimeNanos) {
+        state.refillAllBandwidth(currentTimeNanos);
+        long availableToConsume = state.getAvailableTokens();
         if (tokensToConsume <= availableToConsume) {
-            state.consume(bandwidths, tokensToConsume);
+            state.consume(tokensToConsume);
             bucketStateModified = true;
             return ConsumptionProbe.consumed(availableToConsume - tokensToConsume);
         } else {
-            long nanosToWaitForRefill = state.delayNanosAfterWillBePossibleToConsume(bandwidths, tokensToConsume);
+            long nanosToWaitForRefill = state.delayNanosAfterWillBePossibleToConsume(tokensToConsume);
             return ConsumptionProbe.rejected(availableToConsume, nanosToWaitForRefill);
         }
     }

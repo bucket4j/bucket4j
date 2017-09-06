@@ -17,10 +17,6 @@
 
 package io.github.bucket4j.grid;
 
-import io.github.bucket4j.BucketConfiguration;
-import io.github.bucket4j.BucketState;
-import io.github.bucket4j.Bandwidth;
-
 public class TryConsumeCommand implements GridCommand<Boolean> {
 
     private static final long serialVersionUID = 1L;
@@ -33,15 +29,11 @@ public class TryConsumeCommand implements GridCommand<Boolean> {
     }
 
     @Override
-    public Boolean execute(GridBucketState gridState, long currentTimeNanos) {
-        BucketConfiguration configuration = gridState.getBucketConfiguration();
-        BucketState state = gridState.getBucketState();
-        Bandwidth[] bandwidths = configuration.getBandwidths();
-
-        state.refillAllBandwidth(bandwidths, currentTimeNanos);
-        long availableToConsume = state.getAvailableTokens(bandwidths);
+    public Boolean execute(GridBucketState state, long currentTimeNanos) {
+        state.refillAllBandwidth(currentTimeNanos);
+        long availableToConsume = state.getAvailableTokens();
         if (tokensToConsume <= availableToConsume) {
-            state.consume(bandwidths, tokensToConsume);
+            state.consume(tokensToConsume);
             bucketStateModified = true;
             return true;
         } else {
