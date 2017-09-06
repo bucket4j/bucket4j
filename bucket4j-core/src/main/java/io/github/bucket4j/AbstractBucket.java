@@ -17,6 +17,7 @@
 
 package io.github.bucket4j;
 
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -44,6 +45,10 @@ public abstract class AbstractBucket implements Bucket {
     protected abstract CompletableFuture<Long> reserveAndCalculateTimeToSleepAsyncImpl(long tokensToConsume, long maxWaitTimeNanos) throws UnsupportedOperationException;
 
     protected abstract CompletableFuture<Void> addTokensAsyncImpl(long tokensToAdd) throws UnsupportedOperationException;
+
+    protected abstract void replaceConfigurationImpl(BucketConfiguration newConfiguration);
+
+    protected abstract CompletableFuture<Void> replaceConfigurationAsyncImpl(BucketConfiguration newConfiguration);
 
     private final AsyncBucket asyncView;
 
@@ -84,8 +89,8 @@ public abstract class AbstractBucket implements Bucket {
 
             @Override
             public CompletableFuture<Void> replaceConfiguration(BucketConfiguration newConfiguration) {
-                // TODO
-                throw new UnsupportedOperationException();
+                Objects.requireNonNull(newConfiguration);
+                return replaceConfigurationAsyncImpl(newConfiguration);
             }
 
             @Override
@@ -125,6 +130,7 @@ public abstract class AbstractBucket implements Bucket {
             }
         };
     }
+
 
     @Override
     public AsyncBucket asAsync() throws UnsupportedOperationException {
@@ -185,8 +191,8 @@ public abstract class AbstractBucket implements Bucket {
 
     @Override
     public void replaceConfiguration(BucketConfiguration newConfiguration) {
-        // TODO
-        throw new UnsupportedOperationException();
+        Objects.requireNonNull(newConfiguration);
+        replaceConfigurationImpl(newConfiguration);
     }
 
     private void checkTokensToAdd(long tokensToAdd) {

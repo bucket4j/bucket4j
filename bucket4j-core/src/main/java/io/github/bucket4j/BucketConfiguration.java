@@ -55,4 +55,10 @@ public final class BucketConfiguration implements Serializable {
                 '}';
     }
 
+    public void checkCompatibility(BucketConfiguration newConfiguration) {
+        if (bandwidths.length != newConfiguration.bandwidths.length) {
+            throw new IncompatibleConfigurationException(this, newConfiguration);
+        }
+    }
+
 }

@@ -25,17 +25,13 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class LockFreeBucket extends AbstractBucket {
 
-    private final BucketConfiguration configuration;
-    private final Bandwidth[] bandwidths;
     private final TimeMeter timeMeter;
-    private final AtomicReference<BucketState> stateReference;
+    private final AtomicReference<StateWithConfiguration> stateReference;
 
     public LockFreeBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
-        this.configuration = configuration;
-        this.bandwidths = configuration.getBandwidths();
         this.timeMeter = timeMeter;
         BucketState initialState = BucketState.createInitialState(configuration, timeMeter.currentTimeNanos());
-        this.stateReference = new AtomicReference<>(initialState);
+        this.stateReference = new AtomicReference<>(new StateWithConfiguration(configuration, initialState));
     }
 
     @Override
@@ -45,18 +41,18 @@ public class LockFreeBucket extends AbstractBucket {
 
     @Override
     protected long consumeAsMuchAsPossibleImpl(long limit) {
-        BucketState previousState = stateReference.get();
-        BucketState newState = previousState.copy();
+        StateWithConfiguration previousState = stateReference.get();
+        StateWithConfiguration newState = previousState.copy();
         long currentTimeNanos = timeMeter.currentTimeNanos();
 
         while (true) {
-            newState.refillAllBandwidth(bandwidths, currentTimeNanos);
-            long availableToConsume = newState.getAvailableTokens(bandwidths);
+            newState.state.refillAllBandwidth(bandwidths, currentTimeNanos);
+            long availableToConsume = newState.state.getAvailableTokens(bandwidths);
             long toConsume = Math.min(limit, availableToConsume);
             if (toConsume == 0) {
                 return 0;
             }
-            newState.consume(bandwidths, toConsume);
+            newState.state.consume(bandwidths, toConsume);
             if (stateReference.compareAndSet(previousState, newState)) {
                 return toConsume;
             } else {
@@ -68,8 +64,8 @@ public class LockFreeBucket extends AbstractBucket {
 
     @Override
     protected boolean tryConsumeImpl(long tokensToConsume) {
-        BucketState previousState = stateReference.get();
-        BucketState newState = previousState.copy();
+        StateWithConfiguration previousState = stateReference.get();
+        StateWithConfiguration newState = previousState.copy();
         long currentTimeNanos = timeMeter.currentTimeNanos();
 
         while (true) {
@@ -162,6 +158,22 @@ public class LockFreeBucket extends AbstractBucket {
     }
 
     @Override
+    protected void replaceConfigurationImpl(BucketConfiguration newConfiguration) {
+        StateWithConfiguration previousStateWithConfiguration = stateReference.get();
+        StateWithConfiguration newStateWithConfiguration = new StateWithConfiguration();
+
+        BucketState newState = previousStateWithConfiguration.state.copy();
+        long currentTimeNanos = timeMeter.currentTimeNanos();
+
+        while (true) {
+            previousStateWithConfiguration.configuration.checkCompatibility(newConfiguration);
+            newState.re
+        }
+
+        sdfsd
+    }
+
+    @Override
     public long getAvailableTokens() {
         long currentTimeNanos = timeMeter.currentTimeNanos();
         BucketState snapshot = stateReference.get().copy();
@@ -179,6 +191,18 @@ public class LockFreeBucket extends AbstractBucket {
     protected CompletableFuture<Void> addTokensAsyncImpl(long tokensToAdd) throws UnsupportedOperationException {
         addTokensImpl(tokensToAdd);
         return CompletableFuture.completedFuture(null);
+    }
+
+    @Override
+    protected CompletableFuture<Void> replaceConfigurationAsyncImpl(BucketConfiguration newConfiguration) {
+        try {
+            replaceConfigurationImpl(newConfiguration);
+            return CompletableFuture.completedFuture(null);
+        } catch (IncompatibleConfigurationException e) {
+            CompletableFuture fail = new CompletableFuture();
+            fail.completeExceptionally(e);
+            return fail;
+        }
     }
 
     @Override
@@ -201,12 +225,33 @@ public class LockFreeBucket extends AbstractBucket {
 
     @Override
     public BucketState createSnapshot() {
-        return stateReference.get().copy();
+        return stateReference.get().state.copy();
     }
 
     @Override
     public BucketConfiguration getConfiguration() {
-        return configuration;
+        return stateReference.get().configuration;
+    }
+
+    private static class StateWithConfiguration {
+
+        BucketConfiguration configuration;
+        BucketState state;
+
+        public StateWithConfiguration(BucketConfiguration configuration, BucketState state) {
+            this.configuration = configuration;
+            this.state = state;
+        }
+
+        StateWithConfiguration copy() {
+            return new StateWithConfiguration(configuration, state.copy());
+        }
+
+        void copyStateFrom(StateWithConfiguration other) {
+            configuration = other.configuration;
+            state.copyStateFrom(other.state);
+        }
+
     }
 
     @Override

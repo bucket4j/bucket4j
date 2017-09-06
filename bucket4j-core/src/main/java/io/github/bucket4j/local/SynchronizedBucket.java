@@ -26,8 +26,8 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class SynchronizedBucket extends AbstractBucket {
 
-    private final BucketConfiguration configuration;
-    private final Bandwidth[] bandwidths;
+    private BucketConfiguration configuration;
+    private Bandwidth[] bandwidths;
     private final TimeMeter timeMeter;
     private final BucketState state;
     private final Lock lock;
@@ -146,6 +146,20 @@ public class SynchronizedBucket extends AbstractBucket {
     }
 
     @Override
+    protected void replaceConfigurationImpl(BucketConfiguration newConfiguration) {
+        long currentTimeNanos = timeMeter.currentTimeNanos();
+        lock.lock();
+        try {
+            configuration.checkCompatibility(newConfiguration);
+            this.configuration = newConfiguration;
+            this.bandwidths = newConfiguration.getBandwidths();
+            this.state.refillAllBandwidth(bandwidths, currentTimeNanos);
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    @Override
     protected CompletableFuture<Boolean> tryConsumeAsyncImpl(long tokensToConsume) throws UnsupportedOperationException {
         boolean result = tryConsumeImpl(tokensToConsume);
         return CompletableFuture.completedFuture(result);
@@ -175,6 +189,17 @@ public class SynchronizedBucket extends AbstractBucket {
         return CompletableFuture.completedFuture(result);
     }
 
+    @Override
+    protected CompletableFuture<Void> replaceConfigurationAsyncImpl(BucketConfiguration newConfiguration) {
+        try {
+            replaceConfigurationImpl(newConfiguration);
+            return CompletableFuture.completedFuture(null);
+        } catch (IncompatibleConfigurationException e) {
+            CompletableFuture<Void> fail = new CompletableFuture<>();
+            fail.completeExceptionally(e);
+            return fail;
+        }
+    }
 
     @Override
     public BucketState createSnapshot() {

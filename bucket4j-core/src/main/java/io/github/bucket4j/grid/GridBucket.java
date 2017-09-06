@@ -111,9 +111,8 @@ public class GridBucket<K extends Serializable> extends AbstractBucket {
 
     @Override
     protected CompletableFuture<Void> addTokensAsyncImpl(long tokensToAdd) throws UnsupportedOperationException {
-        CompletableFuture future = executeAsync(new AddTokensCommand(tokensToAdd));
-        // TODO fix unchecked assignment
-        return future;
+        CompletableFuture<Nothing> future = executeAsync(new AddTokensCommand(tokensToAdd));
+        return future.thenApply(nothing -> null);
     }
 
     @Override
