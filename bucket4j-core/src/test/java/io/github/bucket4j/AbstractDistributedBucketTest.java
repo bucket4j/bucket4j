@@ -140,7 +140,7 @@ public abstract class AbstractDistributedBucketTest<B extends ConfigurationBuild
         ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
         Function<Bucket, Long> action = bucket -> {
             try {
-                bucket.asAsync().consume(1, scheduler).get();
+                bucket.asAsync().consume(1, Duration.ofMinutes(1), scheduler).get();
             } catch (InterruptedException | ExecutionException e) {
                 throw new RuntimeException(e);
             }

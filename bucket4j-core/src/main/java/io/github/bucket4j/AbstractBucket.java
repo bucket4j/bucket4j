@@ -17,6 +17,7 @@
 
 package io.github.bucket4j;
 
+import java.time.Duration;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ScheduledExecutorService;
@@ -78,13 +79,8 @@ public abstract class AbstractBucket implements Bucket {
             }
 
             @Override
-            public CompletableFuture<Boolean> consume(long tokensToConsume, long maxWaitTimeNanos, ScheduledExecutorService scheduler) throws InterruptedException {
-                return consumeImpl(tokensToConsume, maxWaitTimeNanos, true, scheduler);
-            }
-
-            @Override
-            public CompletableFuture<Void> consume(long tokensToConsume, ScheduledExecutorService scheduler) throws InterruptedException {
-                return consumeImpl(tokensToConsume, UNSPECIFIED_WAITING_LIMIT, false, scheduler).thenApply(bool -> null);
+            public CompletableFuture<Boolean> consume(long tokensToConsume, Duration maxWait, ScheduledExecutorService scheduler) throws InterruptedException {
+                return consumeImpl(tokensToConsume, maxWait.toNanos(), true, scheduler);
             }
 
             @Override

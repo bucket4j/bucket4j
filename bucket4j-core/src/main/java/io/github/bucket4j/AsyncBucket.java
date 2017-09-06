@@ -1,5 +1,6 @@
 package io.github.bucket4j;
 
+import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ScheduledExecutorService;
 
@@ -9,9 +10,9 @@ import java.util.concurrent.ScheduledExecutorService;
  * A bucket provides asynchronous mode support if and only if particular {@link Extension extension} behind this bucket provides asynchronous mode.
  *
  * <p>
- * A special notes about local(in-memory) buckets: Mostly methods(excepting {@link #consume(long, ScheduledExecutorService)} and {@link #consume(long, long, ScheduledExecutorService)})
+ * A special notes about local(in-memory) buckets: Mostly methods(excepting {@link #consume(long, long, ScheduledExecutorService)})
  * from interface {@link AsyncBucket} are useless for local buckets, because local bucket does not communicate with external back-ends, as result any thread is never blocked, and local bucket.
- * But using asynchronous mode together with {@link #consume(long, ScheduledExecutorService)} and {@link #consume(long, long, ScheduledExecutorService)} methods,
+ * But using asynchronous mode together with {@link #consume(long, long, ScheduledExecutorService)} methods,
  * has a sense even for local bucket, because TODO
  *
  * <p> Which thread does completion of future? TODO
@@ -81,7 +82,7 @@ public interface AsyncBucket {
      * until  required number of tokens will be available or current thread is interrupted, or {@code maxWaitTimeNanos} has elapsed.
      *
      * @param numTokens The number of tokens to consume from the bucket.
-     * @param maxWaitTimeNanos limit of time which thread can wait.
+     * @param maxWait limit of time which TODO
      * @param scheduler TODO
      *
      * @return true if {@code numTokens} has been consumed or false when {@code numTokens} has not been consumed
@@ -89,19 +90,7 @@ public interface AsyncBucket {
      * @throws InterruptedException in case of current thread has been interrupted during waiting
      * @throws IllegalArgumentException if <tt>numTokens</tt> is greater than capacity of bucket
      */
-    CompletableFuture<Boolean> consume(long numTokens, long maxWaitTimeNanos, ScheduledExecutorService scheduler) throws InterruptedException;
-
-    /**
-     * Consumes {@code numTokens} from the bucket. If enough tokens are not currently available then this method will block
-     * until required number of tokens will be available or current thread is interrupted.
-     *
-     * @param numTokens The number of tokens to consume from bucket, must be a positive number.
-     * @param scheduler TODO
-     *
-     * @throws InterruptedException in case of current thread has been interrupted during waiting
-     * @throws IllegalArgumentException if <tt>numTokens</tt> is greater than capacity of bucket
-     */
-    CompletableFuture<Void> consume(long numTokens, ScheduledExecutorService scheduler) throws InterruptedException;
+    CompletableFuture<Boolean> consume(long numTokens, Duration maxWait, ScheduledExecutorService scheduler) throws InterruptedException;
 
     /**
      * Asynchronous variance of {@link Bucket#replaceConfiguration(BucketConfiguration)}, follows the same rules and semantic.
