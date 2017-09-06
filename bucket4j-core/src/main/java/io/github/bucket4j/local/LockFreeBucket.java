@@ -241,7 +241,7 @@ public class LockFreeBucket extends AbstractBucket {
         BucketConfiguration configuration;
         BucketState state;
 
-        public StateWithConfiguration(BucketConfiguration configuration, BucketState state) {
+        StateWithConfiguration(BucketConfiguration configuration, BucketState state) {
             this.configuration = configuration;
             this.state = state;
         }
@@ -255,19 +255,19 @@ public class LockFreeBucket extends AbstractBucket {
             state.copyStateFrom(other.state);
         }
 
-        public void refillAllBandwidth(long currentTimeNanos) {
+        void refillAllBandwidth(long currentTimeNanos) {
             state.refillAllBandwidth(configuration.getBandwidths(), currentTimeNanos);
         }
 
-        public long getAvailableTokens() {
+        long getAvailableTokens() {
             return state.getAvailableTokens(configuration.getBandwidths());
         }
 
-        public void consume(long tokensToConsume) {
+        void consume(long tokensToConsume) {
             state.consume(configuration.getBandwidths(), tokensToConsume);
         }
 
-        public long delayNanosAfterWillBePossibleToConsume(long tokensToConsume) {
+        long delayNanosAfterWillBePossibleToConsume(long tokensToConsume) {
             return state.delayNanosAfterWillBePossibleToConsume(configuration.getBandwidths(), tokensToConsume);
         }
     }

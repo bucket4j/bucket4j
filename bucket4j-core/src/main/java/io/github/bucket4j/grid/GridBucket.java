@@ -117,13 +117,26 @@ public class GridBucket<K extends Serializable> extends AbstractBucket {
 
     @Override
     protected void replaceConfigurationImpl(BucketConfiguration newConfiguration) {
-        // TODO
+        ReplaceConfigurationOrReturnPreviousCommand replaceConfigCommand = new ReplaceConfigurationOrReturnPreviousCommand(newConfiguration);
+        BucketConfiguration previousConfiguration = execute(replaceConfigCommand);
+        if (previousConfiguration != null) {
+            throw new IncompatibleConfigurationException(newConfiguration, previousConfiguration);
+        }
     }
 
     @Override
     protected CompletableFuture<Void> replaceConfigurationAsyncImpl(BucketConfiguration newConfiguration) {
-        // TODO
-        return null;
+        ReplaceConfigurationOrReturnPreviousCommand replaceConfigCommand = new ReplaceConfigurationOrReturnPreviousCommand(newConfiguration);
+        CompletableFuture<BucketConfiguration> result = executeAsync(replaceConfigCommand);
+        return result.thenCompose(previousConfiguration -> {
+            if (previousConfiguration == null) {
+                return CompletableFuture.completedFuture(null);
+            } else {
+                CompletableFuture<Void> future = new CompletableFuture<>();
+                future.completeExceptionally(new IncompatibleConfigurationException(newConfiguration, previousConfiguration));
+                return future;
+            }
+        });
     }
 
     @Override

@@ -27,8 +27,8 @@ public class GridBucketState implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    private final BucketConfiguration bucketConfiguration;
-    private final BucketState bucketState;
+    private BucketConfiguration bucketConfiguration;
+    private BucketState bucketState;
 
     public GridBucketState() {
         bucketConfiguration = null;
@@ -51,6 +51,10 @@ public class GridBucketState implements Serializable {
 
     public GridBucketState deepCopy() {
         return new GridBucketState(bucketConfiguration, bucketState.copy());
+    }
+
+    public void setConfiguration(BucketConfiguration newConfiguration) {
+        this.bucketConfiguration = newConfiguration;
     }
 
 }
