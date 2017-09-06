@@ -116,6 +116,17 @@ public class GridBucket<K extends Serializable> extends AbstractBucket {
     }
 
     @Override
+    protected void replaceConfigurationImpl(BucketConfiguration newConfiguration) {
+        // TODO
+    }
+
+    @Override
+    protected CompletableFuture<Void> replaceConfigurationAsyncImpl(BucketConfiguration newConfiguration) {
+        // TODO
+        return null;
+    }
+
+    @Override
     public long getAvailableTokens() {
         return execute(new GetAvailableTokensCommand());
     }
