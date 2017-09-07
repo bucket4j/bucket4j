@@ -165,8 +165,8 @@ public class LockFreeBucket extends AbstractBucket {
 
         while (true) {
             previousState.configuration.checkCompatibility(newConfiguration);
-            newState.configuration = newConfiguration;
             newState.refillAllBandwidth(currentTimeNanos);
+            newState.configuration = newConfiguration;
             if (stateReference.compareAndSet(previousState, newState)) {
                 return;
             } else {

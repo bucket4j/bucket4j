@@ -120,7 +120,7 @@ public class GridBucket<K extends Serializable> extends AbstractBucket {
         ReplaceConfigurationOrReturnPreviousCommand replaceConfigCommand = new ReplaceConfigurationOrReturnPreviousCommand(newConfiguration);
         BucketConfiguration previousConfiguration = execute(replaceConfigCommand);
         if (previousConfiguration != null) {
-            throw new IncompatibleConfigurationException(newConfiguration, previousConfiguration);
+            throw new IncompatibleConfigurationException(previousConfiguration, newConfiguration);
         }
     }
 
@@ -133,7 +133,7 @@ public class GridBucket<K extends Serializable> extends AbstractBucket {
                 return CompletableFuture.completedFuture(null);
             } else {
                 CompletableFuture<Void> future = new CompletableFuture<>();
-                future.completeExceptionally(new IncompatibleConfigurationException(newConfiguration, previousConfiguration));
+                future.completeExceptionally(new IncompatibleConfigurationException(previousConfiguration, newConfiguration));
                 return future;
             }
         });

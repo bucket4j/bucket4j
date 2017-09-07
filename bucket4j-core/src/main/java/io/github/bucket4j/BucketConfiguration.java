@@ -62,7 +62,35 @@ public final class BucketConfiguration implements Serializable {
     }
 
     public boolean isCompatible(BucketConfiguration newConfiguration) {
-        return bandwidths.length != newConfiguration.bandwidths.length;
+        return bandwidths.length == newConfiguration.bandwidths.length;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        BucketConfiguration that = (BucketConfiguration) o;
+
+        if (bandwidths.length != that.bandwidths.length) {
+            return false;
+        }
+        for (int i = 0; i < bandwidths.length; i++) {
+            if (!bandwidths[i].equals(that.bandwidths[i])) {
+                return false;
+            }
+            if (bandwidthsInitialTokens[i] != that.bandwidthsInitialTokens[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Arrays.hashCode(bandwidths);
+        result = 31 * result + Arrays.hashCode(bandwidthsInitialTokens);
+        return result;
     }
 
 }

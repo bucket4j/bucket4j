@@ -268,7 +268,7 @@ class BucketSpecification extends Specification {
                 Thread.currentThread().interrupt()
                 InterruptedException thrown
                 try {
-                    bucket.tryConsume(1, BlockingStrategy.PARKING)
+                    bucket.tryConsume(1, TimeUnit.HOURS.toNanos(1000), BlockingStrategy.PARKING)
                 } catch (InterruptedException e) {
                     thrown = e
                 }

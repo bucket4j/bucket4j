@@ -39,7 +39,8 @@ public class IncompatibleConfigurationException extends IllegalArgumentException
     }
 
     private static String generateMessage(BucketConfiguration previousConfiguration, BucketConfiguration newConfiguration) {
-        return MessageFormat.format("New configuration {} incompatible with previous configuration {}", newConfiguration, previousConfiguration);
+        String format = "New configuration {0} incompatible with previous configuration {1}";
+        return MessageFormat.format(format, newConfiguration, previousConfiguration);
     }
 
 }

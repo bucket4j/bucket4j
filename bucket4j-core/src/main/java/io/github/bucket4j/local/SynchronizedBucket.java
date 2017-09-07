@@ -151,9 +151,9 @@ public class SynchronizedBucket extends AbstractBucket {
         lock.lock();
         try {
             configuration.checkCompatibility(newConfiguration);
+            this.state.refillAllBandwidth(bandwidths, currentTimeNanos);
             this.configuration = newConfiguration;
             this.bandwidths = newConfiguration.getBandwidths();
-            this.state.refillAllBandwidth(bandwidths, currentTimeNanos);
         } finally {
             lock.unlock();
         }

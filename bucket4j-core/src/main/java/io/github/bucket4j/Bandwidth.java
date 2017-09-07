@@ -102,4 +102,21 @@ public class Bandwidth implements Serializable {
                 '}';
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Bandwidth bandwidth = (Bandwidth) o;
+
+        if (capacity != bandwidth.capacity) return false;
+        return refill != null ? refill.equals(bandwidth.refill) : bandwidth.refill == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = (int) (capacity ^ (capacity >>> 32));
+        result = 31 * result + (refill != null ? refill.hashCode() : 0);
+        return result;
+    }
 }

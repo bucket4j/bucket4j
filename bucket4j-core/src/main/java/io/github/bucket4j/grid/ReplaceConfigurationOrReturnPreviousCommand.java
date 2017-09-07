@@ -33,11 +33,11 @@ public class ReplaceConfigurationOrReturnPreviousCommand implements GridCommand<
 
     @Override
     public BucketConfiguration execute(GridBucketState state, long currentTimeNanos) {
+        state.refillAllBandwidth(currentTimeNanos);
         BucketConfiguration previousConfiguration = state.replaceConfigurationOrReturnPrevious(newConfiguration);
         if (previousConfiguration != null) {
             return previousConfiguration;
         }
-        state.refillAllBandwidth(currentTimeNanos);
         replaced = true;
         return null;
     }

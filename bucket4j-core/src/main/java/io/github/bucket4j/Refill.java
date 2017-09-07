@@ -84,4 +84,21 @@ public class Refill implements Serializable {
                 '}';
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Refill refill = (Refill) o;
+
+        if (periodNanos != refill.periodNanos) return false;
+        return tokens == refill.tokens;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = (int) (periodNanos ^ (periodNanos >>> 32));
+        result = 31 * result + (int) (tokens ^ (tokens >>> 32));
+        return result;
+    }
 }

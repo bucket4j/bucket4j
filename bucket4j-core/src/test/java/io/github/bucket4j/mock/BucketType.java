@@ -68,4 +68,8 @@ public enum BucketType {
 
     abstract public Bucket createBucket(ConfigurationBuilder builder, TimeMeter timeMeter);
 
+    public Bucket createBucket(ConfigurationBuilder builder) {
+        return createBucket(builder, TimeMeter.SYSTEM_MILLISECONDS);
+    }
+
 }
