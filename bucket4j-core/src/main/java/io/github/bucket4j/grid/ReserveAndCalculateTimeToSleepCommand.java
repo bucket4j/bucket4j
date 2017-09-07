@@ -35,7 +35,7 @@ public class ReserveAndCalculateTimeToSleepCommand implements GridCommand<Long> 
         state.refillAllBandwidth(currentTimeNanos);
 
         long nanosToCloseDeficit = state.delayNanosAfterWillBePossibleToConsume(tokensToConsume);
-        if (waitIfBusyNanosLimit > 0 && nanosToCloseDeficit > waitIfBusyNanosLimit) {
+        if (nanosToCloseDeficit == Long.MAX_VALUE || nanosToCloseDeficit > waitIfBusyNanosLimit) {
             return Long.MAX_VALUE;
         } else {
             state.consume(tokensToConsume);

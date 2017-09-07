@@ -41,6 +41,10 @@ public class Refill implements Serializable {
         if (periodNanos <= 0) {
             throw BucketExceptions.nonPositivePeriod(periodNanos);
         }
+        if (tokens > periodNanos) {
+            // TODO add unit test
+            throw BucketExceptions.tooHighRefillRate(periodNanos, tokens);
+        }
     }
 
     /**

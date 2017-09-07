@@ -110,7 +110,7 @@ public class SynchronizedBucket extends AbstractBucket {
             state.refillAllBandwidth(bandwidths, currentTimeNanos);
             long nanosToCloseDeficit = state.delayNanosAfterWillBePossibleToConsume(bandwidths, tokensToConsume);
 
-            if (waitIfBusyNanosLimit > 0 && nanosToCloseDeficit > waitIfBusyNanosLimit) {
+            if (nanosToCloseDeficit == Long.MAX_VALUE || nanosToCloseDeficit > waitIfBusyNanosLimit) {
                 return Long.MAX_VALUE;
             }
 

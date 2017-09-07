@@ -126,7 +126,7 @@ public class LockFreeBucket extends AbstractBucket {
                 continue;
             }
 
-            if (waitIfBusyNanosLimit > 0 && nanosToCloseDeficit > waitIfBusyNanosLimit) {
+            if (nanosToCloseDeficit == Long.MAX_VALUE || nanosToCloseDeficit > waitIfBusyNanosLimit) {
                 return Long.MAX_VALUE;
             }
 

@@ -25,8 +25,6 @@ import java.util.concurrent.TimeUnit;
 
 public abstract class AbstractBucket implements Bucket {
 
-    protected static final long UNSPECIFIED_WAITING_LIMIT = -1;
-
     protected abstract long consumeAsMuchAsPossibleImpl(long limit);
 
     protected abstract boolean tryConsumeImpl(long tokensToConsume);
@@ -79,8 +77,8 @@ public abstract class AbstractBucket implements Bucket {
             }
 
             @Override
-            public CompletableFuture<Boolean> consume(long tokensToConsume, Duration maxWait, ScheduledExecutorService scheduler) throws InterruptedException {
-                return consumeImpl(tokensToConsume, maxWait.toNanos(), true, scheduler);
+            public CompletableFuture<Boolean> tryConsume(long tokensToConsume, long maxWaitNanos, ScheduledExecutorService scheduler) throws InterruptedException {
+                return consumeImpl(tokensToConsume, maxWaitNanos, true, scheduler);
             }
 
             @Override
@@ -143,23 +141,33 @@ public abstract class AbstractBucket implements Bucket {
     }
 
     @Override
-    public void consume(long tokensToConsume, BlockingStrategy blockingStrategy) throws InterruptedException {
-        consumeImpl(tokensToConsume, UNSPECIFIED_WAITING_LIMIT, false, blockingStrategy);
+    public boolean tryConsume(long tokensToConsume, long maxWaitTimeNanos, BlockingStrategy blockingStrategy) throws InterruptedException {
+        checkTokensToConsume(tokensToConsume);
+        checkMaxWaitTime(maxWaitTimeNanos);
+
+        long nanosToSleep = reserveAndCalculateTimeToSleepImpl(tokensToConsume, maxWaitTimeNanos);
+        if (nanosToSleep == Long.MAX_VALUE) {
+            return false;
+        }
+        if (nanosToSleep > 0L) {
+            blockingStrategy.park(nanosToSleep);
+        }
+        return true;
     }
 
     @Override
-    public boolean consume(long tokensToConsume, long maxWaitTimeNanos, BlockingStrategy blockingStrategy) throws InterruptedException {
-        return consumeImpl(tokensToConsume, maxWaitTimeNanos, true, blockingStrategy);
-    }
+    public boolean tryConsumeUninterruptibly(long tokensToConsume, long maxWaitTimeNanos, BlockingStrategy blockingStrategy) {
+        checkTokensToConsume(tokensToConsume);
+        checkMaxWaitTime(maxWaitTimeNanos);
 
-    @Override
-    public void consumeUninterruptibly(long tokensToConsume, BlockingStrategy blockingStrategy) {
-        consumeUninterruptiblyImpl(tokensToConsume, UNSPECIFIED_WAITING_LIMIT, false, blockingStrategy);
-    }
-
-    @Override
-    public boolean consumeUninterruptibly(long tokensToConsume, long maxWaitTimeNanos, BlockingStrategy blockingStrategy) {
-        return consumeUninterruptiblyImpl(tokensToConsume, maxWaitTimeNanos, true, blockingStrategy);
+        long nanosToSleep = reserveAndCalculateTimeToSleepImpl(tokensToConsume, maxWaitTimeNanos);
+        if (nanosToSleep == Long.MAX_VALUE) {
+            return false;
+        }
+        if (nanosToSleep > 0L) {
+            blockingStrategy.parkUninterruptibly(nanosToSleep);
+        }
+        return true;
     }
 
     @Override
@@ -207,36 +215,6 @@ public abstract class AbstractBucket implements Bucket {
         if (maxWaitTimeNanos <= 0) {
             throw BucketExceptions.nonPositiveNanosToWait(maxWaitTimeNanos);
         }
-    }
-
-    private boolean consumeImpl(long tokensToConsume, long maxWaitTimeNanos, boolean limitedWaiting, BlockingStrategy blockingStrategy) throws InterruptedException {
-        checkTokensToConsume(tokensToConsume);
-        if (limitedWaiting) {
-            checkMaxWaitTime(maxWaitTimeNanos);
-        }
-        long nanosToSleep = reserveAndCalculateTimeToSleepImpl(tokensToConsume, maxWaitTimeNanos);
-        if (nanosToSleep == Long.MAX_VALUE) {
-            return false;
-        }
-        if (nanosToSleep > 0L) {
-            blockingStrategy.park(nanosToSleep);
-        }
-        return true;
-    }
-
-    private boolean consumeUninterruptiblyImpl(long tokensToConsume, long maxWaitTimeNanos, boolean limitedWaiting, BlockingStrategy blockingStrategy) {
-        checkTokensToConsume(tokensToConsume);
-        if (limitedWaiting) {
-            checkMaxWaitTime(maxWaitTimeNanos);
-        }
-        long nanosToSleep = reserveAndCalculateTimeToSleepImpl(tokensToConsume, maxWaitTimeNanos);
-        if (nanosToSleep == Long.MAX_VALUE) {
-            return false;
-        }
-        if (nanosToSleep > 0L) {
-            blockingStrategy.parkUninterruptibly(nanosToSleep);
-        }
-        return true;
     }
 
 }

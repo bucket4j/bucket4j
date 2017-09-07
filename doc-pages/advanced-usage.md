@@ -17,7 +17,7 @@ Bucket bucket = Bucket4j.builder()
 while (true) {
   // Consume a token from the token bucket.  If a token is not available this method will block until
   // the refill adds one to the bucket.
-  bucket.consume(1);
+  bucket.tryConsume(1);
 
   workloadExecutor.execute(new LoadTask());
 }
@@ -65,7 +65,7 @@ The [compensating transaction](https://en.wikipedia.org/wiki/Compensating_transa
 ```java
 Bucket wallet;
 ...
-wallet.consume(50); // get 50 cents from wallet
+wallet.tryConsume(50); // get 50 cents from wallet
 try {
     buyCocaCola();
 } catch(NoCocaColaException e) {

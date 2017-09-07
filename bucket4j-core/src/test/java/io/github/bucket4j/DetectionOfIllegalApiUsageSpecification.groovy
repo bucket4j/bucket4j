@@ -97,22 +97,11 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
             def bucket = Bucket4j.builder().addLimit(
                     Bandwidth.simple(VALID_CAPACITY, VALID_PERIOD)
             ).build()
-        when:
-            bucket.consume(0, BlockingStrategy.PARKING)
-        then:
-            IllegalArgumentException ex = thrown()
-            ex.message == nonPositiveTokensToConsume(0).message
-
-        when:
-            bucket.consume(-1, BlockingStrategy.PARKING)
-        then:
-            ex = thrown()
-            ex.message == nonPositiveTokensToConsume(-1).message
 
         when:
             bucket.tryConsume(0)
         then:
-            ex = thrown()
+            IllegalArgumentException ex = thrown()
             ex.message == nonPositiveTokensToConsume(0).message
 
         when:
@@ -134,13 +123,13 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
             ex.message == nonPositiveTokensToConsume(-1).message
 
         when:
-            bucket.consume(0L, VALID_PERIOD.toNanos(), BlockingStrategy.PARKING)
+            bucket.tryConsume(0L, VALID_PERIOD.toNanos(), BlockingStrategy.PARKING)
         then:
             ex = thrown()
             ex.message == nonPositiveTokensToConsume(0).message
 
         when:
-            bucket.consume(-1, VALID_PERIOD.toNanos(), BlockingStrategy.PARKING)
+            bucket.tryConsume(-1, VALID_PERIOD.toNanos(), BlockingStrategy.PARKING)
         then:
             ex = thrown()
             ex.message == nonPositiveTokensToConsume(-1).message
@@ -152,13 +141,13 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
                     Bandwidth.simple(VALID_CAPACITY, VALID_PERIOD)
             ).build()
         when:
-            bucket.consume(1, 0, BlockingStrategy.PARKING)
+            bucket.tryConsume(1, 0, BlockingStrategy.PARKING)
         then:
             IllegalArgumentException ex = thrown()
             ex.message == nonPositiveNanosToWait(0).message
 
         when:
-            bucket.consume(1, -1, BlockingStrategy.PARKING)
+            bucket.tryConsume(1, -1, BlockingStrategy.PARKING)
         then:
             ex = thrown()
             ex.message == nonPositiveNanosToWait(-1).message

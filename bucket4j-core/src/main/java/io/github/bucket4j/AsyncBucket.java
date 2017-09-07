@@ -1,6 +1,5 @@
 package io.github.bucket4j;
 
-import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ScheduledExecutorService;
 
@@ -10,9 +9,9 @@ import java.util.concurrent.ScheduledExecutorService;
  * A bucket provides asynchronous mode support if and only if particular {@link Extension extension} behind this bucket provides asynchronous mode.
  *
  * <p>
- * A special notes about local(in-memory) buckets: Mostly methods(excepting {@link #consume(long, long, ScheduledExecutorService)})
+ * A special notes about local(in-memory) buckets: Mostly methods(excepting {@link #tryConsume(long, long, ScheduledExecutorService)})
  * from interface {@link AsyncBucket} are useless for local buckets, because local bucket does not communicate with external back-ends, as result any thread is never blocked, and local bucket.
- * But using asynchronous mode together with {@link #consume(long, long, ScheduledExecutorService)} methods,
+ * But using asynchronous mode together with {@link #tryConsume(long, long, ScheduledExecutorService)} methods,
  * has a sense even for local bucket, because TODO
  *
  * <p> Which thread does completion of future? TODO
@@ -20,33 +19,33 @@ import java.util.concurrent.ScheduledExecutorService;
 public interface AsyncBucket {
 
     /**
-     * Tries to consume a specified number of tokens from this bucket.
+     * Tries to tryConsume a specified number of tokens from this bucket.
      *
-     * @param numTokens The number of tokens to consume from the bucket, must be a positive number.
+     * @param numTokens The number of tokens to tryConsume from the bucket, must be a positive number.
      * @return {@code true} if the tokens were consumed, {@code false} otherwise.
      */
     CompletableFuture<Boolean> tryConsume(long numTokens);
 
     /**
-     * Tries to consume a specified number of tokens from this bucket.
+     * Tries to tryConsume a specified number of tokens from this bucket.
      *
-     * @param numTokens The number of tokens to consume from the bucket, must be a positive number.
+     * @param numTokens The number of tokens to tryConsume from the bucket, must be a positive number.
      * @return {@link ConsumptionProbe} which describes both result of consumption and tokens remaining in the bucket after consumption.
      */
     CompletableFuture<ConsumptionProbe> tryConsumeAndReturnRemaining(long numTokens);
 
     /**
-     * Tries to consume as much tokens from this bucket as available at the moment of invocation.
+     * Tries to tryConsume as much tokens from this bucket as available at the moment of invocation.
      *
      * @return number of tokens which has been consumed, or zero if was consumed nothing.
      */
     CompletableFuture<Long> tryConsumeAsMuchAsPossible();
 
     /**
-     * Tries to consume as much tokens from bucket as available in the bucket at the moment of invocation,
+     * Tries to tryConsume as much tokens from bucket as available in the bucket at the moment of invocation,
      * but tokens which should be consumed is limited by than not more than {@code limit}.
      *
-     * @param limit maximum number of tokens to consume, should be positive.
+     * @param limit maximum number of tokens to tryConsume, should be positive.
      *
      * @return number of tokens which has been consumed, or zero if was consumed nothing.
      */
@@ -63,7 +62,7 @@ public interface AsyncBucket {
      * <pre>{@code
      *      Bucket wallet;
      *      ...
-     *      wallet.consume(50); // get 50 cents from wallet
+     *      wallet.tryConsume(50); // get 50 cents from wallet
      *      try {
      *          buyCocaCola();
      *      } catch(NoCocaColaException e) {
@@ -81,8 +80,8 @@ public interface AsyncBucket {
      * Consumes a specified number of tokens from the bucket. If required count of tokens is not currently available then this method will block
      * until  required number of tokens will be available or current thread is interrupted, or {@code maxWaitTimeNanos} has elapsed.
      *
-     * @param numTokens The number of tokens to consume from the bucket.
-     * @param maxWait limit of time which TODO
+     * @param numTokens The number of tokens to tryConsume from the bucket.
+     * @param maxWaitNanos limit of time which TODO
      * @param scheduler TODO
      *
      * @return true if {@code numTokens} has been consumed or false when {@code numTokens} has not been consumed
@@ -90,7 +89,7 @@ public interface AsyncBucket {
      * @throws InterruptedException in case of current thread has been interrupted during waiting
      * @throws IllegalArgumentException if <tt>numTokens</tt> is greater than capacity of bucket
      */
-    CompletableFuture<Boolean> consume(long numTokens, Duration maxWait, ScheduledExecutorService scheduler) throws InterruptedException;
+    CompletableFuture<Boolean> tryConsume(long numTokens, long maxWaitNanos, ScheduledExecutorService scheduler) throws InterruptedException;
 
     /**
      * Asynchronous variance of {@link Bucket#replaceConfiguration(BucketConfiguration)}, follows the same rules and semantic.

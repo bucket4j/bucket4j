@@ -101,11 +101,8 @@ public abstract class AbstractDistributedBucketTest<B extends ConfigurationBuild
     }
 
     @Test
-    public void testConsume() throws Exception {
-        Function<Bucket, Long> action = bucket -> {
-            bucket.consumeUninterruptibly(1, BlockingStrategy.PARKING);
-            return 1L;
-        };
+    public void testTryConsumeWithLimit() throws Exception {
+        Function<Bucket, Long> action = bucket -> bucket.tryConsumeUninterruptibly(1, TimeUnit.MILLISECONDS.toNanos(50), BlockingStrategy.PARKING) ? 1L : 0L;
         Supplier<Bucket> bucketSupplier = () -> build(builder, key, THROW_BUCKET_NOT_FOUND_EXCEPTION);
         ConsumptionScenario scenario = new ConsumptionScenario(4, TimeUnit.SECONDS.toNanos(15), bucketSupplier, action, permittedRatePerSecond);
         scenario.executeAndValidateRate();
@@ -131,7 +128,7 @@ public abstract class AbstractDistributedBucketTest<B extends ConfigurationBuild
     }
 
     @Test
-    public void testConsumeAsync() throws Exception {
+    public void testTryConsumeAsyncWithLimit() throws Exception {
         Bucket testBucket = build(builder, anotherKey, RECONSTRUCT);
         if (!testBucket.isAsyncModeSupported()) {
             return;
@@ -140,11 +137,10 @@ public abstract class AbstractDistributedBucketTest<B extends ConfigurationBuild
         ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
         Function<Bucket, Long> action = bucket -> {
             try {
-                bucket.asAsync().consume(1, Duration.ofMinutes(1), scheduler).get();
+                return bucket.asAsync().tryConsume(1, TimeUnit.MILLISECONDS.toNanos(50), scheduler).get() ? 1L :0L;
             } catch (InterruptedException | ExecutionException e) {
                 throw new RuntimeException(e);
             }
-            return 1L;
         };
         Supplier<Bucket> bucketSupplier = () -> build(builder, key, THROW_BUCKET_NOT_FOUND_EXCEPTION);
         ConsumptionScenario scenario = new ConsumptionScenario(4, TimeUnit.SECONDS.toNanos(15), bucketSupplier, action, permittedRatePerSecond);

@@ -44,7 +44,7 @@ while (true) {
   // Consume a token from the token bucket.  
   // If a token is not available this method will block until
   // the refill adds one to the bucket.
-  bucket.consume(1, BlockingStrategy.PARKING);
+  bucket.tryConsume(1, BlockingStrategy.PARKING);
 
   exchangeRate = pollExchangeRate();
 }

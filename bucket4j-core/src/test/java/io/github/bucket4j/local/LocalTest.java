@@ -29,8 +29,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import static org.junit.Assert.assertTrue;
-
 public class LocalTest {
 
     private LocalBucketBuilder builder = Bucket4j.builder()
@@ -47,12 +45,9 @@ public class LocalTest {
     }
 
     @Test
-    public void testConsume_lockFree() throws Exception {
+    public void testTryConsume_lockFree_Limited() throws Exception {
         int threadCount = 4;
-        Function<Bucket, Long> action = b -> {
-            b.consumeUninterruptibly(1, BlockingStrategy.PARKING);
-            return 1L;
-        };
+        Function<Bucket, Long> action = b -> b.tryConsumeUninterruptibly(1, TimeUnit.MILLISECONDS.toNanos(50), BlockingStrategy.PARKING)? 1L : 0L;
         test15Seconds(() -> builder.build(), threadCount, action);
     }
 
@@ -64,12 +59,9 @@ public class LocalTest {
     }
 
     @Test
-    public void testConsume_Synchronized() throws Exception {
+    public void testTryConsume_SynchronizedLimited() throws Exception {
         int threadCount = 4;
-        Function<Bucket, Long> action = b -> {
-            b.consumeUninterruptibly(1, BlockingStrategy.PARKING);
-            return 1L;
-        };
+        Function<Bucket, Long> action = b -> b.tryConsumeUninterruptibly(1, TimeUnit.MILLISECONDS.toNanos(50), BlockingStrategy.PARKING)? 1L : 0L;
         test15Seconds(() -> builder.build(SynchronizationStrategy.SYNCHRONIZED), threadCount, action);
     }
 
@@ -81,12 +73,9 @@ public class LocalTest {
     }
 
     @Test
-    public void testConsume_Unsafe() throws Exception {
+    public void testTryConsume_UnsafeLimited() throws Exception {
         int threadCount = 1;
-        Function<Bucket, Long> action = b -> {
-            b.consumeUninterruptibly(1, BlockingStrategy.PARKING);
-            return 1L;
-        };
+        Function<Bucket, Long> action = b -> b.tryConsumeUninterruptibly(1, TimeUnit.MILLISECONDS.toNanos(50), BlockingStrategy.PARKING)? 1L: 0L;
         test15Seconds(() -> builder.build(SynchronizationStrategy.NONE), threadCount, action);
     }
 

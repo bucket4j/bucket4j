@@ -81,8 +81,17 @@ public final class BucketExceptions {
     }
 
     public static IllegalArgumentException nonPositiveTokensToConsume(long tokens) {
-        String pattern = "Unable to consume {0} tokens, due to number of tokens to consume should be positive";
+        String pattern = "Unable to tryConsume {0} tokens, due to number of tokens to tryConsume should be positive";
         String msg = MessageFormat.format(pattern, tokens);
+        return new IllegalArgumentException(msg);
+    }
+
+    public static IllegalArgumentException tooHighRefillRate(long periodNanos, long tokens) {
+        // TODO document this limitation in javadocs and wiki pages
+        double actualRate = (double) tokens / (double) periodNanos;
+        String pattern = "{0} token/nanosecond is not permitted refill rate " +
+                ", because highest supported rate is 1 token/nanasecond";
+        String msg = MessageFormat.format(pattern, actualRate);
         return new IllegalArgumentException(msg);
     }
 

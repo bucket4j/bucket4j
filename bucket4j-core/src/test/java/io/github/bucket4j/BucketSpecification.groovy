@@ -155,14 +155,14 @@ class BucketSpecification extends Specification {
                         if (sync) {
                             BlockingStrategyMock sleepStrategy = new BlockingStrategyMock(meter)
                             if (uniterruptible) {
-                                bucket.consumeUninterruptibly(toConsume, sleepStrategy)
+                                bucket.tryConsumeUninterruptibly(toConsume, TimeUnit.HOURS.toNanos(1), sleepStrategy)
                             } else {
-                                bucket.consume(toConsume, sleepStrategy)
+                                bucket.tryConsume(toConsume, TimeUnit.HOURS.toNanos(1), sleepStrategy)
                             }
                             assert sleepStrategy.sleeped == requiredSleep
                         } else {
                             SchedulerMock scheduler = new SchedulerMock()
-                            bucket.asAsync().consume(toConsume, scheduler).get()
+                            bucket.asAsync().tryConsume(toConsume, TimeUnit.HOURS.toNanos(1), scheduler).get()
                             assert scheduler.acummulatedDelayNanos == requiredSleep
                         }
                     }
@@ -188,14 +188,14 @@ class BucketSpecification extends Specification {
                         if (sync) {
                             BlockingStrategyMock sleepStrategy = new BlockingStrategyMock(meter)
                             if (uniterruptible) {
-                                assert bucket.consumeUninterruptibly(toConsume, sleepLimit, sleepStrategy) == requiredResult
+                                assert bucket.tryConsumeUninterruptibly(toConsume, sleepLimit, sleepStrategy) == requiredResult
                             } else {
-                                assert bucket.consume(toConsume, sleepLimit, sleepStrategy) == requiredResult
+                                assert bucket.tryConsume(toConsume, sleepLimit, sleepStrategy) == requiredResult
                             }
                             assert sleepStrategy.sleeped == requiredSleep
                         } else {
                             SchedulerMock scheduler = new SchedulerMock()
-                            assert bucket.asAsync().consume(toConsume, sleepLimit, scheduler).get() == requiredResult
+                            assert bucket.asAsync().tryConsume(toConsume, sleepLimit, scheduler).get() == requiredResult
                             assert scheduler.acummulatedDelayNanos == requiredSleep
                         }
                     }
@@ -268,7 +268,7 @@ class BucketSpecification extends Specification {
                 Thread.currentThread().interrupt()
                 InterruptedException thrown
                 try {
-                    bucket.consume(1, BlockingStrategy.PARKING)
+                    bucket.tryConsume(1, BlockingStrategy.PARKING)
                 } catch (InterruptedException e) {
                     thrown = e
                 }
@@ -277,7 +277,7 @@ class BucketSpecification extends Specification {
                 thrown = null
                 Thread.currentThread().interrupt()
                 try {
-                    bucket.consume(1, TimeUnit.HOURS.toNanos(1), BlockingStrategy.PARKING)
+                    bucket.tryConsume(1, TimeUnit.HOURS.toNanos(1), BlockingStrategy.PARKING)
                 } catch (InterruptedException e) {
                     thrown = e
                 }
