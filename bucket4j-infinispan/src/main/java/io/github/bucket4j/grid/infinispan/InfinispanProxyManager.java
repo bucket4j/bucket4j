@@ -27,6 +27,7 @@ import io.github.bucket4j.util.LazySupplier;
 import org.infinispan.functional.FunctionalMap;
 
 import java.io.Serializable;
+import java.util.Objects;
 import java.util.function.Supplier;
 
 /**
@@ -39,6 +40,9 @@ public class InfinispanProxyManager<K extends Serializable> implements ProxyMana
     private final GridProxy<K> gridProxy;
 
     InfinispanProxyManager(FunctionalMap.ReadWriteMap<K, GridBucketState> readWriteMap) {
+        if (readWriteMap == null) {
+            throw new IllegalArgumentException("map must not be null");
+        }
         this.gridProxy = new InfinispanProxy<>(readWriteMap);
     }
 

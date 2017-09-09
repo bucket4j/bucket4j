@@ -27,6 +27,7 @@ import io.github.bucket4j.grid.ProxyManager;
 import io.github.bucket4j.util.LazySupplier;
 
 import java.io.Serializable;
+import java.util.Objects;
 import java.util.function.Supplier;
 
 /**
@@ -39,6 +40,9 @@ public class HazelcastProxyManager<K extends Serializable> implements ProxyManag
     private final GridProxy<K> gridProxy;
 
     HazelcastProxyManager(IMap<K, GridBucketState> map) {
+        if (map == null) {
+            throw new IllegalArgumentException("map must not be null");
+        }
         this.gridProxy = new HazelcastProxy<>(map);
     }
 

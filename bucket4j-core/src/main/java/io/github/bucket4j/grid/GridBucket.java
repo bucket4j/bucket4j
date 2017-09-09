@@ -51,6 +51,9 @@ public class GridBucket<K extends Serializable> extends AbstractBucket {
         this.gridProxy = gridProxy;
         this.recoveryStrategy = recoveryStrategy;
         this.configurationSupplier = configurationSupplier;
+        if (configurationSupplier == null) {
+            throw BucketExceptions.nullConfigurationSupplier();
+        }
         if (initializeBucket) {
             BucketConfiguration configuration = getConfiguration();
             gridProxy.createInitialState(key, configuration);
@@ -151,7 +154,11 @@ public class GridBucket<K extends Serializable> extends AbstractBucket {
 
     @Override
     public BucketConfiguration getConfiguration() {
-        return configurationSupplier.get();
+        BucketConfiguration bucketConfiguration = configurationSupplier.get();
+        if (bucketConfiguration == null) {
+            throw BucketExceptions.nullConfiguration();
+        }
+        return bucketConfiguration;
     }
 
     private <T extends Serializable> T execute(GridCommand<T> command) {

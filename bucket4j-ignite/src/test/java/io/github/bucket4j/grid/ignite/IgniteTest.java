@@ -34,6 +34,7 @@ import org.gridkit.nanocloud.VX;
 import org.gridkit.vicluster.ViNode;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Test;
 
 import java.io.Serializable;
 
@@ -78,6 +79,11 @@ public class IgniteTest extends AbstractDistributedBucketTest<IgniteBucketBuilde
         }
     }
 
+    @Test
+    @Override
+    public void testThatImpossibleToPassNullCacheToProxyManagerConstructor() {
+        Bucket4j.extension(getExtensionClass()).proxyManagerForCache(null);
+    }
 
     @Override
     protected Class<io.github.bucket4j.grid.ignite.Ignite> getExtensionClass() {

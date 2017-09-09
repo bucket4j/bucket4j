@@ -29,22 +29,22 @@ public class Refill implements Serializable {
     private final long tokens;
 
     private Refill(long tokens, Duration period) {
+        long periodNanos = period.toNanos();
         if (tokens <= 0) {
             throw BucketExceptions.nonPositivePeriodTokens(tokens);
         }
-        this.tokens = tokens;
-
         if (period == null) {
             throw BucketExceptions.nullPeriod();
         }
-        this.periodNanos = period.toNanos();
         if (periodNanos <= 0) {
             throw BucketExceptions.nonPositivePeriod(periodNanos);
         }
         if (tokens > periodNanos) {
-            // TODO add unit test
             throw BucketExceptions.tooHighRefillRate(periodNanos, tokens);
         }
+
+        this.tokens = tokens;
+        this.periodNanos = periodNanos;
     }
 
     /**

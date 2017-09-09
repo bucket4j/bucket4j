@@ -54,6 +54,21 @@ public final class BucketExceptions {
         return new IllegalArgumentException(msg);
     }
 
+    public static IllegalArgumentException nullScheduler() {
+        String msg = "Scheduler can not be null";
+        return new IllegalArgumentException(msg);
+    }
+
+    public static IllegalArgumentException nullConfiguration() {
+        String msg = "Configuration can not be null";
+        return new IllegalArgumentException(msg);
+    }
+
+    public static IllegalArgumentException nullConfigurationSupplier() {
+        String msg = "Configuration supplier can not be null";
+        return new IllegalArgumentException(msg);
+    }
+
     public static IllegalArgumentException nonPositivePeriod(long period) {
         String pattern = "{0} is wrong value for period of bandwidth, because period should be positive";
         String msg = MessageFormat.format(pattern, period);
@@ -70,7 +85,6 @@ public final class BucketExceptions {
         String msg = "At list one limited bandwidth should be specified";
         return new IllegalArgumentException(msg);
     }
-
     // ------------------- end of construction time exceptions --------------------------------
 
     // ------------------- usage time exceptions  ---------------------------------------------
@@ -87,9 +101,8 @@ public final class BucketExceptions {
     }
 
     public static IllegalArgumentException tooHighRefillRate(long periodNanos, long tokens) {
-        // TODO document this limitation in javadocs and wiki pages
         double actualRate = (double) tokens / (double) periodNanos;
-        String pattern = "{0} token/nanosecond is not permitted refill rate " +
+        String pattern = "{0} token/nanosecond is not permitted refill rate" +
                 ", because highest supported rate is 1 token/nanasecond";
         String msg = MessageFormat.format(pattern, actualRate);
         return new IllegalArgumentException(msg);

@@ -23,14 +23,22 @@ import java.util.concurrent.*;
 
 public class SchedulerMock implements ScheduledExecutorService {
 
+    private RuntimeException exception;
     private long acummulatedDelayNanos;
 
     public long getAcummulatedDelayNanos() {
         return acummulatedDelayNanos;
     }
 
+    public void setException(RuntimeException exception) {
+        this.exception = exception;
+    }
+
     @Override
     public ScheduledFuture<?> schedule(Runnable command, long delay, TimeUnit unit) {
+        if (exception != null) {
+            throw exception;
+        }
         acummulatedDelayNanos += unit.toNanos(delay);
         command.run();
         return null;

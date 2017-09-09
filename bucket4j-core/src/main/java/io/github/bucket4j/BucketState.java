@@ -188,7 +188,7 @@ public class BucketState implements Serializable {
     @Override
     public String toString() {
         return "BucketState{" +
-                ", bandwidthStates=" + Arrays.toString(stateData) +
+                "bandwidthStates=" + Arrays.toString(stateData) +
                 '}';
     }
 

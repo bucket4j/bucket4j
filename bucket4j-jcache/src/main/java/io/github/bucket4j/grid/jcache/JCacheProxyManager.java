@@ -27,6 +27,7 @@ import io.github.bucket4j.util.LazySupplier;
 
 import javax.cache.Cache;
 import java.io.Serializable;
+import java.util.Objects;
 import java.util.function.Supplier;
 
 /**
@@ -39,6 +40,9 @@ public class JCacheProxyManager<K extends Serializable> implements ProxyManager<
     private final GridProxy<K> gridProxy;
 
     JCacheProxyManager(Cache<K, GridBucketState> cache) {
+        if (cache == null) {
+            throw new IllegalArgumentException("cache must not be null");
+        }
         this.gridProxy = new JCacheProxy<>(cache);
     }
 

@@ -17,7 +17,6 @@
 
 package io.github.bucket4j;
 
-import java.time.Duration;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ScheduledExecutorService;
@@ -77,27 +76,10 @@ public abstract class AbstractBucket implements Bucket {
             }
 
             @Override
-            public CompletableFuture<Boolean> tryConsume(long tokensToConsume, long maxWaitNanos, ScheduledExecutorService scheduler) throws InterruptedException {
-                return consumeImpl(tokensToConsume, maxWaitNanos, true, scheduler);
-            }
-
-            @Override
-            public CompletableFuture<Void> replaceConfiguration(BucketConfiguration newConfiguration) {
-                Objects.requireNonNull(newConfiguration);
-                return replaceConfigurationAsyncImpl(newConfiguration);
-            }
-
-            @Override
-            public CompletableFuture<Void> addTokens(long tokensToAdd) {
-                checkTokensToAdd(tokensToAdd);
-                return addTokensAsyncImpl(tokensToAdd);
-            }
-
-            private CompletableFuture<Boolean> consumeImpl(long tokensToConsume, long maxWaitTimeNanos, boolean limitedWaiting, ScheduledExecutorService scheduler) {
-                if (limitedWaiting) {
-                    checkMaxWaitTime(maxWaitTimeNanos);
-                }
+            public CompletableFuture<Boolean> tryConsume(long tokensToConsume, long maxWaitTimeNanos, ScheduledExecutorService scheduler) throws InterruptedException {
+                checkMaxWaitTime(maxWaitTimeNanos);
                 checkTokensToConsume(tokensToConsume);
+                checkScheduler(scheduler);
                 CompletableFuture<Boolean> resultFuture = new CompletableFuture<>();
                 CompletableFuture<Long> reservationFuture = reserveAndCalculateTimeToSleepAsyncImpl(tokensToConsume, maxWaitTimeNanos);
                 reservationFuture.whenComplete((nanosToSleep, exception) -> {
@@ -122,9 +104,21 @@ public abstract class AbstractBucket implements Bucket {
                 });
                 return resultFuture;
             }
+
+            @Override
+            public CompletableFuture<Void> replaceConfiguration(BucketConfiguration newConfiguration) {
+                checkConfiguration(newConfiguration);
+                return replaceConfigurationAsyncImpl(newConfiguration);
+            }
+
+            @Override
+            public CompletableFuture<Void> addTokens(long tokensToAdd) {
+                checkTokensToAdd(tokensToAdd);
+                return addTokensAsyncImpl(tokensToAdd);
+            }
+
         };
     }
-
 
     @Override
     public AsyncBucket asAsync() throws UnsupportedOperationException {
@@ -195,11 +189,11 @@ public abstract class AbstractBucket implements Bucket {
 
     @Override
     public void replaceConfiguration(BucketConfiguration newConfiguration) {
-        Objects.requireNonNull(newConfiguration);
+        checkConfiguration(newConfiguration);
         replaceConfigurationImpl(newConfiguration);
     }
 
-    private void checkTokensToAdd(long tokensToAdd) {
+    private static void checkTokensToAdd(long tokensToAdd) {
         if (tokensToAdd <= 0) {
             throw new IllegalArgumentException("tokensToAdd should be >= 0");
         }
@@ -214,6 +208,18 @@ public abstract class AbstractBucket implements Bucket {
     private static void checkMaxWaitTime(long maxWaitTimeNanos) {
         if (maxWaitTimeNanos <= 0) {
             throw BucketExceptions.nonPositiveNanosToWait(maxWaitTimeNanos);
+        }
+    }
+
+    private static void checkScheduler(ScheduledExecutorService scheduler) {
+        if (scheduler == null) {
+            throw BucketExceptions.nullScheduler();
+        }
+    }
+
+    private static void checkConfiguration(BucketConfiguration newConfiguration) {
+        if (newConfiguration == null) {
+            throw BucketExceptions.nullConfiguration();
         }
     }
 

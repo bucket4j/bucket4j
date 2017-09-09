@@ -29,14 +29,13 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static io.github.bucket4j.grid.RecoveryStrategy.RECONSTRUCT;
 import static io.github.bucket4j.grid.RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 public abstract class AbstractDistributedBucketTest<B extends ConfigurationBuilder<B>, E extends Extension<B>> {
 
@@ -56,6 +55,9 @@ public abstract class AbstractDistributedBucketTest<B extends ConfigurationBuild
     protected abstract ProxyManager<String> newProxyManager();
 
     protected abstract void removeBucketFromBackingStorage(String key);
+
+    @Test
+    public abstract void testThatImpossibleToPassNullCacheToProxyManagerConstructor();
 
     @Test
     public void testReconstructRecoveryStrategy() {
@@ -161,6 +163,37 @@ public abstract class AbstractDistributedBucketTest<B extends ConfigurationBuild
         Bucket bucket2 = registry.getProxy(anotherKey, () -> configuration);
         assertTrue(bucket2.tryConsume(10));
         assertFalse(bucket2.tryConsume(1));
+    }
+
+    @Test
+    public void configurationSupplierShouldBeCalledOnlyOnceInStronglyLazyWayAndOnlyIfBucketNotExists() {
+        BucketConfiguration configuration = Bucket4j.configurationBuilder()
+                .addLimit(Bandwidth.simple(10, Duration.ofDays(1)))
+                .buildConfiguration();
+
+        ProxyManager<String> registry = newProxyManager();
+        AtomicInteger configSupplierInteractionCount = new AtomicInteger();
+        Supplier<BucketConfiguration> configurationSupplier = () -> {
+            configSupplierInteractionCount.incrementAndGet();
+            return configuration;
+        };
+
+        // acquiring reference to bucket should lead to touching configuration supplier
+        Bucket bucket = registry.getProxy(key, configurationSupplier);
+        assertEquals(0, configSupplierInteractionCount.get());
+
+        // supplier should be called at first time call of business method
+        bucket.tryConsume(1);
+        assertEquals(1, configSupplierInteractionCount.get());
+
+        // after initialization supplier should not be called
+        bucket.tryConsume(1);
+        assertEquals(1, configSupplierInteractionCount.get());
+
+        // reinitialization of bucket should not call supplier yet another time
+        removeBucketFromBackingStorage(key);
+        bucket.tryConsume(1);
+        assertEquals(1, configSupplierInteractionCount.get());
     }
 
 }

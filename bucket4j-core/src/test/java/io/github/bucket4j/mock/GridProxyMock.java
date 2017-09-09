@@ -33,13 +33,24 @@ public class GridProxyMock implements GridProxy {
 
     private final TimeMeter timeMeter;
     private GridBucketState state;
+    private RuntimeException exception;
 
     public GridProxyMock(TimeMeter timeMeter) {
         this.timeMeter = timeMeter;
     }
 
+    public void setException(RuntimeException exception) {
+        this.exception = exception;
+    }
+
     @Override
     public CommandResult execute(Serializable key, GridCommand command) {
+        if (exception != null) {
+            throw new RuntimeException();
+        }
+        if (state == null) {
+            return CommandResult.bucketNotFound();
+        }
         emulateSerialization(key);
         command = emulateSerialization(command);
         GridBucketState newState = emulateSerialization(state);
@@ -53,23 +64,39 @@ public class GridProxyMock implements GridProxy {
 
     @Override
     public void createInitialState(Serializable key, BucketConfiguration configuration) {
+        if (exception != null) {
+            throw new RuntimeException();
+        }
         BucketState bucketState = BucketState.createInitialState(configuration, timeMeter.currentTimeNanos());
         this.state = new GridBucketState(configuration, bucketState);
     }
 
     @Override
     public Serializable createInitialStateAndExecute(Serializable key, BucketConfiguration configuration, GridCommand command) {
+        if (exception != null) {
+            throw new RuntimeException();
+        }
         createInitialState(key, configuration);
         return execute(key, command);
     }
 
     @Override
     public CompletableFuture createInitialStateAndExecuteAsync(Serializable key, BucketConfiguration configuration, GridCommand command) throws UnsupportedOperationException {
+        if (exception != null) {
+            CompletableFuture future = new CompletableFuture();
+            future.completeExceptionally(new RuntimeException());
+            return future;
+        }
         return CompletableFuture.completedFuture(createInitialStateAndExecute(key, configuration, command));
     }
 
     @Override
     public CompletableFuture<CommandResult> executeAsync(Serializable key, GridCommand command) throws UnsupportedOperationException {
+        if (exception != null) {
+            CompletableFuture future = new CompletableFuture();
+            future.completeExceptionally(new RuntimeException());
+            return future;
+        }
         return CompletableFuture.completedFuture(execute(key, command));
     }
 

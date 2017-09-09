@@ -17,8 +17,13 @@
 
 package io.github.bucket4j
 
+import io.github.bucket4j.grid.GridBucket
+import io.github.bucket4j.grid.GridProxy
+import io.github.bucket4j.grid.RecoveryStrategy
+import io.github.bucket4j.local.LocalBucketBuilder
 import io.github.bucket4j.mock.BucketType
 import io.github.bucket4j.mock.BlockingStrategyMock
+import io.github.bucket4j.mock.GridProxyMock
 import io.github.bucket4j.mock.SchedulerMock
 import io.github.bucket4j.mock.TimeMeterMock
 import spock.lang.Specification
@@ -26,7 +31,11 @@ import spock.lang.Timeout
 import spock.lang.Unroll
 
 import java.time.Duration
+import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
+
+import static io.github.bucket4j.TimeMeter.SYSTEM_MILLISECONDS
+import static io.github.bucket4j.grid.RecoveryStrategy.*
 
 class BucketSpecification extends Specification {
 
@@ -259,7 +268,7 @@ class BucketSpecification extends Specification {
     @Timeout(value = 2, unit = TimeUnit.SECONDS)
     def "Should throw InterruptedException when thread interrupted during waiting for token refill"() {
         expect:
-            for (TimeMeter meter : [TimeMeter.SYSTEM_MILLISECONDS, TimeMeter.SYSTEM_NANOTIME]) {
+            for (TimeMeter meter : [SYSTEM_MILLISECONDS, TimeMeter.SYSTEM_NANOTIME]) {
                 Bucket bucket = Bucket4j.builder()
                         .withCustomTimePrecision(meter)
                         .addLimit(0, Bandwidth.simple(1, Duration.ofMinutes(1)))
@@ -283,6 +292,49 @@ class BucketSpecification extends Specification {
                 }
                 assert thrown != null
             }
+    }
+
+    def "should complete future exceptionally if backend failed"() {
+        setup:
+            BucketConfiguration configuration = Bucket4j.configurationBuilder()
+                                                    .addLimit(Bandwidth.simple(1, Duration.ofNanos(1)))
+                                                    .buildConfiguration()
+            GridProxyMock mockProxy = new GridProxyMock(SYSTEM_MILLISECONDS);
+            Bucket bucket = GridBucket.createInitializedBucket("66", configuration, mockProxy, THROW_BUCKET_NOT_FOUND_EXCEPTION)
+        when:
+            mockProxy.setException(new RuntimeException())
+            CompletableFuture<Boolean> future = bucket.asAsync().tryConsume(1)
+        then:
+            future.isCompletedExceptionally()
+    }
+
+    def "should complete future exceptionally if scheduler failed to schedule the task"() {
+        setup:
+            BucketConfiguration configuration = Bucket4j.configurationBuilder()
+                    .addLimit(Bandwidth.simple(1, Duration.ofNanos(1)))
+                    .buildConfiguration()
+            GridProxyMock mockProxy = new GridProxyMock(SYSTEM_MILLISECONDS)
+            SchedulerMock schedulerMock = new SchedulerMock()
+            Bucket bucket = GridBucket.createInitializedBucket("66", configuration, mockProxy, THROW_BUCKET_NOT_FOUND_EXCEPTION)
+        when:
+            schedulerMock.setException(new RuntimeException())
+            CompletableFuture<Boolean> future = bucket.asAsync().tryConsume(10, 100000, schedulerMock)
+        then:
+            future.isCompletedExceptionally()
+    }
+
+    def "check that toString does not fail"() {
+        when:
+            for (BucketType type : BucketType.values()) {
+                for (TimeMeter meter : [SYSTEM_MILLISECONDS, SYSTEM_MILLISECONDS]) {
+                    ConfigurationBuilder builder = Bucket4j.builder()
+                            .addLimit(1, Bandwidth.simple(100, Duration.ofNanos(100)))
+                    Bucket bucket = type.createBucket(builder, meter)
+                    println bucket.toString()
+                }
+            }
+        then:
+            noExceptionThrown()
     }
 
 }

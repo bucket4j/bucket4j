@@ -29,11 +29,6 @@ public class GridBucketState implements Serializable {
     private BucketConfiguration configuration;
     private BucketState state;
 
-    public GridBucketState() {
-        configuration = null;
-        state = null;
-    }
-
     public GridBucketState(BucketConfiguration configuration, BucketState state) {
         this.configuration = configuration;
         this.state = state;

@@ -49,12 +49,4 @@ public class CommandResult<T extends Serializable> implements Serializable {
         return bucketNotFound;
     }
 
-    public void setData(T data) {
-        this.data = data;
-    }
-
-    public void setBucketNotFound(boolean bucketNotFound) {
-        this.bucketNotFound = bucketNotFound;
-    }
-
 }

@@ -25,6 +25,12 @@ public abstract class AbstractJCacheTest extends AbstractDistributedBucketTest<J
         bucket.asAsync();
     }
 
+    @Test
+    @Override
+    public void testThatImpossibleToPassNullCacheToProxyManagerConstructor() {
+        Bucket4j.extension(JCache.class).proxyManagerForCache(null);
+    }
+
     @Override
     protected Class<JCache> getExtensionClass() {
         return JCache.class;

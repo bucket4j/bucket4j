@@ -32,6 +32,7 @@ import org.gridkit.nanocloud.VX;
 import org.gridkit.vicluster.ViNode;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Test;
 
 import java.io.Serializable;
 
@@ -72,6 +73,12 @@ public class HazelcastTest extends AbstractDistributedBucketTest<HazelcastBucket
         if (cloud != null) {
             cloud.shutdown();
         }
+    }
+
+    @Test
+    @Override
+    public void testThatImpossibleToPassNullCacheToProxyManagerConstructor() {
+        Bucket4j.extension(getExtensionClass()).proxyManagerForMap(null);
     }
 
     @Override

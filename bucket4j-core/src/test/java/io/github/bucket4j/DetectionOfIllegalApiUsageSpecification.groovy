@@ -17,12 +17,18 @@
 
 package io.github.bucket4j
 
+import io.github.bucket4j.grid.GridBucket
 import io.github.bucket4j.local.LocalBucketBuilder
+import io.github.bucket4j.mock.GridProxyMock
+import io.github.bucket4j.mock.SchedulerMock
 import spock.lang.Specification
 import spock.lang.Unroll
 import java.time.Duration
+import java.util.concurrent.CompletableFuture
+import java.util.function.Supplier
 
 import static BucketExceptions.*
+import static io.github.bucket4j.grid.RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION
 
 class DetectionOfIllegalApiUsageSpecification extends Specification {
 
@@ -172,6 +178,39 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
             Bucket4j.extension(FakeExtension.class)
         then:
             thrown(IllegalArgumentException)
+    }
+
+    def "Should detect the high rate of refill"() {
+        when:
+            Bucket4j.builder().addLimit(Bandwidth.simple(2, Duration.ofNanos(1)))
+        then:
+            IllegalArgumentException ex = thrown()
+            ex.message == tooHighRefillRate(1, 2).message
+    }
+
+    def "GridBucket should check that configuration is not null"() {
+        setup:
+            GridProxyMock mockProxy = new GridProxyMock(TimeMeter.SYSTEM_MILLISECONDS)
+        when:
+            GridBucket.createInitializedBucket("66", null, mockProxy, THROW_BUCKET_NOT_FOUND_EXCEPTION)
+
+        then:
+            IllegalArgumentException ex = thrown()
+            ex.message == nullConfiguration().message
+
+        when:
+            GridBucket.createLazyBucket("66", {null}, mockProxy)
+                    .tryConsume(1)
+        then:
+            ex = thrown()
+            ex.message == nullConfiguration().message
+
+        when:
+            GridBucket.createLazyBucket("66", null, mockProxy)
+                    .tryConsume(1)
+        then:
+            ex = thrown()
+            ex.message == nullConfigurationSupplier().message
     }
 
     private static class FakeExtension implements Extension {

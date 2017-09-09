@@ -6,11 +6,13 @@ import io.github.bucket4j.Bucket4j;
 import io.github.bucket4j.grid.GridBucketState;
 import io.github.bucket4j.grid.ProxyManager;
 import io.github.bucket4j.grid.RecoveryStrategy;
+import io.github.bucket4j.grid.jcache.JCache;
 import org.infinispan.functional.FunctionalMap.ReadWriteMap;
 import org.infinispan.functional.impl.FunctionalMapImpl;
 import org.infinispan.functional.impl.ReadWriteMapImpl;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Test;
 
 import javax.cache.Cache;
 import javax.cache.CacheManager;
@@ -26,6 +28,12 @@ public class InfinispanTest extends AbstractDistributedBucketTest<InfinispanBuck
     private static Cache<String, GridBucketState> cache;
     private static CacheManager cacheManager1;
     private static CacheManager cacheManager2;
+
+    @Test
+    @Override
+    public void testThatImpossibleToPassNullCacheToProxyManagerConstructor() {
+        Bucket4j.extension(getExtensionClass()).proxyManagerForMap(null);
+    }
 
     @BeforeClass
     public static void init() throws MalformedURLException, URISyntaxException {
