@@ -23,6 +23,7 @@
         <artifactId>bucket4j</artifactId>
         <groupId>com.github.vladimir-bukhtoyarov</groupId>
         <version>3.0.0-rc1</version>
+        <relativePath>..</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
