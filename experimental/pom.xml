@@ -22,12 +22,16 @@
     <parent>
         <artifactId>bucket4j</artifactId>
         <groupId>com.github.vladimir-bukhtoyarov</groupId>
-        <version>2.2.0</version>
+        <version>3.0.0-rc1</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>experimental</artifactId>
     <packaging>pom</packaging>
+
+    <properties>
+        <maven.deploy.skip>true</maven.deploy.skip>
+    </properties>
 
     <modules>
         <module>bucket4j-redis</module>

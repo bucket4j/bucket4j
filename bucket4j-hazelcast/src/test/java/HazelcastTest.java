@@ -75,7 +75,7 @@ public class HazelcastTest extends AbstractDistributedBucketTest<HazelcastBucket
         }
     }
 
-    @Test
+    @Test(expected = IllegalArgumentException.class)
     @Override
     public void testThatImpossibleToPassNullCacheToProxyManagerConstructor() {
         Bucket4j.extension(getExtensionClass()).proxyManagerForMap(null);

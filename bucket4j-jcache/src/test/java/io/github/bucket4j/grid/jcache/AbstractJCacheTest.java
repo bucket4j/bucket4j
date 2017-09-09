@@ -25,7 +25,7 @@ public abstract class AbstractJCacheTest extends AbstractDistributedBucketTest<J
         bucket.asAsync();
     }
 
-    @Test
+    @Test(expected = IllegalArgumentException.class)
     @Override
     public void testThatImpossibleToPassNullCacheToProxyManagerConstructor() {
         Bucket4j.extension(JCache.class).proxyManagerForCache(null);

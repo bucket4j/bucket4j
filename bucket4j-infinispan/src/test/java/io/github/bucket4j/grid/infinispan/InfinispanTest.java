@@ -29,7 +29,7 @@ public class InfinispanTest extends AbstractDistributedBucketTest<InfinispanBuck
     private static CacheManager cacheManager1;
     private static CacheManager cacheManager2;
 
-    @Test
+    @Test(expected = IllegalArgumentException.class)
     @Override
     public void testThatImpossibleToPassNullCacheToProxyManagerConstructor() {
         Bucket4j.extension(getExtensionClass()).proxyManagerForMap(null);

@@ -35,9 +35,10 @@ public interface Bucket {
     /**
      * Gets asynchronous view of this bucket.
      *
-     * <p>If asynchronous mode is not supported by extension(TODO see {@link Extension#isAsyncModeSupported()}) any attempt to call {@link Bucket#asAsync()} will fail with {@link UnsupportedOperationException}
+     * <p>If asynchronous mode is not supported by particular extension behind this bucket,
+     * then any attempt to call this method will fail with {@link UnsupportedOperationException}.
      *
-     * @return Instance of this bucket with asynchronous mode enabled.
+     * @return Asynchronous view of this bucket.
      *
      * @throws UnsupportedOperationException if particular extension behind the bucket does not support asynchronous mode.
      */
