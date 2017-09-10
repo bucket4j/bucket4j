@@ -30,9 +30,9 @@ public interface GridProxy<K extends Serializable> {
 
     <T extends Serializable> T createInitialStateAndExecute(K key, BucketConfiguration configuration, GridCommand<T> command);
 
-    <T extends Serializable> CompletableFuture<CommandResult<T>> executeAsync(K key, GridCommand<T> command) throws UnsupportedOperationException;
+    <T extends Serializable> CompletableFuture<CommandResult<T>> executeAsync(K key, GridCommand<T> command);
 
-    <T extends Serializable> CompletableFuture<T> createInitialStateAndExecuteAsync(K key, BucketConfiguration configuration, GridCommand<T> command) throws UnsupportedOperationException;
+    <T extends Serializable> CompletableFuture<T> createInitialStateAndExecuteAsync(K key, BucketConfiguration configuration, GridCommand<T> command);
 
     boolean isAsyncModeSupported();
 

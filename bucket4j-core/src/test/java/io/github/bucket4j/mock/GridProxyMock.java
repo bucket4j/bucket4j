@@ -81,7 +81,7 @@ public class GridProxyMock implements GridProxy {
     }
 
     @Override
-    public CompletableFuture createInitialStateAndExecuteAsync(Serializable key, BucketConfiguration configuration, GridCommand command) throws UnsupportedOperationException {
+    public CompletableFuture createInitialStateAndExecuteAsync(Serializable key, BucketConfiguration configuration, GridCommand command) {
         if (exception != null) {
             CompletableFuture future = new CompletableFuture();
             future.completeExceptionally(new RuntimeException());
@@ -91,7 +91,7 @@ public class GridProxyMock implements GridProxy {
     }
 
     @Override
-    public CompletableFuture<CommandResult> executeAsync(Serializable key, GridCommand command) throws UnsupportedOperationException {
+    public CompletableFuture<CommandResult> executeAsync(Serializable key, GridCommand command) {
         if (exception != null) {
             CompletableFuture future = new CompletableFuture();
             future.completeExceptionally(new RuntimeException());

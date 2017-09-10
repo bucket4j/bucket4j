@@ -33,9 +33,9 @@ import java.util.concurrent.CompletableFuture;
 
 public class JCacheProxy<K extends Serializable> implements GridProxy<K> {
 
-    public static Map<String, String> incompatibleProviders = new HashMap<>();
+    private static final Map<String, String> incompatibleProviders = new HashMap<>();
     static {
-        incompatibleProviders.put("org.infinispan", "bucket4j-infinispan");
+        incompatibleProviders.put("org.infinispan", " use module bucket4j-infinispan directly");
     }
 
     private final Cache<K, GridBucketState> cache;
@@ -65,13 +65,13 @@ public class JCacheProxy<K extends Serializable> implements GridProxy<K> {
     }
 
     @Override
-    public <T extends Serializable> CompletableFuture<CommandResult<T>> executeAsync(K key, GridCommand<T> command) throws UnsupportedOperationException {
+    public <T extends Serializable> CompletableFuture<CommandResult<T>> executeAsync(K key, GridCommand<T> command) {
         // because JCache does not specify async API
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public <T extends Serializable> CompletableFuture<T> createInitialStateAndExecuteAsync(K key, BucketConfiguration configuration, GridCommand<T> command) throws UnsupportedOperationException {
+    public <T extends Serializable> CompletableFuture<T> createInitialStateAndExecuteAsync(K key, BucketConfiguration configuration, GridCommand<T> command) {
         // because JCache does not specify async API
         throw new UnsupportedOperationException();
     }
@@ -94,13 +94,12 @@ public class JCacheProxy<K extends Serializable> implements GridProxy<K> {
         }
 
         String providerClassName = cachingProvider.getClass().getName();
-        for (String prefix : incompatibleProviders.keySet()) {
-            if (providerClassName.startsWith(prefix)) {
-                String message = "The Cache provider " + providerClassName + " is incompatible with Bucket4j " +
-                        " use module " + incompatibleProviders.get(prefix) + " directly";
+        incompatibleProviders.forEach((providerPrefix, recommendation) -> {
+            if (providerClassName.startsWith(providerPrefix)) {
+                String message = "The Cache provider " + providerClassName + " is incompatible with Bucket4j, " + recommendation;
                 throw new UnsupportedOperationException(message);
             }
-        }
+        });
     }
 
 }

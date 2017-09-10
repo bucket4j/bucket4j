@@ -42,7 +42,7 @@ public interface Bucket {
      *
      * @throws UnsupportedOperationException if particular extension behind the bucket does not support asynchronous mode.
      */
-    AsyncBucket asAsync() throws UnsupportedOperationException;
+    AsyncBucket asAsync();
 
     /**
      * Tries to tryConsume a specified number of tokens from this bucket.

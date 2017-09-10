@@ -17,7 +17,6 @@
 
 package io.github.bucket4j;
 
-import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -34,15 +33,41 @@ public abstract class AbstractBucket implements Bucket {
 
     protected abstract void addTokensImpl(long tokensToAdd);
 
-    protected abstract CompletableFuture<Long> tryConsumeAsMuchAsPossibleAsyncImpl(long limit) throws UnsupportedOperationException;
+    /**
+     * @param limit
+     * @return
+     * @throws UnsupportedOperationException if bucket does not support asynchronous mode
+     */
+    protected abstract CompletableFuture<Long> tryConsumeAsMuchAsPossibleAsyncImpl(long limit);
 
-    protected abstract CompletableFuture<Boolean> tryConsumeAsyncImpl(long tokensToConsume) throws UnsupportedOperationException;
+    /**
+     * @param tokensToConsume
+     * @return
+     * @throws UnsupportedOperationException if bucket does not support asynchronous mode
+     */
+    protected abstract CompletableFuture<Boolean> tryConsumeAsyncImpl(long tokensToConsume);
 
-    protected abstract CompletableFuture<ConsumptionProbe> tryConsumeAndReturnRemainingTokensAsyncImpl(long tokensToConsume) throws UnsupportedOperationException;
+    /**
+     * @param tokensToConsume
+     * @return
+     * @throws UnsupportedOperationException if bucket does not support asynchronous mode
+     */
+    protected abstract CompletableFuture<ConsumptionProbe> tryConsumeAndReturnRemainingTokensAsyncImpl(long tokensToConsume);
 
-    protected abstract CompletableFuture<Long> reserveAndCalculateTimeToSleepAsyncImpl(long tokensToConsume, long maxWaitTimeNanos) throws UnsupportedOperationException;
+    /**
+     * @param tokensToConsume
+     * @param maxWaitTimeNanos
+     * @return
+     * @throws UnsupportedOperationException if bucket does not support asynchronous mode
+     */
+    protected abstract CompletableFuture<Long> reserveAndCalculateTimeToSleepAsyncImpl(long tokensToConsume, long maxWaitTimeNanos);
 
-    protected abstract CompletableFuture<Void> addTokensAsyncImpl(long tokensToAdd) throws UnsupportedOperationException;
+    /**
+     * @throws UnsupportedOperationException if bucket does not support asynchronous mode
+     * @param tokensToAdd
+     * @return
+     */
+    protected abstract CompletableFuture<Void> addTokensAsyncImpl(long tokensToAdd);
 
     protected abstract void replaceConfigurationImpl(BucketConfiguration newConfiguration);
 
@@ -121,7 +146,7 @@ public abstract class AbstractBucket implements Bucket {
     }
 
     @Override
-    public AsyncBucket asAsync() throws UnsupportedOperationException {
+    public AsyncBucket asAsync() {
         if (!isAsyncModeSupported()) {
             throw new UnsupportedOperationException();
         }

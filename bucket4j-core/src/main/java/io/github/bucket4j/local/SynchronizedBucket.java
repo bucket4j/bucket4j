@@ -160,31 +160,31 @@ public class SynchronizedBucket extends AbstractBucket {
     }
 
     @Override
-    protected CompletableFuture<Boolean> tryConsumeAsyncImpl(long tokensToConsume) throws UnsupportedOperationException {
+    protected CompletableFuture<Boolean> tryConsumeAsyncImpl(long tokensToConsume) {
         boolean result = tryConsumeImpl(tokensToConsume);
         return CompletableFuture.completedFuture(result);
     }
 
     @Override
-    protected CompletableFuture<Void> addTokensAsyncImpl(long tokensToAdd) throws UnsupportedOperationException {
+    protected CompletableFuture<Void> addTokensAsyncImpl(long tokensToAdd) {
         addTokensImpl(tokensToAdd);
         return CompletableFuture.completedFuture(null);
     }
 
     @Override
-    protected CompletableFuture<ConsumptionProbe> tryConsumeAndReturnRemainingTokensAsyncImpl(long tokensToConsume) throws UnsupportedOperationException {
+    protected CompletableFuture<ConsumptionProbe> tryConsumeAndReturnRemainingTokensAsyncImpl(long tokensToConsume) {
         ConsumptionProbe result = tryConsumeAndReturnRemainingTokensImpl(tokensToConsume);
         return CompletableFuture.completedFuture(result);
     }
 
     @Override
-    protected CompletableFuture<Long> tryConsumeAsMuchAsPossibleAsyncImpl(long limit) throws UnsupportedOperationException {
+    protected CompletableFuture<Long> tryConsumeAsMuchAsPossibleAsyncImpl(long limit) {
         long result = tryConsumeAsMuchAsPossible(limit);
         return CompletableFuture.completedFuture(result);
     }
 
     @Override
-    protected CompletableFuture<Long> reserveAndCalculateTimeToSleepAsyncImpl(long tokensToConsume, long maxWaitTimeNanos) throws UnsupportedOperationException {
+    protected CompletableFuture<Long> reserveAndCalculateTimeToSleepAsyncImpl(long tokensToConsume, long maxWaitTimeNanos) {
         long result = reserveAndCalculateTimeToSleepImpl(tokensToConsume, maxWaitTimeNanos);
         return CompletableFuture.completedFuture(result);
     }
