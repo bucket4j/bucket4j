@@ -1,7 +1,7 @@
 # Bucket4j - is a java implementation of token-bucket algorithm for rate limiting
 [![Build Status](https://travis-ci.org/vladimir-bukhtoyarov/bucket4j.svg?branch=master)](https://travis-ci.org/vladimir-bukhtoyarov/bucket4j)
 [![Join the chat at https://gitter.im/vladimir-bukhtoyarov/bucket4j](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/vladimir-bukhtoyarov/bucket4j?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-[![Quality Gate](https://sonarqube.com/api/badges/gate?key=com.github.vladimir-bukhtoyarov:bucket4j)](https://sonarqube.com/dashboard/index/com.github.vladimir-bukhtoyarov:bucket4j)
+[![Quality Gate](https://sonarqube.com/api/badges/gate?key=com.github.vladimir-bukhtoyarov:bucket4j-parent)](https://sonarqube.com/dashboard/index/com.github.vladimir-bukhtoyarov:bucket4j-parent)
 
 ## Advantages of Bucket4j
 * Implemented on top of ideas of well known algorithm, which are by de-facto standard for rate limiting in the IT industry.
@@ -17,19 +17,25 @@ Just use your favorite grid including [Hazelcast](http://hazelcast.com/products/
 ## Documentation
 * [Basic-usage](doc-pages/basic-usage.md) - examples of basic usage, just start from here and most likely you will skip the rest items below. 
 * [Brief overview of token-bucket algorithm](doc-pages/token-bucket-brief-overview.md) - the brief overview of token-bucket algorithm.
+* [Bucket4j key concepts](doc-pages/key-concepts.md) describes main terms, technical limits and algorithms used inside Bucket4j.
 * [Advanced usage](doc-pages/advanced-usage.md) - examples of advanced usage. 
+* [Documentation for previous versions](doc-pages/archive-links.md)
+
+## Supported back-ends
 * [Jcache integration](doc-pages/jcache-usage.md) - documentation and examples about usage ```Bucket4j``` with in-memory grids which supports ```JCache API (JSR 107)``` specification. 
 * [Hazelcast integration](doc-pages/hazelcast.md) - documentation and examples for ```bucket4j-hazelcast``` module.
 * [Apache Ignite integration](doc-pages/ignite.md) - documentation and examples for ```bucket4j-ignite``` module.
 * [Infinspan integration](doc-pages/inifinispan.md) - documentation and examples for ```bucket4j-infinispan``` module.
 * [Spring Boot Starter](https://github.com/MarcGiffing/bucket4j-spring-boot-starter) - third-party integration developed by @MarcGiffing.
-* [Documentation for previous versions](doc-pages/archive-links.md)
 
+## Third-party integrations:
+* [Spring Boot Starter for Bucket4j](https://github.com/MarcGiffing/bucket4j-spring-boot-starter) 
+* [JHipster API Gateway](https://jhipster.github.io/api-gateway/#rate_limiting)
+* [Dropwizard Ratelimit](https://github.com/zivver/dropwizard-ratelimit)
 
 ## Get Bucket4j library
-
 #### By direct link
-[Download compiled jar, sources, javadocs](https://github.com/vladimir-bukhtoyarov/bucket4j/releases/tag/2.1.0)
+[Download compiled jar, sources, javadocs](https://github.com/vladimir-bukhtoyarov/bucket4j/releases/tag/3.0.0)
 
 #### You can build Bucket4j from sources
 ```bash
@@ -45,22 +51,9 @@ use any of them:
 <dependency>
     <groupId>com.github.vladimir-bukhtoyarov</groupId>
     <artifactId>bucket4j-core</artifactId>
-    <version>2.1.0</version>
+    <version>3.0.0</version>
 </dependency>
 ```
-To use JCache extension you also need to add following dependency:
-```xml
-<dependency>
-    <groupId>com.github.vladimir-bukhtoyarov</groupId>
-    <artifactId>bucket4j-jcache</artifactId>
-    <version>2.1.0</version>
-</dependency>
-```
-
-## Third-party libraries which uses bucket4j
-- [JHipster API Gateway](https://jhipster.github.io/api-gateway/#rate_limiting)
-- [Spring Boot Starter for Bucket4j](https://github.com/MarcGiffing/bucket4j-spring-boot-starter)
-- [Dropwizard Ratelimit](https://github.com/zivver/dropwizard-ratelimit)
 
 ## Have a question?
 Feel free to ask in the [gitter chat](https://gitter.im/vladimir-bukhtoyarov/bucket4j) 

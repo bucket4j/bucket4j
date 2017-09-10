@@ -180,6 +180,7 @@
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-antrun-plugin</artifactId>
                         <version>1.7</version>
+                        <inherited>false</inherited>
                         <executions>
                             <execution>
                                 <phase>clean</phase>

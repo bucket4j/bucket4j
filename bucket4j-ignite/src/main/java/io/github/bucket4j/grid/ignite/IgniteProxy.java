@@ -60,11 +60,7 @@ public class IgniteProxy<K extends Serializable> implements GridProxy<K> {
     }
 
     @Override
-    public <T extends Serializable> CompletableFuture<CommandResult<T>> executeAsync(K key, GridCommand<T> command) throws UnsupportedOperationException {
-
-
-
-        List l;
+    public <T extends Serializable> CompletableFuture<CommandResult<T>> executeAsync(K key, GridCommand<T> command) {
         JCacheEntryProcessor<K, T> entryProcessor = JCacheEntryProcessor.executeProcessor(command);
         return invokeAsync(key, entryProcessor);
     }
