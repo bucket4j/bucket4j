@@ -29,7 +29,6 @@ import org.apache.ignite.lang.IgniteFuture;
 import org.apache.ignite.lang.IgniteInClosure;
 
 import java.io.Serializable;
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public class IgniteProxy<K extends Serializable> implements GridProxy<K> {

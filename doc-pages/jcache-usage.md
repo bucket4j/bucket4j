@@ -137,5 +137,13 @@ public class GlobalThrottlingFilter implements javax.servlet.Filter {
 As you can see the code is simpler when you work with Bucket directly without ProxyManager, so use this way always when all buckets are known at development time. 
 
 ## Runnable examples of JCache integration
-Bucket4j has been well tested with ```Hazelcast``` and ```Apache Ignite/GridGain```, you can use integration tests from [this folder](https://github.com/vladimir-bukhtoyarov/bucket4j/tree/2.0/bucket4j-jcache/src/test/java/io/github/bucket4j/grid/jcache) as live examples.
+Bucket4j well tested with ```Hazelcast``` and ```Apache Ignite/GridGain```, you can use integration tests from [this folder](https://github.com/vladimir-bukhtoyarov/bucket4j/tree/2.0/bucket4j-jcache/src/test/java/io/github/bucket4j/grid/jcache) as live examples.
 
+## Why JCache specification is not enough and since 3.0 were introduced the dedicated modules for Infinispan, Hazelcast and Ignite?
+Asynchronous processing is very important for high-throughput applications, but JCache specification does not specify asynchronous API, because two early attempts to bring this kind functionality at spec level [307](https://github.com/jsr107/jsr107spec/issues/307),[312](https://github.com/jsr107/jsr107spec/issues/312) were failed in absence of consensus.
+Sad, but true, if you need for asynchronous API, then JCache extension is useless, and you need to choose from following extensions:
+[bucket4j-ignite](./ignite.md)
+[bucket4j-hazelcast](./hazelcast.md)
+[bucket4j-infinispan](./infinispan.md)
+Of course implementation the asynchronous support for any other JCache provider outside from the list above should be easy exercise, 
+so feel free to return back the pull request addressed to cover your favorite JCache provider.
