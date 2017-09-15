@@ -53,7 +53,7 @@ public interface Bucket {
     /**
      * Tries to consume a specified number of tokens from this bucket.
      *
-     * @param numTokens The number of tokens to tryConsume from the bucket, must be a positive number.
+     * @param numTokens The number of tokens to consume from the bucket, must be a positive number.
      *
      * @return {@code true} if the tokens were consumed, {@code false} otherwise.
      */
@@ -121,7 +121,7 @@ public interface Bucket {
     /**
      * Has same semantic with {@link #tryConsume(long, long, BlockingStrategy)} but ignores interrupts(just restores interruption flag on exit).
      *
-     * @param numTokens The number of tokens to tryConsume from the bucket.
+     * @param numTokens The number of tokens to consume from the bucket.
      * @param maxWaitTimeNanos limit of time which thread can wait.
      * @param blockingStrategy specifies the way to block current thread to amount of time required to refill missed number of tokens in the bucket
      *
