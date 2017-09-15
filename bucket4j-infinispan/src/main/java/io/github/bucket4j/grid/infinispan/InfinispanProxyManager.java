@@ -27,7 +27,6 @@ import io.github.bucket4j.util.LazySupplier;
 import org.infinispan.functional.FunctionalMap;
 
 import java.io.Serializable;
-import java.util.Objects;
 import java.util.function.Supplier;
 
 /**

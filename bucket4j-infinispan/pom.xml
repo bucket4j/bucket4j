@@ -24,8 +24,8 @@
     <parent>
         <groupId>com.github.vladimir-bukhtoyarov</groupId>
         <artifactId>bucket4j-parent</artifactId>
-        <version>3.0.0-rc1</version>
-        <relativePath>..</relativePath>
+        <version>3.0.0</version>
+        <relativePath>../bucket4j-parent</relativePath>
     </parent>
     
     <artifactId>bucket4j-infinispan</artifactId>

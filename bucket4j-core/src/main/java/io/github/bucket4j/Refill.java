@@ -32,10 +32,10 @@ public class Refill implements Serializable {
         if (period == null) {
             throw BucketExceptions.nullPeriod();
         }
-        long periodNanos = period.toNanos();
         if (tokens <= 0) {
             throw BucketExceptions.nonPositivePeriodTokens(tokens);
         }
+        this.periodNanos = period.toNanos();
         if (periodNanos <= 0) {
             throw BucketExceptions.nonPositivePeriod(periodNanos);
         }
@@ -44,7 +44,6 @@ public class Refill implements Serializable {
         }
 
         this.tokens = tokens;
-        this.periodNanos = periodNanos;
     }
 
     /**
