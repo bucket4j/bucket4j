@@ -15,18 +15,26 @@ Just use your favorite grid including [Hazelcast](http://hazelcast.com/products/
 * Both synchronous and asynchronous API.
 
 ## Documentation
-* [Basic-usage](doc-pages/basic-usage.md) - examples of basic usage, just start from here and most likely you will skip the rest items below. 
-* [Brief overview of token-bucket algorithm](doc-pages/token-bucket-brief-overview.md) - the brief overview of token-bucket algorithm.
-* [Bucket4j key concepts](doc-pages/key-concepts.md) describes main terms, technical limits and algorithms used inside Bucket4j.
-* [Advanced usage](doc-pages/advanced-usage.md) - examples of advanced usage. 
-* [Documentation for previous versions](doc-pages/archive-links.md)
+####Examples:
+* [Basic-usage](doc-pages/basic-usage.md) - examples of basic usage.
+* [Advanced-usage](doc-pages/advanced-usage.md) - examples of advanced usage.
+* [Asynchronous-usage](doc-pages/asynchronous.md) - examples of asynchronous usage.
 
-## Supported back-ends
-* [Jcache integration](doc-pages/jcache-usage.md) - documentation and examples about usage ```Bucket4j``` with in-memory grids which supports ```JCache API (JSR 107)``` specification. 
+####Basics:
+* [Token bucket wikipedia](https://en.wikipedia.org/wiki/Token_bucket) - wikipedia page describes the token-bucket algorithm in classical form.
+* [Non-formal overview of token-bucket algorithm](doc-pages/token-bucket-brief-overview.md) - the brief overview of token-bucket algorithm.
+* [Bucket4j key concepts](doc-pages/key-concepts.md) describes main terms, technical limits and algorithms used by Bucket4j.
+
+####Supported back-ends without asynchronous support:
+* [Jcache integration](doc-pages/jcache-usage.md) - documentation and examples about usage ```Bucket4j``` with in-memory grids which supports ```JCache API (JSR 107)``` specification.
+
+####Supported back-ends with asynchronous support:
 * [Hazelcast integration](doc-pages/hazelcast.md) - documentation and examples for ```bucket4j-hazelcast``` module.
 * [Apache Ignite integration](doc-pages/ignite.md) - documentation and examples for ```bucket4j-ignite``` module.
 * [Infinspan integration](doc-pages/inifinispan.md) - documentation and examples for ```bucket4j-infinispan``` module.
-* [Spring Boot Starter](https://github.com/MarcGiffing/bucket4j-spring-boot-starter) - third-party integration developed by @MarcGiffing.
+
+####Archieve:
+* [Documentation for legacy releases](doc-pages/archive-links.md).
 
 ## Third-party integrations:
 * [Spring Boot Starter for Bucket4j](https://github.com/MarcGiffing/bucket4j-spring-boot-starter) 

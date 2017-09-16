@@ -18,8 +18,10 @@
 package io.github.bucket4j;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 /**
  * Provides asynchronous API for bucket.
@@ -45,6 +47,10 @@ public interface AsyncBucket {
      *     <li>When back-end provides signal(through callback) that request is done, then future completed.</li>
      *     <li>If back-end provides signal(through callback) that asynchronous request failed, then future completed exceptionally.</li>
      * </ul>
+     * It is strongly not recommended to do any heavy work in thread which completes the future,
+     * because typically this will be a back-end thread which handles NIO selectors,
+     * blocking this thread will take negative performance effect to back-end throughput,
+     * so you always should resume control flow in another executor via methods like {@link CompletableFuture#thenApplyAsync(Function, Executor)}.
      *
      * <p>
      * <strong>The algorithm for local buckets is following:</strong>
@@ -73,6 +79,10 @@ public interface AsyncBucket {
      *     <li>When back-end provides signal(through callback) that request is done, then future completed.</li>
      *     <li>If back-end provides signal(through callback) that asynchronous request failed, then future completed exceptionally.</li>
      * </ul>
+     * It is strongly not recommended to do any heavy work in thread which completes the future,
+     * because typically this will be a back-end thread which handles NIO selectors,
+     * blocking this thread will take negative performance effect to back-end throughput,
+     * so you always should resume control flow in another executor via methods like {@link CompletableFuture#thenApplyAsync(Function, Executor)}.
      *
      * <p>
      * <strong>The algorithm for local buckets is following:</strong>
@@ -101,6 +111,10 @@ public interface AsyncBucket {
      *     <li>When back-end provides signal(through callback) that request is done, then future completed.</li>
      *     <li>If back-end provides signal(through callback) that asynchronous request failed, then future completed exceptionally.</li>
      * </ul>
+     * It is strongly not recommended to do any heavy work in thread which completes the future,
+     * because typically this will be a back-end thread which handles NIO selectors,
+     * blocking this thread will take negative performance effect to back-end throughput,
+     * so you always should resume control flow in another executor via methods like {@link CompletableFuture#thenApplyAsync(Function, Executor)}.
      *
      * <p>
      * <strong>The algorithm for local buckets is following:</strong>
@@ -127,6 +141,10 @@ public interface AsyncBucket {
      *     <li>When back-end provides signal(through callback) that request is done, then future completed.</li>
      *     <li>If back-end provides signal(through callback) that asynchronous request failed, then future completed exceptionally.</li>
      * </ul>
+     * It is strongly not recommended to do any heavy work in thread which completes the future,
+     * because typically this will be a back-end thread which handles NIO selectors,
+     * blocking this thread will take negative performance effect to back-end throughput,
+     * so you always should resume control flow in another executor via methods like {@link CompletableFuture#thenApplyAsync(Function, Executor)}.
      *
      * <p>
      * <strong>The algorithm for local buckets is following:</strong>
@@ -169,6 +187,10 @@ public interface AsyncBucket {
      *          </ul>
      *     </li>
      * </ul>
+     * It is strongly not recommended to do any heavy work in thread which completes the future,
+     * because typically this will be a back-end thread which handles NIO selectors,
+     * blocking this thread will take negative performance effect to back-end throughput,
+     * so you always should resume control flow in another executor via methods like {@link CompletableFuture#thenApplyAsync(Function, Executor)}.
      *
      * @return true if {@code numTokens} has been consumed or false when {@code numTokens} has not been consumed
      *
@@ -187,6 +209,10 @@ public interface AsyncBucket {
      *     <li>When back-end provides signal(through callback) that request is done, then future completed.</li>
      *     <li>If back-end provides signal(through callback) that asynchronous request failed, then future completed exceptionally.</li>
      * </ul>
+     * It is strongly not recommended to do any heavy work in thread which completes the future,
+     * because typically this will be a back-end thread which handles NIO selectors,
+     * blocking this thread will take negative performance effect to back-end throughput,
+     * so you always should resume control flow in another executor via methods like {@link CompletableFuture#thenApplyAsync(Function, Executor)}.
      *
      * <p>
      * <strong>The algorithm for local buckets is following:</strong>
@@ -216,6 +242,10 @@ public interface AsyncBucket {
      *     <li>When back-end provides signal(through callback) that request is done, then future completed.</li>
      *     <li>If back-end provides signal(through callback) that asynchronous request failed, then future completed exceptionally.</li>
      * </ul>
+     * It is strongly not recommended to do any heavy work in thread which completes the future,
+     * because typically this will be a back-end thread which handles NIO selectors,
+     * blocking this thread will take negative performance effect to back-end throughput,
+     * so you always should resume control flow in another executor via methods like {@link CompletableFuture#thenApplyAsync(Function, Executor)}.
      *
      * <p>
      * <strong>The algorithm for local buckets is following:</strong>
