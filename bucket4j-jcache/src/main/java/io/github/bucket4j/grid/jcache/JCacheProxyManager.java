@@ -27,7 +27,6 @@ import io.github.bucket4j.util.LazySupplier;
 
 import javax.cache.Cache;
 import java.io.Serializable;
-import java.util.Objects;
 import java.util.function.Supplier;
 
 /**

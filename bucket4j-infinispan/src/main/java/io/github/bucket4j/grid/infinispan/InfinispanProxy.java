@@ -24,6 +24,7 @@ import io.github.bucket4j.grid.GridBucketState;
 import io.github.bucket4j.grid.GridCommand;
 import io.github.bucket4j.grid.GridProxy;
 import io.github.bucket4j.grid.jcache.JCacheEntryProcessor;
+import org.infinispan.commons.CacheException;
 import org.infinispan.functional.FunctionalMap.ReadWriteMap;
 
 import java.io.Serializable;
@@ -67,7 +68,7 @@ public class InfinispanProxy<K extends Serializable> implements GridProxy<K> {
     public <T extends Serializable> CompletableFuture<T> createInitialStateAndExecuteAsync(K key, BucketConfiguration configuration, GridCommand<T> command) {
         JCacheEntryProcessor<K, T> entryProcessor = JCacheEntryProcessor.initStateAndExecuteProcessor(command, configuration);
         CompletableFuture<CommandResult<T>> result = invokeAsync(key, entryProcessor);
-        return result.thenApply(f -> f.getData());
+        return result.thenApply(CommandResult::getData);
     }
 
     @Override
@@ -79,7 +80,7 @@ public class InfinispanProxy<K extends Serializable> implements GridProxy<K> {
         try {
             return readWriteMap.eval(key, new SerializableFunctionAdapter<>(entryProcessor)).get();
         } catch (InterruptedException | ExecutionException e) {
-            throw new RuntimeException(e);
+            throw new CacheException(e);
         }
     }
 
