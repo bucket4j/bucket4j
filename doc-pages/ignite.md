@@ -1,6 +1,6 @@
-# Apache ignite integration
+# Apache Ignite integration
 Before use ```bucket4j-ignite``` module please read [bucket4j-jcache documentation](bucket4j-jcache.md),
-because ```bucket4j-ignite``` is just a logical follow-up of ```bucket4j-jcache```.
+because ```bucket4j-ignite``` is just a follow-up of ```bucket4j-jcache```.
 
 **Question:** Bucket4j already supports JCache since version ```1.2```. Why it was needed to introduce direct support for ```Apache Ignite```?
 **Answer:** Because [JCache API (JSR 107)](https://www.jcp.org/en/jsr/detail?id=107) does not specify asynchronous API,
@@ -36,7 +36,3 @@ org.apache.ignite.IgniteCache cache = ...;
 
 ProxyManager proxyManager = Bucket4j.extension(Ignite.class).proxyManagerForCache(cache);
 ```
-
-
-
-
