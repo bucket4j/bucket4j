@@ -23,9 +23,10 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.github.vladimir-bukhtoyarov</groupId>
-    <version>3.0.0</version>
+    <version>3.0.1</version>
     <artifactId>bucket4j-parent</artifactId>
     <packaging>pom</packaging>
+    <name>bucket4j-parent</name>
 
     <description>bucket4j - is a java implementation of token bucket algorithm for rate limiting</description>
     <url>http://github.com/vladimir-bukhtoyarov/bucket4j</url>
