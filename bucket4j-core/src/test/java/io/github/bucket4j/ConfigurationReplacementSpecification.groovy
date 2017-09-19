@@ -25,6 +25,8 @@ import spock.lang.Unroll
 import java.time.Duration
 import java.util.concurrent.ExecutionException
 
+import static io.github.bucket4j.util.EqualsUtil.isConfigEquals
+
 class ConfigurationReplacementSpecification extends Specification {
 
     @Unroll
@@ -42,16 +44,16 @@ class ConfigurationReplacementSpecification extends Specification {
             bucket.replaceConfiguration(newConfiguration)
         then:
             IncompatibleConfigurationException ex = thrown(IncompatibleConfigurationException)
-            ex.newConfiguration == newConfiguration
-            ex.previousConfiguration == bucket.getConfiguration()
+            isConfigEquals(ex.newConfiguration, newConfiguration)
+            isConfigEquals(ex.previousConfiguration, bucket.getConfiguration())
 
         when:
             bucket.asAsync().replaceConfiguration(newConfiguration).get()
         then:
             ExecutionException executionException = thrown(ExecutionException)
-            IncompatibleConfigurationException asyncExecption = executionException.getCause()
-            asyncExecption.newConfiguration == newConfiguration
-            asyncExecption.previousConfiguration == bucket.getConfiguration()
+            IncompatibleConfigurationException asyncException = executionException.getCause()
+            isConfigEquals(asyncException.newConfiguration, newConfiguration)
+            isConfigEquals(asyncException.previousConfiguration, bucket.getConfiguration())
         where:
             bucketType << BucketType.values()
     }
@@ -71,16 +73,16 @@ class ConfigurationReplacementSpecification extends Specification {
             bucket.replaceConfiguration(newConfiguration)
             then:
             IncompatibleConfigurationException ex = thrown(IncompatibleConfigurationException)
-            ex.newConfiguration == newConfiguration
-            ex.previousConfiguration == bucket.getConfiguration()
+            isConfigEquals(ex.newConfiguration, newConfiguration)
+            isConfigEquals(ex.previousConfiguration, bucket.getConfiguration())
 
         when:
             bucket.asAsync().replaceConfiguration(newConfiguration).get()
         then:
             ExecutionException executionException = thrown(ExecutionException)
-            IncompatibleConfigurationException asyncExecption = executionException.getCause()
-            asyncExecption.newConfiguration == newConfiguration
-            asyncExecption.previousConfiguration == bucket.getConfiguration()
+            IncompatibleConfigurationException asyncException = executionException.getCause()
+            isConfigEquals(asyncException.newConfiguration, newConfiguration)
+            isConfigEquals(asyncException.previousConfiguration, bucket.getConfiguration())
         where:
             bucketType << BucketType.values()
     }

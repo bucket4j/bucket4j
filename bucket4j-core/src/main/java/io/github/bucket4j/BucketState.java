@@ -22,6 +22,8 @@ import java.util.Arrays;
 
 public class BucketState implements Serializable {
 
+    private static final long serialVersionUID = 42L;
+
     private static final int LAST_REFILL_TIME_OFFSET = 0;
 
     final long[] stateData;

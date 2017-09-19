@@ -202,7 +202,7 @@ public class LockFreeBucket extends AbstractBucket {
             replaceConfigurationImpl(newConfiguration);
             return CompletableFuture.completedFuture(null);
         } catch (IncompatibleConfigurationException e) {
-            CompletableFuture fail = new CompletableFuture();
+            CompletableFuture<Void> fail = new CompletableFuture<>();
             fail.completeExceptionally(e);
             return fail;
         }

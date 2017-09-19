@@ -26,6 +26,8 @@ import java.io.Serializable;
  */
 public class ConsumptionProbe implements Serializable {
 
+    private static final long serialVersionUID = 42L;
+
     private final boolean consumed;
     private final long remainingTokens;
     private final long nanosToWaitForRefill;

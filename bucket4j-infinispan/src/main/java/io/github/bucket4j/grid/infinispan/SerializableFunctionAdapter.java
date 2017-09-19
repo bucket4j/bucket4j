@@ -28,6 +28,8 @@ import java.io.Serializable;
 
 public class SerializableFunctionAdapter<K extends Serializable, R extends Serializable> implements SerializableFunction<EntryView.ReadWriteEntryView<K, GridBucketState>, CommandResult<R>> {
 
+    private static final long serialVersionUID = 42L;
+
     private final JCacheEntryProcessor<K, R> entryProcessor;
 
     public SerializableFunctionAdapter(JCacheEntryProcessor<K, R> entryProcessor) {

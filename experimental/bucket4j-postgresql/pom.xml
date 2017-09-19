@@ -27,13 +27,11 @@
         <version>3.0.0</version>
         <relativePath>../../bucket4j-parent</relativePath>
     </parent>
+    <artifactId>bucket4j-postgresql</artifactId>
 
     <properties>
         <maven.deploy.skip>true</maven.deploy.skip>
         <sonar.skip>true</sonar.skip>
     </properties>
-
-    <groupId>com.github.vladimir-bukhtoyarov</groupId>
-    <artifactId>bucket4j-postgresql</artifactId>
     
 </project>

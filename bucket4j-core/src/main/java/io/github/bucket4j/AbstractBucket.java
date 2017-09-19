@@ -101,7 +101,7 @@ public abstract class AbstractBucket implements Bucket {
             }
 
             @Override
-            public CompletableFuture<Boolean> tryConsume(long tokensToConsume, long maxWaitTimeNanos, ScheduledExecutorService scheduler) throws InterruptedException {
+            public CompletableFuture<Boolean> tryConsume(long tokensToConsume, long maxWaitTimeNanos, ScheduledExecutorService scheduler) {
                 checkMaxWaitTime(maxWaitTimeNanos);
                 checkTokensToConsume(tokensToConsume);
                 checkScheduler(scheduler);

@@ -193,10 +193,8 @@ public interface AsyncBucket {
      * so you always should resume control flow in another executor via methods like {@link CompletableFuture#thenApplyAsync(Function, Executor)}.
      *
      * @return true if {@code numTokens} has been consumed or false when {@code numTokens} has not been consumed
-     *
-     * @throws InterruptedException in case of current thread has been interrupted during waiting
      */
-    CompletableFuture<Boolean> tryConsume(long numTokens, long maxWaitNanos, ScheduledExecutorService scheduler) throws InterruptedException;
+    CompletableFuture<Boolean> tryConsume(long numTokens, long maxWaitNanos, ScheduledExecutorService scheduler);
 
     /**
      * Asynchronous version of {@link Bucket#addTokens(long)}, follows the same semantic.

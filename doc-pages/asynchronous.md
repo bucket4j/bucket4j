@@ -82,18 +82,16 @@ public class SmsServlet extends javax.servlet.http.HttpServlet {
         }).whenComplete((result, exception) -> {
             HttpServletResponse asyncResponse = (HttpServletResponse) asyncContext.getResponse();
             try {
+                asyncResponse.setContentType("text/plain");
                 if (exception != null || result.isFailed()) {
                     asyncResponse.setStatus(500);
-                    asyncResponse.setContentType("text/plain");
                     asyncResponse.getWriter().println("Internal Error");
                 } else if (result.isThrottled()) {
-                    httpResponse.setStatus(429);
-                    asyncResponse.setContentType("text/plain");
+                    asyncResponse.setStatus(429);
                     asyncResponse.setHeader("X-Rate-Limit-Retry-After-Seconds", "" + result.getRetryAfter());
                     asyncResponse.getWriter().append("Too many requests");
                 } else {
-                    httpResponse.setStatus(200);
-                    asyncResponse.setContentType("text/plain");
+                    asyncResponse.setStatus(200);
                     asyncResponse.getWriter().append("Success");
                 }
             } finally{

@@ -57,6 +57,8 @@ import java.time.Duration;
  */
 public class Bandwidth implements Serializable {
 
+    private static final long serialVersionUID = 42L;
+
     final long capacity;
     final Refill refill;
 
@@ -94,6 +96,14 @@ public class Bandwidth implements Serializable {
         return new Bandwidth(capacity, refill);
     }
 
+    public long getCapacity() {
+        return capacity;
+    }
+
+    public Refill getRefill() {
+        return refill;
+    }
+
     @Override
     public String toString() {
         return "Bandwidth{" +
@@ -102,21 +112,4 @@ public class Bandwidth implements Serializable {
                 '}';
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        Bandwidth bandwidth = (Bandwidth) o;
-
-        if (capacity != bandwidth.capacity) return false;
-        return refill != null ? refill.equals(bandwidth.refill) : bandwidth.refill == null;
-    }
-
-    @Override
-    public int hashCode() {
-        int result = (int) (capacity ^ (capacity >>> 32));
-        result = 31 * result + (refill != null ? refill.hashCode() : 0);
-        return result;
-    }
 }

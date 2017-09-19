@@ -23,7 +23,7 @@ public class CommandResult<T extends Serializable> implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    private static final CommandResult NOT_FOUND = new CommandResult(null, true);
+    private static final CommandResult<?> NOT_FOUND = new CommandResult<>(null, true);
 
     private T data;
     private boolean bucketNotFound;
@@ -38,7 +38,7 @@ public class CommandResult<T extends Serializable> implements Serializable {
     }
 
     public static <R extends Serializable> CommandResult<R> bucketNotFound() {
-        return NOT_FOUND;
+        return (CommandResult<R>) NOT_FOUND;
     }
 
     public T getData() {

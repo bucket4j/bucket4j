@@ -49,7 +49,7 @@ public final class BucketExceptions {
         return new IllegalArgumentException(msg);
     }
 
-    public static IllegalArgumentException nullPeriod() {
+    public static IllegalArgumentException nullRefillPeriod() {
         String msg = "Refill period can not be null";
         return new IllegalArgumentException(msg);
     }
@@ -103,7 +103,7 @@ public final class BucketExceptions {
     public static IllegalArgumentException tooHighRefillRate(long periodNanos, long tokens) {
         double actualRate = (double) tokens / (double) periodNanos;
         String pattern = "{0} token/nanosecond is not permitted refill rate" +
-                ", because highest supported rate is 1 token/nanasecond";
+                ", because highest supported rate is 1 token/nanosecond";
         String msg = MessageFormat.format(pattern, actualRate);
         return new IllegalArgumentException(msg);
     }
