@@ -20,37 +20,39 @@ package io.github.bucket4j.local;
 
 import io.github.bucket4j.*;
 
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class LockFreeBucket extends AbstractBucket {
 
-    private final BucketConfiguration configuration;
-    private final Bandwidth[] bandwidths;
     private final TimeMeter timeMeter;
-    private final AtomicReference<BucketState> stateReference;
+    private final AtomicReference<StateWithConfiguration> stateReference;
 
-    public LockFreeBucket(BucketConfiguration configuration) {
-        this.configuration = configuration;
-        this.bandwidths = configuration.getBandwidths();
-        this.timeMeter = configuration.getTimeMeter();
-        BucketState initialState = BucketState.createInitialState(configuration);
-        this.stateReference = new AtomicReference<>(initialState);
+    public LockFreeBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
+        this.timeMeter = timeMeter;
+        BucketState initialState = BucketState.createInitialState(configuration, timeMeter.currentTimeNanos());
+        this.stateReference = new AtomicReference<>(new StateWithConfiguration(configuration, initialState));
+    }
+
+    @Override
+    public boolean isAsyncModeSupported() {
+        return true;
     }
 
     @Override
     protected long consumeAsMuchAsPossibleImpl(long limit) {
-        BucketState previousState = stateReference.get();
-        BucketState newState = previousState.copy();
+        StateWithConfiguration previousState = stateReference.get();
+        StateWithConfiguration newState = previousState.copy();
         long currentTimeNanos = timeMeter.currentTimeNanos();
 
         while (true) {
-            newState.refillAllBandwidth(bandwidths, currentTimeNanos);
-            long availableToConsume = newState.getAvailableTokens(bandwidths);
+            newState.refillAllBandwidth(currentTimeNanos);
+            long availableToConsume = newState.getAvailableTokens();
             long toConsume = Math.min(limit, availableToConsume);
             if (toConsume == 0) {
                 return 0;
             }
-            newState.consume(bandwidths, toConsume);
+            newState.consume(toConsume);
             if (stateReference.compareAndSet(previousState, newState)) {
                 return toConsume;
             } else {
@@ -62,17 +64,17 @@ public class LockFreeBucket extends AbstractBucket {
 
     @Override
     protected boolean tryConsumeImpl(long tokensToConsume) {
-        BucketState previousState = stateReference.get();
-        BucketState newState = previousState.copy();
+        StateWithConfiguration previousState = stateReference.get();
+        StateWithConfiguration newState = previousState.copy();
         long currentTimeNanos = timeMeter.currentTimeNanos();
 
         while (true) {
-            newState.refillAllBandwidth(bandwidths, currentTimeNanos);
-            long availableToConsume = newState.getAvailableTokens(bandwidths);
+            newState.refillAllBandwidth(currentTimeNanos);
+            long availableToConsume = newState.getAvailableTokens();
             if (tokensToConsume > availableToConsume) {
                 return false;
             }
-            newState.consume(bandwidths, tokensToConsume);
+            newState.consume(tokensToConsume);
             if (stateReference.compareAndSet(previousState, newState)) {
                 return true;
             } else {
@@ -84,18 +86,18 @@ public class LockFreeBucket extends AbstractBucket {
 
     @Override
     protected ConsumptionProbe tryConsumeAndReturnRemainingTokensImpl(long tokensToConsume) {
-        BucketState previousState = stateReference.get();
-        BucketState newState = previousState.copy();
+        StateWithConfiguration previousState = stateReference.get();
+        StateWithConfiguration newState = previousState.copy();
         long currentTimeNanos = timeMeter.currentTimeNanos();
 
         while (true) {
-            newState.refillAllBandwidth(bandwidths, currentTimeNanos);
-            long availableToConsume = newState.getAvailableTokens(bandwidths);
+            newState.refillAllBandwidth(currentTimeNanos);
+            long availableToConsume = newState.getAvailableTokens();
             if (tokensToConsume > availableToConsume) {
-                long nanosToWaitForRefill = newState.delayNanosAfterWillBePossibleToConsume(bandwidths, tokensToConsume);
+                long nanosToWaitForRefill = newState.delayNanosAfterWillBePossibleToConsume(tokensToConsume);
                 return ConsumptionProbe.rejected(availableToConsume, nanosToWaitForRefill);
             }
-            newState.consume(bandwidths, tokensToConsume);
+            newState.consume(tokensToConsume);
             if (stateReference.compareAndSet(previousState, newState)) {
                 return ConsumptionProbe.consumed(availableToConsume - tokensToConsume);
             } else {
@@ -106,55 +108,65 @@ public class LockFreeBucket extends AbstractBucket {
     }
 
     @Override
-    protected boolean consumeOrAwaitImpl(long tokensToConsume, long waitIfBusyNanosLimit, boolean uninterruptibly, BlockingStrategy blockingStrategy) throws InterruptedException {
-        BucketState previousState = stateReference.get();
-        BucketState newState = previousState.copy();
+    protected long reserveAndCalculateTimeToSleepImpl(long tokensToConsume, long waitIfBusyNanosLimit) {
+        StateWithConfiguration previousState = stateReference.get();
+        StateWithConfiguration newState = previousState.copy();
         long currentTimeNanos = timeMeter.currentTimeNanos();
 
         while (true) {
-            newState.refillAllBandwidth(bandwidths, currentTimeNanos);
-            long nanosToCloseDeficit = newState.delayNanosAfterWillBePossibleToConsume(bandwidths, tokensToConsume);
+            newState.refillAllBandwidth(currentTimeNanos);
+            long nanosToCloseDeficit = newState.delayNanosAfterWillBePossibleToConsume(tokensToConsume);
             if (nanosToCloseDeficit == 0) {
-                newState.consume(bandwidths, tokensToConsume);
+                newState.consume(tokensToConsume);
                 if (stateReference.compareAndSet(previousState, newState)) {
-                    return true;
+                    return 0L;
                 }
                 previousState = stateReference.get();
                 newState.copyStateFrom(previousState);
                 continue;
             }
 
-            if (waitIfBusyNanosLimit > 0 && nanosToCloseDeficit > waitIfBusyNanosLimit) {
-                return false;
+            if (nanosToCloseDeficit == Long.MAX_VALUE || nanosToCloseDeficit > waitIfBusyNanosLimit) {
+                return Long.MAX_VALUE;
             }
 
-            newState.consume(bandwidths, tokensToConsume);
+            newState.consume(tokensToConsume);
             if (stateReference.compareAndSet(previousState, newState)) {
-                park(blockingStrategy, nanosToCloseDeficit, uninterruptibly);
-                return true;
+                return nanosToCloseDeficit;
             }
             previousState = stateReference.get();
             newState.copyStateFrom(previousState);
         }
     }
 
-    private void park(BlockingStrategy blockingStrategy, long nanosToCloseDeficit, boolean uninterruptibly) throws InterruptedException {
-        if (uninterruptibly) {
-            blockingStrategy.parkUninterruptibly(nanosToCloseDeficit);
-        } else {
-            blockingStrategy.park(nanosToCloseDeficit);
+    @Override
+    protected void addTokensImpl(long tokensToAdd) {
+        StateWithConfiguration previousState = stateReference.get();
+        StateWithConfiguration newState = previousState.copy();
+        long currentTimeNanos = timeMeter.currentTimeNanos();
+
+        while (true) {
+            newState.refillAllBandwidth(currentTimeNanos);
+            newState.state.addTokens(newState.configuration.getBandwidths(), tokensToAdd);
+            if (stateReference.compareAndSet(previousState, newState)) {
+                return;
+            } else {
+                previousState = stateReference.get();
+                newState.copyStateFrom(previousState);
+            }
         }
     }
 
     @Override
-    protected void addTokensImpl(long tokensToAdd) {
-        BucketState previousState = stateReference.get();
-        BucketState newState = previousState.copy();
+    protected void replaceConfigurationImpl(BucketConfiguration newConfiguration) {
+        StateWithConfiguration previousState = stateReference.get();
+        StateWithConfiguration newState = previousState.copy();
         long currentTimeNanos = timeMeter.currentTimeNanos();
 
         while (true) {
-            newState.refillAllBandwidth(bandwidths, currentTimeNanos);
-            newState.addTokens(bandwidths, tokensToAdd);
+            previousState.configuration.checkCompatibility(newConfiguration);
+            newState.refillAllBandwidth(currentTimeNanos);
+            newState.configuration = newConfiguration;
             if (stateReference.compareAndSet(previousState, newState)) {
                 return;
             } else {
@@ -167,19 +179,97 @@ public class LockFreeBucket extends AbstractBucket {
     @Override
     public long getAvailableTokens() {
         long currentTimeNanos = timeMeter.currentTimeNanos();
-        BucketState snapshot = stateReference.get().copy();
-        snapshot.refillAllBandwidth(bandwidths, currentTimeNanos);
-        return snapshot.getAvailableTokens(bandwidths);
+        StateWithConfiguration snapshot = stateReference.get().copy();
+        snapshot.refillAllBandwidth(currentTimeNanos);
+        return snapshot.getAvailableTokens();
+    }
+
+    @Override
+    protected CompletableFuture<Boolean> tryConsumeAsyncImpl(long tokensToConsume) {
+        boolean result = tryConsumeImpl(tokensToConsume);
+        return CompletableFuture.completedFuture(result);
+    }
+
+    @Override
+    protected CompletableFuture<Void> addTokensAsyncImpl(long tokensToAdd) {
+        addTokensImpl(tokensToAdd);
+        return CompletableFuture.completedFuture(null);
+    }
+
+    @Override
+    protected CompletableFuture<Void> replaceConfigurationAsyncImpl(BucketConfiguration newConfiguration) {
+        try {
+            replaceConfigurationImpl(newConfiguration);
+            return CompletableFuture.completedFuture(null);
+        } catch (IncompatibleConfigurationException e) {
+            CompletableFuture<Void> fail = new CompletableFuture<>();
+            fail.completeExceptionally(e);
+            return fail;
+        }
+    }
+
+    @Override
+    protected CompletableFuture<ConsumptionProbe> tryConsumeAndReturnRemainingTokensAsyncImpl(long tokensToConsume) {
+        ConsumptionProbe result = tryConsumeAndReturnRemainingTokensImpl(tokensToConsume);
+        return CompletableFuture.completedFuture(result);
+    }
+
+    @Override
+    protected CompletableFuture<Long> tryConsumeAsMuchAsPossibleAsyncImpl(long limit) {
+        long result = tryConsumeAsMuchAsPossible(limit);
+        return CompletableFuture.completedFuture(result);
+    }
+
+    @Override
+    protected CompletableFuture<Long> reserveAndCalculateTimeToSleepAsyncImpl(long tokensToConsume, long maxWaitTimeNanos) {
+        long result = reserveAndCalculateTimeToSleepImpl(tokensToConsume, maxWaitTimeNanos);
+        return CompletableFuture.completedFuture(result);
     }
 
     @Override
     public BucketState createSnapshot() {
-        return stateReference.get().copy();
+        return stateReference.get().state.copy();
     }
 
     @Override
     public BucketConfiguration getConfiguration() {
-        return configuration;
+        return stateReference.get().configuration;
+    }
+
+    private static class StateWithConfiguration {
+
+        BucketConfiguration configuration;
+        BucketState state;
+
+        StateWithConfiguration(BucketConfiguration configuration, BucketState state) {
+            this.configuration = configuration;
+            this.state = state;
+        }
+
+        StateWithConfiguration copy() {
+            return new StateWithConfiguration(configuration, state.copy());
+        }
+
+        void copyStateFrom(StateWithConfiguration other) {
+            configuration = other.configuration;
+            state.copyStateFrom(other.state);
+        }
+
+        void refillAllBandwidth(long currentTimeNanos) {
+            state.refillAllBandwidth(configuration.getBandwidths(), currentTimeNanos);
+        }
+
+        long getAvailableTokens() {
+            return state.getAvailableTokens(configuration.getBandwidths());
+        }
+
+        void consume(long tokensToConsume) {
+            state.consume(configuration.getBandwidths(), tokensToConsume);
+        }
+
+        long delayNanosAfterWillBePossibleToConsume(long tokensToConsume) {
+            return state.delayNanosAfterWillBePossibleToConsume(configuration.getBandwidths(), tokensToConsume);
+        }
     }
 
     @Override

@@ -19,22 +19,27 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-
+    <parent>
+        <groupId>com.github.vladimir-bukhtoyarov</groupId>
+        <artifactId>bucket4j-parent</artifactId>
+        <version>3.0.1</version>
+        <relativePath>../bucket4j-parent</relativePath>
+    </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.github.vladimir-bukhtoyarov</groupId>
-    <artifactId>release-reactor</artifactId>
-    <version>2.1.0</version>
+    <artifactId>experimental</artifactId>
     <packaging>pom</packaging>
 
     <properties>
         <maven.deploy.skip>true</maven.deploy.skip>
+        <sonar.skip>true</sonar.skip>
     </properties>
 
     <modules>
-        <module>../bucket4j-parent</module>
-        <module>../bucket4j-core</module>
-        <module>../bucket4j-jcache</module>
+        <module>bucket4j-redis</module>
+        <module>bucket4j-mysql</module>
+        <module>bucket4j-postgresql</module>
     </modules>
+
 
 </project>

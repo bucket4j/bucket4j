@@ -17,12 +17,11 @@
 
 package io.github.bucket4j.grid;
 
+import io.github.bucket4j.Nothing;
 
-import io.github.bucket4j.Bandwidth;
-import io.github.bucket4j.BucketConfiguration;
-import io.github.bucket4j.BucketState;
+public class AddTokensCommand implements GridCommand<Nothing> {
 
-public class AddTokensCommand implements GridCommand<Long> {
+    private static final long serialVersionUID = 1L;
 
     private long tokensToAdd;
 
@@ -31,15 +30,10 @@ public class AddTokensCommand implements GridCommand<Long> {
     }
 
     @Override
-    public Long execute(GridBucketState gridState) {
-        BucketConfiguration configuration = gridState.getBucketConfiguration();
-        BucketState state = gridState.getBucketState();
-        Bandwidth[] bandwidths = configuration.getBandwidths();
-        long currentTimeNanos = configuration.getTimeMeter().currentTimeNanos();
-
-        state.refillAllBandwidth(bandwidths, currentTimeNanos);
-        state.addTokens(bandwidths, tokensToAdd);
-        return null;
+    public Nothing execute(GridBucketState state, long currentTimeNanos) {
+        state.refillAllBandwidth(currentTimeNanos);
+        state.addTokens(tokensToAdd);
+        return Nothing.INSTANCE;
     }
 
     @Override

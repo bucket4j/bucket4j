@@ -48,7 +48,7 @@ import java.time.Duration;
  * Strongly atomic means that token will be consumed from all bandwidth or from nothing,
  * in other words any token can not be partially consumed.
  * <br> Example of multiple bandwidth:
- * <pre>{@code // Adds bandwidth that restricts to consume not often 1000 tokens per 1 minute and not often than 100 tokens per second
+ * <pre>{@code // Adds bandwidth that restricts to tryConsume not often 1000 tokens per 1 minute and not often than 100 tokens per second
  * Bucket bucket = Bucket4j.builder().
  *      .addLimit(Bandwidth.create(1000, Duration.ofMinutes(1)));
  *      .addLimit(Bandwidth.create(100, Duration.ofSeconds(1)));
@@ -56,6 +56,8 @@ import java.time.Duration;
  * }</pre>
  */
 public class Bandwidth implements Serializable {
+
+    private static final long serialVersionUID = 42L;
 
     final long capacity;
     final Refill refill;
@@ -92,6 +94,14 @@ public class Bandwidth implements Serializable {
      */
     public static Bandwidth classic(long capacity, Refill refill) {
         return new Bandwidth(capacity, refill);
+    }
+
+    public long getCapacity() {
+        return capacity;
+    }
+
+    public Refill getRefill() {
+        return refill;
     }
 
     @Override

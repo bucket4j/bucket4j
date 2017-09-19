@@ -20,27 +20,33 @@ package io.github.bucket4j.local;
 
 import io.github.bucket4j.*;
 
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class SynchronizedBucket extends AbstractBucket {
 
-    private final BucketConfiguration configuration;
-    private final Bandwidth[] bandwidths;
+    private BucketConfiguration configuration;
+    private Bandwidth[] bandwidths;
     private final TimeMeter timeMeter;
     private final BucketState state;
     private final Lock lock;
 
-    public SynchronizedBucket(BucketConfiguration configuration) {
-        this(configuration, new ReentrantLock());
+    public SynchronizedBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
+        this(configuration, timeMeter, new ReentrantLock());
     }
 
-    public SynchronizedBucket(BucketConfiguration configuration, Lock lock) {
+    public SynchronizedBucket(BucketConfiguration configuration, TimeMeter timeMeter, Lock lock) {
         this.configuration = configuration;
         this.bandwidths = configuration.getBandwidths();
-        this.timeMeter = configuration.getTimeMeter();
-        this.state = BucketState.createInitialState(configuration);
+        this.timeMeter = timeMeter;
+        this.state = BucketState.createInitialState(configuration, timeMeter.currentTimeNanos());
         this.lock = lock;
+    }
+
+    @Override
+    public boolean isAsyncModeSupported() {
+        return true;
     }
 
     @Override
@@ -97,33 +103,22 @@ public class SynchronizedBucket extends AbstractBucket {
     }
 
     @Override
-    protected boolean consumeOrAwaitImpl(long tokensToConsume, long waitIfBusyNanosLimit, boolean uninterruptibly, BlockingStrategy blockingStrategy) throws InterruptedException {
+    protected long reserveAndCalculateTimeToSleepImpl(long tokensToConsume, long waitIfBusyNanosLimit) {
         long currentTimeNanos = timeMeter.currentTimeNanos();
-        long nanosToCloseDeficit;
-
         lock.lock();
         try {
             state.refillAllBandwidth(bandwidths, currentTimeNanos);
-            nanosToCloseDeficit = state.delayNanosAfterWillBePossibleToConsume(bandwidths, tokensToConsume);
-            if (nanosToCloseDeficit == 0) {
-                state.consume(bandwidths, tokensToConsume);
-                return true;
-            }
+            long nanosToCloseDeficit = state.delayNanosAfterWillBePossibleToConsume(bandwidths, tokensToConsume);
 
-            if (waitIfBusyNanosLimit > 0 && nanosToCloseDeficit > waitIfBusyNanosLimit) {
-                return false;
+            if (nanosToCloseDeficit == Long.MAX_VALUE || nanosToCloseDeficit > waitIfBusyNanosLimit) {
+                return Long.MAX_VALUE;
             }
 
             state.consume(bandwidths, tokensToConsume);
+            return nanosToCloseDeficit;
         } finally {
             lock.unlock();
         }
-        if (uninterruptibly) {
-            blockingStrategy.parkUninterruptibly(nanosToCloseDeficit);
-        } else {
-            blockingStrategy.park(nanosToCloseDeficit);
-        }
-        return true;
     }
 
     @Override
@@ -147,6 +142,62 @@ public class SynchronizedBucket extends AbstractBucket {
             return state.getAvailableTokens(bandwidths);
         } finally {
             lock.unlock();
+        }
+    }
+
+    @Override
+    protected void replaceConfigurationImpl(BucketConfiguration newConfiguration) {
+        long currentTimeNanos = timeMeter.currentTimeNanos();
+        lock.lock();
+        try {
+            configuration.checkCompatibility(newConfiguration);
+            this.state.refillAllBandwidth(bandwidths, currentTimeNanos);
+            this.configuration = newConfiguration;
+            this.bandwidths = newConfiguration.getBandwidths();
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    @Override
+    protected CompletableFuture<Boolean> tryConsumeAsyncImpl(long tokensToConsume) {
+        boolean result = tryConsumeImpl(tokensToConsume);
+        return CompletableFuture.completedFuture(result);
+    }
+
+    @Override
+    protected CompletableFuture<Void> addTokensAsyncImpl(long tokensToAdd) {
+        addTokensImpl(tokensToAdd);
+        return CompletableFuture.completedFuture(null);
+    }
+
+    @Override
+    protected CompletableFuture<ConsumptionProbe> tryConsumeAndReturnRemainingTokensAsyncImpl(long tokensToConsume) {
+        ConsumptionProbe result = tryConsumeAndReturnRemainingTokensImpl(tokensToConsume);
+        return CompletableFuture.completedFuture(result);
+    }
+
+    @Override
+    protected CompletableFuture<Long> tryConsumeAsMuchAsPossibleAsyncImpl(long limit) {
+        long result = tryConsumeAsMuchAsPossible(limit);
+        return CompletableFuture.completedFuture(result);
+    }
+
+    @Override
+    protected CompletableFuture<Long> reserveAndCalculateTimeToSleepAsyncImpl(long tokensToConsume, long maxWaitTimeNanos) {
+        long result = reserveAndCalculateTimeToSleepImpl(tokensToConsume, maxWaitTimeNanos);
+        return CompletableFuture.completedFuture(result);
+    }
+
+    @Override
+    protected CompletableFuture<Void> replaceConfigurationAsyncImpl(BucketConfiguration newConfiguration) {
+        try {
+            replaceConfigurationImpl(newConfiguration);
+            return CompletableFuture.completedFuture(null);
+        } catch (IncompatibleConfigurationException e) {
+            CompletableFuture<Void> fail = new CompletableFuture<>();
+            fail.completeExceptionally(e);
+            return fail;
         }
     }
 

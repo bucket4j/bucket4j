@@ -49,8 +49,23 @@ public final class BucketExceptions {
         return new IllegalArgumentException(msg);
     }
 
-    public static IllegalArgumentException nullPeriod() {
+    public static IllegalArgumentException nullRefillPeriod() {
         String msg = "Refill period can not be null";
+        return new IllegalArgumentException(msg);
+    }
+
+    public static IllegalArgumentException nullScheduler() {
+        String msg = "Scheduler can not be null";
+        return new IllegalArgumentException(msg);
+    }
+
+    public static IllegalArgumentException nullConfiguration() {
+        String msg = "Configuration can not be null";
+        return new IllegalArgumentException(msg);
+    }
+
+    public static IllegalArgumentException nullConfigurationSupplier() {
+        String msg = "Configuration supplier can not be null";
         return new IllegalArgumentException(msg);
     }
 
@@ -70,7 +85,6 @@ public final class BucketExceptions {
         String msg = "At list one limited bandwidth should be specified";
         return new IllegalArgumentException(msg);
     }
-
     // ------------------- end of construction time exceptions --------------------------------
 
     // ------------------- usage time exceptions  ---------------------------------------------
@@ -81,8 +95,16 @@ public final class BucketExceptions {
     }
 
     public static IllegalArgumentException nonPositiveTokensToConsume(long tokens) {
-        String pattern = "Unable to consume {0} tokens, due to number of tokens to consume should be positive";
+        String pattern = "Unable to tryConsume {0} tokens, due to number of tokens to tryConsume should be positive";
         String msg = MessageFormat.format(pattern, tokens);
+        return new IllegalArgumentException(msg);
+    }
+
+    public static IllegalArgumentException tooHighRefillRate(long periodNanos, long tokens) {
+        double actualRate = (double) tokens / (double) periodNanos;
+        String pattern = "{0} token/nanosecond is not permitted refill rate" +
+                ", because highest supported rate is 1 token/nanosecond";
+        String msg = MessageFormat.format(pattern, actualRate);
         return new IllegalArgumentException(msg);
     }
 

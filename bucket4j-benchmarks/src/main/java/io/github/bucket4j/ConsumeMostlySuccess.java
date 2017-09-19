@@ -37,12 +37,12 @@ public class ConsumeMostlySuccess {
 
     @Benchmark
     public void consumeOneToken_mostlySuccess_LockFree(LocalLockFreeState state) {
-        state._10_milion_rps_Bucket.consumeUninterruptibly(1, BlockingStrategy.PARKING);
+        state._10_milion_rps_Bucket.tryConsumeUninterruptibly(1, TimeUnit.MILLISECONDS.toNanos(1), BlockingStrategy.PARKING);
     }
 
     @Benchmark
     public void consumeOneToken_mostlySuccess_Synchronized(LocalSynchronizedState state) {
-        state._10_milion_rps_Bucket.consumeUninterruptibly(1, BlockingStrategy.PARKING);
+        state._10_milion_rps_Bucket.tryConsumeUninterruptibly(1, TimeUnit.MILLISECONDS.toNanos(1), BlockingStrategy.PARKING);
     }
 
     @Benchmark

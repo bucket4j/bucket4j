@@ -1,18 +1,18 @@
 /*
- *  Copyright 2015-2017 Vladimir Bukhtoyarov
  *
- *    Licensed under the Apache License, Version 2.0 (the "License");
- *    you may not use this file except in compliance with the License.
- *    You may obtain a copy of the License at
+ *   Copyright 2015-2017 Vladimir Bukhtoyarov
  *
- *          http://www.apache.org/licenses/LICENSE-2.0
+ *     Licensed under the Apache License, Version 2.0 (the "License");
+ *     you may not use this file except in compliance with the License.
+ *     You may obtain a copy of the License at
  *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ *           http://www.apache.org/licenses/LICENSE-2.0
  *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
  */
 
 package io.github.bucket4j.grid.jcache.hazelcast;
@@ -24,19 +24,32 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ICacheManager;
 import io.github.bucket4j.grid.GridBucketState;
 import io.github.bucket4j.grid.jcache.AbstractJCacheTest;
+import org.gridkit.nanocloud.Cloud;
+import org.gridkit.nanocloud.CloudFactory;
+import org.gridkit.nanocloud.VX;
+import org.gridkit.vicluster.ViNode;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 
 import javax.cache.Cache;
 import java.io.Serializable;
 
-public class HazelcastTest extends AbstractJCacheTest {
+public class HazelcastJCacheTest extends AbstractJCacheTest {
+
+    private static Cache<String, GridBucketState> cache;
+    private static Cloud cloud;
+    private static ViNode server;
 
     private static HazelcastInstance hazelcastInstance;
 
     @BeforeClass
     public static void setup() {
-        jCacheFixture.startGridOnServer((Runnable & Serializable) () -> {
+        // start separated JVM on current host
+        cloud = CloudFactory.createCloud();
+        cloud.node("**").x(VX.TYPE).setLocal();
+        server = cloud.node("stateful-hazelcast-server");
+
+        server.exec((Runnable & Serializable) () -> {
             Config config = new Config();
             config.setLiteMember(false);
             CacheSimpleConfig cacheConfig = new CacheSimpleConfig();
@@ -53,8 +66,7 @@ public class HazelcastTest extends AbstractJCacheTest {
         config.setLiteMember(true);
         hazelcastInstance = Hazelcast.newHazelcastInstance(config);
         ICacheManager cacheManager = hazelcastInstance.getCacheManager();
-        Cache<String, GridBucketState> cache = cacheManager.getCache("my_buckets");
-        jCacheFixture.setCache(cache);
+        cache = cacheManager.getCache("my_buckets");
     }
 
     @AfterClass
@@ -62,6 +74,14 @@ public class HazelcastTest extends AbstractJCacheTest {
         if (hazelcastInstance != null) {
             hazelcastInstance.shutdown();
         }
+        if (cloud != null) {
+            cloud.shutdown();
+        }
+    }
+
+    @Override
+    protected Cache<String, GridBucketState> getCache() {
+        return cache;
     }
 
 }

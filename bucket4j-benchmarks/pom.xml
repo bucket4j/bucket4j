@@ -24,10 +24,15 @@
     <parent>
         <groupId>com.github.vladimir-bukhtoyarov</groupId>
         <artifactId>bucket4j-parent</artifactId>
-        <version>2.1.0</version>
+        <version>3.0.1</version>
         <relativePath>../bucket4j-parent</relativePath>
     </parent>
     <artifactId>bucket4j-benchmarks</artifactId>
+
+    <properties>
+        <maven.deploy.skip>true</maven.deploy.skip>
+        <sonar.skip>true</sonar.skip>
+    </properties>
 
     <dependencies>
         <dependency>

@@ -207,7 +207,7 @@ public class MinimalisticTokenBucket {
      */
     public MinimalisticTokenBucket(long capacity, long refillTokens, long refillPeriodMillis) {
         this.capacity = capacity;
-        this.refillTokensPerOneMillis = (double) refillPeriodMillis / (double) refillPeriodMillis;
+        this.refillTokensPerOneMillis = (double) refillTokens / (double) refillPeriodMillis;
 
         this.availableTokens = capacity;
         this.lastRefillTimestamp = System.currentTimeMillis();

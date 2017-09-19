@@ -20,6 +20,7 @@ package io.github.bucket4j.mock;
 import io.github.bucket4j.ConfigurationBuilder;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketConfiguration;
+import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.grid.GridBucket;
 import io.github.bucket4j.grid.RecoveryStrategy;
 import io.github.bucket4j.local.LocalBucketBuilder;
@@ -28,43 +29,47 @@ import io.github.bucket4j.local.SynchronizationStrategy;
 import java.util.ArrayList;
 import java.util.List;
 
+import static io.github.bucket4j.grid.RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION;
+
 public enum BucketType {
 
     LOCAL_LOCK_FREE {
         @Override
-        public Bucket createBucket(ConfigurationBuilder builder) {
-            return ((LocalBucketBuilder) builder).build();
+        public Bucket createBucket(ConfigurationBuilder builder, TimeMeter timeMeter) {
+            return ((LocalBucketBuilder) builder)
+                    .withCustomTimePrecision(timeMeter)
+                    .build();
         }
     },
     LOCAL_SYNCHRONIZED {
         @Override
-        public Bucket createBucket(ConfigurationBuilder builder) {
-            return ((LocalBucketBuilder) builder).build(SynchronizationStrategy.SYNCHRONIZED);
+        public Bucket createBucket(ConfigurationBuilder builder, TimeMeter timeMeter) {
+            return ((LocalBucketBuilder) builder)
+                    .withCustomTimePrecision(timeMeter)
+                    .build(SynchronizationStrategy.SYNCHRONIZED);
         }
     },
     LOCAL_UNSAFE {
         @Override
-        public Bucket createBucket(ConfigurationBuilder builder) {
-            return ((LocalBucketBuilder) builder).build(SynchronizationStrategy.NONE);
+        public Bucket createBucket(ConfigurationBuilder builder, TimeMeter timeMeter) {
+            return ((LocalBucketBuilder) builder)
+                    .withCustomTimePrecision(timeMeter)
+                    .build(SynchronizationStrategy.NONE);
         }
     },
     GRID {
         @Override
-        public Bucket createBucket(ConfigurationBuilder builder) {
+        public Bucket createBucket(ConfigurationBuilder builder, TimeMeter timeMeter) {
             BucketConfiguration configuration = builder.buildConfiguration();
-            return GridBucket.createInitializedBucket(42, configuration, new GridProxyMock(), RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION);
+            GridProxyMock gridProxy = new GridProxyMock(timeMeter);
+            return GridBucket.createInitializedBucket(42, configuration, gridProxy, THROW_BUCKET_NOT_FOUND_EXCEPTION);
         }
     };
 
-    abstract public Bucket createBucket(ConfigurationBuilder builder);
+    abstract public Bucket createBucket(ConfigurationBuilder builder, TimeMeter timeMeter);
 
-    public static List<Bucket> createBuckets(ConfigurationBuilder builder) {
-        List<Bucket> buckets = new ArrayList<>();
-        for (BucketType type : values()) {
-            Bucket bucket = type.createBucket(builder);
-            buckets.add(bucket);
-        }
-        return buckets;
+    public Bucket createBucket(ConfigurationBuilder builder) {
+        return createBucket(builder, TimeMeter.SYSTEM_MILLISECONDS);
     }
 
 }

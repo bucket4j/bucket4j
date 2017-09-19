@@ -24,17 +24,12 @@ import java.util.List;
 public final class BucketConfiguration implements Serializable {
 
     public static final long INITIAL_TOKENS_UNSPECIFIED = -1;
+    private static final long serialVersionUID = 42L;
 
     private final Bandwidth[] bandwidths;
     private final long[] bandwidthsInitialTokens;
-    private final TimeMeter timeMeter;
 
-    public BucketConfiguration(List<BandwidthDefinition> bandwidths, TimeMeter timeMeter) {
-        if (timeMeter == null) {
-            throw BucketExceptions.nullTimeMeter();
-        }
-        this.timeMeter = timeMeter;
-
+    public BucketConfiguration(List<BandwidthDefinition> bandwidths) {
         if (bandwidths.isEmpty()) {
             throw BucketExceptions.restrictionsNotSpecified();
         }
@@ -44,10 +39,6 @@ public final class BucketConfiguration implements Serializable {
             this.bandwidths[i] = bandwidths.get(i).getBandwidth();
             this.bandwidthsInitialTokens[i] = bandwidths.get(i).getInitialTokens();
         }
-    }
-
-    public TimeMeter getTimeMeter() {
-        return timeMeter;
     }
 
     public Bandwidth[] getBandwidths() {
@@ -62,8 +53,17 @@ public final class BucketConfiguration implements Serializable {
     public String toString() {
         return "BucketConfiguration{" +
                 "bandwidths=" + Arrays.toString(bandwidths) +
-                ", timeMeter=" + timeMeter +
                 '}';
+    }
+
+    public void checkCompatibility(BucketConfiguration newConfiguration) {
+        if (!isCompatible(newConfiguration)) {
+            throw new IncompatibleConfigurationException(this, newConfiguration);
+        }
+    }
+
+    public boolean isCompatible(BucketConfiguration newConfiguration) {
+        return bandwidths.length == newConfiguration.bandwidths.length;
     }
 
 }

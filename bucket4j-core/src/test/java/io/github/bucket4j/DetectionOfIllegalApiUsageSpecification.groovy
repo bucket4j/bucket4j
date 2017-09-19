@@ -17,12 +17,15 @@
 
 package io.github.bucket4j
 
+import io.github.bucket4j.grid.GridBucket
 import io.github.bucket4j.local.LocalBucketBuilder
+import io.github.bucket4j.mock.GridProxyMock
 import spock.lang.Specification
 import spock.lang.Unroll
 import java.time.Duration
 
 import static BucketExceptions.*
+import static io.github.bucket4j.grid.RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION
 
 class DetectionOfIllegalApiUsageSpecification extends Specification {
 
@@ -74,6 +77,39 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
             ex.message == nullBandwidthRefill().message
     }
 
+    def "Should check that bandwidth is not null"() {
+        when:
+            builder.addLimit(null)
+        then:
+            IllegalArgumentException ex = thrown()
+            ex.message == nullBandwidth().message
+
+        when:
+            builder.addLimit(32,null)
+        then:
+            ex = thrown()
+            ex.message == nullBandwidth().message
+    }
+
+    def "Should check that refill period is not null"() {
+        when:
+            builder.addLimit(Bandwidth.classic( 32, Refill.smooth(1, null)))
+        then:
+            IllegalArgumentException ex = thrown()
+            ex.message == nullRefillPeriod().message
+    }
+
+    @Unroll
+    def "Should detect that refill #refillTokens tokens is invalid"(int refillTokens) {
+        when:
+            builder.addLimit(Bandwidth.classic( 32, Refill.smooth(refillTokens, Duration.ofSeconds(1))))
+        then:
+            IllegalArgumentException ex = thrown()
+            ex.message == nonPositivePeriodTokens(refillTokens).message
+        where:
+            refillTokens << [0, -2]
+    }
+
     def "Should check than time meter is not null"() {
         when:
             Bucket4j.builder().withCustomTimePrecision(null)
@@ -97,22 +133,11 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
             def bucket = Bucket4j.builder().addLimit(
                     Bandwidth.simple(VALID_CAPACITY, VALID_PERIOD)
             ).build()
-        when:
-            bucket.consume(0, BlockingStrategy.PARKING)
-        then:
-            IllegalArgumentException ex = thrown()
-            ex.message == nonPositiveTokensToConsume(0).message
-
-        when:
-            bucket.consume(-1, BlockingStrategy.PARKING)
-        then:
-            ex = thrown()
-            ex.message == nonPositiveTokensToConsume(-1).message
 
         when:
             bucket.tryConsume(0)
         then:
-            ex = thrown()
+            IllegalArgumentException ex = thrown()
             ex.message == nonPositiveTokensToConsume(0).message
 
         when:
@@ -134,16 +159,24 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
             ex.message == nonPositiveTokensToConsume(-1).message
 
         when:
-            bucket.consume(0L, VALID_PERIOD.toNanos(), BlockingStrategy.PARKING)
+            bucket.tryConsume(0L, VALID_PERIOD.toNanos(), BlockingStrategy.PARKING)
         then:
             ex = thrown()
             ex.message == nonPositiveTokensToConsume(0).message
 
         when:
-            bucket.consume(-1, VALID_PERIOD.toNanos(), BlockingStrategy.PARKING)
+            bucket.tryConsume(-1, VALID_PERIOD.toNanos(), BlockingStrategy.PARKING)
         then:
             ex = thrown()
             ex.message == nonPositiveTokensToConsume(-1).message
+    }
+
+    def "Should detect the high rate of refill"() {
+        when:
+           Bucket4j.builder().addLimit(Bandwidth.simple(2, Duration.ofNanos(1)))
+        then:
+            IllegalArgumentException ex = thrown()
+            ex.message == tooHighRefillRate(1, 2).message
     }
 
     def "Should check that time units to wait should be positive"() {
@@ -152,13 +185,13 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
                     Bandwidth.simple(VALID_CAPACITY, VALID_PERIOD)
             ).build()
         when:
-            bucket.consume(1, 0, BlockingStrategy.PARKING)
+            bucket.tryConsume(1, 0, BlockingStrategy.PARKING)
         then:
             IllegalArgumentException ex = thrown()
             ex.message == nonPositiveNanosToWait(0).message
 
         when:
-            bucket.consume(1, -1, BlockingStrategy.PARKING)
+            bucket.tryConsume(1, -1, BlockingStrategy.PARKING)
         then:
             ex = thrown()
             ex.message == nonPositiveNanosToWait(-1).message
@@ -178,11 +211,48 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
             tokens << [0, -1, -10]
     }
 
+    def "Should that scheduler passed to tryConsume is not null"() {
+        setup:
+            def bucket = Bucket4j.builder().addLimit(
+                    Bandwidth.simple(VALID_CAPACITY, VALID_PERIOD)
+            ).build()
+        when:
+            bucket.asAsync().tryConsume(32, 1000_000, null)
+        then:
+            IllegalArgumentException ex = thrown()
+            ex.message == nullScheduler().message
+    }
+
     def "Should detect when extension unregistered"() {
         when:
             Bucket4j.extension(FakeExtension.class)
         then:
             thrown(IllegalArgumentException)
+    }
+
+    def "GridBucket should check that configuration is not null"() {
+        setup:
+            GridProxyMock mockProxy = new GridProxyMock(TimeMeter.SYSTEM_MILLISECONDS)
+        when:
+            GridBucket.createInitializedBucket("66", null, mockProxy, THROW_BUCKET_NOT_FOUND_EXCEPTION)
+
+        then:
+            IllegalArgumentException ex = thrown()
+            ex.message == nullConfiguration().message
+
+        when:
+            GridBucket.createLazyBucket("66", {null}, mockProxy)
+                    .tryConsume(1)
+        then:
+            ex = thrown()
+            ex.message == nullConfiguration().message
+
+        when:
+            GridBucket.createLazyBucket("66", null, mockProxy)
+                    .tryConsume(1)
+        then:
+            ex = thrown()
+            ex.message == nullConfigurationSupplier().message
     }
 
     private static class FakeExtension implements Extension {

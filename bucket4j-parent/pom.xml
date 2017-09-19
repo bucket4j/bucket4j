@@ -1,4 +1,4 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!--
   ~
   ~   Copyright 2015-2017 Vladimir Bukhtoyarov
@@ -16,15 +16,18 @@
   ~    limitations under the License.
   -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.github.vladimir-bukhtoyarov</groupId>
+    <version>3.0.1</version>
     <artifactId>bucket4j-parent</artifactId>
-    <version>2.1.0</version>
     <packaging>pom</packaging>
+    <name>bucket4j-parent</name>
 
-    <name>bucket4-parent</name>
     <description>bucket4j - is a java implementation of token bucket algorithm for rate limiting</description>
     <url>http://github.com/vladimir-bukhtoyarov/bucket4j</url>
 
@@ -51,6 +54,10 @@
         <benchmark.jar.name>benchmarks</benchmark.jar.name>
         <sonar.jacoco.reportPath>${project.basedir}/../bucket4j-parent/target/jacoco-merged.exec</sonar.jacoco.reportPath>
         <argLine/>
+        <jcache.version>1.0.0</jcache.version>
+        <ignite.version>2.1.0</ignite.version>
+        <hazelcast.version>3.8</hazelcast.version>
+        <infinispan.version>9.1.0.Final</infinispan.version>
     </properties>
 
     <scm>
@@ -176,12 +183,6 @@
                                     <destFile>${sonar.jacoco.reportPath}</destFile>
                                 </configuration>
                             </execution>
-                            <!--<execution>-->
-                                <!--<id>agent-for-it</id>-->
-                                <!--<goals>-->
-                                    <!--<goal>prepare-agent-integration</goal>-->
-                                <!--</goals>-->
-                            <!--</execution>-->
                             <execution>
                                 <id>jacoco-site</id>
                                 <phase>verify</phase>
@@ -231,6 +232,12 @@
             <groupId>cglib</groupId>
             <artifactId>cglib-nodep</artifactId>
             <version>3.1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.gridkit.lab</groupId>
+            <artifactId>nanocloud</artifactId>
+            <version>0.8.12</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

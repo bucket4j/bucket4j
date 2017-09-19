@@ -17,8 +17,6 @@
 
 package io.github.bucket4j;
 
-
-import java.io.Serializable;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -27,7 +25,7 @@ import java.util.concurrent.TimeUnit;
  * @see TimeMeter#SYSTEM_NANOTIME
  * @see TimeMeter#SYSTEM_MILLISECONDS
  */
-public interface TimeMeter extends Serializable {
+public interface TimeMeter {
 
     /**
      * Returns current time in nanosecond precision, but not necessarily nanosecond resolution.
@@ -37,7 +35,7 @@ public interface TimeMeter extends Serializable {
     long currentTimeNanos();
 
     /**
-     * The implementation of {@link TimeMeter} which works arround {@link java.lang.System#nanoTime}
+     * The implementation of {@link TimeMeter} which works around {@link java.lang.System#nanoTime}
      */
     TimeMeter SYSTEM_NANOTIME = new TimeMeter() {
         @Override

@@ -17,14 +17,53 @@
 
 package io.github.bucket4j.local;
 
-import io.github.bucket4j.ConfigurationBuilder;
-import io.github.bucket4j.Bucket;
-import io.github.bucket4j.BucketConfiguration;
+import io.github.bucket4j.*;
 
 /**
  * This builder creates in-memory buckets ({@link LockFreeBucket}).
  */
 public class LocalBucketBuilder extends ConfigurationBuilder<LocalBucketBuilder> {
+
+    private TimeMeter timeMeter;
+
+    public LocalBucketBuilder() {
+        this.timeMeter = TimeMeter.SYSTEM_MILLISECONDS;
+    }
+
+    /**
+     * Creates instance of {@link ConfigurationBuilder} which will create buckets with {@link TimeMeter#SYSTEM_NANOTIME} as time meter.
+     *
+     * @return this builder instance
+     */
+    public LocalBucketBuilder withNanosecondPrecision() {
+        this.timeMeter = TimeMeter.SYSTEM_NANOTIME;
+        return this;
+    }
+
+    /**
+     * Creates instance of {@link ConfigurationBuilder} which will create buckets with {@link TimeMeter#SYSTEM_MILLISECONDS} as time meter.
+     *
+     * @return this builder instance
+     */
+    public LocalBucketBuilder withMillisecondPrecision() {
+        this.timeMeter = TimeMeter.SYSTEM_MILLISECONDS;
+        return this;
+    }
+
+    /**
+     * Creates instance of {@link ConfigurationBuilder} which will create buckets with {@code customTimeMeter} as time meter.
+     *
+     * @param customTimeMeter object which will measure time.
+     *
+     * @return this builder instance
+     */
+    public LocalBucketBuilder withCustomTimePrecision(TimeMeter customTimeMeter) {
+        if (customTimeMeter == null) {
+            throw BucketExceptions.nullTimeMeter();
+        }
+        this.timeMeter = customTimeMeter;
+        return this;
+    }
 
     /**
      * Constructs the bucket using {@link SynchronizationStrategy#LOCK_FREE} synchronization strategy.
@@ -45,9 +84,9 @@ public class LocalBucketBuilder extends ConfigurationBuilder<LocalBucketBuilder>
     public Bucket build(SynchronizationStrategy synchronizationStrategy) {
         BucketConfiguration configuration = buildConfiguration();
         switch (synchronizationStrategy) {
-            case LOCK_FREE: return new LockFreeBucket(configuration);
-            case SYNCHRONIZED: return new SynchronizedBucket(configuration);
-            case NONE: return new SynchronizedBucket(configuration, FakeLock.INSTANCE);
+            case LOCK_FREE: return new LockFreeBucket(configuration, timeMeter);
+            case SYNCHRONIZED: return new SynchronizedBucket(configuration, timeMeter);
+            case NONE: return new SynchronizedBucket(configuration, timeMeter, FakeLock.INSTANCE);
             default: throw new IllegalStateException();
         }
     }

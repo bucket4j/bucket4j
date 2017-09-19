@@ -1,4 +1,3 @@
-
 /*
  *
  *   Copyright 2015-2017 Vladimir Bukhtoyarov
@@ -22,24 +21,30 @@ import io.github.bucket4j.grid.CommandResult;
 import io.github.bucket4j.grid.GridBucketState;
 import io.github.bucket4j.grid.GridCommand;
 
-import javax.cache.processor.EntryProcessor;
 import javax.cache.processor.MutableEntry;
 import java.io.Serializable;
 
+public class ExecuteProcessor<K extends Serializable, T extends Serializable> implements JCacheEntryProcessor<K, T> {
 
-public class JCacheCommand<K, T extends Serializable> implements Serializable, EntryProcessor<K, GridBucketState, CommandResult> {
+    private static final long serialVersionUID = 1;
+
+    private GridCommand<T> targetCommand;
+
+    public ExecuteProcessor(GridCommand<T> targetCommand) {
+        this.targetCommand = targetCommand;
+    }
 
     @Override
     public CommandResult<T> process(MutableEntry<K, GridBucketState> mutableEntry, Object... arguments) {
         if (!mutableEntry.exists()) {
             return CommandResult.bucketNotFound();
         }
+        long currentTimeNanos = currentTimeNanos();
+        GridBucketState gridBucketState = mutableEntry.getValue();
 
-        GridCommand<T> targetCommand = (GridCommand<T>) arguments[0];
-        GridBucketState state = mutableEntry.getValue();
-        T result = targetCommand.execute(state);
+        T result = targetCommand.execute(gridBucketState, currentTimeNanos);
         if (targetCommand.isBucketStateModified()) {
-            mutableEntry.setValue(state);
+            mutableEntry.setValue(gridBucketState);
         }
         return CommandResult.success(result);
     }

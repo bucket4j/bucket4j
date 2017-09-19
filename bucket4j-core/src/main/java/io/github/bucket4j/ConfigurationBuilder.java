@@ -27,19 +27,17 @@ import java.util.List;
  */
 public class ConfigurationBuilder<T extends ConfigurationBuilder> {
 
-    private TimeMeter timeMeter;
     private List<BandwidthDefinition> bandwidths;
 
     protected ConfigurationBuilder() {
-        timeMeter = TimeMeter.SYSTEM_MILLISECONDS;
-        bandwidths = new ArrayList<>(1);
+        this.bandwidths = new ArrayList<>(1);
     }
 
     /**
      * @return configuration which used for bucket construction.
      */
     public BucketConfiguration buildConfiguration() {
-        return new BucketConfiguration(this.bandwidths, timeMeter);
+        return new BucketConfiguration(this.bandwidths);
     }
 
     /**
@@ -66,45 +64,9 @@ public class ConfigurationBuilder<T extends ConfigurationBuilder> {
         return (T) this;
     }
 
-    /**
-     * Creates instance of {@link ConfigurationBuilder} which will create buckets with {@link TimeMeter#SYSTEM_NANOTIME} as time meter.
-     *
-     * @return this builder instance
-     */
-    public T withNanosecondPrecision() {
-        this.timeMeter = TimeMeter.SYSTEM_NANOTIME;
-        return (T) this;
-    }
-
-    /**
-     * Creates instance of {@link ConfigurationBuilder} which will create buckets with {@link TimeMeter#SYSTEM_MILLISECONDS} as time meter.
-     *
-     * @return this builder instance
-     */
-    public T withMillisecondPrecision() {
-        this.timeMeter = TimeMeter.SYSTEM_MILLISECONDS;
-        return (T) this;
-    }
-
-    /**
-     * Creates instance of {@link ConfigurationBuilder} which will create buckets with {@code customTimeMeter} as time meter.
-     *
-     * @param customTimeMeter object which will measure time.
-     *
-     * @return this builder instance
-     */
-    public T withCustomTimePrecision(TimeMeter customTimeMeter) {
-        if (customTimeMeter == null) {
-            throw BucketExceptions.nullTimeMeter();
-        }
-        this.timeMeter = customTimeMeter;
-        return (T) this;
-    }
-
     @Override
     public String toString() {
         return "AbstractBucketBuilder{" +
-                "timeMeter=" + timeMeter +
                 ", bandwidths=" + bandwidths +
                 '}';
     }

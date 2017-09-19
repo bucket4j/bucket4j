@@ -11,26 +11,38 @@ this feature protects end users from calculation errors involved by rounding.
 * Ability to switch from one JVM to cluster in two lines of code. Using Bucket4j you are able to limiting something in the cluster of JVMs.
 Since [release 1.2](https://github.com/vladimir-bukhtoyarov/bucket4j/releases/tag/1.2.0) the ```Bucket4j``` supports any GRID solution which compatible with [JCache API (JSR 107)](https://www.jcp.org/en/jsr/detail?id=107) specification.
 Just use your favorite grid including [Hazelcast](http://hazelcast.com/products/hazelcast/), [Ignite](https://ignite.apache.org/), [Coherence](http://www.oracle.com/technetwork/middleware/coherence/overview/index.html), [Infinispan](http://infinispan.org/) or any other.
-* Ability to specify more than one bandwidth per bucket. For example you can limit 1000 events per hours but not often then 100 events per minute.
+* Ability to specify multiple bandwidths per bucket. For example you can limit 1000 events per hours but not often then 100 events per minute.
+* Both synchronous and asynchronous API.
 
 ## Documentation
-The items placed in recommended to read order:
-* [Basic-usage](doc-pages/basic-usage.md) - examples of basic usage, just start from here and most likely you will skip the rest items below. 
-* [Brief overview of token-bucket algorithm](doc-pages/token-bucket-brief-overview.md) - the brief overview of token-bucket algorithm. 
-* [Jcache integration](doc-pages/jcache-usage.md) - documentation and examples about usage ```Bucket4j``` with in-memory grids which supports ```JCache API (JSR 107)``` specification.
-* [Advanced usage](doc-pages/advanced-usage.md) - examples of advanced usage.
-* [Spring Boot Starter](https://github.com/MarcGiffing/bucket4j-spring-boot-starter) - third-party integration developed by @MarcGiffing.
+####Examples:
+* [Basic-usage](doc-pages/basic-usage.md) - examples of basic usage.
+* [Advanced-usage](doc-pages/advanced-usage.md) - examples of advanced usage.
+* [Asynchronous-usage](doc-pages/asynchronous.md) - examples of asynchronous usage.
 
-Documentation for previous versions:
-* [1.0](https://github.com/vladimir-bukhtoyarov/bucket4j/tree/release_1-0) ```10 May 2015``` First version of bucket4j library
-* [1.1](https://github.com/vladimir-bukhtoyarov/bucket4j/tree/1.1) ```2 Mar 2017``` Removing intrusive support of Oracle Coherence
-* [1.2](https://github.com/vladimir-bukhtoyarov/bucket4j/tree/1.2) ```3 Mar 2017``` Support of JCache and java 8
-* [1.3](https://github.com/vladimir-bukhtoyarov/bucket4j/tree/1.3) ```23 Mar 2017``` Support different styles of synchronization for local bucket
+####Basics:
+* [Token bucket wikipedia](https://en.wikipedia.org/wiki/Token_bucket) - wikipedia page describes the token-bucket algorithm in classical form.
+* [Non-formal overview of token-bucket algorithm](doc-pages/token-bucket-brief-overview.md) - the brief overview of token-bucket algorithm.
+
+####Supported back-ends without asynchronous support:
+* [Jcache integration](doc-pages/jcache-usage.md) - documentation and examples about usage ```Bucket4j``` with in-memory grids which supports ```JCache API (JSR 107)``` specification.
+
+####Supported back-ends with asynchronous support:
+* [Hazelcast integration](doc-pages/hazelcast.md) - documentation and examples for ```bucket4j-hazelcast``` module.
+* [Apache Ignite integration](doc-pages/ignite.md) - documentation and examples for ```bucket4j-ignite``` module.
+* [Infinspan integration](doc-pages/inifinispan.md) - documentation and examples for ```bucket4j-infinispan``` module.
+
+####Archieve:
+* [Documentation for legacy releases](doc-pages/archive-links.md).
+
+## Third-party integrations:
+* [Spring Boot Starter for Bucket4j](https://github.com/MarcGiffing/bucket4j-spring-boot-starter) 
+* [JHipster API Gateway](https://jhipster.github.io/api-gateway/#rate_limiting)
+* [Dropwizard Ratelimit](https://github.com/zivver/dropwizard-ratelimit)
 
 ## Get Bucket4j library
-
 #### By direct link
-[Download compiled jar, sources, javadocs](https://github.com/vladimir-bukhtoyarov/bucket4j/releases/tag/2.1.0)
+[Download compiled jar, sources, javadocs](https://github.com/vladimir-bukhtoyarov/bucket4j/releases/tag/3.0.0)
 
 #### You can build Bucket4j from sources
 ```bash
@@ -46,22 +58,9 @@ use any of them:
 <dependency>
     <groupId>com.github.vladimir-bukhtoyarov</groupId>
     <artifactId>bucket4j-core</artifactId>
-    <version>2.1.0</version>
+    <version>3.0.1</version>
 </dependency>
 ```
-To use JCache extension you also need to add following dependency:
-```xml
-<dependency>
-    <groupId>com.github.vladimir-bukhtoyarov</groupId>
-    <artifactId>bucket4j-jcache</artifactId>
-    <version>2.1.0</version>
-</dependency>
-```
-
-## Third-party libraries which uses bucket4j
-- [JHipster API Gateway](https://jhipster.github.io/api-gateway/#rate_limiting)
-- [Spring Boot Starter for Bucket4j](https://github.com/MarcGiffing/bucket4j-spring-boot-starter)
-- [Dropwizard Ratelimit](https://github.com/zivver/dropwizard-ratelimit)
 
 ## Have a question?
 Feel free to ask in the [gitter chat](https://gitter.im/vladimir-bukhtoyarov/bucket4j) 

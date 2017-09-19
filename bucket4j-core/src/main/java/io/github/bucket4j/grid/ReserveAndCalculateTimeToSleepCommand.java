@@ -17,11 +17,9 @@
 
 package io.github.bucket4j.grid;
 
-import io.github.bucket4j.Bandwidth;
-import io.github.bucket4j.BucketConfiguration;
-import io.github.bucket4j.BucketState;
-
 public class ReserveAndCalculateTimeToSleepCommand implements GridCommand<Long> {
+
+    private static final long serialVersionUID = 1L;
 
     private long tokensToConsume;
     private long waitIfBusyNanosLimit;
@@ -33,18 +31,14 @@ public class ReserveAndCalculateTimeToSleepCommand implements GridCommand<Long> 
     }
 
     @Override
-    public Long execute(GridBucketState gridState) {
-        BucketConfiguration configuration = gridState.getBucketConfiguration();
-        BucketState state = gridState.getBucketState();
-        long currentTimeNanos = configuration.getTimeMeter().currentTimeNanos();
-        Bandwidth[] bandwidths = configuration.getBandwidths();
-        state.refillAllBandwidth(bandwidths, currentTimeNanos);
+    public Long execute(GridBucketState state, long currentTimeNanos) {
+        state.refillAllBandwidth(currentTimeNanos);
 
-        long nanosToCloseDeficit = state.delayNanosAfterWillBePossibleToConsume(bandwidths, tokensToConsume);
-        if (waitIfBusyNanosLimit > 0 && nanosToCloseDeficit > waitIfBusyNanosLimit) {
+        long nanosToCloseDeficit = state.delayNanosAfterWillBePossibleToConsume(tokensToConsume);
+        if (nanosToCloseDeficit == Long.MAX_VALUE || nanosToCloseDeficit > waitIfBusyNanosLimit) {
             return Long.MAX_VALUE;
         } else {
-            state.consume(bandwidths, tokensToConsume);
+            state.consume(tokensToConsume);
             bucketStateModified = true;
             return nanosToCloseDeficit;
         }

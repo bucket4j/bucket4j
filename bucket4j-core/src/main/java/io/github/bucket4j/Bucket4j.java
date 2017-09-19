@@ -25,8 +25,6 @@ import java.util.ServiceLoader;
 
 /**
  * This is entry point for functionality provided bucket4j library.
- *
- * It is always better to initialize the buckets through this class.
  */
 public class Bucket4j {
 

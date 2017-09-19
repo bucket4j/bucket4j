@@ -25,22 +25,27 @@ import java.time.Duration;
  */
 public class Refill implements Serializable {
 
+    private static final long serialVersionUID = 42L;
+
     private final long periodNanos;
     private final long tokens;
 
     private Refill(long tokens, Duration period) {
+        if (period == null) {
+            throw BucketExceptions.nullRefillPeriod();
+        }
         if (tokens <= 0) {
             throw BucketExceptions.nonPositivePeriodTokens(tokens);
-        }
-        this.tokens = tokens;
-
-        if (period == null) {
-            throw BucketExceptions.nullPeriod();
         }
         this.periodNanos = period.toNanos();
         if (periodNanos <= 0) {
             throw BucketExceptions.nonPositivePeriod(periodNanos);
         }
+        if (tokens > periodNanos) {
+            throw BucketExceptions.tooHighRefillRate(periodNanos, tokens);
+        }
+
+        this.tokens = tokens;
     }
 
     /**
@@ -64,11 +69,11 @@ public class Refill implements Serializable {
         return new Refill(tokens, period);
     }
 
-    long getPeriodNanos() {
+    public long getPeriodNanos() {
         return periodNanos;
     }
 
-    long getTokens() {
+    public long getTokens() {
         return tokens;
     }
 

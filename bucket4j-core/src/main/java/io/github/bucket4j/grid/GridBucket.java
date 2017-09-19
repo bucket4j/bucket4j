@@ -20,6 +20,7 @@ package io.github.bucket4j.grid;
 import io.github.bucket4j.*;
 
 import java.io.Serializable;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
 /**
@@ -47,9 +48,18 @@ public class GridBucket<K extends Serializable> extends AbstractBucket {
         this.gridProxy = gridProxy;
         this.recoveryStrategy = recoveryStrategy;
         this.configurationSupplier = configurationSupplier;
-        if (initializeBucket) {
-            initializeBucket();
+        if (configurationSupplier == null) {
+            throw BucketExceptions.nullConfigurationSupplier();
         }
+        if (initializeBucket) {
+            BucketConfiguration configuration = getConfiguration();
+            gridProxy.createInitialState(key, configuration);
+        }
+    }
+
+    @Override
+    public boolean isAsyncModeSupported() {
+        return gridProxy.isAsyncModeSupported();
     }
 
     @Override
@@ -58,8 +68,18 @@ public class GridBucket<K extends Serializable> extends AbstractBucket {
     }
 
     @Override
+    protected CompletableFuture<Long> tryConsumeAsMuchAsPossibleAsyncImpl(long limit) {
+        return executeAsync(new ConsumeAsMuchAsPossibleCommand(limit));
+    }
+
+    @Override
     protected boolean tryConsumeImpl(long tokensToConsume) {
         return execute(new TryConsumeCommand(tokensToConsume));
+    }
+
+    @Override
+    protected CompletableFuture<Boolean> tryConsumeAsyncImpl(long tokensToConsume) {
+        return executeAsync(new TryConsumeCommand(tokensToConsume));
     }
 
     @Override
@@ -68,25 +88,55 @@ public class GridBucket<K extends Serializable> extends AbstractBucket {
     }
 
     @Override
-    protected boolean consumeOrAwaitImpl(long tokensToConsume, long waitIfBusyNanosLimit, boolean uninterruptibly, BlockingStrategy blockingStrategy) throws InterruptedException {
-        final ReserveAndCalculateTimeToSleepCommand consumeCommand = new ReserveAndCalculateTimeToSleepCommand(tokensToConsume, waitIfBusyNanosLimit);
-        long nanosToSleep = execute(consumeCommand);
-        if (nanosToSleep == Long.MAX_VALUE) {
-            return false;
-        }
-        if (nanosToSleep > 0) {
-            if (uninterruptibly) {
-                blockingStrategy.parkUninterruptibly(nanosToSleep);
-            } else {
-                blockingStrategy.park(nanosToSleep);
-            }
-        }
-        return true;
+    protected CompletableFuture<ConsumptionProbe> tryConsumeAndReturnRemainingTokensAsyncImpl(long tokensToConsume) {
+        return executeAsync(new TryConsumeAndReturnRemainingTokensCommand(tokensToConsume));
+    }
+
+    @Override
+    protected long reserveAndCalculateTimeToSleepImpl(long tokensToConsume, long waitIfBusyNanosLimit) {
+        ReserveAndCalculateTimeToSleepCommand consumeCommand = new ReserveAndCalculateTimeToSleepCommand(tokensToConsume, waitIfBusyNanosLimit);
+        return execute(consumeCommand);
+    }
+
+    @Override
+    protected CompletableFuture<Long> reserveAndCalculateTimeToSleepAsyncImpl(long tokensToConsume, long maxWaitTimeNanos) {
+        ReserveAndCalculateTimeToSleepCommand consumeCommand = new ReserveAndCalculateTimeToSleepCommand(tokensToConsume, maxWaitTimeNanos);
+        return executeAsync(consumeCommand);
     }
 
     @Override
     protected void addTokensImpl(long tokensToAdd) {
         execute(new AddTokensCommand(tokensToAdd));
+    }
+
+    @Override
+    protected CompletableFuture<Void> addTokensAsyncImpl(long tokensToAdd) {
+        CompletableFuture<Nothing> future = executeAsync(new AddTokensCommand(tokensToAdd));
+        return future.thenApply(nothing -> null);
+    }
+
+    @Override
+    protected void replaceConfigurationImpl(BucketConfiguration newConfiguration) {
+        ReplaceConfigurationOrReturnPreviousCommand replaceConfigCommand = new ReplaceConfigurationOrReturnPreviousCommand(newConfiguration);
+        BucketConfiguration previousConfiguration = execute(replaceConfigCommand);
+        if (previousConfiguration != null) {
+            throw new IncompatibleConfigurationException(previousConfiguration, newConfiguration);
+        }
+    }
+
+    @Override
+    protected CompletableFuture<Void> replaceConfigurationAsyncImpl(BucketConfiguration newConfiguration) {
+        ReplaceConfigurationOrReturnPreviousCommand replaceConfigCommand = new ReplaceConfigurationOrReturnPreviousCommand(newConfiguration);
+        CompletableFuture<BucketConfiguration> result = executeAsync(replaceConfigCommand);
+        return result.thenCompose(previousConfiguration -> {
+            if (previousConfiguration == null) {
+                return CompletableFuture.completedFuture(null);
+            } else {
+                CompletableFuture<Void> future = new CompletableFuture<>();
+                future.completeExceptionally(new IncompatibleConfigurationException(previousConfiguration, newConfiguration));
+                return future;
+            }
+        });
     }
 
     @Override
@@ -101,7 +151,11 @@ public class GridBucket<K extends Serializable> extends AbstractBucket {
 
     @Override
     public BucketConfiguration getConfiguration() {
-        return configurationSupplier.get();
+        BucketConfiguration bucketConfiguration = configurationSupplier.get();
+        if (bucketConfiguration == null) {
+            throw BucketExceptions.nullConfiguration();
+        }
+        return bucketConfiguration;
     }
 
     private <T extends Serializable> T execute(GridCommand<T> command) {
@@ -113,24 +167,26 @@ public class GridBucket<K extends Serializable> extends AbstractBucket {
         // the bucket was removed or lost, it is need to apply recovery strategy
         if (recoveryStrategy == RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION) {
             throw new BucketNotFoundException(key);
-        } else {
-            initializeBucket();
         }
 
         // retry command execution
-        result = gridProxy.execute(key, command);
-        if (!result.isBucketNotFound()) {
-            return result.getData();
-        } else {
-            // something wrong goes with GRID, reinitialization of bucket has no effect
-            throw new BucketNotFoundException(key);
-        }
+        return gridProxy.createInitialStateAndExecute(key, getConfiguration(), command);
     }
 
-    private void initializeBucket() {
-        BucketConfiguration configuration = getConfiguration();
-        GridBucketState initialState = new GridBucketState(configuration, BucketState.createInitialState(configuration));
-        gridProxy.setInitialState(key, initialState);
+    private <T extends Serializable> CompletableFuture<T> executeAsync(GridCommand<T> command) {
+        CompletableFuture<CommandResult<T>> futureResult = gridProxy.executeAsync(key, command);
+        return futureResult.thenCompose(cmdResult -> {
+            if (!cmdResult.isBucketNotFound()) {
+                T resultDate = cmdResult.getData();
+                return CompletableFuture.completedFuture(resultDate);
+            }
+            if (recoveryStrategy == RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION) {
+                CompletableFuture<T> failedFuture = new CompletableFuture<>();
+                failedFuture.completeExceptionally(new BucketNotFoundException(key));
+                return failedFuture;
+            }
+            return gridProxy.createInitialStateAndExecuteAsync(key, getConfiguration(), command);
+        });
     }
 
 }
