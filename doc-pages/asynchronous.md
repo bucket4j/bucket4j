@@ -34,24 +34,48 @@ non-blocking architecture means that both SMS sending and limit checking should 
 ```java
 import io.github.bucket4j.Bucket4j;
 
-public class ThrottlingFilter implements javax.servlet.Filter {
+public class SmsServlet extends javax.servlet.http.HttpServlet {
 
-    // TODO rewrite to servlet
-
-    private Bucket createNewBucket() {
-         long overdraft = 20;
-         Refill refill = Refill.smooth(10, Duration.ofMinutes(1));
-         Bandwidth limit = Bandwidth.classic(overdraft, refill);
-         return Bucket4j.builder().addLimit(limit).build();
+    private SmsSender smsSender;
+    private ProxyManager<String> buckets;
+    private Supplier<BucketConfiguration> configuration;
+       
+    @Override
+    public void init(ServletConfig config) throws ServletException {
+        super.init(config);
+        ServletContext ctx = config.getServletContext();
+        
+        smsSender = (SmsSender) ctx.getAttribute("sms-sender")
+        
+        FunctionalMapImpl<String, GridBucketState> bucketMap = (FunctionalMapImpl<String, GridBucketState>) ctx.getAttribute("bucket-map")
+        this.buckets = Bucket4j.extension(Infinispan.class).proxyManagerForMap(bucketMap);
+        
+        this.configuration = () -> {
+            long overdraft = 20;
+            Refill refill = Refill.smooth(10, Duration.ofMinutes(1));
+            Bandwidth limit = Bandwidth.classic(overdraft, refill);
+            return Bucket4j.configurationBuilder()
+                .addLimit(limit)
+                .buildConfiguration()
+        };
     }
     
     @Override
-    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
+    protected void doPost(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
         HttpServletRequest httpRequest = (HttpServletRequest) servletRequest;
-        HttpSession session = httpRequest.getSession(true);
-
-        String appKey = SecurityUtils.getThirdPartyAppKey();
-        Bucket bucket = (Bucket) session.getAttribute("throttler-" + appKey);
+        
+        String fromNumber = req.getParameter("from");
+        String toNumber = req.getParameter("to");
+        String text = req.getParameter("text");
+        
+        final AsyncContext asyncContext = req.startAsync();
+        
+        Bucket bucket = buckets.getProxy(fromNumber, configuration);
+        CompletableFuture<ConsumptionProbe> limitCheckingFuture = bucket.asAsync().tryConsumeAndReturnRemaining(1);
+        
+        
+        return;
+        
         if (bucket == null) {
             Bucket bucket = createNewBucket();
             session.setAttribute("throttler-" + appKey, bucket);
