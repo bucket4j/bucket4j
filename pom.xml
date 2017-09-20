@@ -21,7 +21,7 @@
 
     <groupId>com.github.vladimir-bukhtoyarov</groupId>
     <artifactId>bucket4j</artifactId>
-    <version>3.0.1</version>
+    <version>3.1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>bucket4j</name>
@@ -35,6 +35,7 @@
         <module>bucket4j-infinispan</module>
         <module>experimental</module>
         <module>bucket4j-benchmarks</module>
+        <module>bucket4j-annotation-agent</module>
     </modules>
 
     <properties>

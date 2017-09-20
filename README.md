@@ -46,7 +46,7 @@ Just use your favorite grid including [Hazelcast](http://hazelcast.com/products/
 
 ## Get Bucket4j library
 #### By direct link
-[Download compiled jar, sources, javadocs](https://github.com/vladimir-bukhtoyarov/bucket4j/releases/tag/3.0.0)
+[Download compiled jar, sources, javadocs](https://github.com/vladimir-bukhtoyarov/bucket4j/releases/tag/3.1.0)
 
 #### You can build Bucket4j from sources
 ```bash
@@ -62,7 +62,7 @@ use any of them:
 <dependency>
     <groupId>com.github.vladimir-bukhtoyarov</groupId>
     <artifactId>bucket4j-core</artifactId>
-    <version>3.0.1</version>
+    <version>3.1.0</version>
 </dependency>
 ```
 
