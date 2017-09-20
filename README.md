@@ -36,9 +36,13 @@ Just use your favorite grid including [Hazelcast](http://hazelcast.com/products/
 * [Documentation for legacy releases](doc-pages/archive-links.md).
 
 ## Third-party integrations:
-* [Spring Boot Starter for Bucket4j](https://github.com/MarcGiffing/bucket4j-spring-boot-starter) 
-* [JHipster API Gateway](https://jhipster.github.io/api-gateway/#rate_limiting)
-* [Dropwizard Ratelimit](https://github.com/zivver/dropwizard-ratelimit)
+* [MarcGiffing/Spring Boot Starter for Bucket4j](https://github.com/MarcGiffing/bucket4j-spring-boot-starter). Demos of usage (incluing Zuul and Hazelcast) can be found there [bucket4j-spring-boot-starter-examples](https://github.com/MarcGiffing/bucket4j-spring-boot-starter-examples).
+* [JHipster/JHipster API Gateway](https://jhipster.github.io/api-gateway/#rate_limiting)
+* [Zivver/Dropwizard Ratelimit](https://github.com/zivver/dropwizard-ratelimit)
+
+## Third-party Demos:
+* [Abdennebi/spring-boot-bucket4j-hazelcast-demo](https://github.com/Abdennebi/spring-boot-bucket4j-hazelcast-demo) 
+* [Abdennebi/spring-boot-bucket4j-redis-demo](https://github.com/Abdennebi/spring-boot-bucket4j-redis-demo/tree/master/src/main/java/com/abddennebi/demo)
 
 ## Get Bucket4j library
 #### By direct link
