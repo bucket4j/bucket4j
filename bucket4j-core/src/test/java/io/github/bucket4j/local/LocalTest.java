@@ -29,8 +29,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import static org.junit.Assert.assertTrue;
-
 public class LocalTest {
 
     private LocalBucketBuilder builder = Bucket4j.builder()
