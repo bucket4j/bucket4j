@@ -28,16 +28,6 @@ Documentation for previous versions:
 
 ## Get Bucket4j library
 
-#### By direct link
-[Download compiled jar, sources, javadocs](https://github.com/vladimir-bukhtoyarov/bucket4j/releases/tag/2.0.1)
-
-#### You can build Bucket4j from sources
-```bash
-git clone https://github.com/vladimir-bukhtoyarov/bucket4j.git
-cd bucket4j
-mvn clean install
-```
-
 #### You can add Bucket4j to your project as maven dependency
 The Bucket4j is distributed through both [JCenter](https://bintray.com/bintray/jcenter) and [Maven Central](http://search.maven.org/),
 use any of them:
@@ -45,7 +35,7 @@ use any of them:
 <dependency>
     <groupId>com.github.vladimir-bukhtoyarov</groupId>
     <artifactId>bucket4j-core</artifactId>
-    <version>2.0.1</version>
+    <version>2.0.2</version>
 </dependency>
 ```
 To use JCache extension you also need to add following dependency:
@@ -53,8 +43,14 @@ To use JCache extension you also need to add following dependency:
 <dependency>
     <groupId>com.github.vladimir-bukhtoyarov</groupId>
     <artifactId>bucket4j-jcache</artifactId>
-    <version>2.0.1</version>
+    <version>2.0.2</version>
 </dependency>
+```
+#### You can build Bucket4j from sources
+```bash
+git clone https://github.com/vladimir-bukhtoyarov/bucket4j.git
+cd bucket4j
+mvn clean install
 ```
 
 ## Have a question?
