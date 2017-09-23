@@ -23,18 +23,11 @@
     <parent>
         <groupId>com.github.vladimir-bukhtoyarov</groupId>
         <artifactId>bucket4j-parent</artifactId>
-        <version>2.1.0</version>
+        <version>2.1.1</version>
         <relativePath>../bucket4j-parent</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>bucket4j-core</artifactId>
-
-    <distributionManagement>
-        <repository>
-            <id>vladimir-bukhtoyarov-bintray-repo</id>
-            <url>https://api.bintray.com/maven/vladimir-bukhtoyarov/maven/bucket4j-core/</url>
-        </repository>
-    </distributionManagement>
 
     <build>
         <plugins>

@@ -71,6 +71,14 @@ public final class BucketExceptions {
         return new IllegalArgumentException(msg);
     }
 
+    public static IllegalArgumentException tooHighRefillRate(long periodNanos, long tokens) {
+        double actualRate = (double) tokens / (double) periodNanos;
+        String pattern = "{0} token/nanosecond is not permitted refill rate" +
+                ", because highest supported rate is 1 token/nanosecond";
+        String msg = MessageFormat.format(pattern, actualRate);
+        return new IllegalArgumentException(msg);
+    }
+
     // ------------------- end of construction time exceptions --------------------------------
 
     // ------------------- usage time exceptions  ---------------------------------------------
