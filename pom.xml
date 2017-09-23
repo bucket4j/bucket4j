@@ -41,8 +41,4 @@
         <maven.deploy.skip>true</maven.deploy.skip>
     </properties>
 
-    <properties>
-        <maven.deploy.skip>true</maven.deploy.skip>
-    </properties>
-
 </project>

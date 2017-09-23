@@ -128,14 +128,6 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
             ex.message == restrictionsNotSpecified().message
     }
 
-    def "Should detect the high rate of refill"() {
-        when:
-           Bucket4j.builder().addLimit(Bandwidth.simple(2, Duration.ofNanos(1)))
-        then:
-            IllegalArgumentException ex = thrown()
-            ex.message == tooHighRefillRate(1, 2).message
-    }
-
     def "Should check that tokens to consume should be positive"() {
         setup:
             def bucket = Bucket4j.builder().addLimit(
