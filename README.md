@@ -36,24 +36,13 @@ Just use your favorite grid including [Hazelcast](http://hazelcast.com/products/
 * [Documentation for legacy releases](doc-pages/archive-links.md).
 
 ## Third-party integrations:
-* [MarcGiffing/Spring Boot Starter for Bucket4j](https://github.com/MarcGiffing/bucket4j-spring-boot-starter). Demos of usage (incluing Zuul and Hazelcast) can be found there [bucket4j-spring-boot-starter-examples](https://github.com/MarcGiffing/bucket4j-spring-boot-starter-examples).
+* [MarcGiffing/Spring Boot Starter for Bucket4j](https://github.com/MarcGiffing/bucket4j-spring-boot-starter) . Demos of usage (incluing Zuul and Hazelcast) can be found there [bucket4j-spring-boot-starter-examples](https://github.com/MarcGiffing/bucket4j-spring-boot-starter-examples).
 * [JHipster/JHipster API Gateway](https://jhipster.github.io/api-gateway/#rate_limiting)
-* [Zivver/Dropwizard Ratelimit](https://github.com/zivver/dropwizard-ratelimit)
-
-## Third-party Demos:
-* [Abdennebi/spring-boot-bucket4j-hazelcast-demo](https://github.com/Abdennebi/spring-boot-bucket4j-hazelcast-demo) 
+* [Zivver/Dropwizard Ratelimit](https://github.com/zivver/dropwizard-ratelimit)## Third-party Demos:
+* [Abdennebi/spring-boot-bucket4j-hazelcast-demo](https://github.com/Abdennebi/spring-boot-bucket4j-hazelcast-demo)
 * [Abdennebi/spring-boot-bucket4j-redis-demo](https://github.com/Abdennebi/spring-boot-bucket4j-redis-demo/tree/master/src/main/java/com/abddennebi/demo)
 
 ## Get Bucket4j library
-#### By direct link
-[Download compiled jar, sources, javadocs](https://github.com/vladimir-bukhtoyarov/bucket4j/releases/tag/3.0.0)
-
-#### You can build Bucket4j from sources
-```bash
-git clone https://github.com/vladimir-bukhtoyarov/bucket4j.git
-cd bucket4j
-mvn clean install
-```
 
 #### You can add Bucket4j to your project as maven dependency
 The Bucket4j is distributed through both [JCenter](https://bintray.com/bintray/jcenter) and [Maven Central](http://search.maven.org/),
@@ -62,8 +51,14 @@ use any of them:
 <dependency>
     <groupId>com.github.vladimir-bukhtoyarov</groupId>
     <artifactId>bucket4j-core</artifactId>
-    <version>3.0.1</version>
+    <version>3.0.2</version>
 </dependency>
+```
+#### You can build Bucket4j from sources
+```bash
+git clone https://github.com/vladimir-bukhtoyarov/bucket4j.git
+cd bucket4j
+mvn clean install
 ```
 
 ## Have a question?
