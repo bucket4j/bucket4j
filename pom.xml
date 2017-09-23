@@ -21,7 +21,7 @@
 
     <groupId>com.github.vladimir-bukhtoyarov</groupId>
     <artifactId>bucket4j</artifactId>
-    <version>3.0.1</version>
+    <version>3.0.2</version>
     <packaging>pom</packaging>
 
     <name>bucket4j</name>
@@ -36,6 +36,10 @@
         <module>experimental</module>
         <module>bucket4j-benchmarks</module>
     </modules>
+
+    <properties>
+        <maven.deploy.skip>true</maven.deploy.skip>
+    </properties>
 
     <properties>
         <maven.deploy.skip>true</maven.deploy.skip>
