@@ -16,18 +16,18 @@ You want from your architecture to be protected from overloding, clustered and f
 to prevent fraud and service overloading you want to introduce following limit for any outbound phone number:
 > The bucket size is 20 SMS (which cannot be exceeded at any given time), with a "refill rate" of 10 SMS per minute that continually increases tokens in the bucket.
 In other words, if client sends 10 SMS per minute, it will never be throttled,
-and moreover client have overdraft equals to 20 SMS which can be used if average is little bit higher that 10 SMS/minute on short time period.
+and moreover client have overdraft equals to 20 SMS which can be used if average is little bit higher that 10 SMS/minute on short time period.  
 **Solution:** lets use bucket4j for this.
 
 **Clustering requirement:**
 You want to avoid the single point of failure, if one server crashed that information about consumed tokens should not be lost,
-thus it would be better to use any distributed computation platform for storing the buckets.
+thus it would be better to use any distributed computation platform for storing the buckets.  
 **Solution:** lets use JBoss Infinispan for this and ```bucket4j-infinispan``` extension.
 Hazelcast and Apache Ignite will be also well choice, Infinispan just selected as example.
 
 **Asynchronous processing requirement:**
 Also for maximum scalability you want from architecture to be fully non-blocking,
-non-blocking architecture means that both SMS sending and limit checking should be asynchronous.
+non-blocking architecture means that both SMS sending and limit checking should be asynchronous.  
 **Solution:** lets use asynchronous features provided by bucket4j and Servlet-API.
 
 **Mockup of service based on top of Servlet API and bucket4j-infinispan**:
