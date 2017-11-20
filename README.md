@@ -42,7 +42,6 @@ Just use your favorite grid including [Hazelcast](http://hazelcast.com/products/
 
 ## Third-party Demos:
 * [Abdennebi/spring-boot-bucket4j-hazelcast-demo](https://github.com/Abdennebi/spring-boot-bucket4j-hazelcast-demo)
-* [Abdennebi/spring-boot-bucket4j-redis-demo](https://github.com/Abdennebi/spring-boot-bucket4j-redis-demo/tree/master/src/main/java/com/abddennebi/demo)
 
 ## Get Bucket4j library
 
