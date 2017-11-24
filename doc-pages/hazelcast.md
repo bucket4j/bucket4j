@@ -1,5 +1,5 @@
 # Hazelcast integration
-Before use ```bucket4j-hazelcast``` module please read [bucket4j-jcache documentation](bucket4j-jcache.md),
+Before use ```bucket4j-hazelcast``` module please read [bucket4j-jcache documentation](jcache-usage.md),
 because ```bucket4j-hazelcast``` is just a follow-up of ```bucket4j-jcache```.
 
 **Question:** Bucket4j already supports JCache since version ```1.2```. Why it was needed to introduce direct support for ```Hazelcast```?
