@@ -35,7 +35,7 @@
         <module>bucket4j-infinispan</module>
         <module>experimental</module>
         <module>bucket4j-benchmarks</module>
-        <module>bucket4j-annotation-agent</module>
+
     </modules>
 
     <properties>

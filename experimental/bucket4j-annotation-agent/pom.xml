@@ -26,9 +26,14 @@
         <groupId>com.github.vladimir-bukhtoyarov</groupId>
         <artifactId>bucket4j-parent</artifactId>
         <version>3.1.0-SNAPSHOT</version>
-        <relativePath>../bucket4j-parent</relativePath>
+        <relativePath>../../bucket4j-parent</relativePath>
     </parent>
     <artifactId>bucket4j-annotation-agent</artifactId>
+
+    <properties>
+        <maven.deploy.skip>true</maven.deploy.skip>
+        <sonar.skip>true</sonar.skip>
+    </properties>
 
     <dependencies>
         <dependency>
