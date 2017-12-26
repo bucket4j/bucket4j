@@ -22,7 +22,7 @@
     <parent>
         <groupId>com.github.vladimir-bukhtoyarov</groupId>
         <artifactId>bucket4j-parent</artifactId>
-        <version>3.0.2</version>
+        <version>3.1.0</version>
         <relativePath>../bucket4j-parent</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -39,6 +39,7 @@
         <module>bucket4j-redis</module>
         <module>bucket4j-mysql</module>
         <module>bucket4j-postgresql</module>
+        <module>bucket4j-annotation-agent</module>
     </modules>
 
 

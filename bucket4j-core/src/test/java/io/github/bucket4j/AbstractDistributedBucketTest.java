@@ -24,6 +24,7 @@ import io.github.bucket4j.util.ConsumptionScenario;
 import org.junit.Test;
 
 import java.time.Duration;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
@@ -95,6 +96,50 @@ public abstract class AbstractDistributedBucketTest<B extends ConfigurationBuild
     }
 
     @Test
+    public void testLocateConfigurationThroughProxyManager() {
+        ProxyManager<String> proxyManager = newProxyManager();
+
+        // should return empty optional if bucket is not stored
+        Optional<BucketConfiguration> remoteConfiguration = proxyManager.getProxyConfiguration(key);
+        assertFalse(remoteConfiguration.isPresent());
+
+        // should return not empty options if bucket is stored
+        B builder = Bucket4j.extension(extensionClass).builder()
+                .addLimit(Bandwidth.simple(1_000, Duration.ofMinutes(1)))
+                .addLimit(Bandwidth.simple(200, Duration.ofSeconds(10)));
+        build(builder, key, THROW_BUCKET_NOT_FOUND_EXCEPTION);
+        remoteConfiguration = proxyManager.getProxyConfiguration(key);
+        assertTrue(remoteConfiguration.isPresent());
+
+        // should return empty optional if bucket is removed
+        removeBucketFromBackingStorage(key);
+        remoteConfiguration = proxyManager.getProxyConfiguration(key);
+        assertFalse(remoteConfiguration.isPresent());
+    }
+
+    @Test
+    public void testLocateBucketThroughProxyManager() {
+        ProxyManager<String> proxyManager = newProxyManager();
+
+        // should return empty optional if bucket is not stored
+        Optional<Bucket> remoteBucket = proxyManager.getProxy(key);
+        assertFalse(remoteBucket.isPresent());
+
+        // should return not empty options if bucket is stored
+        B builder = Bucket4j.extension(extensionClass).builder()
+                .addLimit(Bandwidth.simple(1_000, Duration.ofMinutes(1)))
+                .addLimit(Bandwidth.simple(200, Duration.ofSeconds(10)));
+        build(builder, key, THROW_BUCKET_NOT_FOUND_EXCEPTION);
+        remoteBucket = proxyManager.getProxy(key);
+        assertTrue(remoteBucket.isPresent());
+
+        // should return empty optional if bucket is removed
+        removeBucketFromBackingStorage(key);
+        remoteBucket = proxyManager.getProxy(key);
+        assertFalse(remoteBucket.isPresent());
+    }
+
+    @Test
     public void testTryConsume() throws Exception {
         Function<Bucket, Long> action = bucket -> bucket.tryConsume(1)? 1L : 0L;
         Supplier<Bucket> bucketSupplier = () -> build(builder, key, THROW_BUCKET_NOT_FOUND_EXCEPTION);
@@ -163,37 +208,6 @@ public abstract class AbstractDistributedBucketTest<B extends ConfigurationBuild
         Bucket bucket2 = registry.getProxy(anotherKey, () -> configuration);
         assertTrue(bucket2.tryConsume(10));
         assertFalse(bucket2.tryConsume(1));
-    }
-
-    @Test
-    public void configurationSupplierShouldBeCalledOnlyOnceInStronglyLazyWayAndOnlyIfBucketNotExists() {
-        BucketConfiguration configuration = Bucket4j.configurationBuilder()
-                .addLimit(Bandwidth.simple(10, Duration.ofDays(1)))
-                .buildConfiguration();
-
-        ProxyManager<String> registry = newProxyManager();
-        AtomicInteger configSupplierInteractionCount = new AtomicInteger();
-        Supplier<BucketConfiguration> configurationSupplier = () -> {
-            configSupplierInteractionCount.incrementAndGet();
-            return configuration;
-        };
-
-        // acquiring reference to bucket should lead to touching configuration supplier
-        Bucket bucket = registry.getProxy(key, configurationSupplier);
-        assertEquals(0, configSupplierInteractionCount.get());
-
-        // supplier should be called at first time call of business method
-        bucket.tryConsume(1);
-        assertEquals(1, configSupplierInteractionCount.get());
-
-        // after initialization supplier should not be called
-        bucket.tryConsume(1);
-        assertEquals(1, configSupplierInteractionCount.get());
-
-        // reinitialization of bucket should not call supplier yet another time
-        removeBucketFromBackingStorage(key);
-        bucket.tryConsume(1);
-        assertEquals(1, configSupplierInteractionCount.get());
     }
 
 }

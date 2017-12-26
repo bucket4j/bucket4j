@@ -1,0 +1,4 @@
+Manifest-Version: 1.0
+Premain-Class: io.github.bucket4j.annotation.Bucket4jAnnotationAgent
+Agent-Class: io.github.bucket4j.annotation.Bucket4jAnnotationAgent
+Can-Redefine-Classes: true

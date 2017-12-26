@@ -27,6 +27,7 @@ import io.github.bucket4j.grid.GridCommand;
 import io.github.bucket4j.grid.GridProxy;
 
 import java.io.*;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 public class GridProxyMock implements GridProxy {
@@ -69,6 +70,14 @@ public class GridProxyMock implements GridProxy {
         }
         BucketState bucketState = BucketState.createInitialState(configuration, timeMeter.currentTimeNanos());
         this.state = new GridBucketState(configuration, bucketState);
+    }
+
+    @Override
+    public Optional<BucketConfiguration> getConfiguration(Serializable key) {
+        if (exception != null) {
+            throw new RuntimeException();
+        }
+        return Optional.of(state.getConfiguration());
     }
 
     @Override

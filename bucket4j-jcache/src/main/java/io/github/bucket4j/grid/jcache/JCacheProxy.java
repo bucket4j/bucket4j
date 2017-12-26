@@ -77,6 +77,16 @@ public class JCacheProxy<K extends Serializable> implements GridProxy<K> {
     }
 
     @Override
+    public Optional<BucketConfiguration> getConfiguration(K key) {
+        GridBucketState state = cache.get(key);
+        if (state == null) {
+            return Optional.empty();
+        } else {
+            return Optional.of(state.getConfiguration());
+        }
+    }
+
+    @Override
     public boolean isAsyncModeSupported() {
         // because JCache does not specify async API
         return false;

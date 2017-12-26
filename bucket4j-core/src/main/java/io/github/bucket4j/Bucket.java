@@ -22,9 +22,9 @@ package io.github.bucket4j;
  * <p>
  * Use following links for further details:
  * <ul>
- * <li><a href="https://github.com/vladimir-bukhtoyarov/bucket4j/blob/3.0/doc-pages/key-concepts.md">Key concepts of Bucket4j</a></li>
- * <li><a href="https://github.com/vladimir-bukhtoyarov/bucket4j/blob/3.0/doc-pages/basic-usage.md">Basic example of usage</a></li>
- * <li><a href="https://github.com/vladimir-bukhtoyarov/bucket4j/blob/3.0/doc-pages/advanced-usage.md">Advanced examples of usage</a></li>
+ * <li><a href="https://github.com/vladimir-bukhtoyarov/bucket4j/blob/3.1/doc-pages/key-concepts.md">Key concepts of Bucket4j</a></li>
+ * <li><a href="https://github.com/vladimir-bukhtoyarov/bucket4j/blob/3.1/doc-pages/basic-usage.md">Basic example of usage</a></li>
+ * <li><a href="https://github.com/vladimir-bukhtoyarov/bucket4j/blob/3.1/doc-pages/advanced-usage.md">Advanced examples of usage</a></li>
  * </ul>
  */
 public interface Bucket {
@@ -203,12 +203,5 @@ public interface Bucket {
      * @return snapshot of internal state
      */
     BucketState createSnapshot();
-
-    /**
-     * Returns configuration of this bucket.
-     *
-     * @return configuration
-     */
-    BucketConfiguration getConfiguration();
 
 }

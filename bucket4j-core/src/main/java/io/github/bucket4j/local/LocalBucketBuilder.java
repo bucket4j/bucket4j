@@ -70,7 +70,7 @@ public class LocalBucketBuilder extends ConfigurationBuilder<LocalBucketBuilder>
      *
      * @return the new bucket
      */
-    public Bucket build() {
+    public LocalBucket build() {
         return build(SynchronizationStrategy.LOCK_FREE);
     }
 
@@ -81,7 +81,7 @@ public class LocalBucketBuilder extends ConfigurationBuilder<LocalBucketBuilder>
      *
      * @return the new bucket
      */
-    public Bucket build(SynchronizationStrategy synchronizationStrategy) {
+    public LocalBucket build(SynchronizationStrategy synchronizationStrategy) {
         BucketConfiguration configuration = buildConfiguration();
         switch (synchronizationStrategy) {
             case LOCK_FREE: return new LockFreeBucket(configuration, timeMeter);

@@ -69,4 +69,13 @@ public class GridBucketState implements Serializable {
         configuration = newConfiguration;
         return null;
     }
+
+    public BucketConfiguration getConfiguration() {
+        return configuration;
+    }
+
+    public BucketState getState() {
+        return state;
+    }
+
 }

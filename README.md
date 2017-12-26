@@ -44,7 +44,6 @@ Just use your favorite grid including [Hazelcast](http://hazelcast.com/products/
 * [Abdennebi/spring-boot-bucket4j-hazelcast-demo](https://github.com/Abdennebi/spring-boot-bucket4j-hazelcast-demo)
 
 ## Get Bucket4j library
-
 #### You can add Bucket4j to your project as maven dependency
 The Bucket4j is distributed through both [JCenter](https://bintray.com/bintray/jcenter) and [Maven Central](http://search.maven.org/),
 use any of them:
@@ -52,9 +51,16 @@ use any of them:
 <dependency>
     <groupId>com.github.vladimir-bukhtoyarov</groupId>
     <artifactId>bucket4j-core</artifactId>
-    <version>3.0.2</version>
+    <version>3.1.0</version>
 </dependency>
 ```
+#### You can build Bucket4j from sources
+```bash
+git clone https://github.com/vladimir-bukhtoyarov/bucket4j.git
+cd bucket4j
+mvn clean install
+```
+
 #### You can build Bucket4j from sources
 ```bash
 git clone https://github.com/vladimir-bukhtoyarov/bucket4j.git

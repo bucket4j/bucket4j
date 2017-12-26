@@ -29,6 +29,7 @@ import io.github.bucket4j.grid.GridProxy;
 import io.github.bucket4j.grid.jcache.JCacheEntryProcessor;
 
 import java.io.Serializable;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 public class HazelcastProxy<K extends Serializable> implements GridProxy<K> {
@@ -69,6 +70,16 @@ public class HazelcastProxy<K extends Serializable> implements GridProxy<K> {
         JCacheEntryProcessor<K, T> entryProcessor = JCacheEntryProcessor.initStateAndExecuteProcessor(command, configuration);
         CompletableFuture<CommandResult<T>> result = invokeAsync(key, entryProcessor);
         return result.thenApply(CommandResult::getData);
+    }
+
+    @Override
+    public Optional<BucketConfiguration> getConfiguration(K key) {
+        GridBucketState state = cache.get(key);
+        if (state == null) {
+            return Optional.empty();
+        } else {
+            return Optional.of(state.getConfiguration());
+        }
     }
 
     @Override
