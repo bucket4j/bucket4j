@@ -58,4 +58,13 @@ public interface ProxyManager<K extends Serializable> {
      */
     Optional<Bucket> getProxy(K key);
 
+    /**
+     * Locates configuration of bucket which actually stored outside current JVM.
+     *
+     * @param key the unique identifier used to point to the bucket in external storage.
+     *
+     * @return Optional surround the configuration or empty optional if bucket with specified key are not stored.
+     */
+    Optional<BucketConfiguration> getProxyConfiguration(K key);
+
 }
