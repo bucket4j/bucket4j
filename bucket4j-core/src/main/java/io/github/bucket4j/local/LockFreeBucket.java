@@ -23,7 +23,7 @@ import io.github.bucket4j.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class LockFreeBucket extends AbstractBucket {
+public class LockFreeBucket extends AbstractBucket implements LocalBucket {
 
     private final TimeMeter timeMeter;
     private final AtomicReference<StateWithConfiguration> stateReference;

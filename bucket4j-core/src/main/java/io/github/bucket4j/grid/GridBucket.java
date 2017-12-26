@@ -149,8 +149,7 @@ public class GridBucket<K extends Serializable> extends AbstractBucket {
         return execute(new CreateSnapshotCommand());
     }
 
-    @Override
-    public BucketConfiguration getConfiguration() {
+    private BucketConfiguration getConfiguration() {
         BucketConfiguration bucketConfiguration = configurationSupplier.get();
         if (bucketConfiguration == null) {
             throw BucketExceptions.nullConfiguration();

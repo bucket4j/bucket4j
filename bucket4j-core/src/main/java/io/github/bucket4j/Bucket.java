@@ -204,11 +204,4 @@ public interface Bucket {
      */
     BucketState createSnapshot();
 
-    /**
-     * Returns configuration of this bucket.
-     *
-     * @return configuration
-     */
-    BucketConfiguration getConfiguration();
-
 }
