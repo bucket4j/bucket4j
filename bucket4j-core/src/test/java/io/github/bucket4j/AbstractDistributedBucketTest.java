@@ -24,6 +24,7 @@ import io.github.bucket4j.util.ConsumptionScenario;
 import org.junit.Test;
 
 import java.time.Duration;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
@@ -92,6 +93,50 @@ public abstract class AbstractDistributedBucketTest<B extends ConfigurationBuild
         } catch (BucketNotFoundException e) {
             // ok
         }
+    }
+
+    @Test
+    public void testLocateConfigurationThroughProxyManager() {
+        ProxyManager<String> proxyManager = newProxyManager();
+
+        // should return empty optional if bucket is not stored
+        Optional<BucketConfiguration> remoteConfiguration = proxyManager.getProxyConfiguration(key);
+        assertFalse(remoteConfiguration.isPresent());
+
+        // should return not empty options if bucket is stored
+        B builder = Bucket4j.extension(extensionClass).builder()
+                .addLimit(Bandwidth.simple(1_000, Duration.ofMinutes(1)))
+                .addLimit(Bandwidth.simple(200, Duration.ofSeconds(10)));
+        build(builder, key, THROW_BUCKET_NOT_FOUND_EXCEPTION);
+        remoteConfiguration = proxyManager.getProxyConfiguration(key);
+        assertTrue(remoteConfiguration.isPresent());
+
+        // should return empty optional if bucket is removed
+        removeBucketFromBackingStorage(key);
+        remoteConfiguration = proxyManager.getProxyConfiguration(key);
+        assertFalse(remoteConfiguration.isPresent());
+    }
+
+    @Test
+    public void testLocateBucketThroughProxyManager() {
+        ProxyManager<String> proxyManager = newProxyManager();
+
+        // should return empty optional if bucket is not stored
+        Optional<Bucket> remoteBucket = proxyManager.getProxy(key);
+        assertFalse(remoteBucket.isPresent());
+
+        // should return not empty options if bucket is stored
+        B builder = Bucket4j.extension(extensionClass).builder()
+                .addLimit(Bandwidth.simple(1_000, Duration.ofMinutes(1)))
+                .addLimit(Bandwidth.simple(200, Duration.ofSeconds(10)));
+        build(builder, key, THROW_BUCKET_NOT_FOUND_EXCEPTION);
+        remoteBucket = proxyManager.getProxy(key);
+        assertTrue(remoteBucket.isPresent());
+
+        // should return empty optional if bucket is removed
+        removeBucketFromBackingStorage(key);
+        remoteBucket = proxyManager.getProxy(key);
+        assertFalse(remoteBucket.isPresent());
     }
 
     @Test

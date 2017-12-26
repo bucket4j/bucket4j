@@ -25,9 +25,12 @@ import io.github.bucket4j.grid.GridCommand;
 import io.github.bucket4j.grid.GridProxy;
 import io.github.bucket4j.grid.jcache.JCacheEntryProcessor;
 import org.infinispan.commons.CacheException;
+import org.infinispan.functional.EntryView;
 import org.infinispan.functional.FunctionalMap.ReadWriteMap;
+import org.infinispan.util.function.SerializableFunction;
 
 import java.io.Serializable;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
@@ -69,6 +72,23 @@ public class InfinispanProxy<K extends Serializable> implements GridProxy<K> {
         JCacheEntryProcessor<K, T> entryProcessor = JCacheEntryProcessor.initStateAndExecuteProcessor(command, configuration);
         CompletableFuture<CommandResult<T>> result = invokeAsync(key, entryProcessor);
         return result.thenApply(CommandResult::getData);
+    }
+
+    @Override
+    public Optional<BucketConfiguration> getConfiguration(K key) {
+        try {
+            SerializableFunction<EntryView.ReadWriteEntryView<K, GridBucketState>, GridBucketState> findFunction =
+                    (SerializableFunction<EntryView.ReadWriteEntryView<K, GridBucketState>, GridBucketState>)
+                    entry -> entry.find().orElse(null);
+            GridBucketState state = readWriteMap.eval(key, findFunction).get();
+            if (state == null) {
+                return Optional.empty();
+            } else {
+                return Optional.of(state.getConfiguration());
+            }
+        } catch (InterruptedException | ExecutionException e) {
+            throw new CacheException(e);
+        }
     }
 
     @Override

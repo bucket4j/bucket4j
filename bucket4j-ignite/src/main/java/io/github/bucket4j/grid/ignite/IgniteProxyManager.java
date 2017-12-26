@@ -27,6 +27,7 @@ import io.github.bucket4j.util.LazySupplier;
 import org.apache.ignite.IgniteCache;
 
 import java.io.Serializable;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 /**
@@ -48,6 +49,17 @@ public class IgniteProxyManager<K extends Serializable> implements ProxyManager<
     @Override
     public Bucket getProxy(K key, Supplier<BucketConfiguration> supplier) {
         return GridBucket.createLazyBucket(key, new LazySupplier<>(supplier), gridProxy);
+    }
+
+    @Override
+    public Optional<Bucket> getProxy(K key) {
+        return getProxyConfiguration(key)
+                .map(configuration -> GridBucket.createLazyBucket(key, () -> configuration, gridProxy));
+    }
+
+    @Override
+    public Optional<BucketConfiguration> getProxyConfiguration(K key) {
+        return gridProxy.getConfiguration(key);
     }
 
 }
