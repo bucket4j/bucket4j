@@ -24,7 +24,6 @@ import io.github.bucket4j.grid.GridBucket;
 import io.github.bucket4j.grid.GridBucketState;
 import io.github.bucket4j.grid.GridProxy;
 import io.github.bucket4j.grid.ProxyManager;
-import io.github.bucket4j.util.LazySupplier;
 
 import java.io.Serializable;
 import java.util.Optional;
@@ -48,7 +47,7 @@ public class HazelcastProxyManager<K extends Serializable> implements ProxyManag
 
     @Override
     public Bucket getProxy(K key, Supplier<BucketConfiguration> supplier) {
-        return GridBucket.createLazyBucket(key, new LazySupplier<>(supplier), gridProxy);
+        return GridBucket.createLazyBucket(key, supplier, gridProxy);
     }
 
     @Override

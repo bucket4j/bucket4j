@@ -210,35 +210,4 @@ public abstract class AbstractDistributedBucketTest<B extends ConfigurationBuild
         assertFalse(bucket2.tryConsume(1));
     }
 
-    @Test
-    public void configurationSupplierShouldBeCalledOnlyOnceInStronglyLazyWayAndOnlyIfBucketNotExists() {
-        BucketConfiguration configuration = Bucket4j.configurationBuilder()
-                .addLimit(Bandwidth.simple(10, Duration.ofDays(1)))
-                .buildConfiguration();
-
-        ProxyManager<String> registry = newProxyManager();
-        AtomicInteger configSupplierInteractionCount = new AtomicInteger();
-        Supplier<BucketConfiguration> configurationSupplier = () -> {
-            configSupplierInteractionCount.incrementAndGet();
-            return configuration;
-        };
-
-        // acquiring reference to bucket should lead to touching configuration supplier
-        Bucket bucket = registry.getProxy(key, configurationSupplier);
-        assertEquals(0, configSupplierInteractionCount.get());
-
-        // supplier should be called at first time call of business method
-        bucket.tryConsume(1);
-        assertEquals(1, configSupplierInteractionCount.get());
-
-        // after initialization supplier should not be called
-        bucket.tryConsume(1);
-        assertEquals(1, configSupplierInteractionCount.get());
-
-        // reinitialization of bucket should not call supplier yet another time
-        removeBucketFromBackingStorage(key);
-        bucket.tryConsume(1);
-        assertEquals(1, configSupplierInteractionCount.get());
-    }
-
 }

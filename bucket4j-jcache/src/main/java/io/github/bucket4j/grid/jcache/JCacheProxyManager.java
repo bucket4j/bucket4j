@@ -23,7 +23,6 @@ import io.github.bucket4j.grid.ProxyManager;
 import io.github.bucket4j.grid.GridBucket;
 import io.github.bucket4j.grid.GridBucketState;
 import io.github.bucket4j.grid.GridProxy;
-import io.github.bucket4j.util.LazySupplier;
 
 import javax.cache.Cache;
 import java.io.Serializable;
@@ -48,7 +47,7 @@ public class JCacheProxyManager<K extends Serializable> implements ProxyManager<
 
     @Override
     public Bucket getProxy(K key, Supplier<BucketConfiguration> supplier) {
-        return GridBucket.createLazyBucket(key, new LazySupplier<>(supplier), gridProxy);
+        return GridBucket.createLazyBucket(key, supplier, gridProxy);
     }
 
     @Override
