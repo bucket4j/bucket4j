@@ -21,6 +21,7 @@ import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketConfiguration;
 
 import java.io.Serializable;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 /**
@@ -47,5 +48,14 @@ public interface ProxyManager<K extends Serializable> {
      * @return proxy to bucket stored storage outside current JVM.
      */
     Bucket getProxy(K key, Supplier<BucketConfiguration> configurationLazySupplier);
+
+    /**
+     * Locates proxy to bucket which actually stored outside current JVM.
+     *
+     * @param key the unique identifier used to point to the bucket in external storage.
+     *
+     * @return Optional surround the proxy to bucket or empty optional if bucket with specified key are not stored.
+     */
+    Optional<Bucket> getProxy(K key);
 
 }
