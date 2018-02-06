@@ -23,6 +23,7 @@ Just use your favorite grid including [Hazelcast](http://hazelcast.com/products/
 #### Basics:
 * [Token bucket wikipedia](https://en.wikipedia.org/wiki/Token_bucket) - wikipedia page describes the token-bucket algorithm in classical form.
 * [Non-formal overview of token-bucket algorithm](doc-pages/token-bucket-brief-overview.md) - the brief overview of token-bucket algorithm.
+* [Production checklist](doc-pages/production-checklist.md) - important aspects that need to be understood before using the Bucket4j in production.
 
 #### Supported back-ends without asynchronous support:
 * [Jcache integration](doc-pages/jcache-usage.md) - documentation and examples about usage ```Bucket4j``` with in-memory grids which supports ```JCache API (JSR 107)``` specification.
