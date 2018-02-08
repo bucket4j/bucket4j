@@ -14,24 +14,26 @@ Just use your favorite grid including [Hazelcast](http://hazelcast.com/products/
 * Ability to specify multiple bandwidths per bucket. For example you can limit 1000 events per hours but not often then 100 events per minute.
 * Both synchronous and asynchronous API.
 
-## Documentation
-#### Examples:
-* [Basic-usage](doc-pages/basic-usage.md) - examples of basic usage.
-* [Advanced-usage](doc-pages/advanced-usage.md) - examples of advanced usage.
-* [Asynchronous-usage](doc-pages/asynchronous.md) - examples of asynchronous usage.
+## Supported back-ends
+As mentioned above in addition to local in-memory buckets, the Bucket4j supports clustered usage scenarios on top of following backends:
+ 
+| Back-end                   | Documentation page                                  | Async support |
+| -------------------------- | --------------------------------------------------- | :-----------: |
+| ```JCache API (JSR 107)``` | [bucket4j-jcache](doc-pages/jcache-usage.md)        | No            |
+| ```Hazelcast```            | [bucket4j-hazelcast](doc-pages/hazelcast.md)        | Yes           |
+| ```Apache Ignite```        | [bucket4j-ignite](doc-pages/ignite.md)              | Yes           |
+| ```Inifinispan```          | [bucket4j-infinspan](doc-pages/inifinispan.md)      | Yes           | 
 
+## General documentation
 #### Basics:
 * [Token bucket wikipedia](https://en.wikipedia.org/wiki/Token_bucket) - wikipedia page describes the token-bucket algorithm in classical form.
 * [Non-formal overview of token-bucket algorithm](doc-pages/token-bucket-brief-overview.md) - the brief overview of token-bucket algorithm.
 * [Production checklist](doc-pages/production-checklist.md) - important aspects that need to be understood before using the Bucket4j in production.
 
-#### Supported back-ends without asynchronous support:
-* [Jcache integration](doc-pages/jcache-usage.md) - documentation and examples about usage ```Bucket4j``` with in-memory grids which supports ```JCache API (JSR 107)``` specification.
-
-#### Supported back-ends with asynchronous support:
-* [Hazelcast integration](doc-pages/hazelcast.md) - documentation and examples for ```bucket4j-hazelcast``` module.
-* [Apache Ignite integration](doc-pages/ignite.md) - documentation and examples for ```bucket4j-ignite``` module.
-* [Infinspan integration](doc-pages/inifinispan.md) - documentation and examples for ```bucket4j-infinispan``` module.
+#### Examples:
+* [Basic-usage](doc-pages/basic-usage.md) - examples of basic usage.
+* [Advanced-usage](doc-pages/advanced-usage.md) - examples of advanced usage.
+* [Asynchronous-usage](doc-pages/asynchronous.md) - examples of asynchronous usage.
 
 #### Archieve:
 * [Documentation for legacy releases](doc-pages/archive-links.md).
@@ -70,4 +72,3 @@ Feel free to ask in the [gitter chat](https://gitter.im/vladimir-bukhtoyarov/buc
 ## License
 Copyright 2015-2017 Vladimir Bukhtoyarov
 Licensed under the Apache Software License, Version 2.0: <http://www.apache.org/licenses/LICENSE-2.0>.
-
