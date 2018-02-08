@@ -15,27 +15,30 @@ Just use your favorite grid including [Hazelcast](http://hazelcast.com/products/
 * Both synchronous and asynchronous API.
 
 ## Supported back-ends
-As mentioned above in addition to local in-memory buckets, the Bucket4j supports clustered usage scenarios on top of following backends:
+As mentioned above in addition to local in-memory buckets, the Bucket4j supports clustered usage scenario on top of following back-ends:
  
-| Back-end                   | Documentation page                                  | Async support |
-| -------------------------- | --------------------------------------------------- | :-----------: |
-| ```JCache API (JSR 107)``` | [bucket4j-jcache](doc-pages/jcache-usage.md)        | No            |
-| ```Hazelcast```            | [bucket4j-hazelcast](doc-pages/hazelcast.md)        | Yes           |
-| ```Apache Ignite```        | [bucket4j-ignite](doc-pages/ignite.md)              | Yes           |
-| ```Inifinispan```          | [bucket4j-infinspan](doc-pages/inifinispan.md)      | Yes           | 
+| Back-end                   | Documentation page                                  | Async supported |
+| -------------------------- | --------------------------------------------------- | :-------------: |
+| ```JCache API (JSR 107)``` | [bucket4j-jcache](doc-pages/jcache-usage.md)        | No              |
+| ```Hazelcast```            | [bucket4j-hazelcast](doc-pages/hazelcast.md)        | Yes             |
+| ```Apache Ignite```        | [bucket4j-ignite](doc-pages/ignite.md)              | Yes             |
+| ```Inifinispan```          | [bucket4j-infinspan](doc-pages/inifinispan.md)      | Yes             | 
 
 ## General documentation
 #### Basics:
 * [Token bucket wikipedia](https://en.wikipedia.org/wiki/Token_bucket) - wikipedia page describes the token-bucket algorithm in classical form.
 * [Non-formal overview of token-bucket algorithm](doc-pages/token-bucket-brief-overview.md) - the brief overview of token-bucket algorithm.
-* [Production checklist](doc-pages/production-checklist.md) - important aspects that need to be understood before using the Bucket4j in production.
 
 #### Examples:
 * [Basic-usage](doc-pages/basic-usage.md) - examples of basic usage.
 * [Advanced-usage](doc-pages/advanced-usage.md) - examples of advanced usage.
 * [Asynchronous-usage](doc-pages/asynchronous.md) - examples of asynchronous usage.
 
-#### Archieve:
+#### Production checklist
+* [Common production checklist](doc-pages/production-generic-checklist.md) - Mandatory points that need to be understood before using the Bucket4j in production, independently of local or clustered usage scenarios.
+* [Clustered production checklist](doc-pages/production-clustered-checklist.md) - Mandatory points that need to be understood before using the Bucket4j in clustered scenario.
+
+#### Archive:
 * [Documentation for legacy releases](doc-pages/archive-links.md).
 
 ## Third-party integrations:
