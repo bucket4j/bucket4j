@@ -42,13 +42,12 @@ As mentioned above in addition to local in-memory buckets, the Bucket4j supports
 * [Documentation for legacy releases](doc-pages/archive-links.md).
 
 ## Third-party integrations:
-* [MarcGiffing/Spring Boot Starter for Bucket4j](https://github.com/MarcGiffing/bucket4j-spring-boot-starter). Demos of usage (incluing Zuul and Hazelcast) can be found there [bucket4j-spring-boot-starter-examples](https://github.com/MarcGiffing/bucket4j-spring-boot-starter-examples).
+* [MarcGiffing/Spring Boot Starter for Bucket4j](https://github.com/MarcGiffing/bucket4j-spring-boot-starter) . Demos of usage (incluing Zuul and Hazelcast) can be found there [bucket4j-spring-boot-starter-examples](https://github.com/MarcGiffing/bucket4j-spring-boot-starter-examples).
 * [JHipster/JHipster API Gateway](https://jhipster.github.io/api-gateway/#rate_limiting)
 * [Zivver/Dropwizard Ratelimit](https://github.com/zivver/dropwizard-ratelimit)
 
 ## Third-party Demos:
-* [Abdennebi/spring-boot-bucket4j-hazelcast-demo](https://github.com/Abdennebi/spring-boot-bucket4j-hazelcast-demo) 
-* [Abdennebi/spring-boot-bucket4j-redis-demo](https://github.com/Abdennebi/spring-boot-bucket4j-redis-demo/tree/master/src/main/java/com/abddennebi/demo)
+* [Abdennebi/spring-boot-bucket4j-hazelcast-demo](https://github.com/Abdennebi/spring-boot-bucket4j-hazelcast-demo)
 
 ## Get Bucket4j library
 #### You can add Bucket4j to your project as maven dependency
@@ -58,8 +57,14 @@ use any of them:
 <dependency>
     <groupId>com.github.vladimir-bukhtoyarov</groupId>
     <artifactId>bucket4j-core</artifactId>
-    <version>3.1.0</version>
+    <version>3.1.1</version>
 </dependency>
+```
+#### You can build Bucket4j from sources
+```bash
+git clone https://github.com/vladimir-bukhtoyarov/bucket4j.git
+cd bucket4j
+mvn clean install
 ```
 
 #### You can build Bucket4j from sources

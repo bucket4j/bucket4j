@@ -108,8 +108,11 @@ public class BucketState implements Serializable {
         long currentSize = getCurrentSize(bandwidthIndex);
         long newSize = currentSize + tokensToAdd;
         if (newSize >= bandwidth.capacity) {
-            setCurrentSize(bandwidthIndex, bandwidth.capacity);
-            setRoundingError(bandwidthIndex, 0L);
+            resetBandwidth(bandwidthIndex, bandwidth.capacity);
+        } else if (newSize < currentSize) {
+            // arithmetic overflow happens. This mean that bucket reached Long.MAX_VALUE tokens.
+            // just reset bandwidth state
+            resetBandwidth(bandwidthIndex, bandwidth.capacity);
         } else {
             setCurrentSize(bandwidthIndex, newSize);
         }
@@ -121,36 +124,66 @@ public class BucketState implements Serializable {
 
     private void refill(int bandwidthIndex, Bandwidth bandwidth, long previousRefillNanos, long currentTimeNanos) {
         final long capacity = bandwidth.capacity;
-        long currentSize = getCurrentSize(bandwidthIndex);
-
-        if (currentSize >= capacity) {
-            setCurrentSize(bandwidthIndex, capacity);
-            setRoundingError(bandwidthIndex, 0L);
-            return;
-        }
+        final long refillPeriodNanos = bandwidth.refill.getPeriodNanos();
+        final long refillTokens = bandwidth.refill.getTokens();
+        final long currentSize = getCurrentSize(bandwidthIndex);
 
         long durationSinceLastRefillNanos = currentTimeNanos - previousRefillNanos;
+        long newSize = currentSize;
 
-        long refillPeriod = bandwidth.refill.getPeriodNanos();
-        long refillTokens = bandwidth.refill.getTokens();
+        if (durationSinceLastRefillNanos > refillPeriodNanos) {
+            long elapsedPeriods = durationSinceLastRefillNanos / refillPeriodNanos;
+            long calculatedRefill = elapsedPeriods * refillTokens;
+            newSize += calculatedRefill;
+            if (newSize > capacity) {
+                resetBandwidth(bandwidthIndex, capacity);
+                return;
+            }
+            if (newSize < currentSize) {
+                // arithmetic overflow happens. This mean that tokens reached Long.MAX_VALUE tokens.
+                // just reset bandwidth state
+                resetBandwidth(bandwidthIndex, capacity);
+                return;
+            }
+            durationSinceLastRefillNanos %= refillPeriodNanos;
+        }
+
         long roundingError = getRoundingError(bandwidthIndex);
-        long divided = refillTokens * durationSinceLastRefillNanos + roundingError;
-        long calculatedRefill = divided / refillPeriod;
-        if (calculatedRefill == 0) {
-            setRoundingError(bandwidthIndex, divided);
-            return;
+        long dividedWithoutError = multiplyExactOrReturnMaxValue(refillTokens, durationSinceLastRefillNanos);
+        long divided = dividedWithoutError + roundingError;
+        if (divided < 0 || dividedWithoutError == Long.MAX_VALUE) {
+            // arithmetic overflow happens.
+            // there is no sense to stay in integer arithmetic when having deal with so big numbers
+            long calculatedRefill = (long) ((double) durationSinceLastRefillNanos / (double) refillPeriodNanos * (double) refillTokens);
+            newSize += calculatedRefill;
+            roundingError = 0;
+        } else {
+            long calculatedRefill = divided / refillPeriodNanos;
+            if (calculatedRefill == 0) {
+                roundingError = divided;
+            } else {
+                newSize += calculatedRefill;
+                roundingError = divided % refillPeriodNanos;
+            }
         }
 
-        long newSize = currentSize + calculatedRefill;
         if (newSize >= capacity) {
-            setCurrentSize(bandwidthIndex, capacity);
-            setRoundingError(bandwidthIndex, 0);
+            resetBandwidth(bandwidthIndex, capacity);
             return;
         }
-
-        roundingError = divided % refillPeriod;
+        if (newSize < currentSize) {
+            // arithmetic overflow happens. This mean that bucket reached Long.MAX_VALUE tokens.
+            // just reset bandwidth state
+            resetBandwidth(bandwidthIndex, capacity);
+            return;
+        }
         setCurrentSize(bandwidthIndex, newSize);
         setRoundingError(bandwidthIndex, roundingError);
+    }
+
+    private void resetBandwidth(int bandwidthIndex, long capacity) {
+        setCurrentSize(bandwidthIndex, capacity);
+        setRoundingError(bandwidthIndex, 0);
     }
 
     private long delayNanosAfterWillBePossibleToConsume(int bandwidthIndex, Bandwidth bandwidth, long tokens) {
@@ -159,8 +192,17 @@ public class BucketState implements Serializable {
             return 0;
         }
         long deficit = tokens - currentSize;
-        long periodNanos = bandwidth.refill.getPeriodNanos();
-        return periodNanos * deficit / bandwidth.refill.getTokens();
+        long refillPeriodNanos = bandwidth.refill.getPeriodNanos();
+        long refillPeriodTokens = bandwidth.refill.getTokens();
+
+        long divided = multiplyExactOrReturnMaxValue(refillPeriodNanos, deficit);
+        if (divided == Long.MAX_VALUE) {
+            // arithmetic overflow happens.
+            // there is no sense to stay in integer arithmetic when having deal with so big numbers
+            return (long)((double) deficit / (double)refillPeriodTokens * (double)refillPeriodNanos);
+        } else {
+            return divided / refillPeriodTokens;
+        }
     }
 
     long getCurrentSize(int bandwidth) {
@@ -192,6 +234,23 @@ public class BucketState implements Serializable {
         return "BucketState{" +
                 "bandwidthStates=" + Arrays.toString(stateData) +
                 '}';
+    }
+
+    // just a copy of JDK method Math#multiplyExact,
+    // but instead of throwing exception it returns Long.MAX_VALUE in case of overflow
+    private static long multiplyExactOrReturnMaxValue(long x, long y) {
+        long r = x * y;
+        long ax = Math.abs(x);
+        long ay = Math.abs(y);
+        if (((ax | ay) >>> 31 != 0)) {
+            // Some bits greater than 2^31 that might cause overflow
+            // Check the result using the divide operator
+            // and check for the special case of Long.MIN_VALUE * -1
+            if (((y != 0) && (r / y != x)) || (x == Long.MIN_VALUE && y == -1)) {
+                return Long.MAX_VALUE;
+            }
+        }
+        return r;
     }
 
 }

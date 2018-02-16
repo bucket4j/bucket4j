@@ -6,6 +6,9 @@ Imagine that you are developing load testing tool, in order to be ensure that te
 But you do not want to randomly kill the testable system by generation all 1000 events in one second instead of 1 minute. 
 To solve problem you can construct following bucket:
 ```java
+static final long MAX_WAIT_NANOS = TimeUnit.HOURS.toNanos(1);
+// ...
+
 Bucket bucket = Bucket4j.builder()
        // allows 1000 tokens per 1 minute
        .addLimit(Bandwidth.simple(1000, Duration.ofMinutes(1)))
@@ -15,11 +18,10 @@ Bucket bucket = Bucket4j.builder()
 
 // ...
 while (true) {
-  // Consume a token from the token bucket.  If a token is not available this method will block until
-  // the refill adds one to the bucket.
-  bucket.tryConsume(1);
-
-  workloadExecutor.execute(new LoadTask());
+  // Consume a token from the token bucket.  If a token is not available this method will block until the refill adds one to the bucket.
+  if (bucket.tryConsume(1, MAX_WAIT_NANOS, BlockingStrategy.PARKING)) {
+       workloadExecutor.execute(new LoadTask());
+  };
 }
 ```
 
