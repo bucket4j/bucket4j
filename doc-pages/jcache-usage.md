@@ -1,5 +1,8 @@
 # JCache integration
-```Bucket4j``` supports any GRID solution which compatible with [JCache API (JSR 107)](https://www.jcp.org/en/jsr/detail?id=107) specification.
+```Bucket4j``` supports any GRID solution which compatible with [JCache API (JSR 107)](https://www.jcp.org/en/jsr/detail?id=107) specification. 
+
+**Do not forget to read** [JCache production checklist](doc-pages/production-jcache-checklist.md) **before using the Bucket4j over JCache cluster.** 
+
 To use JCache extension you also need to add following dependency:
 ```xml
 <dependency>
@@ -7,10 +10,7 @@ To use JCache extension you also need to add following dependency:
     <artifactId>bucket4j-jcache</artifactId>
     <version>${bucket4j.version}</version>
 </dependency>
-```
-
-## Do not forget to read production checklist 
-[JCache production checklist](doc-pages/production-jcache-checklist.md) - Mandatory points that need to be understood before using the Bucket4j over JCache cluster.
+``` 
 
 ## Example 1 - limiting access to HTTP server by IP address
 Imagine that you develop any Servlet based WEB application and want to limit access per IP basis.
