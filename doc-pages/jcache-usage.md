@@ -9,6 +9,9 @@ To use JCache extension you also need to add following dependency:
 </dependency>
 ```
 
+## Do not forget to read production checklist 
+[JCache production checklist](doc-pages/production-jcache-checklist.md) - Mandatory points that need to be understood before using the Bucket4j over JCache cluster.
+
 ## Example 1 - limiting access to HTTP server by IP address
 Imagine that you develop any Servlet based WEB application and want to limit access per IP basis.
 The limitation depends on country to which IP belongs, you want to allow less tokens to democratic countries and more tokens for normal countries, 

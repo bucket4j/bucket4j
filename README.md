@@ -36,7 +36,7 @@ As mentioned above in addition to local in-memory buckets, the Bucket4j supports
 
 #### Production checklist
 * [Common production checklist](doc-pages/production-generic-checklist.md) - Mandatory points that need to be understood before using the Bucket4j in production, independently of local or clustered usage scenarios.
-* [Clustered production checklist](doc-pages/production-clustered-checklist.md) - Mandatory points that need to be understood before using the Bucket4j in clustered scenario.
+* [JCache production checklist](doc-pages/production-jcache-checklist.md) - Mandatory points that need to be understood before using the Bucket4j over JCache cluster.
 
 #### Archive:
 * [Documentation for legacy releases](doc-pages/archive-links.md).
