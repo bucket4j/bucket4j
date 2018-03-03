@@ -1,7 +1,7 @@
 # JCache integration
 ```Bucket4j``` supports any GRID solution which compatible with [JCache API (JSR 107)](https://www.jcp.org/en/jsr/detail?id=107) specification. 
 
-**Do not forget to read** [JCache production checklist](doc-pages/production-jcache-checklist.md) **before using the Bucket4j over JCache cluster.** 
+**Do not forget to read** [JCache production checklist](production-jcache-checklist.md) **before using the Bucket4j over JCache cluster.**
 
 To use JCache extension you also need to add following dependency:
 ```xml
