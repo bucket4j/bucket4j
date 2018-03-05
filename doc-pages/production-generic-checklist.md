@@ -1,40 +1,39 @@
 # Generic production checklist
-The thoughts, described bellow, are applicable to each solution based on token-bucket or leaky-bucket algorithm.
+The considerations described bellow are applicable to each solution based on the token-bucket or leaky-bucket algorithm.
 You need to understand, agree and configure following points:
 
-## Be careful when having deals with long periods
+## Be wary of long periods
 When you are planning to use any solution based on token-bucket for throttling incoming requests,
-you should to pay high attention to choose appropriate throttling time window.
+you need to pay close attention to the throttling time window.
 
-Lets describe the example of dangerous configuration:
-* Given the per-user limitation 10000 tokens/ per 1 hour.
-* As a hacker I am able to send 9999 request in very short period, for example at first 10 seconds, and potentially 100RPS can damage or slowdown any part of your service.
-* Then as good hacker I stop to sending, and bucket is unable to catch me, because limit was not reached.
-* Then I will be reproduce this attack each hour.
+Lets describe an example of a dangerous configuration:
+* Given a bucket with a limit of 10000 tokens/ per 1 hour per user.
+* A malicious attacker may send 9999 request in very short period, for example within 10 seconds. This would correspond to 100 request per second which could seriously impact your system.
+* A skilled attacker could stop at 9999 request per hour, and repeat every hour, which would make this attack impossible to detect (because the limit would not be reached).
 
-To protect from this kind attacks, you should specify multiple limits [as describe there](https://github.com/vladimir-bukhtoyarov/bucket4j/blob/master/doc-pages/advanced-usage.md#example-of-multiple-bandwidth).
-From performance perspective it does not matter how many limits specified per single bucket.
+To protect from this kind attacks, you must specify multiple limits [as describe there](https://github.com/vladimir-bukhtoyarov/bucket4j/blob/master/doc-pages/advanced-usage.md#example-of-multiple-bandwidth).
+The number of limits specified per bucket does not impact the performance.
+
+For example:
 ```java
 Bucket bucket = Bucket4j.jCacheBuilder(RecoveryStrategy.RECONSTRUCT)
     .addLimit(Bandwidth.simple(10000, Duration.ofSeconds(3_600))
-    .addLimit(Bandwidth.simple(20, Duration.ofSeconds(1)) // hacker is unable to achieve 1000RPS and crash service in short time
+    .addLimit(Bandwidth.simple(20, Duration.ofSeconds(1)) // attacker is unable to achieve 1000RPS and crash service in short time
     .build(cache, bucketId);
 ```
 
-## Token bucket algorithms defines its contract in long terms, you can not avoid the short-timed bursts
-Token bucket is effective algorithm with low and fixed memory footprint, independently of incoming request-rate(it can be millions per second) the bucket consumes no more then 40 bytes(five longs).
-But effective memory footprint has its own cost - bandwidth limitation is satisfied properly only when we are thinking of it in long run terms,
-in other words you can not avoid the short-timed bursts.
+## Be wary of short-term bursts
+Token bucket is an efficient algorithm with low and fixed memory footprint, independently of the incoming request-rate(it can be millions per second) the bucket consumes no more then 40 bytes(five longs).
+But an efficient memory footprint has its own cost - bandwidth limitation is only satisfied over a long period of time. In other words you cannot avoid short-timed bursts.
 
-Lets describe the example of local burst:
-* Given the per-user limitation 100 tokens/ per 1 minute.
-* At moment of time ```T1``` the bucket is full.
-* All 100 tokens consumed from bucket, the bucket is empty.
-* At moment of time ```T1+1min``` the bucket is full again because tokens fully regenerated.
-* All 100 tokens consumed from bucket. And we are giving the point where 200 tokens consumed during 1 minutes, but bucket configured by 100 tokens/minute. This situation called as burst.
+Let us describe an example of local burst:
+* Given a bucket with a limit of 100 tokens/min. We start with a full bucket, i.e. with 100 tokens.
+* At ```T1``` 100 requests are made and thus the bucket becomes empty.
+* At ```T1+1min``` the bucket is full again because tokens fully regenerated and we can immediately consume 100 tokens.
+* This means that between  ```T1``` and ```T1+1min``` we have consumed 200 tokens. Over a long period of time there will be no more than 100 requests per min, but as shown above it is possible to burst at **twice the limit** here at 100 tokens per min.
 
-And there is no way to avoid the local short-timed bursts. If local bursts are unacceptable for your case then you have two alternatives:
-* Do not use Bucket4j or any other solution implemented on top of token-bucket ideas.
+These bursts are inherent to token bucket algorithms and cannot be avoided. If local bursts are unacceptable you then have two options:
+* Do not use Bucket4j or any other solution implemented on top of token-bucket algorithms.
 * Try to change the bandwidth from ```Tokens per Time``` to ```Tokens/2 per Time/2```,
 for example if you need to strongly satisfy the limit 100tokens/60seconds,
-then you need to define the bandwidth as ```50tokens/30seconds```, and desired original limitation will be satisfied as well independently of local bursts.
+then you need to define the bandwidth as ```50tokens/30seconds```, and desired original limitation will be satisfied.
