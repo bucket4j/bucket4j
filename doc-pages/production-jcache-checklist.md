@@ -85,5 +85,5 @@ public class CompatibilityTest {
 }
 ```
 The check does 4000 increments of integer in parallel and verifies that no one update has been missed.
-If check passed then your JCache provider is compatible with Bucket4j, the throttling will wotk fine in distributed and concurrent environment. 
+If check passed then your JCache provider is compatible with Bucket4j, the throttling will work fine in distributed and concurrent environment. 
 If check is not passed, then reach to the particular JCache provider team and consult why its implementation misses the writes.  
