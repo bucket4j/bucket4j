@@ -45,7 +45,7 @@ public class IpThrottlingFilter implements javax.servlet.Filter {
         HttpServletRequest httpRequest = (HttpServletRequest) servletRequest;
         String ip = IpHelper.getIpFromRequest(httpRequest);
         
-        // prepare configuration supplier which will be called(on first interaction with proxy) iff bucket was not saved yet previously. 
+        // prepare configuration supplier which will be called(on first interaction with proxy) if bucket was not saved yet previously. 
         Supplier<BucketConfiguration> configurationLazySupplier = getConfigSupplierForIp(ip);
         
         // acquire cheap proxy to bucket, the real  
