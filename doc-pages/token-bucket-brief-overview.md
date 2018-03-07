@@ -253,5 +253,5 @@ public class MinimalisticTokenBucket {
 
 }
 ```
-The ```MinimalisticTokenBucket``` is just a learning example which helps to understand token-bucket. please do not make assumptions about how to ```Bucket4j``` internally works looking looking at ```MinimalisticTokenBucket```,
+The ```MinimalisticTokenBucket``` is just a learning example which helps to understand token-bucket. please do not make assumptions about how to ```Bucket4j``` internally works looking at ```MinimalisticTokenBucket```,
 because ```Bucket4j``` has nothing common with ```MinimalisticTokenBucket```. 
