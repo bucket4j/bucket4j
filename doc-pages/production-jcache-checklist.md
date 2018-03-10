@@ -39,6 +39,7 @@ Just run this code in order to be sure that your implementation of JCache provid
 import javax.cache.Cache;
 import javax.cache.processor.EntryProcessor;
 import java.util.concurrent.CountDownLatch;
+import java.io.Serializable;
 
 public class CompatibilityTest {
 
@@ -59,7 +60,7 @@ public class CompatibilityTest {
             new Thread(() -> {
                 try {
                     for (int j = 0; j < iterations; j++) {
-                        EntryProcessor<String, Integer, Void> processor = (mutableEntry, objects) -> {
+                        EntryProcessor<String, Integer, Void> processor = (EntryProcessor<String, Integer, Void> & Serializable) (mutableEntry, objects) -> {
                             int value = mutableEntry.getValue();
                             mutableEntry.setValue(value + 1);
                             return null;

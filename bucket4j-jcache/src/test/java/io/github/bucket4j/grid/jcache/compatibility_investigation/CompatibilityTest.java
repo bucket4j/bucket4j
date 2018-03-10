@@ -2,6 +2,7 @@ package io.github.bucket4j.grid.jcache.compatibility_investigation;
 
 import javax.cache.Cache;
 import javax.cache.processor.EntryProcessor;
+import java.io.Serializable;
 import java.util.concurrent.CountDownLatch;
 
 public class CompatibilityTest {
@@ -23,7 +24,7 @@ public class CompatibilityTest {
             new Thread(() -> {
                 try {
                     for (int j = 0; j < iterations; j++) {
-                        EntryProcessor<String, Integer, Void> processor = (mutableEntry, objects) -> {
+                        EntryProcessor<String, Integer, Void> processor = (EntryProcessor<String, Integer, Void> & Serializable) (mutableEntry, objects) -> {
                             int value = mutableEntry.getValue();
                             mutableEntry.setValue(value + 1);
                             return null;
