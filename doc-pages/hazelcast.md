@@ -2,11 +2,11 @@
 Before use ```bucket4j-hazelcast``` module please read [bucket4j-jcache documentation](jcache-usage.md),
 because ```bucket4j-hazelcast``` is just a follow-up of ```bucket4j-jcache```.
 
-**Question:** Bucket4j already supports JCache since version ```1.2```. Why it was needed to introduce direct support for ```Hazelcast```? 
+**Question:** Bucket4j already supports JCache since version ```1.2```. Why it was needed to introduce direct support for ```Hazelcast```?  
 **Answer:** Because [JCache API (JSR 107)](https://www.jcp.org/en/jsr/detail?id=107) does not specify asynchronous API,
 developing the dedicated module ```bucket4j-hazelcast``` was the only way to provide asynchrony for users who use ```Bucket4j``` and ```Hazelcast``` together.
 
-**Question:** Should I migrate from ```bucket4j-jcache``` to ```bucketj-hazelcast``` If I do not need in asynchronous API? 
+**Question:** Should I migrate from ```bucket4j-jcache``` to ```bucketj-hazelcast``` If I do not need in asynchronous API?  
 **Answer:** No, you should not migrate to ```bucketj-hazelcast``` in this case.
 
 ## Dependencies
