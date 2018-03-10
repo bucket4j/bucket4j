@@ -174,7 +174,7 @@ public interface Bucket {
      *      New configuration can be applied if and only if it describes same count of bandwidths which already configured,
      *      else {@link IncompatibleConfigurationException} will be thrown.
      *      In other words you must not try to reduce or increase count of bandwidths,
-     *      it is impossible to create bucket with one bandwidth and reconfigure to use two bandwidths and wise versa.
+     *      it is impossible to create bucket with one bandwidth and reconfigure to use two bandwidths and vice-versa.
      *    </li>
      *    <li>
      *        If new configuration defines capacity which greater than current available tokens,
