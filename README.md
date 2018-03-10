@@ -23,7 +23,7 @@ As mentioned above in addition to local in-memory buckets, the Bucket4j supports
 | ```JCache API (JSR 107)``` | [bucket4j-jcache](doc-pages/jcache-usage.md)        | No              |
 | ```Hazelcast```            | [bucket4j-hazelcast](doc-pages/hazelcast.md)        | Yes             |
 | ```Apache Ignite```        | [bucket4j-ignite](doc-pages/ignite.md)              | Yes             |
-| ```Inifinispan```          | [bucket4j-infinspan](doc-pages/inifinispan.md)      | Yes             | 
+| ```Inifinispan```          | [bucket4j-infinspan](doc-pages/infinispan.md)       | Yes             | 
 
 ## General documentation
 #### Basics:
