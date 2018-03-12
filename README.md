@@ -68,13 +68,6 @@ cd bucket4j
 mvn clean install
 ```
 
-#### You can build Bucket4j from sources
-```bash
-git clone https://github.com/vladimir-bukhtoyarov/bucket4j.git
-cd bucket4j
-mvn clean install
-```
-
 ## Have a question?
 Feel free to ask in the [gitter chat](https://gitter.im/vladimir-bukhtoyarov/bucket4j) 
 
