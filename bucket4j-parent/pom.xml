@@ -59,6 +59,8 @@
         <hazelcast.version>3.8</hazelcast.version>
         <infinispan.version>9.1.0.Final</infinispan.version>
         <byte-buddy.version>1.7.5</byte-buddy.version>
+        <testcontainers.version>1.6.0</testcontainers.version>
+        <lettuce-version>5.0.2.RELEASE</lettuce-version>
     </properties>
 
     <scm>
