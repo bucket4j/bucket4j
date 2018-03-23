@@ -62,7 +62,7 @@ class BucketSpecification extends Specification {
 
     @Unroll
     def "#n Should return #requiredResult when trying to consume #toConsume tokens from Bucket #builder"(
-            int n, boolean requiredResult, long toConsume, ConfigurationBuilder builder) {
+            int n, boolean requiredResult, long toConsume, AbstractBucketBuilder builder) {
         expect:
             for (BucketType type : BucketType.values()) {
                 for (boolean sync : [true, false]) {
@@ -82,7 +82,7 @@ class BucketSpecification extends Specification {
     }
 
     @Unroll
-    def "#n tryConsumeAndReturnRemaining specification"(int n, long toConsume, boolean result, long expectedRemaining, long expectedWait, ConfigurationBuilder builder) {
+    def "#n tryConsumeAndReturnRemaining specification"(int n, long toConsume, boolean result, long expectedRemaining, long expectedWait, AbstractBucketBuilder builder) {
         expect:
             for (BucketType type : BucketType.values()) {
                 for (boolean sync : [true, false]) {
@@ -110,7 +110,7 @@ class BucketSpecification extends Specification {
 
     @Unroll
     def "#n Should return #requiredResult when consumeAsMuchAsPossible tokens from Bucket #builder"(
-            int n, long requiredResult, ConfigurationBuilder builder) {
+            int n, long requiredResult, AbstractBucketBuilder builder) {
         expect:
             for (BucketType bucketType : BucketType.values()) {
                 for (boolean sync : [true, false]) {
@@ -131,7 +131,7 @@ class BucketSpecification extends Specification {
 
     @Unroll
     def "#n Should return #requiredResult when trying to consumeAsMuchAsPossible with limit #limit tokens from Bucket #builder"(
-            int n, long requiredResult, long limit, ConfigurationBuilder builder) {
+            int n, long requiredResult, long limit, AbstractBucketBuilder builder) {
         expect:
             for (BucketType bucketType : BucketType.values()) {
                 for (boolean sync : [true, false]) {
@@ -154,7 +154,7 @@ class BucketSpecification extends Specification {
     @Timeout(value = 2, unit = TimeUnit.SECONDS)
     @Unroll
     def "#n Should sleep #requiredSleep when trying to consuming #toConsume tokens from Bucket #builder"(
-            int n, long requiredSleep, long toConsume, ConfigurationBuilder builder) {
+            int n, long requiredSleep, long toConsume, AbstractBucketBuilder builder) {
         expect:
             for (BucketType type : BucketType.values()) {
                 for (boolean sync : [true, false]) {
@@ -187,7 +187,7 @@ class BucketSpecification extends Specification {
     @Timeout(value = 2, unit = TimeUnit.SECONDS)
     @Unroll
     def "#n Should sleep #requiredSleep and return #requiredResult when trying to synchronous consume #toConsume tokens with limit #sleepLimit from Bucket #builder"(
-            int n, long requiredSleep, boolean requiredResult, long toConsume, long sleepLimit, ConfigurationBuilder builder) {
+            int n, long requiredSleep, boolean requiredResult, long toConsume, long sleepLimit, AbstractBucketBuilder builder) {
         expect:
             for (BucketType type : BucketType.values()) {
                 for (boolean sync : [true, false]) {
@@ -223,7 +223,7 @@ class BucketSpecification extends Specification {
 
     @Unroll
     def "#n Add tokens spec"(
-            int n, long tokensToAdd, long nanosIncrement, long requiredResult, ConfigurationBuilder builder) {
+            int n, long tokensToAdd, long nanosIncrement, long requiredResult, AbstractBucketBuilder builder) {
         expect:
             for (BucketType type : BucketType.values()) {
                 for (boolean sync : [true, false]) {
@@ -248,7 +248,7 @@ class BucketSpecification extends Specification {
     }
 
     @Unroll
-    def "#n getAvailableTokens specification"(int n, long nanosSinceBucketCreation, long expectedTokens,  ConfigurationBuilder builder) {
+    def "#n getAvailableTokens specification"(int n, long nanosSinceBucketCreation, long expectedTokens,  AbstractBucketBuilder builder) {
         expect:
             for (BucketType type : BucketType.values()) {
                 TimeMeterMock timeMeter = new TimeMeterMock(0)
@@ -300,7 +300,7 @@ class BucketSpecification extends Specification {
                                                     .addLimit(Bandwidth.simple(1, Duration.ofNanos(1)))
                                                     .buildConfiguration()
             GridProxyMock mockProxy = new GridProxyMock(SYSTEM_MILLISECONDS);
-            Bucket bucket = GridBucket.createInitializedBucket("66", configuration, mockProxy, THROW_BUCKET_NOT_FOUND_EXCEPTION)
+            Bucket bucket = GridBucket.createInitializedBucket(BucketListener.NOPE, "66", configuration, mockProxy, THROW_BUCKET_NOT_FOUND_EXCEPTION)
         when:
             mockProxy.setException(new RuntimeException())
             CompletableFuture<Boolean> future = bucket.asAsync().tryConsume(1)
@@ -315,7 +315,7 @@ class BucketSpecification extends Specification {
                     .buildConfiguration()
             GridProxyMock mockProxy = new GridProxyMock(SYSTEM_MILLISECONDS)
             SchedulerMock schedulerMock = new SchedulerMock()
-            Bucket bucket = GridBucket.createInitializedBucket("66", configuration, mockProxy, THROW_BUCKET_NOT_FOUND_EXCEPTION)
+            Bucket bucket = GridBucket.createInitializedBucket(BucketListener.NOPE, "66", configuration, mockProxy, THROW_BUCKET_NOT_FOUND_EXCEPTION)
         when:
             schedulerMock.setException(new RuntimeException())
             CompletableFuture<Boolean> future = bucket.asAsync().tryConsume(10, 100000, schedulerMock)
@@ -327,7 +327,7 @@ class BucketSpecification extends Specification {
         when:
             for (BucketType type : BucketType.values()) {
                 for (TimeMeter meter : [SYSTEM_MILLISECONDS, SYSTEM_MILLISECONDS]) {
-                    ConfigurationBuilder builder = Bucket4j.builder()
+                    AbstractBucketBuilder builder = Bucket4j.builder()
                             .addLimit(1, Bandwidth.simple(100, Duration.ofNanos(100)))
                     Bucket bucket = type.createBucket(builder, meter)
                     println bucket.toString()

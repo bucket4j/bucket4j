@@ -17,9 +17,9 @@
 
 package io.github.bucket4j.grid.ignite;
 
+import io.github.bucket4j.AbstractBucketBuilder;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketConfiguration;
-import io.github.bucket4j.ConfigurationBuilder;
 import io.github.bucket4j.grid.GridBucket;
 import io.github.bucket4j.grid.GridBucketState;
 import io.github.bucket4j.grid.RecoveryStrategy;
@@ -36,7 +36,7 @@ import java.io.Serializable;
  * @see io.github.bucket4j.grid.jcache.JCacheBucketBuilder
  *
  */
-public class IgniteBucketBuilder extends ConfigurationBuilder<IgniteBucketBuilder> {
+public class IgniteBucketBuilder extends AbstractBucketBuilder<IgniteBucketBuilder> {
 
     /**
      * Creates the new instance of {@link IgniteBucketBuilder}
@@ -54,7 +54,7 @@ public class IgniteBucketBuilder extends ConfigurationBuilder<IgniteBucketBuilde
     public <K extends Serializable> Bucket build(IgniteCache<K, GridBucketState> cache, K key, RecoveryStrategy recoveryStrategy) {
         BucketConfiguration configuration = buildConfiguration();
         IgniteProxy<K> gridProxy = new IgniteProxy<>(cache);
-        return GridBucket.createInitializedBucket(key, configuration, gridProxy, recoveryStrategy);
+        return GridBucket.createInitializedBucket(getListener(), key, configuration, gridProxy, recoveryStrategy);
     }
 
 }

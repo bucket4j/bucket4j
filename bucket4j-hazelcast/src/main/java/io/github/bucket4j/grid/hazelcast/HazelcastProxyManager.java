@@ -20,6 +20,7 @@ package io.github.bucket4j.grid.hazelcast;
 import com.hazelcast.core.IMap;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketConfiguration;
+import io.github.bucket4j.BucketListener;
 import io.github.bucket4j.grid.GridBucket;
 import io.github.bucket4j.grid.GridBucketState;
 import io.github.bucket4j.grid.GridProxy;
@@ -47,13 +48,13 @@ public class HazelcastProxyManager<K extends Serializable> implements ProxyManag
 
     @Override
     public Bucket getProxy(K key, Supplier<BucketConfiguration> supplier) {
-        return GridBucket.createLazyBucket(key, supplier, gridProxy);
+        return GridBucket.createLazyBucket(BucketListener.NOPE, key, supplier, gridProxy);
     }
 
     @Override
     public Optional<Bucket> getProxy(K key) {
         return getProxyConfiguration(key)
-                .map(configuration -> GridBucket.createLazyBucket(key, () -> configuration, gridProxy));
+                .map(configuration -> GridBucket.createLazyBucket(BucketListener.NOPE, key, () -> configuration, gridProxy));
     }
 
     @Override

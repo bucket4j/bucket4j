@@ -29,10 +29,10 @@ import static io.github.bucket4j.grid.RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EX
 
 class DetectionOfIllegalApiUsageSpecification extends Specification {
 
-    private static final Duration VALID_PERIOD = Duration.ofMinutes(10);
-    private static final long VALID_CAPACITY = 1000;
+    private static final Duration VALID_PERIOD = Duration.ofMinutes(10)
+    private static final long VALID_CAPACITY = 1000
 
-    ConfigurationBuilder builder = Bucket4j.builder()
+    AbstractBucketBuilder builder = Bucket4j.builder()
 
     @Unroll
     def "Should detect that capacity #capacity is wrong"(long capacity) {
@@ -234,21 +234,21 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
         setup:
             GridProxyMock mockProxy = new GridProxyMock(TimeMeter.SYSTEM_MILLISECONDS)
         when:
-            GridBucket.createInitializedBucket("66", null, mockProxy, THROW_BUCKET_NOT_FOUND_EXCEPTION)
+            GridBucket.createInitializedBucket(BucketListener.NOPE, "66", null, mockProxy, THROW_BUCKET_NOT_FOUND_EXCEPTION)
 
         then:
             IllegalArgumentException ex = thrown()
             ex.message == nullConfiguration().message
 
         when:
-            GridBucket.createLazyBucket("66", {null}, mockProxy)
+            GridBucket.createLazyBucket(BucketListener.NOPE, "66", {null}, mockProxy)
                     .tryConsume(1)
         then:
             ex = thrown()
             ex.message == nullConfiguration().message
 
         when:
-            GridBucket.createLazyBucket("66", null, mockProxy)
+            GridBucket.createLazyBucket(BucketListener.NOPE, "66", null, mockProxy)
                     .tryConsume(1)
         then:
             ex = thrown()
@@ -257,7 +257,7 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
 
     private static class FakeExtension implements Extension {
         @Override
-        ConfigurationBuilder builder() {
+        AbstractBucketBuilder builder() {
             return new LocalBucketBuilder()
         }
     }

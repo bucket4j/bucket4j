@@ -17,9 +17,9 @@
 
 package io.github.bucket4j.grid.infinispan;
 
+import io.github.bucket4j.AbstractBucketBuilder;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketConfiguration;
-import io.github.bucket4j.ConfigurationBuilder;
 import io.github.bucket4j.grid.GridBucket;
 import io.github.bucket4j.grid.GridBucketState;
 import io.github.bucket4j.grid.RecoveryStrategy;
@@ -36,7 +36,7 @@ import java.io.Serializable;
  * @see io.github.bucket4j.grid.jcache.JCacheBucketBuilder
  *
  */
-public class InfinispanBucketBuilder extends ConfigurationBuilder<InfinispanBucketBuilder> {
+public class InfinispanBucketBuilder extends AbstractBucketBuilder<InfinispanBucketBuilder> {
 
     /**
      * Creates the new instance of {@link InfinispanBucketBuilder}
@@ -54,7 +54,7 @@ public class InfinispanBucketBuilder extends ConfigurationBuilder<InfinispanBuck
     public <K extends Serializable> Bucket build(FunctionalMap.ReadWriteMap<K, GridBucketState> readWriteMap, K key, RecoveryStrategy recoveryStrategy) {
         BucketConfiguration configuration = buildConfiguration();
         InfinispanProxy<K> gridProxy = new InfinispanProxy<>(readWriteMap);
-        return GridBucket.createInitializedBucket(key, configuration, gridProxy, recoveryStrategy);
+        return GridBucket.createInitializedBucket(getListener(), key, configuration, gridProxy, recoveryStrategy);
     }
 
 }
