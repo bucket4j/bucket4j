@@ -224,7 +224,7 @@ public abstract class AbstractBucket implements Bucket {
     }
 
     @Override
-    public boolean tryConsumeUninterruptibly(long tokensToConsume, long maxWaitTimeNanos, BlockingStrategy blockingStrategy) {
+    public boolean tryConsumeUninterruptibly(long tokensToConsume, long maxWaitTimeNanos, UninterruptibleBlockingStrategy blockingStrategy) {
         checkTokensToConsume(tokensToConsume);
         checkMaxWaitTime(maxWaitTimeNanos);
 
@@ -241,6 +241,49 @@ public abstract class AbstractBucket implements Bucket {
         }
 
         return true;
+    }
+
+    @Override
+    public void consume(long tokensToConsume, BlockingStrategy blockingStrategy) throws InterruptedException {
+        checkTokensToConsume(tokensToConsume);
+
+        while (true) {
+            long nanosToSleep = reserveAndCalculateTimeToSleepImpl(tokensToConsume, tokensToConsume);
+            if (nanosToSleep == Long.MAX_VALUE) {
+                throw new IllegalStateException("Existed hardware is unable to service the reservation of so many tokens");
+            }
+
+            listener.onConsumed(tokensToConsume);
+            if (nanosToSleep > 0L) {
+                try {
+                    blockingStrategy.park(nanosToSleep);
+                } catch (InterruptedException e) {
+                    listener.onInterrupted();
+                    throw e;
+                }
+                listener.onParked(nanosToSleep);
+            }
+            return;
+        }
+    }
+
+    @Override
+    public void consumeUninterruptibly(long tokensToConsume, UninterruptibleBlockingStrategy blockingStrategy) {
+        checkTokensToConsume(tokensToConsume);
+
+        while (true) {
+            long nanosToSleep = reserveAndCalculateTimeToSleepImpl(tokensToConsume, tokensToConsume);
+            if (nanosToSleep == Long.MAX_VALUE) {
+                throw new IllegalStateException("Existed hardware is unable to service the reservation of so many tokens");
+            }
+
+            listener.onConsumed(tokensToConsume);
+            if (nanosToSleep > 0L) {
+                blockingStrategy.parkUninterruptibly(nanosToSleep);
+                listener.onParked(nanosToSleep);
+            }
+            return;
+        }
     }
 
     @Override

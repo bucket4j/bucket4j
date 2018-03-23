@@ -102,6 +102,8 @@ public interface Bucket {
      *         but deficit can be closed in period of time less then <code>maxWaitTimeNanos</code> nanoseconds,
      *         then tokens consumed from bucket and current thread blocked for a time required to close deficit,
      *         after unblocking method returns <tt>true</tt>.
+     *
+     *         <p>
      *         <strong>Note:</strong> If InterruptedException happen when thread was blocked
      *         then tokens will be not returned back to bucket,
      *         but you can use {@link #addTokens(long)} to returned tokens back.
@@ -128,7 +130,45 @@ public interface Bucket {
      * @return true if {@code numTokens} has been consumed or false when {@code numTokens} has not been consumed
      * @see #tryConsume(long, long, BlockingStrategy)
      */
-    boolean tryConsumeUninterruptibly(long numTokens, long maxWaitTimeNanos, BlockingStrategy blockingStrategy);
+    boolean tryConsumeUninterruptibly(long numTokens, long maxWaitTimeNanos, UninterruptibleBlockingStrategy blockingStrategy);
+
+    /**
+     * Consumes a specified number of tokens from the bucket.
+     *
+     * <p>
+     * The algorithm is following:
+     * <ul>
+     *     <li>If bucket has enough tokens, then tokens consumed and <tt>true</tt> returned immediately.</li>
+     *     <li>
+     *         If bucket has no enough tokens, then required amount of tokens will be reserved for future consumption
+     *         and current thread will be blocked for a time required to close deficit.
+     *     </li>
+     *     <li>
+     *         <strong>Note:</strong> If InterruptedException happen when thread was blocked
+     *         then tokens will be not returned back to bucket,
+     *         but you can use {@link #addTokens(long)} to returned tokens back.
+     *     </li>
+     * </ul>
+     *
+     * @param numTokens The number of tokens to tryConsume from the bucket.
+     * @param blockingStrategy specifies the way to block current thread to amount of time required to refill missed number of tokens in the bucket
+     *
+     * @return true if {@code numTokens} has been consumed or false when {@code numTokens} has not been consumed
+     *
+     * @throws InterruptedException in case of current thread has been interrupted during the waiting
+     */
+    void consume(long numTokens, BlockingStrategy blockingStrategy) throws InterruptedException;
+
+    /**
+     * Has same semantic with {@link #consume(long, BlockingStrategy)} but ignores interrupts(just restores interruption flag on exit).
+     *
+     * @param numTokens The number of tokens to consume from the bucket.
+     * @param blockingStrategy specifies the way to block current thread to amount of time required to refill missed number of tokens in the bucket
+     *
+     * @return true if {@code numTokens} has been consumed or false when {@code numTokens} has not been consumed
+     * @see #consume(long, BlockingStrategy)
+     */
+    void consumeUninterruptibly(long numTokens, UninterruptibleBlockingStrategy blockingStrategy);
 
     /**
      * Add <tt>tokensToAdd</tt> to bucket.
