@@ -49,6 +49,16 @@ public final class BucketExceptions {
         return new IllegalArgumentException(msg);
     }
 
+    public static IllegalArgumentException nullSynchronizationStrategy() {
+        String msg = "Synchronization strategy can not be null";
+        return new IllegalArgumentException(msg);
+    }
+
+    public static IllegalArgumentException nullListener() {
+        String msg = "listener can not be null";
+        return new IllegalArgumentException(msg);
+    }
+
     public static IllegalArgumentException nullRefillPeriod() {
         String msg = "Refill period can not be null";
         return new IllegalArgumentException(msg);

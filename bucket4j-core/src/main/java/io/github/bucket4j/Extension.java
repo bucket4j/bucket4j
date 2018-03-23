@@ -22,7 +22,7 @@ package io.github.bucket4j;
  *
  * @param <T>
  */
-public interface Extension<T extends ConfigurationBuilder<T>> {
+public interface Extension<T extends AbstractBucketBuilder<T>> {
 
     /**
      * Creates new instance of builder specific for this particular extension.

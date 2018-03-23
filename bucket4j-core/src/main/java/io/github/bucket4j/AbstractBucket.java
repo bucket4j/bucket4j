@@ -74,9 +74,11 @@ public abstract class AbstractBucket implements Bucket {
     protected abstract CompletableFuture<Void> replaceConfigurationAsyncImpl(BucketConfiguration newConfiguration);
 
     private final AsyncBucket asyncView;
+    private final BucketListener listener;
 
-    public AbstractBucket() {
-        asyncView = new AsyncBucket() {
+    public AbstractBucket(BucketListener listener) {
+        this.listener = listener;
+        this.asyncView = new AsyncBucket() {
             @Override
             public CompletableFuture<Boolean> tryConsume(long tokensToConsume) {
                 checkTokensToConsume(tokensToConsume);

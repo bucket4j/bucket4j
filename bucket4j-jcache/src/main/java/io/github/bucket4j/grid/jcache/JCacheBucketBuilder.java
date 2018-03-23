@@ -17,6 +17,7 @@
 
 package io.github.bucket4j.grid.jcache;
 
+import io.github.bucket4j.AbstractBucketBuilder;
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.grid.GridBucket;
 import io.github.bucket4j.grid.RecoveryStrategy;
@@ -33,7 +34,7 @@ import java.io.Serializable;
  * This builder creates the buckets backed by any <a href="https://www.jcp.org/en/jsr/detail?id=107">JCache API (JSR 107)</a> implementation.
  *
  */
-public class JCacheBucketBuilder extends ConfigurationBuilder<JCacheBucketBuilder> {
+public class JCacheBucketBuilder extends AbstractBucketBuilder<JCacheBucketBuilder> {
 
     /**
      * Creates the new instance of {@link JCacheBucketBuilder}
@@ -67,7 +68,7 @@ public class JCacheBucketBuilder extends ConfigurationBuilder<JCacheBucketBuilde
     public <K extends Serializable> Bucket build(Cache<K, GridBucketState> cache, K key, RecoveryStrategy recoveryStrategy) {
         BucketConfiguration configuration = buildConfiguration();
         JCacheProxy<K> gridProxy = new JCacheProxy<>(cache);
-        return GridBucket.createInitializedBucket(key, configuration, gridProxy, recoveryStrategy);
+        return GridBucket.createInitializedBucket(getListener(), key, configuration, gridProxy, recoveryStrategy);
     }
 
 }

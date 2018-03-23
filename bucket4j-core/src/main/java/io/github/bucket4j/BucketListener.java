@@ -17,14 +17,42 @@
 
 package io.github.bucket4j;
 
+// TODO javadocs
 public interface BucketListener {
 
+    // TODO javadocs
     void onConsumed(long tokens);
 
+    // TODO javadocs
     void onRejected(long tokens);
 
+    // TODO javadocs
     void onParked(long nanos);
 
+    // TODO javadocs
     void onInterrupted();
+
+    // TODO javadocs
+    static BucketListener NOPE = new BucketListener() {
+        @Override
+        public void onConsumed(long tokens) {
+            // do nothing
+        }
+
+        @Override
+        public void onRejected(long tokens) {
+            // do nothing
+        }
+
+        @Override
+        public void onParked(long nanos) {
+            // do nothing
+        }
+
+        @Override
+        public void onInterrupted() {
+            // do nothing
+        }
+    };
 
 }

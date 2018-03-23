@@ -38,7 +38,7 @@ import static io.github.bucket4j.grid.RecoveryStrategy.RECONSTRUCT;
 import static io.github.bucket4j.grid.RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION;
 import static org.junit.Assert.*;
 
-public abstract class AbstractDistributedBucketTest<B extends ConfigurationBuilder<B>, E extends Extension<B>> {
+public abstract class AbstractDistributedBucketTest<B extends AbstractBucketBuilder<B>, E extends Extension<B>> {
 
     private final String key = UUID.randomUUID().toString();
     private final String anotherKey = UUID.randomUUID().toString();

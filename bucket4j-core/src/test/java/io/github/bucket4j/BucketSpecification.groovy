@@ -41,7 +41,7 @@ class BucketSpecification extends Specification {
 
     @Unroll
     def "#n Should return #requiredResult when trying to consume single token from Bucket #builder"(
-            int n, boolean requiredResult, ConfigurationBuilder builder) {
+            int n, boolean requiredResult, AbstractBucketBuilder builder) {
         expect:
             for (BucketType type : BucketType.values()) {
                 for (boolean sync : [true, false]) {

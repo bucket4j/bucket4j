@@ -67,7 +67,7 @@ public class Bucket4j {
      *
      * @return library extension
      */
-    public static <T extends ConfigurationBuilder<T>, E extends Extension<T>> E extension(Class<E> extensionClass) {
+    public static <T extends AbstractBucketBuilder<T>, E extends Extension<T>> E extension(Class<E> extensionClass) {
         E extension = (E) extensions.get(extensionClass);
         if (extension == null) {
             String msg = "extension with class [" + extensionClass + "] is not registered";

@@ -18,26 +18,18 @@
 package io.github.bucket4j;
 
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * A builder for buckets. Builder can be reused, i.e. one builder can create multiple buckets with similar configuration.
  *
  */
-public class ConfigurationBuilder {
+public class AbstractBucketBuilder<T extends AbstractBucketBuilder> {
 
-    private List<BandwidthDefinition> bandwidths;
+    private final ConfigurationBuilder configurationBuilder;
+    private BucketListener listener;
 
-    protected ConfigurationBuilder() {
-        this.bandwidths = new ArrayList<>(1);
-    }
-
-    /**
-     * @return configuration which used for bucket construction.
-     */
-    public BucketConfiguration buildConfiguration() {
-        return new BucketConfiguration(this.bandwidths);
+    protected AbstractBucketBuilder() {
+        configurationBuilder = new ConfigurationBuilder();
+        listener = BucketListener.NOPE;
     }
 
     /**
@@ -46,9 +38,9 @@ public class ConfigurationBuilder {
      * @param bandwidth limitation
      * @return this builder instance
      */
-    public ConfigurationBuilder addLimit(Bandwidth bandwidth) {
-        bandwidths.add(BandwidthDefinition.unspecifiedInitialTokens(bandwidth));
-        return this;
+    public T addLimit(Bandwidth bandwidth) {
+        configurationBuilder.addLimit(bandwidth);
+        return (T) this;
     }
 
     /**
@@ -59,16 +51,27 @@ public class ConfigurationBuilder {
      *
      * @return this builder instance
      */
-    public ConfigurationBuilder addLimit(long initialTokens, Bandwidth bandwidth) {
-        bandwidths.add(BandwidthDefinition.withInitialTokens(bandwidth, initialTokens));
-        return this;
+    public T addLimit(long initialTokens, Bandwidth bandwidth) {
+        configurationBuilder.addLimit(initialTokens, bandwidth);
+        return (T) this;
     }
 
-    @Override
-    public String toString() {
-        return "ConfigurationBuilder{" +
-                ", bandwidths=" + bandwidths +
-                '}';
+    // TODO javadocs
+    public T withListener(BucketListener listener) {
+        if (listener == null) {
+            // TODO add test
+            throw BucketExceptions.nullListener();
+        }
+        this.listener = listener;
+        return (T) this;
+    }
+
+    public BucketConfiguration buildConfiguration() {
+        return configurationBuilder.buildConfiguration();
+    }
+
+    public BucketListener getListener() {
+        return listener;
     }
 
 }

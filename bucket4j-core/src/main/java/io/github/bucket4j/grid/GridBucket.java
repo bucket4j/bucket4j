@@ -35,15 +35,16 @@ public class GridBucket<K extends Serializable> extends AbstractBucket {
     private final RecoveryStrategy recoveryStrategy;
     private final Supplier<BucketConfiguration> configurationSupplier;
 
-    public static <T extends Serializable> GridBucket<T> createLazyBucket(T key, Supplier<BucketConfiguration> configurationSupplier, GridProxy<T> gridProxy) {
-        return new GridBucket<>(key, configurationSupplier, gridProxy, RecoveryStrategy.RECONSTRUCT, false);
+    public static <T extends Serializable> GridBucket<T> createLazyBucket(BucketListener listener, T key, Supplier<BucketConfiguration> configurationSupplier, GridProxy<T> gridProxy) {
+        return new GridBucket<>(listener, key, configurationSupplier, gridProxy, RecoveryStrategy.RECONSTRUCT, false);
     }
 
-    public static <T extends Serializable> GridBucket<T> createInitializedBucket(T key, BucketConfiguration configuration, GridProxy<T> gridProxy, RecoveryStrategy recoveryStrategy) {
-        return new GridBucket<>(key, () -> configuration, gridProxy, recoveryStrategy, true);
+    public static <T extends Serializable> GridBucket<T> createInitializedBucket(BucketListener listener, T key, BucketConfiguration configuration, GridProxy<T> gridProxy, RecoveryStrategy recoveryStrategy) {
+        return new GridBucket<>(listener, key, () -> configuration, gridProxy, recoveryStrategy, true);
     }
 
-    private GridBucket(K key, Supplier<BucketConfiguration> configurationSupplier, GridProxy<K> gridProxy, RecoveryStrategy recoveryStrategy, boolean initializeBucket) {
+    private GridBucket(BucketListener listener, K key, Supplier<BucketConfiguration> configurationSupplier, GridProxy<K> gridProxy, RecoveryStrategy recoveryStrategy, boolean initializeBucket) {
+        super(listener);
         this.key = key;
         this.gridProxy = gridProxy;
         this.recoveryStrategy = recoveryStrategy;

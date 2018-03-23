@@ -29,7 +29,8 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket {
             AtomicReferenceFieldUpdater.newUpdater(LockFreeBucket.class, StateWithConfiguration.class, "state");
     private volatile StateWithConfiguration state;
 
-    public LockFreeBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
+    public LockFreeBucket(BucketConfiguration configuration, TimeMeter timeMeter, BucketListener listener) {
+        super(listener);
         this.timeMeter = timeMeter;
         BucketState initialState = BucketState.createInitialState(configuration, timeMeter.currentTimeNanos());
         state = new StateWithConfiguration(configuration, initialState);

@@ -55,28 +55,28 @@ public class LocalTest {
     public void testTryConsume_Synchronized() throws Exception {
         int threadCount = 4;
         Function<Bucket, Long> action = b -> b.tryConsume(1)? 1L : 0L;
-        test15Seconds(() -> builder.build(SynchronizationStrategy.SYNCHRONIZED), threadCount, action);
+        test15Seconds(() -> builder.withSynchronizationStrategy(SynchronizationStrategy.SYNCHRONIZED).build(), threadCount, action);
     }
 
     @Test
     public void testTryConsume_SynchronizedLimited() throws Exception {
         int threadCount = 4;
         Function<Bucket, Long> action = b -> b.tryConsumeUninterruptibly(1, TimeUnit.MILLISECONDS.toNanos(50), BlockingStrategy.PARKING)? 1L : 0L;
-        test15Seconds(() -> builder.build(SynchronizationStrategy.SYNCHRONIZED), threadCount, action);
+        test15Seconds(() -> builder.withSynchronizationStrategy(SynchronizationStrategy.SYNCHRONIZED).build(), threadCount, action);
     }
 
     @Test
     public void testTryConsume_Unsafe() throws Exception {
         int threadCount = 1;
         Function<Bucket, Long> action = b -> b.tryConsume(1)? 1L : 0L;
-        test15Seconds(() -> builder.build(SynchronizationStrategy.NONE), threadCount, action);
+        test15Seconds(() -> builder.withSynchronizationStrategy(SynchronizationStrategy.NONE).build(), threadCount, action);
     }
 
     @Test
     public void testTryConsume_UnsafeLimited() throws Exception {
         int threadCount = 1;
         Function<Bucket, Long> action = b -> b.tryConsumeUninterruptibly(1, TimeUnit.MILLISECONDS.toNanos(50), BlockingStrategy.PARKING)? 1L: 0L;
-        test15Seconds(() -> builder.build(SynchronizationStrategy.NONE), threadCount, action);
+        test15Seconds(() -> builder.withSynchronizationStrategy(SynchronizationStrategy.NONE).build(), threadCount, action);
     }
 
     private void test15Seconds(Supplier<Bucket> bucket, int threadCount, Function<Bucket, Long> action) throws Exception {
