@@ -23,7 +23,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.github.vladimir-bukhtoyarov</groupId>
-    <version>3.1.1</version>
+    <version>3.2.0-SNAPSHOT</version>
     <artifactId>bucket4j-parent</artifactId>
     <packaging>pom</packaging>
     <name>bucket4j-parent</name>
