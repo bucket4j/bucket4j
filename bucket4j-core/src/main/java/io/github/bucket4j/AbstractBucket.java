@@ -82,24 +82,51 @@ public abstract class AbstractBucket implements Bucket {
             @Override
             public CompletableFuture<Boolean> tryConsume(long tokensToConsume) {
                 checkTokensToConsume(tokensToConsume);
-                return tryConsumeAsyncImpl(tokensToConsume);
+
+                return tryConsumeAsyncImpl(tokensToConsume).thenApply(consumed -> {
+                    if (consumed) {
+                        listener.onConsumed(tokensToConsume);
+                    } else {
+                        listener.onRejected(tokensToConsume);
+                    }
+                    return consumed;
+                });
             }
 
             @Override
             public CompletableFuture<ConsumptionProbe> tryConsumeAndReturnRemaining(long tokensToConsume) {
                 checkTokensToConsume(tokensToConsume);
-                return tryConsumeAndReturnRemainingTokensAsyncImpl(tokensToConsume);
+
+                return tryConsumeAndReturnRemainingTokensAsyncImpl(tokensToConsume).thenApply(probe -> {
+                    if (probe.isConsumed()) {
+                        listener.onConsumed(tokensToConsume);
+                    } else {
+                        listener.onRejected(tokensToConsume);
+                    }
+                    return probe;
+                });
             }
 
             @Override
             public CompletableFuture<Long> tryConsumeAsMuchAsPossible() {
-                return tryConsumeAsMuchAsPossibleAsyncImpl(Long.MAX_VALUE);
+                return tryConsumeAsMuchAsPossibleAsyncImpl(Long.MAX_VALUE).thenApply(consumedTokens -> {
+                    if (consumedTokens > 0) {
+                        listener.onConsumed(consumedTokens);
+                    }
+                    return consumedTokens;
+                });
             }
 
             @Override
             public CompletableFuture<Long> tryConsumeAsMuchAsPossible(long limit) {
                 checkTokensToConsume(limit);
-                return tryConsumeAsMuchAsPossibleAsyncImpl(limit);
+
+                return tryConsumeAsMuchAsPossibleAsyncImpl(limit).thenApply(consumedTokens -> {
+                    if (consumedTokens > 0) {
+                        listener.onConsumed(consumedTokens);
+                    }
+                    return consumedTokens;
+                });
             }
 
             @Override
@@ -116,13 +143,16 @@ public abstract class AbstractBucket implements Bucket {
                     }
                     if (nanosToSleep == Long.MAX_VALUE) {
                         resultFuture.complete(false);
+                        listener.onRejected(tokensToConsume);
                         return;
                     }
                     if (nanosToSleep == 0L) {
                         resultFuture.complete(true);
+                        listener.onConsumed(tokensToConsume);
                         return;
                     }
                     try {
+                        listener.onConsumed(tokensToConsume);
                         Runnable delayedCompletion = () -> resultFuture.complete(true);
                         scheduler.schedule(delayedCompletion, nanosToSleep, TimeUnit.NANOSECONDS);
                     } catch (Throwable t) {
@@ -158,7 +188,14 @@ public abstract class AbstractBucket implements Bucket {
     @Override
     public boolean tryConsume(long tokensToConsume) {
         checkTokensToConsume(tokensToConsume);
-        return tryConsumeImpl(tokensToConsume);
+
+        if (tryConsumeImpl(tokensToConsume)) {
+            listener.onConsumed(tokensToConsume);
+            return true;
+        } else {
+            listener.onRejected(tokensToConsume);
+            return false;
+        }
     }
 
     @Override
@@ -168,11 +205,21 @@ public abstract class AbstractBucket implements Bucket {
 
         long nanosToSleep = reserveAndCalculateTimeToSleepImpl(tokensToConsume, maxWaitTimeNanos);
         if (nanosToSleep == Long.MAX_VALUE) {
+            listener.onRejected(tokensToConsume);
             return false;
         }
+
+        listener.onConsumed(tokensToConsume);
         if (nanosToSleep > 0L) {
-            blockingStrategy.park(nanosToSleep);
+            try {
+                blockingStrategy.park(nanosToSleep);
+            } catch (InterruptedException e) {
+                listener.onInterrupted();
+                throw e;
+            }
+            listener.onParked(nanosToSleep);
         }
+
         return true;
     }
 
@@ -183,29 +230,51 @@ public abstract class AbstractBucket implements Bucket {
 
         long nanosToSleep = reserveAndCalculateTimeToSleepImpl(tokensToConsume, maxWaitTimeNanos);
         if (nanosToSleep == Long.MAX_VALUE) {
+            listener.onRejected(tokensToConsume);
             return false;
         }
+
+        listener.onConsumed(tokensToConsume);
         if (nanosToSleep > 0L) {
             blockingStrategy.parkUninterruptibly(nanosToSleep);
+            listener.onParked(nanosToSleep);
         }
+
         return true;
     }
 
     @Override
     public long tryConsumeAsMuchAsPossible(long limit) {
         checkTokensToConsume(limit);
-        return consumeAsMuchAsPossibleImpl(limit);
+
+        long consumed = consumeAsMuchAsPossibleImpl(limit);
+        if (consumed > 0) {
+            listener.onConsumed(consumed);
+        }
+
+        return consumed;
     }
 
     @Override
     public long tryConsumeAsMuchAsPossible() {
-        return consumeAsMuchAsPossibleImpl(Long.MAX_VALUE);
+        long consumed = consumeAsMuchAsPossibleImpl(Long.MAX_VALUE);
+        if (consumed > 0) {
+            listener.onConsumed(consumed);
+        }
+        return consumed;
     }
 
     @Override
     public ConsumptionProbe tryConsumeAndReturnRemaining(long tokensToConsume) {
         checkTokensToConsume(tokensToConsume);
-        return tryConsumeAndReturnRemainingTokensImpl(tokensToConsume);
+
+        ConsumptionProbe probe = tryConsumeAndReturnRemainingTokensImpl(tokensToConsume);
+        if (probe.isConsumed()) {
+            listener.onConsumed(tokensToConsume);
+        } else {
+            listener.onRejected(tokensToConsume);
+        }
+        return probe;
     }
 
     @Override
