@@ -114,7 +114,7 @@ public final class BucketExceptions {
     }
 
     public static IllegalArgumentException nonPositiveTokensToConsume(long tokens) {
-        String pattern = "Unable to tryConsume {0} tokens, due to number of tokens to tryConsume should be positive";
+        String pattern = "Unable to consume {0} tokens, due to number of tokens to consume should be positive";
         String msg = MessageFormat.format(pattern, tokens);
         return new IllegalArgumentException(msg);
     }

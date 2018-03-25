@@ -21,7 +21,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-public abstract class AbstractBucket implements Bucket {
+public abstract class AbstractBucket implements Bucket, BlockingBucket {
 
     protected abstract long consumeAsMuchAsPossibleImpl(long limit);
 
@@ -33,40 +33,14 @@ public abstract class AbstractBucket implements Bucket {
 
     protected abstract void addTokensImpl(long tokensToAdd);
 
-    /**
-     * @param limit
-     * @return
-     * @throws UnsupportedOperationException if bucket does not support asynchronous mode
-     */
     protected abstract CompletableFuture<Long> tryConsumeAsMuchAsPossibleAsyncImpl(long limit);
 
-    /**
-     * @param tokensToConsume
-     * @return
-     * @throws UnsupportedOperationException if bucket does not support asynchronous mode
-     */
     protected abstract CompletableFuture<Boolean> tryConsumeAsyncImpl(long tokensToConsume);
 
-    /**
-     * @param tokensToConsume
-     * @return
-     * @throws UnsupportedOperationException if bucket does not support asynchronous mode
-     */
     protected abstract CompletableFuture<ConsumptionProbe> tryConsumeAndReturnRemainingTokensAsyncImpl(long tokensToConsume);
 
-    /**
-     * @param tokensToConsume
-     * @param maxWaitTimeNanos
-     * @return
-     * @throws UnsupportedOperationException if bucket does not support asynchronous mode
-     */
     protected abstract CompletableFuture<Long> reserveAndCalculateTimeToSleepAsyncImpl(long tokensToConsume, long maxWaitTimeNanos);
 
-    /**
-     * @throws UnsupportedOperationException if bucket does not support asynchronous mode
-     * @param tokensToAdd
-     * @return
-     */
     protected abstract CompletableFuture<Void> addTokensAsyncImpl(long tokensToAdd);
 
     protected abstract void replaceConfigurationImpl(BucketConfiguration newConfiguration);
@@ -186,6 +160,11 @@ public abstract class AbstractBucket implements Bucket {
     }
 
     @Override
+    public BlockingBucket asBlocking() {
+        return this;
+    }
+
+    @Override
     public boolean tryConsume(long tokensToConsume) {
         checkTokensToConsume(tokensToConsume);
 
@@ -247,23 +226,20 @@ public abstract class AbstractBucket implements Bucket {
     public void consume(long tokensToConsume, BlockingStrategy blockingStrategy) throws InterruptedException {
         checkTokensToConsume(tokensToConsume);
 
-        while (true) {
-            long nanosToSleep = reserveAndCalculateTimeToSleepImpl(tokensToConsume, tokensToConsume);
-            if (nanosToSleep == Long.MAX_VALUE) {
-                throw new IllegalStateException("Existed hardware is unable to service the reservation of so many tokens");
-            }
+        long nanosToSleep = reserveAndCalculateTimeToSleepImpl(tokensToConsume, tokensToConsume);
+        if (nanosToSleep == Long.MAX_VALUE) {
+            throw new IllegalStateException("Existed hardware is unable to service the reservation of so many tokens");
+        }
 
-            listener.onConsumed(tokensToConsume);
-            if (nanosToSleep > 0L) {
-                try {
-                    blockingStrategy.park(nanosToSleep);
-                } catch (InterruptedException e) {
-                    listener.onInterrupted();
-                    throw e;
-                }
-                listener.onParked(nanosToSleep);
+        listener.onConsumed(tokensToConsume);
+        if (nanosToSleep > 0L) {
+            try {
+                blockingStrategy.park(nanosToSleep);
+            } catch (InterruptedException e) {
+                listener.onInterrupted();
+                throw e;
             }
-            return;
+            listener.onParked(nanosToSleep);
         }
     }
 
@@ -271,18 +247,15 @@ public abstract class AbstractBucket implements Bucket {
     public void consumeUninterruptibly(long tokensToConsume, UninterruptibleBlockingStrategy blockingStrategy) {
         checkTokensToConsume(tokensToConsume);
 
-        while (true) {
-            long nanosToSleep = reserveAndCalculateTimeToSleepImpl(tokensToConsume, tokensToConsume);
-            if (nanosToSleep == Long.MAX_VALUE) {
-                throw new IllegalStateException("Existed hardware is unable to service the reservation of so many tokens");
-            }
+        long nanosToSleep = reserveAndCalculateTimeToSleepImpl(tokensToConsume, tokensToConsume);
+        if (nanosToSleep == Long.MAX_VALUE) {
+            throw new IllegalStateException("Existed hardware is unable to service the reservation of so many tokens");
+        }
 
-            listener.onConsumed(tokensToConsume);
-            if (nanosToSleep > 0L) {
-                blockingStrategy.parkUninterruptibly(nanosToSleep);
-                listener.onParked(nanosToSleep);
-            }
-            return;
+        listener.onConsumed(tokensToConsume);
+        if (nanosToSleep > 0L) {
+            blockingStrategy.parkUninterruptibly(nanosToSleep);
+            listener.onParked(nanosToSleep);
         }
     }
 

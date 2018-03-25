@@ -148,7 +148,7 @@ public abstract class AbstractDistributedBucketTest<B extends AbstractBucketBuil
 
     @Test
     public void testTryConsumeWithLimit() throws Exception {
-        Function<Bucket, Long> action = bucket -> bucket.tryConsumeUninterruptibly(1, TimeUnit.MILLISECONDS.toNanos(50), UninterruptibleBlockingStrategy.PARKING) ? 1L : 0L;
+        Function<Bucket, Long> action = bucket -> bucket.asBlocking().tryConsumeUninterruptibly(1, TimeUnit.MILLISECONDS.toNanos(50), UninterruptibleBlockingStrategy.PARKING) ? 1L : 0L;
         Supplier<Bucket> bucketSupplier = () -> build(builder, key, THROW_BUCKET_NOT_FOUND_EXCEPTION);
         ConsumptionScenario scenario = new ConsumptionScenario(4, TimeUnit.SECONDS.toNanos(15), bucketSupplier, action, permittedRatePerSecond);
         scenario.executeAndValidateRate();

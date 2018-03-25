@@ -43,9 +43,7 @@ volatile double exchangeRate;
 while (true) {
   // Consume a token from the token bucket.  
   // If a token is not available this method will block until the refill adds one to the bucket.
-  // The second parameter specifies how long current thread will wait at maximum.
-  // If you do want to choose concrete limit value then use Long.MAX_VALUE, which equals ```9223372036854775807```  nanoseconds or ```292``` years.
-  bucket.tryConsume(1, Long.MAX_VALUE, BlockingStrategy.PARKING);
+  bucket.asBlocking().consume(1);
 
   exchangeRate = pollExchangeRate();
 }
