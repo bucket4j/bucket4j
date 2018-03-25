@@ -43,19 +43,6 @@ public class AbstractBucketBuilder<T extends AbstractBucketBuilder> {
         return (T) this;
     }
 
-    /**
-     * Adds limited bandwidth for all buckets which will be constructed by this builder instance.
-     *
-     * @param bandwidth limitation
-     * @param initialTokens the count of initial tokens
-     *
-     * @return this builder instance
-     */
-    public T addLimit(long initialTokens, Bandwidth bandwidth) {
-        configurationBuilder.addLimit(initialTokens, bandwidth);
-        return (T) this;
-    }
-
     // TODO javadocs
     public T withListener(BucketListener listener) {
         if (listener == null) {

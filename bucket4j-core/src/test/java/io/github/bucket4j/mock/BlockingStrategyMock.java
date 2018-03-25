@@ -18,8 +18,9 @@
 package io.github.bucket4j.mock;
 
 import io.github.bucket4j.BlockingStrategy;
+import io.github.bucket4j.UninterruptibleBlockingStrategy;
 
-public class BlockingStrategyMock implements BlockingStrategy {
+public class BlockingStrategyMock implements BlockingStrategy, UninterruptibleBlockingStrategy {
 
     private final TimeMeterMock meterMock;
     private long sleeped = 0;

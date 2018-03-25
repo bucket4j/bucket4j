@@ -48,10 +48,12 @@ class HandlingArithmeticOverflowSpecification extends Specification {
 
     def "Should check ArithmeticOverflow when add tokens to bucket"() {
         setup:
-            Bandwidth limit = Bandwidth.simple(10, Duration.ofSeconds(1))
+            Bandwidth limit = Bandwidth
+                    .simple(10, Duration.ofSeconds(1))
+                    .withInitialTokens(9)
             TimeMeterMock customTimeMeter = new TimeMeterMock(0)
             Bucket bucket = Bucket4j.builder()
-                .addLimit(9, limit)
+                .addLimit(limit)
                 .withCustomTimePrecision(customTimeMeter)
                 .build()
         when:
@@ -64,9 +66,10 @@ class HandlingArithmeticOverflowSpecification extends Specification {
     def "Should firstly do refill by completed periods"() {
         setup:
             Bandwidth limit = Bandwidth.simple((long) Long.MAX_VALUE / 16, Duration.ofNanos((long) Long.MAX_VALUE / 8))
+                    .withInitialTokens(7)
             TimeMeterMock meter = new TimeMeterMock(0)
             Bucket bucket = Bucket4j.builder()
-                .addLimit(7, limit)
+                .addLimit(limit)
                 .withCustomTimePrecision(meter)
                 .build()
         when:
@@ -79,10 +82,12 @@ class HandlingArithmeticOverflowSpecification extends Specification {
 
     def "Should check ArithmeticOverflow when refilling by completed periods"() {
         setup:
-            Bandwidth limit = Bandwidth.classic((long) Long.MAX_VALUE - 10, Refill.smooth(1, Duration.ofNanos(1)))
+            Bandwidth limit = Bandwidth
+                    .classic((long) Long.MAX_VALUE - 10, Refill.smooth(1, Duration.ofNanos(1)))
+                    .withInitialTokens((long) Long.MAX_VALUE - 13)
             TimeMeterMock meter = new TimeMeterMock(0)
             Bucket bucket = Bucket4j.builder()
-                .addLimit((long) Long.MAX_VALUE - 13, limit)
+                .addLimit(limit)
                 .withCustomTimePrecision(meter)
                 .build()
         when:
@@ -95,10 +100,12 @@ class HandlingArithmeticOverflowSpecification extends Specification {
 
     def "Should down to floating point arithmetic if necessary during refill"() {
         setup:
-            Bandwidth limit = Bandwidth.simple((long) Long.MAX_VALUE / 16, Duration.ofNanos((long) Long.MAX_VALUE / 8))
+            Bandwidth limit = Bandwidth
+                    .simple((long) Long.MAX_VALUE / 16, Duration.ofNanos((long) Long.MAX_VALUE / 8))
+                    .withInitialTokens(0)
             TimeMeterMock meter = new TimeMeterMock(0)
             Bucket bucket = Bucket4j.builder()
-                .addLimit(0, limit)
+                .addLimit(limit)
                 .withCustomTimePrecision(meter)
                 .build()
         when:
@@ -112,10 +119,12 @@ class HandlingArithmeticOverflowSpecification extends Specification {
 
     def "Should check ArithmeticOverflow when refilling by uncompleted periods"() {
         setup:
-            Bandwidth limit = Bandwidth.classic((long) Long.MAX_VALUE - 10, Refill.smooth(100, Duration.ofNanos(100)))
+            Bandwidth limit = Bandwidth
+                    .classic((long) Long.MAX_VALUE - 10, Refill.smooth(100, Duration.ofNanos(100)))
+                    .withInitialTokens((long) Long.MAX_VALUE - 13)
             TimeMeterMock meter = new TimeMeterMock(0)
             Bucket bucket = Bucket4j.builder()
-                .addLimit((long) Long.MAX_VALUE - 13, limit)
+                .addLimit(limit)
                 .withCustomTimePrecision(meter)
                 .build()
         when:
@@ -128,10 +137,12 @@ class HandlingArithmeticOverflowSpecification extends Specification {
 
     def "Should down to floating point arithmetic when having deal with big number during deficit calculation"() {
         setup:
-            Bandwidth limit = Bandwidth.simple ((long) Long.MAX_VALUE / 2, Duration.ofNanos((long) Long.MAX_VALUE / 2))
+            Bandwidth limit = Bandwidth
+                    .simple((long) Long.MAX_VALUE / 2, Duration.ofNanos((long) Long.MAX_VALUE / 2))
+                    .withInitialTokens(0)
             TimeMeterMock meter = new TimeMeterMock(0)
             Bucket bucket = Bucket4j.builder()
-                .addLimit(0, limit)
+                .addLimit(limit)
                 .withCustomTimePrecision(meter)
                 .build()
             BucketState state = bucket.createSnapshot()

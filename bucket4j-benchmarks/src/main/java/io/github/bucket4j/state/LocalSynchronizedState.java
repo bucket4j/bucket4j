@@ -38,7 +38,7 @@ public class LocalSynchronizedState {
             .build();
 
     public final Bucket _10_milion_rps_Bucket = Bucket4j.builder()
-            .addLimit(0, Bandwidth.simple(10_000_000, Duration.ofSeconds(1)))
+            .addLimit(Bandwidth.simple(10_000_000, Duration.ofSeconds(1)).withInitialTokens(0))
             .withSynchronizationStrategy(SynchronizationStrategy.SYNCHRONIZED)
             .build();
 }

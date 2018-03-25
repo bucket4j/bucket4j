@@ -49,7 +49,8 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
     @Unroll
     def "Should detect that initialTokens #initialTokens is wrong"(long initialTokens) {
         when:
-            builder.addLimit(initialTokens, Bandwidth.simple(VALID_CAPACITY, VALID_PERIOD))
+            Bandwidth.simple(VALID_CAPACITY, VALID_PERIOD)
+                    .withInitialTokens(initialTokens)
         then:
             IllegalArgumentException ex = thrown()
             ex.message == nonPositiveInitialTokens(initialTokens).message
@@ -82,12 +83,6 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
             builder.addLimit(null)
         then:
             IllegalArgumentException ex = thrown()
-            ex.message == nullBandwidth().message
-
-        when:
-            builder.addLimit(32,null)
-        then:
-            ex = thrown()
             ex.message == nullBandwidth().message
     }
 

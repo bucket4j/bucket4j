@@ -27,7 +27,7 @@ import java.util.List;
  */
 public class ConfigurationBuilder {
 
-    private List<BandwidthDefinition> bandwidths;
+    private List<Bandwidth> bandwidths;
 
     protected ConfigurationBuilder() {
         this.bandwidths = new ArrayList<>(1);
@@ -47,20 +47,10 @@ public class ConfigurationBuilder {
      * @return this builder instance
      */
     public ConfigurationBuilder addLimit(Bandwidth bandwidth) {
-        bandwidths.add(BandwidthDefinition.unspecifiedInitialTokens(bandwidth));
-        return this;
-    }
-
-    /**
-     * Adds limited bandwidth for all buckets which will be constructed by this builder instance.
-     *
-     * @param bandwidth limitation
-     * @param initialTokens the count of initial tokens
-     *
-     * @return this builder instance
-     */
-    public ConfigurationBuilder addLimit(long initialTokens, Bandwidth bandwidth) {
-        bandwidths.add(BandwidthDefinition.withInitialTokens(bandwidth, initialTokens));
+        if (bandwidth == null) {
+            throw BucketExceptions.nullBandwidth();
+        }
+        bandwidths.add(bandwidth);
         return this;
     }
 

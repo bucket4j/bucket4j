@@ -30,7 +30,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -45,8 +44,8 @@ public abstract class AbstractDistributedBucketTest<B extends AbstractBucketBuil
     private final Class<E> extensionClass = getExtensionClass();
 
     private B builder = Bucket4j.extension(getExtensionClass()).builder()
-            .addLimit(0, Bandwidth.simple(1_000, Duration.ofMinutes(1)))
-            .addLimit(0, Bandwidth.simple(200, Duration.ofSeconds(10)));
+            .addLimit(Bandwidth.simple(1_000, Duration.ofMinutes(1)).withInitialTokens(0))
+            .addLimit(Bandwidth.simple(200, Duration.ofSeconds(10)).withInitialTokens(0));
     private double permittedRatePerSecond = Math.min(1_000d / 60, 200.0 / 10);
 
     protected abstract Class<E> getExtensionClass();
@@ -149,7 +148,7 @@ public abstract class AbstractDistributedBucketTest<B extends AbstractBucketBuil
 
     @Test
     public void testTryConsumeWithLimit() throws Exception {
-        Function<Bucket, Long> action = bucket -> bucket.tryConsumeUninterruptibly(1, TimeUnit.MILLISECONDS.toNanos(50), BlockingStrategy.PARKING) ? 1L : 0L;
+        Function<Bucket, Long> action = bucket -> bucket.tryConsumeUninterruptibly(1, TimeUnit.MILLISECONDS.toNanos(50), UninterruptibleBlockingStrategy.PARKING) ? 1L : 0L;
         Supplier<Bucket> bucketSupplier = () -> build(builder, key, THROW_BUCKET_NOT_FOUND_EXCEPTION);
         ConsumptionScenario scenario = new ConsumptionScenario(4, TimeUnit.SECONDS.toNanos(15), bucketSupplier, action, permittedRatePerSecond);
         scenario.executeAndValidateRate();

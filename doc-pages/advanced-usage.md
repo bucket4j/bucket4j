@@ -25,16 +25,18 @@ while (true) {
 }
 ```
 
-### Using initial capacity  
+### Specifying initial amount of tokens  
 
-By default initial size of bucket is equal to capacity. 
+By default initial size of bucket equals to capacity. 
 But sometimes, you may want to have lesser initial size, for example for case of cold start in order to prevent denial of service: 
 
 ```java
 int initialCapacity = 42;
-Bandwidth limit = Bandwidth.simple(1000, Duration.ofHours(1));
+Bandwidth limit = Bandwidth
+    .simple(1000, Duration.ofHours(1))
+    .withInitialTokens(initialCapacity);
 Bucket bucket = Bucket4j.builder()
-    .addLimit(initialCapacity, limit)
+    .addLimit(limit)
     .build();
 ```
 
@@ -43,12 +45,13 @@ The [compensating transaction](https://en.wikipedia.org/wiki/Compensating_transa
 ```java
 Bucket wallet;
 ...
-wallet.tryConsume(50); // get 50 cents from wallet
-try {
-    buyCocaCola();
-} catch(NoCocaColaException e) {
-    // return money to wallet
-    wallet.addTokens(50);
+if (wallet.tryConsume(50)) { // get 50 cents from wallet
+    try {
+        buyCocaCola();
+    } catch(NoCocaColaException e) {
+        // return money to wallet
+        wallet.addTokens(50);
+    } 
 }
 ```
 

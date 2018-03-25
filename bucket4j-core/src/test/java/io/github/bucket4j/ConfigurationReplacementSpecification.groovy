@@ -93,7 +93,7 @@ class ConfigurationReplacementSpecification extends Specification {
             for (boolean sync : [true, false]) {
                 TimeMeterMock clock = new TimeMeterMock(0)
                 Bucket bucket = bucketType.createBucket(Bucket4j.builder()
-                        .addLimit(0, Bandwidth.simple(100, Duration.ofNanos(100)))
+                        .addLimit(Bandwidth.simple(100, Duration.ofNanos(100)).withInitialTokens(0))
                         .withCustomTimePrecision(clock)
                 )
                 clock.addTime(10)
@@ -140,7 +140,7 @@ class ConfigurationReplacementSpecification extends Specification {
         for (boolean sync : [true, false]) {
             TimeMeterMock clock = new TimeMeterMock(0)
             Bucket bucket = bucketType.createBucket(Bucket4j.builder()
-                    .addLimit(0, Bandwidth.simple(100, Duration.ofNanos(100)))
+                    .addLimit(Bandwidth.simple(100, Duration.ofNanos(100)).withInitialTokens(0))
                     .withCustomTimePrecision(clock)
             )
             BucketConfiguration newConfiguration = Bucket4j.configurationBuilder()

@@ -21,8 +21,6 @@ import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.Refill;
 
-import java.util.Arrays;
-
 public class EqualsUtil {
 
     public static boolean isConfigEquals(BucketConfiguration config1, BucketConfiguration config2) {
@@ -32,9 +30,6 @@ public class EqualsUtil {
         if (config1 == null || config2 == null) {
             return false;
         }
-        if (!Arrays.equals(config1.getBandwidthsInitialTokens(), config2.getBandwidthsInitialTokens())) {
-            return false;
-        }
         if (config1.getBandwidths().length != config2.getBandwidths().length) {
             return false;
         }
@@ -42,6 +37,9 @@ public class EqualsUtil {
             Bandwidth bandwidth1 = config1.getBandwidths()[i];
             Bandwidth bandwidth2 = config2.getBandwidths()[i];
             if (bandwidth1.getCapacity() != bandwidth2.getCapacity()) {
+                return false;
+            }
+            if (bandwidth1.getInitialTokens() != bandwidth2.getInitialTokens()) {
                 return false;
             }
             Refill refill1 = bandwidth1.getRefill();

@@ -61,6 +61,7 @@ public class Bandwidth implements Serializable {
 
     final long capacity;
     final Refill refill;
+    long initialTokens;
 
     private Bandwidth(long capacity, Refill refill) {
         if (capacity <= 0) {
@@ -70,7 +71,16 @@ public class Bandwidth implements Serializable {
             throw BucketExceptions.nullBandwidthRefill();
         }
         this.capacity = capacity;
+        this.initialTokens = capacity;
         this.refill = refill;
+    }
+
+    public Bandwidth withInitialTokens(long initialTokens) {
+        if (initialTokens < 0) {
+            throw BucketExceptions.nonPositiveInitialTokens(initialTokens);
+        }
+        this.initialTokens = initialTokens;
+        return this;
     }
 
     /**
@@ -102,6 +112,10 @@ public class Bandwidth implements Serializable {
 
     public Refill getRefill() {
         return refill;
+    }
+
+    public long getInitialTokens() {
+        return initialTokens;
     }
 
     @Override
