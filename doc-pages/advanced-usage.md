@@ -99,6 +99,6 @@ Bucket bucket = ...
 Bandwidth newLimit = Bandwidth.simple(newCapacity, Duration.ofMinutes(1));
 BucketConfiguration newConfiguration = Bucket4j.configurationBuilder()
                 .addLimit(newLimit)
-                .buildConfiguration();
+                .build();
 bucket.replaceConfiguration(newConfiguration)
 ```

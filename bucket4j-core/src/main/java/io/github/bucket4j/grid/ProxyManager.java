@@ -40,12 +40,32 @@ public interface ProxyManager<K extends Serializable> {
      * Provides light-weight proxy to bucket which actually stored outside current JVM.
      * This method do not perform any hard work or network calls, it is not necessary to cache results of its invocation.
      *
+     * <p>Use this method if you use same configuration for all buckets(it can be easy stored as constant),
+     * or configuration is very cheap to create.
+     * </p>
+     *
+     * @param key the unique identifier used to point to the bucket in external storage.
+     * @param configuration this configuration will be used to initialize bucket if it is not initialized before
+     *
+     * @return proxy to bucket that can be actually stored outside current JVM.
+     */
+    default Bucket getProxy(K key, BucketConfiguration configuration) {
+        return getProxy(key, () -> configuration);
+    }
+
+    /**
+     * Provides light-weight proxy to bucket which actually stored outside current JVM.
+     * This method do not perform any hard work or network calls, it is not necessary to cache results of its invocation.
+     *
+     * <p>Use this method in case of different configurations for each bucket and configuration is very expensive to create.
+     * </p>
+     *
      * @param key the unique identifier used to point to the bucket in external storage.
      * @param configurationLazySupplier supplier for configuration which can be called to build bucket configuration,
      *                                  if and only if first invocation of any method on proxy detects that bucket absents in remote storage,
      *                                  in this case provide configuration will be used to instantiate and persist the missed bucket.
      *
-     * @return proxy to bucket stored storage outside current JVM.
+     * @return proxy to bucket that can be actually stored outside current JVM.
      */
     Bucket getProxy(K key, Supplier<BucketConfiguration> configurationLazySupplier);
 

@@ -54,7 +54,7 @@ public class AbstractBucketBuilder<T extends AbstractBucketBuilder> {
     }
 
     public BucketConfiguration buildConfiguration() {
-        return configurationBuilder.buildConfiguration();
+        return configurationBuilder.build();
     }
 
     public BucketListener getListener() {

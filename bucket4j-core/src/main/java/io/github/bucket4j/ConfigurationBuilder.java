@@ -36,7 +36,7 @@ public class ConfigurationBuilder {
     /**
      * @return configuration which used for bucket construction.
      */
-    public BucketConfiguration buildConfiguration() {
+    public BucketConfiguration build() {
         return new BucketConfiguration(this.bandwidths);
     }
 

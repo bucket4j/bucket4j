@@ -56,7 +56,7 @@ public class SmsServlet extends javax.servlet.http.HttpServlet {
             Bandwidth limit = Bandwidth.classic(overdraft, refill);
             return Bucket4j.configurationBuilder()
                 .addLimit(limit)
-                .buildConfiguration()
+                .build();
         };
     }
     
@@ -98,8 +98,6 @@ public class SmsServlet extends javax.servlet.http.HttpServlet {
                 asyncContext.complete();
             }
         });
-        
-        return;
     }
 
 }

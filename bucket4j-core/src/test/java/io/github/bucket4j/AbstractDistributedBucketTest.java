@@ -197,7 +197,7 @@ public abstract class AbstractDistributedBucketTest<B extends AbstractBucketBuil
     public void testBucketRegistryWithKeyIndependentConfiguration() {
         BucketConfiguration configuration = Bucket4j.configurationBuilder()
                 .addLimit(Bandwidth.simple(10, Duration.ofDays(1)))
-                .buildConfiguration();
+                .build();
 
         ProxyManager<String> registry = newProxyManager();
         Bucket bucket1 = registry.getProxy(key, () -> configuration);
@@ -207,6 +207,18 @@ public abstract class AbstractDistributedBucketTest<B extends AbstractBucketBuil
         Bucket bucket2 = registry.getProxy(anotherKey, () -> configuration);
         assertTrue(bucket2.tryConsume(10));
         assertFalse(bucket2.tryConsume(1));
+    }
+
+    @Test
+    public void testBucketWithNotLazyConfiguration() {
+        BucketConfiguration configuration = Bucket4j.configurationBuilder()
+                .addLimit(Bandwidth.simple(10, Duration.ofDays(1)))
+                .build();
+
+        ProxyManager<String> registry = newProxyManager();
+        Bucket bucket = registry.getProxy(key, configuration);
+        assertTrue(bucket.tryConsume(10));
+        assertFalse(bucket.tryConsume(1));
     }
 
 }
