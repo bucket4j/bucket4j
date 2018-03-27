@@ -193,7 +193,7 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket {
             try {
                 blockingStrategy.park(nanosToSleep);
             } catch (InterruptedException e) {
-                listener.onInterrupted();
+                listener.onInterrupted(e);
                 throw e;
             }
             listener.onParked(nanosToSleep);
@@ -236,7 +236,7 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket {
             try {
                 blockingStrategy.park(nanosToSleep);
             } catch (InterruptedException e) {
-                listener.onInterrupted();
+                listener.onInterrupted(e);
                 throw e;
             }
             listener.onParked(nanosToSleep);

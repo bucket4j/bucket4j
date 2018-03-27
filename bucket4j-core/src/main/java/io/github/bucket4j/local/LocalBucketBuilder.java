@@ -68,8 +68,6 @@ public class LocalBucketBuilder extends AbstractBucketBuilder<LocalBucketBuilder
      * @param synchronizationStrategy the strategy of synchronization which need to be applied to prevent data-races in multi-threading usage scenario.
      *
      * @return this builder instance
-     *
-     * // TODO update readme pages
      */
     public LocalBucketBuilder withSynchronizationStrategy(SynchronizationStrategy synchronizationStrategy) {
         if (synchronizationStrategy == null) {

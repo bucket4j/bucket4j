@@ -42,7 +42,7 @@ public class SimpleBucketListener implements BucketListener {
     }
 
     @Override
-    public void onInterrupted() {
+    public void onInterrupted(InterruptedException e) {
         interrupted.incrementAndGet();
     }
 

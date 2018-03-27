@@ -30,7 +30,7 @@ public interface BucketListener {
     void onParked(long nanos);
 
     // TODO javadocs
-    void onInterrupted();
+    void onInterrupted(InterruptedException e);
 
     // TODO javadocs
     static BucketListener NOPE = new BucketListener() {
@@ -50,7 +50,7 @@ public interface BucketListener {
         }
 
         @Override
-        public void onInterrupted() {
+        public void onInterrupted(InterruptedException e) {
             // do nothing
         }
     };

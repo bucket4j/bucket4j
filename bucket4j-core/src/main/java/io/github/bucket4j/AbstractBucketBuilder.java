@@ -33,7 +33,7 @@ public class AbstractBucketBuilder<T extends AbstractBucketBuilder> {
     }
 
     /**
-     * Adds limited bandwidth for all buckets which will be constructed by this builder instance.
+     * Adds limited bandwidth for all buckets which will be constructed by this builder.
      *
      * @param bandwidth limitation
      * @return this builder instance
@@ -43,21 +43,27 @@ public class AbstractBucketBuilder<T extends AbstractBucketBuilder> {
         return (T) this;
     }
 
-    // TODO javadocs
+    /**
+     * Specifies the bucket events listener that will be passed to all buckets constructed by this builder
+     *
+     * @param listener listener of bucket events
+     * @return this builder instance
+     *
+     * @see BucketListener
+     */
     public T withListener(BucketListener listener) {
         if (listener == null) {
-            // TODO add test
             throw BucketExceptions.nullListener();
         }
         this.listener = listener;
         return (T) this;
     }
 
-    public BucketConfiguration buildConfiguration() {
+    protected BucketConfiguration buildConfiguration() {
         return configurationBuilder.build();
     }
 
-    public BucketListener getListener() {
+    protected BucketListener getListener() {
         return listener;
     }
 

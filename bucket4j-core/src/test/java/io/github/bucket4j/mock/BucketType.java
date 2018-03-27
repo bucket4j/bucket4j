@@ -59,7 +59,7 @@ public enum BucketType {
     GRID {
         @Override
         public Bucket createBucket(AbstractBucketBuilder builder, TimeMeter timeMeter) {
-            BucketConfiguration configuration = builder.buildConfiguration();
+            BucketConfiguration configuration = PackageAcessor.buildConfiguration(builder);
             GridProxyMock gridProxy = new GridProxyMock(timeMeter);
             return GridBucket.createInitializedBucket(BucketListener.NOPE, 42, configuration, gridProxy, THROW_BUCKET_NOT_FOUND_EXCEPTION);
         }

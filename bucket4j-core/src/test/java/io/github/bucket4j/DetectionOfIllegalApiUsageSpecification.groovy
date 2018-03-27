@@ -105,12 +105,20 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
             refillTokens << [0, -2]
     }
 
-    def "Should check than time meter is not null"() {
+    def "Should check that time meter is not null"() {
         when:
             Bucket4j.builder().withCustomTimePrecision(null)
         then:
             IllegalArgumentException ex = thrown()
             ex.message == nullTimeMeter().message
+    }
+
+    def "Should check that listener is not null"() {
+        when:
+            Bucket4j.builder().withListener(null)
+        then:
+            IllegalArgumentException ex = thrown()
+            ex.message == nullListener().message
     }
 
     def  "Should check that limited bandwidth list is not empty"() {
