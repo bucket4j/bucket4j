@@ -49,7 +49,7 @@ class BucketListenerSpecification extends Specification {
             listener.getRejected() == 6
     }
 
-    def "test listener for tryConsume blocking"() {
+    def "test listener for blocking tryConsume"() {
         when:
            bucket.asBlocking().tryConsume(9, Duration.ofSeconds(1), blocker)
         then:
@@ -84,6 +84,100 @@ class BucketListenerSpecification extends Specification {
             listener.getParkedNanos() == 100_000_000
             listener.getInterrupted() == 1
     }
+
+    def "test listener for blocking tryConsumeUninterruptibly"() {
+        when:
+            bucket.asBlocking().tryConsume(9, Duration.ofSeconds(1), blocker)
+        then:
+            listener.getConsumed() == 9
+            listener.getRejected() == 0
+            listener.getParkedNanos() == 0
+            listener.getInterrupted() == 0
+
+        when:
+            bucket.asBlocking().tryConsume(1000, Duration.ofSeconds(1), blocker)
+        then:
+            listener.getConsumed() == 9
+            listener.getRejected() == 1000
+            listener.getParkedNanos() == 0
+            listener.getInterrupted() == 0
+
+        when:
+            bucket.asBlocking().tryConsume(2, Duration.ofSeconds(1), blocker)
+        then:
+            listener.getConsumed() == 11
+            listener.getRejected() == 1000
+            listener.getParkedNanos() == 100_000_000
+            listener.getInterrupted() == 0
+
+        when:
+            Thread.currentThread().interrupt()
+            bucket.asBlocking().tryConsumeUninterruptibly(1, Duration.ofSeconds(1), blocker)
+            Thread.interrupted()
+        then:
+            listener.getConsumed() == 12
+            listener.getRejected() == 1000
+            listener.getParkedNanos() == 200_000_000
+            listener.getInterrupted() == 0
+    }
+
+    def "test listener for blocking consume"() {
+        when:
+            bucket.asBlocking().consume(9, blocker)
+        then:
+            listener.getConsumed() == 9
+            listener.getRejected() == 0
+            listener.getParkedNanos() == 0
+            listener.getInterrupted() == 0
+
+        when:
+            bucket.asBlocking().consume(2, blocker)
+        then:
+            listener.getConsumed() == 11
+            listener.getRejected() == 0
+            listener.getParkedNanos() == 100_000_000
+            listener.getInterrupted() == 0
+
+        when:
+            Thread.currentThread().interrupt()
+            bucket.asBlocking().consume(1, blocker)
+        then:
+            InterruptedException ex = thrown()
+            listener.getConsumed() == 12
+            listener.getRejected() == 0
+            listener.getParkedNanos() == 100_000_000
+            listener.getInterrupted() == 1
+    }
+
+    def "test listener for blocking consumeUninterruptibly"() {
+        when:
+            bucket.asBlocking().consume(9, blocker)
+        then:
+            listener.getConsumed() == 9
+            listener.getRejected() == 0
+            listener.getParkedNanos() == 0
+            listener.getInterrupted() == 0
+
+        when:
+            bucket.asBlocking().consumeUninterruptibly(2, blocker)
+        then:
+            listener.getConsumed() == 11
+            listener.getRejected() == 0
+            listener.getParkedNanos() == 100_000_000
+            listener.getInterrupted() == 0
+
+        when:
+            Thread.currentThread().interrupt()
+            bucket.asBlocking().consume(1, blocker)
+            Thread.interrupted()
+        then:
+            InterruptedException ex = thrown()
+            listener.getConsumed() == 12
+            listener.getRejected() == 0
+            listener.getParkedNanos() == 100_000_000
+            listener.getInterrupted() == 1
+    }
+
 
 
 }

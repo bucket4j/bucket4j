@@ -35,7 +35,7 @@ public class BlockingStrategyMock implements BlockingStrategy, UninterruptibleBl
 
     @Override
     public void park(long nanosToPark) throws InterruptedException {
-        if (Thread.currentThread().isInterrupted()) {
+        if (Thread.interrupted()) {
             throw new InterruptedException();
         }
         sleeped += nanosToPark;

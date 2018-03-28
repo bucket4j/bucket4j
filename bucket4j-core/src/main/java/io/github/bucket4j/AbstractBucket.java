@@ -23,6 +23,8 @@ import java.util.concurrent.TimeUnit;
 
 public abstract class AbstractBucket implements Bucket, BlockingBucket {
 
+    private static long INFINITY_DURATION = Long.MAX_VALUE;
+
     protected abstract long consumeAsMuchAsPossibleImpl(long limit);
 
     protected abstract boolean tryConsumeImpl(long tokensToConsume);
@@ -226,8 +228,8 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket {
     public void consume(long tokensToConsume, BlockingStrategy blockingStrategy) throws InterruptedException {
         checkTokensToConsume(tokensToConsume);
 
-        long nanosToSleep = reserveAndCalculateTimeToSleepImpl(tokensToConsume, tokensToConsume);
-        if (nanosToSleep == Long.MAX_VALUE) {
+        long nanosToSleep = reserveAndCalculateTimeToSleepImpl(tokensToConsume, INFINITY_DURATION);
+        if (nanosToSleep == INFINITY_DURATION) {
             throw new IllegalStateException("Existed hardware is unable to service the reservation of so many tokens");
         }
 
@@ -247,8 +249,8 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket {
     public void consumeUninterruptibly(long tokensToConsume, UninterruptibleBlockingStrategy blockingStrategy) {
         checkTokensToConsume(tokensToConsume);
 
-        long nanosToSleep = reserveAndCalculateTimeToSleepImpl(tokensToConsume, tokensToConsume);
-        if (nanosToSleep == Long.MAX_VALUE) {
+        long nanosToSleep = reserveAndCalculateTimeToSleepImpl(tokensToConsume, INFINITY_DURATION);
+        if (nanosToSleep == INFINITY_DURATION) {
             throw new IllegalStateException("Existed hardware is unable to service the reservation of so many tokens");
         }
 
