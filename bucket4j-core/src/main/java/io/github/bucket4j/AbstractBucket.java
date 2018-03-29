@@ -313,25 +313,25 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket {
         }
     }
 
-    private static void checkTokensToConsume(long tokensToConsume) {
+    protected static void checkTokensToConsume(long tokensToConsume) {
         if (tokensToConsume <= 0) {
             throw BucketExceptions.nonPositiveTokensToConsume(tokensToConsume);
         }
     }
 
-    private static void checkMaxWaitTime(long maxWaitTimeNanos) {
+    protected static void checkMaxWaitTime(long maxWaitTimeNanos) {
         if (maxWaitTimeNanos <= 0) {
             throw BucketExceptions.nonPositiveNanosToWait(maxWaitTimeNanos);
         }
     }
 
-    private static void checkScheduler(ScheduledExecutorService scheduler) {
+    protected static void checkScheduler(ScheduledExecutorService scheduler) {
         if (scheduler == null) {
             throw BucketExceptions.nullScheduler();
         }
     }
 
-    private static void checkConfiguration(BucketConfiguration newConfiguration) {
+    protected static void checkConfiguration(BucketConfiguration newConfiguration) {
         if (newConfiguration == null) {
             throw BucketExceptions.nullConfiguration();
         }
