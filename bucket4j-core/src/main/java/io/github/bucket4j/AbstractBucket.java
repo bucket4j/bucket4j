@@ -24,6 +24,7 @@ import java.util.concurrent.TimeUnit;
 public abstract class AbstractBucket implements Bucket, BlockingBucket {
 
     private static long INFINITY_DURATION = Long.MAX_VALUE;
+    private static long UNLIMITED_AMOUNT = Long.MAX_VALUE;
 
     protected abstract long consumeAsMuchAsPossibleImpl(long limit);
 
@@ -49,12 +50,12 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket {
 
     protected abstract CompletableFuture<Void> replaceConfigurationAsyncImpl(BucketConfiguration newConfiguration);
 
-    private final AsyncBucket asyncView;
+    private final AsyncBlockingBucketImpl asyncView;
     private final BucketListener listener;
 
     public AbstractBucket(BucketListener listener) {
         this.listener = listener;
-        this.asyncView = new AsyncBucket() {
+        this.asyncView = new AsyncBlockingBucketImpl() {
             @Override
             public CompletableFuture<Boolean> tryConsume(long tokensToConsume) {
                 checkTokensToConsume(tokensToConsume);
@@ -85,7 +86,7 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket {
 
             @Override
             public CompletableFuture<Long> tryConsumeAsMuchAsPossible() {
-                return tryConsumeAsMuchAsPossibleAsyncImpl(Long.MAX_VALUE).thenApply(consumedTokens -> {
+                return tryConsumeAsMuchAsPossibleAsyncImpl(UNLIMITED_AMOUNT).thenApply(consumedTokens -> {
                     if (consumedTokens > 0) {
                         listener.onConsumed(consumedTokens);
                     }
@@ -117,7 +118,7 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket {
                         resultFuture.completeExceptionally(exception);
                         return;
                     }
-                    if (nanosToSleep == Long.MAX_VALUE) {
+                    if (nanosToSleep == INFINITY_DURATION) {
                         resultFuture.complete(false);
                         listener.onRejected(tokensToConsume);
                         return;
@@ -131,6 +132,39 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket {
                         listener.onConsumed(tokensToConsume);
                         listener.onDelayed(nanosToSleep);
                         Runnable delayedCompletion = () -> resultFuture.complete(true);
+                        scheduler.schedule(delayedCompletion, nanosToSleep, TimeUnit.NANOSECONDS);
+                    } catch (Throwable t) {
+                        resultFuture.completeExceptionally(t);
+                    }
+                });
+                return resultFuture;
+            }
+
+            @Override
+            public CompletableFuture<Void> consume(long tokensToConsume, ScheduledExecutorService scheduler) {
+                checkTokensToConsume(tokensToConsume);
+                checkScheduler(scheduler);
+                CompletableFuture<Void> resultFuture = new CompletableFuture<>();
+                CompletableFuture<Long> reservationFuture = reserveAndCalculateTimeToSleepAsyncImpl(tokensToConsume, INFINITY_DURATION);
+                reservationFuture.whenComplete((nanosToSleep, exception) -> {
+                    if (exception != null) {
+                        resultFuture.completeExceptionally(exception);
+                        return;
+                    }
+                    if (nanosToSleep == INFINITY_DURATION) {
+                        String msg = "Existed hardware is unable to service the reservation of so many tokens";
+                        resultFuture.completeExceptionally(new IllegalStateException(msg));
+                        return;
+                    }
+                    if (nanosToSleep == 0L) {
+                        resultFuture.complete(null);
+                        listener.onConsumed(tokensToConsume);
+                        return;
+                    }
+                    try {
+                        listener.onConsumed(tokensToConsume);
+                        listener.onDelayed(nanosToSleep);
+                        Runnable delayedCompletion = () -> resultFuture.complete(null);
                         scheduler.schedule(delayedCompletion, nanosToSleep, TimeUnit.NANOSECONDS);
                     } catch (Throwable t) {
                         resultFuture.completeExceptionally(t);
@@ -163,7 +197,15 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket {
     }
 
     @Override
-    public BlockingBucket asBlocking() {
+    public AsyncBlockingBucket asAsyncScheduler() {
+        if (!isAsyncModeSupported()) {
+            throw new UnsupportedOperationException();
+        }
+        return asyncView;
+    }
+
+    @Override
+    public BlockingBucket asScheduler() {
         return this;
     }
 
@@ -186,7 +228,7 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket {
         checkMaxWaitTime(maxWaitTimeNanos);
 
         long nanosToSleep = reserveAndCalculateTimeToSleepImpl(tokensToConsume, maxWaitTimeNanos);
-        if (nanosToSleep == Long.MAX_VALUE) {
+        if (nanosToSleep == INFINITY_DURATION) {
             listener.onRejected(tokensToConsume);
             return false;
         }
@@ -211,7 +253,7 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket {
         checkMaxWaitTime(maxWaitTimeNanos);
 
         long nanosToSleep = reserveAndCalculateTimeToSleepImpl(tokensToConsume, maxWaitTimeNanos);
-        if (nanosToSleep == Long.MAX_VALUE) {
+        if (nanosToSleep == INFINITY_DURATION) {
             listener.onRejected(tokensToConsume);
             return false;
         }
@@ -276,7 +318,7 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket {
 
     @Override
     public long tryConsumeAsMuchAsPossible() {
-        long consumed = consumeAsMuchAsPossibleImpl(Long.MAX_VALUE);
+        long consumed = consumeAsMuchAsPossibleImpl(UNLIMITED_AMOUNT);
         if (consumed > 0) {
             listener.onConsumed(consumed);
         }
@@ -337,5 +379,7 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket {
             throw BucketExceptions.nullConfiguration();
         }
     }
+
+    private interface AsyncBlockingBucketImpl extends AsyncBucket, AsyncBlockingBucket {}
 
 }

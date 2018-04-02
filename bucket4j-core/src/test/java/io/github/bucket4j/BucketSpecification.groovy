@@ -213,7 +213,7 @@ class BucketSpecification extends Specification {
             Bucket bucket = GridBucket.createInitializedBucket(BucketListener.NOPE, "66", configuration, mockProxy, THROW_BUCKET_NOT_FOUND_EXCEPTION)
         when:
             schedulerMock.setException(new RuntimeException())
-            CompletableFuture<Boolean> future = bucket.asAsync().tryConsume(10, 100000, schedulerMock)
+            CompletableFuture<Boolean> future = bucket.asAsyncScheduler().tryConsume(10, Duration.ofNanos(100000), schedulerMock)
         then:
             future.isCompletedExceptionally()
     }

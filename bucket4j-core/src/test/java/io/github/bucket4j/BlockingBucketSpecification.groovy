@@ -47,15 +47,15 @@ class BlockingBucketSpecification extends Specification {
                             BlockingStrategyMock sleepStrategy = new BlockingStrategyMock(meter)
                             if (uniterruptible) {
                                 if (limitAsDuration) {
-                                    bucket.asBlocking().tryConsumeUninterruptibly(toConsume, Duration.ofHours(1), sleepStrategy)
+                                    bucket.asScheduler().tryConsumeUninterruptibly(toConsume, Duration.ofHours(1), sleepStrategy)
                                 } else {
-                                    bucket.asBlocking().tryConsumeUninterruptibly(toConsume, TimeUnit.HOURS.toNanos(1), sleepStrategy)
+                                    bucket.asScheduler().tryConsumeUninterruptibly(toConsume, TimeUnit.HOURS.toNanos(1), sleepStrategy)
                                 }
                             } else {
                                 if (limitAsDuration) {
-                                    bucket.asBlocking().tryConsume(toConsume, Duration.ofHours(1), sleepStrategy)
+                                    bucket.asScheduler().tryConsume(toConsume, Duration.ofHours(1), sleepStrategy)
                                 } else {
-                                    bucket.asBlocking().tryConsume(toConsume, TimeUnit.HOURS.toNanos(1), sleepStrategy)
+                                    bucket.asScheduler().tryConsume(toConsume, TimeUnit.HOURS.toNanos(1), sleepStrategy)
                                 }
                             }
                             assert sleepStrategy.sleeped == requiredSleep
@@ -90,15 +90,15 @@ class BlockingBucketSpecification extends Specification {
                             BlockingStrategyMock sleepStrategy = new BlockingStrategyMock(meter)
                             if (uniterruptible) {
                                 if (limitAsDuration) {
-                                    assert bucket.asBlocking().tryConsumeUninterruptibly(toConsume, Duration.ofNanos(sleepLimit), sleepStrategy) == requiredResult
+                                    assert bucket.asScheduler().tryConsumeUninterruptibly(toConsume, Duration.ofNanos(sleepLimit), sleepStrategy) == requiredResult
                                 } else {
-                                    assert bucket.asBlocking().tryConsumeUninterruptibly(toConsume, sleepLimit, sleepStrategy) == requiredResult
+                                    assert bucket.asScheduler().tryConsumeUninterruptibly(toConsume, sleepLimit, sleepStrategy) == requiredResult
                                 }
                             } else {
                                 if (limitAsDuration) {
-                                    assert bucket.asBlocking().tryConsume(toConsume, Duration.ofNanos(sleepLimit), sleepStrategy) == requiredResult
+                                    assert bucket.asScheduler().tryConsume(toConsume, Duration.ofNanos(sleepLimit), sleepStrategy) == requiredResult
                                 } else {
-                                    assert bucket.asBlocking().tryConsume(toConsume, sleepLimit, sleepStrategy) == requiredResult
+                                    assert bucket.asScheduler().tryConsume(toConsume, sleepLimit, sleepStrategy) == requiredResult
                                 }
                             }
                             assert sleepStrategy.sleeped == requiredSleep
@@ -134,7 +134,7 @@ class BlockingBucketSpecification extends Specification {
             Thread.currentThread().interrupt()
             InterruptedException thrown
             try {
-                bucket.asBlocking().tryConsume(1, TimeUnit.HOURS.toNanos(1000), BlockingStrategy.PARKING)
+                bucket.asScheduler().tryConsume(1, TimeUnit.HOURS.toNanos(1000), BlockingStrategy.PARKING)
             } catch (InterruptedException e) {
                 thrown = e
             }
@@ -143,7 +143,7 @@ class BlockingBucketSpecification extends Specification {
             thrown = null
             Thread.currentThread().interrupt()
             try {
-                bucket.asBlocking().tryConsume(1, TimeUnit.HOURS.toNanos(1), BlockingStrategy.PARKING)
+                bucket.asScheduler().tryConsume(1, TimeUnit.HOURS.toNanos(1), BlockingStrategy.PARKING)
             } catch (InterruptedException e) {
                 thrown = e
             }

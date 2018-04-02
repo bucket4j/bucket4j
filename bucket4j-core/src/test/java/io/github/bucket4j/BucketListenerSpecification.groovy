@@ -66,7 +66,7 @@ class BucketListenerSpecification extends Specification {
             Bucket bucket = type.createBucket(builder, clock)
 
         when:
-           bucket.asBlocking().tryConsume(9, Duration.ofSeconds(1), blocker)
+           bucket.asScheduler().tryConsume(9, Duration.ofSeconds(1), blocker)
         then:
             listener.getConsumed() == 9
             listener.getRejected() == 0
@@ -74,7 +74,7 @@ class BucketListenerSpecification extends Specification {
             listener.getInterrupted() == 0
 
         when:
-            bucket.asBlocking().tryConsume(1000, Duration.ofSeconds(1), blocker)
+            bucket.asScheduler().tryConsume(1000, Duration.ofSeconds(1), blocker)
         then:
             listener.getConsumed() == 9
             listener.getRejected() == 1000
@@ -82,7 +82,7 @@ class BucketListenerSpecification extends Specification {
             listener.getInterrupted() == 0
 
         when:
-            bucket.asBlocking().tryConsume(2, Duration.ofSeconds(1), blocker)
+            bucket.asScheduler().tryConsume(2, Duration.ofSeconds(1), blocker)
         then:
             listener.getConsumed() == 11
             listener.getRejected() == 1000
@@ -91,7 +91,7 @@ class BucketListenerSpecification extends Specification {
 
         when:
             Thread.currentThread().interrupt()
-            bucket.asBlocking().tryConsume(1, Duration.ofSeconds(1), blocker)
+            bucket.asScheduler().tryConsume(1, Duration.ofSeconds(1), blocker)
         then:
             InterruptedException ex = thrown()
             listener.getConsumed() == 12
@@ -109,7 +109,7 @@ class BucketListenerSpecification extends Specification {
             Bucket bucket = type.createBucket(builder, clock)
 
         when:
-            bucket.asBlocking().tryConsume(9, Duration.ofSeconds(1), blocker)
+            bucket.asScheduler().tryConsume(9, Duration.ofSeconds(1), blocker)
         then:
             listener.getConsumed() == 9
             listener.getRejected() == 0
@@ -117,7 +117,7 @@ class BucketListenerSpecification extends Specification {
             listener.getInterrupted() == 0
 
         when:
-            bucket.asBlocking().tryConsume(1000, Duration.ofSeconds(1), blocker)
+            bucket.asScheduler().tryConsume(1000, Duration.ofSeconds(1), blocker)
         then:
             listener.getConsumed() == 9
             listener.getRejected() == 1000
@@ -125,7 +125,7 @@ class BucketListenerSpecification extends Specification {
             listener.getInterrupted() == 0
 
         when:
-            bucket.asBlocking().tryConsume(2, Duration.ofSeconds(1), blocker)
+            bucket.asScheduler().tryConsume(2, Duration.ofSeconds(1), blocker)
         then:
             listener.getConsumed() == 11
             listener.getRejected() == 1000
@@ -134,7 +134,7 @@ class BucketListenerSpecification extends Specification {
 
         when:
             Thread.currentThread().interrupt()
-            bucket.asBlocking().tryConsumeUninterruptibly(1, Duration.ofSeconds(1), blocker)
+            bucket.asScheduler().tryConsumeUninterruptibly(1, Duration.ofSeconds(1), blocker)
             Thread.interrupted()
         then:
             listener.getConsumed() == 12
@@ -152,7 +152,7 @@ class BucketListenerSpecification extends Specification {
             Bucket bucket = type.createBucket(builder, clock)
 
         when:
-            bucket.asBlocking().consume(9, blocker)
+            bucket.asScheduler().consume(9, blocker)
         then:
             listener.getConsumed() == 9
             listener.getRejected() == 0
@@ -160,7 +160,7 @@ class BucketListenerSpecification extends Specification {
             listener.getInterrupted() == 0
 
         when:
-            bucket.asBlocking().consume(2, blocker)
+            bucket.asScheduler().consume(2, blocker)
         then:
             listener.getConsumed() == 11
             listener.getRejected() == 0
@@ -169,7 +169,7 @@ class BucketListenerSpecification extends Specification {
 
         when:
             Thread.currentThread().interrupt()
-            bucket.asBlocking().consume(1, blocker)
+            bucket.asScheduler().consume(1, blocker)
         then:
             InterruptedException ex = thrown()
             listener.getConsumed() == 12
@@ -187,7 +187,7 @@ class BucketListenerSpecification extends Specification {
             Bucket bucket = type.createBucket(builder, clock)
 
         when:
-            bucket.asBlocking().consume(9, blocker)
+            bucket.asScheduler().consume(9, blocker)
         then:
             listener.getConsumed() == 9
             listener.getRejected() == 0
@@ -195,7 +195,7 @@ class BucketListenerSpecification extends Specification {
             listener.getInterrupted() == 0
 
         when:
-            bucket.asBlocking().consumeUninterruptibly(2, blocker)
+            bucket.asScheduler().consumeUninterruptibly(2, blocker)
         then:
             listener.getConsumed() == 11
             listener.getRejected() == 0
@@ -204,7 +204,7 @@ class BucketListenerSpecification extends Specification {
 
         when:
             Thread.currentThread().interrupt()
-            bucket.asBlocking().consume(1, blocker)
+            bucket.asScheduler().consume(1, blocker)
             Thread.interrupted()
         then:
             InterruptedException ex = thrown()
@@ -348,7 +348,7 @@ class BucketListenerSpecification extends Specification {
 //            Bucket bucket = type.createBucket(builder, clock)
 //
 //        when:
-//            bucket.asBlocking().consume(9, blocker)
+//            bucket.asScheduler().consume(9, blocker)
 //        then:
 //            listener.getConsumed() == 9
 //            listener.getRejected() == 0
@@ -356,7 +356,7 @@ class BucketListenerSpecification extends Specification {
 //            listener.getInterrupted() == 0
 //
 //        when:
-//            bucket.asBlocking().consume(2, blocker)
+//            bucket.asScheduler().consume(2, blocker)
 //        then:
 //            listener.getConsumed() == 11
 //            listener.getRejected() == 0
@@ -365,7 +365,7 @@ class BucketListenerSpecification extends Specification {
 //
 //        when:
 //            Thread.currentThread().interrupt()
-//            bucket.asBlocking().consume(1, blocker)
+//            bucket.asScheduler().consume(1, blocker)
 //        then:
 //            InterruptedException ex = thrown()
 //            listener.getConsumed() == 12

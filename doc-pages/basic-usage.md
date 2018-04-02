@@ -43,7 +43,7 @@ volatile double exchangeRate;
 while (true) {
   // Consume a token from the token bucket.  
   // If a token is not available this method will block until the refill adds one to the bucket.
-  bucket.asBlocking().consume(1);
+  bucket.asScheduler().consume(1);
 
   exchangeRate = pollExchangeRate();
 }
