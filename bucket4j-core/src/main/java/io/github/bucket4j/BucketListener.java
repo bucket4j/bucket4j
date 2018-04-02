@@ -27,6 +27,9 @@ public interface BucketListener {
     void onRejected(long tokens);
 
     // TODO javadocs
+    void onDelayed(long nanos);
+
+    // TODO javadocs
     void onParked(long nanos);
 
     // TODO javadocs
@@ -42,6 +45,11 @@ public interface BucketListener {
         @Override
         public void onRejected(long tokens) {
             // do nothing
+        }
+
+        @Override
+        public void onDelayed(long nanos) {
+
         }
 
         @Override

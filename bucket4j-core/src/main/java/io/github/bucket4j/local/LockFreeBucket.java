@@ -218,7 +218,6 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket {
 
     @Override
     protected CompletableFuture<Long> tryConsumeAsMuchAsPossibleAsyncImpl(long limit) {
-        checkTokensToConsume(limit);
         long result = consumeAsMuchAsPossibleImpl(limit);
         return CompletableFuture.completedFuture(result);
     }

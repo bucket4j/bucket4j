@@ -129,6 +129,7 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket {
                     }
                     try {
                         listener.onConsumed(tokensToConsume);
+                        listener.onDelayed(nanosToSleep);
                         Runnable delayedCompletion = () -> resultFuture.complete(true);
                         scheduler.schedule(delayedCompletion, nanosToSleep, TimeUnit.NANOSECONDS);
                     } catch (Throwable t) {
@@ -313,25 +314,25 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket {
         }
     }
 
-    protected static void checkTokensToConsume(long tokensToConsume) {
+    private static void checkTokensToConsume(long tokensToConsume) {
         if (tokensToConsume <= 0) {
             throw BucketExceptions.nonPositiveTokensToConsume(tokensToConsume);
         }
     }
 
-    protected static void checkMaxWaitTime(long maxWaitTimeNanos) {
+    private static void checkMaxWaitTime(long maxWaitTimeNanos) {
         if (maxWaitTimeNanos <= 0) {
             throw BucketExceptions.nonPositiveNanosToWait(maxWaitTimeNanos);
         }
     }
 
-    protected static void checkScheduler(ScheduledExecutorService scheduler) {
+    private static void checkScheduler(ScheduledExecutorService scheduler) {
         if (scheduler == null) {
             throw BucketExceptions.nullScheduler();
         }
     }
 
-    protected static void checkConfiguration(BucketConfiguration newConfiguration) {
+    private static void checkConfiguration(BucketConfiguration newConfiguration) {
         if (newConfiguration == null) {
             throw BucketExceptions.nullConfiguration();
         }

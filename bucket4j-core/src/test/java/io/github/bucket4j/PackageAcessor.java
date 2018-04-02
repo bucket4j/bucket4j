@@ -23,4 +23,8 @@ public class PackageAcessor {
         return builder.buildConfiguration();
     }
 
+    public static BucketListener getListener(AbstractBucketBuilder builder) {
+        return builder.getListener();
+    }
+
 }

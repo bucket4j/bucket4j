@@ -61,7 +61,7 @@ public enum BucketType {
         public Bucket createBucket(AbstractBucketBuilder builder, TimeMeter timeMeter) {
             BucketConfiguration configuration = PackageAcessor.buildConfiguration(builder);
             GridProxyMock gridProxy = new GridProxyMock(timeMeter);
-            return GridBucket.createInitializedBucket(BucketListener.NOPE, 42, configuration, gridProxy, THROW_BUCKET_NOT_FOUND_EXCEPTION);
+            return GridBucket.createInitializedBucket(PackageAcessor.getListener(builder), 42, configuration, gridProxy, THROW_BUCKET_NOT_FOUND_EXCEPTION);
         }
     };
 

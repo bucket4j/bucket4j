@@ -180,7 +180,7 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket {
 
     @Override
     protected CompletableFuture<Long> tryConsumeAsMuchAsPossibleAsyncImpl(long limit) {
-        long result = tryConsumeAsMuchAsPossible(limit);
+        long result = consumeAsMuchAsPossibleImpl(limit);
         return CompletableFuture.completedFuture(result);
     }
 

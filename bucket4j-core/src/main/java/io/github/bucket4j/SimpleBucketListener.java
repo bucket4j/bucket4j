@@ -23,6 +23,7 @@ public class SimpleBucketListener implements BucketListener {
 
     private AtomicLong consumed = new AtomicLong();
     private AtomicLong rejected = new AtomicLong();
+    private AtomicLong delayedNanos = new AtomicLong();
     private AtomicLong parkedNanos = new AtomicLong();
     private AtomicLong interrupted = new AtomicLong();
 
@@ -34,6 +35,11 @@ public class SimpleBucketListener implements BucketListener {
     @Override
     public void onRejected(long tokens) {
         rejected.addAndGet(tokens);
+    }
+
+    @Override
+    public void onDelayed(long nanos) {
+        delayedNanos.addAndGet(nanos);
     }
 
     @Override
@@ -52,6 +58,10 @@ public class SimpleBucketListener implements BucketListener {
 
     public long getRejected() {
         return rejected.get();
+    }
+
+    public long getDelayedNanos() {
+        return delayedNanos.get();
     }
 
     public long getParkedNanos() {

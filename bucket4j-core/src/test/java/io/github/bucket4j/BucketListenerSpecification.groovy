@@ -19,18 +19,19 @@ package io.github.bucket4j
 
 import io.github.bucket4j.mock.BlockingStrategyMock
 import io.github.bucket4j.mock.BucketType
+import io.github.bucket4j.mock.SchedulerMock
 import io.github.bucket4j.mock.TimeMeterMock
 import spock.lang.Specification
 import spock.lang.Unroll
 
 import java.time.Duration
 
-// TODO need to extend per each local and remote bucket type
 class BucketListenerSpecification extends Specification {
 
     TimeMeterMock clock = new TimeMeterMock()
     BlockingStrategyMock blocker = new BlockingStrategyMock(clock)
     SimpleBucketListener listener = new SimpleBucketListener()
+	SchedulerMock scheduler = new SchedulerMock(clock)
 
     AbstractBucketBuilder builder = Bucket4j.builder()
             .withListener(listener)
@@ -307,90 +308,41 @@ class BucketListenerSpecification extends Specification {
             type << BucketType.values()
     }
 
-//    def "#type test listener for blocking tryConsume"(BucketType type) {
-//        setup:
-//            Bucket bucket = type.createBucket(builder, clock)
+	@Unroll
+    def "#type test listener for async scheduled tryConsume"(BucketType type) {
+        setup:
+            Bucket bucket = type.createBucket(builder, clock)
+
+        when:
+            bucket.asAsync().tryConsume(9, Duration.ofSeconds(1).toNanos(), scheduler)
+        then:
+            listener.getConsumed() == 9
+            listener.getRejected() == 0
+            listener.getParkedNanos() == 0
+            listener.getInterrupted() == 0
+
+        when:
+            bucket.asAsync().tryConsume(1000, Duration.ofSeconds(1).toNanos(), scheduler)
+        then:
+            listener.getConsumed() == 9
+            listener.getRejected() == 1000
+            listener.getParkedNanos() == 0
+            listener.getInterrupted() == 0
+
+        when:
+            bucket.asAsync().tryConsume(2, Duration.ofSeconds(1).toNanos(), scheduler)
+        then:
+            listener.getConsumed() == 11
+            listener.getRejected() == 1000
+			listener.getDelayedNanos() == 100_000_000
+            listener.getInterrupted() == 0
+
+        where:
+            type << BucketType.values()
+    }
+
 //
-//        when:
-//            bucket.asBlocking().tryConsume(9, Duration.ofSeconds(1), blocker)
-//        then:
-//            listener.getConsumed() == 9
-//            listener.getRejected() == 0
-//            listener.getParkedNanos() == 0
-//            listener.getInterrupted() == 0
-//
-//        when:
-//            bucket.asBlocking().tryConsume(1000, Duration.ofSeconds(1), blocker)
-//        then:
-//            listener.getConsumed() == 9
-//            listener.getRejected() == 1000
-//            listener.getParkedNanos() == 0
-//            listener.getInterrupted() == 0
-//
-//        when:
-//            bucket.asBlocking().tryConsume(2, Duration.ofSeconds(1), blocker)
-//        then:
-//            listener.getConsumed() == 11
-//            listener.getRejected() == 1000
-//            listener.getParkedNanos() == 100_000_000
-//            listener.getInterrupted() == 0
-//
-//        when:
-//            Thread.currentThread().interrupt()
-//            bucket.asBlocking().tryConsume(1, Duration.ofSeconds(1), blocker)
-//        then:
-//            InterruptedException ex = thrown()
-//            listener.getConsumed() == 12
-//            listener.getRejected() == 1000
-//            listener.getParkedNanos() == 100_000_000
-//            listener.getInterrupted() == 1
-//
-//        where:
-//            type << BucketType.values()
-//    }
-//
-//    def "#type test listener for blocking tryConsumeUninterruptibly"(BucketType type) {
-//        setup:
-//            Bucket bucket = type.createBucket(builder, clock)
-//
-//        when:
-//            bucket.asBlocking().tryConsume(9, Duration.ofSeconds(1), blocker)
-//        then:
-//            listener.getConsumed() == 9
-//            listener.getRejected() == 0
-//            listener.getParkedNanos() == 0
-//            listener.getInterrupted() == 0
-//
-//        when:
-//            bucket.asBlocking().tryConsume(1000, Duration.ofSeconds(1), blocker)
-//        then:
-//            listener.getConsumed() == 9
-//            listener.getRejected() == 1000
-//            listener.getParkedNanos() == 0
-//            listener.getInterrupted() == 0
-//
-//        when:
-//            bucket.asBlocking().tryConsume(2, Duration.ofSeconds(1), blocker)
-//        then:
-//            listener.getConsumed() == 11
-//            listener.getRejected() == 1000
-//            listener.getParkedNanos() == 100_000_000
-//            listener.getInterrupted() == 0
-//
-//        when:
-//            Thread.currentThread().interrupt()
-//            bucket.asBlocking().tryConsumeUninterruptibly(1, Duration.ofSeconds(1), blocker)
-//            Thread.interrupted()
-//        then:
-//            listener.getConsumed() == 12
-//            listener.getRejected() == 1000
-//            listener.getParkedNanos() == 200_000_000
-//            listener.getInterrupted() == 0
-//
-//        where:
-//            type << BucketType.values()
-//    }
-//
+//	  @Unroll
 //    def "#type test listener for blocking consume"(BucketType type) {
 //        setup:
 //            Bucket bucket = type.createBucket(builder, clock)
@@ -447,6 +399,7 @@ class BucketListenerSpecification extends Specification {
             type << BucketType.values()
     }
 
+//	  @Unroll
 //    def "#type test listener for tryConsumeAsMuchAsPossible with limit"(BucketType type) {
 //        setup:
 //            Bucket bucket = type.createBucket(builder, clock)
@@ -473,6 +426,7 @@ class BucketListenerSpecification extends Specification {
 //            type << BucketType.values()
 //    }
 //
+//	  @Unroll
 //    def "#type test listener for tryConsumeAndReturnRemaining"(BucketType type) {
 //        setup:
 //            Bucket bucket = type.createBucket(builder, clock)
