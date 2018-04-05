@@ -58,7 +58,6 @@
         <ignite.version>2.1.0</ignite.version>
         <hazelcast.version>3.8</hazelcast.version>
         <infinispan.version>9.1.0.Final</infinispan.version>
-        <byte-buddy.version>1.7.5</byte-buddy.version>
     </properties>
 
     <scm>
