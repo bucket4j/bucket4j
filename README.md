@@ -43,6 +43,7 @@ As mentioned above in addition to local in-memory buckets, the Bucket4j supports
 * [Documentation for legacy releases](doc-pages/archive-links.md).
 
 ## Third-party integrations:
+* [marcosbarbero/spring-cloud-zuul-ratelimit](https://github.com/marcosbarbero/spring-cloud-zuul-ratelimit)
 * [MarcGiffing/Spring Boot Starter for Bucket4j](https://github.com/MarcGiffing/bucket4j-spring-boot-starter) . Demos of usage (incluing Zuul and Hazelcast) can be found there [bucket4j-spring-boot-starter-examples](https://github.com/MarcGiffing/bucket4j-spring-boot-starter-examples).
 * [JHipster/JHipster API Gateway](https://jhipster.github.io/api-gateway/#rate_limiting)
 * [Zivver/Dropwizard Ratelimit](https://github.com/zivver/dropwizard-ratelimit)
