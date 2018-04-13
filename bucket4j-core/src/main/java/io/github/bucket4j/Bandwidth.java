@@ -59,9 +59,13 @@ public class Bandwidth implements Serializable {
 
     private static final long serialVersionUID = 42L;
 
+    private static final long GREEDY_REFIL_INTERVAL = -1;
+
     final long capacity;
     final Refill refill;
     long initialTokens;
+    long refillIntervalNanos = GREEDY_REFIL_INTERVAL;
+
 
     private Bandwidth(long capacity, Refill refill) {
         if (capacity <= 0) {
@@ -75,11 +79,47 @@ public class Bandwidth implements Serializable {
         this.refill = refill;
     }
 
+    /**
+     * TODO javadocs
+     *
+     * @param initialTokens
+     * @return
+     */
     public Bandwidth withInitialTokens(long initialTokens) {
         if (initialTokens < 0) {
             throw BucketExceptions.nonPositiveInitialTokens(initialTokens);
         }
         this.initialTokens = initialTokens;
+        return this;
+    }
+
+    /**
+     * TODO fix this javadocs
+     *
+     * @param refillInterval
+     * @return
+     */
+    /**
+     * Creates refill which regenerates the tokens in greedy manner.
+     *      *
+     *      This factory method is called "smooth" because of refill created by this method will add tokens to bucket as soon as possible.
+     *      *      * For example smooth refill "10 tokens per 1 second" will add 1 token per each 100 millisecond,
+     *      *      * in other words refill will not wait 1 second to regenerate whole bunch of 10 tokens:
+     *
+     *      * <pre>
+     *      * <code>Refill.smooth(600, Duration.ofMinutes(1));</code>
+     *      * <code>Refill.smooth(10, Duration.ofSeconds(1));</code>
+     *      * <code>Refill.smooth(1, Duration.ofMillis(100));</code>
+     *      * </pre>
+     *      * The three refills above absolutely equals.
+     *      *
+     *      * @param tokens
+     *      * @param period
+     *      *
+     *      * @return
+     */
+    public Bandwidth withFixedRefillInterval(Duration refillInterval) {
+        this.refillIntervalNanos = refillInterval.toNanos();
         return this;
     }
 
@@ -116,6 +156,10 @@ public class Bandwidth implements Serializable {
 
     public long getInitialTokens() {
         return initialTokens;
+    }
+    
+    public boolean isGreedy() {
+        return refillIntervalNanos == GREEDY_REFIL_INTERVAL;
     }
 
     @Override
