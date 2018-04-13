@@ -24,7 +24,7 @@ public class BucketState implements Serializable {
 
     private static final long serialVersionUID = 42L;
 
-    private static final int LAST_REFILL_TIME_OFFSET = 0;
+    private static final int BANDWIDTH_SIZE = 3;
 
     final long[] stateData;
 
@@ -35,7 +35,7 @@ public class BucketState implements Serializable {
     public BucketState(BucketConfiguration configuration, long currentTimeNanos) {
         Bandwidth[] bandwidths = configuration.getBandwidths();
 
-        this.stateData = new long[1 + bandwidths.length * 2];
+        this.stateData = new long[bandwidths.length * 3];
         for(int i = 0; i < bandwidths.length; i++) {
             setCurrentSize(i, bandwidths[i].initialTokens);
         }
@@ -118,8 +118,8 @@ public class BucketState implements Serializable {
 
     private void refill(int bandwidthIndex, Bandwidth bandwidth, long previousRefillNanos, long currentTimeNanos) {
         final long capacity = bandwidth.capacity;
-        final long refillPeriodNanos = bandwidth.refill.getPeriodNanos();
-        final long refillTokens = bandwidth.refill.getTokens();
+        final long refillPeriodNanos = bandwidth.refillPeriodNanos;
+        final long refillTokens = bandwidth.refillTokens;
         final long currentSize = getCurrentSize(bandwidthIndex);
 
         long durationSinceLastRefillNanos = currentTimeNanos - previousRefillNanos;
@@ -186,8 +186,8 @@ public class BucketState implements Serializable {
             return 0;
         }
         long deficit = tokens - currentSize;
-        long refillPeriodNanos = bandwidth.refill.getPeriodNanos();
-        long refillPeriodTokens = bandwidth.refill.getTokens();
+        long refillPeriodNanos = bandwidth.refillPeriodNanos;
+        long refillPeriodTokens = bandwidth.refillTokens;
 
         long divided = multiplyExactOrReturnMaxValue(refillPeriodNanos, deficit);
         if (divided == Long.MAX_VALUE) {
@@ -215,12 +215,12 @@ public class BucketState implements Serializable {
         stateData[2 + bandwidth * 2] = roundingError;
     }
 
-    private long getLastRefillTimeNanos() {
-        return stateData[LAST_REFILL_TIME_OFFSET];
+    private long getLastRefillTimeNanos(int bandwidth) {
+        return stateData[bandwidth * BANDWIDTH_SIZE];
     }
 
-    private void setLastRefillTimeNanos(long nanos) {
-        stateData[LAST_REFILL_TIME_OFFSET] = nanos;
+    private void setLastRefillTimeNanos(int bandwidth, long nanos) {
+        stateData[bandwidth * BANDWIDTH_SIZE] = nanos;
     }
 
     @Override

@@ -62,10 +62,11 @@ public class Bandwidth implements Serializable {
     private static final long GREEDY_REFIL_INTERVAL = -1;
 
     final long capacity;
-    final Refill refill;
     long initialTokens;
-    long refillIntervalNanos = GREEDY_REFIL_INTERVAL;
 
+    final long refillPeriodNanos;
+    final long refillTokens;
+    long refillRefreshIntervalNanos = GREEDY_REFIL_INTERVAL;
 
     private Bandwidth(long capacity, Refill refill) {
         if (capacity <= 0) {
@@ -76,7 +77,8 @@ public class Bandwidth implements Serializable {
         }
         this.capacity = capacity;
         this.initialTokens = capacity;
-        this.refill = refill;
+        this.refillPeriodNanos = refill.getPeriodNanos();
+        this.refillTokens = refill.getTokens();
     }
 
     /**
@@ -119,7 +121,13 @@ public class Bandwidth implements Serializable {
      *      * @return
      */
     public Bandwidth withFixedRefillInterval(Duration refillInterval) {
-        this.refillIntervalNanos = refillInterval.toNanos();
+        if (refillInterval == null) {
+            // TODO
+        }
+        if (refillInterval.isNegative()) {
+            // TODO
+        }
+        this.refillRefreshIntervalNanos = refillInterval.toNanos();
         return this;
     }
 
@@ -131,7 +139,7 @@ public class Bandwidth implements Serializable {
      * @return
      */
     public static Bandwidth simple(long capacity, Duration period) {
-        Refill refill = Refill.smooth(capacity, period);
+        Refill refill = Refill.of(capacity, period);
         return classic(capacity, refill);
     }
 
@@ -150,24 +158,36 @@ public class Bandwidth implements Serializable {
         return capacity;
     }
 
-    public Refill getRefill() {
-        return refill;
-    }
-
     public long getInitialTokens() {
         return initialTokens;
     }
-    
+
+    public long getRefillPeriodNanos() {
+        return refillPeriodNanos;
+    }
+
+    public long getRefillTokens() {
+        return refillTokens;
+    }
+
+    public long getRefillRefreshIntervalNanos() {
+        return refillRefreshIntervalNanos;
+    }
+
     public boolean isGreedy() {
-        return refillIntervalNanos == GREEDY_REFIL_INTERVAL;
+        return refillRefreshIntervalNanos == GREEDY_REFIL_INTERVAL;
     }
 
     @Override
     public String toString() {
-        return "Bandwidth{" +
-                "capacity=" + capacity +
-                ", refill=" + refill +
-                '}';
+        final StringBuilder sb = new StringBuilder("Bandwidth{");
+        sb.append("capacity=").append(capacity);
+        sb.append(", initialTokens=").append(initialTokens);
+        sb.append(", refillPeriodNanos=").append(refillPeriodNanos);
+        sb.append(", refillTokens=").append(refillTokens);
+        sb.append(", refillRefreshIntervalNanos=").append(refillRefreshIntervalNanos);
+        sb.append('}');
+        return sb.toString();
     }
 
 }

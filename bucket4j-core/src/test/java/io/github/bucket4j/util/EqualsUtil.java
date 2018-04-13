@@ -42,12 +42,13 @@ public class EqualsUtil {
             if (bandwidth1.getInitialTokens() != bandwidth2.getInitialTokens()) {
                 return false;
             }
-            Refill refill1 = bandwidth1.getRefill();
-            Refill refill2 = bandwidth2.getRefill();
-            if (refill1.getPeriodNanos() != refill2.getPeriodNanos()) {
+            if (bandwidth1.getRefillPeriodNanos() != bandwidth2.getRefillPeriodNanos()) {
                 return false;
             }
-            if (refill1.getTokens() != refill2.getTokens()) {
+            if (bandwidth1.getRefillRefreshIntervalNanos() != bandwidth2.getRefillRefreshIntervalNanos()) {
+                return false;
+            }
+            if (bandwidth1.getRefillTokens() != bandwidth2.getRefillTokens()) {
                 return false;
             }
         }
