@@ -65,7 +65,7 @@ class BucketStateSpecification extends Specification {
                         "#5",
                         10,
                         Bucket4j.builder()
-                            .addLimit(Bandwidth.classic(10, Refill.smooth(1, Duration.ofSeconds(1))))
+                            .addLimit(Bandwidth.classic(10, Refill.of(1, Duration.ofSeconds(1))))
                             .build()
                 ]
             ]
@@ -116,7 +116,7 @@ class BucketStateSpecification extends Specification {
                         4,
                         5,
                         Bucket4j.builder()
-                                .addLimit(Bandwidth.classic(10, Refill.smooth(1, Duration.ofSeconds(1))).withInitialTokens(1))
+                                .addLimit(Bandwidth.classic(10, Refill.of(1, Duration.ofSeconds(1))).withInitialTokens(1))
                                 .build()
                 ]
         ]
@@ -147,7 +147,7 @@ class BucketStateSpecification extends Specification {
                         100,
                         Bucket4j.builder()
                             .withCustomTimePrecision(new TimeMeterMock(0))
-                            .addLimit(Bandwidth.classic(10, Refill.smooth(10, Duration.ofNanos(100))).withInitialTokens(0))
+                            .addLimit(Bandwidth.classic(10, Refill.of(10, Duration.ofNanos(100))).withInitialTokens(0))
                             .build()
                 ], [
                         "#3",
@@ -155,7 +155,7 @@ class BucketStateSpecification extends Specification {
                         500,
                         Bucket4j.builder()
                             .withCustomTimePrecision(new TimeMeterMock(0))
-                            .addLimit(Bandwidth.classic(10, Refill.smooth(2, Duration.ofNanos(100))).withInitialTokens(0))
+                            .addLimit(Bandwidth.classic(10, Refill.of(2, Duration.ofNanos(100))).withInitialTokens(0))
                             .build()
                 ], [
                         "#4",
@@ -237,7 +237,7 @@ class BucketStateSpecification extends Specification {
                                                        long initTime, long timeOnRefill, long tokensAfterRefill, long roundingError) {
         setup:
             TimeMeterMock mockTimer = new TimeMeterMock(initTime)
-            def refill = Refill.smooth(refillTokens, Duration.ofNanos(refillPeriod))
+            def refill = Refill.of(refillTokens, Duration.ofNanos(refillPeriod))
             Bucket bucket = Bucket4j.builder()
                     .addLimit(Bandwidth.classic(capacity, refill).withInitialTokens(initialTokens))
                     .withCustomTimePrecision(mockTimer)

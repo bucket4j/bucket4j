@@ -37,7 +37,7 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
     @Unroll
     def "Should detect that capacity #capacity is wrong"(long capacity) {
         when:
-            builder.addLimit(Bandwidth.classic(capacity, Refill.smooth(1, VALID_PERIOD)))
+            builder.addLimit(Bandwidth.classic(capacity, Refill.of(1, VALID_PERIOD)))
         then:
             IllegalArgumentException ex = thrown()
             ex.message == nonPositiveCapacity(capacity).message
@@ -56,6 +56,28 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
             ex.message == nonPositiveInitialTokens(initialTokens).message
         where:
             initialTokens << [-10, -1]
+    }
+
+    @Unroll
+    def "Should check that #fixedRefillPeriod is wrong value of fixedRefillPeriod"(Duration fixedRefillPeriod) {
+        when:
+            Bandwidth.simple(VALID_CAPACITY, VALID_PERIOD)
+                    .withFixedRefillInterval(fixedRefillPeriod)
+        then:
+            IllegalArgumentException ex = thrown()
+            ex.message == nonPositiveFixedRefillInterval(fixedRefillPeriod).message
+
+        where:
+            fixedRefillPeriod << [Duration.ZERO, Duration.ofSeconds(-1)]
+    }
+
+    def "Should check that fixedRefillPeriod is not null"() {
+        when:
+            Bandwidth.simple(VALID_CAPACITY, VALID_PERIOD)
+                .withFixedRefillInterval(null)
+        then:
+            IllegalArgumentException ex = thrown()
+            ex.message == nullFixedRefillInterval().message
     }
 
     @Unroll
@@ -88,7 +110,7 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
 
     def "Should check that refill period is not null"() {
         when:
-            builder.addLimit(Bandwidth.classic( 32, Refill.smooth(1, null)))
+            builder.addLimit(Bandwidth.classic( 32, Refill.of(1, null)))
         then:
             IllegalArgumentException ex = thrown()
             ex.message == nullRefillPeriod().message
@@ -97,7 +119,7 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
     @Unroll
     def "Should detect that refill #refillTokens tokens is invalid"(int refillTokens) {
         when:
-            builder.addLimit(Bandwidth.classic( 32, Refill.smooth(refillTokens, Duration.ofSeconds(1))))
+            builder.addLimit(Bandwidth.classic( 32, Refill.of(refillTokens, Duration.ofSeconds(1))))
         then:
             IllegalArgumentException ex = thrown()
             ex.message == nonPositivePeriodTokens(refillTokens).message

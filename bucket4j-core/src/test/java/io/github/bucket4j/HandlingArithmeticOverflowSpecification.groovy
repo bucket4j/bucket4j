@@ -83,7 +83,7 @@ class HandlingArithmeticOverflowSpecification extends Specification {
     def "Should check ArithmeticOverflow when refilling by completed periods"() {
         setup:
             Bandwidth limit = Bandwidth
-                    .classic((long) Long.MAX_VALUE - 10, Refill.smooth(1, Duration.ofNanos(1)))
+                    .classic((long) Long.MAX_VALUE - 10, Refill.of(1, Duration.ofNanos(1)))
                     .withInitialTokens((long) Long.MAX_VALUE - 13)
             TimeMeterMock meter = new TimeMeterMock(0)
             Bucket bucket = Bucket4j.builder()
@@ -120,7 +120,7 @@ class HandlingArithmeticOverflowSpecification extends Specification {
     def "Should check ArithmeticOverflow when refilling by uncompleted periods"() {
         setup:
             Bandwidth limit = Bandwidth
-                    .classic((long) Long.MAX_VALUE - 10, Refill.smooth(100, Duration.ofNanos(100)))
+                    .classic((long) Long.MAX_VALUE - 10, Refill.of(100, Duration.ofNanos(100)))
                     .withInitialTokens((long) Long.MAX_VALUE - 13)
             TimeMeterMock meter = new TimeMeterMock(0)
             Bucket bucket = Bucket4j.builder()

@@ -15,11 +15,8 @@
  *    limitations under the License.
  */
 
-package io.github.bucket4j.util;
+package io.github.bucket4j;
 
-import io.github.bucket4j.Bandwidth;
-import io.github.bucket4j.BucketConfiguration;
-import io.github.bucket4j.Refill;
 
 public class EqualsUtil {
 
@@ -36,19 +33,19 @@ public class EqualsUtil {
         for (int i = 0; i < config1.getBandwidths().length; i++) {
             Bandwidth bandwidth1 = config1.getBandwidths()[i];
             Bandwidth bandwidth2 = config2.getBandwidths()[i];
-            if (bandwidth1.getCapacity() != bandwidth2.getCapacity()) {
+            if (bandwidth1.capacity != bandwidth2.capacity) {
                 return false;
             }
-            if (bandwidth1.getInitialTokens() != bandwidth2.getInitialTokens()) {
+            if (bandwidth1.initialTokens != bandwidth2.initialTokens) {
                 return false;
             }
-            if (bandwidth1.getRefillPeriodNanos() != bandwidth2.getRefillPeriodNanos()) {
+            if (bandwidth1.refillPeriodNanos != bandwidth2.refillPeriodNanos) {
                 return false;
             }
-            if (bandwidth1.getRefillRefreshIntervalNanos() != bandwidth2.getRefillRefreshIntervalNanos()) {
+            if (bandwidth1.refillRefreshIntervalNanos != bandwidth2.refillRefreshIntervalNanos) {
                 return false;
             }
-            if (bandwidth1.getRefillTokens() != bandwidth2.getRefillTokens()) {
+            if (bandwidth1.refillTokens != bandwidth2.refillTokens) {
                 return false;
             }
         }

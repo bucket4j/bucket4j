@@ -27,8 +27,8 @@ public class Refill implements Serializable {
 
     private static final long serialVersionUID = 42L;
 
-    private final long periodNanos;
-    private final long tokens;
+    final long periodNanos;
+    final long tokens;
 
     private Refill(long tokens, Duration period) {
         if (period == null) {
@@ -49,16 +49,6 @@ public class Refill implements Serializable {
     }
 
     /**
-     * @deprecated use {@link #of(long, Duration)} instead
-     * @see #of(long, Duration)
-     *
-     * @return
-     */
-    public static Refill smooth(long tokens, Duration period) {
-        return of(tokens, period);
-    }
-
-    /**
      * Creates the new instance of {@link Refill} that specifies the speed of tokens regeneration
      *
      * @param tokens amount of tokens
@@ -68,14 +58,6 @@ public class Refill implements Serializable {
      */
     public static Refill of(long tokens, Duration period) {
         return new Refill(tokens, period);
-    }
-
-    public long getPeriodNanos() {
-        return periodNanos;
-    }
-
-    public long getTokens() {
-        return tokens;
     }
 
     @Override

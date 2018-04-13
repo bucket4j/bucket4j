@@ -54,81 +54,46 @@ import java.time.Duration;
  *      .addLimit(Bandwidth.create(100, Duration.ofSeconds(1)));
  *      .build()
  * }</pre>
+ *
+ * <h3>Greediness of refill</h3>
+ * By default any bandwidth does refill in greedy manner, because bandwidth tries to add the tokens to bucket as soon as possible.
+ * For example bandwidth with refill "10 tokens per 1 second" will add 1 token per each 100 millisecond,
+ * in other words refill will not wait 1 second to regenerate whole bunch of 10 tokens.
+ *
+ * The three bandwidths bellow do refill of tokens with same speed:
+ *  <pre>
+ *  <code>Bandwidth.simple(600, Duration.ofMinutes(1));</code>
+ *  <code>Bandwidth.simple(10, Duration.ofSeconds(1));</code>
+ *  <code>Bandwidth.simple(1, Duration.ofMillis(100));</code>
+ *  </pre>
+ *
+ * <p>
+ * If greediness is undesired</b>,
+ * then you can specify the fixed interval refill via {@link #withFixedRefillInterval(Duration) withFixedRefillInterval} method.
+ * When fixed refill interval was specified then greediness is turned-off.
+ * For example the bandwidth bellow will refill 10 tokens per 1 second instead of 1 token per 100 milliseconds:
+ * <pre>
+ *  <code>Bandwidth.simple(600, Duration.ofMinutes(1)).withFixedRefillInterval(Duration.ofSecond(1));</code>
+ * </pre>
  */
 public class Bandwidth implements Serializable {
 
     private static final long serialVersionUID = 42L;
 
-    private static final long GREEDY_REFIL_INTERVAL = -1;
+    static final long GREEDY_REFILL_INTERVAL = 0;
 
     final long capacity;
-    long initialTokens;
-
+    final long initialTokens;
     final long refillPeriodNanos;
     final long refillTokens;
-    long refillRefreshIntervalNanos = GREEDY_REFIL_INTERVAL;
+    final long refillRefreshIntervalNanos;
 
-    private Bandwidth(long capacity, Refill refill) {
-        if (capacity <= 0) {
-            throw BucketExceptions.nonPositiveCapacity(capacity);
-        }
-        if (refill == null) {
-            throw BucketExceptions.nullBandwidthRefill();
-        }
+    private Bandwidth(long capacity, long refillPeriodNanos, long refillTokens, long initialTokens, long refillRefreshIntervalNanos) {
         this.capacity = capacity;
-        this.initialTokens = capacity;
-        this.refillPeriodNanos = refill.getPeriodNanos();
-        this.refillTokens = refill.getTokens();
-    }
-
-    /**
-     * TODO javadocs
-     *
-     * @param initialTokens
-     * @return
-     */
-    public Bandwidth withInitialTokens(long initialTokens) {
-        if (initialTokens < 0) {
-            throw BucketExceptions.nonPositiveInitialTokens(initialTokens);
-        }
         this.initialTokens = initialTokens;
-        return this;
-    }
-
-    /**
-     * TODO fix this javadocs
-     *
-     * @param refillInterval
-     * @return
-     */
-    /**
-     * Creates refill which regenerates the tokens in greedy manner.
-     *      *
-     *      This factory method is called "smooth" because of refill created by this method will add tokens to bucket as soon as possible.
-     *      *      * For example smooth refill "10 tokens per 1 second" will add 1 token per each 100 millisecond,
-     *      *      * in other words refill will not wait 1 second to regenerate whole bunch of 10 tokens:
-     *
-     *      * <pre>
-     *      * <code>Refill.smooth(600, Duration.ofMinutes(1));</code>
-     *      * <code>Refill.smooth(10, Duration.ofSeconds(1));</code>
-     *      * <code>Refill.smooth(1, Duration.ofMillis(100));</code>
-     *      * </pre>
-     *      * The three refills above absolutely equals.
-     *      *
-     *      * @param tokens
-     *      * @param period
-     *      *
-     *      * @return
-     */
-    public Bandwidth withFixedRefillInterval(Duration refillInterval) {
-        if (refillInterval == null) {
-            // TODO
-        }
-        if (refillInterval.isNegative()) {
-            // TODO
-        }
-        this.refillRefreshIntervalNanos = refillInterval.toNanos();
-        return this;
+        this.refillPeriodNanos = refillPeriodNanos;
+        this.refillTokens = refillTokens;
+        this.refillRefreshIntervalNanos = refillRefreshIntervalNanos;
     }
 
     /**
@@ -151,32 +116,46 @@ public class Bandwidth implements Serializable {
      * @return
      */
     public static Bandwidth classic(long capacity, Refill refill) {
-        return new Bandwidth(capacity, refill);
+        if (capacity <= 0) {
+            throw BucketExceptions.nonPositiveCapacity(capacity);
+        }
+        if (refill == null) {
+            throw BucketExceptions.nullBandwidthRefill();
+        }
+        return new Bandwidth(capacity, refill.periodNanos, refill.tokens, capacity, GREEDY_REFILL_INTERVAL);
     }
 
-    public long getCapacity() {
-        return capacity;
+    /**
+     * TODO javadocs
+     *
+     * @param initialTokens
+     * @return
+     */
+    public Bandwidth withInitialTokens(long initialTokens) {
+        if (initialTokens < 0) {
+            throw BucketExceptions.nonPositiveInitialTokens(initialTokens);
+        }
+        return new Bandwidth(capacity, refillPeriodNanos, refillTokens, initialTokens, refillRefreshIntervalNanos);
     }
 
-    public long getInitialTokens() {
-        return initialTokens;
+
+    /**
+     * Creates the copy of current bandwidth for which the greediness of refill is switched-off.
+     * 
+     * @param fixedRefillInterval specifies the interval between refill of tokens
+     * 
+     * @return new instance of {@link Bandwidth} configured by {@code fixedRefillInterval}
+     */
+    public Bandwidth withFixedRefillInterval(Duration fixedRefillInterval) {
+        if (fixedRefillInterval == null) {
+            throw BucketExceptions.nullFixedRefillInterval();
+        }
+        if (fixedRefillInterval.isNegative() || fixedRefillInterval.isZero()) {
+            throw BucketExceptions.nonPositiveFixedRefillInterval(fixedRefillInterval);
+        }
+        return new Bandwidth(capacity, refillPeriodNanos, refillTokens, initialTokens, fixedRefillInterval.toNanos());
     }
 
-    public long getRefillPeriodNanos() {
-        return refillPeriodNanos;
-    }
-
-    public long getRefillTokens() {
-        return refillTokens;
-    }
-
-    public long getRefillRefreshIntervalNanos() {
-        return refillRefreshIntervalNanos;
-    }
-
-    public boolean isGreedy() {
-        return refillRefreshIntervalNanos == GREEDY_REFIL_INTERVAL;
-    }
 
     @Override
     public String toString() {
