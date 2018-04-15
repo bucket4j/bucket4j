@@ -107,10 +107,6 @@ public class BucketState implements Serializable {
         }
     }
 
-    private void consume(int bandwidth, long tokens) {
-        stateData[1 + bandwidth * 2] -= tokens;
-    }
-
     private void refill(int bandwidthIndex, Bandwidth bandwidth, long currentTimeNanos) {
         long previousRefillNanos = getLastRefillTimeNanos(bandwidthIndex);
         if (currentTimeNanos <= previousRefillNanos) {
@@ -224,6 +220,10 @@ public class BucketState implements Serializable {
 
     private void setCurrentSize(int bandwidth, long currentSize) {
         stateData[bandwidth * BANDWIDTH_SIZE + 1] = currentSize;
+    }
+
+    private void consume(int bandwidth, long tokens) {
+        stateData[bandwidth * BANDWIDTH_SIZE + 1] -= tokens;
     }
 
     long getRoundingError(int bandwidth) {
