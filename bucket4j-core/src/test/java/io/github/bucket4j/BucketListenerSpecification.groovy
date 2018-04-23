@@ -93,7 +93,7 @@ class BucketListenerSpecification extends Specification {
             Thread.currentThread().interrupt()
             bucket.asScheduler().tryConsume(1, Duration.ofSeconds(1), blocker)
         then:
-            InterruptedException ex = thrown()
+            thrown(InterruptedException)
             listener.getConsumed() == 12
             listener.getRejected() == 1000
             listener.getParkedNanos() == 100_000_000
@@ -171,7 +171,7 @@ class BucketListenerSpecification extends Specification {
             Thread.currentThread().interrupt()
             bucket.asScheduler().consume(1, blocker)
         then:
-            InterruptedException ex = thrown()
+            thrown(InterruptedException)
             listener.getConsumed() == 12
             listener.getRejected() == 0
             listener.getParkedNanos() == 100_000_000
@@ -207,7 +207,7 @@ class BucketListenerSpecification extends Specification {
             bucket.asScheduler().consume(1, blocker)
             Thread.interrupted()
         then:
-            InterruptedException ex = thrown()
+            thrown(InterruptedException)
             listener.getConsumed() == 12
             listener.getRejected() == 0
             listener.getParkedNanos() == 100_000_000
@@ -314,23 +314,23 @@ class BucketListenerSpecification extends Specification {
             Bucket bucket = type.createBucket(builder, clock)
 
         when:
-            bucket.asAsync().tryConsume(9, Duration.ofSeconds(1).toNanos(), scheduler)
+            bucket.asAsyncScheduler().tryConsume(9, Duration.ofSeconds(1).toNanos(), scheduler)
         then:
             listener.getConsumed() == 9
             listener.getRejected() == 0
-            listener.getParkedNanos() == 0
+            listener.getDelayedNanos() == 0
             listener.getInterrupted() == 0
 
         when:
-            bucket.asAsync().tryConsume(1000, Duration.ofSeconds(1).toNanos(), scheduler)
+            bucket.asAsyncScheduler().tryConsume(1000, Duration.ofSeconds(1).toNanos(), scheduler)
         then:
             listener.getConsumed() == 9
             listener.getRejected() == 1000
-            listener.getParkedNanos() == 0
+            listener.getDelayedNanos() == 0
             listener.getInterrupted() == 0
 
         when:
-            bucket.asAsync().tryConsume(2, Duration.ofSeconds(1).toNanos(), scheduler)
+            bucket.asAsyncScheduler().tryConsume(2, Duration.ofSeconds(1).toNanos(), scheduler)
         then:
             listener.getConsumed() == 11
             listener.getRejected() == 1000
@@ -341,41 +341,31 @@ class BucketListenerSpecification extends Specification {
             type << BucketType.values()
     }
 
-//
-//	  @Unroll
-//    def "#type test listener for blocking consume"(BucketType type) {
-//        setup:
-//            Bucket bucket = type.createBucket(builder, clock)
-//
-//        when:
-//            bucket.asScheduler().consume(9, blocker)
-//        then:
-//            listener.getConsumed() == 9
-//            listener.getRejected() == 0
-//            listener.getParkedNanos() == 0
-//            listener.getInterrupted() == 0
-//
-//        when:
-//            bucket.asScheduler().consume(2, blocker)
-//        then:
-//            listener.getConsumed() == 11
-//            listener.getRejected() == 0
-//            listener.getParkedNanos() == 100_000_000
-//            listener.getInterrupted() == 0
-//
-//        when:
-//            Thread.currentThread().interrupt()
-//            bucket.asScheduler().consume(1, blocker)
-//        then:
-//            InterruptedException ex = thrown()
-//            listener.getConsumed() == 12
-//            listener.getRejected() == 0
-//            listener.getParkedNanos() == 100_000_000
-//            listener.getInterrupted() == 1
-//
-//        where:
-//            type << BucketType.values()
-//    }
+
+	  @Unroll
+    def "#type test listener for async blocking consume"(BucketType type) {
+        setup:
+            Bucket bucket = type.createBucket(builder, clock)
+
+        when:
+            bucket.asAsyncScheduler().consume(9, scheduler)
+        then:
+            listener.getConsumed() == 9
+            listener.getRejected() == 0
+            listener.getDelayedNanos() == 0
+            listener.getInterrupted() == 0
+
+        when:
+            bucket.asAsyncScheduler().consume(2, scheduler)
+        then:
+            listener.getConsumed() == 11
+            listener.getRejected() == 0
+            listener.getDelayedNanos() == 100_000_000
+            listener.getInterrupted() == 0
+
+        where:
+            type << BucketType.values()
+    }
 
 
     @Unroll
@@ -399,54 +389,52 @@ class BucketListenerSpecification extends Specification {
             type << BucketType.values()
     }
 
-//	  @Unroll
-//    def "#type test listener for tryConsumeAsMuchAsPossible with limit"(BucketType type) {
-//        setup:
-//            Bucket bucket = type.createBucket(builder, clock)
-//
-//        when:
-//            bucket.tryConsumeAsMuchAsPossible(8)
-//        then:
-//            listener.getConsumed() == 8
-//            listener.getRejected() == 0
-//
-//        when:
-//            bucket.tryConsumeAsMuchAsPossible(8)
-//        then:
-//            listener.getConsumed() == 10
-//            listener.getRejected() == 0
-//
-//        when:
-//            bucket.tryConsumeAsMuchAsPossible(3)
-//        then:
-//            listener.getConsumed() == 10
-//            listener.getRejected() == 0
-//
-//        where:
-//            type << BucketType.values()
-//    }
-//
-//	  @Unroll
-//    def "#type test listener for tryConsumeAndReturnRemaining"(BucketType type) {
-//        setup:
-//            Bucket bucket = type.createBucket(builder, clock)
-//
-//        when:
-//            bucket.tryConsumeAndReturnRemaining(9)
-//        then:
-//            listener.getConsumed() == 9
-//            listener.getRejected() == 0
-//
-//        when:
-//            bucket.tryConsumeAndReturnRemaining(6)
-//        then:
-//            listener.getConsumed() == 9
-//            listener.getRejected() == 6
-//
-//        where:
-//            type << BucketType.values()
-//    }
+	  @Unroll
+    def "#type test listener for async tryConsumeAsMuchAsPossible with limit"(BucketType type) {
+        setup:
+            Bucket bucket = type.createBucket(builder, clock)
 
+        when:
+            bucket.asAsync().tryConsumeAsMuchAsPossible(8).get()
+        then:
+            listener.getConsumed() == 8
+            listener.getRejected() == 0
 
+        when:
+            bucket.asAsync().tryConsumeAsMuchAsPossible(8).get()
+        then:
+            listener.getConsumed() == 10
+            listener.getRejected() == 0
+
+        when:
+            bucket.asAsync().tryConsumeAsMuchAsPossible(3).get()
+        then:
+            listener.getConsumed() == 10
+            listener.getRejected() == 0
+
+        where:
+            type << BucketType.values()
+    }
+
+	@Unroll
+    def "#type test listener for async tryConsumeAndReturnRemaining"(BucketType type) {
+        setup:
+            Bucket bucket = type.createBucket(builder, clock)
+
+        when:
+            bucket.asAsync().tryConsumeAndReturnRemaining(9).get()
+        then:
+            listener.getConsumed() == 9
+            listener.getRejected() == 0
+
+        when:
+            bucket.asAsync().tryConsumeAndReturnRemaining(6).get()
+        then:
+            listener.getConsumed() == 9
+            listener.getRejected() == 6
+
+        where:
+            type << BucketType.values()
+    }
 
 }
