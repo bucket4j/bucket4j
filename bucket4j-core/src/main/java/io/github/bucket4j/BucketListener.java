@@ -17,7 +17,10 @@
 
 package io.github.bucket4j;
 
-// TODO javadocs
+/**
+ *
+ *
+ */
 public interface BucketListener {
 
     // TODO javadocs

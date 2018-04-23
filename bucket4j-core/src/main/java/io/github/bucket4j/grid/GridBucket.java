@@ -28,19 +28,19 @@ import java.util.function.Supplier;
  *
  * @param <K>
  */
-public class GridBucket<K extends Serializable> extends AbstractBucket {
+public class GridBucket<K extends Serializable> extends AbstractBucket<GridBucket<K>> {
 
     private final K key;
     private final GridProxy<K> gridProxy;
     private final RecoveryStrategy recoveryStrategy;
     private final Supplier<BucketConfiguration> configurationSupplier;
 
-    public static <T extends Serializable> GridBucket<T> createLazyBucket(BucketListener listener, T key, Supplier<BucketConfiguration> configurationSupplier, GridProxy<T> gridProxy) {
-        return new GridBucket<>(listener, key, configurationSupplier, gridProxy, RecoveryStrategy.RECONSTRUCT, false);
+    public static <T extends Serializable> GridBucket<T> createLazyBucket(T key, Supplier<BucketConfiguration> configurationSupplier, GridProxy<T> gridProxy) {
+        return new GridBucket<>(BucketListener.NOPE, key, configurationSupplier, gridProxy, RecoveryStrategy.RECONSTRUCT, false);
     }
 
-    public static <T extends Serializable> GridBucket<T> createInitializedBucket(BucketListener listener, T key, BucketConfiguration configuration, GridProxy<T> gridProxy, RecoveryStrategy recoveryStrategy) {
-        return new GridBucket<>(listener, key, () -> configuration, gridProxy, recoveryStrategy, true);
+    public static <T extends Serializable> GridBucket<T> createInitializedBucket(T key, BucketConfiguration configuration, GridProxy<T> gridProxy, RecoveryStrategy recoveryStrategy) {
+        return new GridBucket<>(BucketListener.NOPE, key, () -> configuration, gridProxy, recoveryStrategy, true);
     }
 
     private GridBucket(BucketListener listener, K key, Supplier<BucketConfiguration> configurationSupplier, GridProxy<K> gridProxy, RecoveryStrategy recoveryStrategy, boolean initializeBucket) {
@@ -148,6 +148,11 @@ public class GridBucket<K extends Serializable> extends AbstractBucket {
     @Override
     public BucketState createSnapshot() {
         return execute(new CreateSnapshotCommand());
+    }
+
+    @Override
+    public Bucket<GridBucket<K>> withListener(BucketListener listener) {
+        return new GridBucket<>(listener, key, configurationSupplier, gridProxy, recoveryStrategy, false);
     }
 
     private BucketConfiguration getConfiguration() {

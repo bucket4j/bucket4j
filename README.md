@@ -6,7 +6,7 @@
 
 ## Advantages of Bucket4j
 * Implemented on top of ideas of well known algorithm, which are by de-facto standard for rate limiting in the IT industry.
-* Effective lock-free implementation, Bucket4j is good scalable for multithreading case.
+* Effective lock-free implementation, Bucket4j is good scalable for multi-threading case.
 * Absolutely non-compromise precision, Bucket4j does not operate with floats or doubles, all calculation are performed in the integer arithmetic,
 this feature protects end users from calculation errors involved by rounding.
 * Ability to switch from one JVM to cluster in two lines of code. Using Bucket4j you are able to limiting something in the cluster of JVMs.
@@ -14,6 +14,8 @@ Since [release 1.2](https://github.com/vladimir-bukhtoyarov/bucket4j/releases/ta
 Just use your favorite grid including [Hazelcast](http://hazelcast.com/products/hazelcast/), [Ignite](https://ignite.apache.org/), [Coherence](http://www.oracle.com/technetwork/middleware/coherence/overview/index.html), [Infinispan](http://infinispan.org/) or any other.
 * Ability to specify multiple bandwidths per bucket. For example you can limit 1000 events per hours but not often then 100 events per minute.
 * Both synchronous and asynchronous API.
+* Pluggable listener API that allows to implement monitoring and logging, [see examples](TODO).
+* Ability to use bucket as as scheduler, [see examples](https://github.com/vladimir-bukhtoyarov/bucket4j/blob/4.0/doc-pages/basic-usage.md#example-2---using-bucket-as-scheduler).
 
 ## Supported back-ends
 As mentioned above in addition to local in-memory buckets, the Bucket4j supports clustered usage scenario on top of following back-ends:

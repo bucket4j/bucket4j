@@ -21,7 +21,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-public abstract class AbstractBucket implements Bucket, BlockingBucket {
+public abstract class AbstractBucket<B extends Bucket> implements Bucket<B>, BlockingBucket {
 
     private static long INFINITY_DURATION = Long.MAX_VALUE;
     private static long UNLIMITED_AMOUNT = Long.MAX_VALUE;

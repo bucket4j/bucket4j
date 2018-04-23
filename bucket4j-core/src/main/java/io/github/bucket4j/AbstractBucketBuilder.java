@@ -25,11 +25,9 @@ package io.github.bucket4j;
 public class AbstractBucketBuilder<T extends AbstractBucketBuilder> {
 
     private final ConfigurationBuilder configurationBuilder;
-    private BucketListener listener;
 
     protected AbstractBucketBuilder() {
         configurationBuilder = new ConfigurationBuilder();
-        listener = BucketListener.NOPE;
     }
 
     /**
@@ -43,28 +41,8 @@ public class AbstractBucketBuilder<T extends AbstractBucketBuilder> {
         return (T) this;
     }
 
-    /**
-     * Specifies the bucket events listener that will be passed to all buckets constructed by this builder
-     *
-     * @param listener listener of bucket events
-     * @return this builder instance
-     *
-     * @see BucketListener
-     */
-    public T withListener(BucketListener listener) {
-        if (listener == null) {
-            throw BucketExceptions.nullListener();
-        }
-        this.listener = listener;
-        return (T) this;
-    }
-
     protected BucketConfiguration buildConfiguration() {
         return configurationBuilder.build();
-    }
-
-    protected BucketListener getListener() {
-        return listener;
     }
 
 }
