@@ -203,21 +203,6 @@ class BucketSpecification extends Specification {
             future.isCompletedExceptionally()
     }
 
-    def "should complete future exceptionally if scheduler failed to schedule the task"() {
-        setup:
-            BucketConfiguration configuration = Bucket4j.configurationBuilder()
-                    .addLimit(Bandwidth.simple(1, Duration.ofNanos(1)))
-                    .build()
-            GridProxyMock mockProxy = new GridProxyMock(SYSTEM_MILLISECONDS)
-            SchedulerMock schedulerMock = new SchedulerMock()
-            Bucket bucket = GridBucket.createInitializedBucket(BucketListener.NOPE, "66", configuration, mockProxy, THROW_BUCKET_NOT_FOUND_EXCEPTION)
-        when:
-            schedulerMock.setException(new RuntimeException())
-            CompletableFuture<Boolean> future = bucket.asAsyncScheduler().tryConsume(10, Duration.ofNanos(100000), schedulerMock)
-        then:
-            future.isCompletedExceptionally()
-    }
-
     def "check that toString does not fail"() {
         when:
             for (BucketType type : BucketType.values()) {

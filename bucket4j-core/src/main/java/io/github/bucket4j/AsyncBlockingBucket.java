@@ -61,6 +61,7 @@ public interface AsyncBlockingBucket {
      *
      * @return true if {@code numTokens} has been consumed or false when {@code numTokens} has not been consumed
      */
+    // TODO add cases to AsyncBlockingBucketSpecification
     CompletableFuture<Boolean> tryConsume(long numTokens, long maxWaitNanos, ScheduledExecutorService scheduler);
 
     /**
@@ -68,6 +69,7 @@ public interface AsyncBlockingBucket {
      *
      * @see #tryConsume(long, long, ScheduledExecutorService)
      */
+    // TODO add cases to AsyncBlockingBucketSpecification
     default CompletableFuture<Boolean> tryConsume(long numTokens, Duration maxWait, ScheduledExecutorService scheduler) {
         return tryConsume(numTokens, maxWait.toNanos(), scheduler);
     }
@@ -100,6 +102,7 @@ public interface AsyncBlockingBucket {
      *
      * @return true if {@code numTokens} has been consumed or false when {@code numTokens} has not been consumed
      */
+    // TODO add cases to AsyncBlockingBucketSpecification
     CompletableFuture<Void> consume(long numTokens, ScheduledExecutorService scheduler);
 
 }
