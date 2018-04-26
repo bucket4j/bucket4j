@@ -19,7 +19,6 @@ package io.github.bucket4j.grid.jcache;
 
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketConfiguration;
-import io.github.bucket4j.BucketListener;
 import io.github.bucket4j.grid.ProxyManager;
 import io.github.bucket4j.grid.GridBucket;
 import io.github.bucket4j.grid.GridBucketState;
@@ -48,13 +47,13 @@ public class JCacheProxyManager<K extends Serializable> implements ProxyManager<
 
     @Override
     public Bucket getProxy(K key, Supplier<BucketConfiguration> supplier) {
-        return GridBucket.createLazyBucket(BucketListener.NOPE, key, supplier, gridProxy);
+        return GridBucket.createLazyBucket(key, supplier, gridProxy);
     }
 
     @Override
     public Optional<Bucket> getProxy(K key) {
         return getProxyConfiguration(key)
-                .map(configuration -> GridBucket.createLazyBucket(BucketListener.NOPE, key, () -> configuration, gridProxy));
+                .map(configuration -> GridBucket.createLazyBucket(key, () -> configuration, gridProxy));
     }
 
     @Override

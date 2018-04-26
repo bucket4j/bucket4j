@@ -21,7 +21,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-public abstract class AbstractBucket<B extends Bucket> implements Bucket<B>, BlockingBucket {
+public abstract class AbstractBucket implements Bucket, BlockingBucket {
 
     private static long INFINITY_DURATION = Long.MAX_VALUE;
     private static long UNLIMITED_AMOUNT = Long.MAX_VALUE;
@@ -50,12 +50,16 @@ public abstract class AbstractBucket<B extends Bucket> implements Bucket<B>, Blo
 
     protected abstract CompletableFuture<Void> replaceConfigurationAsyncImpl(BucketConfiguration newConfiguration);
 
-    private final AsyncBlockingBucketImpl asyncView;
+    private final AsyncScheduledBucketImpl asyncView;
     private final BucketListener listener;
 
     public AbstractBucket(BucketListener listener) {
+        if (listener == null) {
+            throw BucketExceptions.nullListener();
+        }
+
         this.listener = listener;
-        this.asyncView = new AsyncBlockingBucketImpl() {
+        this.asyncView = new AsyncScheduledBucketImpl() {
             @Override
             public CompletableFuture<Boolean> tryConsume(long tokensToConsume) {
                 checkTokensToConsume(tokensToConsume);
@@ -197,7 +201,7 @@ public abstract class AbstractBucket<B extends Bucket> implements Bucket<B>, Blo
     }
 
     @Override
-    public AsyncBlockingBucket asAsyncScheduler() {
+    public AsyncScheduledBucket asAsyncScheduler() {
         if (!isAsyncModeSupported()) {
             throw new UnsupportedOperationException();
         }
@@ -380,6 +384,6 @@ public abstract class AbstractBucket<B extends Bucket> implements Bucket<B>, Blo
         }
     }
 
-    private interface AsyncBlockingBucketImpl extends AsyncBucket, AsyncBlockingBucket {}
+    private interface AsyncScheduledBucketImpl extends AsyncBucket, AsyncScheduledBucket {}
 
 }

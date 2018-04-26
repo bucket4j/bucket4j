@@ -17,8 +17,6 @@
 
 package io.github.bucket4j;
 
-import io.github.bucket4j.grid.GridBucket;
-
 /**
  * Performs rate limiting using algorithm based on top of ideas of <a href="https://en.wikipedia.org/wiki/Token_bucket">Token Bucket</a>.
  * <p>
@@ -28,7 +26,7 @@ import io.github.bucket4j.grid.GridBucket;
  * <li><a href="https://github.com/vladimir-bukhtoyarov/bucket4j/blob/4.0/doc-pages/advanced-usage.md">Advanced examples of usage</a></li>
  * </ul>
  */
-public interface Bucket<B extends Bucket> {
+public interface Bucket {
 
     /**
      * Returns the {@link BlockingBucket} view of this bucket, that provides operations which are able to block caller thread.
@@ -68,7 +66,7 @@ public interface Bucket<B extends Bucket> {
      *
      * @throws UnsupportedOperationException if particular extension behind the bucket does not support asynchronous mode.
      */
-    AsyncBlockingBucket asAsyncScheduler();
+    AsyncScheduledBucket asAsyncScheduler();
 
     /**
      * Tries to consume a specified number of tokens from this bucket.
@@ -180,12 +178,12 @@ public interface Bucket<B extends Bucket> {
     BucketState createSnapshot();
 
     /**
-     * Returns new bucket instance decorated by {@code listener}
+     * Returns new copy of this bucket instance decorated by {@code listener}.
      *
-     * @param listener the listener of bucket events
+     * @param listener the listener of bucket events.
      *
      * @return new bucket instance decorated by {@code listener}
      */
-    public Bucket<B> withListener(BucketListener listener);
+    Bucket withListener(BucketListener listener);
 
 }

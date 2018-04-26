@@ -28,7 +28,7 @@ import java.util.concurrent.CompletableFuture
 import static io.github.bucket4j.TimeMeter.SYSTEM_MILLISECONDS
 import static io.github.bucket4j.grid.RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION
 
-class AsyncBlockingBucketSpecification extends Specification {
+class AsyncScheduledBucketSpecification extends Specification {
 
 	def "should complete future exceptionally if scheduler failed to schedule the task"() {
 		setup:

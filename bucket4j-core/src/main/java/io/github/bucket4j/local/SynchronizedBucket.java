@@ -32,17 +32,26 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket {
     private final BucketState state;
     private final Lock lock;
 
-    public SynchronizedBucket(BucketConfiguration configuration, TimeMeter timeMeter, BucketListener listener) {
-        this(configuration, timeMeter, listener, new ReentrantLock());
+    public SynchronizedBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
+        this(configuration, timeMeter, new ReentrantLock());
     }
 
-    public SynchronizedBucket(BucketConfiguration configuration, TimeMeter timeMeter, BucketListener listener, Lock lock) {
+    SynchronizedBucket(BucketConfiguration configuration, TimeMeter timeMeter, Lock lock) {
+        this(BucketListener.NOPE, configuration, timeMeter, lock, BucketState.createInitialState(configuration, timeMeter.currentTimeNanos()));
+    }
+
+    private SynchronizedBucket(BucketListener listener, BucketConfiguration configuration, TimeMeter timeMeter, Lock lock, BucketState initialState) {
         super(listener);
         this.configuration = configuration;
         this.bandwidths = configuration.getBandwidths();
         this.timeMeter = timeMeter;
-        this.state = BucketState.createInitialState(configuration, timeMeter.currentTimeNanos());
+        this.state = initialState;
         this.lock = lock;
+    }
+
+    @Override
+    public Bucket withListener(BucketListener listener) {
+        return new SynchronizedBucket(listener, configuration, timeMeter, lock, state.copy());
     }
 
     @Override

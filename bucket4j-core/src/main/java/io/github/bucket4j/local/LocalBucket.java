@@ -6,7 +6,7 @@ import io.github.bucket4j.BucketConfiguration;
 /**
  * Represents the bucket inside current JVM.
  */
-public interface LocalBucket extends Bucket<LocalBucket> {
+public interface LocalBucket extends Bucket {
 
     /**
      * Returns configuration of this bucket.

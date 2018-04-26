@@ -19,6 +19,7 @@ package io.github.bucket4j
 
 import io.github.bucket4j.grid.GridBucket
 import io.github.bucket4j.local.LocalBucketBuilder
+import io.github.bucket4j.mock.BucketType
 import io.github.bucket4j.mock.GridProxyMock
 import spock.lang.Specification
 import spock.lang.Unroll
@@ -43,7 +44,7 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
             ex.message == nonPositiveCapacity(capacity).message
 
         where:
-          capacity << [-10, -5, 0]
+            capacity << [-10, -5, 0]
     }
 
     @Unroll
@@ -135,12 +136,16 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
             ex.message == nullTimeMeter().message
     }
 
-    def "Should check that listener is not null"() {
+    @Unroll
+    def "Should check that listener is not null when decorating bucket with type #bucketType"(BucketType bucketType) {
         when:
-            Bucket4j.builder().withListener(null)
+            bucketType.createBucket(Bucket4j.builder().addLimit(Bandwidth.simple(3, Duration.ofMinutes(1))))
+                    .withListener(null)
         then:
             IllegalArgumentException ex = thrown()
             ex.message == nullListener().message
+        where:
+            bucketType << BucketType.values()
     }
 
     def  "Should check that limited bandwidth list is not empty"() {
@@ -184,13 +189,13 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
             ex.message == nonPositiveTokensToConsume(-1).message
 
         when:
-            bucket.tryConsume(0L, VALID_PERIOD.toNanos(), BlockingStrategy.PARKING)
+            bucket.asScheduler().tryConsume(0L, VALID_PERIOD.toNanos(), BlockingStrategy.PARKING)
         then:
             ex = thrown()
             ex.message == nonPositiveTokensToConsume(0).message
 
         when:
-            bucket.tryConsume(-1, VALID_PERIOD.toNanos(), BlockingStrategy.PARKING)
+            bucket.asScheduler().tryConsume(-1, VALID_PERIOD.toNanos(), BlockingStrategy.PARKING)
         then:
             ex = thrown()
             ex.message == nonPositiveTokensToConsume(-1).message
@@ -210,13 +215,13 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
                     Bandwidth.simple(VALID_CAPACITY, VALID_PERIOD)
             ).build()
         when:
-            bucket.tryConsume(1, 0, BlockingStrategy.PARKING)
+            bucket.asScheduler().tryConsume(1, 0, BlockingStrategy.PARKING)
         then:
             IllegalArgumentException ex = thrown()
             ex.message == nonPositiveNanosToWait(0).message
 
         when:
-            bucket.tryConsume(1, -1, BlockingStrategy.PARKING)
+            bucket.asScheduler().tryConsume(1, -1, BlockingStrategy.PARKING)
         then:
             ex = thrown()
             ex.message == nonPositiveNanosToWait(-1).message
@@ -242,7 +247,7 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
                     Bandwidth.simple(VALID_CAPACITY, VALID_PERIOD)
             ).build()
         when:
-            bucket.asAsync().tryConsume(32, 1000_000, null)
+            bucket.asAsyncScheduler().tryConsume(32, 1000_000, null)
         then:
             IllegalArgumentException ex = thrown()
             ex.message == nullScheduler().message
@@ -259,21 +264,21 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
         setup:
             GridProxyMock mockProxy = new GridProxyMock(TimeMeter.SYSTEM_MILLISECONDS)
         when:
-            GridBucket.createInitializedBucket(BucketListener.NOPE, "66", null, mockProxy, THROW_BUCKET_NOT_FOUND_EXCEPTION)
+            GridBucket.createInitializedBucket("66", null, mockProxy, THROW_BUCKET_NOT_FOUND_EXCEPTION)
 
         then:
             IllegalArgumentException ex = thrown()
             ex.message == nullConfiguration().message
 
         when:
-            GridBucket.createLazyBucket(BucketListener.NOPE, "66", {null}, mockProxy)
+            GridBucket.createLazyBucket("66", {null}, mockProxy)
                     .tryConsume(1)
         then:
             ex = thrown()
             ex.message == nullConfiguration().message
 
         when:
-            GridBucket.createLazyBucket(BucketListener.NOPE, "66", null, mockProxy)
+            GridBucket.createLazyBucket("66", null, mockProxy)
                     .tryConsume(1)
         then:
             ex = thrown()

@@ -21,7 +21,6 @@ import io.github.bucket4j.AbstractBucketBuilder;
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.grid.GridBucket;
 import io.github.bucket4j.grid.RecoveryStrategy;
-import io.github.bucket4j.ConfigurationBuilder;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.grid.GridBucketState;
 
@@ -68,7 +67,7 @@ public class JCacheBucketBuilder extends AbstractBucketBuilder<JCacheBucketBuild
     public <K extends Serializable> Bucket build(Cache<K, GridBucketState> cache, K key, RecoveryStrategy recoveryStrategy) {
         BucketConfiguration configuration = buildConfiguration();
         JCacheProxy<K> gridProxy = new JCacheProxy<>(cache);
-        return GridBucket.createInitializedBucket(getListener(), key, configuration, gridProxy, recoveryStrategy);
+        return GridBucket.createInitializedBucket(key, configuration, gridProxy, recoveryStrategy);
     }
 
 }

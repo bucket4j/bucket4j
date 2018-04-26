@@ -85,9 +85,9 @@ public class LocalBucketBuilder extends AbstractBucketBuilder<LocalBucketBuilder
     public LocalBucket build() {
         BucketConfiguration configuration = buildConfiguration();
         switch (synchronizationStrategy) {
-            case LOCK_FREE: return new LockFreeBucket(configuration, timeMeter, BucketListener.NOPE);
-            case SYNCHRONIZED: return new SynchronizedBucket(configuration, timeMeter, BucketListener.NOPE);
-            case NONE: return new SynchronizedBucket(configuration, timeMeter, BucketListener.NOPE, FakeLock.INSTANCE);
+            case LOCK_FREE: return new LockFreeBucket(configuration, timeMeter);
+            case SYNCHRONIZED: return new SynchronizedBucket(configuration, timeMeter);
+            case NONE: return new SynchronizedBucket(configuration, timeMeter, FakeLock.INSTANCE);
             default: throw new IllegalStateException();
         }
     }

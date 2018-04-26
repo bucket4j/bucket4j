@@ -54,7 +54,7 @@ public class InfinispanBucketBuilder extends AbstractBucketBuilder<InfinispanBuc
     public <K extends Serializable> Bucket build(FunctionalMap.ReadWriteMap<K, GridBucketState> readWriteMap, K key, RecoveryStrategy recoveryStrategy) {
         BucketConfiguration configuration = buildConfiguration();
         InfinispanProxy<K> gridProxy = new InfinispanProxy<>(readWriteMap);
-        return GridBucket.createInitializedBucket(getListener(), key, configuration, gridProxy, recoveryStrategy);
+        return GridBucket.createInitializedBucket(key, configuration, gridProxy, recoveryStrategy);
     }
 
 }

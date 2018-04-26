@@ -54,7 +54,7 @@ public class HazelcastBucketBuilder extends AbstractBucketBuilder<HazelcastBucke
     public <K extends Serializable> Bucket build(IMap<K, GridBucketState> map, K key, RecoveryStrategy recoveryStrategy) {
         BucketConfiguration configuration = buildConfiguration();
         HazelcastProxy<K> gridProxy = new HazelcastProxy<>(map);
-        return GridBucket.createInitializedBucket(getListener(), key, configuration, gridProxy, recoveryStrategy);
+        return GridBucket.createInitializedBucket(key, configuration, gridProxy, recoveryStrategy);
     }
 
 }

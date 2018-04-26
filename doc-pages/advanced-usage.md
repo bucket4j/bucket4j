@@ -115,3 +115,11 @@ BucketConfiguration newConfiguration = Bucket4j.configurationBuilder()
                 .build();
 bucket.replaceConfiguration(newConfiguration)
 ```
+
+### Listening for bucket events
+You can attach the listener to any bucket in order to track following events:
+- 
+-
+-
+-
+

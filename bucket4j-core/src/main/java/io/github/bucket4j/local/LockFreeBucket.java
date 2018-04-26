@@ -29,11 +29,19 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket {
             AtomicReferenceFieldUpdater.newUpdater(LockFreeBucket.class, StateWithConfiguration.class, "state");
     private volatile StateWithConfiguration state;
 
-    public LockFreeBucket(BucketConfiguration configuration, TimeMeter timeMeter, BucketListener listener) {
+    public LockFreeBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
+        this(createStateWithConfiguration(configuration, timeMeter), timeMeter, BucketListener.NOPE);
+    }
+
+    private LockFreeBucket(StateWithConfiguration state, TimeMeter timeMeter, BucketListener listener) {
         super(listener);
         this.timeMeter = timeMeter;
-        BucketState initialState = BucketState.createInitialState(configuration, timeMeter.currentTimeNanos());
-        state = new StateWithConfiguration(configuration, initialState);
+        this.state = state;
+    }
+
+    @Override
+    public Bucket withListener(BucketListener listener) {
+        return new LockFreeBucket(state, timeMeter, listener);
     }
 
     @Override
@@ -272,6 +280,11 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket {
         long delayNanosAfterWillBePossibleToConsume(long tokensToConsume) {
             return state.delayNanosAfterWillBePossibleToConsume(configuration.getBandwidths(), tokensToConsume);
         }
+    }
+
+    private static StateWithConfiguration createStateWithConfiguration(BucketConfiguration configuration, TimeMeter timeMeter) {
+        BucketState initialState = BucketState.createInitialState(configuration, timeMeter.currentTimeNanos());
+        return new StateWithConfiguration(configuration, initialState);
     }
 
     @Override

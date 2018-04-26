@@ -27,7 +27,7 @@ import java.util.function.Function;
 /**
  * Provides async API for bucket that allows to use bucket as async scheduler.
  */
-public interface AsyncBlockingBucket {
+public interface AsyncScheduledBucket {
 
     /**
      * Tries to consume the specified number of tokens from the bucket.

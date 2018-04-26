@@ -54,7 +54,7 @@ public class IgniteBucketBuilder extends AbstractBucketBuilder<IgniteBucketBuild
     public <K extends Serializable> Bucket build(IgniteCache<K, GridBucketState> cache, K key, RecoveryStrategy recoveryStrategy) {
         BucketConfiguration configuration = buildConfiguration();
         IgniteProxy<K> gridProxy = new IgniteProxy<>(cache);
-        return GridBucket.createInitializedBucket(getListener(), key, configuration, gridProxy, recoveryStrategy);
+        return GridBucket.createInitializedBucket(key, configuration, gridProxy, recoveryStrategy);
     }
 
 }

@@ -28,7 +28,7 @@ import java.util.function.Supplier;
  *
  * @param <K>
  */
-public class GridBucket<K extends Serializable> extends AbstractBucket<GridBucket<K>> {
+public class GridBucket<K extends Serializable> extends AbstractBucket {
 
     private final K key;
     private final GridProxy<K> gridProxy;
@@ -41,6 +41,11 @@ public class GridBucket<K extends Serializable> extends AbstractBucket<GridBucke
 
     public static <T extends Serializable> GridBucket<T> createInitializedBucket(T key, BucketConfiguration configuration, GridProxy<T> gridProxy, RecoveryStrategy recoveryStrategy) {
         return new GridBucket<>(BucketListener.NOPE, key, () -> configuration, gridProxy, recoveryStrategy, true);
+    }
+
+    @Override
+    public Bucket withListener(BucketListener listener) {
+        return new GridBucket<>(listener, key, configurationSupplier, gridProxy, recoveryStrategy, false);
     }
 
     private GridBucket(BucketListener listener, K key, Supplier<BucketConfiguration> configurationSupplier, GridProxy<K> gridProxy, RecoveryStrategy recoveryStrategy, boolean initializeBucket) {
@@ -148,11 +153,6 @@ public class GridBucket<K extends Serializable> extends AbstractBucket<GridBucke
     @Override
     public BucketState createSnapshot() {
         return execute(new CreateSnapshotCommand());
-    }
-
-    @Override
-    public Bucket<GridBucket<K>> withListener(BucketListener listener) {
-        return new GridBucket<>(listener, key, configurationSupplier, gridProxy, recoveryStrategy, false);
     }
 
     private BucketConfiguration getConfiguration() {
