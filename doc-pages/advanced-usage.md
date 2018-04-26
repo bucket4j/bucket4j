@@ -118,8 +118,8 @@ bucket.replaceConfiguration(newConfiguration)
 
 ### Listening for bucket events
 You can attach the listener to any bucket in order to track following events:
-- 
--
--
--
+- TODO
+- TODO
+- TODO
+- TODO
 
