@@ -195,7 +195,7 @@ class BucketSpecification extends Specification {
                                                     .addLimit(Bandwidth.simple(1, Duration.ofNanos(1)))
                                                     .build()
             GridProxyMock mockProxy = new GridProxyMock(SYSTEM_MILLISECONDS);
-            Bucket bucket = GridBucket.createInitializedBucket(BucketListener.NOPE, "66", configuration, mockProxy, THROW_BUCKET_NOT_FOUND_EXCEPTION)
+            Bucket bucket = GridBucket.createInitializedBucket("66", configuration, mockProxy, THROW_BUCKET_NOT_FOUND_EXCEPTION)
         when:
             mockProxy.setException(new RuntimeException())
             CompletableFuture<Boolean> future = bucket.asAsync().tryConsume(1)

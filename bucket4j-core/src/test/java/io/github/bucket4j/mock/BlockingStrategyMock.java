@@ -23,28 +23,35 @@ import io.github.bucket4j.UninterruptibleBlockingStrategy;
 public class BlockingStrategyMock implements BlockingStrategy, UninterruptibleBlockingStrategy {
 
     private final TimeMeterMock meterMock;
-    private long sleeped = 0;
+    private long parkedNanos = 0;
+    private long atemptToParkNanos = 0;
 
     public BlockingStrategyMock(TimeMeterMock meterMock) {
         this.meterMock = meterMock;
     }
 
-    public long getSleeped() {
-        return sleeped;
+    public long getParkedNanos() {
+        return parkedNanos;
+    }
+
+    public long getAtemptToParkNanos() {
+        return atemptToParkNanos;
     }
 
     @Override
     public void park(long nanosToPark) throws InterruptedException {
+        atemptToParkNanos += nanosToPark;
         if (Thread.interrupted()) {
             throw new InterruptedException();
         }
-        sleeped += nanosToPark;
+        parkedNanos += nanosToPark;
         meterMock.addTime(nanosToPark);
     }
 
     @Override
     public void parkUninterruptibly(long nanosToPark) {
-        sleeped += nanosToPark;
+        atemptToParkNanos += nanosToPark;
+        parkedNanos += nanosToPark;
         meterMock.addTime(nanosToPark);
     }
 

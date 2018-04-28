@@ -73,7 +73,6 @@ public interface BlockingBucket {
      *
      * @see #tryConsume(long, long, BlockingStrategy)
      */
-    // TODO add cases to BlockingBucketSpecification
     default boolean tryConsume(long numTokens, long maxWaitTimeNanos) throws InterruptedException {
         return tryConsume(numTokens, maxWaitTimeNanos, BlockingStrategy.PARKING);
     }
@@ -83,7 +82,6 @@ public interface BlockingBucket {
      *
      * @see #tryConsume(long, long, BlockingStrategy)
      */
-    // TODO add cases to BlockingBucketSpecification
     default boolean tryConsume(long numTokens, Duration maxWait) throws InterruptedException {
         return tryConsume(numTokens, maxWait.toNanos(), BlockingStrategy.PARKING);
     }
@@ -152,7 +150,6 @@ public interface BlockingBucket {
      *
      * @throws InterruptedException in case of current thread has been interrupted during the waiting
      */
-    // TODO add cases to BlockingBucketSpecification
     void consume(long numTokens, BlockingStrategy blockingStrategy) throws InterruptedException;
 
     /**
@@ -160,7 +157,6 @@ public interface BlockingBucket {
      *
      * @see #consume(long, BlockingStrategy)
      */
-    // TODO add cases to BlockingBucketSpecification
     default void consume(long numTokens) throws InterruptedException {
         consume(numTokens, BlockingStrategy.PARKING);
     }
@@ -174,7 +170,6 @@ public interface BlockingBucket {
      * @return true if {@code numTokens} has been consumed or false when {@code numTokens} has not been consumed
      * @see #consume(long, BlockingStrategy)
      */
-    // TODO add cases to BlockingBucketSpecification
     void consumeUninterruptibly(long numTokens, UninterruptibleBlockingStrategy blockingStrategy);
 
     /**
@@ -182,7 +177,6 @@ public interface BlockingBucket {
      *
      * @see #consumeUninterruptibly(long, UninterruptibleBlockingStrategy)
      */
-    // TODO add cases to BlockingBucketSpecification
     default void consumeUninterruptibly(long numTokens) {
         consumeUninterruptibly(numTokens, UninterruptibleBlockingStrategy.PARKING);
     }

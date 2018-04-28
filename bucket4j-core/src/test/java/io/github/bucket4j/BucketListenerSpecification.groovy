@@ -203,14 +203,13 @@ class BucketListenerSpecification extends Specification {
 
         when:
             Thread.currentThread().interrupt()
-            bucket.asScheduler().consume(1, blocker)
-            Thread.interrupted()
+            bucket.asScheduler().consumeUninterruptibly(1, blocker)
         then:
-            thrown(InterruptedException)
+            Thread.interrupted()
             listener.getConsumed() == 12
             listener.getRejected() == 0
-            listener.getParkedNanos() == 100_000_000
-            listener.getInterrupted() == 1
+            listener.getParkedNanos() == 200_000_000
+            listener.getInterrupted() == 0
 
         where:
             type << BucketType.values()
@@ -341,8 +340,8 @@ class BucketListenerSpecification extends Specification {
     }
 
 
-	  @Unroll
-    def "#type test listener for async blocking consume"(BucketType type) {
+    @Unroll
+    def "#type test listener for async delayed consume"(BucketType type) {
         setup:
             Bucket bucket = type.createBucket(builder, clock).toListenable(listener)
 
@@ -365,7 +364,6 @@ class BucketListenerSpecification extends Specification {
         where:
             type << BucketType.values()
     }
-
 
     @Unroll
     def "#type test listener for async tryConsumeAsMuchAsPossible"(BucketType type) {
