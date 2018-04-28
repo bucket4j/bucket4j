@@ -63,6 +63,14 @@ public interface BlockingBucket {
      * This is just overloaded equivalent of {@link #tryConsume(long, long, BlockingStrategy)}
      *
      * @see #tryConsume(long, long, BlockingStrategy)
+     *
+     * @param numTokens The number of tokens to consume from the bucket.
+     * @param maxWait limit of time which thread can wait.
+     * @param blockingStrategy specifies the way to block current thread to amount of time required to refill missed number of tokens in the bucket
+     *
+     * @return true if {@code numTokens} has been consumed or false when {@code numTokens} has not been consumed
+     *
+     * @throws InterruptedException in case of current thread has been interrupted during the waiting
      */
     default boolean tryConsume(long numTokens, Duration maxWait, BlockingStrategy blockingStrategy) throws InterruptedException {
         return tryConsume(numTokens, maxWait.toNanos(), blockingStrategy);
@@ -72,6 +80,13 @@ public interface BlockingBucket {
      * This is just overloaded equivalent of {@link #tryConsume(long, long, BlockingStrategy)}
      *
      * @see #tryConsume(long, long, BlockingStrategy)
+     *
+     * @param numTokens The number of tokens to consume from the bucket.
+     * @param maxWaitTimeNanos limit of time(in nanoseconds) which thread can wait.
+     *
+     * @return true if {@code numTokens} has been consumed or false when {@code numTokens} has not been consumed
+     *
+     * @throws InterruptedException in case of current thread has been interrupted during the waiting
      */
     default boolean tryConsume(long numTokens, long maxWaitTimeNanos) throws InterruptedException {
         return tryConsume(numTokens, maxWaitTimeNanos, BlockingStrategy.PARKING);
@@ -81,6 +96,13 @@ public interface BlockingBucket {
      * This is just overloaded equivalent of {@link #tryConsume(long, long, BlockingStrategy)}
      *
      * @see #tryConsume(long, long, BlockingStrategy)
+     *
+     * @param numTokens The number of tokens to consume from the bucket.
+     * @param maxWait limit of time which thread can wait.
+     *
+     * @return true if {@code numTokens} has been consumed or false when {@code numTokens} has not been consumed
+     *
+     * @throws InterruptedException in case of current thread has been interrupted during the waiting
      */
     default boolean tryConsume(long numTokens, Duration maxWait) throws InterruptedException {
         return tryConsume(numTokens, maxWait.toNanos(), BlockingStrategy.PARKING);
