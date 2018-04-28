@@ -14,7 +14,7 @@ Since [release 1.2](https://github.com/vladimir-bukhtoyarov/bucket4j/releases/ta
 Just use your favorite grid including [Hazelcast](http://hazelcast.com/products/hazelcast/), [Ignite](https://ignite.apache.org/), [Coherence](http://www.oracle.com/technetwork/middleware/coherence/overview/index.html), [Infinispan](http://infinispan.org/) or any other.
 * Ability to specify multiple bandwidths per bucket. For example you can limit 1000 events per hours but not often then 100 events per minute.
 * Both synchronous and asynchronous API.
-* Pluggable listener API that allows to implement monitoring and logging, [see examples](https://github.com/vladimir-bukhtoyarov/bucket4j/blob/4.0/doc-pages/advanced-usage.md#listening-for-bucket-events).
+* Pluggable listener API that allows to implement monitoring and logging.
 * Ability to use bucket as as scheduler, [see examples](https://github.com/vladimir-bukhtoyarov/bucket4j/blob/4.0/doc-pages/basic-usage.md#example-2---using-bucket-as-scheduler).
 
 ## Supported back-ends
@@ -36,6 +36,7 @@ As mentioned above in addition to local in-memory buckets, the Bucket4j supports
 * [Basic-usage](doc-pages/basic-usage.md) - examples of basic usage.
 * [Advanced-usage](doc-pages/advanced-usage.md) - examples of advanced usage.
 * [Asynchronous-usage](doc-pages/asynchronous.md) - examples of asynchronous usage.
+* [Listening of bucket events](doc-pages/listener.md) - examples of monitoring.
 
 #### Production checklist
 * [Common production checklist](doc-pages/production-generic-checklist.md) - Mandatory points that need to be understood before using the Bucket4j in production, independently of local or clustered usage scenarios.

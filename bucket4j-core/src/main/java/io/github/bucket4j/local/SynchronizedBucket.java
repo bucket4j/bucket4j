@@ -50,7 +50,7 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket {
     }
 
     @Override
-    public Bucket withListener(BucketListener listener) {
+    public Bucket toListenable(BucketListener listener) {
         return new SynchronizedBucket(listener, configuration, timeMeter, lock, state.copy());
     }
 

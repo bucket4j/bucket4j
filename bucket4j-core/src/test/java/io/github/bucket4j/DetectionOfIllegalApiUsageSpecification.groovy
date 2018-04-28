@@ -140,7 +140,7 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
     def "Should check that listener is not null when decorating bucket with type #bucketType"(BucketType bucketType) {
         when:
             bucketType.createBucket(Bucket4j.builder().addLimit(Bandwidth.simple(3, Duration.ofMinutes(1))))
-                    .withListener(null)
+                    .toListenable(null)
         then:
             IllegalArgumentException ex = thrown()
             ex.message == nullListener().message

@@ -44,7 +44,7 @@ public class GridBucket<K extends Serializable> extends AbstractBucket {
     }
 
     @Override
-    public Bucket withListener(BucketListener listener) {
+    public Bucket toListenable(BucketListener listener) {
         return new GridBucket<>(listener, key, configurationSupplier, gridProxy, recoveryStrategy, false);
     }
 

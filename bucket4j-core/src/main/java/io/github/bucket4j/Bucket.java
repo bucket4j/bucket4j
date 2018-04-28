@@ -180,10 +180,12 @@ public interface Bucket {
     /**
      * Returns new copy of this bucket instance decorated by {@code listener}.
      *
+     * See javadocs for {@link BucketListener} in order to understand semantic of listener.
+     *
      * @param listener the listener of bucket events.
      *
      * @return new bucket instance decorated by {@code listener}
      */
-    Bucket withListener(BucketListener listener);
+    Bucket toListenable(BucketListener listener);
 
 }

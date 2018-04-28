@@ -40,7 +40,7 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket {
     }
 
     @Override
-    public Bucket withListener(BucketListener listener) {
+    public Bucket toListenable(BucketListener listener) {
         return new LockFreeBucket(state, timeMeter, listener);
     }
 
