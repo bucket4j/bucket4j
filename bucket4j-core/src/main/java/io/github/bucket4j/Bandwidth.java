@@ -126,10 +126,12 @@ public class Bandwidth implements Serializable {
     }
 
     /**
-     * TODO javadocs
+     * By default new created bandwidth has amount of tokens that equals its capacity.
+     * This method allows to replace amount of initial tokens.
      *
      * @param initialTokens
-     * @return
+     *
+     * @return the copy of this bandwidth with new value of initial tokens.
      */
     public Bandwidth withInitialTokens(long initialTokens) {
         if (initialTokens < 0) {
