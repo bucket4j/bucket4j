@@ -25,7 +25,7 @@ import spock.lang.Unroll
 import java.time.Duration
 import java.util.concurrent.ExecutionException
 
-import static io.github.bucket4j.util.EqualsUtil.isConfigEquals
+import static EqualsUtil.isConfigEquals
 
 class ConfigurationReplacementSpecification extends Specification {
 
@@ -38,7 +38,7 @@ class ConfigurationReplacementSpecification extends Specification {
             BucketConfiguration newConfiguration = Bucket4j.configurationBuilder()
                     .addLimit(Bandwidth.simple(100, Duration.ofMinutes(1)))
                     .addLimit(Bandwidth.simple(1000, Duration.ofHours(1)))
-                    .buildConfiguration()
+                    .build()
 
         when:
             bucket.replaceConfiguration(newConfiguration)
@@ -67,7 +67,7 @@ class ConfigurationReplacementSpecification extends Specification {
             )
             BucketConfiguration newConfiguration = Bucket4j.configurationBuilder()
                     .addLimit(Bandwidth.simple(10, Duration.ofMinutes(100)))
-                    .buildConfiguration()
+                    .build()
 
         when:
             bucket.replaceConfiguration(newConfiguration)
@@ -93,13 +93,13 @@ class ConfigurationReplacementSpecification extends Specification {
             for (boolean sync : [true, false]) {
                 TimeMeterMock clock = new TimeMeterMock(0)
                 Bucket bucket = bucketType.createBucket(Bucket4j.builder()
-                        .addLimit(0, Bandwidth.simple(100, Duration.ofNanos(100)))
+                        .addLimit(Bandwidth.simple(100, Duration.ofNanos(100)).withInitialTokens(0))
                         .withCustomTimePrecision(clock)
                 )
                 clock.addTime(10)
                 BucketConfiguration newConfiguration = Bucket4j.configurationBuilder()
                         .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)))
-                        .buildConfiguration()
+                        .build()
                 if (sync) {
                     bucket.replaceConfiguration(newConfiguration)
                 } else {
@@ -117,12 +117,12 @@ class ConfigurationReplacementSpecification extends Specification {
         for (boolean sync : [true, false]) {
             TimeMeterMock clock = new TimeMeterMock(0)
             Bucket bucket = bucketType.createBucket(Bucket4j.builder()
-                    .addLimit(Bandwidth.classic (500, Refill.smooth(100, Duration.ofNanos(100)) ))
+                    .addLimit(Bandwidth.classic (500, Refill.of(100, Duration.ofNanos(100)) ))
                     .withCustomTimePrecision(clock)
             )
             BucketConfiguration newConfiguration = Bucket4j.configurationBuilder()
-                    .addLimit(Bandwidth.classic (200, Refill.smooth(100, Duration.ofNanos(100)) ))
-                    .buildConfiguration()
+                    .addLimit(Bandwidth.classic (200, Refill.of(100, Duration.ofNanos(100)) ))
+                    .build()
             if (sync) {
                 bucket.replaceConfiguration(newConfiguration)
             } else {
@@ -140,12 +140,12 @@ class ConfigurationReplacementSpecification extends Specification {
         for (boolean sync : [true, false]) {
             TimeMeterMock clock = new TimeMeterMock(0)
             Bucket bucket = bucketType.createBucket(Bucket4j.builder()
-                    .addLimit(0, Bandwidth.simple(100, Duration.ofNanos(100)))
+                    .addLimit(Bandwidth.simple(100, Duration.ofNanos(100)).withInitialTokens(0))
                     .withCustomTimePrecision(clock)
             )
             BucketConfiguration newConfiguration = Bucket4j.configurationBuilder()
                     .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)))
-                    .buildConfiguration()
+                    .build()
             if (sync) {
                 bucket.replaceConfiguration(newConfiguration)
             } else {

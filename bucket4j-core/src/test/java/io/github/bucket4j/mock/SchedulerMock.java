@@ -25,6 +25,7 @@ public class SchedulerMock implements ScheduledExecutorService {
 
     private RuntimeException exception;
     private long acummulatedDelayNanos;
+    private TimeMeterMock timeMeter;
 
     public long getAcummulatedDelayNanos() {
         return acummulatedDelayNanos;
@@ -34,12 +35,22 @@ public class SchedulerMock implements ScheduledExecutorService {
         this.exception = exception;
     }
 
+    public SchedulerMock() {
+    }
+
+    public SchedulerMock(TimeMeterMock timeMeter) {
+        this.timeMeter = timeMeter;
+    }
+
     @Override
     public ScheduledFuture<?> schedule(Runnable command, long delay, TimeUnit unit) {
         if (exception != null) {
             throw exception;
         }
         acummulatedDelayNanos += unit.toNanos(delay);
+        if (timeMeter != null) {
+            timeMeter.addTime(unit.toNanos(delay));
+        }
         command.run();
         return null;
     }

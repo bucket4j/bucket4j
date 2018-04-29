@@ -29,10 +29,8 @@ import java.util.function.Function;
  * Any bucket supports the asynchronous mode iff particular {@link Extension} behind the bucket provides asynchronous mode.
  *
  * <p>
- * <strong>A special notes about local buckets:</strong> Majority of methods(excepting {@link #tryConsume(long, long, ScheduledExecutorService)})
- * from interface {@link AsyncBucket} are useless for local buckets,
- * because local bucket does not communicate with external back-ends, as result any thread is never blocked,
- * thus for local buckets only {@link #tryConsume(long, long, ScheduledExecutorService) conditional consuming with timed limit}) is the legal use case of asynchronous API.
+ * <strong>A special notes about in-memory buckets:</strong>: this interface is useless for in-memory buckets
+ * because in-memory bucket does not communicate with external back-ends, as result any thread is never blocked by IO operations.
  */
 public interface AsyncBucket {
 
@@ -161,40 +159,6 @@ public interface AsyncBucket {
      * @see Bucket#tryConsumeAsMuchAsPossible(long)
      */
     CompletableFuture<Long> tryConsumeAsMuchAsPossible(long limit);
-
-    /**
-     * Tries to consume the specified number of tokens from the bucket.
-     *
-     * <p>
-     * <strong>The algorithm for all type of buckets is following:</strong>
-     * <ul>
-     *     <li>Implementation issues asynchronous request to back-end behind the bucket(for local bucket it is just a synchronous call) in way which specific for each particular back-end.</li>
-     *     <li>Then uncompleted future returned to the caller.</li>
-     *     <li>If back-end provides signal(through callback) that asynchronous request failed, then future completed exceptionally.</li>
-     *     <li>When back-end provides signal(through callback) that request is done(for local bucket response got immediately), then following post-processing rules will be applied:
-     *          <ul>
-     *              <li>
-     *                  If tokens were consumed then future immediately completed by <tt>true</tt>.
-     *              </li>
-     *              <li>
-     *                  If tokens were not consumed because were not enough tokens in the bucket and <tt>maxWaitNanos</tt> nanoseconds is not enough time to refill deficit,
-     *                  then future immediately completed by <tt>false</tt>.
-     *              </li>
-     *              <li>
-     *                  If tokens were reserved(effectively consumed) then <tt>task</tt> to delayed completion will be scheduled to the <tt>scheduler</tt> via {@link ScheduledExecutorService#schedule(Runnable, long, TimeUnit)},
-     *                  when delay equals to time required to refill the deficit of tokens. After scheduler executes task the future completed by <tt>true</tt>.
-     *              </li>
-     *          </ul>
-     *     </li>
-     * </ul>
-     * It is strongly not recommended to do any heavy work in thread which completes the future,
-     * because typically this will be a back-end thread which handles NIO selectors,
-     * blocking this thread will take negative performance effect to back-end throughput,
-     * so you always should resume control flow in another executor via methods like {@link CompletableFuture#thenApplyAsync(Function, Executor)}.
-     *
-     * @return true if {@code numTokens} has been consumed or false when {@code numTokens} has not been consumed
-     */
-    CompletableFuture<Boolean> tryConsume(long numTokens, long maxWaitNanos, ScheduledExecutorService scheduler);
 
     /**
      * Asynchronous version of {@link Bucket#addTokens(long)}, follows the same semantic.

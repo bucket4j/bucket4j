@@ -24,16 +24,16 @@ Instead Bucket4j relies on *you* to configure the cache with proper parameters t
 
 Years of experience working with distributed system has tought the author that High Availability does not come for free. You need to test and verify that your system remains available. This cannot be provided by this or any other library. Your system will most certainly go down if you do not plan for that.
    
-#### Verification of compatibility with JCache provider is your responsibility
+#### Verification of compatibility with particular JCache provider is your responsibility
 Keep in mind that there are many non-certified implementations of JCache specification on the market.
-Many of them want to increase their own popularity by declaring support for the JCache API,
+Many of them want to increase their popularity by declaring support for the JCache API,
 but often only the API is supported and the semantic of JCache is totally ignored.
 Usage Bucket4j with this kind of libraries should be completely avoided.
 
 Bucket4j is only compatible with implementations which obey the JCache specification rules(especially related to EntryProcessor execution).
 Oracle Coherence, Apache Ignite, Hazelcast are good examples of safe implementations of JCache.
 
-Because it is impossible to test all possible JCache providers, you need to test your provider yourself.
+Because it is impossible to test all possible JCache providers, you need to test your provider by yourself.
 Just run this code in order to be sure that your implementation of JCache provides good isolation for EntryProcessors
 ```java
 import javax.cache.Cache;

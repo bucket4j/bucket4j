@@ -20,33 +20,27 @@ package io.github.bucket4j;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 public final class BucketConfiguration implements Serializable {
 
-    public static final long INITIAL_TOKENS_UNSPECIFIED = -1;
     private static final long serialVersionUID = 42L;
 
     private final Bandwidth[] bandwidths;
-    private final long[] bandwidthsInitialTokens;
 
-    public BucketConfiguration(List<BandwidthDefinition> bandwidths) {
+    public BucketConfiguration(List<Bandwidth> bandwidths) {
+        Objects.requireNonNull(bandwidths);
         if (bandwidths.isEmpty()) {
             throw BucketExceptions.restrictionsNotSpecified();
         }
         this.bandwidths = new Bandwidth[bandwidths.size()];
-        this.bandwidthsInitialTokens = new long[bandwidths.size()];
         for (int i = 0; i < bandwidths.size() ; i++) {
-            this.bandwidths[i] = bandwidths.get(i).getBandwidth();
-            this.bandwidthsInitialTokens[i] = bandwidths.get(i).getInitialTokens();
+            this.bandwidths[i] = Objects.requireNonNull(bandwidths.get(i));
         }
     }
 
     public Bandwidth[] getBandwidths() {
         return bandwidths;
-    }
-
-    public long[] getBandwidthsInitialTokens() {
-        return bandwidthsInitialTokens;
     }
 
     @Override

@@ -30,9 +30,18 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket {
     private volatile StateWithConfiguration state;
 
     public LockFreeBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
+        this(createStateWithConfiguration(configuration, timeMeter), timeMeter, BucketListener.NOPE);
+    }
+
+    private LockFreeBucket(StateWithConfiguration state, TimeMeter timeMeter, BucketListener listener) {
+        super(listener);
         this.timeMeter = timeMeter;
-        BucketState initialState = BucketState.createInitialState(configuration, timeMeter.currentTimeNanos());
-        STATE_UPDATER.set(this, new StateWithConfiguration(configuration, initialState));
+        this.state = state;
+    }
+
+    @Override
+    public Bucket toListenable(BucketListener listener) {
+        return new LockFreeBucket(state, timeMeter, listener);
     }
 
     @Override
@@ -42,7 +51,7 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket {
 
     @Override
     protected long consumeAsMuchAsPossibleImpl(long limit) {
-        StateWithConfiguration previousState = STATE_UPDATER.get(this);
+        StateWithConfiguration previousState = state;
         StateWithConfiguration newState = previousState.copy();
         long currentTimeNanos = timeMeter.currentTimeNanos();
 
@@ -57,7 +66,7 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket {
             if (STATE_UPDATER.compareAndSet(this, previousState, newState)) {
                 return toConsume;
             } else {
-                previousState = STATE_UPDATER.get(this);
+                previousState = state;
                 newState.copyStateFrom(previousState);
             }
         }
@@ -65,7 +74,7 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket {
 
     @Override
     protected boolean tryConsumeImpl(long tokensToConsume) {
-        StateWithConfiguration previousState = STATE_UPDATER.get(this);
+        StateWithConfiguration previousState = state;
         StateWithConfiguration newState = previousState.copy();
         long currentTimeNanos = timeMeter.currentTimeNanos();
 
@@ -79,7 +88,7 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket {
             if (STATE_UPDATER.compareAndSet(this, previousState, newState)) {
                 return true;
             } else {
-                previousState = STATE_UPDATER.get(this);
+                previousState = state;
                 newState.copyStateFrom(previousState);
             }
         }
@@ -87,7 +96,7 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket {
 
     @Override
     protected ConsumptionProbe tryConsumeAndReturnRemainingTokensImpl(long tokensToConsume) {
-        StateWithConfiguration previousState = STATE_UPDATER.get(this);
+        StateWithConfiguration previousState = state;
         StateWithConfiguration newState = previousState.copy();
         long currentTimeNanos = timeMeter.currentTimeNanos();
 
@@ -102,7 +111,7 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket {
             if (STATE_UPDATER.compareAndSet(this, previousState, newState)) {
                 return ConsumptionProbe.consumed(availableToConsume - tokensToConsume);
             } else {
-                previousState = STATE_UPDATER.get(this);
+                previousState = state;
                 newState.copyStateFrom(previousState);
             }
         }
@@ -110,7 +119,7 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket {
 
     @Override
     protected long reserveAndCalculateTimeToSleepImpl(long tokensToConsume, long waitIfBusyNanosLimit) {
-        StateWithConfiguration previousState = STATE_UPDATER.get(this);
+        StateWithConfiguration previousState = state;
         StateWithConfiguration newState = previousState.copy();
         long currentTimeNanos = timeMeter.currentTimeNanos();
 
@@ -122,7 +131,7 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket {
                 if (STATE_UPDATER.compareAndSet(this, previousState, newState)) {
                     return 0L;
                 }
-                previousState = STATE_UPDATER.get(this);
+                previousState = state;
                 newState.copyStateFrom(previousState);
                 continue;
             }
@@ -135,14 +144,14 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket {
             if (STATE_UPDATER.compareAndSet(this, previousState, newState)) {
                 return nanosToCloseDeficit;
             }
-            previousState = STATE_UPDATER.get(this);
+            previousState = state;
             newState.copyStateFrom(previousState);
         }
     }
 
     @Override
     protected void addTokensImpl(long tokensToAdd) {
-        StateWithConfiguration previousState = STATE_UPDATER.get(this);
+        StateWithConfiguration previousState = state;
         StateWithConfiguration newState = previousState.copy();
         long currentTimeNanos = timeMeter.currentTimeNanos();
 
@@ -152,7 +161,7 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket {
             if (STATE_UPDATER.compareAndSet(this, previousState, newState)) {
                 return;
             } else {
-                previousState = STATE_UPDATER.get(this);
+                previousState = state;
                 newState.copyStateFrom(previousState);
             }
         }
@@ -160,7 +169,7 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket {
 
     @Override
     protected void replaceConfigurationImpl(BucketConfiguration newConfiguration) {
-        StateWithConfiguration previousState = STATE_UPDATER.get(this);
+        StateWithConfiguration previousState = state;
         StateWithConfiguration newState = previousState.copy();
         long currentTimeNanos = timeMeter.currentTimeNanos();
 
@@ -171,7 +180,7 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket {
             if (STATE_UPDATER.compareAndSet(this, previousState, newState)) {
                 return;
             } else {
-                previousState = STATE_UPDATER.get(this);
+                previousState = state;
                 newState.copyStateFrom(previousState);
             }
         }
@@ -180,7 +189,7 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket {
     @Override
     public long getAvailableTokens() {
         long currentTimeNanos = timeMeter.currentTimeNanos();
-        StateWithConfiguration snapshot = STATE_UPDATER.get(this).copy();
+        StateWithConfiguration snapshot = state.copy();
         snapshot.refillAllBandwidth(currentTimeNanos);
         return snapshot.getAvailableTokens();
     }
@@ -217,7 +226,7 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket {
 
     @Override
     protected CompletableFuture<Long> tryConsumeAsMuchAsPossibleAsyncImpl(long limit) {
-        long result = tryConsumeAsMuchAsPossible(limit);
+        long result = consumeAsMuchAsPossibleImpl(limit);
         return CompletableFuture.completedFuture(result);
     }
 
@@ -229,12 +238,12 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket {
 
     @Override
     public BucketState createSnapshot() {
-        return STATE_UPDATER.get(this).state.copy();
+        return state.state.copy();
     }
 
     @Override
     public BucketConfiguration getConfiguration() {
-        return STATE_UPDATER.get(this).configuration;
+        return state.configuration;
     }
 
     private static class StateWithConfiguration {
@@ -271,6 +280,11 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket {
         long delayNanosAfterWillBePossibleToConsume(long tokensToConsume) {
             return state.delayNanosAfterWillBePossibleToConsume(configuration.getBandwidths(), tokensToConsume);
         }
+    }
+
+    private static StateWithConfiguration createStateWithConfiguration(BucketConfiguration configuration, TimeMeter timeMeter) {
+        BucketState initialState = BucketState.createInitialState(configuration, timeMeter.currentTimeNanos());
+        return new StateWithConfiguration(configuration, initialState);
     }
 
     @Override

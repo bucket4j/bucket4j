@@ -19,6 +19,7 @@ package io.github.bucket4j
 
 import io.github.bucket4j.grid.GridBucket
 import io.github.bucket4j.local.LocalBucketBuilder
+import io.github.bucket4j.mock.BucketType
 import io.github.bucket4j.mock.GridProxyMock
 import spock.lang.Specification
 import spock.lang.Unroll
@@ -29,32 +30,55 @@ import static io.github.bucket4j.grid.RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EX
 
 class DetectionOfIllegalApiUsageSpecification extends Specification {
 
-    private static final Duration VALID_PERIOD = Duration.ofMinutes(10);
-    private static final long VALID_CAPACITY = 1000;
+    private static final Duration VALID_PERIOD = Duration.ofMinutes(10)
+    private static final long VALID_CAPACITY = 1000
 
-    ConfigurationBuilder builder = Bucket4j.builder()
+    AbstractBucketBuilder builder = Bucket4j.builder()
 
     @Unroll
     def "Should detect that capacity #capacity is wrong"(long capacity) {
         when:
-            builder.addLimit(Bandwidth.classic(capacity, Refill.smooth(1, VALID_PERIOD)))
+            builder.addLimit(Bandwidth.classic(capacity, Refill.of(1, VALID_PERIOD)))
         then:
             IllegalArgumentException ex = thrown()
             ex.message == nonPositiveCapacity(capacity).message
 
         where:
-          capacity << [-10, -5, 0]
+            capacity << [-10, -5, 0]
     }
 
     @Unroll
     def "Should detect that initialTokens #initialTokens is wrong"(long initialTokens) {
         when:
-            builder.addLimit(initialTokens, Bandwidth.simple(VALID_CAPACITY, VALID_PERIOD))
+            Bandwidth.simple(VALID_CAPACITY, VALID_PERIOD)
+                    .withInitialTokens(initialTokens)
         then:
             IllegalArgumentException ex = thrown()
             ex.message == nonPositiveInitialTokens(initialTokens).message
         where:
             initialTokens << [-10, -1]
+    }
+
+    @Unroll
+    def "Should check that #fixedRefillPeriod is wrong value of fixedRefillPeriod"(Duration fixedRefillPeriod) {
+        when:
+            Bandwidth.simple(VALID_CAPACITY, VALID_PERIOD)
+                    .withFixedRefillInterval(fixedRefillPeriod)
+        then:
+            IllegalArgumentException ex = thrown()
+            ex.message == nonPositiveFixedRefillInterval(fixedRefillPeriod).message
+
+        where:
+            fixedRefillPeriod << [Duration.ZERO, Duration.ofSeconds(-1)]
+    }
+
+    def "Should check that fixedRefillPeriod is not null"() {
+        when:
+            Bandwidth.simple(VALID_CAPACITY, VALID_PERIOD)
+                .withFixedRefillInterval(null)
+        then:
+            IllegalArgumentException ex = thrown()
+            ex.message == nullFixedRefillInterval().message
     }
 
     @Unroll
@@ -83,17 +107,11 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
         then:
             IllegalArgumentException ex = thrown()
             ex.message == nullBandwidth().message
-
-        when:
-            builder.addLimit(32,null)
-        then:
-            ex = thrown()
-            ex.message == nullBandwidth().message
     }
 
     def "Should check that refill period is not null"() {
         when:
-            builder.addLimit(Bandwidth.classic( 32, Refill.smooth(1, null)))
+            builder.addLimit(Bandwidth.classic( 32, Refill.of(1, null)))
         then:
             IllegalArgumentException ex = thrown()
             ex.message == nullRefillPeriod().message
@@ -102,7 +120,7 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
     @Unroll
     def "Should detect that refill #refillTokens tokens is invalid"(int refillTokens) {
         when:
-            builder.addLimit(Bandwidth.classic( 32, Refill.smooth(refillTokens, Duration.ofSeconds(1))))
+            builder.addLimit(Bandwidth.classic( 32, Refill.of(refillTokens, Duration.ofSeconds(1))))
         then:
             IllegalArgumentException ex = thrown()
             ex.message == nonPositivePeriodTokens(refillTokens).message
@@ -110,12 +128,24 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
             refillTokens << [0, -2]
     }
 
-    def "Should check than time meter is not null"() {
+    def "Should check that time meter is not null"() {
         when:
             Bucket4j.builder().withCustomTimePrecision(null)
         then:
             IllegalArgumentException ex = thrown()
             ex.message == nullTimeMeter().message
+    }
+
+    @Unroll
+    def "Should check that listener is not null when decorating bucket with type #bucketType"(BucketType bucketType) {
+        when:
+            bucketType.createBucket(Bucket4j.builder().addLimit(Bandwidth.simple(3, Duration.ofMinutes(1))))
+                    .toListenable(null)
+        then:
+            IllegalArgumentException ex = thrown()
+            ex.message == nullListener().message
+        where:
+            bucketType << BucketType.values()
     }
 
     def  "Should check that limited bandwidth list is not empty"() {
@@ -159,13 +189,13 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
             ex.message == nonPositiveTokensToConsume(-1).message
 
         when:
-            bucket.tryConsume(0L, VALID_PERIOD.toNanos(), BlockingStrategy.PARKING)
+            bucket.asScheduler().tryConsume(0L, VALID_PERIOD.toNanos(), BlockingStrategy.PARKING)
         then:
             ex = thrown()
             ex.message == nonPositiveTokensToConsume(0).message
 
         when:
-            bucket.tryConsume(-1, VALID_PERIOD.toNanos(), BlockingStrategy.PARKING)
+            bucket.asScheduler().tryConsume(-1, VALID_PERIOD.toNanos(), BlockingStrategy.PARKING)
         then:
             ex = thrown()
             ex.message == nonPositiveTokensToConsume(-1).message
@@ -185,13 +215,13 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
                     Bandwidth.simple(VALID_CAPACITY, VALID_PERIOD)
             ).build()
         when:
-            bucket.tryConsume(1, 0, BlockingStrategy.PARKING)
+            bucket.asScheduler().tryConsume(1, 0, BlockingStrategy.PARKING)
         then:
             IllegalArgumentException ex = thrown()
             ex.message == nonPositiveNanosToWait(0).message
 
         when:
-            bucket.tryConsume(1, -1, BlockingStrategy.PARKING)
+            bucket.asScheduler().tryConsume(1, -1, BlockingStrategy.PARKING)
         then:
             ex = thrown()
             ex.message == nonPositiveNanosToWait(-1).message
@@ -217,7 +247,7 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
                     Bandwidth.simple(VALID_CAPACITY, VALID_PERIOD)
             ).build()
         when:
-            bucket.asAsync().tryConsume(32, 1000_000, null)
+            bucket.asAsyncScheduler().tryConsume(32, 1000_000, null)
         then:
             IllegalArgumentException ex = thrown()
             ex.message == nullScheduler().message
@@ -257,7 +287,7 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
 
     private static class FakeExtension implements Extension {
         @Override
-        ConfigurationBuilder builder() {
+        AbstractBucketBuilder builder() {
             return new LocalBucketBuilder()
         }
     }

@@ -21,7 +21,10 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-public abstract class AbstractBucket implements Bucket {
+public abstract class AbstractBucket implements Bucket, BlockingBucket {
+
+    private static long INFINITY_DURATION = Long.MAX_VALUE;
+    private static long UNLIMITED_AMOUNT = Long.MAX_VALUE;
 
     protected abstract long consumeAsMuchAsPossibleImpl(long limit);
 
@@ -33,71 +36,78 @@ public abstract class AbstractBucket implements Bucket {
 
     protected abstract void addTokensImpl(long tokensToAdd);
 
-    /**
-     * @param limit
-     * @return
-     * @throws UnsupportedOperationException if bucket does not support asynchronous mode
-     */
     protected abstract CompletableFuture<Long> tryConsumeAsMuchAsPossibleAsyncImpl(long limit);
 
-    /**
-     * @param tokensToConsume
-     * @return
-     * @throws UnsupportedOperationException if bucket does not support asynchronous mode
-     */
     protected abstract CompletableFuture<Boolean> tryConsumeAsyncImpl(long tokensToConsume);
 
-    /**
-     * @param tokensToConsume
-     * @return
-     * @throws UnsupportedOperationException if bucket does not support asynchronous mode
-     */
     protected abstract CompletableFuture<ConsumptionProbe> tryConsumeAndReturnRemainingTokensAsyncImpl(long tokensToConsume);
 
-    /**
-     * @param tokensToConsume
-     * @param maxWaitTimeNanos
-     * @return
-     * @throws UnsupportedOperationException if bucket does not support asynchronous mode
-     */
     protected abstract CompletableFuture<Long> reserveAndCalculateTimeToSleepAsyncImpl(long tokensToConsume, long maxWaitTimeNanos);
 
-    /**
-     * @throws UnsupportedOperationException if bucket does not support asynchronous mode
-     * @param tokensToAdd
-     * @return
-     */
     protected abstract CompletableFuture<Void> addTokensAsyncImpl(long tokensToAdd);
 
     protected abstract void replaceConfigurationImpl(BucketConfiguration newConfiguration);
 
     protected abstract CompletableFuture<Void> replaceConfigurationAsyncImpl(BucketConfiguration newConfiguration);
 
-    private final AsyncBucket asyncView;
+    private final AsyncScheduledBucketImpl asyncView;
+    private final BucketListener listener;
 
-    public AbstractBucket() {
-        asyncView = new AsyncBucket() {
+    public AbstractBucket(BucketListener listener) {
+        if (listener == null) {
+            throw BucketExceptions.nullListener();
+        }
+
+        this.listener = listener;
+        this.asyncView = new AsyncScheduledBucketImpl() {
             @Override
             public CompletableFuture<Boolean> tryConsume(long tokensToConsume) {
                 checkTokensToConsume(tokensToConsume);
-                return tryConsumeAsyncImpl(tokensToConsume);
+
+                return tryConsumeAsyncImpl(tokensToConsume).thenApply(consumed -> {
+                    if (consumed) {
+                        listener.onConsumed(tokensToConsume);
+                    } else {
+                        listener.onRejected(tokensToConsume);
+                    }
+                    return consumed;
+                });
             }
 
             @Override
             public CompletableFuture<ConsumptionProbe> tryConsumeAndReturnRemaining(long tokensToConsume) {
                 checkTokensToConsume(tokensToConsume);
-                return tryConsumeAndReturnRemainingTokensAsyncImpl(tokensToConsume);
+
+                return tryConsumeAndReturnRemainingTokensAsyncImpl(tokensToConsume).thenApply(probe -> {
+                    if (probe.isConsumed()) {
+                        listener.onConsumed(tokensToConsume);
+                    } else {
+                        listener.onRejected(tokensToConsume);
+                    }
+                    return probe;
+                });
             }
 
             @Override
             public CompletableFuture<Long> tryConsumeAsMuchAsPossible() {
-                return tryConsumeAsMuchAsPossibleAsyncImpl(Long.MAX_VALUE);
+                return tryConsumeAsMuchAsPossibleAsyncImpl(UNLIMITED_AMOUNT).thenApply(consumedTokens -> {
+                    if (consumedTokens > 0) {
+                        listener.onConsumed(consumedTokens);
+                    }
+                    return consumedTokens;
+                });
             }
 
             @Override
             public CompletableFuture<Long> tryConsumeAsMuchAsPossible(long limit) {
                 checkTokensToConsume(limit);
-                return tryConsumeAsMuchAsPossibleAsyncImpl(limit);
+
+                return tryConsumeAsMuchAsPossibleAsyncImpl(limit).thenApply(consumedTokens -> {
+                    if (consumedTokens > 0) {
+                        listener.onConsumed(consumedTokens);
+                    }
+                    return consumedTokens;
+                });
             }
 
             @Override
@@ -112,16 +122,53 @@ public abstract class AbstractBucket implements Bucket {
                         resultFuture.completeExceptionally(exception);
                         return;
                     }
-                    if (nanosToSleep == Long.MAX_VALUE) {
+                    if (nanosToSleep == INFINITY_DURATION) {
                         resultFuture.complete(false);
+                        listener.onRejected(tokensToConsume);
                         return;
                     }
                     if (nanosToSleep == 0L) {
                         resultFuture.complete(true);
+                        listener.onConsumed(tokensToConsume);
                         return;
                     }
                     try {
+                        listener.onConsumed(tokensToConsume);
+                        listener.onDelayed(nanosToSleep);
                         Runnable delayedCompletion = () -> resultFuture.complete(true);
+                        scheduler.schedule(delayedCompletion, nanosToSleep, TimeUnit.NANOSECONDS);
+                    } catch (Throwable t) {
+                        resultFuture.completeExceptionally(t);
+                    }
+                });
+                return resultFuture;
+            }
+
+            @Override
+            public CompletableFuture<Void> consume(long tokensToConsume, ScheduledExecutorService scheduler) {
+                checkTokensToConsume(tokensToConsume);
+                checkScheduler(scheduler);
+                CompletableFuture<Void> resultFuture = new CompletableFuture<>();
+                CompletableFuture<Long> reservationFuture = reserveAndCalculateTimeToSleepAsyncImpl(tokensToConsume, INFINITY_DURATION);
+                reservationFuture.whenComplete((nanosToSleep, exception) -> {
+                    if (exception != null) {
+                        resultFuture.completeExceptionally(exception);
+                        return;
+                    }
+                    if (nanosToSleep == INFINITY_DURATION) {
+                        String msg = "Existed hardware is unable to service the reservation of so many tokens";
+                        resultFuture.completeExceptionally(new IllegalStateException(msg));
+                        return;
+                    }
+                    if (nanosToSleep == 0L) {
+                        resultFuture.complete(null);
+                        listener.onConsumed(tokensToConsume);
+                        return;
+                    }
+                    try {
+                        listener.onConsumed(tokensToConsume);
+                        listener.onDelayed(nanosToSleep);
+                        Runnable delayedCompletion = () -> resultFuture.complete(null);
                         scheduler.schedule(delayedCompletion, nanosToSleep, TimeUnit.NANOSECONDS);
                     } catch (Throwable t) {
                         resultFuture.completeExceptionally(t);
@@ -154,9 +201,29 @@ public abstract class AbstractBucket implements Bucket {
     }
 
     @Override
+    public AsyncScheduledBucket asAsyncScheduler() {
+        if (!isAsyncModeSupported()) {
+            throw new UnsupportedOperationException();
+        }
+        return asyncView;
+    }
+
+    @Override
+    public BlockingBucket asScheduler() {
+        return this;
+    }
+
+    @Override
     public boolean tryConsume(long tokensToConsume) {
         checkTokensToConsume(tokensToConsume);
-        return tryConsumeImpl(tokensToConsume);
+
+        if (tryConsumeImpl(tokensToConsume)) {
+            listener.onConsumed(tokensToConsume);
+            return true;
+        } else {
+            listener.onRejected(tokensToConsume);
+            return false;
+        }
     }
 
     @Override
@@ -165,45 +232,114 @@ public abstract class AbstractBucket implements Bucket {
         checkMaxWaitTime(maxWaitTimeNanos);
 
         long nanosToSleep = reserveAndCalculateTimeToSleepImpl(tokensToConsume, maxWaitTimeNanos);
-        if (nanosToSleep == Long.MAX_VALUE) {
+        if (nanosToSleep == INFINITY_DURATION) {
+            listener.onRejected(tokensToConsume);
             return false;
         }
+
+        listener.onConsumed(tokensToConsume);
         if (nanosToSleep > 0L) {
-            blockingStrategy.park(nanosToSleep);
+            try {
+                blockingStrategy.park(nanosToSleep);
+            } catch (InterruptedException e) {
+                listener.onInterrupted(e);
+                throw e;
+            }
+            listener.onParked(nanosToSleep);
         }
+
         return true;
     }
 
     @Override
-    public boolean tryConsumeUninterruptibly(long tokensToConsume, long maxWaitTimeNanos, BlockingStrategy blockingStrategy) {
+    public boolean tryConsumeUninterruptibly(long tokensToConsume, long maxWaitTimeNanos, UninterruptibleBlockingStrategy blockingStrategy) {
         checkTokensToConsume(tokensToConsume);
         checkMaxWaitTime(maxWaitTimeNanos);
 
         long nanosToSleep = reserveAndCalculateTimeToSleepImpl(tokensToConsume, maxWaitTimeNanos);
-        if (nanosToSleep == Long.MAX_VALUE) {
+        if (nanosToSleep == INFINITY_DURATION) {
+            listener.onRejected(tokensToConsume);
             return false;
         }
+
+        listener.onConsumed(tokensToConsume);
         if (nanosToSleep > 0L) {
             blockingStrategy.parkUninterruptibly(nanosToSleep);
+            listener.onParked(nanosToSleep);
         }
+
         return true;
+    }
+
+    @Override
+    public void consume(long tokensToConsume, BlockingStrategy blockingStrategy) throws InterruptedException {
+        checkTokensToConsume(tokensToConsume);
+
+        long nanosToSleep = reserveAndCalculateTimeToSleepImpl(tokensToConsume, INFINITY_DURATION);
+        if (nanosToSleep == INFINITY_DURATION) {
+            throw new IllegalStateException("Existed hardware is unable to service the reservation of so many tokens");
+        }
+
+        listener.onConsumed(tokensToConsume);
+        if (nanosToSleep > 0L) {
+            try {
+                blockingStrategy.park(nanosToSleep);
+            } catch (InterruptedException e) {
+                listener.onInterrupted(e);
+                throw e;
+            }
+            listener.onParked(nanosToSleep);
+        }
+    }
+
+    @Override
+    public void consumeUninterruptibly(long tokensToConsume, UninterruptibleBlockingStrategy blockingStrategy) {
+        checkTokensToConsume(tokensToConsume);
+
+        long nanosToSleep = reserveAndCalculateTimeToSleepImpl(tokensToConsume, INFINITY_DURATION);
+        if (nanosToSleep == INFINITY_DURATION) {
+            throw new IllegalStateException("Existed hardware is unable to service the reservation of so many tokens");
+        }
+
+        listener.onConsumed(tokensToConsume);
+        if (nanosToSleep > 0L) {
+            blockingStrategy.parkUninterruptibly(nanosToSleep);
+            listener.onParked(nanosToSleep);
+        }
     }
 
     @Override
     public long tryConsumeAsMuchAsPossible(long limit) {
         checkTokensToConsume(limit);
-        return consumeAsMuchAsPossibleImpl(limit);
+
+        long consumed = consumeAsMuchAsPossibleImpl(limit);
+        if (consumed > 0) {
+            listener.onConsumed(consumed);
+        }
+
+        return consumed;
     }
 
     @Override
     public long tryConsumeAsMuchAsPossible() {
-        return consumeAsMuchAsPossibleImpl(Long.MAX_VALUE);
+        long consumed = consumeAsMuchAsPossibleImpl(UNLIMITED_AMOUNT);
+        if (consumed > 0) {
+            listener.onConsumed(consumed);
+        }
+        return consumed;
     }
 
     @Override
     public ConsumptionProbe tryConsumeAndReturnRemaining(long tokensToConsume) {
         checkTokensToConsume(tokensToConsume);
-        return tryConsumeAndReturnRemainingTokensImpl(tokensToConsume);
+
+        ConsumptionProbe probe = tryConsumeAndReturnRemainingTokensImpl(tokensToConsume);
+        if (probe.isConsumed()) {
+            listener.onConsumed(tokensToConsume);
+        } else {
+            listener.onRejected(tokensToConsume);
+        }
+        return probe;
     }
 
     @Override
@@ -247,5 +383,7 @@ public abstract class AbstractBucket implements Bucket {
             throw BucketExceptions.nullConfiguration();
         }
     }
+
+    private interface AsyncScheduledBucketImpl extends AsyncBucket, AsyncScheduledBucket {}
 
 }

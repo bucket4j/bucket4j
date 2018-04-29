@@ -30,7 +30,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -38,15 +37,15 @@ import static io.github.bucket4j.grid.RecoveryStrategy.RECONSTRUCT;
 import static io.github.bucket4j.grid.RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION;
 import static org.junit.Assert.*;
 
-public abstract class AbstractDistributedBucketTest<B extends ConfigurationBuilder<B>, E extends Extension<B>> {
+public abstract class AbstractDistributedBucketTest<B extends AbstractBucketBuilder<B>, E extends Extension<B>> {
 
     private final String key = UUID.randomUUID().toString();
     private final String anotherKey = UUID.randomUUID().toString();
     private final Class<E> extensionClass = getExtensionClass();
 
     private B builder = Bucket4j.extension(getExtensionClass()).builder()
-            .addLimit(0, Bandwidth.simple(1_000, Duration.ofMinutes(1)))
-            .addLimit(0, Bandwidth.simple(200, Duration.ofSeconds(10)));
+            .addLimit(Bandwidth.simple(1_000, Duration.ofMinutes(1)).withInitialTokens(0))
+            .addLimit(Bandwidth.simple(200, Duration.ofSeconds(10)).withInitialTokens(0));
     private double permittedRatePerSecond = Math.min(1_000d / 60, 200.0 / 10);
 
     protected abstract Class<E> getExtensionClass();
@@ -149,7 +148,7 @@ public abstract class AbstractDistributedBucketTest<B extends ConfigurationBuild
 
     @Test
     public void testTryConsumeWithLimit() throws Exception {
-        Function<Bucket, Long> action = bucket -> bucket.tryConsumeUninterruptibly(1, TimeUnit.MILLISECONDS.toNanos(50), BlockingStrategy.PARKING) ? 1L : 0L;
+        Function<Bucket, Long> action = bucket -> bucket.asScheduler().tryConsumeUninterruptibly(1, TimeUnit.MILLISECONDS.toNanos(50), UninterruptibleBlockingStrategy.PARKING) ? 1L : 0L;
         Supplier<Bucket> bucketSupplier = () -> build(builder, key, THROW_BUCKET_NOT_FOUND_EXCEPTION);
         ConsumptionScenario scenario = new ConsumptionScenario(4, TimeUnit.SECONDS.toNanos(15), bucketSupplier, action, permittedRatePerSecond);
         scenario.executeAndValidateRate();
@@ -184,7 +183,7 @@ public abstract class AbstractDistributedBucketTest<B extends ConfigurationBuild
         ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
         Function<Bucket, Long> action = bucket -> {
             try {
-                return bucket.asAsync().tryConsume(1, TimeUnit.MILLISECONDS.toNanos(50), scheduler).get() ? 1L :0L;
+                return bucket.asAsyncScheduler().tryConsume(1, TimeUnit.MILLISECONDS.toNanos(50), scheduler).get() ? 1L :0L;
             } catch (InterruptedException | ExecutionException e) {
                 throw new RuntimeException(e);
             }
@@ -198,7 +197,7 @@ public abstract class AbstractDistributedBucketTest<B extends ConfigurationBuild
     public void testBucketRegistryWithKeyIndependentConfiguration() {
         BucketConfiguration configuration = Bucket4j.configurationBuilder()
                 .addLimit(Bandwidth.simple(10, Duration.ofDays(1)))
-                .buildConfiguration();
+                .build();
 
         ProxyManager<String> registry = newProxyManager();
         Bucket bucket1 = registry.getProxy(key, () -> configuration);
@@ -208,6 +207,18 @@ public abstract class AbstractDistributedBucketTest<B extends ConfigurationBuild
         Bucket bucket2 = registry.getProxy(anotherKey, () -> configuration);
         assertTrue(bucket2.tryConsume(10));
         assertFalse(bucket2.tryConsume(1));
+    }
+
+    @Test
+    public void testBucketWithNotLazyConfiguration() {
+        BucketConfiguration configuration = Bucket4j.configurationBuilder()
+                .addLimit(Bandwidth.simple(10, Duration.ofDays(1)))
+                .build();
+
+        ProxyManager<String> registry = newProxyManager();
+        Bucket bucket = registry.getProxy(key, configuration);
+        assertTrue(bucket.tryConsume(10));
+        assertFalse(bucket.tryConsume(1));
     }
 
 }

@@ -48,29 +48,51 @@ import java.time.Duration;
  * Strongly atomic means that token will be consumed from all bandwidth or from nothing,
  * in other words any token can not be partially consumed.
  * <br> Example of multiple bandwidth:
- * <pre>{@code // Adds bandwidth that restricts to tryConsume not often 1000 tokens per 1 minute and not often than 100 tokens per second
+ * <pre>{@code // Adds bandwidth that restricts to consume not often 1000 tokens per 1 minute and not often than 100 tokens per second
  * Bucket bucket = Bucket4j.builder().
  *      .addLimit(Bandwidth.create(1000, Duration.ofMinutes(1)));
  *      .addLimit(Bandwidth.create(100, Duration.ofSeconds(1)));
  *      .build()
  * }</pre>
+ *
+ * <h3>Greediness of refill</h3>
+ * By default any bandwidth does refill in greedy manner, because bandwidth tries to add the tokens to bucket as soon as possible.
+ * For example bandwidth with refill "10 tokens per 1 second" will add 1 token per each 100 millisecond,
+ * in other words refill will not wait 1 second to regenerate whole bunch of 10 tokens.
+ *
+ * The three bandwidths bellow do refill of tokens with same speed:
+ *  <pre>
+ *  <code>Bandwidth.simple(600, Duration.ofMinutes(1));</code>
+ *  <code>Bandwidth.simple(10, Duration.ofSeconds(1));</code>
+ *  <code>Bandwidth.simple(1, Duration.ofMillis(100));</code>
+ *  </pre>
+ *
+ * <p>
+ * If greediness is undesired, then you can specify the fixed interval refill via {@link #withFixedRefillInterval(Duration) withFixedRefillInterval}.
+ * When fixed refill interval was specified then greediness is turned-off.
+ * For example the bandwidth bellow will refill 10 tokens per 1 second instead of 1 token per 100 milliseconds:
+ * <pre>
+ *  <code>Bandwidth.simple(600, Duration.ofMinutes(1)).withFixedRefillInterval(Duration.ofSecond(1));</code>
+ * </pre>
  */
 public class Bandwidth implements Serializable {
 
     private static final long serialVersionUID = 42L;
 
-    final long capacity;
-    final Refill refill;
+    static final long GREEDY_REFILL_INTERVAL = 0;
 
-    private Bandwidth(long capacity, Refill refill) {
-        if (capacity <= 0) {
-            throw BucketExceptions.nonPositiveCapacity(capacity);
-        }
-        if (refill == null) {
-            throw BucketExceptions.nullBandwidthRefill();
-        }
+    final long capacity;
+    final long initialTokens;
+    final long refillPeriodNanos;
+    final long refillTokens;
+    final long refillRefreshIntervalNanos;
+
+    private Bandwidth(long capacity, long refillPeriodNanos, long refillTokens, long initialTokens, long refillRefreshIntervalNanos) {
         this.capacity = capacity;
-        this.refill = refill;
+        this.initialTokens = initialTokens;
+        this.refillPeriodNanos = refillPeriodNanos;
+        this.refillTokens = refillTokens;
+        this.refillRefreshIntervalNanos = refillRefreshIntervalNanos;
     }
 
     /**
@@ -78,10 +100,11 @@ public class Bandwidth implements Serializable {
      *
      * @param capacity
      * @param period
+     *
      * @return
      */
     public static Bandwidth simple(long capacity, Duration period) {
-        Refill refill = Refill.smooth(capacity, period);
+        Refill refill = Refill.of(capacity, period);
         return classic(capacity, refill);
     }
 
@@ -90,26 +113,63 @@ public class Bandwidth implements Serializable {
      *
      * @param capacity
      * @param refill
+     *
      * @return
      */
     public static Bandwidth classic(long capacity, Refill refill) {
-        return new Bandwidth(capacity, refill);
+        if (capacity <= 0) {
+            throw BucketExceptions.nonPositiveCapacity(capacity);
+        }
+        if (refill == null) {
+            throw BucketExceptions.nullBandwidthRefill();
+        }
+        return new Bandwidth(capacity, refill.periodNanos, refill.tokens, capacity, GREEDY_REFILL_INTERVAL);
     }
 
-    public long getCapacity() {
-        return capacity;
+    /**
+     * By default new created bandwidth has amount of tokens that equals its capacity.
+     * This method allows to replace amount of initial tokens.
+     *
+     * @param initialTokens
+     *
+     * @return the copy of this bandwidth with new value of initial tokens.
+     */
+    public Bandwidth withInitialTokens(long initialTokens) {
+        if (initialTokens < 0) {
+            throw BucketExceptions.nonPositiveInitialTokens(initialTokens);
+        }
+        return new Bandwidth(capacity, refillPeriodNanos, refillTokens, initialTokens, refillRefreshIntervalNanos);
     }
 
-    public Refill getRefill() {
-        return refill;
+
+    /**
+     * Creates the copy of current bandwidth for which the greediness of refill is switched-off.
+     * 
+     * @param fixedRefillInterval specifies the interval between refill of tokens
+     * 
+     * @return new instance of {@link Bandwidth} configured by {@code fixedRefillInterval}
+     */
+    public Bandwidth withFixedRefillInterval(Duration fixedRefillInterval) {
+        if (fixedRefillInterval == null) {
+            throw BucketExceptions.nullFixedRefillInterval();
+        }
+        if (fixedRefillInterval.isNegative() || fixedRefillInterval.isZero()) {
+            throw BucketExceptions.nonPositiveFixedRefillInterval(fixedRefillInterval);
+        }
+        return new Bandwidth(capacity, refillPeriodNanos, refillTokens, initialTokens, fixedRefillInterval.toNanos());
     }
+
 
     @Override
     public String toString() {
-        return "Bandwidth{" +
-                "capacity=" + capacity +
-                ", refill=" + refill +
-                '}';
+        final StringBuilder sb = new StringBuilder("Bandwidth{");
+        sb.append("capacity=").append(capacity);
+        sb.append(", initialTokens=").append(initialTokens);
+        sb.append(", refillPeriodNanos=").append(refillPeriodNanos);
+        sb.append(", refillTokens=").append(refillTokens);
+        sb.append(", refillRefreshIntervalNanos=").append(refillRefreshIntervalNanos);
+        sb.append('}');
+        return sb.toString();
     }
 
 }

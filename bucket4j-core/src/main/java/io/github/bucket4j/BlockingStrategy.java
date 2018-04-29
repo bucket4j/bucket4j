@@ -38,14 +38,6 @@ public interface BlockingStrategy {
      */
     void park(long nanosToPark) throws InterruptedException;
 
-    /**
-     * Parks current thread to required duration of nanoseconds ignoring all interrupts,
-     * if interrupt was happen then interruption flag will be restored on the current thread.
-     *
-     * @param nanosToPark time to park in nanoseconds
-     */
-    void parkUninterruptibly(long nanosToPark);
-
     BlockingStrategy PARKING = new BlockingStrategy() {
 
         @Override
@@ -53,7 +45,9 @@ public interface BlockingStrategy {
             final long endNanos = System.nanoTime() + nanosToPark;
             long remainingParkNanos = nanosToPark;
             while (true) {
-                remainingParkNanos = parkAndCalculateRemaining(remainingParkNanos, endNanos);
+                LockSupport.parkNanos(remainingParkNanos);
+                long currentTimeNanos = System.nanoTime();
+                remainingParkNanos = endNanos - currentTimeNanos;
                 if (Thread.interrupted()) {
                     throw new InterruptedException();
                 }
@@ -62,36 +56,6 @@ public interface BlockingStrategy {
                 }
             }
         }
-
-        @Override
-        public void parkUninterruptibly(final long nanosToPark) {
-            final long endNanos = System.nanoTime() + nanosToPark;
-            long remainingParkNanos = nanosToPark;
-            boolean interrupted = false;
-            try {
-                while (true) {
-                    remainingParkNanos = parkAndCalculateRemaining(remainingParkNanos, endNanos);
-                    if (remainingParkNanos <= 0) {
-                        return;
-                    }
-                    if (Thread.interrupted()) {
-                        interrupted = true;
-                    }
-                }
-            } finally {
-                if (interrupted) {
-                    // restore interrupted status
-                    Thread.currentThread().interrupt();
-                }
-            }
-        }
-
-        private long parkAndCalculateRemaining(long remainingParkNanos, long endNanos) {
-            LockSupport.parkNanos(remainingParkNanos);
-            long currentTimeNanos = System.nanoTime();
-            return endNanos - currentTimeNanos;
-        }
-
     };
 
 }

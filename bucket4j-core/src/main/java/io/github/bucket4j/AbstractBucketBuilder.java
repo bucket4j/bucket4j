@@ -18,47 +18,31 @@
 package io.github.bucket4j;
 
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * A builder for buckets. Builder can be reused, i.e. one builder can create multiple buckets with similar configuration.
  *
  */
-public class ConfigurationBuilder {
+public class AbstractBucketBuilder<T extends AbstractBucketBuilder> {
 
-    private List<Bandwidth> bandwidths;
+    private final ConfigurationBuilder configurationBuilder;
 
-    protected ConfigurationBuilder() {
-        this.bandwidths = new ArrayList<>(1);
+    protected AbstractBucketBuilder() {
+        configurationBuilder = new ConfigurationBuilder();
     }
 
     /**
-     * @return configuration which used for bucket construction.
-     */
-    public BucketConfiguration build() {
-        return new BucketConfiguration(this.bandwidths);
-    }
-
-    /**
-     * Adds limited bandwidth for all buckets which will be constructed by this builder instance.
+     * Adds limited bandwidth for all buckets which will be constructed by this builder.
      *
      * @param bandwidth limitation
      * @return this builder instance
      */
-    public ConfigurationBuilder addLimit(Bandwidth bandwidth) {
-        if (bandwidth == null) {
-            throw BucketExceptions.nullBandwidth();
-        }
-        bandwidths.add(bandwidth);
-        return this;
+    public T addLimit(Bandwidth bandwidth) {
+        configurationBuilder.addLimit(bandwidth);
+        return (T) this;
     }
 
-    @Override
-    public String toString() {
-        return "ConfigurationBuilder{" +
-                ", bandwidths=" + bandwidths +
-                '}';
+    protected BucketConfiguration buildConfiguration() {
+        return configurationBuilder.build();
     }
 
 }

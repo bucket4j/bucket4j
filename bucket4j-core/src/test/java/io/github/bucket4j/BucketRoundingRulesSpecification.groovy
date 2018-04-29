@@ -30,7 +30,7 @@ class BucketRoundingRulesSpecification extends Specification {
             TimeMeterMock meter = new TimeMeterMock(0)
             Bucket bucket = Bucket4j.builder()
                                 .withCustomTimePrecision(meter)
-                                .addLimit(0, Bandwidth.simple(10, Duration.ofNanos(100)))
+                                .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(0))
                                 .build()
         when:
             meter.setCurrentTimeNanos(97)
@@ -49,7 +49,7 @@ class BucketRoundingRulesSpecification extends Specification {
             TimeMeterMock meter = new TimeMeterMock(0)
             Bucket bucket = Bucket4j.builder()
                     .withCustomTimePrecision(meter)
-                    .addLimit(0, Bandwidth.simple(10, Duration.ofNanos(100)))
+                    .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(0))
                     .build()
         when:
             meter.setCurrentTimeNanos(97)

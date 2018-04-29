@@ -15,13 +15,8 @@
  *    limitations under the License.
  */
 
-package io.github.bucket4j.util;
+package io.github.bucket4j;
 
-import io.github.bucket4j.Bandwidth;
-import io.github.bucket4j.BucketConfiguration;
-import io.github.bucket4j.Refill;
-
-import java.util.Arrays;
 
 public class EqualsUtil {
 
@@ -32,24 +27,25 @@ public class EqualsUtil {
         if (config1 == null || config2 == null) {
             return false;
         }
-        if (!Arrays.equals(config1.getBandwidthsInitialTokens(), config2.getBandwidthsInitialTokens())) {
-            return false;
-        }
         if (config1.getBandwidths().length != config2.getBandwidths().length) {
             return false;
         }
         for (int i = 0; i < config1.getBandwidths().length; i++) {
             Bandwidth bandwidth1 = config1.getBandwidths()[i];
             Bandwidth bandwidth2 = config2.getBandwidths()[i];
-            if (bandwidth1.getCapacity() != bandwidth2.getCapacity()) {
+            if (bandwidth1.capacity != bandwidth2.capacity) {
                 return false;
             }
-            Refill refill1 = bandwidth1.getRefill();
-            Refill refill2 = bandwidth2.getRefill();
-            if (refill1.getPeriodNanos() != refill2.getPeriodNanos()) {
+            if (bandwidth1.initialTokens != bandwidth2.initialTokens) {
                 return false;
             }
-            if (refill1.getTokens() != refill2.getTokens()) {
+            if (bandwidth1.refillPeriodNanos != bandwidth2.refillPeriodNanos) {
+                return false;
+            }
+            if (bandwidth1.refillRefreshIntervalNanos != bandwidth2.refillRefreshIntervalNanos) {
+                return false;
+            }
+            if (bandwidth1.refillTokens != bandwidth2.refillTokens) {
                 return false;
             }
         }
