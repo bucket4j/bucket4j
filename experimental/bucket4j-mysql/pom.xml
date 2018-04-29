@@ -33,5 +33,5 @@
         <maven.deploy.skip>true</maven.deploy.skip>
         <sonar.skip>true</sonar.skip>
     </properties>
-    
+
 </project>
