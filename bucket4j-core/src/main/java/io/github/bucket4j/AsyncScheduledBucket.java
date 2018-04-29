@@ -59,12 +59,18 @@ public interface AsyncScheduledBucket {
      * blocking this thread will take negative performance effect to back-end throughput,
      * so you always should resume control flow in another executor via methods like {@link CompletableFuture#thenApplyAsync(Function, Executor)}.
      *
-     * @return true if {@code numTokens} has been consumed or false when {@code numTokens} has not been consumed
+     * @param numTokens The number of tokens to consume from the bucket.
+     * @param maxWaitNanos limit of time(in nanoseconds) which thread can wait.
+     * @param scheduler used to delayed future completion
      */
     CompletableFuture<Boolean> tryConsume(long numTokens, long maxWaitNanos, ScheduledExecutorService scheduler);
 
     /**
      * This is just overloaded equivalent of {@link #tryConsume(long, long, ScheduledExecutorService)}
+     *
+     * @param numTokens The number of tokens to consume from the bucket.
+     * @param maxWait limit of time which thread can wait.
+     * @param scheduler used to delayed future completion
      *
      * @see #tryConsume(long, long, ScheduledExecutorService)
      */
@@ -98,7 +104,9 @@ public interface AsyncScheduledBucket {
      * blocking this thread will take negative performance effect to back-end throughput,
      * so you always should resume control flow in another executor via methods like {@link CompletableFuture#thenApplyAsync(Function, Executor)}.
      *
-     * @return true if {@code numTokens} has been consumed or false when {@code numTokens} has not been consumed
+     * @param numTokens The number of tokens to consume from the bucket.
+     * @param scheduler used to delayed future completion
+     *
      */
     CompletableFuture<Void> consume(long numTokens, ScheduledExecutorService scheduler);
 

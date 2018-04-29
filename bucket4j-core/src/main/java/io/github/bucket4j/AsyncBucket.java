@@ -29,10 +29,8 @@ import java.util.function.Function;
  * Any bucket supports the asynchronous mode iff particular {@link Extension} behind the bucket provides asynchronous mode.
  *
  * <p>
- * <strong>A special notes about local buckets:</strong> Majority of methods(excepting {@link #tryConsume(long, long, ScheduledExecutorService)})
- * from interface {@link AsyncBucket} are useless for local buckets,
- * because local bucket does not communicate with external back-ends, as result any thread is never blocked,
- * thus for local buckets only {@link #tryConsume(long, long, ScheduledExecutorService) conditional consuming with timed limit}) is the legal use case of asynchronous API.
+ * <strong>A special notes about in-memory buckets:</strong>: this interface is useless for in-memory buckets
+ * because in-memory bucket does not communicate with external back-ends, as result any thread is never blocked by IO operations.
  */
 public interface AsyncBucket {
 

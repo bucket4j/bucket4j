@@ -26,7 +26,7 @@ import java.util.function.Supplier;
 /**
  * Represents the bucket which state actually stored outside current JVM.
  *
- * @param <K>
+ * @param <K> type of key
  */
 public class GridBucket<K extends Serializable> extends AbstractBucket {
 

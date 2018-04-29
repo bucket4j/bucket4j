@@ -112,16 +112,23 @@ public interface BlockingBucket {
      * Has same semantic with {@link #tryConsume(long, long, BlockingStrategy)} but ignores interrupts(just restores interruption flag on exit).
      *
      * @param numTokens The number of tokens to consume from the bucket.
-     * @param maxWaitTimeNanos limit of time which thread can wait.
+     * @param maxWaitTimeNanos limit of time(in nanoseconds) which thread can wait.
      * @param blockingStrategy specifies the way to block current thread to amount of time required to refill missed number of tokens in the bucket
      *
      * @return true if {@code numTokens} has been consumed or false when {@code numTokens} has not been consumed
+     *
      * @see #tryConsume(long, long, BlockingStrategy)
      */
     boolean tryConsumeUninterruptibly(long numTokens, long maxWaitTimeNanos, UninterruptibleBlockingStrategy blockingStrategy);
 
     /**
      * This is just overloaded equivalent of {@link #tryConsumeUninterruptibly(long, long, UninterruptibleBlockingStrategy)}
+     *
+     * @param numTokens The number of tokens to consume from the bucket.
+     * @param maxWait limit of time which thread can wait.
+     * @param blockingStrategy specifies the way to block current thread to amount of time required to refill missed number of tokens in the bucket
+     *
+     * @return true if {@code numTokens} has been consumed or false when {@code numTokens} has not been consumed
      *
      * @see #tryConsumeUninterruptibly(long, long, UninterruptibleBlockingStrategy)
      */
@@ -132,6 +139,11 @@ public interface BlockingBucket {
     /**
      * This is just overloaded equivalent of {@link #tryConsumeUninterruptibly(long, long, UninterruptibleBlockingStrategy)}
      *
+     * @param numTokens The number of tokens to consume from the bucket.
+     * @param maxWaitTimeNanos limit of time(in nanoseconds) which thread can wait.
+     *
+     * @return true if {@code numTokens} has been consumed or false when {@code numTokens} has not been consumed
+     *
      * @see #tryConsumeUninterruptibly(long, long, UninterruptibleBlockingStrategy)
      */
     default boolean tryConsumeUninterruptibly(long numTokens, long maxWaitTimeNanos) {
@@ -140,6 +152,11 @@ public interface BlockingBucket {
 
     /**
      * This is just overloaded equivalent of {@link #tryConsumeUninterruptibly(long, long, UninterruptibleBlockingStrategy)}
+     *
+     * @param numTokens The number of tokens to consume from the bucket.
+     * @param maxWait limit of time which thread can wait.
+     *
+     * @return true if {@code numTokens} has been consumed or false when {@code numTokens} has not been consumed
      *
      * @see #tryConsumeUninterruptibly(long, long, UninterruptibleBlockingStrategy)
      */
@@ -168,7 +185,6 @@ public interface BlockingBucket {
      * @param numTokens The number of tokens to consume from the bucket.
      * @param blockingStrategy specifies the way to block current thread to amount of time required to refill missed number of tokens in the bucket
      *
-     * @return true if {@code numTokens} has been consumed or false when {@code numTokens} has not been consumed
      *
      * @throws InterruptedException in case of current thread has been interrupted during the waiting
      */
@@ -176,6 +192,10 @@ public interface BlockingBucket {
 
     /**
      * This is just overloaded equivalent of {@link #consume(long, BlockingStrategy)}
+     *
+     * @param numTokens The number of tokens to consume from the bucket.
+     *
+     * @throws InterruptedException in case of current thread has been interrupted during the waiting
      *
      * @see #consume(long, BlockingStrategy)
      */
@@ -189,13 +209,14 @@ public interface BlockingBucket {
      * @param numTokens The number of tokens to consume from the bucket.
      * @param blockingStrategy specifies the way to block current thread to amount of time required to refill missed number of tokens in the bucket
      *
-     * @return true if {@code numTokens} has been consumed or false when {@code numTokens} has not been consumed
      * @see #consume(long, BlockingStrategy)
      */
     void consumeUninterruptibly(long numTokens, UninterruptibleBlockingStrategy blockingStrategy);
 
     /**
      * This is just overloaded equivalent of {@link #consumeUninterruptibly(long, UninterruptibleBlockingStrategy)}
+     *
+     * @param numTokens The number of tokens to consume from the bucket.
      *
      * @see #consumeUninterruptibly(long, UninterruptibleBlockingStrategy)
      */

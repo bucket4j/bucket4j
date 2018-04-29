@@ -20,7 +20,7 @@ package io.github.bucket4j;
 /**
  * Represents an extension point of bucket4j library.
  *
- * @param <T>
+ * @param <T> type of builder for buckets
  */
 public interface Extension<T extends AbstractBucketBuilder<T>> {
 

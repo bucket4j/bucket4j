@@ -68,8 +68,7 @@ import java.time.Duration;
  *  </pre>
  *
  * <p>
- * If greediness is undesired</b>,
- * then you can specify the fixed interval refill via {@link #withFixedRefillInterval(Duration) withFixedRefillInterval} method.
+ * If greediness is undesired, then you can specify the fixed interval refill via {@link #withFixedRefillInterval(Duration) withFixedRefillInterval}.
  * When fixed refill interval was specified then greediness is turned-off.
  * For example the bandwidth bellow will refill 10 tokens per 1 second instead of 1 token per 100 milliseconds:
  * <pre>
@@ -101,6 +100,7 @@ public class Bandwidth implements Serializable {
      *
      * @param capacity
      * @param period
+     *
      * @return
      */
     public static Bandwidth simple(long capacity, Duration period) {
@@ -113,6 +113,7 @@ public class Bandwidth implements Serializable {
      *
      * @param capacity
      * @param refill
+     *
      * @return
      */
     public static Bandwidth classic(long capacity, Refill refill) {
