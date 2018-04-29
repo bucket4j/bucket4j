@@ -29,7 +29,7 @@ The bucket can be decorated by listener via ```toListenable``` method.
 BucketListener listener = new MyCoolListener();
 
 Bucket bucket = Bucket4j.builder()
-                    .addLimit(Bandwidth.simple())
+                    .addLimit(Bandwidth.simple(100, Duration.ofMinutes(1)))
                     .build()
                     .toListenable(listener);
 ```
