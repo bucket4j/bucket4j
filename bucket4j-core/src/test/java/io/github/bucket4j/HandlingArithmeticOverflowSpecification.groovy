@@ -139,6 +139,13 @@ class HandlingArithmeticOverflowSpecification extends Specification {
 
         expect:
             state.delayNanosAfterWillBePossibleToConsume(limits, 10) == 10
+
+        when:
+            state.consume(limits, 1)
+
+        then:
+            state.getAvailableTokens(limits) == -1
+            state.delayNanosAfterWillBePossibleToConsume(limits, Long.MAX_VALUE) == Long.MAX_VALUE
     }
 
 }
