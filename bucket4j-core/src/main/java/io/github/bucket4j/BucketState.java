@@ -192,6 +192,11 @@ public class BucketState implements Serializable {
             return 0;
         }
         long deficit = tokens - currentSize;
+        if (deficit <= 0) {
+            // math overflow happen
+            return Long.MAX_VALUE;
+        }
+
         long refillPeriodNanos = bandwidth.refill.getPeriodNanos();
         long refillPeriodTokens = bandwidth.refill.getTokens();
 
