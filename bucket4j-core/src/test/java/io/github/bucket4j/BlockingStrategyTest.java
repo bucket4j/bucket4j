@@ -48,7 +48,7 @@ public class BlockingStrategyTest {
         long nanosToPark = TimeUnit.SECONDS.toNanos(1);
         Thread.currentThread().interrupt();
         long startNanos = System.nanoTime();
-        BlockingStrategy.PARKING.parkUninterruptibly(nanosToPark);
+        UninterruptibleBlockingStrategy.PARKING.parkUninterruptibly(nanosToPark);
         assertTrue(System.nanoTime() - startNanos >= nanosToPark);
         assertTrue(Thread.currentThread().isInterrupted());
     }

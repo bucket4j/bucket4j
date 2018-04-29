@@ -15,8 +15,12 @@
  *    limitations under the License.
  */
 
-package io.github.bucket4j.annotation;
+package io.github.bucket4j;
 
-public @interface Throttled {
+public class PackageAcessor {
+
+    public static BucketConfiguration buildConfiguration(AbstractBucketBuilder builder) {
+        return builder.buildConfiguration();
+    }
 
 }

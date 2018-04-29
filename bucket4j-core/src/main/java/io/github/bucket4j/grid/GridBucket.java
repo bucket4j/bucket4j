@@ -26,7 +26,7 @@ import java.util.function.Supplier;
 /**
  * Represents the bucket which state actually stored outside current JVM.
  *
- * @param <K>
+ * @param <K> type of key
  */
 public class GridBucket<K extends Serializable> extends AbstractBucket {
 
@@ -36,14 +36,20 @@ public class GridBucket<K extends Serializable> extends AbstractBucket {
     private final Supplier<BucketConfiguration> configurationSupplier;
 
     public static <T extends Serializable> GridBucket<T> createLazyBucket(T key, Supplier<BucketConfiguration> configurationSupplier, GridProxy<T> gridProxy) {
-        return new GridBucket<>(key, configurationSupplier, gridProxy, RecoveryStrategy.RECONSTRUCT, false);
+        return new GridBucket<>(BucketListener.NOPE, key, configurationSupplier, gridProxy, RecoveryStrategy.RECONSTRUCT, false);
     }
 
     public static <T extends Serializable> GridBucket<T> createInitializedBucket(T key, BucketConfiguration configuration, GridProxy<T> gridProxy, RecoveryStrategy recoveryStrategy) {
-        return new GridBucket<>(key, () -> configuration, gridProxy, recoveryStrategy, true);
+        return new GridBucket<>(BucketListener.NOPE, key, () -> configuration, gridProxy, recoveryStrategy, true);
     }
 
-    private GridBucket(K key, Supplier<BucketConfiguration> configurationSupplier, GridProxy<K> gridProxy, RecoveryStrategy recoveryStrategy, boolean initializeBucket) {
+    @Override
+    public Bucket toListenable(BucketListener listener) {
+        return new GridBucket<>(listener, key, configurationSupplier, gridProxy, recoveryStrategy, false);
+    }
+
+    private GridBucket(BucketListener listener, K key, Supplier<BucketConfiguration> configurationSupplier, GridProxy<K> gridProxy, RecoveryStrategy recoveryStrategy, boolean initializeBucket) {
+        super(listener);
         this.key = key;
         this.gridProxy = gridProxy;
         this.recoveryStrategy = recoveryStrategy;

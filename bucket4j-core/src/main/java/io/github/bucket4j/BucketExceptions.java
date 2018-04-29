@@ -18,6 +18,7 @@
 package io.github.bucket4j;
 
 import java.text.MessageFormat;
+import java.time.Duration;
 
 public final class BucketExceptions {
 
@@ -49,8 +50,23 @@ public final class BucketExceptions {
         return new IllegalArgumentException(msg);
     }
 
+    public static IllegalArgumentException nullSynchronizationStrategy() {
+        String msg = "Synchronization strategy can not be null";
+        return new IllegalArgumentException(msg);
+    }
+
+    public static IllegalArgumentException nullListener() {
+        String msg = "listener can not be null";
+        return new IllegalArgumentException(msg);
+    }
+
     public static IllegalArgumentException nullRefillPeriod() {
         String msg = "Refill period can not be null";
+        return new IllegalArgumentException(msg);
+    }
+
+    public static IllegalArgumentException nullFixedRefillInterval() {
+        String msg = "Fixed refill interval can not be null";
         return new IllegalArgumentException(msg);
     }
 
@@ -72,6 +88,12 @@ public final class BucketExceptions {
     public static IllegalArgumentException nonPositivePeriod(long period) {
         String pattern = "{0} is wrong value for period of bandwidth, because period should be positive";
         String msg = MessageFormat.format(pattern, period);
+        return new IllegalArgumentException(msg);
+    }
+
+    public static IllegalArgumentException nonPositiveFixedRefillInterval(Duration fixedRefillInterval) {
+        String pattern = "{0} is wrong value for fixed refill interval, because period should be positive";
+        String msg = MessageFormat.format(pattern, fixedRefillInterval);
         return new IllegalArgumentException(msg);
     }
 
@@ -104,7 +126,7 @@ public final class BucketExceptions {
     }
 
     public static IllegalArgumentException nonPositiveTokensToConsume(long tokens) {
-        String pattern = "Unable to tryConsume {0} tokens, due to number of tokens to tryConsume should be positive";
+        String pattern = "Unable to consume {0} tokens, due to number of tokens to consume should be positive";
         String msg = MessageFormat.format(pattern, tokens);
         return new IllegalArgumentException(msg);
     }

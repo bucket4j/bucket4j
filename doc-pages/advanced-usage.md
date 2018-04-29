@@ -25,30 +25,46 @@ while (true) {
 }
 ```
 
-### Using initial capacity  
-
-By default initial size of bucket is equal to capacity. 
+### Specifying initial amount of tokens
+By default initial size of bucket equals to capacity. 
 But sometimes, you may want to have lesser initial size, for example for case of cold start in order to prevent denial of service: 
 
 ```java
 int initialCapacity = 42;
-Bandwidth limit = Bandwidth.simple(1000, Duration.ofHours(1));
+Bandwidth limit = Bandwidth
+    .simple(1000, Duration.ofHours(1))
+    .withInitialTokens(initialCapacity);
 Bucket bucket = Bucket4j.builder()
-    .addLimit(initialCapacity, limit)
+    .addLimit(limit)
     .build();
 ```
+
+### Turning-off the refill greediness
+By default any bandwidth does refill in greedy manner, because bandwidth tries to add the tokens to bucket as soon as possible.
+For example bandwidth with refill "10 tokens per 1 second" will add 1 token per each 100 millisecond,
+in other words refill will not wait 1 second to regenerate whole bunch of 10 tokens.
+
+If greediness is undesired then you can specify the fixed interval refill via [withFixedRefillInterval(Duration)]() method.
+When fixed refill interval was specified then greediness is turned-off.
+For example the bandwidth bellow will refill 10 tokens per 1 second instead of 1 token per 100 milliseconds:
+```java
+Bandwidth.simple(600, Duration.ofMinutes(1))
+    .withFixedRefillInterval(Duration.ofSecond(1));
+```
+ 
 
 ### Returning tokens back to bucket.
 The [compensating transaction](https://en.wikipedia.org/wiki/Compensating_transaction) is one of obvious use case when you want to return tokens back to bucket:
 ```java
 Bucket wallet;
 ...
-wallet.tryConsume(50); // get 50 cents from wallet
-try {
-    buyCocaCola();
-} catch(NoCocaColaException e) {
-    // return money to wallet
-    wallet.addTokens(50);
+if (wallet.tryConsume(50)) { // get 50 cents from wallet
+    try {
+        buyCocaCola();
+    } catch(NoCocaColaException e) {
+        // return money to wallet
+        wallet.addTokens(50);
+    } 
 }
 ```
 
@@ -96,6 +112,6 @@ Bucket bucket = ...
 Bandwidth newLimit = Bandwidth.simple(newCapacity, Duration.ofMinutes(1));
 BucketConfiguration newConfiguration = Bucket4j.configurationBuilder()
                 .addLimit(newLimit)
-                .buildConfiguration();
+                .build();
 bucket.replaceConfiguration(newConfiguration)
 ```

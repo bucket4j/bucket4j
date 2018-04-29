@@ -33,7 +33,9 @@ public class LocalUnsafeState {
             .withMillisecondPrecision()
             .addLimit(
                     Bandwidth.simple(Long.MAX_VALUE / 2, Duration.ofNanos(Long.MAX_VALUE / 2))
-            ).build(SynchronizationStrategy.NONE);
+            )
+            .withSynchronizationStrategy(SynchronizationStrategy.NONE)
+            .build();
 
 
     public final Bucket bucketWithoutRefill = Bucket4j.builder()
@@ -41,7 +43,9 @@ public class LocalUnsafeState {
             .withCustomTimePrecision(() -> 0)
             .addLimit(
                     Bandwidth.simple(Long.MAX_VALUE / 2, Duration.ofNanos(Long.MAX_VALUE / 2))
-            ).build(SynchronizationStrategy.NONE);
+            )
+            .withSynchronizationStrategy(SynchronizationStrategy.NONE)
+            .build();
 
 
 }

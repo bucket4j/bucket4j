@@ -36,12 +36,22 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket {
         this(configuration, timeMeter, new ReentrantLock());
     }
 
-    public SynchronizedBucket(BucketConfiguration configuration, TimeMeter timeMeter, Lock lock) {
+    SynchronizedBucket(BucketConfiguration configuration, TimeMeter timeMeter, Lock lock) {
+        this(BucketListener.NOPE, configuration, timeMeter, lock, BucketState.createInitialState(configuration, timeMeter.currentTimeNanos()));
+    }
+
+    private SynchronizedBucket(BucketListener listener, BucketConfiguration configuration, TimeMeter timeMeter, Lock lock, BucketState initialState) {
+        super(listener);
         this.configuration = configuration;
         this.bandwidths = configuration.getBandwidths();
         this.timeMeter = timeMeter;
-        this.state = BucketState.createInitialState(configuration, timeMeter.currentTimeNanos());
+        this.state = initialState;
         this.lock = lock;
+    }
+
+    @Override
+    public Bucket toListenable(BucketListener listener) {
+        return new SynchronizedBucket(listener, configuration, timeMeter, lock, state.copy());
     }
 
     @Override
@@ -179,7 +189,7 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket {
 
     @Override
     protected CompletableFuture<Long> tryConsumeAsMuchAsPossibleAsyncImpl(long limit) {
-        long result = tryConsumeAsMuchAsPossible(limit);
+        long result = consumeAsMuchAsPossibleImpl(limit);
         return CompletableFuture.completedFuture(result);
     }
 

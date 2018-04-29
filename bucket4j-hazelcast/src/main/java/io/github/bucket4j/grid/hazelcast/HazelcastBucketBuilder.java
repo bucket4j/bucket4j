@@ -18,9 +18,9 @@
 package io.github.bucket4j.grid.hazelcast;
 
 import com.hazelcast.core.IMap;
+import io.github.bucket4j.AbstractBucketBuilder;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketConfiguration;
-import io.github.bucket4j.ConfigurationBuilder;
 import io.github.bucket4j.grid.GridBucket;
 import io.github.bucket4j.grid.GridBucketState;
 import io.github.bucket4j.grid.RecoveryStrategy;
@@ -36,7 +36,7 @@ import java.io.Serializable;
  * @see io.github.bucket4j.grid.jcache.JCacheBucketBuilder
  *
  */
-public class HazelcastBucketBuilder extends ConfigurationBuilder<HazelcastBucketBuilder> {
+public class HazelcastBucketBuilder extends AbstractBucketBuilder<HazelcastBucketBuilder> {
 
     /**
      * Creates the new instance of {@link HazelcastBucketBuilder}

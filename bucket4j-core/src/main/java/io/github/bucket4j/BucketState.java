@@ -24,7 +24,7 @@ public class BucketState implements Serializable {
 
     private static final long serialVersionUID = 42L;
 
-    private static final int LAST_REFILL_TIME_OFFSET = 0;
+    private static final int BANDWIDTH_SIZE = 3;
 
     final long[] stateData;
 
@@ -34,18 +34,12 @@ public class BucketState implements Serializable {
 
     public BucketState(BucketConfiguration configuration, long currentTimeNanos) {
         Bandwidth[] bandwidths = configuration.getBandwidths();
-        long[] bandwidthsInitialTokens = configuration.getBandwidthsInitialTokens();
 
-        this.stateData = new long[1 + bandwidths.length * 2];
+        this.stateData = new long[bandwidths.length * 3];
         for(int i = 0; i < bandwidths.length; i++) {
-            Bandwidth bandwidth = bandwidths[i];
-            long initialTokens = bandwidthsInitialTokens[i];
-            if (initialTokens == BucketConfiguration.INITIAL_TOKENS_UNSPECIFIED) {
-                initialTokens = bandwidth.capacity;
-            }
-            setCurrentSize(i, initialTokens);
+            setCurrentSize(i, bandwidths[i].initialTokens);
+            setLastRefillTimeNanos(i, currentTimeNanos);
         }
-        setLastRefillTimeNanos(currentTimeNanos);
     }
 
     public BucketState copy() {
@@ -88,14 +82,9 @@ public class BucketState implements Serializable {
     }
 
     public void refillAllBandwidth(Bandwidth[] limits, long currentTimeNanos) {
-        long lastRefillTimeNanos = getLastRefillTimeNanos();
-        if (currentTimeNanos <= lastRefillTimeNanos) {
-            return;
-        }
         for (int i = 0; i < limits.length; i++) {
-            refill(i, limits[i], lastRefillTimeNanos, currentTimeNanos);
+            refill(i, limits[i], currentTimeNanos);
         }
-        setLastRefillTimeNanos(currentTimeNanos);
     }
 
     public void addTokens(Bandwidth[] limits, long tokensToAdd) {
@@ -118,14 +107,25 @@ public class BucketState implements Serializable {
         }
     }
 
-    private void consume(int bandwidth, long tokens) {
-        stateData[1 + bandwidth * 2] -= tokens;
-    }
+    private void refill(int bandwidthIndex, Bandwidth bandwidth, long currentTimeNanos) {
+        long previousRefillNanos = getLastRefillTimeNanos(bandwidthIndex);
+        if (currentTimeNanos <= previousRefillNanos) {
+            return;
+        }
 
-    private void refill(int bandwidthIndex, Bandwidth bandwidth, long previousRefillNanos, long currentTimeNanos) {
+        if (bandwidth.refillRefreshIntervalNanos != Bandwidth.GREEDY_REFILL_INTERVAL) {
+            long incompleteIntervalCorrection = (currentTimeNanos - previousRefillNanos) % bandwidth.refillRefreshIntervalNanos;
+            currentTimeNanos -= incompleteIntervalCorrection;
+        }
+        if (currentTimeNanos <= previousRefillNanos) {
+            return;
+        } else {
+            setLastRefillTimeNanos(bandwidthIndex, currentTimeNanos);
+        }
+
         final long capacity = bandwidth.capacity;
-        final long refillPeriodNanos = bandwidth.refill.getPeriodNanos();
-        final long refillTokens = bandwidth.refill.getTokens();
+        final long refillPeriodNanos = bandwidth.refillPeriodNanos;
+        final long refillTokens = bandwidth.refillTokens;
         final long currentSize = getCurrentSize(bandwidthIndex);
 
         long durationSinceLastRefillNanos = currentTimeNanos - previousRefillNanos;
@@ -147,6 +147,7 @@ public class BucketState implements Serializable {
             }
             durationSinceLastRefillNanos %= refillPeriodNanos;
         }
+
 
         long roundingError = getRoundingError(bandwidthIndex);
         long dividedWithoutError = multiplyExactOrReturnMaxValue(refillTokens, durationSinceLastRefillNanos);
@@ -192,8 +193,12 @@ public class BucketState implements Serializable {
             return 0;
         }
         long deficit = tokens - currentSize;
-        long refillPeriodNanos = bandwidth.refill.getPeriodNanos();
-        long refillPeriodTokens = bandwidth.refill.getTokens();
+        if (deficit <= 0) {
+            // math overflow happen
+            return Long.MAX_VALUE;
+        }
+        long refillPeriodNanos = bandwidth.refillPeriodNanos;
+        long refillPeriodTokens = bandwidth.refillTokens;
 
         long divided = multiplyExactOrReturnMaxValue(refillPeriodNanos, deficit);
         if (divided == Long.MAX_VALUE) {
@@ -205,28 +210,32 @@ public class BucketState implements Serializable {
         }
     }
 
-    long getCurrentSize(int bandwidth) {
-        return stateData[1 + bandwidth * 2];
+    private long getLastRefillTimeNanos(int bandwidth) {
+        return stateData[bandwidth * BANDWIDTH_SIZE];
     }
 
-    long getRoundingError(int bandwidth) {
-        return stateData[2 + bandwidth * 2];
+    private void setLastRefillTimeNanos(int bandwidth, long nanos) {
+        stateData[bandwidth * BANDWIDTH_SIZE] = nanos;
+    }
+
+    long getCurrentSize(int bandwidth) {
+        return stateData[bandwidth * BANDWIDTH_SIZE + 1];
     }
 
     private void setCurrentSize(int bandwidth, long currentSize) {
-        stateData[1 + bandwidth * 2] = currentSize;
+        stateData[bandwidth * BANDWIDTH_SIZE + 1] = currentSize;
+    }
+
+    private void consume(int bandwidth, long tokens) {
+        stateData[bandwidth * BANDWIDTH_SIZE + 1] -= tokens;
+    }
+
+    long getRoundingError(int bandwidth) {
+        return stateData[bandwidth * BANDWIDTH_SIZE + 2];
     }
 
     private void setRoundingError(int bandwidth, long roundingError) {
-        stateData[2 + bandwidth * 2] = roundingError;
-    }
-
-    private long getLastRefillTimeNanos() {
-        return stateData[LAST_REFILL_TIME_OFFSET];
-    }
-
-    private void setLastRefillTimeNanos(long nanos) {
-        stateData[LAST_REFILL_TIME_OFFSET] = nanos;
+        stateData[bandwidth * BANDWIDTH_SIZE + 2] = roundingError;
     }
 
     @Override

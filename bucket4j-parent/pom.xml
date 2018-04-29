@@ -23,7 +23,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.github.vladimir-bukhtoyarov</groupId>
-    <version>3.1.1</version>
+    <version>4.0.0</version>
     <artifactId>bucket4j-parent</artifactId>
     <packaging>pom</packaging>
     <name>bucket4j-parent</name>
@@ -58,7 +58,6 @@
         <ignite.version>2.1.0</ignite.version>
         <hazelcast.version>3.8</hazelcast.version>
         <infinispan.version>9.1.0.Final</infinispan.version>
-        <byte-buddy.version>1.7.5</byte-buddy.version>
         <testcontainers.version>1.6.0</testcontainers.version>
         <lettuce-version>5.0.2.RELEASE</lettuce-version>
     </properties>
@@ -73,12 +72,12 @@
         <developer>
             <id>vladimir-bukhtoyarov</id>
             <name>Vladimir Bukhtoyarov</name>
-            <email>jsecoder@mail.com</email>
+            <email>jsecoder@mail.ru</email>
             <url>https://github.com/vladimir-bukhtoyarov</url>
-            <organization>Dino systems</organization>
+            <organization>DINS</organization>
             <organizationUrl>http://www.dins.ru/</organizationUrl>
             <roles>
-                <role>Senior software engineer</role>
+                <role>Principal software developer</role>
             </roles>
         </developer>
     </developers>
