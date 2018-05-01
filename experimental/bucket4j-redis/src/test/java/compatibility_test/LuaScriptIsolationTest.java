@@ -17,7 +17,6 @@
 
 package compatibility_test;
 
-import com.github.dockerjava.api.model.Bind;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.RedisURI;
 import io.lettuce.core.ScriptOutputType;
@@ -32,6 +31,9 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.concurrent.CountDownLatch;
+
+import static org.junit.Assert.assertEquals;
 
 
 public class LuaScriptIsolationTest {
@@ -39,8 +41,6 @@ public class LuaScriptIsolationTest {
     private static final String KEY = "42";
 
     private static final String incrementScript = readScript("/increment-counter.lua");
-
-    private static final String getScript = "return redis.call('dp.DATE')";
 
     @Rule
     public GenericContainer redis = new GenericContainer("redis:3.0.6")
@@ -61,9 +61,34 @@ public class LuaScriptIsolationTest {
     }
 
     @Test
-    public void test() {
-        Object result = commands.eval(incrementScript, ScriptOutputType.VALUE, KEY);
-        System.out.println(result);
+    public void test() throws InterruptedException {
+        int threadCount = 4;
+        int invocationsPerThread = 2500;
+
+        CountDownLatch startLatch = new CountDownLatch(threadCount);
+        Thread threads[] = new Thread[threadCount];
+
+        for (int t = 0; t < threadCount; t++) {
+            threads[t] = new Thread(() -> {
+                startLatch.countDown();
+                try {
+                    startLatch.await();
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+                for (int i = 0; i < invocationsPerThread; i++) {
+                    commands.eval(incrementScript, ScriptOutputType.INTEGER, KEY);
+                }
+            });
+            threads[t].start();
+        }
+        for (Thread thread : threads) {
+            thread.join();
+        }
+
+        long result = commands.eval(incrementScript, ScriptOutputType.INTEGER, KEY);
+        System.err.println(result);
+        assertEquals(result, threadCount * invocationsPerThread + 1);
     }
 
     private static String readScript(String scriptResource) {

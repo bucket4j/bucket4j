@@ -2,7 +2,7 @@ local value = redis.call('get', KEYS[1]);
 
 local nextValue = 0;
 
-if (value == nil or type(value) == "table") then
+if (value == nil or (type(value) == "boolean")) then
     nextValue = 1
 else
     nextValue = value + 1
