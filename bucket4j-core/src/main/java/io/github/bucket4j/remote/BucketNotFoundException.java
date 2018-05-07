@@ -17,8 +17,6 @@
 
 package io.github.bucket4j.remote;
 
-import io.github.bucket4j.remote.BucketProxy;
-import io.github.bucket4j.remote.RecoveryStrategy;
 
 import java.io.Serializable;
 
@@ -27,8 +25,6 @@ import java.io.Serializable;
  * and {@link BucketProxy} is unable to repair bucket state or recovery strategy is {@link RecoveryStrategy#THROW_BUCKET_NOT_FOUND_EXCEPTION}.
  */
 public class BucketNotFoundException extends IllegalStateException {
-
-    private static final long serialVersionUID = 1L;
 
     private final Serializable bucketId;
 

@@ -46,7 +46,7 @@ public class IgniteBucketBuilder extends AbstractBucketBuilder<IgniteBucketBuild
     }
 
     /**
-     * Constructs an instance of {@link BucketProxy} which state actually stored inside in-memory data-grid,
+     * Constructs an instance of {@link BucketProxy} which state actually stored inside in-memory data-jvm,
      * semantic of this method is fully equals to {@link io.github.bucket4j.grid.jcache.JCacheBucketBuilder#build(Cache, Serializable, RecoveryStrategy)}
      *
      * @return new distributed bucket

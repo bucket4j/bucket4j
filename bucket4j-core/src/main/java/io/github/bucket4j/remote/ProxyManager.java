@@ -26,7 +26,7 @@ import java.util.function.Supplier;
 
 /**
  * Provides interface to instantiate an light-weight proxy to bucket which state actually stored in any external storage outside current JVM,
- * like in-memory grid or relational database.
+ * like in-memory jvm or relational database.
  *
  * The proxies instantiated by ProxyManager is very cheap, you are free to instantiate as many proxies as you wish,
  * there are no any hard work performed inside {@link #getProxy(Serializable, Supplier) getProxy} method,

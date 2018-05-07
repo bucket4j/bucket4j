@@ -25,7 +25,7 @@ import io.github.bucket4j.remote.ProxyManager;
 import java.io.Serializable;
 
 /**
- * The extension of Bucket4j library addressed to support <a href="https://hazelcast.com//">Hazelcast</a> in-memory data grid.
+ * The extension of Bucket4j library addressed to support <a href="https://hazelcast.com//">Hazelcast</a> in-memory data jvm.
  *
  * Use this extension only if you need in asynchronous API, else stay at {@link io.github.bucket4j.grid.jcache.JCache}
  */

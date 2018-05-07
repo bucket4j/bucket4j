@@ -23,7 +23,7 @@ package io.github.bucket4j.remote;
  * The state of bucket can be lost by many reasons, for example:
  * <ul>
  *     <li>Split-brain happen.</li>
- *     <li>The bucket state was stored on single grid node without replication strategy and this node was crashed.</li>
+ *     <li>The bucket state was stored on single jvm node without replication strategy and this node was crashed.</li>
  *     <li>Wrong cache configuration.</li>
  *     <li>Pragmatically errors introduced by vendor.</li>
  *     <li>Human mistake.</li>

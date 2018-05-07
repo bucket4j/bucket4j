@@ -24,8 +24,6 @@ import io.github.bucket4j.remote.RemoteCommand;
 
 public class ReplaceConfigurationOrReturnPreviousCommand implements RemoteCommand<BucketConfiguration> {
 
-    private static final long serialVersionUID = 8183759647555953907L;
-
     private BucketConfiguration newConfiguration;
     private boolean replaced;
 
@@ -47,6 +45,10 @@ public class ReplaceConfigurationOrReturnPreviousCommand implements RemoteComman
     @Override
     public boolean isBucketStateModified() {
         return replaced;
+    }
+
+    public BucketConfiguration getNewConfiguration() {
+        return newConfiguration;
     }
 
 }

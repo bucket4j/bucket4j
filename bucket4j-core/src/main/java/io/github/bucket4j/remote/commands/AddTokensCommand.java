@@ -23,8 +23,6 @@ import io.github.bucket4j.remote.RemoteCommand;
 
 public class AddTokensCommand implements RemoteCommand<Nothing> {
 
-    private static final long serialVersionUID = 1L;
-
     private long tokensToAdd;
 
     public AddTokensCommand(long tokensToAdd) {
@@ -41,6 +39,10 @@ public class AddTokensCommand implements RemoteCommand<Nothing> {
     @Override
     public boolean isBucketStateModified() {
         return true;
+    }
+
+    public long getTokensToAdd() {
+        return tokensToAdd;
     }
 
 }

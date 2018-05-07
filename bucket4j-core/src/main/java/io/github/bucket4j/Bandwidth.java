@@ -17,7 +17,6 @@
 
 package io.github.bucket4j;
 
-import java.io.Serializable;
 import java.time.Duration;
 
 /**
@@ -75,9 +74,7 @@ import java.time.Duration;
  *  <code>Bandwidth.simple(600, Duration.ofMinutes(1)).withFixedRefillInterval(Duration.ofSecond(1));</code>
  * </pre>
  */
-public class Bandwidth implements Serializable {
-
-    private static final long serialVersionUID = 42L;
+public class Bandwidth {
 
     static final long GREEDY_REFILL_INTERVAL = 0;
 

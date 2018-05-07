@@ -24,8 +24,6 @@ import io.github.bucket4j.remote.RemoteCommand;
 
 public class TryConsumeAndReturnRemainingTokensCommand implements RemoteCommand<ConsumptionProbe> {
 
-    private static final long serialVersionUID = 1L;
-
     private long tokensToConsume;
     private boolean bucketStateModified = false;
 
@@ -50,6 +48,10 @@ public class TryConsumeAndReturnRemainingTokensCommand implements RemoteCommand<
     @Override
     public boolean isBucketStateModified() {
         return bucketStateModified;
+    }
+
+    public long getTokensToConsume() {
+        return tokensToConsume;
     }
 
 }

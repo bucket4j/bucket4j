@@ -17,11 +17,7 @@
 
 package io.github.bucket4j.remote;
 
-import java.io.Serializable;
-
-public class CommandResult<T extends Serializable> implements Serializable {
-
-    private static final long serialVersionUID = 1L;
+public class CommandResult<T> {
 
     private static final CommandResult<?> NOT_FOUND = new CommandResult<>(null, true);
 
@@ -33,11 +29,11 @@ public class CommandResult<T extends Serializable> implements Serializable {
         this.bucketNotFound = bucketNotFound;
     }
 
-    public static <R extends Serializable> CommandResult<R> success(R data) {
+    public static <R> CommandResult<R> success(R data) {
         return new CommandResult<>(data, false);
     }
 
-    public static <R extends Serializable> CommandResult<R> bucketNotFound() {
+    public static <R> CommandResult<R> bucketNotFound() {
         return (CommandResult<R>) NOT_FOUND;
     }
 

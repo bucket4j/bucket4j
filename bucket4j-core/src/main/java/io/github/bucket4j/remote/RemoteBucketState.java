@@ -20,11 +20,7 @@ package io.github.bucket4j.remote;
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.BucketState;
 
-import java.io.Serializable;
-
-public class RemoteBucketState implements Serializable {
-
-    private static final long serialVersionUID = 1L;
+public class RemoteBucketState {
 
     private BucketConfiguration configuration;
     private BucketState state;

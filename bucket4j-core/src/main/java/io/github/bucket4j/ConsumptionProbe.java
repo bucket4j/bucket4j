@@ -17,16 +17,12 @@
 
 package io.github.bucket4j;
 
-import java.io.Serializable;
-
 /**
  * Describes both result of consumption and tokens remaining in the bucket after consumption.
  *
  * @see Bucket#tryConsumeAndReturnRemaining(long)
  */
-public class ConsumptionProbe implements Serializable {
-
-    private static final long serialVersionUID = 42L;
+public class ConsumptionProbe {
 
     private final boolean consumed;
     private final long remainingTokens;

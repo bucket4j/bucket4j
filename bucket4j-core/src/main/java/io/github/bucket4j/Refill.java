@@ -17,15 +17,12 @@
 
 package io.github.bucket4j;
 
-import java.io.Serializable;
 import java.time.Duration;
 
 /**
  * Specifies the speed of tokens regeneration.
  */
-public class Refill implements Serializable {
-
-    private static final long serialVersionUID = 42L;
+public class Refill {
 
     final long periodNanos;
     final long tokens;

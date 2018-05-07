@@ -22,8 +22,6 @@ import io.github.bucket4j.remote.RemoteCommand;
 
 public class TryConsumeCommand implements RemoteCommand<Boolean> {
 
-    private static final long serialVersionUID = 1L;
-
     private long tokensToConsume;
     private boolean bucketStateModified;
 
@@ -47,6 +45,10 @@ public class TryConsumeCommand implements RemoteCommand<Boolean> {
     @Override
     public boolean isBucketStateModified() {
         return bucketStateModified;
+    }
+
+    public long getTokensToConsume() {
+        return tokensToConsume;
     }
 
 }

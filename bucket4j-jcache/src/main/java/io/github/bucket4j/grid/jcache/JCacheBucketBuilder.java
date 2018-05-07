@@ -43,8 +43,8 @@ public class JCacheBucketBuilder extends AbstractBucketBuilder<JCacheBucketBuild
     }
 
     /**
-     * Constructs an instance of {@link BucketProxy} which state actually stored inside in-memory data-grid,
-     * the bucket stored in the grid immediately, so one network request will be issued to grid.
+     * Constructs an instance of {@link BucketProxy} which state actually stored inside in-memory data-jvm,
+     * the bucket stored in the jvm immediately, so one network request will be issued to jvm.
      * Due to this method performs network IO, returned result must not be treated as light-weight entity,
      * it will be a performance anti-pattern to use this method multiple times for same key,
      * you need to cache result somewhere and reuse between invocations,

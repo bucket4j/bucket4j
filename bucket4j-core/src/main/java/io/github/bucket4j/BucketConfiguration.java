@@ -17,14 +17,11 @@
 
 package io.github.bucket4j;
 
-import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
-public final class BucketConfiguration implements Serializable {
-
-    private static final long serialVersionUID = 42L;
+public final class BucketConfiguration {
 
     private final Bandwidth[] bandwidths;
 

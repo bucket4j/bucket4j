@@ -17,12 +17,9 @@
 
 package io.github.bucket4j;
 
-import java.io.Serializable;
 import java.util.Arrays;
 
-public class BucketState implements Serializable {
-
-    private static final long serialVersionUID = 42L;
+public class BucketState {
 
     private static final int BANDWIDTH_SIZE = 3;
 
