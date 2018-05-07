@@ -19,9 +19,9 @@ package io.github.bucket4j.grid.jcache;
 
 
 import io.github.bucket4j.*;
-import io.github.bucket4j.grid.GridBucketState;
-import io.github.bucket4j.grid.ProxyManager;
-import io.github.bucket4j.grid.RecoveryStrategy;
+import io.github.bucket4j.remote.RemoteBucketState;
+import io.github.bucket4j.remote.ProxyManager;
+import io.github.bucket4j.remote.RecoveryStrategy;
 import org.junit.Test;
 
 import javax.cache.Cache;
@@ -29,7 +29,7 @@ import java.time.Duration;
 import java.util.UUID;
 
 
-import static io.github.bucket4j.grid.RecoveryStrategy.RECONSTRUCT;
+import static io.github.bucket4j.remote.RecoveryStrategy.RECONSTRUCT;
 
 public abstract class AbstractJCacheTest extends AbstractDistributedBucketTest<JCacheBucketBuilder, JCache> {
 
@@ -68,6 +68,6 @@ public abstract class AbstractJCacheTest extends AbstractDistributedBucketTest<J
         getCache().remove(key);
     }
 
-    protected abstract Cache<String, GridBucketState> getCache();
+    protected abstract Cache<String, RemoteBucketState> getCache();
 
 }

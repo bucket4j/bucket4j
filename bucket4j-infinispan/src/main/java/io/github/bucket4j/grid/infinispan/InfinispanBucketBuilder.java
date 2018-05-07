@@ -20,9 +20,9 @@ package io.github.bucket4j.grid.infinispan;
 import io.github.bucket4j.AbstractBucketBuilder;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketConfiguration;
-import io.github.bucket4j.grid.GridBucket;
-import io.github.bucket4j.grid.GridBucketState;
-import io.github.bucket4j.grid.RecoveryStrategy;
+import io.github.bucket4j.remote.BucketProxy;
+import io.github.bucket4j.remote.RemoteBucketState;
+import io.github.bucket4j.remote.RecoveryStrategy;
 import org.infinispan.functional.FunctionalMap;
 
 import javax.cache.Cache;
@@ -46,15 +46,15 @@ public class InfinispanBucketBuilder extends AbstractBucketBuilder<InfinispanBuc
     }
 
     /**
-     * Constructs an instance of {@link GridBucket} which state actually stored inside in-memory data-grid,
+     * Constructs an instance of {@link BucketProxy} which state actually stored inside in-memory data-grid,
      * semantic of this method is fully equals to {@link io.github.bucket4j.grid.jcache.JCacheBucketBuilder#build(Cache, Serializable, RecoveryStrategy)}
      *
      * @return new distributed bucket
      */
-    public <K extends Serializable> Bucket build(FunctionalMap.ReadWriteMap<K, GridBucketState> readWriteMap, K key, RecoveryStrategy recoveryStrategy) {
+    public <K extends Serializable> Bucket build(FunctionalMap.ReadWriteMap<K, RemoteBucketState> readWriteMap, K key, RecoveryStrategy recoveryStrategy) {
         BucketConfiguration configuration = buildConfiguration();
-        InfinispanProxy<K> gridProxy = new InfinispanProxy<>(readWriteMap);
-        return GridBucket.createInitializedBucket(key, configuration, gridProxy, recoveryStrategy);
+        InfinispanBackend<K> gridProxy = new InfinispanBackend<>(readWriteMap);
+        return BucketProxy.createInitializedBucket(key, configuration, gridProxy, recoveryStrategy);
     }
 
 }

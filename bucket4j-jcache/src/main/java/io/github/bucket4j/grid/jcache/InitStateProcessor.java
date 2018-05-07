@@ -20,8 +20,8 @@ package io.github.bucket4j.grid.jcache;
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.BucketState;
 import io.github.bucket4j.Nothing;
-import io.github.bucket4j.grid.CommandResult;
-import io.github.bucket4j.grid.GridBucketState;
+import io.github.bucket4j.remote.CommandResult;
+import io.github.bucket4j.remote.RemoteBucketState;
 
 import javax.cache.processor.MutableEntry;
 import java.io.Serializable;
@@ -37,14 +37,14 @@ public class InitStateProcessor<K extends Serializable> implements JCacheEntryPr
     }
 
     @Override
-    public CommandResult<Nothing> process(MutableEntry<K, GridBucketState> mutableEntry, Object... arguments) {
+    public CommandResult<Nothing> process(MutableEntry<K, RemoteBucketState> mutableEntry, Object... arguments) {
         if (mutableEntry.exists()) {
             return CommandResult.success(null);
         }
         long currentTimeNanos = currentTimeNanos();
         BucketState bucketState = BucketState.createInitialState(configuration, currentTimeNanos);
-        GridBucketState gridBucketState = new GridBucketState(configuration, bucketState);
-        mutableEntry.setValue(gridBucketState);
+        RemoteBucketState remoteBucketState = new RemoteBucketState(configuration, bucketState);
+        mutableEntry.setValue(remoteBucketState);
         return CommandResult.success(null);
     }
 

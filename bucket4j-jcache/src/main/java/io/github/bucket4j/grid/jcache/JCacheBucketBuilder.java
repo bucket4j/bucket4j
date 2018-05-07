@@ -19,10 +19,10 @@ package io.github.bucket4j.grid.jcache;
 
 import io.github.bucket4j.AbstractBucketBuilder;
 import io.github.bucket4j.BucketConfiguration;
-import io.github.bucket4j.grid.GridBucket;
-import io.github.bucket4j.grid.RecoveryStrategy;
+import io.github.bucket4j.remote.BucketProxy;
+import io.github.bucket4j.remote.RecoveryStrategy;
 import io.github.bucket4j.Bucket;
-import io.github.bucket4j.grid.GridBucketState;
+import io.github.bucket4j.remote.RemoteBucketState;
 
 import javax.cache.Cache;
 import java.io.Serializable;
@@ -43,7 +43,7 @@ public class JCacheBucketBuilder extends AbstractBucketBuilder<JCacheBucketBuild
     }
 
     /**
-     * Constructs an instance of {@link GridBucket} which state actually stored inside in-memory data-grid,
+     * Constructs an instance of {@link BucketProxy} which state actually stored inside in-memory data-grid,
      * the bucket stored in the grid immediately, so one network request will be issued to grid.
      * Due to this method performs network IO, returned result must not be treated as light-weight entity,
      * it will be a performance anti-pattern to use this method multiple times for same key,
@@ -64,10 +64,10 @@ public class JCacheBucketBuilder extends AbstractBucketBuilder<JCacheBucketBuild
      *
      * @return new distributed bucket
      */
-    public <K extends Serializable> Bucket build(Cache<K, GridBucketState> cache, K key, RecoveryStrategy recoveryStrategy) {
+    public <K extends Serializable> Bucket build(Cache<K, RemoteBucketState> cache, K key, RecoveryStrategy recoveryStrategy) {
         BucketConfiguration configuration = buildConfiguration();
-        JCacheProxy<K> gridProxy = new JCacheProxy<>(cache);
-        return GridBucket.createInitializedBucket(key, configuration, gridProxy, recoveryStrategy);
+        JCacheBackend<K> gridProxy = new JCacheBackend<>(cache);
+        return BucketProxy.createInitializedBucket(key, configuration, gridProxy, recoveryStrategy);
     }
 
 }

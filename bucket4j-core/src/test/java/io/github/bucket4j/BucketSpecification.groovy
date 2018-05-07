@@ -17,10 +17,9 @@
 
 package io.github.bucket4j
 
-import io.github.bucket4j.grid.GridBucket
+import io.github.bucket4j.remote.BucketProxy
 import io.github.bucket4j.mock.BucketType
-import io.github.bucket4j.mock.GridProxyMock
-import io.github.bucket4j.mock.SchedulerMock
+import io.github.bucket4j.mock.BackendMock
 import io.github.bucket4j.mock.TimeMeterMock
 import spock.lang.Specification
 import spock.lang.Unroll
@@ -29,7 +28,7 @@ import java.time.Duration
 import java.util.concurrent.CompletableFuture
 
 import static io.github.bucket4j.TimeMeter.SYSTEM_MILLISECONDS
-import static io.github.bucket4j.grid.RecoveryStrategy.*
+import static io.github.bucket4j.remote.RecoveryStrategy.*
 
 class BucketSpecification extends Specification {
 
@@ -194,8 +193,8 @@ class BucketSpecification extends Specification {
             BucketConfiguration configuration = Bucket4j.configurationBuilder()
                                                     .addLimit(Bandwidth.simple(1, Duration.ofNanos(1)))
                                                     .build()
-            GridProxyMock mockProxy = new GridProxyMock(SYSTEM_MILLISECONDS);
-            Bucket bucket = GridBucket.createInitializedBucket("66", configuration, mockProxy, THROW_BUCKET_NOT_FOUND_EXCEPTION)
+            BackendMock mockProxy = new BackendMock(SYSTEM_MILLISECONDS);
+            Bucket bucket = BucketProxy.createInitializedBucket("66", configuration, mockProxy, THROW_BUCKET_NOT_FOUND_EXCEPTION)
         when:
             mockProxy.setException(new RuntimeException())
             CompletableFuture<Boolean> future = bucket.asAsync().tryConsume(1)

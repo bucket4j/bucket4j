@@ -22,9 +22,9 @@ import com.hazelcast.core.IMap;
 import io.github.bucket4j.AbstractDistributedBucketTest;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.Bucket4j;
-import io.github.bucket4j.grid.GridBucketState;
-import io.github.bucket4j.grid.ProxyManager;
-import io.github.bucket4j.grid.RecoveryStrategy;
+import io.github.bucket4j.remote.RemoteBucketState;
+import io.github.bucket4j.remote.ProxyManager;
+import io.github.bucket4j.remote.RecoveryStrategy;
 import io.github.bucket4j.grid.hazelcast.HazelcastBucketBuilder;
 import org.gridkit.nanocloud.Cloud;
 import org.gridkit.nanocloud.CloudFactory;
@@ -38,7 +38,7 @@ import java.io.Serializable;
 
 public class HazelcastTest extends AbstractDistributedBucketTest<HazelcastBucketBuilder, io.github.bucket4j.grid.hazelcast.Hazelcast> {
 
-    private static IMap<String, GridBucketState> map;
+    private static IMap<String, RemoteBucketState> map;
     private static Cloud cloud;
     private static ViNode server;
 

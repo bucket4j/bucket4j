@@ -17,16 +17,16 @@
 
 package io.github.bucket4j
 
-import io.github.bucket4j.grid.GridBucket
+import io.github.bucket4j.remote.BucketProxy
 import io.github.bucket4j.local.LocalBucketBuilder
 import io.github.bucket4j.mock.BucketType
-import io.github.bucket4j.mock.GridProxyMock
+import io.github.bucket4j.mock.BackendMock
 import spock.lang.Specification
 import spock.lang.Unroll
 import java.time.Duration
 
 import static BucketExceptions.*
-import static io.github.bucket4j.grid.RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION
+import static io.github.bucket4j.remote.RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION
 
 class DetectionOfIllegalApiUsageSpecification extends Specification {
 
@@ -262,23 +262,23 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
 
     def "GridBucket should check that configuration is not null"() {
         setup:
-            GridProxyMock mockProxy = new GridProxyMock(TimeMeter.SYSTEM_MILLISECONDS)
+            BackendMock mockProxy = new BackendMock(TimeMeter.SYSTEM_MILLISECONDS)
         when:
-            GridBucket.createInitializedBucket("66", null, mockProxy, THROW_BUCKET_NOT_FOUND_EXCEPTION)
+            BucketProxy.createInitializedBucket("66", null, mockProxy, THROW_BUCKET_NOT_FOUND_EXCEPTION)
 
         then:
             IllegalArgumentException ex = thrown()
             ex.message == nullConfiguration().message
 
         when:
-            GridBucket.createLazyBucket("66", {null}, mockProxy)
+            BucketProxy.createLazyBucket("66", {null}, mockProxy)
                     .tryConsume(1)
         then:
             ex = thrown()
             ex.message == nullConfiguration().message
 
         when:
-            GridBucket.createLazyBucket("66", null, mockProxy)
+            BucketProxy.createLazyBucket("66", null, mockProxy)
                     .tryConsume(1)
         then:
             ex = thrown()

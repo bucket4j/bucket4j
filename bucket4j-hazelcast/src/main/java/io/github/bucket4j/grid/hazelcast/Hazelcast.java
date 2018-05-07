@@ -20,8 +20,8 @@ package io.github.bucket4j.grid.hazelcast;
 
 import com.hazelcast.core.IMap;
 import io.github.bucket4j.Extension;
-import io.github.bucket4j.grid.GridBucketState;
-import io.github.bucket4j.grid.ProxyManager;
+import io.github.bucket4j.remote.RemoteBucketState;
+import io.github.bucket4j.remote.ProxyManager;
 import java.io.Serializable;
 
 /**
@@ -48,7 +48,7 @@ public class Hazelcast implements Extension<HazelcastBucketBuilder> {
      * @param <T> type of keys in the map
      * @return {@link ProxyManager} for specified map.
      */
-    public <T extends Serializable> ProxyManager<T> proxyManagerForMap(IMap<T, GridBucketState> map) {
+    public <T extends Serializable> ProxyManager<T> proxyManagerForMap(IMap<T, RemoteBucketState> map) {
         return new HazelcastProxyManager<>(map);
     }
 

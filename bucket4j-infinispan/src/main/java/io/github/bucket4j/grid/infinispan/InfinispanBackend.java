@@ -19,10 +19,10 @@ package io.github.bucket4j.grid.infinispan;
 
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.Nothing;
-import io.github.bucket4j.grid.CommandResult;
-import io.github.bucket4j.grid.GridBucketState;
-import io.github.bucket4j.grid.GridCommand;
-import io.github.bucket4j.grid.GridProxy;
+import io.github.bucket4j.remote.CommandResult;
+import io.github.bucket4j.remote.RemoteBucketState;
+import io.github.bucket4j.remote.RemoteCommand;
+import io.github.bucket4j.remote.Backend;
 import io.github.bucket4j.grid.jcache.JCacheEntryProcessor;
 import org.infinispan.commons.CacheException;
 import org.infinispan.functional.EntryView;
@@ -34,16 +34,16 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
-public class InfinispanProxy<K extends Serializable> implements GridProxy<K> {
+public class InfinispanBackend<K extends Serializable> implements Backend<K> {
 
-    private final ReadWriteMap<K, GridBucketState> readWriteMap;
+    private final ReadWriteMap<K, RemoteBucketState> readWriteMap;
 
-    public InfinispanProxy(ReadWriteMap<K, GridBucketState> readWriteMap) {
+    public InfinispanBackend(ReadWriteMap<K, RemoteBucketState> readWriteMap) {
         this.readWriteMap = readWriteMap;
     }
 
     @Override
-    public <T extends Serializable> CommandResult<T> execute(K key, GridCommand<T> command) {
+    public <T extends Serializable> CommandResult<T> execute(K key, RemoteCommand<T> command) {
         JCacheEntryProcessor<K, T> entryProcessor = JCacheEntryProcessor.executeProcessor(command);
         return invokeSync(key, entryProcessor);
     }
@@ -55,20 +55,20 @@ public class InfinispanProxy<K extends Serializable> implements GridProxy<K> {
     }
 
     @Override
-    public <T extends Serializable> T createInitialStateAndExecute(K key, BucketConfiguration configuration, GridCommand<T> command) {
+    public <T extends Serializable> T createInitialStateAndExecute(K key, BucketConfiguration configuration, RemoteCommand<T> command) {
         JCacheEntryProcessor<K, T> entryProcessor = JCacheEntryProcessor.initStateAndExecuteProcessor(command, configuration);
         CommandResult<T> result = invokeSync(key, entryProcessor);
         return result.getData();
     }
 
     @Override
-    public <T extends Serializable> CompletableFuture<CommandResult<T>> executeAsync(K key, GridCommand<T> command) {
+    public <T extends Serializable> CompletableFuture<CommandResult<T>> executeAsync(K key, RemoteCommand<T> command) {
         JCacheEntryProcessor<K, T> entryProcessor = JCacheEntryProcessor.executeProcessor(command);
         return invokeAsync(key, entryProcessor);
     }
 
     @Override
-    public <T extends Serializable> CompletableFuture<T> createInitialStateAndExecuteAsync(K key, BucketConfiguration configuration, GridCommand<T> command) {
+    public <T extends Serializable> CompletableFuture<T> createInitialStateAndExecuteAsync(K key, BucketConfiguration configuration, RemoteCommand<T> command) {
         JCacheEntryProcessor<K, T> entryProcessor = JCacheEntryProcessor.initStateAndExecuteProcessor(command, configuration);
         CompletableFuture<CommandResult<T>> result = invokeAsync(key, entryProcessor);
         return result.thenApply(CommandResult::getData);
@@ -77,10 +77,10 @@ public class InfinispanProxy<K extends Serializable> implements GridProxy<K> {
     @Override
     public Optional<BucketConfiguration> getConfiguration(K key) {
         try {
-            SerializableFunction<EntryView.ReadWriteEntryView<K, GridBucketState>, GridBucketState> findFunction =
-                    (SerializableFunction<EntryView.ReadWriteEntryView<K, GridBucketState>, GridBucketState>)
+            SerializableFunction<EntryView.ReadWriteEntryView<K, RemoteBucketState>, RemoteBucketState> findFunction =
+                    (SerializableFunction<EntryView.ReadWriteEntryView<K, RemoteBucketState>, RemoteBucketState>)
                     entry -> entry.find().orElse(null);
-            GridBucketState state = readWriteMap.eval(key, findFunction).get();
+            RemoteBucketState state = readWriteMap.eval(key, findFunction).get();
             if (state == null) {
                 return Optional.empty();
             } else {

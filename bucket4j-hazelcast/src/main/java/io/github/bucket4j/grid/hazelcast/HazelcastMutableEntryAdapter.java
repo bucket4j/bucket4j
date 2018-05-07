@@ -17,19 +17,19 @@
 
 package io.github.bucket4j.grid.hazelcast;
 
-import io.github.bucket4j.grid.GridBucketState;
+import io.github.bucket4j.remote.RemoteBucketState;
 
 import javax.cache.processor.MutableEntry;
 import java.io.Serializable;
 import java.util.Map;
 
 
-class HazelcastMutableEntryAdapter<K extends Serializable> implements MutableEntry<K, GridBucketState> {
+class HazelcastMutableEntryAdapter<K extends Serializable> implements MutableEntry<K, RemoteBucketState> {
 
-    private final Map.Entry<K, GridBucketState> entry;
+    private final Map.Entry<K, RemoteBucketState> entry;
     private boolean modified;
 
-    public HazelcastMutableEntryAdapter(Map.Entry<K, GridBucketState> entry) {
+    public HazelcastMutableEntryAdapter(Map.Entry<K, RemoteBucketState> entry) {
         this.entry = entry;
     }
 
@@ -44,7 +44,7 @@ class HazelcastMutableEntryAdapter<K extends Serializable> implements MutableEnt
     }
 
     @Override
-    public void setValue(GridBucketState value) {
+    public void setValue(RemoteBucketState value) {
         entry.setValue(value);
         this.modified = true;
     }
@@ -55,7 +55,7 @@ class HazelcastMutableEntryAdapter<K extends Serializable> implements MutableEnt
     }
 
     @Override
-    public GridBucketState getValue() {
+    public RemoteBucketState getValue() {
         return entry.getValue();
     }
 

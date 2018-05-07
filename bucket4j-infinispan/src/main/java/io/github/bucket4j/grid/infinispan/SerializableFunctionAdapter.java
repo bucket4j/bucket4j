@@ -17,8 +17,8 @@
 
 package io.github.bucket4j.grid.infinispan;
 
-import io.github.bucket4j.grid.CommandResult;
-import io.github.bucket4j.grid.GridBucketState;
+import io.github.bucket4j.remote.CommandResult;
+import io.github.bucket4j.remote.RemoteBucketState;
 import io.github.bucket4j.grid.jcache.JCacheEntryProcessor;
 import org.infinispan.functional.EntryView;
 import org.infinispan.util.function.SerializableFunction;
@@ -26,7 +26,7 @@ import org.infinispan.util.function.SerializableFunction;
 import javax.cache.processor.MutableEntry;
 import java.io.Serializable;
 
-public class SerializableFunctionAdapter<K extends Serializable, R extends Serializable> implements SerializableFunction<EntryView.ReadWriteEntryView<K, GridBucketState>, CommandResult<R>> {
+public class SerializableFunctionAdapter<K extends Serializable, R extends Serializable> implements SerializableFunction<EntryView.ReadWriteEntryView<K, RemoteBucketState>, CommandResult<R>> {
 
     private static final long serialVersionUID = 42L;
 
@@ -37,15 +37,15 @@ public class SerializableFunctionAdapter<K extends Serializable, R extends Seria
     }
 
     @Override
-    public CommandResult<R> apply(EntryView.ReadWriteEntryView<K, GridBucketState> entryView) {
+    public CommandResult<R> apply(EntryView.ReadWriteEntryView<K, RemoteBucketState> entryView) {
         return entryProcessor.process(new MutableEntryAdapter<>(entryView));
     }
 
-    private static class MutableEntryAdapter<K extends Serializable> implements MutableEntry<K, GridBucketState> {
+    private static class MutableEntryAdapter<K extends Serializable> implements MutableEntry<K, RemoteBucketState> {
 
-        private final EntryView.ReadWriteEntryView<K, GridBucketState> entryView;
+        private final EntryView.ReadWriteEntryView<K, RemoteBucketState> entryView;
 
-        public MutableEntryAdapter(EntryView.ReadWriteEntryView<K, GridBucketState> entryView) {
+        public MutableEntryAdapter(EntryView.ReadWriteEntryView<K, RemoteBucketState> entryView) {
             this.entryView = entryView;
         }
 
@@ -55,8 +55,8 @@ public class SerializableFunctionAdapter<K extends Serializable, R extends Seria
         }
 
         @Override
-        public GridBucketState getValue() {
-            GridBucketState sourceState = entryView.get();
+        public RemoteBucketState getValue() {
+            RemoteBucketState sourceState = entryView.get();
             return sourceState.deepCopy();
         }
 
@@ -71,7 +71,7 @@ public class SerializableFunctionAdapter<K extends Serializable, R extends Seria
         }
 
         @Override
-        public void setValue(GridBucketState value) {
+        public void setValue(RemoteBucketState value) {
             entryView.set(value);
         }
 

@@ -18,24 +18,24 @@
 package io.github.bucket4j.grid.hazelcast;
 
 import com.hazelcast.map.EntryBackupProcessor;
-import io.github.bucket4j.grid.GridBucketState;
+import io.github.bucket4j.remote.RemoteBucketState;
 
 import java.io.Serializable;
 import java.util.Map;
 
 
-class SimpleBackupProcessor<K extends Serializable> implements EntryBackupProcessor<K, GridBucketState> {
+class SimpleBackupProcessor<K extends Serializable> implements EntryBackupProcessor<K, RemoteBucketState> {
 
     private static final long serialVersionUID = 1L;
 
-    private final GridBucketState state;
+    private final RemoteBucketState state;
 
-    public SimpleBackupProcessor(GridBucketState state) {
+    public SimpleBackupProcessor(RemoteBucketState state) {
         this.state = state;
     }
 
     @Override
-    public void processBackup(Map.Entry<K, GridBucketState> entry) {
+    public void processBackup(Map.Entry<K, RemoteBucketState> entry) {
         entry.setValue(state);
     }
 

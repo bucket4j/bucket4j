@@ -19,8 +19,8 @@ package io.github.bucket4j.grid.infinispan;
 
 
 import io.github.bucket4j.Extension;
-import io.github.bucket4j.grid.GridBucketState;
-import io.github.bucket4j.grid.ProxyManager;
+import io.github.bucket4j.remote.RemoteBucketState;
+import io.github.bucket4j.remote.ProxyManager;
 
 import org.infinispan.functional.FunctionalMap.ReadWriteMap;
 
@@ -50,7 +50,7 @@ public class Infinispan implements Extension<InfinispanBucketBuilder> {
      * @param <K> type of keys in the cache
      * @return {@link ProxyManager} for specified cache.
      */
-    public <K extends Serializable> ProxyManager<K> proxyManagerForMap(ReadWriteMap<K, GridBucketState> readWriteMap) {
+    public <K extends Serializable> ProxyManager<K> proxyManagerForMap(ReadWriteMap<K, RemoteBucketState> readWriteMap) {
         return new InfinispanProxyManager<>(readWriteMap);
     }
 

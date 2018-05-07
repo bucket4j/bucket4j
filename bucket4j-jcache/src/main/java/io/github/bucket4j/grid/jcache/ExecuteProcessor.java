@@ -17,9 +17,9 @@
 
 package io.github.bucket4j.grid.jcache;
 
-import io.github.bucket4j.grid.CommandResult;
-import io.github.bucket4j.grid.GridBucketState;
-import io.github.bucket4j.grid.GridCommand;
+import io.github.bucket4j.remote.CommandResult;
+import io.github.bucket4j.remote.RemoteBucketState;
+import io.github.bucket4j.remote.RemoteCommand;
 
 import javax.cache.processor.MutableEntry;
 import java.io.Serializable;
@@ -28,23 +28,23 @@ public class ExecuteProcessor<K extends Serializable, T extends Serializable> im
 
     private static final long serialVersionUID = 1;
 
-    private GridCommand<T> targetCommand;
+    private RemoteCommand<T> targetCommand;
 
-    public ExecuteProcessor(GridCommand<T> targetCommand) {
+    public ExecuteProcessor(RemoteCommand<T> targetCommand) {
         this.targetCommand = targetCommand;
     }
 
     @Override
-    public CommandResult<T> process(MutableEntry<K, GridBucketState> mutableEntry, Object... arguments) {
+    public CommandResult<T> process(MutableEntry<K, RemoteBucketState> mutableEntry, Object... arguments) {
         if (!mutableEntry.exists()) {
             return CommandResult.bucketNotFound();
         }
         long currentTimeNanos = currentTimeNanos();
-        GridBucketState gridBucketState = mutableEntry.getValue();
+        RemoteBucketState remoteBucketState = mutableEntry.getValue();
 
-        T result = targetCommand.execute(gridBucketState, currentTimeNanos);
+        T result = targetCommand.execute(remoteBucketState, currentTimeNanos);
         if (targetCommand.isBucketStateModified()) {
-            mutableEntry.setValue(gridBucketState);
+            mutableEntry.setValue(remoteBucketState);
         }
         return CommandResult.success(result);
     }

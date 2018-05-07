@@ -19,8 +19,8 @@ package io.github.bucket4j.grid.jcache.infinispan;
 
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket4j;
-import io.github.bucket4j.grid.GridBucketState;
-import io.github.bucket4j.grid.RecoveryStrategy;
+import io.github.bucket4j.remote.RemoteBucketState;
+import io.github.bucket4j.remote.RecoveryStrategy;
 import io.github.bucket4j.grid.jcache.JCache;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -46,7 +46,7 @@ public class InfinispanJCacheTest {
         }
     }
 
-    private static Cache<String, GridBucketState> cache;
+    private static Cache<String, RemoteBucketState> cache;
     private static CacheManager cacheManager;
 
     @BeforeClass

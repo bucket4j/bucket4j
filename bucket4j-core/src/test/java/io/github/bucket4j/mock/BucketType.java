@@ -18,15 +18,11 @@
 package io.github.bucket4j.mock;
 
 import io.github.bucket4j.*;
-import io.github.bucket4j.grid.GridBucket;
-import io.github.bucket4j.grid.RecoveryStrategy;
+import io.github.bucket4j.remote.BucketProxy;
 import io.github.bucket4j.local.LocalBucketBuilder;
 import io.github.bucket4j.local.SynchronizationStrategy;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import static io.github.bucket4j.grid.RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION;
+import static io.github.bucket4j.remote.RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION;
 
 public enum BucketType {
 
@@ -60,8 +56,8 @@ public enum BucketType {
         @Override
         public Bucket createBucket(AbstractBucketBuilder builder, TimeMeter timeMeter) {
             BucketConfiguration configuration = PackageAcessor.buildConfiguration(builder);
-            GridProxyMock gridProxy = new GridProxyMock(timeMeter);
-            return GridBucket.createInitializedBucket(42, configuration, gridProxy, THROW_BUCKET_NOT_FOUND_EXCEPTION);
+            BackendMock gridProxy = new BackendMock(timeMeter);
+            return BucketProxy.createInitializedBucket(42, configuration, gridProxy, THROW_BUCKET_NOT_FOUND_EXCEPTION);
         }
     };
 

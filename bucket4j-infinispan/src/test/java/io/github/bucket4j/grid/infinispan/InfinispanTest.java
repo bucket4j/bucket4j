@@ -20,9 +20,9 @@ package io.github.bucket4j.grid.infinispan;
 import io.github.bucket4j.AbstractDistributedBucketTest;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.Bucket4j;
-import io.github.bucket4j.grid.GridBucketState;
-import io.github.bucket4j.grid.ProxyManager;
-import io.github.bucket4j.grid.RecoveryStrategy;
+import io.github.bucket4j.remote.RemoteBucketState;
+import io.github.bucket4j.remote.ProxyManager;
+import io.github.bucket4j.remote.RecoveryStrategy;
 import org.infinispan.functional.FunctionalMap.ReadWriteMap;
 import org.infinispan.functional.impl.FunctionalMapImpl;
 import org.infinispan.functional.impl.ReadWriteMapImpl;
@@ -40,8 +40,8 @@ import java.net.URISyntaxException;
 
 public class InfinispanTest extends AbstractDistributedBucketTest<InfinispanBucketBuilder, Infinispan> {
 
-    private static ReadWriteMap<String, GridBucketState> readWriteMap;
-    private static Cache<String, GridBucketState> cache;
+    private static ReadWriteMap<String, RemoteBucketState> readWriteMap;
+    private static Cache<String, RemoteBucketState> cache;
     private static CacheManager cacheManager1;
     private static CacheManager cacheManager2;
 
@@ -96,9 +96,9 @@ public class InfinispanTest extends AbstractDistributedBucketTest<InfinispanBuck
         }
     }
 
-    private static ReadWriteMap<String, GridBucketState> toMap(Cache<String, GridBucketState> cache) {
-        org.infinispan.Cache<String, GridBucketState> nativeCache = cache.unwrap(org.infinispan.Cache.class);
-        FunctionalMapImpl<String, GridBucketState> functionalMap = FunctionalMapImpl.create(nativeCache.getAdvancedCache());
+    private static ReadWriteMap<String, RemoteBucketState> toMap(Cache<String, RemoteBucketState> cache) {
+        org.infinispan.Cache<String, RemoteBucketState> nativeCache = cache.unwrap(org.infinispan.Cache.class);
+        FunctionalMapImpl<String, RemoteBucketState> functionalMap = FunctionalMapImpl.create(nativeCache.getAdvancedCache());
         return ReadWriteMapImpl.create(functionalMap);
     }
 

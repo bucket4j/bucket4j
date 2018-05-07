@@ -20,9 +20,9 @@ package io.github.bucket4j.grid.ignite;
 import io.github.bucket4j.AbstractDistributedBucketTest;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.Bucket4j;
-import io.github.bucket4j.grid.GridBucketState;
-import io.github.bucket4j.grid.ProxyManager;
-import io.github.bucket4j.grid.RecoveryStrategy;
+import io.github.bucket4j.remote.RemoteBucketState;
+import io.github.bucket4j.remote.ProxyManager;
+import io.github.bucket4j.remote.RecoveryStrategy;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.IgniteCache;
 import org.apache.ignite.Ignition;
@@ -40,7 +40,7 @@ import java.io.Serializable;
 
 public class IgniteTest extends AbstractDistributedBucketTest<IgniteBucketBuilder, io.github.bucket4j.grid.ignite.Ignite> {
 
-    private static IgniteCache<String, GridBucketState> cache;
+    private static IgniteCache<String, RemoteBucketState> cache;
     private static Cloud cloud;
     private static ViNode server;
 

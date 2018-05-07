@@ -19,9 +19,9 @@ package io.github.bucket4j.grid.jcache;
 
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.BucketState;
-import io.github.bucket4j.grid.CommandResult;
-import io.github.bucket4j.grid.GridBucketState;
-import io.github.bucket4j.grid.GridCommand;
+import io.github.bucket4j.remote.CommandResult;
+import io.github.bucket4j.remote.RemoteBucketState;
+import io.github.bucket4j.remote.RemoteCommand;
 
 import javax.cache.processor.MutableEntry;
 import java.io.Serializable;
@@ -30,30 +30,30 @@ public class InitStateAndExecuteProcessor<K extends Serializable, T extends Seri
 
     private static final long serialVersionUID = 1L;
 
-    private GridCommand<T> targetCommand;
+    private RemoteCommand<T> targetCommand;
     private BucketConfiguration configuration;
 
-    public InitStateAndExecuteProcessor(GridCommand<T> targetCommand, BucketConfiguration configuration) {
+    public InitStateAndExecuteProcessor(RemoteCommand<T> targetCommand, BucketConfiguration configuration) {
         this.configuration = configuration;
         this.targetCommand = targetCommand;
     }
 
     @Override
-    public CommandResult<T> process(MutableEntry<K, GridBucketState> mutableEntry, Object... arguments) {
+    public CommandResult<T> process(MutableEntry<K, RemoteBucketState> mutableEntry, Object... arguments) {
         boolean newStateCreated = false;
         long currentTimeNanos = currentTimeNanos();
-        GridBucketState gridBucketState;
+        RemoteBucketState remoteBucketState;
         if (mutableEntry.exists()) {
-            gridBucketState = mutableEntry.getValue();
+            remoteBucketState = mutableEntry.getValue();
         } else {
             BucketState bucketState = BucketState.createInitialState(configuration, currentTimeNanos);
-            gridBucketState = new GridBucketState(configuration, bucketState);
+            remoteBucketState = new RemoteBucketState(configuration, bucketState);
             newStateCreated = true;
         }
 
-        T result = targetCommand.execute(gridBucketState, currentTimeNanos);
+        T result = targetCommand.execute(remoteBucketState, currentTimeNanos);
         if (newStateCreated || targetCommand.isBucketStateModified()) {
-            mutableEntry.setValue(gridBucketState);
+            mutableEntry.setValue(remoteBucketState);
         }
         return CommandResult.success(result);
     }

@@ -19,10 +19,10 @@ package io.github.bucket4j.grid.jcache;
 
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.Nothing;
-import io.github.bucket4j.grid.CommandResult;
-import io.github.bucket4j.grid.GridCommand;
-import io.github.bucket4j.grid.GridProxy;
-import io.github.bucket4j.grid.GridBucketState;
+import io.github.bucket4j.remote.CommandResult;
+import io.github.bucket4j.remote.RemoteCommand;
+import io.github.bucket4j.remote.Backend;
+import io.github.bucket4j.remote.RemoteBucketState;
 
 import javax.cache.Cache;
 import javax.cache.CacheManager;
@@ -31,22 +31,22 @@ import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
-public class JCacheProxy<K extends Serializable> implements GridProxy<K> {
+public class JCacheBackend<K extends Serializable> implements Backend<K> {
 
     private static final Map<String, String> incompatibleProviders = new HashMap<>();
     static {
         incompatibleProviders.put("org.infinispan", " use module bucket4j-infinispan directly");
     }
 
-    private final Cache<K, GridBucketState> cache;
+    private final Cache<K, RemoteBucketState> cache;
 
-    public JCacheProxy(Cache<K, GridBucketState> cache) {
+    public JCacheBackend(Cache<K, RemoteBucketState> cache) {
         this.cache = Objects.requireNonNull(cache);
         checkProviders(cache);
     }
 
     @Override
-    public <T extends Serializable> CommandResult<T> execute(K key, GridCommand<T> command) {
+    public <T extends Serializable> CommandResult<T> execute(K key, RemoteCommand<T> command) {
         JCacheEntryProcessor<K, T> entryProcessor = JCacheEntryProcessor.executeProcessor(command);
         return cache.invoke(key, entryProcessor);
     }
@@ -58,27 +58,27 @@ public class JCacheProxy<K extends Serializable> implements GridProxy<K> {
     }
 
     @Override
-    public <T extends Serializable> T createInitialStateAndExecute(K key, BucketConfiguration configuration, GridCommand<T> command) {
+    public <T extends Serializable> T createInitialStateAndExecute(K key, BucketConfiguration configuration, RemoteCommand<T> command) {
         JCacheEntryProcessor<K, T> entryProcessor = JCacheEntryProcessor.initStateAndExecuteProcessor(command, configuration);
         CommandResult<T> result = cache.invoke(key, entryProcessor);
         return result.getData();
     }
 
     @Override
-    public <T extends Serializable> CompletableFuture<CommandResult<T>> executeAsync(K key, GridCommand<T> command) {
+    public <T extends Serializable> CompletableFuture<CommandResult<T>> executeAsync(K key, RemoteCommand<T> command) {
         // because JCache does not specify async API
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public <T extends Serializable> CompletableFuture<T> createInitialStateAndExecuteAsync(K key, BucketConfiguration configuration, GridCommand<T> command) {
+    public <T extends Serializable> CompletableFuture<T> createInitialStateAndExecuteAsync(K key, BucketConfiguration configuration, RemoteCommand<T> command) {
         // because JCache does not specify async API
         throw new UnsupportedOperationException();
     }
 
     @Override
     public Optional<BucketConfiguration> getConfiguration(K key) {
-        GridBucketState state = cache.get(key);
+        RemoteBucketState state = cache.get(key);
         if (state == null) {
             return Optional.empty();
         } else {
@@ -92,7 +92,7 @@ public class JCacheProxy<K extends Serializable> implements GridProxy<K> {
         return false;
     }
 
-    private void checkProviders(Cache<K, GridBucketState> cache) {
+    private void checkProviders(Cache<K, RemoteBucketState> cache) {
         CacheManager cacheManager = cache.getCacheManager();
         if (cacheManager == null) {
             return;

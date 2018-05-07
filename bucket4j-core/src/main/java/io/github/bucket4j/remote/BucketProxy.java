@@ -1,23 +1,24 @@
 /*
  *
- *   Copyright 2015-2017 Vladimir Bukhtoyarov
+ * Copyright 2015-2018 Vladimir Bukhtoyarov
  *
- *     Licensed under the Apache License, Version 2.0 (the "License");
- *     you may not use this file except in compliance with the License.
- *     You may obtain a copy of the License at
+ *       Licensed under the Apache License, Version 2.0 (the "License");
+ *       you may not use this file except in compliance with the License.
+ *       You may obtain a copy of the License at
  *
- *           http://www.apache.org/licenses/LICENSE-2.0
+ *             http://www.apache.org/licenses/LICENSE-2.0
  *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *    See the License for the specific language governing permissions and
- *    limitations under the License.
+ *      Unless required by applicable law or agreed to in writing, software
+ *      distributed under the License is distributed on an "AS IS" BASIS,
+ *      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *      See the License for the specific language governing permissions and
+ *      limitations under the License.
  */
 
-package io.github.bucket4j.grid;
+package io.github.bucket4j.remote;
 
 import io.github.bucket4j.*;
+import io.github.bucket4j.remote.commands.*;
 
 import java.io.Serializable;
 import java.util.concurrent.CompletableFuture;
@@ -28,30 +29,30 @@ import java.util.function.Supplier;
  *
  * @param <K> type of key
  */
-public class GridBucket<K extends Serializable> extends AbstractBucket {
+public class BucketProxy<K extends Serializable> extends AbstractBucket {
 
     private final K key;
-    private final GridProxy<K> gridProxy;
+    private final Backend<K> backend;
     private final RecoveryStrategy recoveryStrategy;
     private final Supplier<BucketConfiguration> configurationSupplier;
 
-    public static <T extends Serializable> GridBucket<T> createLazyBucket(T key, Supplier<BucketConfiguration> configurationSupplier, GridProxy<T> gridProxy) {
-        return new GridBucket<>(BucketListener.NOPE, key, configurationSupplier, gridProxy, RecoveryStrategy.RECONSTRUCT, false);
+    public static <T extends Serializable> BucketProxy<T> createLazyBucket(T key, Supplier<BucketConfiguration> configurationSupplier, Backend<T> backend) {
+        return new BucketProxy<>(BucketListener.NOPE, key, configurationSupplier, backend, RecoveryStrategy.RECONSTRUCT, false);
     }
 
-    public static <T extends Serializable> GridBucket<T> createInitializedBucket(T key, BucketConfiguration configuration, GridProxy<T> gridProxy, RecoveryStrategy recoveryStrategy) {
-        return new GridBucket<>(BucketListener.NOPE, key, () -> configuration, gridProxy, recoveryStrategy, true);
+    public static <T extends Serializable> BucketProxy<T> createInitializedBucket(T key, BucketConfiguration configuration, Backend<T> backend, RecoveryStrategy recoveryStrategy) {
+        return new BucketProxy<>(BucketListener.NOPE, key, () -> configuration, backend, recoveryStrategy, true);
     }
 
     @Override
     public Bucket toListenable(BucketListener listener) {
-        return new GridBucket<>(listener, key, configurationSupplier, gridProxy, recoveryStrategy, false);
+        return new BucketProxy<>(listener, key, configurationSupplier, backend, recoveryStrategy, false);
     }
 
-    private GridBucket(BucketListener listener, K key, Supplier<BucketConfiguration> configurationSupplier, GridProxy<K> gridProxy, RecoveryStrategy recoveryStrategy, boolean initializeBucket) {
+    private BucketProxy(BucketListener listener, K key, Supplier<BucketConfiguration> configurationSupplier, Backend<K> backend, RecoveryStrategy recoveryStrategy, boolean initializeBucket) {
         super(listener);
         this.key = key;
-        this.gridProxy = gridProxy;
+        this.backend = backend;
         this.recoveryStrategy = recoveryStrategy;
         this.configurationSupplier = configurationSupplier;
         if (configurationSupplier == null) {
@@ -59,13 +60,13 @@ public class GridBucket<K extends Serializable> extends AbstractBucket {
         }
         if (initializeBucket) {
             BucketConfiguration configuration = getConfiguration();
-            gridProxy.createInitialState(key, configuration);
+            backend.createInitialState(key, configuration);
         }
     }
 
     @Override
     public boolean isAsyncModeSupported() {
-        return gridProxy.isAsyncModeSupported();
+        return backend.isAsyncModeSupported();
     }
 
     @Override
@@ -163,8 +164,8 @@ public class GridBucket<K extends Serializable> extends AbstractBucket {
         return bucketConfiguration;
     }
 
-    private <T extends Serializable> T execute(GridCommand<T> command) {
-        CommandResult<T> result = gridProxy.execute(key, command);
+    private <T extends Serializable> T execute(RemoteCommand<T> command) {
+        CommandResult<T> result = backend.execute(key, command);
         if (!result.isBucketNotFound()) {
             return result.getData();
         }
@@ -175,11 +176,11 @@ public class GridBucket<K extends Serializable> extends AbstractBucket {
         }
 
         // retry command execution
-        return gridProxy.createInitialStateAndExecute(key, getConfiguration(), command);
+        return backend.createInitialStateAndExecute(key, getConfiguration(), command);
     }
 
-    private <T extends Serializable> CompletableFuture<T> executeAsync(GridCommand<T> command) {
-        CompletableFuture<CommandResult<T>> futureResult = gridProxy.executeAsync(key, command);
+    private <T extends Serializable> CompletableFuture<T> executeAsync(RemoteCommand<T> command) {
+        CompletableFuture<CommandResult<T>> futureResult = backend.executeAsync(key, command);
         return futureResult.thenCompose(cmdResult -> {
             if (!cmdResult.isBucketNotFound()) {
                 T resultDate = cmdResult.getData();
@@ -190,7 +191,7 @@ public class GridBucket<K extends Serializable> extends AbstractBucket {
                 failedFuture.completeExceptionally(new BucketNotFoundException(key));
                 return failedFuture;
             }
-            return gridProxy.createInitialStateAndExecuteAsync(key, getConfiguration(), command);
+            return backend.createInitialStateAndExecuteAsync(key, getConfiguration(), command);
         });
     }
 

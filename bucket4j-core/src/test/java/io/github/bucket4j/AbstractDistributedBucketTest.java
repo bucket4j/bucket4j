@@ -17,9 +17,9 @@
 
 package io.github.bucket4j;
 
-import io.github.bucket4j.grid.BucketNotFoundException;
-import io.github.bucket4j.grid.ProxyManager;
-import io.github.bucket4j.grid.RecoveryStrategy;
+import io.github.bucket4j.remote.BucketNotFoundException;
+import io.github.bucket4j.remote.ProxyManager;
+import io.github.bucket4j.remote.RecoveryStrategy;
 import io.github.bucket4j.util.ConsumptionScenario;
 import org.junit.Test;
 
@@ -33,8 +33,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import static io.github.bucket4j.grid.RecoveryStrategy.RECONSTRUCT;
-import static io.github.bucket4j.grid.RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION;
+import static io.github.bucket4j.remote.RecoveryStrategy.RECONSTRUCT;
+import static io.github.bucket4j.remote.RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION;
 import static org.junit.Assert.*;
 
 public abstract class AbstractDistributedBucketTest<B extends AbstractBucketBuilder<B>, E extends Extension<B>> {

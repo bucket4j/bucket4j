@@ -17,10 +17,9 @@
 
 package io.github.bucket4j.grid.jcache.ignite;
 
-import io.github.bucket4j.grid.GridBucketState;
+import io.github.bucket4j.remote.RemoteBucketState;
 import io.github.bucket4j.grid.jcache.AbstractJCacheTest;
 import org.apache.ignite.Ignite;
-import org.apache.ignite.IgniteCache;
 import org.apache.ignite.Ignition;
 import org.apache.ignite.configuration.CacheConfiguration;
 import org.apache.ignite.configuration.IgniteConfiguration;
@@ -35,7 +34,7 @@ import java.io.Serializable;
 
 public class IgniteJCacheTest extends AbstractJCacheTest {
 
-    private static Cache<String, GridBucketState> cache;
+    private static Cache<String, RemoteBucketState> cache;
     private static Cloud cloud;
     private static ViNode server;
 
@@ -75,7 +74,7 @@ public class IgniteJCacheTest extends AbstractJCacheTest {
     }
 
     @Override
-    protected Cache<String, GridBucketState> getCache() {
+    protected Cache<String, RemoteBucketState> getCache() {
         return cache;
     }
 

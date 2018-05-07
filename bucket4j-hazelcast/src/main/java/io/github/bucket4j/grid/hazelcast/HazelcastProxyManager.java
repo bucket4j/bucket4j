@@ -20,10 +20,10 @@ package io.github.bucket4j.grid.hazelcast;
 import com.hazelcast.core.IMap;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketConfiguration;
-import io.github.bucket4j.grid.GridBucket;
-import io.github.bucket4j.grid.GridBucketState;
-import io.github.bucket4j.grid.GridProxy;
-import io.github.bucket4j.grid.ProxyManager;
+import io.github.bucket4j.remote.BucketProxy;
+import io.github.bucket4j.remote.RemoteBucketState;
+import io.github.bucket4j.remote.Backend;
+import io.github.bucket4j.remote.ProxyManager;
 
 import java.io.Serializable;
 import java.util.Optional;
@@ -36,29 +36,29 @@ import java.util.function.Supplier;
  */
 public class HazelcastProxyManager<K extends Serializable> implements ProxyManager<K> {
 
-    private final GridProxy<K> gridProxy;
+    private final Backend<K> backend;
 
-    HazelcastProxyManager(IMap<K, GridBucketState> map) {
+    HazelcastProxyManager(IMap<K, RemoteBucketState> map) {
         if (map == null) {
             throw new IllegalArgumentException("map must not be null");
         }
-        this.gridProxy = new HazelcastProxy<>(map);
+        this.backend = new HazelcastBackend<>(map);
     }
 
     @Override
     public Bucket getProxy(K key, Supplier<BucketConfiguration> supplier) {
-        return GridBucket.createLazyBucket(key, supplier, gridProxy);
+        return BucketProxy.createLazyBucket(key, supplier, backend);
     }
 
     @Override
     public Optional<Bucket> getProxy(K key) {
         return getProxyConfiguration(key)
-                .map(configuration -> GridBucket.createLazyBucket(key, () -> configuration, gridProxy));
+                .map(configuration -> BucketProxy.createLazyBucket(key, () -> configuration, backend));
     }
 
     @Override
     public Optional<BucketConfiguration> getProxyConfiguration(K key) {
-        return gridProxy.getConfiguration(key);
+        return backend.getConfiguration(key);
     }
 
 }

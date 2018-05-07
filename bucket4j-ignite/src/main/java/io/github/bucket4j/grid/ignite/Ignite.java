@@ -19,8 +19,8 @@ package io.github.bucket4j.grid.ignite;
 
 
 import io.github.bucket4j.Extension;
-import io.github.bucket4j.grid.GridBucketState;
-import io.github.bucket4j.grid.ProxyManager;
+import io.github.bucket4j.remote.RemoteBucketState;
+import io.github.bucket4j.remote.ProxyManager;
 import org.apache.ignite.IgniteCache;
 
 import java.io.Serializable;
@@ -49,7 +49,7 @@ public class Ignite implements Extension<IgniteBucketBuilder> {
      * @param <T> type of keys in the cache
      * @return {@link ProxyManager} for specified cache.
      */
-    public <T extends Serializable> ProxyManager<T> proxyManagerForCache(IgniteCache<T, GridBucketState> cache) {
+    public <T extends Serializable> ProxyManager<T> proxyManagerForCache(IgniteCache<T, RemoteBucketState> cache) {
         return new IgniteProxyManager<>(cache);
     }
 

@@ -21,22 +21,22 @@ package io.github.bucket4j.mock;
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.BucketState;
 import io.github.bucket4j.TimeMeter;
-import io.github.bucket4j.grid.CommandResult;
-import io.github.bucket4j.grid.GridBucketState;
-import io.github.bucket4j.grid.GridCommand;
-import io.github.bucket4j.grid.GridProxy;
+import io.github.bucket4j.remote.CommandResult;
+import io.github.bucket4j.remote.RemoteBucketState;
+import io.github.bucket4j.remote.RemoteCommand;
+import io.github.bucket4j.remote.Backend;
 
 import java.io.*;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-public class GridProxyMock implements GridProxy {
+public class BackendMock implements Backend {
 
     private final TimeMeter timeMeter;
-    private GridBucketState state;
+    private RemoteBucketState state;
     private RuntimeException exception;
 
-    public GridProxyMock(TimeMeter timeMeter) {
+    public BackendMock(TimeMeter timeMeter) {
         this.timeMeter = timeMeter;
     }
 
@@ -45,7 +45,7 @@ public class GridProxyMock implements GridProxy {
     }
 
     @Override
-    public CommandResult execute(Serializable key, GridCommand command) {
+    public CommandResult execute(Serializable key, RemoteCommand command) {
         if (exception != null) {
             throw new RuntimeException();
         }
@@ -54,7 +54,7 @@ public class GridProxyMock implements GridProxy {
         }
         emulateSerialization(key);
         command = emulateSerialization(command);
-        GridBucketState newState = emulateSerialization(state);
+        RemoteBucketState newState = emulateSerialization(state);
         Serializable resultData = command.execute(newState, timeMeter.currentTimeNanos());
         if (command.isBucketStateModified()) {
             state = newState;
@@ -69,7 +69,7 @@ public class GridProxyMock implements GridProxy {
             throw new RuntimeException();
         }
         BucketState bucketState = BucketState.createInitialState(configuration, timeMeter.currentTimeNanos());
-        this.state = new GridBucketState(configuration, bucketState);
+        this.state = new RemoteBucketState(configuration, bucketState);
     }
 
     @Override
@@ -81,7 +81,7 @@ public class GridProxyMock implements GridProxy {
     }
 
     @Override
-    public Serializable createInitialStateAndExecute(Serializable key, BucketConfiguration configuration, GridCommand command) {
+    public Serializable createInitialStateAndExecute(Serializable key, BucketConfiguration configuration, RemoteCommand command) {
         if (exception != null) {
             throw new RuntimeException();
         }
@@ -90,7 +90,7 @@ public class GridProxyMock implements GridProxy {
     }
 
     @Override
-    public CompletableFuture createInitialStateAndExecuteAsync(Serializable key, BucketConfiguration configuration, GridCommand command) {
+    public CompletableFuture createInitialStateAndExecuteAsync(Serializable key, BucketConfiguration configuration, RemoteCommand command) {
         if (exception != null) {
             CompletableFuture future = new CompletableFuture();
             future.completeExceptionally(new RuntimeException());
@@ -100,7 +100,7 @@ public class GridProxyMock implements GridProxy {
     }
 
     @Override
-    public CompletableFuture<CommandResult> executeAsync(Serializable key, GridCommand command) {
+    public CompletableFuture<CommandResult> executeAsync(Serializable key, RemoteCommand command) {
         if (exception != null) {
             CompletableFuture future = new CompletableFuture();
             future.completeExceptionally(new RuntimeException());

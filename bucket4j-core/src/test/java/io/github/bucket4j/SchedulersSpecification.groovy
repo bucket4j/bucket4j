@@ -17,10 +17,10 @@
 
 package io.github.bucket4j
 
-import io.github.bucket4j.grid.GridBucket
+import io.github.bucket4j.remote.BucketProxy
 import io.github.bucket4j.mock.BlockingStrategyMock
 import io.github.bucket4j.mock.BucketType
-import io.github.bucket4j.mock.GridProxyMock
+import io.github.bucket4j.mock.BackendMock
 import io.github.bucket4j.mock.SchedulerMock
 import io.github.bucket4j.mock.TimeMeterMock
 import spock.lang.Specification
@@ -33,7 +33,7 @@ import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
 
 import static io.github.bucket4j.TimeMeter.SYSTEM_MILLISECONDS
-import static io.github.bucket4j.grid.RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION
+import static io.github.bucket4j.remote.RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION
 
 class SchedulersSpecification extends Specification {
 
@@ -165,9 +165,9 @@ class SchedulersSpecification extends Specification {
             BucketConfiguration configuration = Bucket4j.configurationBuilder()
                 .addLimit(Bandwidth.simple(1, Duration.ofNanos(1)))
                 .build()
-            GridProxyMock mockProxy = new GridProxyMock(SYSTEM_MILLISECONDS)
+            BackendMock mockProxy = new BackendMock(SYSTEM_MILLISECONDS)
             SchedulerMock schedulerMock = new SchedulerMock()
-            Bucket bucket = GridBucket.createInitializedBucket("66", configuration, mockProxy, THROW_BUCKET_NOT_FOUND_EXCEPTION)
+            Bucket bucket = BucketProxy.createInitializedBucket("66", configuration, mockProxy, THROW_BUCKET_NOT_FOUND_EXCEPTION)
         when:
             schedulerMock.setException(new RuntimeException())
             CompletableFuture<Boolean> future = bucket.asAsyncScheduler().tryConsume(10, Duration.ofNanos(100000), schedulerMock)
