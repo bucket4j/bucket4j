@@ -24,7 +24,7 @@ import io.github.bucket4j.remote.RemoteCommand;
 import javax.cache.processor.MutableEntry;
 import java.io.Serializable;
 
-public class ExecuteProcessor<K extends Serializable, T extends Serializable> implements JCacheEntryProcessor<K, T> {
+public class ExecuteProcessor<K, T> implements JCacheEntryProcessor<K, T> {
 
     private static final long serialVersionUID = 1;
 

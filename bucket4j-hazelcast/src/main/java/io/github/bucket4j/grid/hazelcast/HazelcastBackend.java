@@ -28,11 +28,10 @@ import io.github.bucket4j.remote.RemoteCommand;
 import io.github.bucket4j.remote.Backend;
 import io.github.bucket4j.grid.jcache.JCacheEntryProcessor;
 
-import java.io.Serializable;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-public class HazelcastBackend<K extends Serializable> implements Backend<K> {
+public class HazelcastBackend<K> implements Backend<K> {
 
     private final IMap<K, RemoteBucketState> cache;
 
@@ -41,7 +40,7 @@ public class HazelcastBackend<K extends Serializable> implements Backend<K> {
     }
 
     @Override
-    public <T extends Serializable> CommandResult<T> execute(K key, RemoteCommand<T> command) {
+    public <T> CommandResult<T> execute(K key, RemoteCommand<T> command) {
         JCacheEntryProcessor<K, T> entryProcessor = JCacheEntryProcessor.executeProcessor(command);
         return (CommandResult<T>) cache.executeOnKey(key, adoptEntryProcessor(entryProcessor));
     }
@@ -53,20 +52,20 @@ public class HazelcastBackend<K extends Serializable> implements Backend<K> {
     }
 
     @Override
-    public <T extends Serializable> T createInitialStateAndExecute(K key, BucketConfiguration configuration, RemoteCommand<T> command) {
+    public <T> T createInitialStateAndExecute(K key, BucketConfiguration configuration, RemoteCommand<T> command) {
         JCacheEntryProcessor<K, T> entryProcessor = JCacheEntryProcessor.initStateAndExecuteProcessor(command, configuration);
         CommandResult<T> result = (CommandResult<T>) cache.executeOnKey(key, adoptEntryProcessor(entryProcessor));
         return result.getData();
     }
 
     @Override
-    public <T extends Serializable> CompletableFuture<CommandResult<T>> executeAsync(K key, RemoteCommand<T> command) {
+    public <T> CompletableFuture<CommandResult<T>> executeAsync(K key, RemoteCommand<T> command) {
         JCacheEntryProcessor<K, T> entryProcessor = JCacheEntryProcessor.executeProcessor(command);
         return invokeAsync(key, entryProcessor);
     }
 
     @Override
-    public <T extends Serializable> CompletableFuture<T> createInitialStateAndExecuteAsync(K key, BucketConfiguration configuration, RemoteCommand<T> command) {
+    public <T> CompletableFuture<T> createInitialStateAndExecuteAsync(K key, BucketConfiguration configuration, RemoteCommand<T> command) {
         JCacheEntryProcessor<K, T> entryProcessor = JCacheEntryProcessor.initStateAndExecuteProcessor(command, configuration);
         CompletableFuture<CommandResult<T>> result = invokeAsync(key, entryProcessor);
         return result.thenApply(CommandResult::getData);
@@ -87,11 +86,11 @@ public class HazelcastBackend<K extends Serializable> implements Backend<K> {
         return true;
     }
 
-    private <T extends Serializable>  EntryProcessor adoptEntryProcessor(final JCacheEntryProcessor<K, T> entryProcessor) {
+    private <T>  EntryProcessor adoptEntryProcessor(final JCacheEntryProcessor<K, T> entryProcessor) {
         return new HazelcastEntryProcessorAdapter<>(entryProcessor);
     }
 
-    private <T extends Serializable> CompletableFuture<CommandResult<T>> invokeAsync(K key, JCacheEntryProcessor<K, T> entryProcessor) {
+    private <T> CompletableFuture<CommandResult<T>> invokeAsync(K key, JCacheEntryProcessor<K, T> entryProcessor) {
         CompletableFuture<CommandResult<T>> future = new CompletableFuture<>();
         cache.submitToKey(key, adoptEntryProcessor(entryProcessor), new ExecutionCallback() {
             @Override

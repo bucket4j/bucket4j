@@ -23,11 +23,10 @@ import io.github.bucket4j.remote.CommandResult;
 import io.github.bucket4j.remote.RemoteBucketState;
 import io.github.bucket4j.grid.jcache.JCacheEntryProcessor;
 
-import java.io.Serializable;
 import java.util.Map;
 
 
-class HazelcastEntryProcessorAdapter<K extends Serializable, T extends Serializable> implements EntryProcessor<K, RemoteBucketState> {
+class HazelcastEntryProcessorAdapter<K, T> implements EntryProcessor<K, RemoteBucketState> {
 
     private static final long serialVersionUID = 1L;
 

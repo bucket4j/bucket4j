@@ -20,7 +20,6 @@ package io.github.bucket4j.remote;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketConfiguration;
 
-import java.io.Serializable;
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -29,12 +28,12 @@ import java.util.function.Supplier;
  * like in-memory jvm or relational database.
  *
  * The proxies instantiated by ProxyManager is very cheap, you are free to instantiate as many proxies as you wish,
- * there are no any hard work performed inside {@link #getProxy(Serializable, Supplier) getProxy} method,
+ * there are no any hard work performed inside {@link #getProxy(Object, Supplier) getProxy} method,
  * so it is not necessary to cache results of its invocation.
  * 
  * @param <K> type of key 
  */
-public interface ProxyManager<K extends Serializable> {
+public interface ProxyManager<K> {
 
     /**
      * Provides light-weight proxy to bucket which actually stored outside current JVM.

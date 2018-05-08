@@ -24,7 +24,7 @@ import java.io.Serializable;
 import java.util.Map;
 
 
-class SimpleBackupProcessor<K extends Serializable> implements EntryBackupProcessor<K, RemoteBucketState> {
+class SimpleBackupProcessor<K> implements EntryBackupProcessor<K, RemoteBucketState> {
 
     private static final long serialVersionUID = 1L;
 

@@ -20,11 +20,10 @@ package io.github.bucket4j.grid.hazelcast;
 import io.github.bucket4j.remote.RemoteBucketState;
 
 import javax.cache.processor.MutableEntry;
-import java.io.Serializable;
 import java.util.Map;
 
 
-class HazelcastMutableEntryAdapter<K extends Serializable> implements MutableEntry<K, RemoteBucketState> {
+class HazelcastMutableEntryAdapter<K> implements MutableEntry<K, RemoteBucketState> {
 
     private final Map.Entry<K, RemoteBucketState> entry;
     private boolean modified;

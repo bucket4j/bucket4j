@@ -28,11 +28,10 @@ import org.apache.ignite.IgniteCache;
 import org.apache.ignite.lang.IgniteFuture;
 import org.apache.ignite.lang.IgniteInClosure;
 
-import java.io.Serializable;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-public class IgniteBackend<K extends Serializable> implements Backend<K> {
+public class IgniteBackend<K> implements Backend<K> {
 
     private final IgniteCache<K, RemoteBucketState> cache;
 
@@ -41,7 +40,7 @@ public class IgniteBackend<K extends Serializable> implements Backend<K> {
     }
 
     @Override
-    public <T extends Serializable> CommandResult<T> execute(K key, RemoteCommand<T> command) {
+    public <T> CommandResult<T> execute(K key, RemoteCommand<T> command) {
         JCacheEntryProcessor<K, T> entryProcessor = JCacheEntryProcessor.executeProcessor(command);
         return cache.invoke(key, entryProcessor);
     }
@@ -53,23 +52,23 @@ public class IgniteBackend<K extends Serializable> implements Backend<K> {
     }
 
     @Override
-    public <T extends Serializable> T createInitialStateAndExecute(K key, BucketConfiguration configuration, RemoteCommand<T> command) {
+    public <T> T createInitialStateAndExecute(K key, BucketConfiguration configuration, RemoteCommand<T> command) {
         JCacheEntryProcessor<K, T> entryProcessor = JCacheEntryProcessor.initStateAndExecuteProcessor(command, configuration);
         CommandResult<T> result = cache.invoke(key, entryProcessor);
         return result.getData();
     }
 
     @Override
-    public <T extends Serializable> CompletableFuture<CommandResult<T>> executeAsync(K key, RemoteCommand<T> command) {
+    public <T> CompletableFuture<CommandResult<T>> executeAsync(K key, RemoteCommand<T> command) {
         JCacheEntryProcessor<K, T> entryProcessor = JCacheEntryProcessor.executeProcessor(command);
         return invokeAsync(key, entryProcessor);
     }
 
     @Override
-    public <T extends Serializable> CompletableFuture<T> createInitialStateAndExecuteAsync(K key, BucketConfiguration configuration, RemoteCommand<T> command) {
+    public <T> CompletableFuture<T> createInitialStateAndExecuteAsync(K key, BucketConfiguration configuration, RemoteCommand<T> command) {
         JCacheEntryProcessor<K, T> entryProcessor = JCacheEntryProcessor.initStateAndExecuteProcessor(command, configuration);
         CompletableFuture<CommandResult<T>> result = invokeAsync(key, entryProcessor);
-        return result.thenApply(f -> f.getData());
+        return result.thenApply(CommandResult::getData);
     }
 
     @Override
@@ -87,7 +86,7 @@ public class IgniteBackend<K extends Serializable> implements Backend<K> {
         return true;
     }
 
-    private <T extends Serializable> CompletableFuture<CommandResult<T>> invokeAsync(K key, JCacheEntryProcessor<K, T> entryProcessor) {
+    private <T> CompletableFuture<CommandResult<T>> invokeAsync(K key, JCacheEntryProcessor<K, T> entryProcessor) {
         return convertFuture(cache.invokeAsync(key, entryProcessor));
     }
 

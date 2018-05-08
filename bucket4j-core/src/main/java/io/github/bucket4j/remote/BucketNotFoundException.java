@@ -17,23 +17,20 @@
 
 package io.github.bucket4j.remote;
 
-
-import java.io.Serializable;
-
 /**
  * Exception which thrown each time when {@link BucketProxy} found that bucket state has been lost,
  * and {@link BucketProxy} is unable to repair bucket state or recovery strategy is {@link RecoveryStrategy#THROW_BUCKET_NOT_FOUND_EXCEPTION}.
  */
 public class BucketNotFoundException extends IllegalStateException {
 
-    private final Serializable bucketId;
+    private final Object bucketId;
 
-    public BucketNotFoundException(Serializable bucketId) {
+    public BucketNotFoundException(Object bucketId) {
         super(createErrorMessage(bucketId));
         this.bucketId = bucketId;
     }
 
-    private static String createErrorMessage(Serializable bucketId) {
+    private static String createErrorMessage(Object bucketId) {
         return "Bucket with key [" + bucketId + "] does not exist";
     }
 

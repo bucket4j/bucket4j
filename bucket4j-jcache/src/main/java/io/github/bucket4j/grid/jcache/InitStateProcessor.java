@@ -24,9 +24,8 @@ import io.github.bucket4j.remote.CommandResult;
 import io.github.bucket4j.remote.RemoteBucketState;
 
 import javax.cache.processor.MutableEntry;
-import java.io.Serializable;
 
-public class InitStateProcessor<K extends Serializable> implements JCacheEntryProcessor<K, Nothing> {
+public class InitStateProcessor<K> implements JCacheEntryProcessor<K, Nothing> {
 
     private static final long serialVersionUID = 1;
 

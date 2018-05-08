@@ -17,6 +17,8 @@
 
 package io.github.bucket4j.remote;
 
+import io.github.bucket4j.BucketConfiguration;
+
 public class Protocol {
 
     public static Protocol[] KNOWN_PROTOCOLS = new Protocol[] {
@@ -34,18 +36,32 @@ public class Protocol {
     }
 
     public String toJson(RemoteCommand<?> command) {
+        // TODO
+        throw new UnsupportedOperationException();
+    }
+
+    public  <T> RemoteCommand<T> parseCommand(String commandAsJson) {
+        // TODO
+        throw new UnsupportedOperationException();
+    }
+
+    public String toJson(BucketConfiguration configuration) {
+        // TODO
+        throw new UnsupportedOperationException();
+    }
+
+    public BucketConfiguration parseConfiguration(String configurationAsJson) {
+        // TODO
         throw new UnsupportedOperationException();
     }
 
     public <T> String toJson(CommandResult<T> result, RemoteCommand<T> command) {
+        // TODO
         throw new UnsupportedOperationException();
     }
 
-    public  <T> RemoteCommand<T> parseCommand(String jsonCommand) {
-        throw new UnsupportedOperationException();
-    }
-
-    public <T> CommandResult<T> parseResult(String jsonResult, RemoteCommand<T> command) {
+    public <T> CommandResult<T> parseResult(String resultAsJson, RemoteCommand<T> command) {
+        // TODO
         throw new UnsupportedOperationException();
     }
 

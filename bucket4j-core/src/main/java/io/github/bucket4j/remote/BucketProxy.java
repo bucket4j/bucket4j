@@ -20,7 +20,6 @@ package io.github.bucket4j.remote;
 import io.github.bucket4j.*;
 import io.github.bucket4j.remote.commands.*;
 
-import java.io.Serializable;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
@@ -29,18 +28,18 @@ import java.util.function.Supplier;
  *
  * @param <K> type of key
  */
-public class BucketProxy<K extends Serializable> extends AbstractBucket {
+public class BucketProxy<K> extends AbstractBucket {
 
     private final K key;
     private final Backend<K> backend;
     private final RecoveryStrategy recoveryStrategy;
     private final Supplier<BucketConfiguration> configurationSupplier;
 
-    public static <T extends Serializable> BucketProxy<T> createLazyBucket(T key, Supplier<BucketConfiguration> configurationSupplier, Backend<T> backend) {
+    public static <T> BucketProxy<T> createLazyBucket(T key, Supplier<BucketConfiguration> configurationSupplier, Backend<T> backend) {
         return new BucketProxy<>(BucketListener.NOPE, key, configurationSupplier, backend, RecoveryStrategy.RECONSTRUCT, false);
     }
 
-    public static <T extends Serializable> BucketProxy<T> createInitializedBucket(T key, BucketConfiguration configuration, Backend<T> backend, RecoveryStrategy recoveryStrategy) {
+    public static <T> BucketProxy<T> createInitializedBucket(T key, BucketConfiguration configuration, Backend<T> backend, RecoveryStrategy recoveryStrategy) {
         return new BucketProxy<>(BucketListener.NOPE, key, () -> configuration, backend, recoveryStrategy, true);
     }
 
@@ -164,7 +163,7 @@ public class BucketProxy<K extends Serializable> extends AbstractBucket {
         return bucketConfiguration;
     }
 
-    private <T extends Serializable> T execute(RemoteCommand<T> command) {
+    private <T> T execute(RemoteCommand<T> command) {
         CommandResult<T> result = backend.execute(key, command);
         if (!result.isBucketNotFound()) {
             return result.getData();
@@ -179,7 +178,7 @@ public class BucketProxy<K extends Serializable> extends AbstractBucket {
         return backend.createInitialStateAndExecute(key, getConfiguration(), command);
     }
 
-    private <T extends Serializable> CompletableFuture<T> executeAsync(RemoteCommand<T> command) {
+    private <T> CompletableFuture<T> executeAsync(RemoteCommand<T> command) {
         CompletableFuture<CommandResult<T>> futureResult = backend.executeAsync(key, command);
         return futureResult.thenCompose(cmdResult -> {
             if (!cmdResult.isBucketNotFound()) {

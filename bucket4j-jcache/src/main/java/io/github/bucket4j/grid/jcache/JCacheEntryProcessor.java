@@ -27,17 +27,17 @@ import javax.cache.processor.EntryProcessor;
 import java.io.Serializable;
 
 
-public interface JCacheEntryProcessor<K extends Serializable, T extends Serializable> extends Serializable, EntryProcessor<K, RemoteBucketState, CommandResult<T>> {
+public interface JCacheEntryProcessor<K, T> extends Serializable, EntryProcessor<K, RemoteBucketState, CommandResult<T>> {
 
-    static <K extends Serializable> JCacheEntryProcessor<K, Nothing> initStateProcessor(BucketConfiguration configuration) {
+    static <K> JCacheEntryProcessor<K, Nothing> initStateProcessor(BucketConfiguration configuration) {
         return new InitStateProcessor<>(configuration);
     }
 
-    static <K extends Serializable, T extends Serializable> JCacheEntryProcessor<K, T> executeProcessor(RemoteCommand<T> targetCommand) {
+    static <K, T> JCacheEntryProcessor<K, T> executeProcessor(RemoteCommand<T> targetCommand) {
         return new ExecuteProcessor<>(targetCommand);
     }
 
-    static <K extends Serializable, T extends Serializable> JCacheEntryProcessor<K, T> initStateAndExecuteProcessor(RemoteCommand<T> targetCommand, BucketConfiguration configuration) {
+    static <K, T> JCacheEntryProcessor<K, T> initStateAndExecuteProcessor(RemoteCommand<T> targetCommand, BucketConfiguration configuration) {
         return new InitStateAndExecuteProcessor<>(targetCommand, configuration);
     }
 

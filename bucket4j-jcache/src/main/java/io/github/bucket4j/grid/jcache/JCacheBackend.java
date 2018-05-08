@@ -27,11 +27,13 @@ import io.github.bucket4j.remote.RemoteBucketState;
 import javax.cache.Cache;
 import javax.cache.CacheManager;
 import javax.cache.spi.CachingProvider;
-import java.io.Serializable;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-public class JCacheBackend<K extends Serializable> implements Backend<K> {
+public class JCacheBackend<K> implements Backend<K> {
 
     private static final Map<String, String> incompatibleProviders = new HashMap<>();
     static {
@@ -46,7 +48,7 @@ public class JCacheBackend<K extends Serializable> implements Backend<K> {
     }
 
     @Override
-    public <T extends Serializable> CommandResult<T> execute(K key, RemoteCommand<T> command) {
+    public <T> CommandResult<T> execute(K key, RemoteCommand<T> command) {
         JCacheEntryProcessor<K, T> entryProcessor = JCacheEntryProcessor.executeProcessor(command);
         return cache.invoke(key, entryProcessor);
     }
@@ -58,20 +60,20 @@ public class JCacheBackend<K extends Serializable> implements Backend<K> {
     }
 
     @Override
-    public <T extends Serializable> T createInitialStateAndExecute(K key, BucketConfiguration configuration, RemoteCommand<T> command) {
+    public <T> T createInitialStateAndExecute(K key, BucketConfiguration configuration, RemoteCommand<T> command) {
         JCacheEntryProcessor<K, T> entryProcessor = JCacheEntryProcessor.initStateAndExecuteProcessor(command, configuration);
         CommandResult<T> result = cache.invoke(key, entryProcessor);
         return result.getData();
     }
 
     @Override
-    public <T extends Serializable> CompletableFuture<CommandResult<T>> executeAsync(K key, RemoteCommand<T> command) {
+    public <T> CompletableFuture<CommandResult<T>> executeAsync(K key, RemoteCommand<T> command) {
         // because JCache does not specify async API
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public <T extends Serializable> CompletableFuture<T> createInitialStateAndExecuteAsync(K key, BucketConfiguration configuration, RemoteCommand<T> command) {
+    public <T> CompletableFuture<T> createInitialStateAndExecuteAsync(K key, BucketConfiguration configuration, RemoteCommand<T> command) {
         // because JCache does not specify async API
         throw new UnsupportedOperationException();
     }

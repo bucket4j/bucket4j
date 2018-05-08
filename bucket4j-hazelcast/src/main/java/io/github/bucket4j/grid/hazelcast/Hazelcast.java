@@ -22,7 +22,6 @@ import com.hazelcast.core.IMap;
 import io.github.bucket4j.Extension;
 import io.github.bucket4j.remote.RemoteBucketState;
 import io.github.bucket4j.remote.ProxyManager;
-import java.io.Serializable;
 
 /**
  * The extension of Bucket4j library addressed to support <a href="https://hazelcast.com//">Hazelcast</a> in-memory data jvm.
@@ -45,10 +44,10 @@ public class Hazelcast implements Extension<HazelcastBucketBuilder> {
      * Creates {@link HazelcastProxyManager} for specified map.
      *
      * @param map map for storing state of buckets
-     * @param <T> type of keys in the map
+     * @param <K> type of keys in the map
      * @return {@link ProxyManager} for specified map.
      */
-    public <T extends Serializable> ProxyManager<T> proxyManagerForMap(IMap<T, RemoteBucketState> map) {
+    public <K> ProxyManager<K> proxyManagerForMap(IMap<K, RemoteBucketState> map) {
         return new HazelcastProxyManager<>(map);
     }
 
