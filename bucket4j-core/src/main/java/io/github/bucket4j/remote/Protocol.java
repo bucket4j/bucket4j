@@ -21,9 +21,11 @@ import io.github.bucket4j.BucketConfiguration;
 
 public class Protocol {
 
-    public static Protocol[] KNOWN_PROTOCOLS = new Protocol[] {
+    private static Protocol[] KNOWN_PROTOCOLS = new Protocol[] {
             new Protocol(1)
     };
+
+    private static Protocol NEWEST = KNOWN_PROTOCOLS[KNOWN_PROTOCOLS.length - 1];
 
     private final int version;
 
@@ -31,7 +33,17 @@ public class Protocol {
         this.version = version;
     }
 
+    public static Protocol newest() {
+        return NEWEST;
+    }
+
     public static Protocol forVersion(int version) {
+        for (Protocol protocol : KNOWN_PROTOCOLS) {
+            if (protocol.version == version) {
+                return protocol;
+            }
+        }
+        // TODO replace to specific exception
         throw new UnsupportedOperationException();
     }
 
