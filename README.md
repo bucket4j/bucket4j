@@ -80,4 +80,4 @@ Copyright 2015-2018 Vladimir Bukhtoyarov
 Licensed under the Apache Software License, Version 2.0: <http://www.apache.org/licenses/LICENSE-2.0>.
 
 ## Give beer to author
-[PayPalMe Donation link](http:paypal.me/vladimirbukhtoyarov)
+[PayPalMe Donation link](http://paypal.me/vladimirbukhtoyarov)
