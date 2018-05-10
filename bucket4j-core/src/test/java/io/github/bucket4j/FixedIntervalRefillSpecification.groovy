@@ -21,6 +21,7 @@ import io.github.bucket4j.mock.TimeMeterMock
 import spock.lang.Specification
 
 import java.time.Duration
+import java.util.concurrent.TimeUnit
 
 class FixedIntervalRefillSpecification extends Specification {
 
@@ -101,6 +102,25 @@ class FixedIntervalRefillSpecification extends Specification {
         then:
             bucket.getAvailableTokens() == 9
 
+    }
+
+    def "Test for refill time estimation https://github.com/vladimir-bukhtoyarov/bucket4j/issues/71"() {
+        setup:
+            Bandwidth bandwidth = Bandwidth.simple(10, Duration.ofMinutes(1))
+                    .withInitialTokens(0)
+                    .withFixedRefillInterval(Duration.ofMinutes(1))
+            TimeMeterMock mockTimer = new TimeMeterMock(0)
+            Bucket bucket = Bucket4j.builder()
+                    .withCustomTimePrecision(mockTimer)
+                    .addLimit(bandwidth)
+                    .build()
+
+        when:
+            def probe = bucket.tryConsumeAndReturnRemaining(1)
+
+        then:
+            !probe.consumed
+            probe.nanosToWaitForRefill == TimeUnit.MINUTES.toNanos(1)
     }
 
 }
