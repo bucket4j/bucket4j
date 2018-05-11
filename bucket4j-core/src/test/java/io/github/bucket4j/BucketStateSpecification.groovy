@@ -1,18 +1,18 @@
 /*
  *
- *   Copyright 2015-2017 Vladimir Bukhtoyarov
+ * Copyright 2015-2018 Vladimir Bukhtoyarov
  *
- *     Licensed under the Apache License, Version 2.0 (the "License");
- *     you may not use this file except in compliance with the License.
- *     You may obtain a copy of the License at
+ *       Licensed under the Apache License, Version 2.0 (the "License");
+ *       you may not use this file except in compliance with the License.
+ *       You may obtain a copy of the License at
  *
- *           http://www.apache.org/licenses/LICENSE-2.0
+ *             http://www.apache.org/licenses/LICENSE-2.0
  *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *    See the License for the specific language governing permissions and
- *    limitations under the License.
+ *      Unless required by applicable law or agreed to in writing, software
+ *      distributed under the License is distributed on an "AS IS" BASIS,
+ *      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *      See the License for the specific language governing permissions and
+ *      limitations under the License.
  */
 
 package io.github.bucket4j
@@ -65,7 +65,7 @@ class BucketStateSpecification extends Specification {
                         "#5",
                         10,
                         Bucket4j.builder()
-                            .addLimit(Bandwidth.classic(10, Refill.of(1, Duration.ofSeconds(1))))
+                            .addLimit(Bandwidth.classic(10, Refill.greedy(1, Duration.ofSeconds(1))))
                             .build()
                 ]
             ]
@@ -116,7 +116,7 @@ class BucketStateSpecification extends Specification {
                         4,
                         5,
                         Bucket4j.builder()
-                                .addLimit(Bandwidth.classic(10, Refill.of(1, Duration.ofSeconds(1))).withInitialTokens(1))
+                                .addLimit(Bandwidth.classic(10, Refill.greedy(1, Duration.ofSeconds(1))).withInitialTokens(1))
                                 .build()
                 ]
         ]
@@ -147,7 +147,7 @@ class BucketStateSpecification extends Specification {
                         100,
                         Bucket4j.builder()
                             .withCustomTimePrecision(new TimeMeterMock(0))
-                            .addLimit(Bandwidth.classic(10, Refill.of(10, Duration.ofNanos(100))).withInitialTokens(0))
+                            .addLimit(Bandwidth.classic(10, Refill.greedy(10, Duration.ofNanos(100))).withInitialTokens(0))
                             .build()
                 ], [
                         "#3",
@@ -155,7 +155,7 @@ class BucketStateSpecification extends Specification {
                         500,
                         Bucket4j.builder()
                             .withCustomTimePrecision(new TimeMeterMock(0))
-                            .addLimit(Bandwidth.classic(10, Refill.of(2, Duration.ofNanos(100))).withInitialTokens(0))
+                            .addLimit(Bandwidth.classic(10, Refill.greedy(2, Duration.ofNanos(100))).withInitialTokens(0))
                             .build()
                 ], [
                         "#4",
@@ -237,7 +237,7 @@ class BucketStateSpecification extends Specification {
                                                        long initTime, long timeOnRefill, long tokensAfterRefill, long roundingError) {
         setup:
             TimeMeterMock mockTimer = new TimeMeterMock(initTime)
-            def refill = Refill.of(refillTokens, Duration.ofNanos(refillPeriod))
+            def refill = Refill.greedy(refillTokens, Duration.ofNanos(refillPeriod))
             Bucket bucket = Bucket4j.builder()
                     .addLimit(Bandwidth.classic(capacity, refill).withInitialTokens(initialTokens))
                     .withCustomTimePrecision(mockTimer)

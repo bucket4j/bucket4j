@@ -45,14 +45,14 @@ public class SmsServlet extends javax.servlet.http.HttpServlet {
         super.init(config);
         ServletContext ctx = config.getServletContext();
         
-        smsSender = (SmsSender) ctx.getAttribute("sms-sender")
+        smsSender = (SmsSender) ctx.getAttribute("sms-sender");
         
         FunctionalMapImpl<String, GridBucketState> bucketMap = (FunctionalMapImpl<String, GridBucketState>) ctx.getAttribute("bucket-map")
         this.buckets = Bucket4j.extension(Infinispan.class).proxyManagerForMap(bucketMap);
         
         this.configuration = () -> {
             long overdraft = 20;
-            Refill refill = Refill.smooth(10, Duration.ofMinutes(1));
+            Refill refill = Refill.greedy(10, Duration.ofMinutes(1));
             Bandwidth limit = Bandwidth.classic(overdraft, refill);
             return Bucket4j.configurationBuilder()
                 .addLimit(limit)

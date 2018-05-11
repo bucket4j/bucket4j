@@ -1,18 +1,18 @@
 /*
  *
- *   Copyright 2015-2017 Vladimir Bukhtoyarov
+ * Copyright 2015-2018 Vladimir Bukhtoyarov
  *
- *     Licensed under the Apache License, Version 2.0 (the "License");
- *     you may not use this file except in compliance with the License.
- *     You may obtain a copy of the License at
+ *       Licensed under the Apache License, Version 2.0 (the "License");
+ *       you may not use this file except in compliance with the License.
+ *       You may obtain a copy of the License at
  *
- *           http://www.apache.org/licenses/LICENSE-2.0
+ *             http://www.apache.org/licenses/LICENSE-2.0
  *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *    See the License for the specific language governing permissions and
- *    limitations under the License.
+ *      Unless required by applicable law or agreed to in writing, software
+ *      distributed under the License is distributed on an "AS IS" BASIS,
+ *      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *      See the License for the specific language governing permissions and
+ *      limitations under the License.
  */
 
 package io.github.bucket4j;
@@ -68,11 +68,11 @@ public class BucketState implements Serializable {
         }
     }
 
-    public long delayNanosAfterWillBePossibleToConsume(Bandwidth[] bandwidths, long tokensToConsume) {
-        long delayAfterWillBePossibleToConsume = delayNanosAfterWillBePossibleToConsume(0, bandwidths[0], tokensToConsume);
+    public long calculateDelayNanosAfterWillBePossibleToConsume(Bandwidth[] bandwidths, long tokensToConsume, long currentTimeNanos) {
+        long delayAfterWillBePossibleToConsume = calculateDelayNanosAfterWillBePossibleToConsume(0, bandwidths[0], tokensToConsume, currentTimeNanos);
         for (int i = 1; i < bandwidths.length; i++) {
             Bandwidth bandwidth = bandwidths[i];
-            long delay = delayNanosAfterWillBePossibleToConsume(i, bandwidth, tokensToConsume);
+            long delay = calculateDelayNanosAfterWillBePossibleToConsume(i, bandwidth, tokensToConsume, currentTimeNanos);
             delayAfterWillBePossibleToConsume = Math.max(delayAfterWillBePossibleToConsume, delay);
             if (delay > delayAfterWillBePossibleToConsume) {
                 delayAfterWillBePossibleToConsume = delay;
@@ -113,8 +113,8 @@ public class BucketState implements Serializable {
             return;
         }
 
-        if (bandwidth.refillRefreshIntervalNanos != Bandwidth.GREEDY_REFILL_INTERVAL) {
-            long incompleteIntervalCorrection = (currentTimeNanos - previousRefillNanos) % bandwidth.refillRefreshIntervalNanos;
+        if (bandwidth.refillIntervally) {
+            long incompleteIntervalCorrection = (currentTimeNanos - previousRefillNanos) % bandwidth.refillPeriodNanos;
             currentTimeNanos -= incompleteIntervalCorrection;
         }
         if (currentTimeNanos <= previousRefillNanos) {
@@ -187,7 +187,7 @@ public class BucketState implements Serializable {
         setRoundingError(bandwidthIndex, 0);
     }
 
-    private long delayNanosAfterWillBePossibleToConsume(int bandwidthIndex, Bandwidth bandwidth, long tokens) {
+    private long calculateDelayNanosAfterWillBePossibleToConsume(int bandwidthIndex, Bandwidth bandwidth, long tokens, long currentTimeNanos) {
         long currentSize = getCurrentSize(bandwidthIndex);
         if (tokens <= currentSize) {
             return 0;
@@ -197,9 +197,17 @@ public class BucketState implements Serializable {
             // math overflow happen
             return Long.MAX_VALUE;
         }
+
+        if (bandwidth.refillIntervally) {
+            return calculateDelayNanosAfterWillBePossibleToConsumeForIntervalBandwidth(bandwidthIndex, bandwidth, deficit, currentTimeNanos);
+        } else {
+            return calculateDelayNanosAfterWillBePossibleToConsumeForGreedyBandwidth(bandwidth, deficit);
+        }
+    }
+
+    private long calculateDelayNanosAfterWillBePossibleToConsumeForGreedyBandwidth(Bandwidth bandwidth, long deficit) {
         long refillPeriodNanos = bandwidth.refillPeriodNanos;
         long refillPeriodTokens = bandwidth.refillTokens;
-
         long divided = multiplyExactOrReturnMaxValue(refillPeriodNanos, deficit);
         if (divided == Long.MAX_VALUE) {
             // arithmetic overflow happens.
@@ -208,6 +216,32 @@ public class BucketState implements Serializable {
         } else {
             return divided / refillPeriodTokens;
         }
+    }
+
+    private long calculateDelayNanosAfterWillBePossibleToConsumeForIntervalBandwidth(int bandwidthIndex, Bandwidth bandwidth, long deficit, long currentTimeNanos) {
+        long refillPeriodNanos = bandwidth.refillPeriodNanos;
+        long refillPeriodTokens = bandwidth.refillTokens;
+        long previousRefillNanos = getLastRefillTimeNanos(bandwidthIndex);
+
+        long timeOfNextRefillNanos = previousRefillNanos + refillPeriodNanos;
+        long waitForNextRefillNanos = timeOfNextRefillNanos - currentTimeNanos;
+        if (deficit <= refillPeriodTokens) {
+            return waitForNextRefillNanos;
+        }
+
+        deficit -= waitForNextRefillNanos;
+
+        long deficitPeriods = deficit / refillPeriodTokens + (deficit % refillPeriodTokens == 0L? 0 : 1);
+        if (deficit < refillPeriodNanos) {
+            return waitForNextRefillNanos + refillPeriodNanos;
+        }
+
+        long deficitNanos = multiplyExactOrReturnMaxValue(deficitPeriods, refillPeriodNanos) + waitForNextRefillNanos;
+        if (deficitNanos <= 0) {
+            // arithmetic overflow happens.
+            return Long.MAX_VALUE;
+        }
+        return deficitNanos;
     }
 
     private long getLastRefillTimeNanos(int bandwidth) {
