@@ -106,9 +106,9 @@ class FixedIntervalRefillSpecification extends Specification {
 
     def "Test for refill time estimation https://github.com/vladimir-bukhtoyarov/bucket4j/issues/71"() {
         setup:
-            Bandwidth bandwidth = Bandwidth.simple(10, Duration.ofMinutes(1))
+            Refill refill = Refill.intervally(10, Duration.ofMinutes(1))
+            Bandwidth bandwidth = Bandwidth.classic(10, refill)
                     .withInitialTokens(0)
-                    .withFixedRefillInterval(Duration.ofMinutes(1))
             TimeMeterMock mockTimer = new TimeMeterMock(0)
             Bucket bucket = Bucket4j.builder()
                     .withCustomTimePrecision(mockTimer)
@@ -117,10 +117,39 @@ class FixedIntervalRefillSpecification extends Specification {
 
         when:
             def probe = bucket.tryConsumeAndReturnRemaining(1)
-
         then:
             !probe.consumed
-            probe.nanosToWaitForRefill == TimeUnit.MINUTES.toNanos(1)
+            probe.remainingTokens == 0
+            probe.nanosToWaitForRefill == TimeUnit.SECONDS.toNanos(60)
+
+        when:
+            probe = bucket.tryConsumeAndReturnRemaining(10)
+        then:
+            !probe.consumed
+            probe.remainingTokens == 0
+            probe.nanosToWaitForRefill == TimeUnit.SECONDS.toNanos(60)
+
+        when:
+            mockTimer.addTime(TimeUnit.SECONDS.toNanos(15))
+            probe = bucket.tryConsumeAndReturnRemaining(1)
+        then:
+            !probe.consumed
+            probe.remainingTokens == 0
+            probe.nanosToWaitForRefill == TimeUnit.SECONDS.toNanos(45)
+
+        when:
+            probe = bucket.tryConsumeAndReturnRemaining(15)
+        then:
+            !probe.consumed
+            probe.remainingTokens == 0
+            probe.nanosToWaitForRefill == TimeUnit.SECONDS.toNanos(45 + 60)
+
+        when:
+            probe = bucket.tryConsumeAndReturnRemaining(21)
+        then:
+            !probe.consumed
+            probe.remainingTokens == 0
+            probe.nanosToWaitForRefill == TimeUnit.SECONDS.toNanos(45 + 60 + 60)
     }
 
 }

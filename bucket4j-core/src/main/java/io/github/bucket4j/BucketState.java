@@ -220,24 +220,28 @@ public class BucketState implements Serializable {
 
     private long calculateDelayNanosAfterWillBePossibleToConsumeForIntervalBandwidth(int bandwidthIndex, Bandwidth bandwidth, long deficit, long currentTimeNanos) {
         long refillPeriodNanos = bandwidth.refillPeriodNanos;
-        long refillPeriodTokens = bandwidth.refillTokens;
+        long refillTokens = bandwidth.refillTokens;
         long previousRefillNanos = getLastRefillTimeNanos(bandwidthIndex);
 
         long timeOfNextRefillNanos = previousRefillNanos + refillPeriodNanos;
         long waitForNextRefillNanos = timeOfNextRefillNanos - currentTimeNanos;
-        if (deficit <= refillPeriodTokens) {
+        if (deficit <= refillTokens) {
             return waitForNextRefillNanos;
         }
 
-        deficit -= waitForNextRefillNanos;
-
-        long deficitPeriods = deficit / refillPeriodTokens + (deficit % refillPeriodTokens == 0L? 0 : 1);
-        if (deficit < refillPeriodNanos) {
+        deficit -= refillTokens;
+        if (deficit < refillTokens) {
             return waitForNextRefillNanos + refillPeriodNanos;
         }
 
-        long deficitNanos = multiplyExactOrReturnMaxValue(deficitPeriods, refillPeriodNanos) + waitForNextRefillNanos;
-        if (deficitNanos <= 0) {
+        long deficitPeriods = deficit / refillTokens + (deficit % refillTokens == 0L? 0 : 1);
+        long deficitNanos = multiplyExactOrReturnMaxValue(deficitPeriods, refillPeriodNanos);
+        if (deficitNanos == Long.MAX_VALUE) {
+            // arithmetic overflow happens.
+            return Long.MAX_VALUE;
+        }
+        deficitNanos += waitForNextRefillNanos;
+        if (deficitNanos < 0) {
             // arithmetic overflow happens.
             return Long.MAX_VALUE;
         }

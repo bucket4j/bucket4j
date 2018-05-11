@@ -51,7 +51,7 @@ public class Refill implements Serializable {
     }
 
     /**
-     * Creates the {@link Refill} that does refill of tokens in of manner,
+     * Creates the {@link Refill} that does refill of tokens in greedy manner,
      * it will try to add the tokens to bucket as soon as possible.
      * For example "of" refill "10 tokens per 1 second" will add 1 token per each 100 millisecond,
      * in other words refill will not wait 1 second to regenerate whole bunch of 10 tokens.
@@ -77,8 +77,8 @@ public class Refill implements Serializable {
     }
 
     /**
-     * Creates the {@link Refill} that does refill of tokens in intervally manner,
-     * in opposite to "of" refill the "intervally" refill will wait until whole {@code period} will be elapsed before regenerate {@code tokens}
+     * Creates the {@link Refill} that does refill of tokens in intervally manner.
+     * "Intervally" in opposite to "greedy"  will wait until whole {@code period} will be elapsed before regenerate {@code tokens}
      *
      * @param tokens amount of tokens
      * @param period the period within {@code tokens} will be fully regenerated
