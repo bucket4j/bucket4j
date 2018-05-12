@@ -210,7 +210,7 @@ public class BucketState implements Serializable {
         long refillPeriodTokens = bandwidth.refillTokens;
         long divided = multiplyExactOrReturnMaxValue(refillPeriodNanos, deficit);
         if (divided == Long.MAX_VALUE) {
-            // arithmetic overflow happens.
+            // math overflow happen.
             // there is no sense to stay in integer arithmetic when having deal with so big numbers
             return (long)((double) deficit / (double)refillPeriodTokens * (double)refillPeriodNanos);
         } else {
@@ -237,12 +237,12 @@ public class BucketState implements Serializable {
         long deficitPeriods = deficit / refillTokens + (deficit % refillTokens == 0L? 0 : 1);
         long deficitNanos = multiplyExactOrReturnMaxValue(deficitPeriods, refillPeriodNanos);
         if (deficitNanos == Long.MAX_VALUE) {
-            // arithmetic overflow happens.
+            // math overflow happen
             return Long.MAX_VALUE;
         }
         deficitNanos += waitForNextRefillNanos;
         if (deficitNanos < 0) {
-            // arithmetic overflow happens.
+            // math overflow happen
             return Long.MAX_VALUE;
         }
         return deficitNanos;

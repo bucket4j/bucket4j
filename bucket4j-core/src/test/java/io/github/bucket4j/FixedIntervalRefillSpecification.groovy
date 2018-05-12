@@ -27,9 +27,9 @@ class FixedIntervalRefillSpecification extends Specification {
 
     def "Basic test of fixed interval refill"() {
         setup:
-           Bandwidth bandwidth = Bandwidth.simple(9, Duration.ofNanos(10))
+           Refill refill = Refill.intervally(9, Duration.ofNanos(10))
+           Bandwidth bandwidth = Bandwidth.classic(9, refill)
                 .withInitialTokens(0)
-                .withFixedRefillInterval(Duration.ofNanos(5))
             TimeMeterMock mockTimer = new TimeMeterMock(0)
             Bucket bucket = Bucket4j.builder()
                 .withCustomTimePrecision(mockTimer)
@@ -45,14 +45,9 @@ class FixedIntervalRefillSpecification extends Specification {
             bucket.getAvailableTokens() == 0
 
         when:
-            mockTimer.addTime(1)
+            mockTimer.addTime(6)
         then:
-            bucket.getAvailableTokens() == 4
-
-        when:
-            mockTimer.addTime(4)
-        then:
-            bucket.getAvailableTokens() == 4
+            bucket.getAvailableTokens() == 9
 
         when:
             mockTimer.addTime(1)
@@ -62,12 +57,10 @@ class FixedIntervalRefillSpecification extends Specification {
 
     def "Complex test of fixed interval refill"() {
         setup:
-            Bandwidth bandwidth1 = Bandwidth.simple(9, Duration.ofNanos(10))
+            Bandwidth bandwidth1 = Bandwidth.classic(9, Refill.intervally(5, Duration.ofNanos(6)))
                     .withInitialTokens(0)
-                    .withFixedRefillInterval(Duration.ofNanos(5))
-            Bandwidth bandwidth2 = Bandwidth.simple(12, Duration.ofNanos(15))
-                .withInitialTokens(0)
-                .withFixedRefillInterval(Duration.ofNanos(3))
+            Bandwidth bandwidth2 = Bandwidth.classic(12, Refill.intervally(4, Duration.ofNanos(5)))
+                    .withInitialTokens(0)
             TimeMeterMock mockTimer = new TimeMeterMock(0)
             Bucket bucket = Bucket4j.builder()
                     .withCustomTimePrecision(mockTimer)
@@ -85,20 +78,25 @@ class FixedIntervalRefillSpecification extends Specification {
         when:
             mockTimer.addTime(1) // 5
         then:
-            bucket.getAvailableTokens() == 2
+            bucket.getAvailableTokens() == 0
 
         when:
-            mockTimer.addTime(4) // 9
+            mockTimer.addTime(1) // 6
         then:
             bucket.getAvailableTokens() == 4
 
         when:
-            mockTimer.addTime(1) // 10
+            mockTimer.addTime(4) // 10
         then:
-            bucket.getAvailableTokens() == 7
+            bucket.getAvailableTokens() == 5
 
         when:
             mockTimer.addTime(2) // 12
+        then:
+            bucket.getAvailableTokens() == 8
+
+        when:
+            mockTimer.addTime(3) // 15
         then:
             bucket.getAvailableTokens() == 9
 
