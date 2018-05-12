@@ -50,6 +50,16 @@ public class Refill implements Serializable {
         this.refillIntervally = refillIntervally;
     }
 
+    @Deprecated
+    public static Refill of(long tokens, Duration period) {
+        return greedy(tokens, period);
+    }
+
+    @Deprecated
+    public static Refill smooth(long tokens, Duration period) {
+        return greedy(tokens, period);
+    }
+
     /**
      * Creates the {@link Refill} that does refill of tokens in greedy manner,
      * it will try to add the tokens to bucket as soon as possible.

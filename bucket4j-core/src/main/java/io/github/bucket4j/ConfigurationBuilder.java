@@ -40,6 +40,11 @@ public class ConfigurationBuilder {
         return new BucketConfiguration(this.bandwidths);
     }
 
+    @Deprecated
+    public BucketConfiguration buildConfiguration() {
+        return build();
+    }
+
     /**
      * Adds limited bandwidth for all buckets which will be constructed by this builder instance.
      *
