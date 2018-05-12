@@ -30,28 +30,27 @@ By default initial size of bucket equals to capacity.
 But sometimes, you may want to have lesser initial size, for example for case of cold start in order to prevent denial of service: 
 
 ```java
-int initialCapacity = 42;
+int initialTokens = 42;
 Bandwidth limit = Bandwidth
     .simple(1000, Duration.ofHours(1))
-    .withInitialTokens(initialCapacity);
+    .withInitialTokens(initialTokens);
 Bucket bucket = Bucket4j.builder()
     .addLimit(limit)
     .build();
 ```
 
 ### Turning-off the refill greediness
-By default any bandwidth does refill in greedy manner, because bandwidth tries to add the tokens to bucket as soon as possible.
+When bandwidth created via ```Bandwidth#simple``` method  it does refill in greedy manner, because bandwidth tries to add the tokens to bucket as soon as possible.
 For example bandwidth with refill "10 tokens per 1 second" will add 1 token per each 100 millisecond,
 in other words refill will not wait 1 second to regenerate whole bunch of 10 tokens.
 
-If greediness is undesired then you can specify the fixed interval refill via [withFixedRefillInterval(Duration)]() method.
-When fixed refill interval was specified then greediness is turned-off.
+If greediness is undesired then you should explicitly choose non-greedy refill.
 For example the bandwidth bellow will refill 10 tokens per 1 second instead of 1 token per 100 milliseconds:
 ```java
-Bandwidth.simple(600, Duration.ofMinutes(1))
-    .withFixedRefillInterval(Duration.ofSecond(1));
+// When refill created via "intervally" factory method then greediness is turned-off.
+Refill refill = Refill.intervally(10, Duration.ofSecond(1));
+Bandwidth bandwidth = Bandwidth.classic(600, refill);
 ```
- 
 
 ### Returning tokens back to bucket.
 The [compensating transaction](https://en.wikipedia.org/wiki/Compensating_transaction) is one of obvious use case when you want to return tokens back to bucket:
