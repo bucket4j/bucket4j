@@ -124,11 +124,12 @@ class BucketStateSpecification extends Specification {
 
     @Unroll
     def "delayAfterWillBePossibleToConsume specification #testNumber"(String testNumber, long toConsume, long requiredTime, Bucket bucket) {
-        def configuration = bucket.configuration
+            def configuration = bucket.configuration
+            TimeMeter timeMeter = bucket.timeMeter
         setup:
             BucketState state = bucket.createSnapshot()
         when:
-            long actualTime = state.delayNanosAfterWillBePossibleToConsume(configuration.bandwidths, toConsume)
+            long actualTime = state.calculateDelayNanosAfterWillBePossibleToConsume(configuration.bandwidths, toConsume, timeMeter.currentTimeNanos())
         then:
             actualTime == requiredTime
         where:

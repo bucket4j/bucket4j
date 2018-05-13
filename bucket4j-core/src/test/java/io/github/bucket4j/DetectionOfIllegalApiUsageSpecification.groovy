@@ -60,28 +60,6 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
     }
 
     @Unroll
-    def "Should check that #fixedRefillPeriod is wrong value of fixedRefillPeriod"(Duration fixedRefillPeriod) {
-        when:
-            Bandwidth.simple(VALID_CAPACITY, VALID_PERIOD)
-                    .withFixedRefillInterval(fixedRefillPeriod)
-        then:
-            IllegalArgumentException ex = thrown()
-            ex.message == nonPositiveFixedRefillInterval(fixedRefillPeriod).message
-
-        where:
-            fixedRefillPeriod << [Duration.ZERO, Duration.ofSeconds(-1)]
-    }
-
-    def "Should check that fixedRefillPeriod is not null"() {
-        when:
-            Bandwidth.simple(VALID_CAPACITY, VALID_PERIOD)
-                .withFixedRefillInterval(null)
-        then:
-            IllegalArgumentException ex = thrown()
-            ex.message == nullFixedRefillInterval().message
-    }
-
-    @Unroll
     def "Should check that #period is invalid period of bandwidth"(long period) {
         when:
             builder.addLimit(Bandwidth.simple(VALID_CAPACITY, Duration.ofMinutes(period)))
