@@ -31,7 +31,7 @@ import java.util.function.Supplier;
  * there are no any hard work performed inside {@link #getProxy(Object, Supplier) getProxy} method,
  * so it is not necessary to cache results of its invocation.
  * 
- * @param <K> type of key 
+ * @param <K> type of key
  */
 public interface ProxyManager<K> {
 

@@ -1,18 +1,18 @@
 /*
  *
- *   Copyright 2015-2017 Vladimir Bukhtoyarov
+ * Copyright 2015-2018 Vladimir Bukhtoyarov
  *
- *     Licensed under the Apache License, Version 2.0 (the "License");
- *     you may not use this file except in compliance with the License.
- *     You may obtain a copy of the License at
+ *       Licensed under the Apache License, Version 2.0 (the "License");
+ *       you may not use this file except in compliance with the License.
+ *       You may obtain a copy of the License at
  *
- *           http://www.apache.org/licenses/LICENSE-2.0
+ *             http://www.apache.org/licenses/LICENSE-2.0
  *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *    See the License for the specific language governing permissions and
- *    limitations under the License.
+ *      Unless required by applicable law or agreed to in writing, software
+ *      distributed under the License is distributed on an "AS IS" BASIS,
+ *      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *      See the License for the specific language governing permissions and
+ *      limitations under the License.
  */
 
 package io.github.bucket4j.local;
@@ -104,7 +104,7 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket {
             newState.refillAllBandwidth(currentTimeNanos);
             long availableToConsume = newState.getAvailableTokens();
             if (tokensToConsume > availableToConsume) {
-                long nanosToWaitForRefill = newState.delayNanosAfterWillBePossibleToConsume(tokensToConsume);
+                long nanosToWaitForRefill = newState.delayNanosAfterWillBePossibleToConsume(tokensToConsume, currentTimeNanos);
                 return ConsumptionProbe.rejected(availableToConsume, nanosToWaitForRefill);
             }
             newState.consume(tokensToConsume);
@@ -125,7 +125,7 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket {
 
         while (true) {
             newState.refillAllBandwidth(currentTimeNanos);
-            long nanosToCloseDeficit = newState.delayNanosAfterWillBePossibleToConsume(tokensToConsume);
+            long nanosToCloseDeficit = newState.delayNanosAfterWillBePossibleToConsume(tokensToConsume, currentTimeNanos);
             if (nanosToCloseDeficit == 0) {
                 newState.consume(tokensToConsume);
                 if (STATE_UPDATER.compareAndSet(this, previousState, newState)) {
@@ -277,8 +277,8 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket {
             state.consume(configuration.getBandwidths(), tokensToConsume);
         }
 
-        long delayNanosAfterWillBePossibleToConsume(long tokensToConsume) {
-            return state.delayNanosAfterWillBePossibleToConsume(configuration.getBandwidths(), tokensToConsume);
+        long delayNanosAfterWillBePossibleToConsume(long tokensToConsume, long currentTimeNanos) {
+            return state.calculateDelayNanosAfterWillBePossibleToConsume(configuration.getBandwidths(), tokensToConsume, currentTimeNanos);
         }
     }
 

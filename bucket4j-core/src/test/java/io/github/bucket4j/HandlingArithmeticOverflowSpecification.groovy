@@ -1,18 +1,18 @@
 /*
  *
- *   Copyright 2015-2017 Vladimir Bukhtoyarov
+ * Copyright 2015-2018 Vladimir Bukhtoyarov
  *
- *     Licensed under the Apache License, Version 2.0 (the "License");
- *     you may not use this file except in compliance with the License.
- *     You may obtain a copy of the License at
+ *       Licensed under the Apache License, Version 2.0 (the "License");
+ *       you may not use this file except in compliance with the License.
+ *       You may obtain a copy of the License at
  *
- *           http://www.apache.org/licenses/LICENSE-2.0
+ *             http://www.apache.org/licenses/LICENSE-2.0
  *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *    See the License for the specific language governing permissions and
- *    limitations under the License.
+ *      Unless required by applicable law or agreed to in writing, software
+ *      distributed under the License is distributed on an "AS IS" BASIS,
+ *      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *      See the License for the specific language governing permissions and
+ *      limitations under the License.
  */
 
 package io.github.bucket4j
@@ -83,7 +83,7 @@ class HandlingArithmeticOverflowSpecification extends Specification {
     def "Should check ArithmeticOverflow when refilling by completed periods"() {
         setup:
             Bandwidth limit = Bandwidth
-                    .classic((long) Long.MAX_VALUE - 10, Refill.of(1, Duration.ofNanos(1)))
+                    .classic((long) Long.MAX_VALUE - 10, Refill.greedy(1, Duration.ofNanos(1)))
                     .withInitialTokens((long) Long.MAX_VALUE - 13)
             TimeMeterMock meter = new TimeMeterMock(0)
             Bucket bucket = Bucket4j.builder()
@@ -120,7 +120,7 @@ class HandlingArithmeticOverflowSpecification extends Specification {
     def "Should check ArithmeticOverflow when refilling by uncompleted periods"() {
         setup:
             Bandwidth limit = Bandwidth
-                    .classic((long) Long.MAX_VALUE - 10, Refill.of(100, Duration.ofNanos(100)))
+                    .classic((long) Long.MAX_VALUE - 10, Refill.greedy(100, Duration.ofNanos(100)))
                     .withInitialTokens((long) Long.MAX_VALUE - 13)
             TimeMeterMock meter = new TimeMeterMock(0)
             Bucket bucket = Bucket4j.builder()
@@ -149,14 +149,48 @@ class HandlingArithmeticOverflowSpecification extends Specification {
             Bandwidth[] limits = bucket.configuration.bandwidths
 
         expect:
-            state.delayNanosAfterWillBePossibleToConsume(limits, 10) == 10
+            state.calculateDelayNanosAfterWillBePossibleToConsume(limits, 10, meter.currentTimeNanos()) == 10
 
         when:
             state.consume(limits, 1)
 
         then:
             state.getAvailableTokens(limits) == -1
-            state.delayNanosAfterWillBePossibleToConsume(limits, Long.MAX_VALUE) == Long.MAX_VALUE
+            state.calculateDelayNanosAfterWillBePossibleToConsume(limits, Long.MAX_VALUE, meter.currentTimeNanos()) == Long.MAX_VALUE
+    }
+
+    def "Should detect overflow during deficit calculation for interval refill"() {
+        setup:
+            long bandwidthPeriodNanos = (long) Long.MAX_VALUE / 2
+            Refill refill = Refill.intervally((long) Long.MAX_VALUE / 4, Duration.ofNanos(bandwidthPeriodNanos))
+            Bandwidth limit = Bandwidth
+                    .classic((long) Long.MAX_VALUE / 2, refill)
+                    .withInitialTokens(0)
+            TimeMeterMock meter = new TimeMeterMock(0)
+            Bucket bucket = Bucket4j.builder()
+                    .addLimit(limit)
+                    .withCustomTimePrecision(meter)
+                    .build()
+            BucketState state = bucket.createSnapshot()
+            Bandwidth[] limits = bucket.configuration.bandwidths
+
+        expect:
+            state.calculateDelayNanosAfterWillBePossibleToConsume(limits, 10, meter.currentTimeNanos()) == bandwidthPeriodNanos
+
+        when:
+            state.consume(limits, 1)
+
+        then:
+            state.getAvailableTokens(limits) == -1
+            state.calculateDelayNanosAfterWillBePossibleToConsume(limits, Long.MAX_VALUE, meter.currentTimeNanos()) == Long.MAX_VALUE
+            state.calculateDelayNanosAfterWillBePossibleToConsume(limits, (long)Long.MAX_VALUE/2, meter.currentTimeNanos()) == Long.MAX_VALUE
+
+        when:
+            state.addTokens(limits, 1)
+            meter.addTime(bandwidthPeriodNanos - 10)
+        then:
+            state.getAvailableTokens(limits) == 0
+            state.calculateDelayNanosAfterWillBePossibleToConsume(limits, Long.MAX_VALUE - 10, meter.currentTimeNanos()) == Long.MAX_VALUE
     }
 
 }

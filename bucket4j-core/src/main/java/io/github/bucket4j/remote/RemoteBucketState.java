@@ -46,8 +46,8 @@ public class RemoteBucketState {
         state.consume(configuration.getBandwidths(), tokensToConsume);
     }
 
-    public long delayNanosAfterWillBePossibleToConsume(long tokensToConsume) {
-        return state.delayNanosAfterWillBePossibleToConsume(configuration.getBandwidths(), tokensToConsume);
+    public long calculateDelayNanosAfterWillBePossibleToConsume(long tokensToConsume, long currentTimeNanos) {
+        return state.calculateDelayNanosAfterWillBePossibleToConsume(configuration.getBandwidths(), tokensToConsume, currentTimeNanos);
     }
 
     public void addTokens(long tokensToAdd) {

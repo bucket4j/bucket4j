@@ -66,7 +66,7 @@ public class ThrottlingFilter implements javax.servlet.Filter {
 
     private Bucket createNewBucket() {
          long overdraft = 50; 
-         Refill refill = Refill.smooth(10, Duration.ofSeconds(1));
+         Refill refill = Refill.greedy(10, Duration.ofSeconds(1));
          Bandwidth limit = Bandwidth.classic(overdraft, refill);
          return Bucket4j.builder().addLimit(limit).build();
     }

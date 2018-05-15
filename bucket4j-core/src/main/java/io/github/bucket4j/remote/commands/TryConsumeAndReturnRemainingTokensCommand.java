@@ -40,7 +40,7 @@ public class TryConsumeAndReturnRemainingTokensCommand implements RemoteCommand<
             bucketStateModified = true;
             return ConsumptionProbe.consumed(availableToConsume - tokensToConsume);
         } else {
-            long nanosToWaitForRefill = state.delayNanosAfterWillBePossibleToConsume(tokensToConsume);
+            long nanosToWaitForRefill = state.calculateDelayNanosAfterWillBePossibleToConsume(tokensToConsume, currentTimeNanos);
             return ConsumptionProbe.rejected(availableToConsume, nanosToWaitForRefill);
         }
     }

@@ -63,7 +63,7 @@ use any of them:
 <dependency>
     <groupId>com.github.vladimir-bukhtoyarov</groupId>
     <artifactId>bucket4j-core</artifactId>
-    <version>4.1.0</version>
+    <version>5.0.0</version>
 </dependency>
 ```
 #### You can build Bucket4j from sources
@@ -79,3 +79,6 @@ Feel free to ask in the [gitter chat](https://gitter.im/vladimir-bukhtoyarov/buc
 ## License
 Copyright 2015-2018 Vladimir Bukhtoyarov
 Licensed under the Apache Software License, Version 2.0: <http://www.apache.org/licenses/LICENSE-2.0>.
+
+## Give beer to author
+[PayPalMe Donation link](http://paypal.me/vladimirbukhtoyarov)
