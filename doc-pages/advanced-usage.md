@@ -48,7 +48,7 @@ If greediness is undesired then you should explicitly choose non-greedy refill.
 For example the bandwidth bellow will refill 10 tokens per 1 second instead of 1 token per 100 milliseconds:
 ```java
 // When refill created via "intervally" factory method then greediness is turned-off.
-Refill refill = Refill.intervally(10, Duration.ofSecond(1));
+Refill refill = Refill.intervally(10, Duration.ofSeconds(1));
 Bandwidth bandwidth = Bandwidth.classic(600, refill);
 ```
 
