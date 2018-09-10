@@ -15,14 +15,18 @@
  *      limitations under the License.
  */
 
-package io.github.bucket4j.remote;
+package io.github.bucket4j.remote.multiversion;
 
 import io.github.bucket4j.BucketConfiguration;
+import io.github.bucket4j.remote.Backend;
+import io.github.bucket4j.remote.CommandResult;
+import io.github.bucket4j.remote.RemoteCommand;
 
+import java.io.Serializable;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-public abstract class MultiversionBackend<K> implements Backend<K> {
+public abstract class MultiversionBackend<K extends Serializable> implements Backend<K> {
 
     private final Protocol desiredProtocol;
 
@@ -35,7 +39,7 @@ public abstract class MultiversionBackend<K> implements Backend<K> {
     }
 
     @Override
-    public <T> CommandResult<T> execute(K key, RemoteCommand<T> command) {
+    public <T extends Serializable> CommandResult<T> execute(K key, RemoteCommand<T> command) {
         String commandAsJson = desiredProtocol.toJson(command);
         String resultAsJson = execute(key, commandAsJson);
         return desiredProtocol.parseResult(resultAsJson, command);
@@ -48,7 +52,7 @@ public abstract class MultiversionBackend<K> implements Backend<K> {
     }
 
     @Override
-    public <T> T createInitialStateAndExecute(K key, BucketConfiguration configuration, RemoteCommand<T> command) {
+    public <T extends Serializable> T createInitialStateAndExecute(K key, BucketConfiguration configuration, RemoteCommand<T> command) {
         String configurationAsJson = desiredProtocol.toJson(configuration);
         String commandAsJson = desiredProtocol.toJson(command);
         String resultAsJson = createInitialStateAndExecute(key, configurationAsJson, commandAsJson);
@@ -63,14 +67,14 @@ public abstract class MultiversionBackend<K> implements Backend<K> {
     }
 
     @Override
-    public <T> CompletableFuture<CommandResult<T>> executeAsync(K key, RemoteCommand<T> command) {
+    public <T extends Serializable> CompletableFuture<CommandResult<T>> executeAsync(K key, RemoteCommand<T> command) {
         String commandAsJson = desiredProtocol.toJson(command);
         return executeAsync(key, commandAsJson)
                 .thenApply(resultAsJson -> desiredProtocol.parseResult(resultAsJson, command));
     }
 
     @Override
-    public <T>  CompletableFuture<T> createInitialStateAndExecuteAsync(K key, BucketConfiguration configuration, RemoteCommand<T> command) {
+    public <T extends Serializable>  CompletableFuture<T> createInitialStateAndExecuteAsync(K key, BucketConfiguration configuration, RemoteCommand<T> command) {
         String configurationAsJson = desiredProtocol.toJson(configuration);
         String commandAsJson = desiredProtocol.toJson(command);
         return createInitialStateAndExecuteAsync(key, configurationAsJson, commandAsJson)

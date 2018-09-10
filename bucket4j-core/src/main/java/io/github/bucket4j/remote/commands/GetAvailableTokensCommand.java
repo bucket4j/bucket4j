@@ -23,6 +23,8 @@ import io.github.bucket4j.remote.RemoteCommand;
 
 public class GetAvailableTokensCommand implements RemoteCommand<Long> {
 
+    private static final long serialVersionUID = 42;
+
     @Override
     public Long execute(RemoteBucketState state, long currentTimeNanos) {
         state.refillAllBandwidth(currentTimeNanos);

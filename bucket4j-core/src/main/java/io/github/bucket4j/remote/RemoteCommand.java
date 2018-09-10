@@ -17,7 +17,9 @@
 
 package io.github.bucket4j.remote;
 
-public interface RemoteCommand<T> {
+import java.io.Serializable;
+
+public interface RemoteCommand<T extends Serializable> extends Serializable {
 
     T execute(RemoteBucketState state, long currentTimeNanos);
 

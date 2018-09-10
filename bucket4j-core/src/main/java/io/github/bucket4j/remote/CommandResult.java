@@ -17,7 +17,11 @@
 
 package io.github.bucket4j.remote;
 
-public class CommandResult<T> {
+import java.io.Serializable;
+
+public class CommandResult<T> implements Serializable {
+
+    private static final long serialVersionUID = 42;
 
     private static final CommandResult<?> NOT_FOUND = new CommandResult<>(null, true);
 

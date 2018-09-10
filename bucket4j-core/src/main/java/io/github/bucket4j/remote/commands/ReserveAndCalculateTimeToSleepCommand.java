@@ -22,6 +22,8 @@ import io.github.bucket4j.remote.RemoteCommand;
 
 public class ReserveAndCalculateTimeToSleepCommand implements RemoteCommand<Long> {
 
+    private static final long serialVersionUID = 42;
+
     private long tokensToConsume;
     private long waitIfBusyNanosLimit;
     private boolean bucketStateModified;
@@ -35,7 +37,7 @@ public class ReserveAndCalculateTimeToSleepCommand implements RemoteCommand<Long
     public Long execute(RemoteBucketState state, long currentTimeNanos) {
         state.refillAllBandwidth(currentTimeNanos);
 
-        long nanosToCloseDeficit = state.delayNanosAfterWillBePossibleToConsume(tokensToConsume);
+        long nanosToCloseDeficit = state.calculateDelayNanosAfterWillBePossibleToConsume(tokensToConsume, currentTimeNanos);
         if (nanosToCloseDeficit == Long.MAX_VALUE || nanosToCloseDeficit > waitIfBusyNanosLimit) {
             return Long.MAX_VALUE;
         } else {

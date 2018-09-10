@@ -19,20 +19,21 @@ package io.github.bucket4j.remote;
 
 import io.github.bucket4j.BucketConfiguration;
 
+import java.io.Serializable;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-public interface Backend<K> {
+public interface Backend<K extends Serializable> {
 
-    <T> CommandResult<T> execute(K key, RemoteCommand<T> command);
+    <T extends Serializable> CommandResult<T> execute(K key, RemoteCommand<T> command);
+
+    <T extends Serializable> CompletableFuture<CommandResult<T>> executeAsync(K key, RemoteCommand<T> command);
 
     void createInitialState(K key, BucketConfiguration configuration);
 
-    <T> T createInitialStateAndExecute(K key, BucketConfiguration configuration, RemoteCommand<T> command);
+    <T extends Serializable> T createInitialStateAndExecute(K key, BucketConfiguration configuration, RemoteCommand<T> command);
 
-    <T> CompletableFuture<CommandResult<T>> executeAsync(K key, RemoteCommand<T> command);
-
-    <T> CompletableFuture<T> createInitialStateAndExecuteAsync(K key, BucketConfiguration configuration, RemoteCommand<T> command);
+    <T extends Serializable> CompletableFuture<T> createInitialStateAndExecuteAsync(K key, BucketConfiguration configuration, RemoteCommand<T> command);
 
     Optional<BucketConfiguration> getConfiguration(K key);
 

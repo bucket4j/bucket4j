@@ -17,6 +17,7 @@
 
 package io.github.bucket4j;
 
+import java.io.Serializable;
 import java.time.Duration;
 
 /**
@@ -54,7 +55,9 @@ import java.time.Duration;
  *      .build()
  * }</pre>
  */
-public class Bandwidth {
+public class Bandwidth implements Serializable {
+
+    private static final long serialVersionUID = 101L;
 
     final long capacity;
     final long initialTokens;

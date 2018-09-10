@@ -21,6 +21,8 @@ import java.text.MessageFormat;
 
 public class IncompatibleConfigurationException extends IllegalArgumentException {
 
+    private static final long serialVersionUID = 42;
+
     private final BucketConfiguration previousConfiguration;
     private final BucketConfiguration newConfiguration;
 

@@ -23,6 +23,8 @@ import io.github.bucket4j.remote.RemoteCommand;
 
 public class CreateSnapshotCommand implements RemoteCommand<BucketState> {
 
+    private static final long serialVersionUID = 42;
+
     @Override
     public BucketState execute(RemoteBucketState gridState, long currentTimeNanos) {
         return gridState.copyBucketState();

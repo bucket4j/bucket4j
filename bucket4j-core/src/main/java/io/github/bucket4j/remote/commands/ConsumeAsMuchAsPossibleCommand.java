@@ -23,6 +23,8 @@ import io.github.bucket4j.remote.RemoteCommand;
 
 public class ConsumeAsMuchAsPossibleCommand implements RemoteCommand<Long> {
 
+    private static final long serialVersionUID = 42;
+
     private long limit;
     private boolean bucketStateModified;
 

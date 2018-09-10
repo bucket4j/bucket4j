@@ -30,7 +30,7 @@ import java.io.*;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-public class BackendMock implements Backend {
+public class BackendMock<K extends Serializable> implements Backend<K> {
 
     private final TimeMeter timeMeter;
     private RemoteBucketState state;
@@ -45,7 +45,7 @@ public class BackendMock implements Backend {
     }
 
     @Override
-    public CommandResult execute(Serializable key, RemoteCommand command) {
+    public <T extends Serializable> CommandResult<T> execute(K key, RemoteCommand<T> command) {
         if (exception != null) {
             throw new RuntimeException();
         }
@@ -55,7 +55,7 @@ public class BackendMock implements Backend {
         emulateSerialization(key);
         command = emulateSerialization(command);
         RemoteBucketState newState = emulateSerialization(state);
-        Serializable resultData = command.execute(newState, timeMeter.currentTimeNanos());
+        T resultData = command.execute(newState, timeMeter.currentTimeNanos());
         if (command.isBucketStateModified()) {
             state = newState;
         }
@@ -81,16 +81,16 @@ public class BackendMock implements Backend {
     }
 
     @Override
-    public Serializable createInitialStateAndExecute(Serializable key, BucketConfiguration configuration, RemoteCommand command) {
+    public <T extends Serializable> T createInitialStateAndExecute(K key, BucketConfiguration configuration, RemoteCommand<T> command) {
         if (exception != null) {
             throw new RuntimeException();
         }
         createInitialState(key, configuration);
-        return execute(key, command);
+        return execute(key, command).getData();
     }
 
     @Override
-    public CompletableFuture createInitialStateAndExecuteAsync(Serializable key, BucketConfiguration configuration, RemoteCommand command) {
+    public <T extends Serializable> CompletableFuture<T> createInitialStateAndExecuteAsync(K key, BucketConfiguration configuration, RemoteCommand<T> command) {
         if (exception != null) {
             CompletableFuture future = new CompletableFuture();
             future.completeExceptionally(new RuntimeException());
@@ -100,7 +100,7 @@ public class BackendMock implements Backend {
     }
 
     @Override
-    public CompletableFuture<CommandResult> executeAsync(Serializable key, RemoteCommand command) {
+    public <T extends Serializable> CompletableFuture<CommandResult<T>> executeAsync(K key, RemoteCommand<T> command) {
         if (exception != null) {
             CompletableFuture future = new CompletableFuture();
             future.completeExceptionally(new RuntimeException());

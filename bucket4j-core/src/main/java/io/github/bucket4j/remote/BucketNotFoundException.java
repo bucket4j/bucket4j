@@ -23,6 +23,8 @@ package io.github.bucket4j.remote;
  */
 public class BucketNotFoundException extends IllegalStateException {
 
+    private static final long serialVersionUID = 42;
+
     private final Object bucketId;
 
     public BucketNotFoundException(Object bucketId) {

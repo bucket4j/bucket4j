@@ -25,6 +25,7 @@ import io.github.bucket4j.remote.RemoteBucketState;
 import io.github.bucket4j.remote.Backend;
 import io.github.bucket4j.remote.ProxyManager;
 
+import java.io.Serializable;
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -33,7 +34,7 @@ import java.util.function.Supplier;
  *
  * @param <K> type of key for buckets
  */
-public class HazelcastProxyManager<K> implements ProxyManager<K> {
+public class HazelcastProxyManager<K extends Serializable> implements ProxyManager<K> {
 
     private final Backend<K> backend;
 
