@@ -19,10 +19,10 @@ package io.github.bucket4j.grid.jcache;
 
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.Nothing;
-import io.github.bucket4j.remote.CommandResult;
-import io.github.bucket4j.remote.RemoteCommand;
 import io.github.bucket4j.remote.Backend;
+import io.github.bucket4j.remote.CommandResult;
 import io.github.bucket4j.remote.RemoteBucketState;
+import io.github.bucket4j.remote.RemoteCommand;
 
 import javax.cache.Cache;
 import javax.cache.CacheManager;

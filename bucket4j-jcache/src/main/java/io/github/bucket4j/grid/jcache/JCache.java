@@ -18,8 +18,8 @@
 package io.github.bucket4j.grid.jcache;
 
 import io.github.bucket4j.Extension;
-import io.github.bucket4j.remote.RemoteBucketState;
 import io.github.bucket4j.remote.ProxyManager;
+import io.github.bucket4j.remote.RemoteBucketState;
 
 import javax.cache.Cache;
 import java.io.Serializable;

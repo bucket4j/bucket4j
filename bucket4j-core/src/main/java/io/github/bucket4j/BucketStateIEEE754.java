@@ -17,10 +17,9 @@
 
 package io.github.bucket4j;
 
-import java.io.Serializable;
 import java.util.Arrays;
 
-public class BucketStateIEEE754 implements Serializable {
+public class BucketStateIEEE754 implements BucketState {
 
     private static final long serialVersionUID = 42L;
 
@@ -46,20 +45,20 @@ public class BucketStateIEEE754 implements Serializable {
         }
     }
 
+    @Override
     public BucketStateIEEE754 copy() {
         return new BucketStateIEEE754(tokens.clone(), lastRefillTime.clone());
     }
 
-    public void copyStateFrom(BucketStateIEEE754 sourceState) {
-        System.arraycopy(sourceState.tokens, 0, tokens, 0, tokens.length);
-        System.arraycopy(sourceState.lastRefillTime, 0, lastRefillTime, 0, lastRefillTime.length);
+    @Override
+    public void copyStateFrom(BucketState sourceState) {
+        BucketStateIEEE754 sourceStateIEEE754 = (BucketStateIEEE754) sourceState;
+        System.arraycopy(sourceStateIEEE754.tokens, 0, tokens, 0, tokens.length);
+        System.arraycopy(sourceStateIEEE754.lastRefillTime, 0, lastRefillTime, 0, lastRefillTime.length);
     }
 
-    public static BucketStateIEEE754 createInitialState(BucketConfiguration configuration, long currentTimeNanos) {
-        return new BucketStateIEEE754(configuration, currentTimeNanos);
-    }
-
-    public long getAvailableTokens() {
+    @Override
+    public long getAvailableTokens(Bandwidth[] bandwidths) {
         long availableTokens = (long) tokens[0];
         for (int i = 1; i < tokens.length; i++) {
             availableTokens = Math.min(availableTokens, (long) tokens[i]);
@@ -67,12 +66,14 @@ public class BucketStateIEEE754 implements Serializable {
         return availableTokens;
     }
 
-    public void consume(long toConsume) {
+    @Override
+    public void consume(Bandwidth[] bandwidths, long toConsume) {
         for (int i = 0; i < tokens.length; i++) {
             tokens[i] -= toConsume;
         }
     }
 
+    @Override
     public long calculateDelayNanosAfterWillBePossibleToConsume(Bandwidth[] bandwidths, long tokensToConsume, long currentTimeNanos) {
         long delayAfterWillBePossibleToConsume = calculateDelayNanosAfterWillBePossibleToConsume(0, bandwidths[0], tokensToConsume, currentTimeNanos);
         for (int i = 1; i < bandwidths.length; i++) {
@@ -83,12 +84,14 @@ public class BucketStateIEEE754 implements Serializable {
         return delayAfterWillBePossibleToConsume;
     }
 
+    @Override
     public void refillAllBandwidth(Bandwidth[] limits, long currentTimeNanos) {
         for (int i = 0; i < limits.length; i++) {
             refill(i, limits[i], currentTimeNanos);
         }
     }
 
+    @Override
     public void addTokens(Bandwidth[] limits, long tokensToAdd) {
         for (int i = 0; i < limits.length; i++) {
             addTokens(i, limits[i], tokensToAdd);

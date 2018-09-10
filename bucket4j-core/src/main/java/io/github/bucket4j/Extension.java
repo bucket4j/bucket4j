@@ -17,6 +17,8 @@
 
 package io.github.bucket4j;
 
+import java.util.Set;
+
 /**
  * Represents an extension point of bucket4j library.
  *
@@ -30,5 +32,20 @@ public interface Extension<T extends AbstractBucketBuilder<T>> {
      * @return new builder instance
      */
     T builder();
+
+    // TODO javadocs
+    default ConfigurationBuilder configurationBuilder() {
+        return new ConfigurationBuilder(this);
+    }
+
+    // TODO javadocs
+    default Set<MathType> getSupportedMathTypes() {
+        return MathType.ALL;
+    };
+
+    // TODO javadocs
+    default MathType getDefaultMathType() {
+        return MathType.LONG_64_BITS;
+    }
 
 }

@@ -17,12 +17,8 @@
 
 package io.github.bucket4j
 
+import io.github.bucket4j.mock.*
 import io.github.bucket4j.remote.BucketProxy
-import io.github.bucket4j.mock.BlockingStrategyMock
-import io.github.bucket4j.mock.BucketType
-import io.github.bucket4j.mock.BackendMock
-import io.github.bucket4j.mock.SchedulerMock
-import io.github.bucket4j.mock.TimeMeterMock
 import spock.lang.Specification
 import spock.lang.Timeout
 import spock.lang.Unroll
@@ -162,7 +158,7 @@ class SchedulersSpecification extends Specification {
 
     def "should complete future exceptionally if scheduler failed to schedule the task"() {
         setup:
-            BucketConfiguration configuration = Bucket4j.configurationBuilder()
+            BucketConfiguration configuration = BucketType.GRID.extension.configurationBuilder()
                 .addLimit(Bandwidth.simple(1, Duration.ofNanos(1)))
                 .build()
             BackendMock mockProxy = new BackendMock(SYSTEM_MILLISECONDS)

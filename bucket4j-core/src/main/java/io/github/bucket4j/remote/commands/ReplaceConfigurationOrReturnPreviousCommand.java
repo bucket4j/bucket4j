@@ -21,8 +21,6 @@ import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.remote.RemoteBucketState;
 import io.github.bucket4j.remote.RemoteCommand;
 
-import java.io.Serializable;
-
 
 public class ReplaceConfigurationOrReturnPreviousCommand implements RemoteCommand<BucketConfiguration> {
 

@@ -17,10 +17,11 @@
 
 package io.github.bucket4j
 
-import io.github.bucket4j.remote.BucketProxy
-import io.github.bucket4j.mock.BucketType
+import io.github.bucket4j.local.InMemory
 import io.github.bucket4j.mock.BackendMock
+import io.github.bucket4j.mock.BucketType
 import io.github.bucket4j.mock.TimeMeterMock
+import io.github.bucket4j.remote.BucketProxy
 import spock.lang.Specification
 import spock.lang.Unroll
 
@@ -28,7 +29,7 @@ import java.time.Duration
 import java.util.concurrent.CompletableFuture
 
 import static io.github.bucket4j.TimeMeter.SYSTEM_MILLISECONDS
-import static io.github.bucket4j.remote.RecoveryStrategy.*
+import static io.github.bucket4j.remote.RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION
 
 class BucketSpecification extends Specification {
 
@@ -190,7 +191,7 @@ class BucketSpecification extends Specification {
 
     def "should complete future exceptionally if backend failed"() {
         setup:
-            BucketConfiguration configuration = Bucket4j.configurationBuilder()
+            BucketConfiguration configuration = Bucket4j.extension(InMemory.class).configurationBuilder()
                                                     .addLimit(Bandwidth.simple(1, Duration.ofNanos(1)))
                                                     .build()
             BackendMock mockProxy = new BackendMock(SYSTEM_MILLISECONDS);

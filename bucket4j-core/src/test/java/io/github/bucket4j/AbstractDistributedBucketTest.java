@@ -195,7 +195,8 @@ public abstract class AbstractDistributedBucketTest<B extends AbstractBucketBuil
 
     @Test
     public void testBucketRegistryWithKeyIndependentConfiguration() {
-        BucketConfiguration configuration = Bucket4j.configurationBuilder()
+        BucketConfiguration configuration = Bucket4j.extension(getExtensionClass())
+                .configurationBuilder()
                 .addLimit(Bandwidth.simple(10, Duration.ofDays(1)))
                 .build();
 
@@ -211,7 +212,8 @@ public abstract class AbstractDistributedBucketTest<B extends AbstractBucketBuil
 
     @Test
     public void testBucketWithNotLazyConfiguration() {
-        BucketConfiguration configuration = Bucket4j.configurationBuilder()
+        BucketConfiguration configuration = Bucket4j.extension(getExtensionClass())
+                .configurationBuilder()
                 .addLimit(Bandwidth.simple(10, Duration.ofDays(1)))
                 .build();
 

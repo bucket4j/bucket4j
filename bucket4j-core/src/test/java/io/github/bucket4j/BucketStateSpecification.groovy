@@ -29,7 +29,7 @@ class BucketStateSpecification extends Specification {
     @Unroll
     def "GetAvailableTokens specification #testNumber"(String testNumber, long requiredAvailableTokens, Bucket bucket) {
         setup:
-            BucketState state = bucket.createSnapshot()
+            BucketState64BitsInteger state = bucket.createSnapshot()
         when:
             long availableTokens = state.getAvailableTokens(bucket.configuration.bandwidths)
         then:
@@ -74,7 +74,7 @@ class BucketStateSpecification extends Specification {
     @Unroll
     def "addTokens specification #testNumber"(String testNumber, long tokensToAdd, long requiredAvailableTokens, Bucket bucket) {
         setup:
-            BucketState state = bucket.createSnapshot()
+            BucketState64BitsInteger state = bucket.createSnapshot()
         when:
             state.addTokens(bucket.configuration.bandwidths, tokensToAdd)
             long availableTokens = state.getAvailableTokens(bucket.configuration.bandwidths)
@@ -127,7 +127,7 @@ class BucketStateSpecification extends Specification {
             def configuration = bucket.configuration
             TimeMeter timeMeter = bucket.timeMeter
         setup:
-            BucketState state = bucket.createSnapshot()
+            BucketState64BitsInteger state = bucket.createSnapshot()
         when:
             long actualTime = state.calculateDelayNanosAfterWillBePossibleToConsume(configuration.bandwidths, toConsume, timeMeter.currentTimeNanos())
         then:
@@ -214,7 +214,7 @@ class BucketStateSpecification extends Specification {
                     .addLimit(Bandwidth.simple(capacity, Duration.ofNanos(period)).withInitialTokens(initialTokens))
                     .withCustomTimePrecision(mockTimer)
                     .build()
-            BucketState state = bucket.createSnapshot()
+            BucketState64BitsInteger state = bucket.createSnapshot()
             BucketConfiguration configuration = bucket.getConfiguration()
         when:
             mockTimer.setCurrentTimeNanos(timeOnRefill)
@@ -243,7 +243,7 @@ class BucketStateSpecification extends Specification {
                     .addLimit(Bandwidth.classic(capacity, refill).withInitialTokens(initialTokens))
                     .withCustomTimePrecision(mockTimer)
                     .build()
-            BucketState state = bucket.createSnapshot()
+            BucketState64BitsInteger state = bucket.createSnapshot()
             BucketConfiguration configuration = bucket.getConfiguration()
         when:
             mockTimer.setCurrentTimeNanos(timeOnRefill)
@@ -270,7 +270,7 @@ class BucketStateSpecification extends Specification {
             Bucket bucket = Bucket4j.builder()
                 .addLimit(Bandwidth.simple(capacity, Duration.ofNanos(period)).withInitialTokens(initialTokens))
                 .build()
-            BucketState state = bucket.createSnapshot()
+            BucketState64BitsInteger state = bucket.createSnapshot()
             BucketConfiguration configuration = bucket.getConfiguration()
         when:
             state.consume(configuration.bandwidths, toConsume)

@@ -20,7 +20,6 @@ package io.github.bucket4j.grid.hazelcast;
 import com.hazelcast.map.EntryBackupProcessor;
 import io.github.bucket4j.remote.RemoteBucketState;
 
-import java.io.Serializable;
 import java.util.Map;
 
 

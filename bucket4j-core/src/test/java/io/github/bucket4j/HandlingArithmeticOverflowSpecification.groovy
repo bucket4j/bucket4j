@@ -145,7 +145,7 @@ class HandlingArithmeticOverflowSpecification extends Specification {
                 .addLimit(limit)
                 .withCustomTimePrecision(meter)
                 .build()
-            BucketState state = bucket.createSnapshot()
+            BucketState64BitsInteger state = bucket.createSnapshot()
             Bandwidth[] limits = bucket.configuration.bandwidths
 
         expect:
@@ -171,7 +171,7 @@ class HandlingArithmeticOverflowSpecification extends Specification {
                     .addLimit(limit)
                     .withCustomTimePrecision(meter)
                     .build()
-            BucketState state = bucket.createSnapshot()
+            BucketState64BitsInteger state = bucket.createSnapshot()
             Bandwidth[] limits = bucket.configuration.bandwidths
 
         expect:

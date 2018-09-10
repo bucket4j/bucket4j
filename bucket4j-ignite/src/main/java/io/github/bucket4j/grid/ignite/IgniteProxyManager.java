@@ -19,10 +19,10 @@ package io.github.bucket4j.grid.ignite;
 
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketConfiguration;
-import io.github.bucket4j.remote.BucketProxy;
-import io.github.bucket4j.remote.RemoteBucketState;
 import io.github.bucket4j.remote.Backend;
+import io.github.bucket4j.remote.BucketProxy;
 import io.github.bucket4j.remote.ProxyManager;
+import io.github.bucket4j.remote.RemoteBucketState;
 import org.apache.ignite.IgniteCache;
 
 import java.io.Serializable;

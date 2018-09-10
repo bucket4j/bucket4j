@@ -18,9 +18,10 @@
 package io.github.bucket4j.mock;
 
 import io.github.bucket4j.*;
-import io.github.bucket4j.remote.BucketProxy;
+import io.github.bucket4j.local.InMemory;
 import io.github.bucket4j.local.LocalBucketBuilder;
 import io.github.bucket4j.local.SynchronizationStrategy;
+import io.github.bucket4j.remote.BucketProxy;
 
 import static io.github.bucket4j.remote.RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION;
 
@@ -33,6 +34,11 @@ public enum BucketType {
                     .withCustomTimePrecision(timeMeter)
                     .build();
         }
+
+        @Override
+        public Extension getExtension() {
+            return InMemory.INSTANCE;
+        }
     },
     LOCAL_SYNCHRONIZED {
         @Override
@@ -41,6 +47,11 @@ public enum BucketType {
                     .withCustomTimePrecision(timeMeter)
                     .withSynchronizationStrategy(SynchronizationStrategy.SYNCHRONIZED)
                     .build();
+        }
+
+        @Override
+        public Extension getExtension() {
+            return InMemory.INSTANCE;
         }
     },
     LOCAL_UNSAFE {
@@ -51,6 +62,11 @@ public enum BucketType {
                     .withSynchronizationStrategy(SynchronizationStrategy.NONE)
                     .build();
         }
+
+        @Override
+        public Extension getExtension() {
+            return InMemory.INSTANCE;
+        }
     },
     GRID {
         @Override
@@ -59,12 +75,26 @@ public enum BucketType {
             BackendMock gridProxy = new BackendMock(timeMeter);
             return BucketProxy.createInitializedBucket(42, configuration, gridProxy, THROW_BUCKET_NOT_FOUND_EXCEPTION);
         }
+
+        @Override
+        public Extension getExtension() {
+            return new RemoteExtensionMock();
+        }
     };
 
     abstract public Bucket createBucket(AbstractBucketBuilder builder, TimeMeter timeMeter);
 
+    abstract public Extension getExtension();
+
     public Bucket createBucket(AbstractBucketBuilder builder) {
         return createBucket(builder, TimeMeter.SYSTEM_MILLISECONDS);
+    }
+
+    public static class RemoteExtensionMock implements Extension {
+        @Override
+        public AbstractBucketBuilder builder() {
+            return null;
+        }
     }
 
 }

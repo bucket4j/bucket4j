@@ -17,9 +17,9 @@
 
 package io.github.bucket4j.grid.infinispan;
 
+import io.github.bucket4j.grid.jcache.JCacheEntryProcessor;
 import io.github.bucket4j.remote.CommandResult;
 import io.github.bucket4j.remote.RemoteBucketState;
-import io.github.bucket4j.grid.jcache.JCacheEntryProcessor;
 import org.infinispan.functional.EntryView;
 import org.infinispan.util.function.SerializableFunction;
 

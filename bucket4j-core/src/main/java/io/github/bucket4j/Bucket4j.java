@@ -17,6 +17,7 @@
 
 package io.github.bucket4j;
 
+import io.github.bucket4j.local.InMemory;
 import io.github.bucket4j.local.LocalBucketBuilder;
 
 import java.util.HashMap;
@@ -34,6 +35,7 @@ public class Bucket4j {
         for (Extension extension : ServiceLoader.load(Extension.class)) {
             extensions.put(extension.getClass(), extension);
         }
+        extensions.put(InMemory.class, InMemory.INSTANCE);
     }
 
     private Bucket4j() {
@@ -46,16 +48,7 @@ public class Bucket4j {
      * @return new instance of {@link LocalBucketBuilder}
      */
     public static LocalBucketBuilder builder() {
-        return new LocalBucketBuilder();
-    }
-
-    /**
-     * Creates new instance of {@link ConfigurationBuilder}
-     *
-     * @return instance of {@link ConfigurationBuilder}
-     */
-    public static ConfigurationBuilder configurationBuilder() {
-        return new ConfigurationBuilder();
+        return Bucket4j.extension(InMemory.class).builder();
     }
 
     /**

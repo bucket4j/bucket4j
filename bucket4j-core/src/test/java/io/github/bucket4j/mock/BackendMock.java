@@ -21,10 +21,10 @@ package io.github.bucket4j.mock;
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.BucketState;
 import io.github.bucket4j.TimeMeter;
+import io.github.bucket4j.remote.Backend;
 import io.github.bucket4j.remote.CommandResult;
 import io.github.bucket4j.remote.RemoteBucketState;
 import io.github.bucket4j.remote.RemoteCommand;
-import io.github.bucket4j.remote.Backend;
 
 import java.io.*;
 import java.util.Optional;

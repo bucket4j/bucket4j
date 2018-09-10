@@ -19,9 +19,9 @@ package io.github.bucket4j.grid.jcache.infinispan;
 
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket4j;
-import io.github.bucket4j.remote.RemoteBucketState;
-import io.github.bucket4j.remote.RecoveryStrategy;
 import io.github.bucket4j.grid.jcache.JCache;
+import io.github.bucket4j.remote.RecoveryStrategy;
+import io.github.bucket4j.remote.RemoteBucketState;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;

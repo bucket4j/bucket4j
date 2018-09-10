@@ -18,10 +18,11 @@
 package io.github.bucket4j.grid.jcache;
 
 import io.github.bucket4j.AbstractBucketBuilder;
+import io.github.bucket4j.Bucket;
+import io.github.bucket4j.Bucket4j;
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.remote.BucketProxy;
 import io.github.bucket4j.remote.RecoveryStrategy;
-import io.github.bucket4j.Bucket;
 import io.github.bucket4j.remote.RemoteBucketState;
 
 import javax.cache.Cache;
@@ -39,7 +40,7 @@ public class JCacheBucketBuilder extends AbstractBucketBuilder<JCacheBucketBuild
      * Creates the new instance of {@link JCacheBucketBuilder}
      */
     public JCacheBucketBuilder() {
-        super();
+        super(Bucket4j.extension(JCache.class));
     }
 
     /**

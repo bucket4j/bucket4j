@@ -19,9 +19,9 @@ package io.github.bucket4j.grid.hazelcast;
 
 import com.hazelcast.map.EntryBackupProcessor;
 import com.hazelcast.map.EntryProcessor;
+import io.github.bucket4j.grid.jcache.JCacheEntryProcessor;
 import io.github.bucket4j.remote.CommandResult;
 import io.github.bucket4j.remote.RemoteBucketState;
-import io.github.bucket4j.grid.jcache.JCacheEntryProcessor;
 
 import java.io.Serializable;
 import java.util.Map;

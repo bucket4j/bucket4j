@@ -27,22 +27,21 @@ import java.util.List;
  */
 public class ConfigurationBuilder {
 
+    private final Extension extension;
     private List<Bandwidth> bandwidths;
+    private MathType mathType;
 
-    protected ConfigurationBuilder() {
+    public ConfigurationBuilder(Extension extension) {
         this.bandwidths = new ArrayList<>(1);
+        this.extension = extension;
+        mathType = extension.getDefaultMathType();
     }
 
     /**
-     * @return configuration which used for bucket construction.
+     * @return configuration that used for bucket construction.
      */
     public BucketConfiguration build() {
-        return new BucketConfiguration(this.bandwidths);
-    }
-
-    @Deprecated
-    public BucketConfiguration buildConfiguration() {
-        return build();
+        return new BucketConfiguration(this.bandwidths, mathType);
     }
 
     /**
@@ -56,6 +55,16 @@ public class ConfigurationBuilder {
             throw BucketExceptions.nullBandwidth();
         }
         bandwidths.add(bandwidth);
+        return this;
+    }
+
+    // TODO javadocs
+    public ConfigurationBuilder withMath(MathType mathType) {
+        if (!extension.getSupportedMathTypes().contains(mathType)) {
+            // TODO provide message and implement tests
+            throw new IllegalArgumentException();
+        }
+        this.mathType = mathType;
         return this;
     }
 

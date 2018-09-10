@@ -26,8 +26,8 @@ public class AbstractBucketBuilder<T extends AbstractBucketBuilder> {
 
     private final ConfigurationBuilder configurationBuilder;
 
-    protected AbstractBucketBuilder() {
-        configurationBuilder = new ConfigurationBuilder();
+    protected AbstractBucketBuilder(Extension extension) {
+        configurationBuilder = new ConfigurationBuilder(extension);
     }
 
     /**
@@ -38,6 +38,12 @@ public class AbstractBucketBuilder<T extends AbstractBucketBuilder> {
      */
     public T addLimit(Bandwidth bandwidth) {
         configurationBuilder.addLimit(bandwidth);
+        return (T) this;
+    }
+
+    // TODO javadocs
+    public T withMath(MathType mathType) {
+        configurationBuilder.withMath(mathType);
         return (T) this;
     }
 

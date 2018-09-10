@@ -18,16 +18,18 @@
 package io.github.bucket4j.grid.jcache;
 
 
-import io.github.bucket4j.*;
-import io.github.bucket4j.remote.RemoteBucketState;
+import io.github.bucket4j.AbstractDistributedBucketTest;
+import io.github.bucket4j.Bandwidth;
+import io.github.bucket4j.Bucket;
+import io.github.bucket4j.Bucket4j;
 import io.github.bucket4j.remote.ProxyManager;
 import io.github.bucket4j.remote.RecoveryStrategy;
+import io.github.bucket4j.remote.RemoteBucketState;
 import org.junit.Test;
 
 import javax.cache.Cache;
 import java.time.Duration;
 import java.util.UUID;
-
 
 import static io.github.bucket4j.remote.RecoveryStrategy.RECONSTRUCT;
 

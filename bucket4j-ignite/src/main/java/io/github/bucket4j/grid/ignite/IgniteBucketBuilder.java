@@ -19,10 +19,11 @@ package io.github.bucket4j.grid.ignite;
 
 import io.github.bucket4j.AbstractBucketBuilder;
 import io.github.bucket4j.Bucket;
+import io.github.bucket4j.Bucket4j;
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.remote.BucketProxy;
-import io.github.bucket4j.remote.RemoteBucketState;
 import io.github.bucket4j.remote.RecoveryStrategy;
+import io.github.bucket4j.remote.RemoteBucketState;
 import org.apache.ignite.IgniteCache;
 
 import javax.cache.Cache;
@@ -42,7 +43,7 @@ public class IgniteBucketBuilder extends AbstractBucketBuilder<IgniteBucketBuild
      * Creates the new instance of {@link IgniteBucketBuilder}
      */
     public IgniteBucketBuilder() {
-        super();
+        super(Bucket4j.extension(Ignite.class));
     }
 
     /**

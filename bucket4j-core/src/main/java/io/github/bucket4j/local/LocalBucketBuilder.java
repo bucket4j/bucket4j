@@ -17,7 +17,10 @@
 
 package io.github.bucket4j.local;
 
-import io.github.bucket4j.*;
+import io.github.bucket4j.AbstractBucketBuilder;
+import io.github.bucket4j.BucketConfiguration;
+import io.github.bucket4j.BucketExceptions;
+import io.github.bucket4j.TimeMeter;
 
 /**
  * This builder creates in-memory buckets ({@link LockFreeBucket}).
@@ -26,6 +29,10 @@ public class LocalBucketBuilder extends AbstractBucketBuilder<LocalBucketBuilder
 
     private TimeMeter timeMeter = TimeMeter.SYSTEM_MILLISECONDS;
     private SynchronizationStrategy synchronizationStrategy = SynchronizationStrategy.LOCK_FREE;
+
+    public LocalBucketBuilder() {
+        super(InMemory.INSTANCE);
+    }
 
     /**
      * Specifies {@link TimeMeter#SYSTEM_NANOTIME} as time meter for buckets that will be created by this builder.

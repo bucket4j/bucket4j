@@ -17,6 +17,7 @@
 
 package io.github.bucket4j;
 
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Set;
 
@@ -29,6 +30,6 @@ public enum MathType {
     // TODO javadocs
     IEEE_754;
 
-    static Set<MathType> ALL = EnumSet.of(LONG_64_BITS, IEEE_754);
+    public static Set<MathType> ALL = Collections.unmodifiableSet(EnumSet.allOf(MathType.class));
 
 }

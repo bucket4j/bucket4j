@@ -20,10 +20,11 @@ package io.github.bucket4j.grid.hazelcast;
 import com.hazelcast.core.IMap;
 import io.github.bucket4j.AbstractBucketBuilder;
 import io.github.bucket4j.Bucket;
+import io.github.bucket4j.Bucket4j;
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.remote.BucketProxy;
-import io.github.bucket4j.remote.RemoteBucketState;
 import io.github.bucket4j.remote.RecoveryStrategy;
+import io.github.bucket4j.remote.RemoteBucketState;
 
 import javax.cache.Cache;
 import java.io.Serializable;
@@ -42,7 +43,7 @@ public class HazelcastBucketBuilder extends AbstractBucketBuilder<HazelcastBucke
      * Creates the new instance of {@link HazelcastBucketBuilder}
      */
     public HazelcastBucketBuilder() {
-        super();
+        super(Bucket4j.extension(Hazelcast.class));
     }
 
     /**

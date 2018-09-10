@@ -19,10 +19,11 @@ package io.github.bucket4j.grid.infinispan;
 
 import io.github.bucket4j.AbstractBucketBuilder;
 import io.github.bucket4j.Bucket;
+import io.github.bucket4j.Bucket4j;
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.remote.BucketProxy;
-import io.github.bucket4j.remote.RemoteBucketState;
 import io.github.bucket4j.remote.RecoveryStrategy;
+import io.github.bucket4j.remote.RemoteBucketState;
 import org.infinispan.functional.FunctionalMap;
 
 import javax.cache.Cache;
@@ -42,7 +43,7 @@ public class InfinispanBucketBuilder extends AbstractBucketBuilder<InfinispanBuc
      * Creates the new instance of {@link InfinispanBucketBuilder}
      */
     public InfinispanBucketBuilder() {
-        super();
+        super(Bucket4j.extension(Infinispan.class));
     }
 
     /**
