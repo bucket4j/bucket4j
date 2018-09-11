@@ -12,6 +12,15 @@ To use JCache extension you also need to add following dependency:
 </dependency>
 ``` 
 
+JCache expects javax.cache.cache-api to be a provided dependency. Do not forget to add following dependency:
+```xml
+<dependency>
+    <groupId>javax.cache</groupId>
+    <artifactId>cache-api</artifactId>
+    <version>${jcache.version}</version>
+</dependency>
+```
+
 ## Example 1 - limiting access to HTTP server by IP address
 Imagine that you develop any Servlet based WEB application and want to limit access per IP basis.
 You want to use same limits for each IP - 30 requests per minute.
