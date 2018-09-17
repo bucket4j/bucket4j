@@ -74,9 +74,6 @@ public class BucketState implements Serializable {
             Bandwidth bandwidth = bandwidths[i];
             long delay = calculateDelayNanosAfterWillBePossibleToConsume(i, bandwidth, tokensToConsume, currentTimeNanos);
             delayAfterWillBePossibleToConsume = Math.max(delayAfterWillBePossibleToConsume, delay);
-            if (delay > delayAfterWillBePossibleToConsume) {
-                delayAfterWillBePossibleToConsume = delay;
-            }
         }
         return delayAfterWillBePossibleToConsume;
     }
