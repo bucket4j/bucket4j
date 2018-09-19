@@ -6,7 +6,7 @@ because ```bucket4j-hazelcast``` is just a follow-up of ```bucket4j-jcache```.
 **Answer:** Because [JCache API (JSR 107)](https://www.jcp.org/en/jsr/detail?id=107) does not specify asynchronous API,
 developing the dedicated module ```bucket4j-hazelcast``` was the only way to provide asynchrony for users who use ```Bucket4j``` and ```Hazelcast``` together.
 
-**Question:** Should I migrate from ```bucket4j-jcache``` to ```bucketj-hazelcast``` If I do not need in asynchronous API?  
+**Question:** Should I migrate from ```bucket4j-jcache``` to ```bucket4j-hazelcast``` If I do not need in asynchronous API?  
 **Answer:** No, you should not migrate to ```bucket4j-hazelcast``` in this case.
 
 ## Dependencies
