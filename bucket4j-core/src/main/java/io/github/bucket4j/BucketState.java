@@ -37,7 +37,7 @@ public interface BucketState extends Serializable {
 
     static BucketState createInitialState(BucketConfiguration configuration, long currentTimeNanos) {
         switch (configuration.getMathType()) {
-            case LONG_64_BITS: return new BucketState64BitsInteger(configuration, currentTimeNanos);
+            case INTEGER_64_BITS: return new BucketState64BitsInteger(configuration, currentTimeNanos);
             case IEEE_754: return new BucketStateIEEE754(configuration, currentTimeNanos);
             default: throw new IllegalStateException("Unsupported mathType:" + configuration.getMathType());
         }

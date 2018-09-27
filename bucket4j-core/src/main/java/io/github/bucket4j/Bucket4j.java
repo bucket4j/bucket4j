@@ -17,30 +17,17 @@
 
 package io.github.bucket4j;
 
-import io.github.bucket4j.local.InMemory;
 import io.github.bucket4j.local.LocalBucketBuilder;
+import io.github.bucket4j.remote.Backend;
+import io.github.bucket4j.remote.ProxyManager;
+import io.github.bucket4j.remote.RemoteBucketBuilder;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.ServiceLoader;
+import java.io.Serializable;
 
 /**
  * This is entry point for functionality provided bucket4j library.
  */
-public class Bucket4j {
-
-    private static final Map<Class, Extension> extensions;
-    static {
-        extensions = new HashMap<>();
-        for (Extension extension : ServiceLoader.load(Extension.class)) {
-            extensions.put(extension.getClass(), extension);
-        }
-        extensions.put(InMemory.class, InMemory.INSTANCE);
-    }
-
-    private Bucket4j() {
-        // to avoid initialization of utility class
-    }
+public abstract class Bucket4j {
 
     /**
      * Creates the new builder of in-memory buckets.
@@ -48,25 +35,30 @@ public class Bucket4j {
      * @return new instance of {@link LocalBucketBuilder}
      */
     public static LocalBucketBuilder builder() {
-        return Bucket4j.extension(InMemory.class).builder();
+        return new LocalBucketBuilder();
     }
 
     /**
-     * Locates Bucket4j extension by class {@code extensionClass}.
+     * Creates new instance of builder specific for this back-end.
      *
-     * @param extensionClass must be registered in "/META-INF/services/io.github.bucket4j.Extension" according to java SPI rules.
-     * @param <T>
-     * @param <E>
-     *
-     * @return library extension
+     * @return new builder instance
      */
-    public static <T extends AbstractBucketBuilder<T>, E extends Extension<T>> E extension(Class<E> extensionClass) {
-        E extension = (E) extensions.get(extensionClass);
-        if (extension == null) {
-            String msg = "extension with class [" + extensionClass + "] is not registered";
-            throw new IllegalArgumentException(msg);
-        }
-        return extension;
+    public static <K extends Serializable> RemoteBucketBuilder<K> builder(Backend<K> backend) {
+        return new RemoteBucketBuilder<>(backend);
+    }
+
+    /**
+     * Creates new instance of {@link ConfigurationBuilder}
+     *
+     * @return instance of {@link ConfigurationBuilder}
+     */
+    public static ConfigurationBuilder configurationBuilder(Backend<?> backend) {
+        return new ConfigurationBuilder(backend.getOptions());
+    }
+
+    // TODO javadocs
+    public static <K extends Serializable> ProxyManager<K> proxyManager(Backend<K> backend) {
+        return new ProxyManager<>(backend);
     }
 
 }

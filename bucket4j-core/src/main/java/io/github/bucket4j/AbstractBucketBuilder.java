@@ -17,17 +17,16 @@
 
 package io.github.bucket4j;
 
-
 /**
  * A builder for buckets. Builder can be reused, i.e. one builder can create multiple buckets with similar configuration.
  *
  */
-public class AbstractBucketBuilder<T extends AbstractBucketBuilder> {
+public abstract class AbstractBucketBuilder<T extends AbstractBucketBuilder> {
 
     private final ConfigurationBuilder configurationBuilder;
 
-    protected AbstractBucketBuilder(Extension extension) {
-        configurationBuilder = new ConfigurationBuilder(extension);
+    protected AbstractBucketBuilder(BucketOptions options) {
+        configurationBuilder = new ConfigurationBuilder(options);
     }
 
     /**

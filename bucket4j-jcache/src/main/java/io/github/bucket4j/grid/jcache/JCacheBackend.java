@@ -18,6 +18,8 @@
 package io.github.bucket4j.grid.jcache;
 
 import io.github.bucket4j.BucketConfiguration;
+import io.github.bucket4j.BucketOptions;
+import io.github.bucket4j.MathType;
 import io.github.bucket4j.Nothing;
 import io.github.bucket4j.remote.Backend;
 import io.github.bucket4j.remote.CommandResult;
@@ -28,13 +30,15 @@ import javax.cache.Cache;
 import javax.cache.CacheManager;
 import javax.cache.spi.CachingProvider;
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * The extension of Bucket4j library addressed to support <a href="https://www.jcp.org/en/jsr/detail?id=107">JCache API (JSR 107)</a> specification.
+ */
 public class JCacheBackend<K extends Serializable> implements Backend<K> {
+
+    private static final BucketOptions OPTIONS = new BucketOptions(false, MathType.ALL, MathType.INTEGER_64_BITS);
 
     private static final Map<String, String> incompatibleProviders = new HashMap<>();
     static {
@@ -46,6 +50,11 @@ public class JCacheBackend<K extends Serializable> implements Backend<K> {
     public JCacheBackend(Cache<K, RemoteBucketState> cache) {
         this.cache = Objects.requireNonNull(cache);
         checkProviders(cache);
+    }
+
+    @Override
+    public BucketOptions getOptions() {
+        return OPTIONS;
     }
 
     @Override
@@ -87,12 +96,6 @@ public class JCacheBackend<K extends Serializable> implements Backend<K> {
         } else {
             return Optional.of(state.getConfiguration());
         }
-    }
-
-    @Override
-    public boolean isAsyncModeSupported() {
-        // because JCache does not specify async API
-        return false;
     }
 
     private void checkProviders(Cache<K, RemoteBucketState> cache) {

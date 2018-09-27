@@ -17,21 +17,20 @@
 
 package io.github.bucket4j.local;
 
-import io.github.bucket4j.AbstractBucketBuilder;
-import io.github.bucket4j.BucketConfiguration;
-import io.github.bucket4j.BucketExceptions;
-import io.github.bucket4j.TimeMeter;
+import io.github.bucket4j.*;
 
 /**
  * This builder creates in-memory buckets ({@link LockFreeBucket}).
  */
 public class LocalBucketBuilder extends AbstractBucketBuilder<LocalBucketBuilder> {
 
+    private static final BucketOptions OPTIONS = new BucketOptions(true, MathType.ALL, MathType.INTEGER_64_BITS);
+
     private TimeMeter timeMeter = TimeMeter.SYSTEM_MILLISECONDS;
     private SynchronizationStrategy synchronizationStrategy = SynchronizationStrategy.LOCK_FREE;
 
     public LocalBucketBuilder() {
-        super(InMemory.INSTANCE);
+        super(OPTIONS);
     }
 
     /**
@@ -85,7 +84,7 @@ public class LocalBucketBuilder extends AbstractBucketBuilder<LocalBucketBuilder
     }
 
     /**
-     * Constructs the bucket using {@link SynchronizationStrategy#LOCK_FREE} synchronization strategy.
+     * Constructs the bucket.
      *
      * @return the new bucket
      */

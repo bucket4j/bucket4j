@@ -25,7 +25,7 @@ import java.util.Set;
 public enum MathType {
 
     // TODO javadocs
-    LONG_64_BITS,
+    INTEGER_64_BITS,
 
     // TODO javadocs
     IEEE_754;

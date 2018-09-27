@@ -21,6 +21,8 @@ import com.hazelcast.core.ExecutionCallback;
 import com.hazelcast.core.IMap;
 import com.hazelcast.map.EntryProcessor;
 import io.github.bucket4j.BucketConfiguration;
+import io.github.bucket4j.BucketOptions;
+import io.github.bucket4j.MathType;
 import io.github.bucket4j.Nothing;
 import io.github.bucket4j.grid.jcache.JCacheEntryProcessor;
 import io.github.bucket4j.remote.Backend;
@@ -30,14 +32,27 @@ import io.github.bucket4j.remote.RemoteCommand;
 
 import java.io.Serializable;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * The extension of Bucket4j library addressed to support <a href="https://hazelcast.com//">Hazelcast</a> in-memory data jvm.
+ *
+ * Use this extension only if you need in asynchronous API, else stay at {@link io.github.bucket4j.grid.jcache.JCache}
+ */
 public class HazelcastBackend<K extends Serializable> implements Backend<K> {
+
+    private static final BucketOptions OPTIONS = new BucketOptions(true, MathType.ALL, MathType.INTEGER_64_BITS);
 
     private final IMap<K, RemoteBucketState> cache;
 
     public HazelcastBackend(IMap<K, RemoteBucketState> cache) {
         this.cache = cache;
+    }
+
+    @Override
+    public BucketOptions getOptions() {
+        return OPTIONS;
     }
 
     @Override
@@ -80,11 +95,6 @@ public class HazelcastBackend<K extends Serializable> implements Backend<K> {
         } else {
             return Optional.of(state.getConfiguration());
         }
-    }
-
-    @Override
-    public boolean isAsyncModeSupported() {
-        return true;
     }
 
     private <T extends Serializable>  EntryProcessor adoptEntryProcessor(final JCacheEntryProcessor<K, T> entryProcessor) {

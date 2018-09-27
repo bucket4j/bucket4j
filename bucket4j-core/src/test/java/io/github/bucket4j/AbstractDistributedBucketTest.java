@@ -17,6 +17,7 @@
 
 package io.github.bucket4j;
 
+import io.github.bucket4j.remote.Backend;
 import io.github.bucket4j.remote.BucketNotFoundException;
 import io.github.bucket4j.remote.ProxyManager;
 import io.github.bucket4j.remote.RecoveryStrategy;
@@ -48,11 +49,7 @@ public abstract class AbstractDistributedBucketTest<B extends AbstractBucketBuil
             .addLimit(Bandwidth.simple(200, Duration.ofSeconds(10)).withInitialTokens(0));
     private double permittedRatePerSecond = Math.min(1_000d / 60, 200.0 / 10);
 
-    protected abstract Class<E> getExtensionClass();
-
-    protected abstract Bucket build(B builder, String key, RecoveryStrategy recoveryStrategy);
-
-    protected abstract ProxyManager<String> newProxyManager();
+    protected abstract Backend<String> getBackend();
 
     protected abstract void removeBucketFromBackingStorage(String key);
 
@@ -196,9 +193,9 @@ public abstract class AbstractDistributedBucketTest<B extends AbstractBucketBuil
     @Test
     public void testBucketRegistryWithKeyIndependentConfiguration() {
         BucketConfiguration configuration = Bucket4j.extension(getExtensionClass())
-                .configurationBuilder()
+                .builder()
                 .addLimit(Bandwidth.simple(10, Duration.ofDays(1)))
-                .build();
+                .buildConfiguration();
 
         ProxyManager<String> registry = newProxyManager();
         Bucket bucket1 = registry.getProxy(key, () -> configuration);
@@ -213,9 +210,9 @@ public abstract class AbstractDistributedBucketTest<B extends AbstractBucketBuil
     @Test
     public void testBucketWithNotLazyConfiguration() {
         BucketConfiguration configuration = Bucket4j.extension(getExtensionClass())
-                .configurationBuilder()
+                .builder()
                 .addLimit(Bandwidth.simple(10, Duration.ofDays(1)))
-                .build();
+                .buildConfiguration();
 
         ProxyManager<String> registry = newProxyManager();
         Bucket bucket = registry.getProxy(key, configuration);

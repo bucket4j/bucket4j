@@ -66,7 +66,7 @@ public class BucketProxy<K extends Serializable> extends AbstractBucket {
 
     @Override
     public boolean isAsyncModeSupported() {
-        return backend.isAsyncModeSupported();
+        return backend.getOptions().isAsyncModeSupported();
     }
 
     @Override

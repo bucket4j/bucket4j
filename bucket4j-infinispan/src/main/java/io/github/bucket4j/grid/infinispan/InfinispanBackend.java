@@ -18,6 +18,8 @@
 package io.github.bucket4j.grid.infinispan;
 
 import io.github.bucket4j.BucketConfiguration;
+import io.github.bucket4j.BucketOptions;
+import io.github.bucket4j.MathType;
 import io.github.bucket4j.Nothing;
 import io.github.bucket4j.grid.jcache.JCacheEntryProcessor;
 import io.github.bucket4j.remote.Backend;
@@ -31,15 +33,30 @@ import org.infinispan.util.function.SerializableFunction;
 
 import java.io.Serializable;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
+/**
+ * The extension of Bucket4j library addressed to support <a href="https://ignite.apache.org/">Apache ignite</a> in-memory computing platform.
+ *
+ * TODO fix javadocs
+ * Use this extension only if you need in asynchronous API, else stay at {@link io.github.bucket4j.grid.jcache.JCache}
+ */
 public class InfinispanBackend<K extends Serializable> implements Backend<K> {
+
+    private static final BucketOptions OPTIONS = new BucketOptions(true, MathType.ALL, MathType.INTEGER_64_BITS);
 
     private final ReadWriteMap<K, RemoteBucketState> readWriteMap;
 
+    // TODO javadocs
     public InfinispanBackend(ReadWriteMap<K, RemoteBucketState> readWriteMap) {
         this.readWriteMap = readWriteMap;
+    }
+
+    @Override
+    public BucketOptions getOptions() {
+        return OPTIONS;
     }
 
     @Override
@@ -89,11 +106,6 @@ public class InfinispanBackend<K extends Serializable> implements Backend<K> {
         } catch (InterruptedException | ExecutionException e) {
             throw new CacheException(e);
         }
-    }
-
-    @Override
-    public boolean isAsyncModeSupported() {
-        return true;
     }
 
     private <T extends Serializable> CommandResult<T> invokeSync(final K key, final JCacheEntryProcessor<K, T> entryProcessor) {

@@ -1,49 +1,39 @@
 /*
  *
- * Copyright 2015-2018 Vladimir Bukhtoyarov
+ *   Copyright 2015-2017 Vladimir Bukhtoyarov
  *
- *       Licensed under the Apache License, Version 2.0 (the "License");
- *       you may not use this file except in compliance with the License.
- *       You may obtain a copy of the License at
+ *     Licensed under the Apache License, Version 2.0 (the "License");
+ *     you may not use this file except in compliance with the License.
+ *     You may obtain a copy of the License at
  *
- *             http://www.apache.org/licenses/LICENSE-2.0
+ *           http://www.apache.org/licenses/LICENSE-2.0
  *
- *      Unless required by applicable law or agreed to in writing, software
- *      distributed under the License is distributed on an "AS IS" BASIS,
- *      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *      See the License for the specific language governing permissions and
- *      limitations under the License.
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
  */
 
-package io.github.bucket4j.grid.jcache;
+package io.github.bucket4j.remote;
 
 import io.github.bucket4j.AbstractBucketBuilder;
-import io.github.bucket4j.Bucket;
-import io.github.bucket4j.Bucket4j;
 import io.github.bucket4j.BucketConfiguration;
-import io.github.bucket4j.remote.BucketProxy;
-import io.github.bucket4j.remote.RecoveryStrategy;
-import io.github.bucket4j.remote.RemoteBucketState;
 
-import javax.cache.Cache;
 import java.io.Serializable;
 
-/**
- * {@inheritDoc}
- *
- * This builder creates the buckets backed by any <a href="https://www.jcp.org/en/jsr/detail?id=107">JCache API (JSR 107)</a> implementation.
- *
- */
-public class JCacheBucketBuilder extends AbstractBucketBuilder<JCacheBucketBuilder> {
+public class RemoteBucketBuilder<K extends Serializable> extends AbstractBucketBuilder<RemoteBucketBuilder> {
 
-    /**
-     * Creates the new instance of {@link JCacheBucketBuilder}
-     */
-    public JCacheBucketBuilder() {
-        super(Bucket4j.extension(JCache.class));
+    private final Backend<K> backend;
+
+    public RemoteBucketBuilder(Backend<K> backend) {
+        super(backend.getOptions());
+        this.backend = backend;
     }
 
     /**
+     * TODO fix javadocs
+     *
      * Constructs an instance of {@link BucketProxy} which state actually stored inside in-memory data-jvm,
      * the bucket stored in the jvm immediately, so one network request will be issued to jvm.
      * Due to this method performs network IO, returned result must not be treated as light-weight entity,
@@ -65,10 +55,9 @@ public class JCacheBucketBuilder extends AbstractBucketBuilder<JCacheBucketBuild
      *
      * @return new distributed bucket
      */
-    public <K extends Serializable> Bucket build(Cache<K, RemoteBucketState> cache, K key, RecoveryStrategy recoveryStrategy) {
+    public BucketProxy<K> build(K key, RecoveryStrategy recoveryStrategy) {
         BucketConfiguration configuration = buildConfiguration();
-        JCacheBackend<K> gridProxy = new JCacheBackend<>(cache);
-        return BucketProxy.createInitializedBucket(key, configuration, gridProxy, recoveryStrategy);
+        return BucketProxy.createInitializedBucket(key, configuration, backend, recoveryStrategy);
     }
 
 }

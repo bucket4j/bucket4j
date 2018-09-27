@@ -18,9 +18,7 @@
 package io.github.bucket4j.mock;
 
 
-import io.github.bucket4j.BucketConfiguration;
-import io.github.bucket4j.BucketState;
-import io.github.bucket4j.TimeMeter;
+import io.github.bucket4j.*;
 import io.github.bucket4j.remote.Backend;
 import io.github.bucket4j.remote.CommandResult;
 import io.github.bucket4j.remote.RemoteBucketState;
@@ -32,6 +30,8 @@ import java.util.concurrent.CompletableFuture;
 
 public class BackendMock<K extends Serializable> implements Backend<K> {
 
+    private static final BucketOptions OPTIONS = new BucketOptions(true, MathType.ALL, MathType.INTEGER_64_BITS);
+
     private final TimeMeter timeMeter;
     private RemoteBucketState state;
     private RuntimeException exception;
@@ -42,6 +42,11 @@ public class BackendMock<K extends Serializable> implements Backend<K> {
 
     public void setException(RuntimeException exception) {
         this.exception = exception;
+    }
+
+    @Override
+    public BucketOptions getOptions() {
+        return OPTIONS;
     }
 
     @Override
@@ -107,11 +112,6 @@ public class BackendMock<K extends Serializable> implements Backend<K> {
             return future;
         }
         return CompletableFuture.completedFuture(execute(key, command));
-    }
-
-    @Override
-    public boolean isAsyncModeSupported() {
-        return true;
     }
 
     private static <T> T emulateSerialization(T object) {

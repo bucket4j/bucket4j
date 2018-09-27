@@ -269,6 +269,21 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
         AbstractBucketBuilder builder() {
             return new LocalBucketBuilder()
         }
+
+        @Override
+        Set<MathType> getSupportedMathTypes() {
+            return MathType.ALL
+        }
+
+        @Override
+        MathType getDefaultMathType() {
+            return MathType.INTEGER_64_BITS
+        }
+
+        @Override
+        boolean isAsyncSupported() {
+            return true
+        }
     }
 
 }

@@ -22,19 +22,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * A builder for buckets. Builder can be reused, i.e. one builder can create multiple buckets with similar configuration.
+ * TODO add notes for building configuration
  *
  */
 public class ConfigurationBuilder {
 
-    private final Extension extension;
-    private List<Bandwidth> bandwidths;
+    private final List<Bandwidth> bandwidths;
+    private final BucketOptions options;
     private MathType mathType;
 
-    public ConfigurationBuilder(Extension extension) {
+    public ConfigurationBuilder(BucketOptions options) {
         this.bandwidths = new ArrayList<>(1);
-        this.extension = extension;
-        mathType = extension.getDefaultMathType();
+        this.options = options;
+        this.mathType = options.getDefaultMathType();
     }
 
     /**
@@ -60,7 +60,7 @@ public class ConfigurationBuilder {
 
     // TODO javadocs
     public ConfigurationBuilder withMath(MathType mathType) {
-        if (!extension.getSupportedMathTypes().contains(mathType)) {
+        if (!options.getSupportedMathTypes().contains(mathType)) {
             // TODO provide message and implement tests
             throw new IllegalArgumentException();
         }
@@ -71,7 +71,9 @@ public class ConfigurationBuilder {
     @Override
     public String toString() {
         return "ConfigurationBuilder{" +
-                ", bandwidths=" + bandwidths +
+                "bandwidths=" + bandwidths +
+                ", options=" + options +
+                ", mathType=" + mathType +
                 '}';
     }
 

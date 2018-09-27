@@ -20,20 +20,27 @@ package io.github.bucket4j.remote;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketConfiguration;
 
+import java.io.Serializable;
 import java.util.Optional;
 import java.util.function.Supplier;
 
 /**
- * Provides interface to instantiate an light-weight proxy to bucket which state actually stored in any external storage outside current JVM,
+ * Provides an light-weight proxy to bucket which state actually stored in any external storage outside current JVM,
  * like in-memory jvm or relational database.
  *
  * The proxies instantiated by ProxyManager is very cheap, you are free to instantiate as many proxies as you wish,
- * there are no any hard work performed inside {@link #getProxy(Object, Supplier) getProxy} method,
+ * there are no any hard work performed inside {@link #getProxy(K, Supplier) getProxy} method,
  * so it is not necessary to cache results of its invocation.
  * 
  * @param <K> type of key
  */
-public interface ProxyManager<K> {
+public class ProxyManager<K extends Serializable> {
+
+    private final Backend<K> backend;
+
+    public ProxyManager(Backend<K> backend) {
+        this.backend = backend;
+    }
 
     /**
      * Provides light-weight proxy to bucket which actually stored outside current JVM.
@@ -48,7 +55,7 @@ public interface ProxyManager<K> {
      *
      * @return proxy to bucket that can be actually stored outside current JVM.
      */
-    default Bucket getProxy(K key, BucketConfiguration configuration) {
+    public Bucket getProxy(K key, BucketConfiguration configuration) {
         return getProxy(key, () -> configuration);
     }
 
@@ -66,7 +73,9 @@ public interface ProxyManager<K> {
      *
      * @return proxy to bucket that can be actually stored outside current JVM.
      */
-    Bucket getProxy(K key, Supplier<BucketConfiguration> configurationLazySupplier);
+    public Bucket getProxy(K key, Supplier<BucketConfiguration> configurationLazySupplier) {
+        return BucketProxy.createLazyBucket(key, configurationLazySupplier, backend);
+    }
 
     /**
      * Locates proxy to bucket which actually stored outside current JVM.
@@ -75,7 +84,10 @@ public interface ProxyManager<K> {
      *
      * @return Optional surround the proxy to bucket or empty optional if bucket with specified key are not stored.
      */
-    Optional<Bucket> getProxy(K key);
+    public Optional<Bucket> getProxy(K key) {
+        return getProxyConfiguration(key)
+                .map(configuration -> BucketProxy.createLazyBucket(key, () -> configuration, backend));
+    }
 
     /**
      * Locates configuration of bucket which actually stored outside current JVM.
@@ -84,6 +96,8 @@ public interface ProxyManager<K> {
      *
      * @return Optional surround the configuration or empty optional if bucket with specified key are not stored.
      */
-    Optional<BucketConfiguration> getProxyConfiguration(K key);
+    public Optional<BucketConfiguration> getProxyConfiguration(K key) {
+        return backend.getConfiguration(key);
+    }
 
 }
