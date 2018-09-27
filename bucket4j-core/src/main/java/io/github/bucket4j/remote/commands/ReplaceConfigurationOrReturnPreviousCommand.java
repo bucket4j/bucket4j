@@ -28,14 +28,16 @@ public class ReplaceConfigurationOrReturnPreviousCommand implements RemoteComman
 
     private BucketConfiguration newConfiguration;
     private boolean replaced;
+    private Long clientTimeNanos;
 
-    public ReplaceConfigurationOrReturnPreviousCommand(BucketConfiguration newConfiguration) {
+    public ReplaceConfigurationOrReturnPreviousCommand(BucketConfiguration newConfiguration, Long clientTimeNanos) {
         this.newConfiguration = newConfiguration;
+        this.clientTimeNanos = clientTimeNanos;
     }
 
     @Override
-    public BucketConfiguration execute(RemoteBucketState state, long currentTimeNanos) {
-        state.refillAllBandwidth(currentTimeNanos);
+    public BucketConfiguration execute(RemoteBucketState state) {
+        state.refillAllBandwidth(currentTimeNanos());
         BucketConfiguration previousConfiguration = state.replaceConfigurationOrReturnPrevious(newConfiguration);
         if (previousConfiguration != null) {
             return previousConfiguration;
@@ -47,6 +49,11 @@ public class ReplaceConfigurationOrReturnPreviousCommand implements RemoteComman
     @Override
     public boolean isBucketStateModified() {
         return replaced;
+    }
+
+    @Override
+    public Long getClientTimeNanos() {
+        return clientTimeNanos;
     }
 
     public BucketConfiguration getNewConfiguration() {

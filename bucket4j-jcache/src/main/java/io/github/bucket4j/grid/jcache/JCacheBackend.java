@@ -17,10 +17,7 @@
 
 package io.github.bucket4j.grid.jcache;
 
-import io.github.bucket4j.BucketConfiguration;
-import io.github.bucket4j.BucketOptions;
-import io.github.bucket4j.MathType;
-import io.github.bucket4j.Nothing;
+import io.github.bucket4j.*;
 import io.github.bucket4j.remote.Backend;
 import io.github.bucket4j.remote.CommandResult;
 import io.github.bucket4j.remote.RemoteBucketState;
@@ -46,15 +43,28 @@ public class JCacheBackend<K extends Serializable> implements Backend<K> {
     }
 
     private final Cache<K, RemoteBucketState> cache;
+    private final TimeMeter clientClock;
 
     public JCacheBackend(Cache<K, RemoteBucketState> cache) {
         this.cache = Objects.requireNonNull(cache);
         checkProviders(cache);
+        this.clientClock = null;
+    }
+
+    JCacheBackend(Cache<K, RemoteBucketState> cache, TimeMeter clientClock) {
+        this.cache = Objects.requireNonNull(cache);
+        checkProviders(cache);
+        this.clientClock = Objects.requireNonNull(clientClock);
     }
 
     @Override
     public BucketOptions getOptions() {
         return OPTIONS;
+    }
+
+    @Override
+    public TimeMeter getClientSideClock() {
+        return clientClock;
     }
 
     @Override
@@ -65,7 +75,7 @@ public class JCacheBackend<K extends Serializable> implements Backend<K> {
 
     @Override
     public void createInitialState(K key, BucketConfiguration configuration) {
-        JCacheEntryProcessor<K, Nothing> entryProcessor = JCacheEntryProcessor.initStateProcessor(configuration);
+        JCacheEntryProcessor<K, Nothing> entryProcessor = JCacheEntryProcessor.initStateProcessor(configuration, clientClock);
         cache.invoke(key, entryProcessor);
     }
 

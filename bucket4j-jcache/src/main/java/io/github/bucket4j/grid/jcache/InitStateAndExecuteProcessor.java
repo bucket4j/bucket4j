@@ -41,7 +41,7 @@ public class InitStateAndExecuteProcessor<K extends Serializable, T extends Seri
     @Override
     public CommandResult<T> process(MutableEntry<K, RemoteBucketState> mutableEntry, Object... arguments) {
         boolean newStateCreated = false;
-        long currentTimeNanos = currentTimeNanos();
+        long currentTimeNanos = targetCommand.currentTimeNanos();
         RemoteBucketState remoteBucketState;
         if (mutableEntry.exists()) {
             remoteBucketState = mutableEntry.getValue();
@@ -51,7 +51,7 @@ public class InitStateAndExecuteProcessor<K extends Serializable, T extends Seri
             newStateCreated = true;
         }
 
-        T result = targetCommand.execute(remoteBucketState, currentTimeNanos);
+        T result = targetCommand.execute(remoteBucketState);
         if (newStateCreated || targetCommand.isBucketStateModified()) {
             mutableEntry.setValue(remoteBucketState);
         }

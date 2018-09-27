@@ -17,10 +17,7 @@
 
 package io.github.bucket4j.grid.ignite;
 
-import io.github.bucket4j.BucketConfiguration;
-import io.github.bucket4j.BucketOptions;
-import io.github.bucket4j.MathType;
-import io.github.bucket4j.Nothing;
+import io.github.bucket4j.*;
 import io.github.bucket4j.grid.jcache.JCacheEntryProcessor;
 import io.github.bucket4j.remote.Backend;
 import io.github.bucket4j.remote.CommandResult;
@@ -31,8 +28,8 @@ import org.apache.ignite.lang.IgniteFuture;
 import org.apache.ignite.lang.IgniteInClosure;
 
 import java.io.Serializable;
+import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 
@@ -46,14 +43,26 @@ public class IgniteBackend<K extends Serializable> implements Backend<K> {
     private static final BucketOptions OPTIONS = new BucketOptions(true, MathType.ALL, MathType.INTEGER_64_BITS);
 
     private final IgniteCache<K, RemoteBucketState> cache;
+    private final TimeMeter clientClock;
 
     public IgniteBackend(IgniteCache<K, RemoteBucketState> cache) {
-        this.cache = cache;
+        this.cache = Objects.requireNonNull(cache);
+        this.clientClock = null;
+    }
+
+    IgniteBackend(IgniteCache<K, RemoteBucketState> cache, TimeMeter clientClock) {
+        this.cache = Objects.requireNonNull(cache);
+        this.clientClock = Objects.requireNonNull(clientClock);
     }
 
     @Override
     public BucketOptions getOptions() {
         return OPTIONS;
+    }
+
+    @Override
+    public TimeMeter getClientSideClock() {
+        return clientClock;
     }
 
     @Override
@@ -64,7 +73,7 @@ public class IgniteBackend<K extends Serializable> implements Backend<K> {
 
     @Override
     public void createInitialState(K key, BucketConfiguration configuration) {
-        JCacheEntryProcessor<K, Nothing> entryProcessor = JCacheEntryProcessor.initStateProcessor(configuration);
+        JCacheEntryProcessor<K, Nothing> entryProcessor = JCacheEntryProcessor.initStateProcessor(configuration, clientClock);
         cache.invoke(key, entryProcessor);
     }
 

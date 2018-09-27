@@ -20,6 +20,7 @@ package io.github.bucket4j.remote;
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.BucketOptions;
 import io.github.bucket4j.MathType;
+import io.github.bucket4j.TimeMeter;
 
 import java.io.Serializable;
 import java.util.Optional;
@@ -37,6 +38,9 @@ public interface Backend<K extends Serializable> {
 
     // TODO javadocs
     BucketOptions getOptions();
+
+    // TODO javadocs
+    TimeMeter getClientSideClock();
 
     // TODO javadocs
     <T extends Serializable> CommandResult<T> execute(K key, RemoteCommand<T> command);

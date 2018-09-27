@@ -31,9 +31,11 @@ public class InitStateProcessor<K extends Serializable> implements JCacheEntryPr
     private static final long serialVersionUID = 1;
 
     private BucketConfiguration configuration;
+    private final Long clientTimeNanos;
 
-    public InitStateProcessor(BucketConfiguration configuration) {
+    public InitStateProcessor(BucketConfiguration configuration, Long clientTimeNanos) {
         this.configuration = configuration;
+        this.clientTimeNanos = clientTimeNanos;
     }
 
     @Override
@@ -46,6 +48,10 @@ public class InitStateProcessor<K extends Serializable> implements JCacheEntryPr
         RemoteBucketState remoteBucketState = new RemoteBucketState(configuration, bucketState);
         mutableEntry.setValue(remoteBucketState);
         return CommandResult.success(null);
+    }
+
+    private long currentTimeNanos() {
+        return clientTimeNanos != null? clientTimeNanos : System.currentTimeMillis() * 1_000_000;
     }
 
 }

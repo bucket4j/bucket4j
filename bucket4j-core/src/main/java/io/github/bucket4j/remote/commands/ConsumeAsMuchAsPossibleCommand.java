@@ -25,16 +25,18 @@ public class ConsumeAsMuchAsPossibleCommand implements RemoteCommand<Long> {
 
     private static final long serialVersionUID = 42;
 
+    private Long clientTimeNanos;
     private long limit;
     private boolean bucketStateModified;
 
-    public ConsumeAsMuchAsPossibleCommand(long limit) {
+    public ConsumeAsMuchAsPossibleCommand(long limit, Long clientTimeNanos) {
         this.limit = limit;
+        this.clientTimeNanos = clientTimeNanos;
     }
 
     @Override
-    public Long execute(RemoteBucketState state, long currentTimeNanos) {
-        state.refillAllBandwidth(currentTimeNanos);
+    public Long execute(RemoteBucketState state) {
+        state.refillAllBandwidth(currentTimeNanos());
         long availableToConsume = state.getAvailableTokens();
         long toConsume = Math.min(limit, availableToConsume);
         if (toConsume <= 0) {
@@ -48,6 +50,11 @@ public class ConsumeAsMuchAsPossibleCommand implements RemoteCommand<Long> {
     @Override
     public boolean isBucketStateModified() {
         return bucketStateModified;
+    }
+
+    @Override
+    public Long getClientTimeNanos() {
+        return clientTimeNanos;
     }
 
     public long getLimit() {

@@ -39,10 +39,10 @@ public class ExecuteProcessor<K extends Serializable, T extends Serializable> im
         if (!mutableEntry.exists()) {
             return CommandResult.bucketNotFound();
         }
-        long currentTimeNanos = currentTimeNanos();
+
         RemoteBucketState remoteBucketState = mutableEntry.getValue();
 
-        T result = targetCommand.execute(remoteBucketState, currentTimeNanos);
+        T result = targetCommand.execute(remoteBucketState);
         if (targetCommand.isBucketStateModified()) {
             mutableEntry.setValue(remoteBucketState);
         }

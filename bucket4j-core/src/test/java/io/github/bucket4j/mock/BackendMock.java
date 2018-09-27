@@ -25,6 +25,7 @@ import io.github.bucket4j.remote.RemoteBucketState;
 import io.github.bucket4j.remote.RemoteCommand;
 
 import java.io.*;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -37,7 +38,7 @@ public class BackendMock<K extends Serializable> implements Backend<K> {
     private RuntimeException exception;
 
     public BackendMock(TimeMeter timeMeter) {
-        this.timeMeter = timeMeter;
+        this.timeMeter = Objects.requireNonNull(timeMeter);
     }
 
     public void setException(RuntimeException exception) {
@@ -47,6 +48,11 @@ public class BackendMock<K extends Serializable> implements Backend<K> {
     @Override
     public BucketOptions getOptions() {
         return OPTIONS;
+    }
+
+    @Override
+    public TimeMeter getClientSideClock() {
+        return timeMeter;
     }
 
     @Override
@@ -60,7 +66,7 @@ public class BackendMock<K extends Serializable> implements Backend<K> {
         emulateSerialization(key);
         command = emulateSerialization(command);
         RemoteBucketState newState = emulateSerialization(state);
-        T resultData = command.execute(newState, timeMeter.currentTimeNanos());
+        T resultData = command.execute(newState);
         if (command.isBucketStateModified()) {
             state = newState;
         }

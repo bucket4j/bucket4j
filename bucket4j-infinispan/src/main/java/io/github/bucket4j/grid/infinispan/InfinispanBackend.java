@@ -17,10 +17,7 @@
 
 package io.github.bucket4j.grid.infinispan;
 
-import io.github.bucket4j.BucketConfiguration;
-import io.github.bucket4j.BucketOptions;
-import io.github.bucket4j.MathType;
-import io.github.bucket4j.Nothing;
+import io.github.bucket4j.*;
 import io.github.bucket4j.grid.jcache.JCacheEntryProcessor;
 import io.github.bucket4j.remote.Backend;
 import io.github.bucket4j.remote.CommandResult;
@@ -32,6 +29,7 @@ import org.infinispan.functional.FunctionalMap.ReadWriteMap;
 import org.infinispan.util.function.SerializableFunction;
 
 import java.io.Serializable;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -48,15 +46,27 @@ public class InfinispanBackend<K extends Serializable> implements Backend<K> {
     private static final BucketOptions OPTIONS = new BucketOptions(true, MathType.ALL, MathType.INTEGER_64_BITS);
 
     private final ReadWriteMap<K, RemoteBucketState> readWriteMap;
+    private final TimeMeter clientClock;
 
     // TODO javadocs
     public InfinispanBackend(ReadWriteMap<K, RemoteBucketState> readWriteMap) {
-        this.readWriteMap = readWriteMap;
+        this.readWriteMap = Objects.requireNonNull(readWriteMap);
+        this.clientClock = null;
+    }
+
+    InfinispanBackend(ReadWriteMap<K, RemoteBucketState> readWriteMap, TimeMeter clientClock) {
+        this.readWriteMap = Objects.requireNonNull(readWriteMap);
+        this.clientClock = Objects.requireNonNull(clientClock);
     }
 
     @Override
     public BucketOptions getOptions() {
         return OPTIONS;
+    }
+
+    @Override
+    public TimeMeter getClientSideClock() {
+        return clientClock;
     }
 
     @Override
@@ -67,7 +77,7 @@ public class InfinispanBackend<K extends Serializable> implements Backend<K> {
 
     @Override
     public void createInitialState(K key, BucketConfiguration configuration) {
-        JCacheEntryProcessor<K, Nothing> entryProcessor = JCacheEntryProcessor.initStateProcessor(configuration);
+        JCacheEntryProcessor<K, Nothing> entryProcessor = JCacheEntryProcessor.initStateProcessor(configuration, clientClock);
         invokeSync(key, entryProcessor);
     }
 

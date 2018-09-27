@@ -25,8 +25,19 @@ public class CreateSnapshotCommand implements RemoteCommand<BucketState> {
 
     private static final long serialVersionUID = 42;
 
+    private Long clientTimeNanos;
+
+    public CreateSnapshotCommand(Long clientTimeNanos) {
+        this.clientTimeNanos = clientTimeNanos;
+    }
+
     @Override
-    public BucketState execute(RemoteBucketState gridState, long currentTimeNanos) {
+    public Long getClientTimeNanos() {
+        return clientTimeNanos;
+    }
+
+    @Override
+    public BucketState execute(RemoteBucketState gridState) {
         return gridState.copyBucketState();
     }
 

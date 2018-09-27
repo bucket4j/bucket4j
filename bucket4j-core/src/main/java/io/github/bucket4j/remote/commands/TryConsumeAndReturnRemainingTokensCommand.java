@@ -28,13 +28,21 @@ public class TryConsumeAndReturnRemainingTokensCommand implements RemoteCommand<
 
     private long tokensToConsume;
     private boolean bucketStateModified = false;
+    private Long clientTimeNanos;
 
-    public TryConsumeAndReturnRemainingTokensCommand(long tokensToConsume) {
+    public TryConsumeAndReturnRemainingTokensCommand(long tokensToConsume, Long clientTimeNanos) {
         this.tokensToConsume = tokensToConsume;
+        this.clientTimeNanos = clientTimeNanos;
     }
 
     @Override
-    public ConsumptionProbe execute(RemoteBucketState state, long currentTimeNanos) {
+    public Long getClientTimeNanos() {
+        return clientTimeNanos;
+    }
+
+    @Override
+    public ConsumptionProbe execute(RemoteBucketState state) {
+        long currentTimeNanos = currentTimeNanos();
         state.refillAllBandwidth(currentTimeNanos);
         long availableToConsume = state.getAvailableTokens();
         if (tokensToConsume <= availableToConsume) {
