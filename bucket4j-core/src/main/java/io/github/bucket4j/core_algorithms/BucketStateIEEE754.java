@@ -15,7 +15,11 @@
  *      limitations under the License.
  */
 
-package io.github.bucket4j;
+package io.github.bucket4j.core_algorithms;
+
+import io.github.bucket4j.Bandwidth;
+import io.github.bucket4j.BucketConfiguration;
+import io.github.bucket4j.BucketState;
 
 import java.util.Arrays;
 
@@ -40,7 +44,7 @@ public class BucketStateIEEE754 implements BucketState {
         this.tokens = new double[bandwidths.length];
         this.lastRefillTime = new long[bandwidths.length];
         for(int i = 0; i < bandwidths.length; i++) {
-            tokens[i] = bandwidths[i].initialTokens;
+            tokens[i] = bandwidths[i].getInitialTokens();
             lastRefillTime[i] = currentTimeNanos;
         }
     }
@@ -98,11 +102,22 @@ public class BucketStateIEEE754 implements BucketState {
         }
     }
 
+    @Override
+    public long getCurrentSize(int bandwidth) {
+        return (long) tokens[0];
+    }
+
+    @Override
+    public long getRoundingError(int bandwidth) {
+        // accumulated computational error is always zero for this type of state
+        return 0;
+    }
+
     private void addTokens(int bandwidthIndex, Bandwidth bandwidth, long tokensToAdd) {
         double currentSize = tokens[bandwidthIndex];
         double newSize = currentSize + tokensToAdd;
-        if (newSize >= bandwidth.capacity) {
-            tokens[bandwidthIndex] = bandwidth.capacity;
+        if (newSize >= bandwidth.getCapacity()) {
+            tokens[bandwidthIndex] = bandwidth.getCapacity();
         } else {
             tokens[bandwidthIndex] = newSize;
         }
@@ -114,8 +129,8 @@ public class BucketStateIEEE754 implements BucketState {
             return;
         }
 
-        if (bandwidth.refillIntervally) {
-            long incompleteIntervalCorrection = (currentTimeNanos - previousRefillNanos) % bandwidth.refillPeriodNanos;
+        if (bandwidth.isRefillIntervally()) {
+            long incompleteIntervalCorrection = (currentTimeNanos - previousRefillNanos) % bandwidth.getRefillPeriodNanos();
             currentTimeNanos -= incompleteIntervalCorrection;
         }
         if (currentTimeNanos <= previousRefillNanos) {
@@ -124,9 +139,9 @@ public class BucketStateIEEE754 implements BucketState {
             lastRefillTime[bandwidthIndex] = currentTimeNanos;
         }
 
-        final long capacity = bandwidth.capacity;
-        final long refillPeriodNanos = bandwidth.refillPeriodNanos;
-        final long refillTokens = bandwidth.refillTokens;
+        final long capacity = bandwidth.getCapacity();
+        final long refillPeriodNanos = bandwidth.getRefillPeriodNanos();
+        final long refillTokens = bandwidth.getRefillTokens();
         double newSize = tokens[bandwidthIndex];
 
         long durationSinceLastRefillNanos = currentTimeNanos - previousRefillNanos;
@@ -158,7 +173,7 @@ public class BucketStateIEEE754 implements BucketState {
         double deficit = tokensToConsume - currentSize;
 
         double nanosToWait;
-        if (bandwidth.refillIntervally) {
+        if (bandwidth.isRefillIntervally()) {
             nanosToWait = calculateDelayNanosAfterWillBePossibleToConsumeForIntervalBandwidth(bandwidthIndex, bandwidth, deficit, currentTimeNanos);
         } else {
             nanosToWait = calculateDelayNanosAfterWillBePossibleToConsumeForGreedyBandwidth(bandwidth, deficit);
@@ -167,12 +182,12 @@ public class BucketStateIEEE754 implements BucketState {
     }
 
     private double calculateDelayNanosAfterWillBePossibleToConsumeForGreedyBandwidth(Bandwidth bandwidth, double deficit) {
-        return (double) bandwidth.refillPeriodNanos * deficit /(double) bandwidth.refillTokens;
+        return (double) bandwidth.getRefillPeriodNanos() * deficit /(double) bandwidth.getRefillTokens();
     }
 
     private double calculateDelayNanosAfterWillBePossibleToConsumeForIntervalBandwidth(int bandwidthIndex, Bandwidth bandwidth, double deficit, long currentTimeNanos) {
-        long refillPeriodNanos = bandwidth.refillPeriodNanos;
-        long refillTokens = bandwidth.refillTokens;
+        long refillPeriodNanos = bandwidth.getRefillPeriodNanos();
+        long refillTokens = bandwidth.getRefillTokens();
         long previousRefillNanos = lastRefillTime[bandwidthIndex];
 
         long timeOfNextRefillNanos = previousRefillNanos + refillPeriodNanos;

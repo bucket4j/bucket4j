@@ -15,8 +15,14 @@
  *      limitations under the License.
  */
 
-package io.github.bucket4j
+package io.github.bucket4j.core_algorithms.ieee754
 
+import io.github.bucket4j.Bandwidth
+import io.github.bucket4j.Bucket
+import io.github.bucket4j.Bucket4j
+import io.github.bucket4j.BucketState
+import io.github.bucket4j.MathType
+import io.github.bucket4j.Refill
 import io.github.bucket4j.mock.TimeMeterMock
 import spock.lang.Specification
 
@@ -36,6 +42,7 @@ class HandlingArithmeticOverflowSpecification extends Specification {
                 .addLimit(limit2)
                 .addLimit(limit3)
                 .withCustomTimePrecision(customTimeMeter)
+				.withMath(MathType.IEEE_754)
                 .build()
         when:
             // shift time to 12 hours forward
@@ -55,6 +62,7 @@ class HandlingArithmeticOverflowSpecification extends Specification {
             Bucket bucket = Bucket4j.builder()
                 .addLimit(limit)
                 .withCustomTimePrecision(customTimeMeter)
+				.withMath(MathType.IEEE_754)
                 .build()
         when:
             bucket.addTokens(Long.MAX_VALUE - 1)
@@ -71,6 +79,7 @@ class HandlingArithmeticOverflowSpecification extends Specification {
             Bucket bucket = Bucket4j.builder()
                 .addLimit(limit)
                 .withCustomTimePrecision(meter)
+				.withMath(MathType.IEEE_754)
                 .build()
         when:
             // emulate time shift which equal of 3 refill periods
@@ -89,6 +98,7 @@ class HandlingArithmeticOverflowSpecification extends Specification {
             Bucket bucket = Bucket4j.builder()
                 .addLimit(limit)
                 .withCustomTimePrecision(meter)
+				.withMath(MathType.IEEE_754)
                 .build()
         when:
             // add time shift enough to overflow
@@ -107,14 +117,15 @@ class HandlingArithmeticOverflowSpecification extends Specification {
             Bucket bucket = Bucket4j.builder()
                 .addLimit(limit)
                 .withCustomTimePrecision(meter)
+				.withMath(MathType.IEEE_754)
                 .build()
         when:
             // emulate time shift which little bit less then one refill period
             meter.addTime((long) Long.MAX_VALUE / 16 - 1)
         then:
             // should down into floating point arithmetic and successfully refill
-            bucket.tryConsume((long) Long.MAX_VALUE / 32)
-            bucket.tryConsumeAsMuchAsPossible() == 1
+			bucket.tryConsume((long) Long.MAX_VALUE / 32)
+			bucket.getAvailableTokens() == 0
     }
 
     def "Should check ArithmeticOverflow when refilling by uncompleted periods"() {
@@ -126,6 +137,7 @@ class HandlingArithmeticOverflowSpecification extends Specification {
             Bucket bucket = Bucket4j.builder()
                 .addLimit(limit)
                 .withCustomTimePrecision(meter)
+				.withMath(MathType.IEEE_754)
                 .build()
         when:
             // add time shift enough to overflow
@@ -135,7 +147,7 @@ class HandlingArithmeticOverflowSpecification extends Specification {
             !bucket.tryConsume(1)
     }
 
-    def "Should down to floating point arithmetic when having deal with big number during deficit calculation"() {
+    def "Should correctly calculate time to close deficit when having deals with big number"() {
         setup:
             Bandwidth limit = Bandwidth
                     .simple((long) Long.MAX_VALUE / 2, Duration.ofNanos((long) Long.MAX_VALUE / 2))
@@ -144,8 +156,9 @@ class HandlingArithmeticOverflowSpecification extends Specification {
             Bucket bucket = Bucket4j.builder()
                 .addLimit(limit)
                 .withCustomTimePrecision(meter)
+				.withMath(MathType.IEEE_754)
                 .build()
-            BucketState64BitsInteger state = bucket.createSnapshot()
+			BucketState state = bucket.createSnapshot()
             Bandwidth[] limits = bucket.configuration.bandwidths
 
         expect:
@@ -170,12 +183,13 @@ class HandlingArithmeticOverflowSpecification extends Specification {
             Bucket bucket = Bucket4j.builder()
                     .addLimit(limit)
                     .withCustomTimePrecision(meter)
+					.withMath(MathType.IEEE_754)
                     .build()
-            BucketState64BitsInteger state = bucket.createSnapshot()
+			BucketState state = bucket.createSnapshot()
             Bandwidth[] limits = bucket.configuration.bandwidths
 
         expect:
-            state.calculateDelayNanosAfterWillBePossibleToConsume(limits, 10, meter.currentTimeNanos()) == bandwidthPeriodNanos
+            state.calculateDelayNanosAfterWillBePossibleToConsume(limits, 10, meter.currentTimeNanos()) == 4611686018427387904
 
         when:
             state.consume(limits, 1)

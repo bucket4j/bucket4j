@@ -119,6 +119,26 @@ public class Bandwidth implements Serializable {
         return new Bandwidth(capacity, refillPeriodNanos, refillTokens, initialTokens, refillIntervally);
     }
 
+    public long getCapacity() {
+        return capacity;
+    }
+
+    public long getInitialTokens() {
+        return initialTokens;
+    }
+
+    public long getRefillPeriodNanos() {
+        return refillPeriodNanos;
+    }
+
+    public long getRefillTokens() {
+        return refillTokens;
+    }
+
+    public boolean isRefillIntervally() {
+        return refillIntervally;
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("Bandwidth{");
