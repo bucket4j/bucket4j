@@ -40,11 +40,11 @@ It is example of exposing statistics via Dropwizard Metrics(for Micrometer it sh
 ```java
 public static Bucket buildMonitoredBucket(Bandwidth limit, String bucketName, MetricRegistry registry) {
   SimpleBucketListener stat = new SimpleBucketListener(); 
-  registry.register(name + ".consumed", (Gauge<Long>) -> stat::getConsumed);
-  registry.register(name + ".rejected", (Gauge<Long>) -> stat::getRejected);
-  registry.register(name + ".parkedNanos", (Gauge<Long>) -> stat::getParkedNanos);
-  registry.register(name + ".interrupted", (Gauge<Long>) -> stat::getInterrupted);
-  registry.register(name + ".delayedNanos", (Gauge<Long>) -> stat::getDelayedNanos);
+  registry.register(name + ".consumed", (Gauge<Long>) stat::getConsumed);
+  registry.register(name + ".rejected", (Gauge<Long>) stat::getRejected);
+  registry.register(name + ".parkedNanos", (Gauge<Long>) stat::getParkedNanos);
+  registry.register(name + ".interrupted", (Gauge<Long>) stat::getInterrupted);
+  registry.register(name + ".delayedNanos", (Gauge<Long>) stat::getDelayedNanos);
   
   return Bucket4j.builder().addLimit(limit).build().toListenable(stat);
   
