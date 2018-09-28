@@ -22,7 +22,7 @@ import io.github.bucket4j.BucketConfiguration;
 
 import java.io.Serializable;
 
-public class RemoteBucketBuilder<K extends Serializable> extends AbstractBucketBuilder<RemoteBucketBuilder> {
+public class RemoteBucketBuilder<K extends Serializable> extends AbstractBucketBuilder<RemoteBucketBuilder<K>> {
 
     private final Backend<K> backend;
 

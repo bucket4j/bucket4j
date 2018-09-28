@@ -20,6 +20,7 @@ package io.github.bucket4j.grid.ignite;
 import io.github.bucket4j.AbstractDistributedBucketTest;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.Bucket4j;
+import io.github.bucket4j.remote.Backend;
 import io.github.bucket4j.remote.ProxyManager;
 import io.github.bucket4j.remote.RecoveryStrategy;
 import io.github.bucket4j.remote.RemoteBucketState;
@@ -38,7 +39,7 @@ import org.junit.Test;
 
 import java.io.Serializable;
 
-public class IgniteTest extends AbstractDistributedBucketTest<IgniteBucketBuilder, io.github.bucket4j.grid.ignite.Ignite> {
+public class IgniteTest extends AbstractDistributedBucketTest {
 
     private static IgniteCache<String, RemoteBucketState> cache;
     private static Cloud cloud;
@@ -79,25 +80,9 @@ public class IgniteTest extends AbstractDistributedBucketTest<IgniteBucketBuilde
         }
     }
 
-    @Test(expected = IllegalArgumentException.class)
     @Override
-    public void testThatImpossibleToPassNullCacheToProxyManagerConstructor() {
-        Bucket4j.extension(getExtensionClass()).proxyManagerForCache(null);
-    }
-
-    @Override
-    protected Class<io.github.bucket4j.grid.ignite.Ignite> getExtensionClass() {
-        return io.github.bucket4j.grid.ignite.Ignite.class;
-    }
-
-    @Override
-    protected Bucket build(IgniteBucketBuilder builder, String key, RecoveryStrategy recoveryStrategy) {
-        return builder.build(cache, key, recoveryStrategy);
-    }
-
-    @Override
-    protected ProxyManager<String> newProxyManager() {
-        return Bucket4j.extension(getExtensionClass()).proxyManagerForCache(cache);
+    protected Backend<String> getBackend() {
+        return new IgniteBackend<>(cache);
     }
 
     @Override

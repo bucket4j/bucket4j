@@ -17,7 +17,6 @@
 
 package io.github.bucket4j
 
-import io.github.bucket4j.local.InMemory
 import io.github.bucket4j.mock.BackendMock
 import io.github.bucket4j.mock.BucketType
 import io.github.bucket4j.mock.TimeMeterMock
@@ -191,10 +190,11 @@ class BucketSpecification extends Specification {
 
     def "should complete future exceptionally if backend failed"() {
         setup:
-            BucketConfiguration configuration = Bucket4j.extension(InMemory.class).configurationBuilder()
+            BackendMock mockProxy = new BackendMock(SYSTEM_MILLISECONDS);
+            BucketConfiguration configuration = Bucket4j.configurationBuilder(mockProxy)
                                                     .addLimit(Bandwidth.simple(1, Duration.ofNanos(1)))
                                                     .build()
-            BackendMock mockProxy = new BackendMock(SYSTEM_MILLISECONDS);
+
             Bucket bucket = BucketProxy.createInitializedBucket("66", configuration, mockProxy, THROW_BUCKET_NOT_FOUND_EXCEPTION)
         when:
             mockProxy.setException(new RuntimeException())

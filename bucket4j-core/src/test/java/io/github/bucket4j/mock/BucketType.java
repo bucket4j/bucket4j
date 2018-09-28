@@ -54,7 +54,7 @@ public enum BucketType {
                     .build();
         }
     },
-    GRID {
+    REMOTE {
         @Override
         public Bucket createBucket(AbstractBucketBuilder builder, TimeMeter timeMeter) {
             BucketConfiguration configuration = PackageAcessor.buildConfiguration(builder);

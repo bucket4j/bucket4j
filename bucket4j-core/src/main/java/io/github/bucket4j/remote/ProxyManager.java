@@ -21,6 +21,7 @@ import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketConfiguration;
 
 import java.io.Serializable;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -38,8 +39,9 @@ public class ProxyManager<K extends Serializable> {
 
     private final Backend<K> backend;
 
+    // TODO javadocs
     public ProxyManager(Backend<K> backend) {
-        this.backend = backend;
+        this.backend = Objects.requireNonNull(backend);
     }
 
     /**

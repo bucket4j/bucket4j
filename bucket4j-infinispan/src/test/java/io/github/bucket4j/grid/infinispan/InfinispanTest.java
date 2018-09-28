@@ -20,6 +20,7 @@ package io.github.bucket4j.grid.infinispan;
 import io.github.bucket4j.AbstractDistributedBucketTest;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.Bucket4j;
+import io.github.bucket4j.remote.Backend;
 import io.github.bucket4j.remote.ProxyManager;
 import io.github.bucket4j.remote.RecoveryStrategy;
 import io.github.bucket4j.remote.RemoteBucketState;
@@ -38,18 +39,12 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 
-public class InfinispanTest extends AbstractDistributedBucketTest<InfinispanBucketBuilder, Infinispan> {
+public class InfinispanTest extends AbstractDistributedBucketTest {
 
     private static ReadWriteMap<String, RemoteBucketState> readWriteMap;
     private static Cache<String, RemoteBucketState> cache;
     private static CacheManager cacheManager1;
     private static CacheManager cacheManager2;
-
-    @Test(expected = IllegalArgumentException.class)
-    @Override
-    public void testThatImpossibleToPassNullCacheToProxyManagerConstructor() {
-        Bucket4j.extension(getExtensionClass()).proxyManagerForMap(null);
-    }
 
     @BeforeClass
     public static void init() throws MalformedURLException, URISyntaxException {
@@ -70,19 +65,10 @@ public class InfinispanTest extends AbstractDistributedBucketTest<InfinispanBuck
         cacheManager2.close();
     }
 
-    @Override
-    protected Class<Infinispan> getExtensionClass() {
-        return Infinispan.class;
-    }
 
     @Override
-    protected Bucket build(InfinispanBucketBuilder builder, String key, RecoveryStrategy recoveryStrategy) {
-        return builder.build(readWriteMap, key, recoveryStrategy);
-    }
-
-    @Override
-    protected ProxyManager<String> newProxyManager() {
-        return Bucket4j.extension(Infinispan.class).proxyManagerForMap(readWriteMap);
+    protected Backend<String> getBackend() {
+        return new InfinispanBackend<>(readWriteMap);
     }
 
     @Override

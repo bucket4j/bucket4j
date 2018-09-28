@@ -232,13 +232,6 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
             ex.message == nullScheduler().message
     }
 
-    def "Should detect when extension unregistered"() {
-        when:
-            Bucket4j.extension(FakeExtension.class)
-        then:
-            thrown(IllegalArgumentException)
-    }
-
     def "GridBucket should check that configuration is not null"() {
         setup:
             BackendMock mockProxy = new BackendMock(TimeMeter.SYSTEM_MILLISECONDS)
@@ -262,28 +255,6 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
         then:
             ex = thrown()
             ex.message == nullConfigurationSupplier().message
-    }
-
-    private static class FakeExtension implements Extension {
-        @Override
-        AbstractBucketBuilder builder() {
-            return new LocalBucketBuilder()
-        }
-
-        @Override
-        Set<MathType> getSupportedMathTypes() {
-            return MathType.ALL
-        }
-
-        @Override
-        MathType getDefaultMathType() {
-            return MathType.INTEGER_64_BITS
-        }
-
-        @Override
-        boolean isAsyncSupported() {
-            return true
-        }
     }
 
 }

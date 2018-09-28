@@ -38,6 +38,11 @@ public abstract class Bucket4j {
         return new LocalBucketBuilder();
     }
 
+    // TODO javadocs
+    public static ConfigurationBuilder configurationBuilder() {
+        return new ConfigurationBuilder(LocalBucketBuilder.OPTIONS);
+    }
+
     /**
      * Creates new instance of builder specific for this back-end.
      *
