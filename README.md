@@ -65,7 +65,7 @@ use any of them:
     <artifactId>bucket4j-core</artifactId>
     <version>5.0.0</version>
 </dependency>
-```
+``` 
 #### You can build Bucket4j from sources
 ```bash
 git clone https://github.com/vladimir-bukhtoyarov/bucket4j.git
