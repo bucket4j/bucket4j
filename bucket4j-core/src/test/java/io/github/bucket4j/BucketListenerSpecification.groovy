@@ -37,6 +37,33 @@ class BucketListenerSpecification extends Specification {
             .withCustomTimePrecision(clock)
             .addLimit(Bandwidth.simple(10, Duration.ofSeconds(1)))
 
+
+    @Unroll
+    def "#type bucket created by toListenable should share tokens with source bucket"(BucketType type) {
+        setup:
+            Bucket sourceBucket = type.createBucket(builder, clock);
+            Bucket listenableBucket = sourceBucket.toListenable(listener)
+
+        when:
+            sourceBucket.tryConsume(9)
+        then:
+            sourceBucket.getAvailableTokens() == 1
+            listenableBucket.getAvailableTokens() == 1
+
+        when:
+            listenableBucket.tryConsume(1)
+        then:
+            sourceBucket.getAvailableTokens() == 0
+            listenableBucket.getAvailableTokens() == 0
+
+        expect:
+            !sourceBucket.tryConsume(1)
+            !listenableBucket.tryConsume(1)
+
+        where:
+            type << BucketType.values()
+    }
+
     // =========== Sync cases ================================
     @Unroll
     def "#type test listener for tryConsume"(BucketType type) {
