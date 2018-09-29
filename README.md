@@ -62,9 +62,10 @@ use any of them:
 <dependency>
     <groupId>com.github.vladimir-bukhtoyarov</groupId>
     <artifactId>bucket4j-core</artifactId>
-    <version>4.1.0</version>
+    <version>4.1.1</version>
 </dependency>
 ```
+***Warning:*** do not use ```4.1.0``` version, it was released with mistake. 
 #### You can build Bucket4j from sources
 ```bash
 git clone https://github.com/vladimir-bukhtoyarov/bucket4j.git
