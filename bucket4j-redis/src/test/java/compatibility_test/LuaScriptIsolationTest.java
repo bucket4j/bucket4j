@@ -43,7 +43,7 @@ public class LuaScriptIsolationTest {
     private static final String incrementScript = readScript("/increment-counter.lua");
 
     @Rule
-    public GenericContainer redis = new GenericContainer("redis:3.0.6")
+    public GenericContainer redis = new GenericContainer("redis:4.0.11")
             .withExposedPorts(6379);
 
     private RedisCommands<String, String> commands;

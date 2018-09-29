@@ -58,8 +58,9 @@
         <ignite.version>2.1.0</ignite.version>
         <hazelcast.version>3.8</hazelcast.version>
         <infinispan.version>9.1.0.Final</infinispan.version>
-        <testcontainers.version>1.9.0</testcontainers.version>
+        <testcontainers.version>1.9.1</testcontainers.version>
         <lettuce-version>5.0.2.RELEASE</lettuce-version>
+        <jedis.version>2.9.0</jedis.version>
     </properties>
 
     <scm>
