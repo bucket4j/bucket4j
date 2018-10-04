@@ -21,6 +21,7 @@ import io.lettuce.core.RedisClient;
 import io.lettuce.core.RedisURI;
 import io.lettuce.core.ScriptOutputType;
 import io.lettuce.core.api.StatefulRedisConnection;
+import io.lettuce.core.api.async.RedisAsyncCommands;
 import io.lettuce.core.api.sync.RedisCommands;
 import org.junit.Before;
 import org.junit.Rule;
@@ -58,6 +59,7 @@ public class LuaScriptIsolationTest {
         StatefulRedisConnection<String, String> connection = client.connect();
 
         this.commands = connection.sync();
+        RedisAsyncCommands<String, String> p = connection.async();
     }
 
     @Test
