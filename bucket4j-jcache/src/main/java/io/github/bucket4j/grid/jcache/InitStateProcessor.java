@@ -26,16 +26,15 @@ import io.github.bucket4j.remote.RemoteBucketState;
 import javax.cache.processor.MutableEntry;
 import java.io.Serializable;
 
-public class InitStateProcessor<K extends Serializable> implements JCacheEntryProcessor<K, Nothing> {
+public class InitStateProcessor<K extends Serializable> extends JCacheEntryProcessor<K, Nothing> {
 
     private static final long serialVersionUID = 1;
 
     private BucketConfiguration configuration;
-    private final Long clientTimeNanos;
 
     public InitStateProcessor(BucketConfiguration configuration, Long clientTimeNanos) {
+        super(clientTimeNanos);
         this.configuration = configuration;
-        this.clientTimeNanos = clientTimeNanos;
     }
 
     @Override
@@ -48,10 +47,6 @@ public class InitStateProcessor<K extends Serializable> implements JCacheEntryPr
         RemoteBucketState remoteBucketState = new RemoteBucketState(configuration, bucketState);
         mutableEntry.setValue(remoteBucketState);
         return CommandResult.success(null);
-    }
-
-    private long currentTimeNanos() {
-        return clientTimeNanos != null? clientTimeNanos : System.currentTimeMillis() * 1_000_000;
     }
 
 }

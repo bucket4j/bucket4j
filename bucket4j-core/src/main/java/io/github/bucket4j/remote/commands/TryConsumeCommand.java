@@ -26,21 +26,14 @@ public class TryConsumeCommand implements RemoteCommand<Boolean> {
 
     private long tokensToConsume;
     private boolean bucketStateModified;
-    private Long clientTimeNanos;
 
-    public TryConsumeCommand(long tokensToConsume, Long clientTimeNanos) {
+    public TryConsumeCommand(long tokensToConsume) {
         this.tokensToConsume = tokensToConsume;
-        this.clientTimeNanos = clientTimeNanos;
     }
 
     @Override
-    public Long getClientTimeNanos() {
-        return clientTimeNanos;
-    }
-
-    @Override
-    public Boolean execute(RemoteBucketState state) {
-        state.refillAllBandwidth(currentTimeNanos());
+    public Boolean execute(RemoteBucketState state, long currentTimeNanos) {
+        state.refillAllBandwidth(currentTimeNanos);
         long availableToConsume = state.getAvailableTokens();
         if (tokensToConsume <= availableToConsume) {
             state.consume(tokensToConsume);

@@ -24,13 +24,14 @@ import io.github.bucket4j.remote.RemoteCommand;
 import javax.cache.processor.MutableEntry;
 import java.io.Serializable;
 
-public class ExecuteProcessor<K extends Serializable, T extends Serializable> implements JCacheEntryProcessor<K, T> {
+public class ExecuteProcessor<K extends Serializable, T extends Serializable> extends JCacheEntryProcessor<K, T> {
 
     private static final long serialVersionUID = 1;
 
     private RemoteCommand<T> targetCommand;
 
-    public ExecuteProcessor(RemoteCommand<T> targetCommand) {
+    public ExecuteProcessor(RemoteCommand<T> targetCommand, Long clientSideTimeNanos) {
+        super(clientSideTimeNanos);
         this.targetCommand = targetCommand;
     }
 
@@ -42,7 +43,7 @@ public class ExecuteProcessor<K extends Serializable, T extends Serializable> im
 
         RemoteBucketState remoteBucketState = mutableEntry.getValue();
 
-        T result = targetCommand.execute(remoteBucketState);
+        T result = targetCommand.execute(remoteBucketState, currentTimeNanos());
         if (targetCommand.isBucketStateModified()) {
             mutableEntry.setValue(remoteBucketState);
         }

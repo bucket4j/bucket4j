@@ -25,22 +25,15 @@ public class AddTokensCommand implements RemoteCommand<Nothing> {
 
     private static final long serialVersionUID = 42;
 
-    private Long clientTimeNanos;
     private long tokensToAdd;
 
-    public AddTokensCommand(long tokensToAdd, Long clientTimeNanos) {
+    public AddTokensCommand(long tokensToAdd) {
         this.tokensToAdd = tokensToAdd;
-        this.clientTimeNanos = clientTimeNanos;
     }
 
     @Override
-    public Long getClientTimeNanos() {
-        return clientTimeNanos;
-    }
-
-    @Override
-    public Nothing execute(RemoteBucketState state) {
-        state.refillAllBandwidth(currentTimeNanos());
+    public Nothing execute(RemoteBucketState state, long currentTimeNanos) {
+        state.refillAllBandwidth(currentTimeNanos);
         state.addTokens(tokensToAdd);
         return Nothing.INSTANCE;
     }

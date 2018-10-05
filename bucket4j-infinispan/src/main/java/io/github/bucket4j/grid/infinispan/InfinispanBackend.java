@@ -65,38 +65,33 @@ public class InfinispanBackend<K extends Serializable> implements Backend<K> {
     }
 
     @Override
-    public TimeMeter getClientSideClock() {
-        return clientClock;
-    }
-
-    @Override
     public <T extends Serializable> CommandResult<T> execute(K key, RemoteCommand<T> command) {
-        JCacheEntryProcessor<K, T> entryProcessor = JCacheEntryProcessor.executeProcessor(command);
+        JCacheEntryProcessor<K, T> entryProcessor = JCacheEntryProcessor.executeProcessor(command, getClientSideTimeNanos());
         return invokeSync(key, entryProcessor);
     }
 
     @Override
     public void createInitialState(K key, BucketConfiguration configuration) {
-        JCacheEntryProcessor<K, Nothing> entryProcessor = JCacheEntryProcessor.initStateProcessor(configuration, clientClock);
+        JCacheEntryProcessor<K, Nothing> entryProcessor = JCacheEntryProcessor.initStateProcessor(configuration, getClientSideTimeNanos());
         invokeSync(key, entryProcessor);
     }
 
     @Override
     public <T extends Serializable> T createInitialStateAndExecute(K key, BucketConfiguration configuration, RemoteCommand<T> command) {
-        JCacheEntryProcessor<K, T> entryProcessor = JCacheEntryProcessor.initStateAndExecuteProcessor(command, configuration);
+        JCacheEntryProcessor<K, T> entryProcessor = JCacheEntryProcessor.initStateAndExecuteProcessor(command, configuration, getClientSideTimeNanos());
         CommandResult<T> result = invokeSync(key, entryProcessor);
         return result.getData();
     }
 
     @Override
     public <T extends Serializable> CompletableFuture<CommandResult<T>> executeAsync(K key, RemoteCommand<T> command) {
-        JCacheEntryProcessor<K, T> entryProcessor = JCacheEntryProcessor.executeProcessor(command);
+        JCacheEntryProcessor<K, T> entryProcessor = JCacheEntryProcessor.executeProcessor(command, getClientSideTimeNanos());
         return invokeAsync(key, entryProcessor);
     }
 
     @Override
     public <T extends Serializable> CompletableFuture<T> createInitialStateAndExecuteAsync(K key, BucketConfiguration configuration, RemoteCommand<T> command) {
-        JCacheEntryProcessor<K, T> entryProcessor = JCacheEntryProcessor.initStateAndExecuteProcessor(command, configuration);
+        JCacheEntryProcessor<K, T> entryProcessor = JCacheEntryProcessor.initStateAndExecuteProcessor(command, configuration, getClientSideTimeNanos());
         CompletableFuture<CommandResult<T>> result = invokeAsync(key, entryProcessor);
         return result.thenApply(CommandResult::getData);
     }
@@ -128,6 +123,10 @@ public class InfinispanBackend<K extends Serializable> implements Backend<K> {
 
     private <T extends Serializable> CompletableFuture<CommandResult<T>> invokeAsync(final K key, final JCacheEntryProcessor<K, T> entryProcessor) {
         return readWriteMap.eval(key, new SerializableFunctionAdapter<>(entryProcessor));
+    }
+
+    private Long getClientSideTimeNanos() {
+        return clientClock == null? null : clientClock.currentTimeNanos();
     }
 
 }

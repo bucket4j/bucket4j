@@ -51,11 +51,6 @@ public class BackendMock<K extends Serializable> implements Backend<K> {
     }
 
     @Override
-    public TimeMeter getClientSideClock() {
-        return timeMeter;
-    }
-
-    @Override
     public <T extends Serializable> CommandResult<T> execute(K key, RemoteCommand<T> command) {
         if (exception != null) {
             throw new RuntimeException();
@@ -66,7 +61,7 @@ public class BackendMock<K extends Serializable> implements Backend<K> {
         emulateSerialization(key);
         command = emulateSerialization(command);
         RemoteBucketState newState = emulateSerialization(state);
-        T resultData = command.execute(newState);
+        T resultData = command.execute(newState, timeMeter.currentTimeNanos());
         if (command.isBucketStateModified()) {
             state = newState;
         }

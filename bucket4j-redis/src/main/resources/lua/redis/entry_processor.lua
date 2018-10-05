@@ -24,6 +24,8 @@ else
     currentTimeNanos = tonumber(currentTimeNanos);
 end
 
+local key = KEYS[1];
+
 if commandType == "execute" then
     local commandJson = ARGV[3];
     local command = cjson.decode(commandJson);

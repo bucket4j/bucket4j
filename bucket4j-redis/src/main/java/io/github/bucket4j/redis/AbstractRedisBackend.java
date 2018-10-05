@@ -37,11 +37,6 @@ public abstract class AbstractRedisBackend<K extends Serializable> implements Ba
     }
 
     @Override
-    public TimeMeter getClientSideClock() {
-        return null;
-    }
-
-    @Override
     public <T extends Serializable> CommandResult<T> execute(K key, RemoteCommand<T> command) {
         return null;
     }

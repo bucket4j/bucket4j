@@ -40,9 +40,6 @@ public interface Backend<K extends Serializable> {
     BucketOptions getOptions();
 
     // TODO javadocs
-    TimeMeter getClientSideClock();
-
-    // TODO javadocs
     <T extends Serializable> CommandResult<T> execute(K key, RemoteCommand<T> command);
 
     // TODO javadocs

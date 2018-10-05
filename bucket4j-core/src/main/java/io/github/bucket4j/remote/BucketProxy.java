@@ -71,60 +71,60 @@ public class BucketProxy<K extends Serializable> extends AbstractBucket {
 
     @Override
     protected long consumeAsMuchAsPossibleImpl(long limit) {
-        return execute(new ConsumeAsMuchAsPossibleCommand(limit, getClientTimeNanos()));
+        return execute(new ConsumeAsMuchAsPossibleCommand(limit));
     }
 
     @Override
     protected CompletableFuture<Long> tryConsumeAsMuchAsPossibleAsyncImpl(long limit) {
-        return executeAsync(new ConsumeAsMuchAsPossibleCommand(limit, getClientTimeNanos()));
+        return executeAsync(new ConsumeAsMuchAsPossibleCommand(limit));
     }
 
     @Override
     protected boolean tryConsumeImpl(long tokensToConsume) {
-        return execute(new TryConsumeCommand(tokensToConsume, getClientTimeNanos()));
+        return execute(new TryConsumeCommand(tokensToConsume));
     }
 
     @Override
     protected CompletableFuture<Boolean> tryConsumeAsyncImpl(long tokensToConsume) {
-        return executeAsync(new TryConsumeCommand(tokensToConsume, getClientTimeNanos()));
+        return executeAsync(new TryConsumeCommand(tokensToConsume));
     }
 
     @Override
     protected ConsumptionProbe tryConsumeAndReturnRemainingTokensImpl(long tokensToConsume) {
-        return execute(new TryConsumeAndReturnRemainingTokensCommand(tokensToConsume, getClientTimeNanos()));
+        return execute(new TryConsumeAndReturnRemainingTokensCommand(tokensToConsume));
     }
 
     @Override
     protected CompletableFuture<ConsumptionProbe> tryConsumeAndReturnRemainingTokensAsyncImpl(long tokensToConsume) {
-        return executeAsync(new TryConsumeAndReturnRemainingTokensCommand(tokensToConsume, getClientTimeNanos()));
+        return executeAsync(new TryConsumeAndReturnRemainingTokensCommand(tokensToConsume));
     }
 
     @Override
     protected long reserveAndCalculateTimeToSleepImpl(long tokensToConsume, long waitIfBusyNanosLimit) {
-        ReserveAndCalculateTimeToSleepCommand consumeCommand = new ReserveAndCalculateTimeToSleepCommand(tokensToConsume, waitIfBusyNanosLimit, getClientTimeNanos());
+        ReserveAndCalculateTimeToSleepCommand consumeCommand = new ReserveAndCalculateTimeToSleepCommand(tokensToConsume, waitIfBusyNanosLimit);
         return execute(consumeCommand);
     }
 
     @Override
     protected CompletableFuture<Long> reserveAndCalculateTimeToSleepAsyncImpl(long tokensToConsume, long maxWaitTimeNanos) {
-        ReserveAndCalculateTimeToSleepCommand consumeCommand = new ReserveAndCalculateTimeToSleepCommand(tokensToConsume, maxWaitTimeNanos, getClientTimeNanos());
+        ReserveAndCalculateTimeToSleepCommand consumeCommand = new ReserveAndCalculateTimeToSleepCommand(tokensToConsume, maxWaitTimeNanos);
         return executeAsync(consumeCommand);
     }
 
     @Override
     protected void addTokensImpl(long tokensToAdd) {
-        execute(new AddTokensCommand(tokensToAdd, getClientTimeNanos()));
+        execute(new AddTokensCommand(tokensToAdd));
     }
 
     @Override
     protected CompletableFuture<Void> addTokensAsyncImpl(long tokensToAdd) {
-        CompletableFuture<Nothing> future = executeAsync(new AddTokensCommand(tokensToAdd, getClientTimeNanos()));
+        CompletableFuture<Nothing> future = executeAsync(new AddTokensCommand(tokensToAdd));
         return future.thenApply(nothing -> null);
     }
 
     @Override
     protected void replaceConfigurationImpl(BucketConfiguration newConfiguration) {
-        ReplaceConfigurationOrReturnPreviousCommand replaceConfigCommand = new ReplaceConfigurationOrReturnPreviousCommand(newConfiguration, getClientTimeNanos());
+        ReplaceConfigurationOrReturnPreviousCommand replaceConfigCommand = new ReplaceConfigurationOrReturnPreviousCommand(newConfiguration);
         BucketConfiguration previousConfiguration = execute(replaceConfigCommand);
         if (previousConfiguration != null) {
             throw new IncompatibleConfigurationException(previousConfiguration, newConfiguration);
@@ -133,7 +133,7 @@ public class BucketProxy<K extends Serializable> extends AbstractBucket {
 
     @Override
     protected CompletableFuture<Void> replaceConfigurationAsyncImpl(BucketConfiguration newConfiguration) {
-        ReplaceConfigurationOrReturnPreviousCommand replaceConfigCommand = new ReplaceConfigurationOrReturnPreviousCommand(newConfiguration, getClientTimeNanos());
+        ReplaceConfigurationOrReturnPreviousCommand replaceConfigCommand = new ReplaceConfigurationOrReturnPreviousCommand(newConfiguration);
         CompletableFuture<BucketConfiguration> result = executeAsync(replaceConfigCommand);
         return result.thenCompose(previousConfiguration -> {
             if (previousConfiguration == null) {
@@ -148,12 +148,12 @@ public class BucketProxy<K extends Serializable> extends AbstractBucket {
 
     @Override
     public long getAvailableTokens() {
-        return execute(new GetAvailableTokensCommand(getClientTimeNanos()));
+        return execute(new GetAvailableTokensCommand());
     }
 
     @Override
     public BucketState createSnapshot() {
-        return execute(new CreateSnapshotCommand(getClientTimeNanos()));
+        return execute(new CreateSnapshotCommand());
     }
 
     private BucketConfiguration getConfiguration() {
@@ -193,15 +193,6 @@ public class BucketProxy<K extends Serializable> extends AbstractBucket {
             }
             return backend.createInitialStateAndExecuteAsync(key, getConfiguration(), command);
         });
-    }
-
-    private Long getClientTimeNanos() {
-        TimeMeter clientClock = backend.getClientSideClock();
-        if (clientClock == null) {
-            return null;
-        } else {
-            return clientClock.currentTimeNanos();
-        }
     }
 
 }

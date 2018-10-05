@@ -25,26 +25,15 @@ public class GetAvailableTokensCommand implements RemoteCommand<Long> {
 
     private static final long serialVersionUID = 42;
 
-    private Long clientTimeNanos;
-
-    public GetAvailableTokensCommand(Long clientTimeNanos) {
-        this.clientTimeNanos = clientTimeNanos;
-    }
-
     @Override
-    public Long execute(RemoteBucketState state) {
-        state.refillAllBandwidth(currentTimeNanos());
+    public Long execute(RemoteBucketState state, long currentTimeNanos) {
+        state.refillAllBandwidth(currentTimeNanos);
         return state.getAvailableTokens();
     }
 
     @Override
     public boolean isBucketStateModified() {
         return false;
-    }
-
-    @Override
-    public Long getClientTimeNanos() {
-        return clientTimeNanos;
     }
 
 }

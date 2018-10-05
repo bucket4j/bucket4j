@@ -27,17 +27,14 @@ public class ReserveAndCalculateTimeToSleepCommand implements RemoteCommand<Long
     private long tokensToConsume;
     private long waitIfBusyNanosLimit;
     private boolean bucketStateModified;
-    private Long clientTimeNanos;
 
-    public ReserveAndCalculateTimeToSleepCommand(long tokensToConsume, long waitIfBusyNanosLimit, Long clientTimeNanos) {
+    public ReserveAndCalculateTimeToSleepCommand(long tokensToConsume, long waitIfBusyNanosLimit) {
         this.tokensToConsume = tokensToConsume;
         this.waitIfBusyNanosLimit = waitIfBusyNanosLimit;
-        this.clientTimeNanos = clientTimeNanos;
     }
 
     @Override
-    public Long execute(RemoteBucketState state) {
-        long currentTimeNanos = currentTimeNanos();
+    public Long execute(RemoteBucketState state, long currentTimeNanos) {
         state.refillAllBandwidth(currentTimeNanos);
 
         long nanosToCloseDeficit = state.calculateDelayNanosAfterWillBePossibleToConsume(tokensToConsume, currentTimeNanos);
@@ -53,11 +50,6 @@ public class ReserveAndCalculateTimeToSleepCommand implements RemoteCommand<Long
     @Override
     public boolean isBucketStateModified() {
         return bucketStateModified;
-    }
-
-    @Override
-    public Long getClientTimeNanos() {
-        return clientTimeNanos;
     }
 
     public long getTokensToConsume() {

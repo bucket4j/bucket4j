@@ -21,19 +21,8 @@ import java.io.Serializable;
 
 public interface RemoteCommand<T extends Serializable> extends Serializable {
 
-    T execute(RemoteBucketState state);
+    T execute(RemoteBucketState state, long currentTimeNanos);
 
     boolean isBucketStateModified();
-
-    Long getClientTimeNanos();
-
-    default long currentTimeNanos() {
-        Long clientProvidedTime = getClientTimeNanos();
-        if (clientProvidedTime != null) {
-            return clientProvidedTime;
-        } else {
-            return System.currentTimeMillis() * 1_000_000;
-        }
-    }
 
 }

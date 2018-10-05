@@ -55,43 +55,38 @@ public class HazelcastBackend<K extends Serializable> implements Backend<K> {
     }
 
     @Override
-    public TimeMeter getClientSideClock() {
-        return clientClock;
-    }
-
-    @Override
     public BucketOptions getOptions() {
         return OPTIONS;
     }
 
     @Override
     public <T extends Serializable> CommandResult<T> execute(K key, RemoteCommand<T> command) {
-        JCacheEntryProcessor<K, T> entryProcessor = JCacheEntryProcessor.executeProcessor(command);
+        JCacheEntryProcessor<K, T> entryProcessor = JCacheEntryProcessor.executeProcessor(command, getClientSideTimeNanos());
         return (CommandResult<T>) cache.executeOnKey(key, adoptEntryProcessor(entryProcessor));
     }
 
     @Override
     public void createInitialState(K key, BucketConfiguration configuration) {
-        JCacheEntryProcessor<K, Nothing> entryProcessor = JCacheEntryProcessor.initStateProcessor(configuration, clientClock);
+        JCacheEntryProcessor<K, Nothing> entryProcessor = JCacheEntryProcessor.initStateProcessor(configuration, getClientSideTimeNanos());
         cache.executeOnKey(key, adoptEntryProcessor(entryProcessor));
     }
 
     @Override
     public <T extends Serializable> T createInitialStateAndExecute(K key, BucketConfiguration configuration, RemoteCommand<T> command) {
-        JCacheEntryProcessor<K, T> entryProcessor = JCacheEntryProcessor.initStateAndExecuteProcessor(command, configuration);
+        JCacheEntryProcessor<K, T> entryProcessor = JCacheEntryProcessor.initStateAndExecuteProcessor(command, configuration, getClientSideTimeNanos());
         CommandResult<T> result = (CommandResult<T>) cache.executeOnKey(key, adoptEntryProcessor(entryProcessor));
         return result.getData();
     }
 
     @Override
     public <T extends Serializable> CompletableFuture<CommandResult<T>> executeAsync(K key, RemoteCommand<T> command) {
-        JCacheEntryProcessor<K, T> entryProcessor = JCacheEntryProcessor.executeProcessor(command);
+        JCacheEntryProcessor<K, T> entryProcessor = JCacheEntryProcessor.executeProcessor(command, getClientSideTimeNanos());
         return invokeAsync(key, entryProcessor);
     }
 
     @Override
     public <T extends Serializable> CompletableFuture<T> createInitialStateAndExecuteAsync(K key, BucketConfiguration configuration, RemoteCommand<T> command) {
-        JCacheEntryProcessor<K, T> entryProcessor = JCacheEntryProcessor.initStateAndExecuteProcessor(command, configuration);
+        JCacheEntryProcessor<K, T> entryProcessor = JCacheEntryProcessor.initStateAndExecuteProcessor(command, configuration, getClientSideTimeNanos());
         CompletableFuture<CommandResult<T>> result = invokeAsync(key, entryProcessor);
         return result.thenApply(CommandResult::getData);
     }
@@ -124,6 +119,10 @@ public class HazelcastBackend<K extends Serializable> implements Backend<K> {
             }
         });
         return future;
+    }
+
+    private Long getClientSideTimeNanos() {
+        return clientClock == null? null : clientClock.currentTimeNanos();
     }
 
 }

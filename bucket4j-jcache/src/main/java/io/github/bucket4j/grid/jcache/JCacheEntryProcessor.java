@@ -28,19 +28,32 @@ import javax.cache.processor.EntryProcessor;
 import java.io.Serializable;
 
 
-public interface JCacheEntryProcessor<K extends Serializable, T extends Serializable> extends Serializable, EntryProcessor<K, RemoteBucketState, CommandResult<T>> {
+public abstract class JCacheEntryProcessor<K extends Serializable, T extends Serializable> implements Serializable, EntryProcessor<K, RemoteBucketState, CommandResult<T>> {
 
-    static <K extends Serializable> JCacheEntryProcessor<K, Nothing> initStateProcessor(BucketConfiguration configuration, TimeMeter clientClock) {
-        Long clientTimeNanos = clientClock == null? null : clientClock.currentTimeNanos();
-        return new InitStateProcessor<>(configuration, clientTimeNanos);
+    private final Long clientSideTimeNanos;
+
+    protected JCacheEntryProcessor(Long clientSideTimeNanos) {
+        this.clientSideTimeNanos = clientSideTimeNanos;
     }
 
-    static <K extends Serializable, T extends Serializable> JCacheEntryProcessor<K, T> executeProcessor(RemoteCommand<T> targetCommand) {
-        return new ExecuteProcessor<>(targetCommand);
+    public static <K extends Serializable> JCacheEntryProcessor<K, Nothing> initStateProcessor(BucketConfiguration configuration, Long clientSideTimeNanos) {
+        return new InitStateProcessor<>(configuration, clientSideTimeNanos);
     }
 
-    static <K extends Serializable, T extends Serializable> JCacheEntryProcessor<K, T> initStateAndExecuteProcessor(RemoteCommand<T> targetCommand, BucketConfiguration configuration) {
-        return new InitStateAndExecuteProcessor<>(targetCommand, configuration);
+    public static <K extends Serializable, T extends Serializable> JCacheEntryProcessor<K, T> executeProcessor(RemoteCommand<T> targetCommand, Long clientSideTimeNanos) {
+        return new ExecuteProcessor<>(targetCommand, clientSideTimeNanos);
+    }
+
+    public static <K extends Serializable, T extends Serializable> JCacheEntryProcessor<K, T> initStateAndExecuteProcessor(RemoteCommand<T> targetCommand, BucketConfiguration configuration, Long clientSideTimeNanos) {
+        return new InitStateAndExecuteProcessor<>(targetCommand, configuration, clientSideTimeNanos);
+    }
+
+    public long currentTimeNanos() {
+        if (clientSideTimeNanos != null) {
+            return clientSideTimeNanos;
+        } else {
+            return System.currentTimeMillis() * 1_000_000;
+        }
     }
 
 }

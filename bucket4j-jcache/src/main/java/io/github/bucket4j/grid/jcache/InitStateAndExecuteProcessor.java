@@ -26,14 +26,15 @@ import io.github.bucket4j.remote.RemoteCommand;
 import javax.cache.processor.MutableEntry;
 import java.io.Serializable;
 
-public class InitStateAndExecuteProcessor<K extends Serializable, T extends Serializable> implements JCacheEntryProcessor<K, T> {
+public class InitStateAndExecuteProcessor<K extends Serializable, T extends Serializable> extends JCacheEntryProcessor<K, T> {
 
     private static final long serialVersionUID = 1L;
 
     private RemoteCommand<T> targetCommand;
     private BucketConfiguration configuration;
 
-    public InitStateAndExecuteProcessor(RemoteCommand<T> targetCommand, BucketConfiguration configuration) {
+    public InitStateAndExecuteProcessor(RemoteCommand<T> targetCommand, BucketConfiguration configuration, Long clientSideTimeNanos) {
+        super(clientSideTimeNanos);
         this.configuration = configuration;
         this.targetCommand = targetCommand;
     }
@@ -41,7 +42,7 @@ public class InitStateAndExecuteProcessor<K extends Serializable, T extends Seri
     @Override
     public CommandResult<T> process(MutableEntry<K, RemoteBucketState> mutableEntry, Object... arguments) {
         boolean newStateCreated = false;
-        long currentTimeNanos = targetCommand.currentTimeNanos();
+        long currentTimeNanos = currentTimeNanos();
         RemoteBucketState remoteBucketState;
         if (mutableEntry.exists()) {
             remoteBucketState = mutableEntry.getValue();
@@ -51,7 +52,7 @@ public class InitStateAndExecuteProcessor<K extends Serializable, T extends Seri
             newStateCreated = true;
         }
 
-        T result = targetCommand.execute(remoteBucketState);
+        T result = targetCommand.execute(remoteBucketState, currentTimeNanos);
         if (newStateCreated || targetCommand.isBucketStateModified()) {
             mutableEntry.setValue(remoteBucketState);
         }

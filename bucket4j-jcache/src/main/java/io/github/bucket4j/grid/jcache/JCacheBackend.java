@@ -63,25 +63,20 @@ public class JCacheBackend<K extends Serializable> implements Backend<K> {
     }
 
     @Override
-    public TimeMeter getClientSideClock() {
-        return clientClock;
-    }
-
-    @Override
     public <T extends Serializable> CommandResult<T> execute(K key, RemoteCommand<T> command) {
-        JCacheEntryProcessor<K, T> entryProcessor = JCacheEntryProcessor.executeProcessor(command);
+        JCacheEntryProcessor<K, T> entryProcessor = JCacheEntryProcessor.executeProcessor(command, getClientSideTimeNanos());
         return cache.invoke(key, entryProcessor);
     }
 
     @Override
     public void createInitialState(K key, BucketConfiguration configuration) {
-        JCacheEntryProcessor<K, Nothing> entryProcessor = JCacheEntryProcessor.initStateProcessor(configuration, clientClock);
+        JCacheEntryProcessor<K, Nothing> entryProcessor = JCacheEntryProcessor.initStateProcessor(configuration, getClientSideTimeNanos());
         cache.invoke(key, entryProcessor);
     }
 
     @Override
     public <T extends Serializable> T createInitialStateAndExecute(K key, BucketConfiguration configuration, RemoteCommand<T> command) {
-        JCacheEntryProcessor<K, T> entryProcessor = JCacheEntryProcessor.initStateAndExecuteProcessor(command, configuration);
+        JCacheEntryProcessor<K, T> entryProcessor = JCacheEntryProcessor.initStateAndExecuteProcessor(command, configuration, getClientSideTimeNanos());
         CommandResult<T> result = cache.invoke(key, entryProcessor);
         return result.getData();
     }
@@ -126,6 +121,10 @@ public class JCacheBackend<K extends Serializable> implements Backend<K> {
                 throw new UnsupportedOperationException(message);
             }
         });
+    }
+
+    private Long getClientSideTimeNanos() {
+        return clientClock == null? null : clientClock.currentTimeNanos();
     }
 
 }
