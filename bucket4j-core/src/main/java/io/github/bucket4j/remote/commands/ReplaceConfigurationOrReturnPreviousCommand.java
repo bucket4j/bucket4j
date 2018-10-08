@@ -27,7 +27,7 @@ public class ReplaceConfigurationOrReturnPreviousCommand implements RemoteComman
     private static final long serialVersionUID = 42;
 
     private BucketConfiguration newConfiguration;
-    private boolean replaced;
+    private boolean bucketStateModified;
 
     public ReplaceConfigurationOrReturnPreviousCommand(BucketConfiguration newConfiguration) {
         this.newConfiguration = newConfiguration;
@@ -40,13 +40,13 @@ public class ReplaceConfigurationOrReturnPreviousCommand implements RemoteComman
         if (previousConfiguration != null) {
             return previousConfiguration;
         }
-        replaced = true;
+        bucketStateModified = true;
         return null;
     }
 
     @Override
     public boolean isBucketStateModified() {
-        return replaced;
+        return bucketStateModified;
     }
 
     public BucketConfiguration getNewConfiguration() {

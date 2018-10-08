@@ -26,19 +26,19 @@ end
 
 local key = KEYS[1];
 
-if commandType == "execute" then
+if commandType == "EXECUTE" then
     local commandJson = ARGV[3];
     local command = cjson.decode(commandJson);
     return bucket4jExecute(key, currentTimeNanos, command);
 end
 
-if commandType == "initState" then
+if commandType == "INIT_STATE" then
     local configurationJson = ARGV[3];
     local configuration = cjson.decode(configurationJson);
     return bucket4jInitState(key, currentTimeNanos, configuration);
 end
 
-if commandType == "execute" then
+if commandType == "INIT_STATE_AND_EXECUTE" then
     local configurationJson = ARGV[3];
     local configuration = cjson.decode(configurationJson);
     local commandJson = ARGV[3];
