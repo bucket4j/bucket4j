@@ -6,9 +6,27 @@ Bucket4j.addBehaviorToState = function(state)
     -- TODO
 end
 
+Bucket4j.createNewState = function(configuration, currentTimeNanos)
+    local state = {};
+    local tokens = {};
+    state.tokens = tokens;
+    local lastRefillTime = {};
+    state.lastRefillTime = lastRefillTime;
+
+    for i, bandwidth in ipairs(configuration.bandwidths) do
+        tokens[i] = bandwidth.initialTokens;
+        lastRefillTime[i] = currentTimeNanos;
+    end
+
+    Bucket4j.addBehaviorToState(state);
+end
+
 Bucket4j.addBehaviorToConfiguration = function(configuration)
-    -- TODO
-    return bandwidths.length == newConfiguration.bandwidths.length;
+
+    function configuration:isCompatible(otherConfiguration)
+        return table.maxn(self.bandwidths) == table.maxn(otherConfiguration.bandwidths);
+    end
+
 end
 
 -- This is Lua re-implementation of io.github.bucket4j.remote.RemoteBucketState
@@ -70,15 +88,10 @@ Bucket4j.addBehaviorToCommand = function(command)
             self.bucketStateModified = true;
             return toConsume;
         end
-    elseif cmdName == 'ConsumeAsMuchAsPossible' then
-        function command:execute(state, currentTimeNanos)
-            state:refillAllBandwidth(currentTimeNanos);
-            return state:copyBucketState();
-        end
     elseif cmdName == 'CreateSnapshot' then
         function command:execute(state, currentTimeNanos)
             state:refillAllBandwidth(currentTimeNanos);
-            return state:copyBucketState();
+            return state.state;
         end
     elseif cmdName == 'GetAvailableTokens' then
         function command:execute(state, currentTimeNanos)
