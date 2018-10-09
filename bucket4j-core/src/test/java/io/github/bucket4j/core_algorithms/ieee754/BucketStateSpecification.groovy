@@ -225,7 +225,7 @@ class BucketStateSpecification extends Specification {
 
     @Unroll
     def "Specification for refill simple bandwidth #n"(int n, long initialTokens, long capacity, long period,
-                                                       long initTime, long timeOnRefill, long tokensAfterRefill, long roundingError) {
+                                                       long initTime, long timeOnRefill, long tokensAfterRefill) {
         setup:
             TimeMeterMock mockTimer = new TimeMeterMock(initTime)
             Bucket bucket = Bucket4j.builder()
@@ -240,21 +240,21 @@ class BucketStateSpecification extends Specification {
             state.refillAllBandwidth(configuration.bandwidths, timeOnRefill)
         then:
             state.getCurrentSize(0) == tokensAfterRefill
-            state.getRoundingError(0) == roundingError
+            state.getRoundingError(0) == 0
         where:
-        n  | initialTokens |    capacity    | period | initTime | timeOnRefill | tokensAfterRefill | roundingError
-        1  |        0      |      1000      | 1000   | 10000    |     10040    |       40          |      0
-        2  |       50      |      1000      | 1000   | 10000    |     10001    |       51          |      0
-        3  |       55      |      1000      | 1000   | 10000    |      9999    |       55          |      0
-        4  |      200      |      1000      | 1000   | 10000    |     20000    |     1000          |      0
-        5  |        0      |       100      | 1000   | 10000    |     10003    |        0          |      300
-        6  |       90      |       100      | 1000   | 10000    |     10017    |       91          |      700
-        7  |        0      |       100      | 1000   | 10000    |     28888    |      100          |      0
+        n  | initialTokens |    capacity    | period | initTime | timeOnRefill | tokensAfterRefill
+        1  |        0      |      1000      | 1000   | 10000    |     10040    |       40
+        2  |       50      |      1000      | 1000   | 10000    |     10001    |       51
+        3  |       55      |      1000      | 1000   | 10000    |      9999    |       55
+        4  |      200      |      1000      | 1000   | 10000    |     20000    |     1000
+        5  |        0      |       100      | 1000   | 10000    |     10003    |        0
+        6  |       90      |       100      | 1000   | 10000    |     10017    |       91
+        7  |        0      |       100      | 1000   | 10000    |     28888    |      100
     }
 
     @Unroll
     def "Specification for refill classic bandwidth #n"(int n, long initialTokens, long capacity, long refillTokens, long refillPeriod,
-                                                       long initTime, long timeOnRefill, long tokensAfterRefill, long roundingError) {
+                                                       long initTime, long timeOnRefill, long tokensAfterRefill) {
         setup:
             TimeMeterMock mockTimer = new TimeMeterMock(initTime)
             def refill = Refill.greedy(refillTokens, Duration.ofNanos(refillPeriod))
@@ -270,16 +270,16 @@ class BucketStateSpecification extends Specification {
             state.refillAllBandwidth(configuration.bandwidths, timeOnRefill)
         then:
             state.getCurrentSize(0) == tokensAfterRefill
-            state.getRoundingError(0) == roundingError
+            state.getRoundingError(0) == 0
         where:
-        n  | initialTokens |    capacity    | refillTokens | refillPeriod | initTime | timeOnRefill | tokensAfterRefill | roundingError
-        1  |        0      |      1000      |       1      |          1   | 10000    |     10040    |       40          |      0
-        2  |       50      |      1000      |      10      |         10   | 10000    |     10001    |       51          |      0
-        3  |       55      |      1000      |       1      |          1   | 10000    |     10000    |       55          |      0
-        4  |      200      |      1000      |      10      |         10   | 10000    |     20000    |     1000          |      0
-        5  |        0      |       100      |       1      |         10   | 10000    |     10003    |        0          |      3
-        6  |       90      |       100      |       1      |         10   | 10000    |     10017    |       91          |      7
-        7  |        0      |       100      |       1      |         10   | 10000    |     28888    |      100          |      0
+        n  | initialTokens |    capacity    | refillTokens | refillPeriod | initTime | timeOnRefill | tokensAfterRefill
+        1  |        0      |      1000      |       1      |          1   | 10000    |     10040    |       40
+        2  |       50      |      1000      |      10      |         10   | 10000    |     10001    |       51
+        3  |       55      |      1000      |       1      |          1   | 10000    |     10000    |       55
+        4  |      200      |      1000      |      10      |         10   | 10000    |     20000    |     1000
+        5  |        0      |       100      |       1      |         10   | 10000    |     10003    |        0
+        6  |       90      |       100      |       1      |         10   | 10000    |     10017    |       91
+        7  |        0      |       100      |       1      |         10   | 10000    |     28888    |      100
     }
 
     @Unroll
