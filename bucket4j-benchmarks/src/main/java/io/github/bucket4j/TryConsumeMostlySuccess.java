@@ -17,9 +17,7 @@
 
 package io.github.bucket4j;
 
-import io.github.bucket4j.state.GuavaLimiterState;
-import io.github.bucket4j.state.LocalLockFreeState;
-import io.github.bucket4j.state.LocalSynchronizedState;
+import io.github.bucket4j.state.*;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Mode;
@@ -42,6 +40,16 @@ public class TryConsumeMostlySuccess {
 
     @Benchmark
     public boolean tryConsumeOneToken_mostlySuccess_Synchronized(LocalSynchronizedState state) {
+        return state.unlimitedBucket.tryConsume(1);
+    }
+
+    @Benchmark
+    public boolean tryConsumeOneToken_mostlySuccess_LockFree_ieee754(LocalLockFreeState_ieee754 state) {
+        return state.unlimitedBucket.tryConsume(1);
+    }
+
+    @Benchmark
+    public boolean tryConsumeOneToken_mostlySuccess_Synchronized_ieee754(LocalSynchronizedState_ieee754 state) {
         return state.unlimitedBucket.tryConsume(1);
     }
 

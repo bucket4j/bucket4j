@@ -18,6 +18,7 @@
 package io.github.bucket4j;
 
 import io.github.bucket4j.state.LocalUnsafeState;
+import io.github.bucket4j.state.LocalUnsafeState_ieee754;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Mode;
@@ -40,6 +41,16 @@ public class BaseLineWithoutSynchronization {
 
     @Benchmark
     public boolean tryConsumeOneToken_alwaysSuccess_withoutRefill(LocalUnsafeState state) {
+        return state.bucketWithoutRefill.tryConsume(1);
+    }
+
+    @Benchmark
+    public boolean tryConsumeOneToken_alwaysSuccess_ieee754(LocalUnsafeState_ieee754 state) {
+        return state.bucket.tryConsume(1);
+    }
+
+    @Benchmark
+    public boolean tryConsumeOneToken_alwaysSuccess_withoutRefill_ieee754(LocalUnsafeState_ieee754 state) {
         return state.bucketWithoutRefill.tryConsume(1);
     }
 

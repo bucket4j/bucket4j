@@ -17,9 +17,7 @@
 
 package io.github.bucket4j;
 
-import io.github.bucket4j.state.GuavaLimiterState;
-import io.github.bucket4j.state.LocalLockFreeState;
-import io.github.bucket4j.state.LocalSynchronizedState;
+import io.github.bucket4j.state.*;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Mode;
@@ -42,6 +40,16 @@ public class ConsumeMostlySuccess {
 
     @Benchmark
     public void consumeOneToken_mostlySuccess_Synchronized(LocalSynchronizedState state) {
+        state._10_milion_rps_Bucket.asScheduler().tryConsumeUninterruptibly(1, TimeUnit.MILLISECONDS.toNanos(1), UninterruptibleBlockingStrategy.PARKING);
+    }
+
+    @Benchmark
+    public void consumeOneToken_mostlySuccess_LockFree_ieee754(LocalLockFreeState_ieee754 state) {
+        state._10_milion_rps_Bucket.asScheduler().tryConsumeUninterruptibly(1, TimeUnit.MILLISECONDS.toNanos(1), UninterruptibleBlockingStrategy.PARKING);
+    }
+
+    @Benchmark
+    public void consumeOneToken_mostlySuccess_Synchronized_ieee754(LocalSynchronizedState_ieee754 state) {
         state._10_milion_rps_Bucket.asScheduler().tryConsumeUninterruptibly(1, TimeUnit.MILLISECONDS.toNanos(1), UninterruptibleBlockingStrategy.PARKING);
     }
 
