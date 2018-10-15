@@ -18,8 +18,7 @@
 package io.github.bucket4j.redis;
 
 import io.github.bucket4j.BucketConfiguration;
-import io.github.bucket4j.BucketOptions;
-import io.github.bucket4j.TimeMeter;
+import io.github.bucket4j.BackendOptions;
 import io.github.bucket4j.remote.Backend;
 import io.github.bucket4j.remote.CommandResult;
 import io.github.bucket4j.remote.RemoteCommand;
@@ -32,7 +31,7 @@ import java.util.concurrent.CompletableFuture;
 public abstract class AbstractRedisBackend<K extends Serializable> implements Backend<K> {
 
     @Override
-    public BucketOptions getOptions() {
+    public BackendOptions getOptions() {
         return null;
     }
 

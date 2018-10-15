@@ -39,7 +39,7 @@ import java.util.concurrent.CompletableFuture;
  */
 public class HazelcastBackend<K extends Serializable> implements Backend<K> {
 
-    private static final BucketOptions OPTIONS = new BucketOptions(true, MathType.ALL, MathType.INTEGER_64_BITS);
+    private static final BackendOptions OPTIONS = new BackendOptions(true, MathType.ALL, MathType.INTEGER_64_BITS);
 
     private final IMap<K, RemoteBucketState> cache;
     private final TimeMeter clientClock;
@@ -55,7 +55,7 @@ public class HazelcastBackend<K extends Serializable> implements Backend<K> {
     }
 
     @Override
-    public BucketOptions getOptions() {
+    public BackendOptions getOptions() {
         return OPTIONS;
     }
 

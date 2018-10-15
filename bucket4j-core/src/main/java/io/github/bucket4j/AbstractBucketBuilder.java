@@ -25,7 +25,7 @@ public abstract class AbstractBucketBuilder<T extends AbstractBucketBuilder> {
 
     private final ConfigurationBuilder configurationBuilder;
 
-    protected AbstractBucketBuilder(BucketOptions options) {
+    protected AbstractBucketBuilder(BackendOptions options) {
         configurationBuilder = new ConfigurationBuilder(options);
     }
 

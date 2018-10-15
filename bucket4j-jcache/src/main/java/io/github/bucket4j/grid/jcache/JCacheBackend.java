@@ -35,7 +35,7 @@ import java.util.concurrent.CompletableFuture;
  */
 public class JCacheBackend<K extends Serializable> implements Backend<K> {
 
-    private static final BucketOptions OPTIONS = new BucketOptions(false, MathType.ALL, MathType.INTEGER_64_BITS);
+    private static final BackendOptions OPTIONS = new BackendOptions(false, MathType.ALL, MathType.INTEGER_64_BITS);
 
     private static final Map<String, String> incompatibleProviders = new HashMap<>();
     static {
@@ -58,7 +58,7 @@ public class JCacheBackend<K extends Serializable> implements Backend<K> {
     }
 
     @Override
-    public BucketOptions getOptions() {
+    public BackendOptions getOptions() {
         return OPTIONS;
     }
 

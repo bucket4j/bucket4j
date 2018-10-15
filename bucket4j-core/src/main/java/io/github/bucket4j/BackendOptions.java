@@ -17,18 +17,16 @@
 
 package io.github.bucket4j;
 
-import io.github.bucket4j.MathType;
-
 import java.util.Set;
 
 // todo javadocs
-public class BucketOptions {
+public class BackendOptions {
 
     private final boolean asyncModeSupported;
     private final Set<MathType> supportedMathTypes;
     private final MathType defaultMathType;
 
-    public BucketOptions(boolean asyncModeSupported, Set<MathType> supportedMathTypes, MathType defaultMathType) {
+    public BackendOptions(boolean asyncModeSupported, Set<MathType> supportedMathTypes, MathType defaultMathType) {
         this.asyncModeSupported = asyncModeSupported;
         this.supportedMathTypes = supportedMathTypes;
         this.defaultMathType = defaultMathType;

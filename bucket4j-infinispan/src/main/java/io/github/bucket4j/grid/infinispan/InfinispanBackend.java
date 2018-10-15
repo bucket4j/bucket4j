@@ -31,7 +31,6 @@ import org.infinispan.util.function.SerializableFunction;
 import java.io.Serializable;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
@@ -43,7 +42,7 @@ import java.util.concurrent.ExecutionException;
  */
 public class InfinispanBackend<K extends Serializable> implements Backend<K> {
 
-    private static final BucketOptions OPTIONS = new BucketOptions(true, MathType.ALL, MathType.INTEGER_64_BITS);
+    private static final BackendOptions OPTIONS = new BackendOptions(true, MathType.ALL, MathType.INTEGER_64_BITS);
 
     private final ReadWriteMap<K, RemoteBucketState> readWriteMap;
     private final TimeMeter clientClock;
@@ -60,7 +59,7 @@ public class InfinispanBackend<K extends Serializable> implements Backend<K> {
     }
 
     @Override
-    public BucketOptions getOptions() {
+    public BackendOptions getOptions() {
         return OPTIONS;
     }
 

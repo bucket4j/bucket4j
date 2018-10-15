@@ -62,6 +62,17 @@ public class BucketStateIEEE754 implements BucketState {
     }
 
     @Override
+    public long getCurrentSize(int bandwidth) {
+        return (long) tokens[0];
+    }
+
+    @Override
+    public long getRoundingError(int bandwidth) {
+        // accumulated computational error is always zero for this type of state
+        return 0;
+    }
+
+    @Override
     public long getAvailableTokens(Bandwidth[] bandwidths) {
         long availableTokens = (long) tokens[0];
         for (int i = 1; i < tokens.length; i++) {
@@ -78,48 +89,22 @@ public class BucketStateIEEE754 implements BucketState {
     }
 
     @Override
-    public long calculateDelayNanosAfterWillBePossibleToConsume(Bandwidth[] bandwidths, long tokensToConsume, long currentTimeNanos) {
-        long delayAfterWillBePossibleToConsume = calculateDelayNanosAfterWillBePossibleToConsume(0, bandwidths[0], tokensToConsume, currentTimeNanos);
-        for (int i = 1; i < bandwidths.length; i++) {
-            Bandwidth bandwidth = bandwidths[i];
-            long delay = calculateDelayNanosAfterWillBePossibleToConsume(i, bandwidth, tokensToConsume, currentTimeNanos);
-            delayAfterWillBePossibleToConsume = Math.max(delayAfterWillBePossibleToConsume, delay);
+    public void addTokens(Bandwidth[] bandwidths, long tokensToAdd) {
+        for (int i = 0; i < bandwidths.length; i++) {
+            double currentSize = tokens[i];
+            double newSize = currentSize + tokensToAdd;
+            if (newSize >= bandwidths[i].getCapacity()) {
+                tokens[i] = bandwidths[i].getCapacity();
+            } else {
+                tokens[i] = newSize;
+            }
         }
-        return delayAfterWillBePossibleToConsume;
     }
 
     @Override
     public void refillAllBandwidth(Bandwidth[] limits, long currentTimeNanos) {
         for (int i = 0; i < limits.length; i++) {
             refill(i, limits[i], currentTimeNanos);
-        }
-    }
-
-    @Override
-    public void addTokens(Bandwidth[] limits, long tokensToAdd) {
-        for (int i = 0; i < limits.length; i++) {
-            addTokens(i, limits[i], tokensToAdd);
-        }
-    }
-
-    @Override
-    public long getCurrentSize(int bandwidth) {
-        return (long) tokens[0];
-    }
-
-    @Override
-    public long getRoundingError(int bandwidth) {
-        // accumulated computational error is always zero for this type of state
-        return 0;
-    }
-
-    private void addTokens(int bandwidthIndex, Bandwidth bandwidth, long tokensToAdd) {
-        double currentSize = tokens[bandwidthIndex];
-        double newSize = currentSize + tokensToAdd;
-        if (newSize >= bandwidth.getCapacity()) {
-            tokens[bandwidthIndex] = bandwidth.getCapacity();
-        } else {
-            tokens[bandwidthIndex] = newSize;
         }
     }
 
@@ -165,7 +150,18 @@ public class BucketStateIEEE754 implements BucketState {
         tokens[bandwidthIndex] = newSize;
     }
 
-    private long calculateDelayNanosAfterWillBePossibleToConsume(int bandwidthIndex, Bandwidth bandwidth, long tokensToConsume, long currentTimeNanos) {
+    @Override
+    public long calculateDelayNanosAfterWillBePossibleToConsume(Bandwidth[] bandwidths, long tokensToConsume, long currentTimeNanos) {
+        long delayAfterWillBePossibleToConsume = calculateDelayNanosAfterWillBePossibleToConsumeForBandwidth(0, bandwidths[0], tokensToConsume, currentTimeNanos);
+        for (int i = 1; i < bandwidths.length; i++) {
+            Bandwidth bandwidth = bandwidths[i];
+            long delay = calculateDelayNanosAfterWillBePossibleToConsumeForBandwidth(i, bandwidth, tokensToConsume, currentTimeNanos);
+            delayAfterWillBePossibleToConsume = Math.max(delayAfterWillBePossibleToConsume, delay);
+        }
+        return delayAfterWillBePossibleToConsume;
+    }
+
+    private long calculateDelayNanosAfterWillBePossibleToConsumeForBandwidth(int bandwidthIndex, Bandwidth bandwidth, long tokensToConsume, long currentTimeNanos) {
         double currentSize = tokens[bandwidthIndex];
         if (tokensToConsume <= currentSize) {
             return 0;

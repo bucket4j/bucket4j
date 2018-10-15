@@ -18,13 +18,10 @@
 package io.github.bucket4j.remote;
 
 import io.github.bucket4j.BucketConfiguration;
-import io.github.bucket4j.BucketOptions;
-import io.github.bucket4j.MathType;
-import io.github.bucket4j.TimeMeter;
+import io.github.bucket4j.BackendOptions;
 
 import java.io.Serializable;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -37,7 +34,7 @@ import java.util.concurrent.CompletableFuture;
 public interface Backend<K extends Serializable> {
 
     // TODO javadocs
-    BucketOptions getOptions();
+    BackendOptions getOptions();
 
     // TODO javadocs
     <T extends Serializable> CommandResult<T> execute(K key, RemoteCommand<T> command);

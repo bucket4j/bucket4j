@@ -28,10 +28,10 @@ import java.util.List;
 public class ConfigurationBuilder {
 
     private final List<Bandwidth> bandwidths;
-    private final BucketOptions options;
+    private final BackendOptions options;
     private MathType mathType;
 
-    public ConfigurationBuilder(BucketOptions options) {
+    public ConfigurationBuilder(BackendOptions options) {
         this.bandwidths = new ArrayList<>(1);
         this.options = options;
         this.mathType = options.getDefaultMathType();

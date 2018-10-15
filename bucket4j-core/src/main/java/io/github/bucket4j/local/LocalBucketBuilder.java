@@ -24,7 +24,7 @@ import io.github.bucket4j.*;
  */
 public class LocalBucketBuilder extends AbstractBucketBuilder<LocalBucketBuilder> {
 
-    public static final BucketOptions OPTIONS = new BucketOptions(true, MathType.ALL, MathType.INTEGER_64_BITS);
+    public static final BackendOptions OPTIONS = new BackendOptions(true, MathType.ALL, MathType.INTEGER_64_BITS);
 
     private TimeMeter timeMeter = TimeMeter.SYSTEM_MILLISECONDS;
     private SynchronizationStrategy synchronizationStrategy = SynchronizationStrategy.LOCK_FREE;
