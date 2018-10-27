@@ -17,6 +17,7 @@
 
 package compatibility_test;
 
+import io.github.bucket4j.redis.LuaTestBase;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.RedisURI;
 import io.lettuce.core.ScriptOutputType;
@@ -41,7 +42,7 @@ public class LuaScriptIsolationTest {
 
     private static final String KEY = "42";
 
-    private static final String incrementScript = readScript("/increment-counter.lua");
+    private static final String incrementScript = LuaTestBase.readScript("/increment-counter.lua");
 
     @Rule
     public GenericContainer redis = new GenericContainer("redis:4.0.11")
@@ -59,7 +60,6 @@ public class LuaScriptIsolationTest {
         StatefulRedisConnection<String, String> connection = client.connect();
 
         this.commands = connection.sync();
-        RedisAsyncCommands<String, String> p = connection.async();
     }
 
     @Test
@@ -91,17 +91,6 @@ public class LuaScriptIsolationTest {
         long result = commands.eval(incrementScript, ScriptOutputType.INTEGER, KEY);
         System.err.println(result);
         assertEquals(result, threadCount * invocationsPerThread + 1);
-    }
-
-    private static String readScript(String scriptResource) {
-        String file = LuaScriptIsolationTest.class.getResource(scriptResource).getFile();
-        byte[] scriptBytes;
-        try {
-            scriptBytes = Files.readAllBytes(new File(file).toPath());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        return new String(scriptBytes, StandardCharsets.UTF_8);
     }
 
 }
