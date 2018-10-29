@@ -227,6 +227,11 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket {
     }
 
     @Override
+    public TimeMeter getTimeMeter() {
+        return timeMeter;
+    }
+
+    @Override
     public String toString() {
         synchronized (this) {
             return "SynchronizedBucket{" +

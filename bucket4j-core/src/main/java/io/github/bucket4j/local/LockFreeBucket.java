@@ -245,6 +245,11 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket {
         return stateRef.get().configuration;
     }
 
+    @Override
+    public TimeMeter getTimeMeter() {
+        return timeMeter;
+    }
+
     private static class StateWithConfiguration {
 
         BucketConfiguration configuration;

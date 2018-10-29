@@ -18,6 +18,7 @@
 package io.github.bucket4j.core_algorithms.ieee754
 
 import io.github.bucket4j.*
+import io.github.bucket4j.local.LocalBucket
 import io.github.bucket4j.mock.TimeMeterMock
 import spock.lang.Specification
 import spock.lang.Unroll
@@ -27,9 +28,9 @@ import java.time.Duration
 class BucketStateSpecification extends Specification {
 
     @Unroll
-    def "GetAvailableTokens specification #testNumber"(String testNumber, long requiredAvailableTokens, Bucket bucket) {
+    def "GetAvailableTokens specification #testNumber"(String testNumber, long requiredAvailableTokens, LocalBucket bucket) {
         setup:
-            BucketState state = bucket.createSnapshot()
+            BucketState state = getState(bucket)
         when:
             long availableTokens = state.getAvailableTokens(bucket.configuration.bandwidths)
         then:
@@ -77,9 +78,9 @@ class BucketStateSpecification extends Specification {
     }
 
     @Unroll
-    def "addTokens specification #testNumber"(String testNumber, long tokensToAdd, long requiredAvailableTokens, Bucket bucket) {
+    def "addTokens specification #testNumber"(String testNumber, long tokensToAdd, long requiredAvailableTokens, LocalBucket bucket) {
         setup:
-            BucketState state = bucket.createSnapshot()
+            BucketState state = getState(bucket)
         when:
             state.addTokens(bucket.configuration.bandwidths, tokensToAdd)
             long availableTokens = state.getAvailableTokens(bucket.configuration.bandwidths)
@@ -133,11 +134,11 @@ class BucketStateSpecification extends Specification {
     }
 
     @Unroll
-    def "delayAfterWillBePossibleToConsume specification #testNumber"(String testNumber, long toConsume, long requiredTime, Bucket bucket) {
+    def "delayAfterWillBePossibleToConsume specification #testNumber"(String testNumber, long toConsume, long requiredTime, LocalBucket bucket) {
             def configuration = bucket.configuration
         TimeMeter timeMeter = bucket.timeMeter
         setup:
-            BucketState state = bucket.createSnapshot()
+            BucketState state = getState(bucket)
         when:
             long actualTime = state.calculateDelayNanosAfterWillBePossibleToConsume(configuration.bandwidths, toConsume, timeMeter.currentTimeNanos())
         then:
@@ -233,7 +234,7 @@ class BucketStateSpecification extends Specification {
                     .addLimit(Bandwidth.simple(capacity, Duration.ofNanos(period)).withInitialTokens(initialTokens))
                     .withCustomTimePrecision(mockTimer)
                     .build()
-            BucketState state = bucket.createSnapshot()
+            BucketState state = getState(bucket)
             BucketConfiguration configuration = bucket.getConfiguration()
         when:
             mockTimer.setCurrentTimeNanos(timeOnRefill)
@@ -263,7 +264,7 @@ class BucketStateSpecification extends Specification {
                     .addLimit(Bandwidth.classic(capacity, refill).withInitialTokens(initialTokens))
                     .withCustomTimePrecision(mockTimer)
                     .build()
-            BucketState state = bucket.createSnapshot()
+            BucketState state = getState(bucket)
             BucketConfiguration configuration = bucket.getConfiguration()
         when:
             mockTimer.setCurrentTimeNanos(timeOnRefill)
@@ -292,7 +293,7 @@ class BucketStateSpecification extends Specification {
                 .withMath(MathType.IEEE_754)
                 .addLimit(bandwidth)
                 .build()
-            BucketState state = bucket.createSnapshot()
+            BucketState state = getState(bucket)
             BucketConfiguration configuration = bucket.getConfiguration()
         when:
             state.consume(configuration.bandwidths, toConsume)
@@ -303,6 +304,10 @@ class BucketStateSpecification extends Specification {
         1  |        0        | 1000   |   1000   |    10     |   -10
         2  |       50        | 1000   |   1000   |     2     |    48
         3  |       55        | 1000   |   1000   |   1600    |   -1545
+    }
+
+    protected BucketState getState(LocalBucket bucket) {
+        return bucket.createSnapshot()
     }
 
 }

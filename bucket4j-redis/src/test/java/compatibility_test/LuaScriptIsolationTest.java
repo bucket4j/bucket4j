@@ -17,22 +17,17 @@
 
 package compatibility_test;
 
-import io.github.bucket4j.redis.LuaTestBase;
+import io.github.bucket4j.lua.Bucket4jScript;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.RedisURI;
 import io.lettuce.core.ScriptOutputType;
 import io.lettuce.core.api.StatefulRedisConnection;
-import io.lettuce.core.api.async.RedisAsyncCommands;
 import io.lettuce.core.api.sync.RedisCommands;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.testcontainers.containers.GenericContainer;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.util.concurrent.CountDownLatch;
 
 import static org.junit.Assert.assertEquals;
@@ -42,7 +37,7 @@ public class LuaScriptIsolationTest {
 
     private static final String KEY = "42";
 
-    private static final String incrementScript = LuaTestBase.readScript("/increment-counter.lua");
+    private static final String incrementScript = Bucket4jScript.readScript("/increment-counter.lua");
 
     @Rule
     public GenericContainer redis = new GenericContainer("redis:4.0.11")

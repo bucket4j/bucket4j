@@ -15,6 +15,7 @@ Bucket4j.createNewState = function(configuration, currentTimeNanos)
     end
 
     Bucket4j.addBehaviorToState(state);
+    return state;
 end
 
 Bucket4j.addBehaviorToState = function(state)

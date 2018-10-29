@@ -15,9 +15,9 @@
  *    limitations under the License.
  */
 
-package io.github.bucket4j.redis;
+package io.github.bucket4j.lua;
 
-import compatibility_test.LuaScriptIsolationTest;
+import io.github.bucket4j.BucketConfiguration;
 import org.classdump.luna.StateContext;
 import org.classdump.luna.Table;
 import org.classdump.luna.Variable;
@@ -31,8 +31,6 @@ import org.classdump.luna.lib.StandardLibrary;
 import org.classdump.luna.load.ChunkLoader;
 import org.classdump.luna.load.LoaderException;
 import org.classdump.luna.runtime.LuaFunction;
-import org.junit.Before;
-import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
@@ -40,35 +38,34 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 
 
-import static org.junit.Assert.assertEquals;
+public class Bucket4jScript {
 
-public class LuaTestBase {
+    private final DirectCallExecutor executor = DirectCallExecutor.newExecutor();
+    private final StateContext context;
+    private final Table globalScope;
+    private final Table bucket4jMetaTable;
 
-    protected LuaFunction bucket4jScript;
-    protected StateContext context;
-    protected Table environment;
-
-    @Before
-    public void initLuaEnvironment() throws LoaderException {
+    public Bucket4jScript() {
         String program = readScript("/bucket4j.lua");
+        program += "\n return Bucket4j;";
 
         // initialise context
         this.context = StateContexts.newDefaultInstance();
-        this.environment = StandardLibrary.in(RuntimeEnvironments.system()).installInto(context);
+        this.globalScope = StandardLibrary.in(RuntimeEnvironments.system()).installInto(context);
 
         // compile
         ChunkLoader loader = CompilerChunkLoader.of("Bucket4j");
-        bucket4jScript = loader.loadTextChunk(new Variable(environment), "bucket4j", program);
-    }
-
-    @Test
-    public void testThatScriptIsExecutable() throws InterruptedException, CallPausedException, CallException {
-        Object[] result = DirectCallExecutor.newExecutor().call(context, bucket4jScript);
-        assertEquals("Main script should not return any value", 0, result.length);
+        try {
+            LuaFunction bucket4jScript = loader.loadTextChunk(new Variable(globalScope), "bucket4j", program);
+            Object[] result = executor.call(context, bucket4jScript);
+            this.bucket4jMetaTable = (Table) result[0];
+        } catch (LoaderException | CallException | CallPausedException | InterruptedException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     public static String readScript(String scriptResource) {
-        String file = LuaScriptIsolationTest.class.getResource(scriptResource).getFile();
+        String file = Bucket4jScript.class.getResource(scriptResource).getFile();
         byte[] scriptBytes;
         try {
             scriptBytes = Files.readAllBytes(new File(file).toPath());
@@ -76,6 +73,15 @@ public class LuaTestBase {
             throw new RuntimeException(e);
         }
         return new String(scriptBytes, StandardCharsets.UTF_8);
+    }
+
+    public Table getBucket4jMetaTable() {
+        return bucket4jMetaTable;
+    }
+
+    public Table createState(BucketConfiguration configuration, long currentTimeNanos) {
+        // TODO
+        return null;
     }
 
 }

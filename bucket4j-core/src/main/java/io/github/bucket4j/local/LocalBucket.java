@@ -19,6 +19,7 @@ package io.github.bucket4j.local;
 
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketConfiguration;
+import io.github.bucket4j.TimeMeter;
 
 /**
  * Represents the bucket inside current JVM.
@@ -31,5 +32,7 @@ public interface LocalBucket extends Bucket {
      * @return configuration
      */
     BucketConfiguration getConfiguration();
+
+    TimeMeter getTimeMeter();
 
 }
