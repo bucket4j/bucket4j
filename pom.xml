@@ -21,7 +21,7 @@
 
     <groupId>com.github.vladimir-bukhtoyarov</groupId>
     <artifactId>bucket4j</artifactId>
-    <version>4.1.1</version>
+    <version>4.2.0</version>
     <packaging>pom</packaging>
 
     <name>bucket4j</name>
@@ -33,6 +33,7 @@
         <module>bucket4j-hazelcast</module>
         <module>bucket4j-ignite</module>
         <module>bucket4j-infinispan</module>
+        <module>bucket4j-infinispan-8</module>
         <module>experimental</module>
         <module>bucket4j-benchmarks</module>
     </modules>
