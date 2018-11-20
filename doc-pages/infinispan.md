@@ -9,11 +9,19 @@ at bucket construction time.
 
 
 ## Dependencies
-To use ```bucket4j-infinispan``` extension you need to add following dependency:
+To use ```bucket4j-infinispan``` with ```Infinispan 9.x``` extension you need to add following dependency:
 ```xml
 <dependency>
     <groupId>com.github.vladimir-bukhtoyarov</groupId>
     <artifactId>bucket4j-infinispan</artifactId>
+    <version>${bucket4j.version}</version>
+</dependency>
+```
+If you are using legacy version of Infinispan ```8.x``` then you need to add following dependency:
+```xml
+<dependency>
+    <groupId>com.github.vladimir-bukhtoyarov</groupId>
+    <artifactId>bucket4j-infinispan-8</artifactId>
     <version>${bucket4j.version}</version>
 </dependency>
 ```
