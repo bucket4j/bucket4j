@@ -62,7 +62,7 @@ use any of them:
 <dependency>
     <groupId>com.github.vladimir-bukhtoyarov</groupId>
     <artifactId>bucket4j-core</artifactId>
-    <version>4.1.1</version>
+    <version>4.2.0</version>
 </dependency>
 ```
 ***Warning:*** do not use ```4.1.0``` version, it was released with mistake. 
