@@ -79,7 +79,7 @@ public class ThrottlingFilter implements javax.servlet.Filter {
         String appKey = SecurityUtils.getThirdPartyAppKey();
         Bucket bucket = (Bucket) session.getAttribute("throttler-" + appKey);
         if (bucket == null) {
-            Bucket bucket = createNewBucket();
+            bucket = createNewBucket();
             session.setAttribute("throttler-" + appKey, bucket);
         }
 
