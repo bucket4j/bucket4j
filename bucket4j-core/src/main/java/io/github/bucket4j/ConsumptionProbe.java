@@ -65,7 +65,20 @@ public class ConsumptionProbe implements Serializable {
     }
 
     /**
-     * Returns zero if {@link #isConsumed()} returns true, else time in nanos which need to wait until requested amount of tokens will be refilled
+     * Returns zero if {@link #isConsumed()} returns true, else time in nanos which
+     * need to wait until requested amount of tokens will be refilled.
+     * 
+     * For non-zero cases there are 2 options:
+     * 
+     * If bucket's {@link Bandwidth} was configured using
+     * {@link Bandwidth#simple(long, java.time.Duration)} or with
+     * {@link Refill#greedy(long, java.time.Duration)}, then this method will return
+     * constant duration per bandwidth's configuration.
+     * 
+     * If bandwidth was configured using
+     * {@link Refill#intervally(long, java.time.Duration)}, then this method will
+     * return actual duration for which you'll need to wait until next token will
+     * become available.
      *
      * @return Zero if {@link #isConsumed()} returns true, else time in nanos which need to wait until requested amount of tokens will be refilled
      */
