@@ -17,8 +17,10 @@
 
 package io.github.bucket4j
 
+import io.github.bucket4j.mock.BucketType
 import io.github.bucket4j.mock.TimeMeterMock
 import spock.lang.Specification
+import spock.lang.Unroll
 
 import java.time.Duration
 
@@ -64,6 +66,29 @@ class BucketRoundingRulesSpecification extends Specification {
             meter.addTime(3)
         then:
             !bucket.tryConsume(1)
+    }
+
+    @Unroll
+    def "Partially refilled token should not be missed when calculating time for refill #bucketType"(BucketType bucketType) {
+        expect:
+            def timeMeter = new TimeMeterMock(0)
+            def builder = Bucket4j.builder()
+                    .addLimit(Bandwidth.simple(1, Duration.ofSeconds(1)))
+            Bucket bucket = bucketType.createBucket(builder, timeMeter)
+
+            assert bucket.tryConsumeAsMuchAsPossible() == 1
+
+            timeMeter.addTime(200_000_000)
+
+            ConsumptionProbe probe1 = bucket.tryConsumeAndReturnRemaining(1)
+            assert !probe1.consumed
+            assert probe1.nanosToWaitForRefill == 800_000_000
+
+            ConsumptionProbe probe2 = bucket.tryConsumeAndReturnRemaining(3)
+            assert !probe2.consumed
+            assert probe2.nanosToWaitForRefill == 2_800_000_000
+        where:
+            bucketType << BucketType.values()
     }
 
 }
