@@ -103,6 +103,39 @@ class BucketSpecification extends Specification {
     }
 
     @Unroll
+    def "#n tryConsumeAndReturnRemaining specification"(int n, long toEstimate, boolean result, long expectedWait, AbstractBucketBuilder builder) {
+        expect:
+            for (BucketType type : BucketType.values()) {
+                for (boolean sync : [true, false]) {
+                    TimeMeterMock timeMeter = new TimeMeterMock(0)
+                    Bucket bucket = type.createBucket(builder, timeMeter)
+                    long availableTokensBeforeEstimation = bucket.getAvailableTokens()
+
+                    EstimationProbe probe
+                    if (sync) {
+                        probe = bucket.estimateAbilityToConsume(toEstimate)
+                    } else {
+                        probe = bucket.asAsync().estimateAbilityToConsume(toEstimate).get()
+                    }
+                    assert probe.canBeConsumed() == result
+                    assert probe.remainingTokens == availableTokensBeforeEstimation
+                    assert probe.nanosToWaitForRefill == expectedWait
+                    assert bucket.getAvailableTokens() == availableTokensBeforeEstimation
+                }
+            }
+        where:
+            n | toEstimate | result  |  expectedWait | builder
+            1 |    49      |   true  |        0      | Bucket4j.builder().addLimit(Bandwidth.simple(100, Duration.ofNanos(100)).withInitialTokens(100))
+            2 |     1      |   true  |        0      | Bucket4j.builder().addLimit(Bandwidth.simple(100, Duration.ofNanos(100)).withInitialTokens(1))
+            3 |    80      |   false |       10      | Bucket4j.builder().addLimit(Bandwidth.simple(100, Duration.ofNanos(100)).withInitialTokens(70))
+            4 |    10      |   false |       10      | Bucket4j.builder().addLimit(Bandwidth.simple(100, Duration.ofNanos(100)).withInitialTokens(0))
+            5 |   120      |   false |      110      | Bucket4j.builder().addLimit(Bandwidth.simple(100, Duration.ofNanos(100)).withInitialTokens(10))
+            6 |    80      |   false |      100      | Bucket4j.builder().addLimit(Bandwidth.classic(100, Refill.intervally(100, Duration.ofNanos(100))).withInitialTokens(70))
+            7 |    10      |   false |      100      | Bucket4j.builder().addLimit(Bandwidth.classic(100, Refill.intervally(100, Duration.ofNanos(100))).withInitialTokens(0))
+            8 |   120      |   false |      200      | Bucket4j.builder().addLimit(Bandwidth.classic(100, Refill.intervally(100, Duration.ofNanos(100))).withInitialTokens(10))
+    }
+
+    @Unroll
     def "#n Should return #requiredResult when consumeAsMuchAsPossible tokens from Bucket #builder"(
             int n, long requiredResult, AbstractBucketBuilder builder) {
         expect:

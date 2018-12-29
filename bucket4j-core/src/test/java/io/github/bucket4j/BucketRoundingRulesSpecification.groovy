@@ -80,13 +80,19 @@ class BucketRoundingRulesSpecification extends Specification {
 
             timeMeter.addTime(200_000_000)
 
-            ConsumptionProbe probe1 = bucket.tryConsumeAndReturnRemaining(1)
-            assert !probe1.consumed
-            assert probe1.nanosToWaitForRefill == 800_000_000
+            EstimationProbe estimationProbe1 = bucket.estimateAbilityToConsume(1)
+            assert !estimationProbe1.canBeConsumed()
+            assert estimationProbe1.nanosToWaitForRefill == 800_000_000
+            ConsumptionProbe consumptionProbe1 = bucket.tryConsumeAndReturnRemaining(1)
+            assert !consumptionProbe1.consumed
+            assert consumptionProbe1.nanosToWaitForRefill == 800_000_000
 
-            ConsumptionProbe probe2 = bucket.tryConsumeAndReturnRemaining(3)
-            assert !probe2.consumed
-            assert probe2.nanosToWaitForRefill == 2_800_000_000
+            EstimationProbe estimationProbe2 = bucket.estimateAbilityToConsume(3)
+            assert !estimationProbe2.canBeConsumed()
+            assert estimationProbe2.nanosToWaitForRefill == 2_800_000_000
+            ConsumptionProbe consumptionProbe2 = bucket.tryConsumeAndReturnRemaining(3)
+            assert !consumptionProbe2.consumed
+            assert consumptionProbe2.nanosToWaitForRefill == 2_800_000_000
         where:
             bucketType << BucketType.values()
     }
