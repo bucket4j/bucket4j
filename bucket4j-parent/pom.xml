@@ -239,7 +239,7 @@
         <dependency>
             <groupId>org.gridkit.lab</groupId>
             <artifactId>nanocloud</artifactId>
-            <version>0.8.12</version>
+            <version>0.8.16</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
