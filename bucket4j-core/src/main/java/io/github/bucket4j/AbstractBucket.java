@@ -32,9 +32,13 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket {
 
     protected abstract ConsumptionProbe tryConsumeAndReturnRemainingTokensImpl(long tokensToConsume);
 
+    protected abstract EstimationProbe estimateAbilityToConsumeImpl(long numTokens);
+
     protected abstract long reserveAndCalculateTimeToSleepImpl(long tokensToConsume, long waitIfBusyNanos);
 
     protected abstract void addTokensImpl(long tokensToAdd);
+
+    protected abstract void replaceConfigurationImpl(BucketConfiguration newConfiguration);
 
     protected abstract CompletableFuture<Long> tryConsumeAsMuchAsPossibleAsyncImpl(long limit);
 
@@ -42,11 +46,11 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket {
 
     protected abstract CompletableFuture<ConsumptionProbe> tryConsumeAndReturnRemainingTokensAsyncImpl(long tokensToConsume);
 
+    protected abstract CompletableFuture<EstimationProbe> estimateAbilityToConsumeAsyncImpl(long tokensToEstimate);
+
     protected abstract CompletableFuture<Long> reserveAndCalculateTimeToSleepAsyncImpl(long tokensToConsume, long maxWaitTimeNanos);
 
     protected abstract CompletableFuture<Void> addTokensAsyncImpl(long tokensToAdd);
-
-    protected abstract void replaceConfigurationImpl(BucketConfiguration newConfiguration);
 
     protected abstract CompletableFuture<Void> replaceConfigurationAsyncImpl(BucketConfiguration newConfiguration);
 
@@ -86,6 +90,12 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket {
                     }
                     return probe;
                 });
+            }
+
+            @Override
+            public CompletableFuture<EstimationProbe> estimateAbilityToConsume(long numTokens) {
+                checkTokensToConsume(numTokens);
+                return estimateAbilityToConsumeAsyncImpl(numTokens);
             }
 
             @Override
@@ -340,6 +350,12 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket {
             listener.onRejected(tokensToConsume);
         }
         return probe;
+    }
+
+    @Override
+    public EstimationProbe estimateAbilityToConsume(long numTokens) {
+        checkTokensToConsume(numTokens);
+        return estimateAbilityToConsumeImpl(numTokens);
     }
 
     @Override

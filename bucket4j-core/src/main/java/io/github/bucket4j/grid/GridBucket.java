@@ -94,8 +94,18 @@ public class GridBucket<K extends Serializable> extends AbstractBucket {
     }
 
     @Override
+    protected EstimationProbe estimateAbilityToConsumeImpl(long numTokens) {
+        return execute(new EstimateAbilityToConsumeCommand(numTokens));
+    }
+
+    @Override
     protected CompletableFuture<ConsumptionProbe> tryConsumeAndReturnRemainingTokensAsyncImpl(long tokensToConsume) {
         return executeAsync(new TryConsumeAndReturnRemainingTokensCommand(tokensToConsume));
+    }
+
+    @Override
+    protected CompletableFuture<EstimationProbe> estimateAbilityToConsumeAsyncImpl(long tokensToEstimate) {
+        return executeAsync(new EstimateAbilityToConsumeCommand(tokensToEstimate));
     }
 
     @Override

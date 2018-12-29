@@ -113,6 +113,23 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket {
     }
 
     @Override
+    protected EstimationProbe estimateAbilityToConsumeImpl(long tokensToEstimate) {
+        long currentTimeNanos = timeMeter.currentTimeNanos();
+        lock.lock();
+        try {
+            state.refillAllBandwidth(bandwidths, currentTimeNanos);
+            long availableToConsume = state.getAvailableTokens(bandwidths);
+            if (tokensToEstimate > availableToConsume) {
+                long nanosToWaitForRefill = state.calculateDelayNanosAfterWillBePossibleToConsume(bandwidths, tokensToEstimate, currentTimeNanos);
+                return EstimationProbe.canNotBeConsumed(availableToConsume, nanosToWaitForRefill);
+            }
+            return EstimationProbe.canBeConsumed(availableToConsume);
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    @Override
     protected long reserveAndCalculateTimeToSleepImpl(long tokensToConsume, long waitIfBusyNanosLimit) {
         long currentTimeNanos = timeMeter.currentTimeNanos();
         lock.lock();
@@ -184,6 +201,12 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket {
     @Override
     protected CompletableFuture<ConsumptionProbe> tryConsumeAndReturnRemainingTokensAsyncImpl(long tokensToConsume) {
         ConsumptionProbe result = tryConsumeAndReturnRemainingTokensImpl(tokensToConsume);
+        return CompletableFuture.completedFuture(result);
+    }
+
+    @Override
+    protected CompletableFuture<EstimationProbe> estimateAbilityToConsumeAsyncImpl(long tokensToEstimate) {
+        EstimationProbe result = estimateAbilityToConsumeImpl(tokensToEstimate);
         return CompletableFuture.completedFuture(result);
     }
 

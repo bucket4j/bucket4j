@@ -135,7 +135,7 @@ public interface AsyncBucket {
      *
      * @see Bucket#estimateAbilityToConsume(long)
      */
-    EstimationProbe estimateAbilityToConsume(long numTokens);
+    CompletableFuture<EstimationProbe> estimateAbilityToConsume(long numTokens);
 
     /**
      * Asynchronous version of {@link Bucket#tryConsumeAsMuchAsPossible()}, follows the same semantic.
