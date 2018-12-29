@@ -23,7 +23,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.github.vladimir-bukhtoyarov</groupId>
-    <version>4.2.1</version>
+    <version>4.3.0</version>
     <artifactId>bucket4j-parent</artifactId>
     <packaging>pom</packaging>
     <name>bucket4j-parent</name>
@@ -239,7 +239,7 @@
         <dependency>
             <groupId>org.gridkit.lab</groupId>
             <artifactId>nanocloud</artifactId>
-            <version>0.8.12</version>
+            <version>0.8.16</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
