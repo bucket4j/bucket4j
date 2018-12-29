@@ -20,29 +20,29 @@ package io.github.bucket4j;
 import java.io.Serializable;
 
 /**
- * Describes both result of consumption and tokens remaining in the bucket after consumption.
+ * Describes the estimation result.
  *
- * @see Bucket#tryConsumeAndReturnRemaining(long)
- * @see AsyncBucket#tryConsumeAndReturnRemaining(long)
+ * @see Bucket#estimateAbilityToConsume(long)
+ * @see AsyncBucket#estimateAbilityToConsume(long)
  */
-public class ConsumptionProbe implements Serializable {
+public class EstimationProbe implements Serializable {
 
     private static final long serialVersionUID = 42L;
 
-    private final boolean consumed;
+    private final boolean canBeConsumed;
     private final long remainingTokens;
     private final long nanosToWaitForRefill;
 
-    public static ConsumptionProbe consumed(long remainingTokens) {
-        return new ConsumptionProbe(true, remainingTokens, 0);
+    public static EstimationProbe canBeConsumed(long remainingTokens) {
+        return new EstimationProbe(true, remainingTokens, 0);
     }
 
-    public static ConsumptionProbe rejected(long remainingTokens, long nanosToWaitForRefill) {
-        return new ConsumptionProbe(false, remainingTokens, nanosToWaitForRefill);
+    public static EstimationProbe canNotBeConsumed(long remainingTokens, long nanosToWaitForRefill) {
+        return new EstimationProbe(false, remainingTokens, nanosToWaitForRefill);
     }
 
-    private ConsumptionProbe(boolean consumed, long remainingTokens, long nanosToWaitForRefill) {
-        this.consumed = consumed;
+    private EstimationProbe(boolean canBeConsumed, long remainingTokens, long nanosToWaitForRefill) {
+        this.canBeConsumed = canBeConsumed;
         this.remainingTokens = Math.max(0L, remainingTokens);
         this.nanosToWaitForRefill = nanosToWaitForRefill;
     }
@@ -50,10 +50,10 @@ public class ConsumptionProbe implements Serializable {
     /**
      * Flag describes result of consumption operation.
      *
-     * @return true if tokens was consumed
+     * @return true if requested tokens can be consumed
      */
-    public boolean isConsumed() {
-        return consumed;
+    public boolean canBeConsumed() {
+        return canBeConsumed;
     }
 
     /**
@@ -66,9 +66,9 @@ public class ConsumptionProbe implements Serializable {
     }
 
     /**
-     * Returns zero if {@link #isConsumed()} returns true, else time in nanos which need to wait until requested amount of tokens will be refilled
+     * Returns zero if {@link #canBeConsumed()} returns true, else time in nanos which need to wait until requested amount of tokens will be refilled
      *
-     * @return Zero if {@link #isConsumed()} returns true, else time in nanos which need to wait until requested amount of tokens will be refilled
+     * @return Zero if {@link #canBeConsumed()} returns true, else time in nanos which need to wait until requested amount of tokens will be refilled
      */
     public long getNanosToWaitForRefill() {
         return nanosToWaitForRefill;
@@ -77,7 +77,7 @@ public class ConsumptionProbe implements Serializable {
     @Override
     public String toString() {
         return "ConsumptionResult{" +
-                "consumed=" + consumed +
+                "isConsumed=" + canBeConsumed +
                 ", remainingTokens=" + remainingTokens +
                 ", nanosToWaitForRefill=" + nanosToWaitForRefill +
                 '}';
