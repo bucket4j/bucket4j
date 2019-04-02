@@ -33,15 +33,6 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.oracle</groupId>
-            <artifactId>coherence</artifactId>
-            <version>12.2.1.0</version>
-            <scope>system</scope>
-            <!-- Point directly to jar from repository, because oracle does not provide maven distribution of coherence  -->
-            <systemPath>${project.basedir}/lib/cl.jar</systemPath>
-        </dependency>
-
-        <dependency>
             <groupId>com.github.vladimir-bukhtoyarov</groupId>
             <artifactId>bucket4j-core</artifactId>
             <version>${project.version}</version>
@@ -50,6 +41,20 @@
             <groupId>com.github.vladimir-bukhtoyarov</groupId>
             <artifactId>bucket4j-jcache</artifactId>
             <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle</groupId>
+            <artifactId>coherence</artifactId>
+            <version>12.2.1.0</version>
+            <scope>system</scope>
+            <!-- Point directly to jar from repository, because oracle does not provide maven distribution of coherence  -->
+            <systemPath>${project.basedir}/lib/cl.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>javax.cache</groupId>
+            <artifactId>cache-api</artifactId>
+            <version>${jcache.version}</version>
+            <scope>provided</scope>
         </dependency>
 
         <dependency>
