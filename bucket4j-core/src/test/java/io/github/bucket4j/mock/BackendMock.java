@@ -26,7 +26,6 @@ import io.github.bucket4j.remote.RemoteCommand;
 
 import java.io.*;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 public class BackendMock<K extends Serializable> implements Backend<K> {
@@ -67,42 +66,6 @@ public class BackendMock<K extends Serializable> implements Backend<K> {
         }
         resultData = emulateSerialization(resultData);
         return CommandResult.success(resultData);
-    }
-
-    @Override
-    public void createInitialState(Serializable key, BucketConfiguration configuration) {
-        if (exception != null) {
-            throw new RuntimeException();
-        }
-        BucketState bucketState = BucketState.createInitialState(configuration, timeMeter.currentTimeNanos());
-        this.state = new RemoteBucketState(configuration, bucketState);
-    }
-
-    @Override
-    public Optional<BucketConfiguration> getConfiguration(Serializable key) {
-        if (exception != null) {
-            throw new RuntimeException();
-        }
-        return Optional.of(state.getConfiguration());
-    }
-
-    @Override
-    public <T extends Serializable> T createInitialStateAndExecute(K key, BucketConfiguration configuration, RemoteCommand<T> command) {
-        if (exception != null) {
-            throw new RuntimeException();
-        }
-        createInitialState(key, configuration);
-        return execute(key, command).getData();
-    }
-
-    @Override
-    public <T extends Serializable> CompletableFuture<T> createInitialStateAndExecuteAsync(K key, BucketConfiguration configuration, RemoteCommand<T> command) {
-        if (exception != null) {
-            CompletableFuture future = new CompletableFuture();
-            future.completeExceptionally(new RuntimeException());
-            return future;
-        }
-        return CompletableFuture.completedFuture(createInitialStateAndExecute(key, configuration, command));
     }
 
     @Override

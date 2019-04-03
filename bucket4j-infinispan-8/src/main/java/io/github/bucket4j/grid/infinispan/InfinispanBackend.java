@@ -1,62 +1,48 @@
 /*
  *
- * Copyright 2015-2019 Vladimir Bukhtoyarov
+ *   Copyright 2015-2017 Vladimir Bukhtoyarov
  *
- *       Licensed under the Apache License, Version 2.0 (the "License");
- *       you may not use this file except in compliance with the License.
- *       You may obtain a copy of the License at
+ *     Licensed under the Apache License, Version 2.0 (the "License");
+ *     you may not use this file except in compliance with the License.
+ *     You may obtain a copy of the License at
  *
- *             http://www.apache.org/licenses/LICENSE-2.0
+ *           http://www.apache.org/licenses/LICENSE-2.0
  *
- *      Unless required by applicable law or agreed to in writing, software
- *      distributed under the License is distributed on an "AS IS" BASIS,
- *      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *      See the License for the specific language governing permissions and
- *      limitations under the License.
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
  */
 
 package io.github.bucket4j.grid.infinispan;
 
-import io.github.bucket4j.*;
-import io.github.bucket4j.grid.jcache.JCacheEntryProcessor;
-import io.github.bucket4j.remote.Backend;
-import io.github.bucket4j.remote.CommandResult;
-import io.github.bucket4j.remote.RemoteBucketState;
-import io.github.bucket4j.remote.RemoteCommand;
+import io.github.bucket4j.BackendOptions;
+import io.github.bucket4j.MathType;
+import io.github.bucket4j.TimeMeter;
+import io.github.bucket4j.remote.*;
 import org.infinispan.commons.CacheException;
-import org.infinispan.commons.api.functional.EntryView;
-import org.infinispan.commons.api.functional.FunctionalMap;
+import org.infinispan.commons.api.functional.EntryView.ReadWriteEntryView;
 import org.infinispan.commons.api.functional.FunctionalMap.ReadWriteMap;
 import org.infinispan.util.SerializableFunction;
 
 import java.io.Serializable;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 /**
- * The extension of Bucket4j library addressed to support <a href="https://ignite.apache.org/">Apache ignite</a> in-memory computing platform.
- *
- * TODO fix javadocs
- * Use this extension only if you need in asynchronous API, else stay at {@link io.github.bucket4j.grid.jcache.JCache}
+ * The extension of Bucket4j library addressed to support <a href="https://infinispan.org/">Infinispan</a> in-memory computing platform.
  */
 public class InfinispanBackend<K extends Serializable> implements Backend<K> {
 
     private static final BackendOptions OPTIONS = new BackendOptions(true, MathType.ALL, MathType.INTEGER_64_BITS);
 
     private final ReadWriteMap<K, RemoteBucketState> readWriteMap;
-    private final TimeMeter clientClock;
 
     // TODO javadocs
     public InfinispanBackend(ReadWriteMap<K, RemoteBucketState> readWriteMap) {
         this.readWriteMap = Objects.requireNonNull(readWriteMap);
-        this.clientClock = null;
-    }
-
-    InfinispanBackend(ReadWriteMap<K, RemoteBucketState> readWriteMap, TimeMeter clientClock) {
-        this.readWriteMap = Objects.requireNonNull(readWriteMap);
-        this.clientClock = Objects.requireNonNull(clientClock);
     }
 
     @Override
@@ -66,67 +52,64 @@ public class InfinispanBackend<K extends Serializable> implements Backend<K> {
 
     @Override
     public <T extends Serializable> CommandResult<T> execute(K key, RemoteCommand<T> command) {
-        JCacheEntryProcessor<K, T> entryProcessor = JCacheEntryProcessor.executeProcessor(command, getClientSideTimeNanos());
-        return invokeSync(key, entryProcessor);
-    }
-
-    @Override
-    public void createInitialState(K key, BucketConfiguration configuration) {
-        JCacheEntryProcessor<K, Nothing> entryProcessor = JCacheEntryProcessor.initStateProcessor(configuration, getClientSideTimeNanos());
-        invokeSync(key, entryProcessor);
-    }
-
-    @Override
-    public <T extends Serializable> T createInitialStateAndExecute(K key, BucketConfiguration configuration, RemoteCommand<T> command) {
-        JCacheEntryProcessor<K, T> entryProcessor = JCacheEntryProcessor.initStateAndExecuteProcessor(command, configuration, getClientSideTimeNanos());
-        CommandResult<T> result = invokeSync(key, entryProcessor);
-        return result.getData();
+        InfinispanProcessor<K, T> entryProcessor = new InfinispanProcessor<>(command);
+        try {
+            return readWriteMap.eval(key, entryProcessor).get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new CacheException(e);
+        }
     }
 
     @Override
     public <T extends Serializable> CompletableFuture<CommandResult<T>> executeAsync(K key, RemoteCommand<T> command) {
-        JCacheEntryProcessor<K, T> entryProcessor = JCacheEntryProcessor.executeProcessor(command, getClientSideTimeNanos());
-        return invokeAsync(key, entryProcessor);
+        InfinispanProcessor<K, T> entryProcessor = new InfinispanProcessor<>(command);
+        return readWriteMap.eval(key, entryProcessor);
     }
 
-    @Override
-    public <T extends Serializable> CompletableFuture<T> createInitialStateAndExecuteAsync(K key, BucketConfiguration configuration, RemoteCommand<T> command) {
-        JCacheEntryProcessor<K, T> entryProcessor = JCacheEntryProcessor.initStateAndExecuteProcessor(command, configuration, getClientSideTimeNanos());
-        CompletableFuture<CommandResult<T>> result = invokeAsync(key, entryProcessor);
-        return result.thenApply(CommandResult::getData);
-    }
 
-    @Override
-    public Optional<BucketConfiguration> getConfiguration(K key) {
-        try {
-            SerializableFunction<EntryView.ReadWriteEntryView<K, RemoteBucketState>, RemoteBucketState> findFunction =
-                    (SerializableFunction<EntryView.ReadWriteEntryView<K, RemoteBucketState>, RemoteBucketState>)
-                    entry -> entry.find().orElse(null);
-            RemoteBucketState state = readWriteMap.eval(key, findFunction).get();
-            if (state == null) {
-                return Optional.empty();
-            } else {
-                return Optional.of(state.getConfiguration());
-            }
-        } catch (InterruptedException | ExecutionException e) {
-            throw new CacheException(e);
+    private static class InfinispanProcessor<K extends Serializable, R extends Serializable> implements SerializableFunction<ReadWriteEntryView<K, RemoteBucketState>, CommandResult<R>> {
+
+        private static final long serialVersionUID = 42L;
+
+        private final RemoteCommand<R> command;
+
+        public InfinispanProcessor(RemoteCommand<R> command) {
+            this.command = command;
         }
-    }
 
-    private <T extends Serializable> CommandResult<T> invokeSync(final K key, final JCacheEntryProcessor<K, T> entryProcessor) {
-        try {
-            return readWriteMap.eval(key, new SerializableFunctionAdapter<>(entryProcessor)).get();
-        } catch (InterruptedException | ExecutionException e) {
-            throw new CacheException(e);
+        @Override
+        public CommandResult<R> apply(ReadWriteEntryView<K, RemoteBucketState> entryView) {
+            InfinispanEntry<K> mutableEntry = new InfinispanEntry<>(entryView);
+            return command.execute(mutableEntry, TimeMeter.SYSTEM_MILLISECONDS.currentTimeNanos());
         }
+
     }
 
-    private <T extends Serializable> CompletableFuture<CommandResult<T>> invokeAsync(final K key, final JCacheEntryProcessor<K, T> entryProcessor) {
-        return readWriteMap.eval(key, new SerializableFunctionAdapter<>(entryProcessor));
-    }
 
-    private Long getClientSideTimeNanos() {
-        return clientClock == null? null : clientClock.currentTimeNanos();
+    private static class InfinispanEntry<K extends Serializable> implements MutableBucketEntry {
+
+        private final ReadWriteEntryView<K, RemoteBucketState> entryView;
+
+        public InfinispanEntry(ReadWriteEntryView<K, RemoteBucketState> entryView) {
+            this.entryView = entryView;
+        }
+
+        @Override
+        public RemoteBucketState get() {
+            RemoteBucketState sourceState = entryView.get();
+            return sourceState.deepCopy();
+        }
+
+        @Override
+        public boolean exists() {
+            return entryView.find().isPresent();
+        }
+
+        @Override
+        public void set(RemoteBucketState value) {
+            entryView.set(value);
+        }
+
     }
 
 }

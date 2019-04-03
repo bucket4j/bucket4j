@@ -18,41 +18,30 @@
 package io.github.bucket4j.grid.ignite;
 
 import io.github.bucket4j.*;
-import io.github.bucket4j.grid.jcache.JCacheEntryProcessor;
-import io.github.bucket4j.remote.Backend;
-import io.github.bucket4j.remote.CommandResult;
-import io.github.bucket4j.remote.RemoteBucketState;
-import io.github.bucket4j.remote.RemoteCommand;
+import io.github.bucket4j.remote.*;
 import org.apache.ignite.IgniteCache;
+import org.apache.ignite.cache.CacheEntryProcessor;
 import org.apache.ignite.lang.IgniteFuture;
 import org.apache.ignite.lang.IgniteInClosure;
 
+import javax.cache.processor.EntryProcessorException;
+import javax.cache.processor.MutableEntry;
 import java.io.Serializable;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 
 /**
  * The extension of Bucket4j library addressed to support <a href="https://ignite.apache.org/">Apache ignite</a> in-memory computing platform.
- *
- * Use this extension only if you need in asynchronous API, else stay at {@link io.github.bucket4j.grid.jcache.JCache}
  */
 public class IgniteBackend<K extends Serializable> implements Backend<K> {
 
     private static final BackendOptions OPTIONS = new BackendOptions(true, MathType.ALL, MathType.INTEGER_64_BITS);
 
     private final IgniteCache<K, RemoteBucketState> cache;
-    private final TimeMeter clientClock;
 
     public IgniteBackend(IgniteCache<K, RemoteBucketState> cache) {
         this.cache = Objects.requireNonNull(cache);
-        this.clientClock = null;
-    }
-
-    IgniteBackend(IgniteCache<K, RemoteBucketState> cache, TimeMeter clientClock) {
-        this.cache = Objects.requireNonNull(cache);
-        this.clientClock = Objects.requireNonNull(clientClock);
     }
 
     @Override
@@ -62,53 +51,16 @@ public class IgniteBackend<K extends Serializable> implements Backend<K> {
 
     @Override
     public <T extends Serializable> CommandResult<T> execute(K key, RemoteCommand<T> command) {
-        JCacheEntryProcessor<K, T> entryProcessor = JCacheEntryProcessor.executeProcessor(command, getClientSideTimeNanos());
+        IgniteProcessor<K, T> entryProcessor = new IgniteProcessor<>(command);
         return cache.invoke(key, entryProcessor);
     }
 
     @Override
-    public void createInitialState(K key, BucketConfiguration configuration) {
-        JCacheEntryProcessor<K, Nothing> entryProcessor = JCacheEntryProcessor.initStateProcessor(configuration, getClientSideTimeNanos());
-        cache.invoke(key, entryProcessor);
-    }
-
-    @Override
-    public <T extends Serializable> T createInitialStateAndExecute(K key, BucketConfiguration configuration, RemoteCommand<T> command) {
-        JCacheEntryProcessor<K, T> entryProcessor = JCacheEntryProcessor.initStateAndExecuteProcessor(command, configuration, getClientSideTimeNanos());
-        CommandResult<T> result = cache.invoke(key, entryProcessor);
-        return result.getData();
-    }
-
-    @Override
     public <T extends Serializable> CompletableFuture<CommandResult<T>> executeAsync(K key, RemoteCommand<T> command) {
-        JCacheEntryProcessor<K, T> entryProcessor = JCacheEntryProcessor.executeProcessor(command, getClientSideTimeNanos());
-        return invokeAsync(key, entryProcessor);
-    }
-
-    @Override
-    public <T extends Serializable> CompletableFuture<T> createInitialStateAndExecuteAsync(K key, BucketConfiguration configuration, RemoteCommand<T> command) {
-        JCacheEntryProcessor<K, T> entryProcessor = JCacheEntryProcessor.initStateAndExecuteProcessor(command, configuration, getClientSideTimeNanos());
-        CompletableFuture<CommandResult<T>> result = invokeAsync(key, entryProcessor);
-        return result.thenApply(CommandResult::getData);
-    }
-
-    @Override
-    public Optional<BucketConfiguration> getConfiguration(K key) {
-        RemoteBucketState state = cache.get(key);
-        if (state == null) {
-            return Optional.empty();
-        } else {
-            return Optional.of(state.getConfiguration());
-        }
-    }
-
-    private <T extends Serializable> CompletableFuture<CommandResult<T>> invokeAsync(K key, JCacheEntryProcessor<K, T> entryProcessor) {
-        return convertFuture(cache.invokeAsync(key, entryProcessor));
-    }
-
-    private static <T> CompletableFuture<T> convertFuture(IgniteFuture<T> igniteFuture) {
-        CompletableFuture<T> completableFuture = new CompletableFuture<>();
-        igniteFuture.listen((IgniteInClosure<IgniteFuture<T>>) completedIgniteFuture -> {
+        IgniteProcessor<K, T> entryProcessor = new IgniteProcessor<>(command);
+        IgniteFuture<CommandResult<T>> igniteFuture = cache.invokeAsync(key, entryProcessor);
+        CompletableFuture<CommandResult<T>> completableFuture = new CompletableFuture<>();
+        igniteFuture.listen((IgniteInClosure<IgniteFuture<CommandResult<T>>>) completedIgniteFuture -> {
             try {
                 completableFuture.complete(completedIgniteFuture.get());
             } catch (Throwable t) {
@@ -118,8 +70,48 @@ public class IgniteBackend<K extends Serializable> implements Backend<K> {
         return completableFuture;
     }
 
-    private Long getClientSideTimeNanos() {
-        return clientClock == null? null : clientClock.currentTimeNanos();
+
+    private static class IgniteProcessor<K extends Serializable, T extends Serializable> implements Serializable,
+            CacheEntryProcessor<K, RemoteBucketState, CommandResult<T>> {
+
+        private static final long serialVersionUID = 1;
+
+        private final RemoteCommand<T> command;
+
+        private IgniteProcessor(RemoteCommand<T> command) {
+            this.command = command;
+        }
+
+        @Override
+        public CommandResult<T> process(MutableEntry<K, RemoteBucketState> entry, Object... arguments) throws EntryProcessorException {
+            return command.execute(new IgniteEntry(entry), TimeMeter.SYSTEM_MILLISECONDS.currentTimeNanos());
+        }
+
+    }
+
+    private static class IgniteEntry implements MutableBucketEntry {
+
+        private final MutableEntry<?, RemoteBucketState> entry;
+
+        private IgniteEntry(MutableEntry<?, RemoteBucketState> entry) {
+            this.entry = entry;
+        }
+
+        @Override
+        public boolean exists() {
+            return entry.exists();
+        }
+
+        @Override
+        public void set(RemoteBucketState state) {
+            entry.setValue(state);
+        }
+
+        @Override
+        public RemoteBucketState get() {
+            return entry.getValue();
+        }
+
     }
 
 }

@@ -42,18 +42,10 @@ public class JCacheBackend<K extends Serializable> implements Backend<K> {
     }
 
     private final Cache<K, RemoteBucketState> cache;
-    private final TimeMeter clientClock;
 
     public JCacheBackend(Cache<K, RemoteBucketState> cache) {
         this.cache = Objects.requireNonNull(cache);
         checkProviders(cache);
-        this.clientClock = null;
-    }
-
-    JCacheBackend(Cache<K, RemoteBucketState> cache, TimeMeter clientClock) {
-        this.cache = Objects.requireNonNull(cache);
-        checkProviders(cache);
-        this.clientClock = Objects.requireNonNull(clientClock);
     }
 
     @Override
@@ -63,7 +55,7 @@ public class JCacheBackend<K extends Serializable> implements Backend<K> {
 
     @Override
     public <T extends Serializable> CommandResult<T> execute(K key, RemoteCommand<T> command) {
-        BucketProcessor<K, T> entryProcessor = new BucketProcessor<>(command, getClientSideTimeNanos());
+        BucketProcessor<K, T> entryProcessor = new BucketProcessor<>(command);
         return cache.invoke(key, entryProcessor);
     }
 
@@ -93,36 +85,20 @@ public class JCacheBackend<K extends Serializable> implements Backend<K> {
         });
     }
 
-    private Long getClientSideTimeNanos() {
-        return clientClock == null? null : clientClock.currentTimeNanos();
-    }
-
-
-
     private static class BucketProcessor<K extends Serializable, T extends Serializable> implements Serializable, EntryProcessor<K, RemoteBucketState, CommandResult<T>> {
 
         private static final long serialVersionUID = 1;
 
         private RemoteCommand<T> targetCommand;
-        private Long clientSideTimeNanos;
 
-        public BucketProcessor(RemoteCommand<T> targetCommand, Long clientSideTimeNanos) {
-            this.clientSideTimeNanos = clientSideTimeNanos;
+        public BucketProcessor(RemoteCommand<T> targetCommand) {
             this.targetCommand = targetCommand;
         }
 
         @Override
         public CommandResult<T> process(MutableEntry<K, RemoteBucketState> mutableEntry, Object... arguments) {
             JCacheBucketEntry bucketEntry = new JCacheBucketEntry(mutableEntry);
-            return targetCommand.execute(bucketEntry, currentTimeNanos());
-        }
-
-        public long currentTimeNanos() {
-            if (clientSideTimeNanos != null) {
-                return clientSideTimeNanos;
-            } else {
-                return System.currentTimeMillis() * 1_000_000;
-            }
+            return targetCommand.execute(bucketEntry, TimeMeter.SYSTEM_MILLISECONDS.currentTimeNanos());
         }
 
     }

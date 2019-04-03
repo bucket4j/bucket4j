@@ -19,39 +19,27 @@ package io.github.bucket4j.grid.hazelcast;
 
 import com.hazelcast.core.ExecutionCallback;
 import com.hazelcast.core.IMap;
+import com.hazelcast.map.EntryBackupProcessor;
 import com.hazelcast.map.EntryProcessor;
 import io.github.bucket4j.*;
-import io.github.bucket4j.grid.jcache.JCacheEntryProcessor;
-import io.github.bucket4j.remote.Backend;
-import io.github.bucket4j.remote.CommandResult;
-import io.github.bucket4j.remote.RemoteBucketState;
-import io.github.bucket4j.remote.RemoteCommand;
+import io.github.bucket4j.remote.*;
 
 import java.io.Serializable;
+import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * The extension of Bucket4j library addressed to support <a href="https://hazelcast.com//">Hazelcast</a> in-memory data jvm.
- *
- * Use this extension only if you need in asynchronous API, else stay at {@link io.github.bucket4j.grid.jcache.JCache}
+ * The extension of Bucket4j library addressed to support <a href="https://hazelcast.com//">Hazelcast</a> in-memory data grid.
  */
 public class HazelcastBackend<K extends Serializable> implements Backend<K> {
 
     private static final BackendOptions OPTIONS = new BackendOptions(true, MathType.ALL, MathType.INTEGER_64_BITS);
 
     private final IMap<K, RemoteBucketState> cache;
-    private final TimeMeter clientClock;
 
     public HazelcastBackend(IMap<K, RemoteBucketState> cache) {
         this.cache = Objects.requireNonNull(cache);
-        this.clientClock = null;
-    }
-
-    HazelcastBackend(IMap<K, RemoteBucketState> cache, TimeMeter clientClock) {
-        this.cache = Objects.requireNonNull(cache);
-        this.clientClock = Objects.requireNonNull(clientClock);
     }
 
     @Override
@@ -61,53 +49,15 @@ public class HazelcastBackend<K extends Serializable> implements Backend<K> {
 
     @Override
     public <T extends Serializable> CommandResult<T> execute(K key, RemoteCommand<T> command) {
-        JCacheEntryProcessor<K, T> entryProcessor = JCacheEntryProcessor.executeProcessor(command, getClientSideTimeNanos());
-        return (CommandResult<T>) cache.executeOnKey(key, adoptEntryProcessor(entryProcessor));
-    }
-
-    @Override
-    public void createInitialState(K key, BucketConfiguration configuration) {
-        JCacheEntryProcessor<K, Nothing> entryProcessor = JCacheEntryProcessor.initStateProcessor(configuration, getClientSideTimeNanos());
-        cache.executeOnKey(key, adoptEntryProcessor(entryProcessor));
-    }
-
-    @Override
-    public <T extends Serializable> T createInitialStateAndExecute(K key, BucketConfiguration configuration, RemoteCommand<T> command) {
-        JCacheEntryProcessor<K, T> entryProcessor = JCacheEntryProcessor.initStateAndExecuteProcessor(command, configuration, getClientSideTimeNanos());
-        CommandResult<T> result = (CommandResult<T>) cache.executeOnKey(key, adoptEntryProcessor(entryProcessor));
-        return result.getData();
+        HazelcastEntryProcessor<K, T> entryProcessor = new HazelcastEntryProcessor<>(command);
+        return (CommandResult<T>) cache.executeOnKey(key, entryProcessor);
     }
 
     @Override
     public <T extends Serializable> CompletableFuture<CommandResult<T>> executeAsync(K key, RemoteCommand<T> command) {
-        JCacheEntryProcessor<K, T> entryProcessor = JCacheEntryProcessor.executeProcessor(command, getClientSideTimeNanos());
-        return invokeAsync(key, entryProcessor);
-    }
-
-    @Override
-    public <T extends Serializable> CompletableFuture<T> createInitialStateAndExecuteAsync(K key, BucketConfiguration configuration, RemoteCommand<T> command) {
-        JCacheEntryProcessor<K, T> entryProcessor = JCacheEntryProcessor.initStateAndExecuteProcessor(command, configuration, getClientSideTimeNanos());
-        CompletableFuture<CommandResult<T>> result = invokeAsync(key, entryProcessor);
-        return result.thenApply(CommandResult::getData);
-    }
-
-    @Override
-    public Optional<BucketConfiguration> getConfiguration(K key) {
-        RemoteBucketState state = cache.get(key);
-        if (state == null) {
-            return Optional.empty();
-        } else {
-            return Optional.of(state.getConfiguration());
-        }
-    }
-
-    private <T extends Serializable>  EntryProcessor adoptEntryProcessor(final JCacheEntryProcessor<K, T> entryProcessor) {
-        return new HazelcastEntryProcessorAdapter<>(entryProcessor);
-    }
-
-    private <T extends Serializable> CompletableFuture<CommandResult<T>> invokeAsync(K key, JCacheEntryProcessor<K, T> entryProcessor) {
+        HazelcastEntryProcessor<K, T> entryProcessor = new HazelcastEntryProcessor<>(command);
         CompletableFuture<CommandResult<T>> future = new CompletableFuture<>();
-        cache.submitToKey(key, adoptEntryProcessor(entryProcessor), new ExecutionCallback() {
+        cache.submitToKey(key, entryProcessor, new ExecutionCallback() {
             @Override
             public void onResponse(Object response) {
                 future.complete((CommandResult<T>) response);
@@ -121,8 +71,79 @@ public class HazelcastBackend<K extends Serializable> implements Backend<K> {
         return future;
     }
 
-    private Long getClientSideTimeNanos() {
-        return clientClock == null? null : clientClock.currentTimeNanos();
+
+    private static class HazelcastEntryProcessor<K extends Serializable, T extends Serializable> implements EntryProcessor<K, RemoteBucketState> {
+
+        private static final long serialVersionUID = 1L;
+
+        private final RemoteCommand<T> command;
+        private EntryBackupProcessor<K, RemoteBucketState> backupProcessor;
+
+        public HazelcastEntryProcessor(RemoteCommand<T> command) {
+            this.command = command;
+        }
+
+        @Override
+        public Object process(Map.Entry<K, RemoteBucketState> entry) {
+            HazelcastMutableEntryAdapter<K> entryAdapter = new HazelcastMutableEntryAdapter<>(entry);
+            CommandResult<T> result = command.execute(entryAdapter, TimeMeter.SYSTEM_MILLISECONDS.currentTimeNanos());
+            if (entryAdapter.modified) {
+                RemoteBucketState state = entry.getValue();
+                backupProcessor = new SimpleBackupProcessor<>(state);
+            }
+            return result;
+        }
+
+        @Override
+        public EntryBackupProcessor<K, RemoteBucketState> getBackupProcessor() {
+            return backupProcessor;
+        }
+
     }
+
+    private static class HazelcastMutableEntryAdapter<K> implements MutableBucketEntry {
+
+        private final Map.Entry<K, RemoteBucketState> entry;
+        private boolean modified;
+
+        public HazelcastMutableEntryAdapter(Map.Entry<K, RemoteBucketState> entry) {
+            this.entry = entry;
+        }
+
+        @Override
+        public boolean exists() {
+            return entry.getValue() != null;
+        }
+
+        @Override
+        public void set(RemoteBucketState value) {
+            entry.setValue(value);
+            this.modified = true;
+        }
+
+        @Override
+        public RemoteBucketState get() {
+            return entry.getValue();
+        }
+
+    }
+
+    private static class SimpleBackupProcessor<K> implements EntryBackupProcessor<K, RemoteBucketState> {
+
+        private static final long serialVersionUID = 1L;
+
+        private final RemoteBucketState state;
+
+        private SimpleBackupProcessor(RemoteBucketState state) {
+            this.state = state;
+        }
+
+        @Override
+        public void processBackup(Map.Entry<K, RemoteBucketState> entry) {
+            entry.setValue(state);
+        }
+
+    }
+
 
 }

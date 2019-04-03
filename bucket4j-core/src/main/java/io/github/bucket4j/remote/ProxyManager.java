@@ -19,6 +19,7 @@ package io.github.bucket4j.remote;
 
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketConfiguration;
+import io.github.bucket4j.remote.commands.GetConfigurationCommand;
 
 import java.io.Serializable;
 import java.util.Objects;
@@ -99,7 +100,12 @@ public class ProxyManager<K extends Serializable> {
      * @return Optional surround the configuration or empty optional if bucket with specified key are not stored.
      */
     public Optional<BucketConfiguration> getProxyConfiguration(K key) {
-        return backend.getConfiguration(key);
+        GetConfigurationCommand cmd = new GetConfigurationCommand();
+        CommandResult<BucketConfiguration> result = backend.execute(key, cmd);
+        if (result.isBucketNotFound()) {
+            return Optional.empty();
+        }
+        return Optional.of(result.getData());
     }
 
 }
