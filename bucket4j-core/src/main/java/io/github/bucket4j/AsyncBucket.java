@@ -97,6 +97,45 @@ public interface AsyncBucket {
     CompletableFuture<ConsumptionProbe> tryConsumeAndReturnRemaining(long numTokens);
 
     /**
+     * Estimates ability to consume a specified number of tokens.
+     *
+     * @param numTokens The number of tokens to consume, must be a positive number.
+     *
+     * @return {@link EstimationProbe} which describes the ability to consume.
+     */
+    /**
+     * Asynchronous version of {@link Bucket#estimateAbilityToConsume(long)}, follows the same semantic.
+     *
+     * <p>
+     * <strong>The algorithm for distribute buckets is following:</strong>
+     * <ul>
+     *     <li>Implementation issues asynchronous request to back-end behind the bucket in way which specific for each particular back-end.</li>
+     *     <li>Then uncompleted future returned to the caller.</li>
+     *     <li>When back-end provides signal(through callback) that request is done, then future completed.</li>
+     *     <li>If back-end provides signal(through callback) that asynchronous request failed, then future completed exceptionally.</li>
+     * </ul>
+     * It is strongly not recommended to do any heavy work in thread which completes the future,
+     * because typically this will be a back-end thread which handles NIO selectors,
+     * blocking this thread will take negative performance effect to back-end throughput,
+     * so you always should resume control flow in another executor via methods like {@link CompletableFuture#thenApplyAsync(Function, Executor)}.
+     *
+     * <p>
+     * <strong>The algorithm for local buckets is following:</strong>
+     * <ul>
+     *     <li>Implementation just redirects request to synchronous version {@link Bucket#estimateAbilityToConsume(long)}</li>
+     *     <li>Then returns feature immediately completed by results from previous step. So using this method for local buckets is useless,
+     *     because there are no differences with synchronous version.</li>
+     * </ul>
+     *
+     * @param numTokens The number of tokens to consume from the bucket, must be a positive number.
+     *
+     * @return the future which eventually will be completed by {@link EstimationProbe probe} which describes the ability to consume specified amount of tokens.
+     *
+     * @see Bucket#estimateAbilityToConsume(long)
+     */
+    CompletableFuture<EstimationProbe> estimateAbilityToConsume(long numTokens);
+
+    /**
      * Asynchronous version of {@link Bucket#tryConsumeAsMuchAsPossible()}, follows the same semantic.
      *
      * <p>

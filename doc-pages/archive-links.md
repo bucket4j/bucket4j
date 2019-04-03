@@ -1,4 +1,7 @@
 # Documentation links for legacy releases:
+* [4.3](https://github.com/vladimir-bukhtoyarov/bucket4j/tree/4.3) ```29 December 2018``` New method for estimation of ability to consume
+* [4.2](https://github.com/vladimir-bukhtoyarov/bucket4j/tree/4.2) ```21 November 2018``` Support of legacy Infinispan 8.x
+* [4.1](https://github.com/vladimir-bukhtoyarov/bucket4j/tree/4.1) ```29 September 2018``` Boring maintenance of accumulated inconsistency
 * [4.0](https://github.com/vladimir-bukhtoyarov/bucket4j/tree/4.0) ```29 April 2018``` Listener API, Fixed interval refill, Redesign of blocking API.
 * [3.1](https://github.com/vladimir-bukhtoyarov/bucket4j/tree/3.1) ```27 December 2017``` Bored maintenance
 * [3.0](https://github.com/vladimir-bukhtoyarov/bucket4j/tree/3.0) ```20 September 2017``` Asynchronous API

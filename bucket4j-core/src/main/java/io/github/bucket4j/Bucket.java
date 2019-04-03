@@ -87,6 +87,15 @@ public interface Bucket {
     ConsumptionProbe tryConsumeAndReturnRemaining(long numTokens);
 
     /**
+     * Estimates ability to consume a specified number of tokens.
+     *
+     * @param numTokens The number of tokens to consume, must be a positive number.
+     *
+     * @return {@link EstimationProbe} which describes the ability to consume.
+     */
+    EstimationProbe estimateAbilityToConsume(long numTokens);
+
+    /**
      * Tries to consume as much tokens from this bucket as available at the moment of invocation.
      *
      * @return number of tokens which has been consumed, or zero if was consumed nothing.

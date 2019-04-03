@@ -21,18 +21,18 @@ To use ```bucket4j-ignite``` extension you need to add following dependency:
 
 ## Example of Bucket instantiation
 ```java
-org.apache.ignite.IgniteCache cache = ...;
+org.apache.ignite.IgniteCache<K, GridBucketState> cache = ...;
 ...
 
-Bucket bucket = Bucket4j.extension(Ignite.class).builder()
+Bucket bucket = Bucket4j.extension(io.github.bucket4j.grid.ignite.Ignite.class).builder()
                    .addLimit(Bandwidth.simple(1_000, Duration.ofMinutes(1)))
                    .build(cache, key, RecoveryStrategy.RECONSTRUCT);
 ```
 
 ## Example of ProxyManager instantiation
 ```java
-org.apache.ignite.IgniteCache cache = ...;
+org.apache.ignite.IgniteCache<K, GridBucketState> cache = ...;
 ...
 
-ProxyManager proxyManager = Bucket4j.extension(Ignite.class).proxyManagerForCache(cache);
+ProxyManager proxyManager = Bucket4j.extension(io.github.bucket4j.grid.ignite.Ignite.class).proxyManagerForCache(cache);
 ```

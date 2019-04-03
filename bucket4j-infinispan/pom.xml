@@ -27,8 +27,9 @@
         <version>5.0.0-SNAPSHOT</version>
         <relativePath>../bucket4j-parent</relativePath>
     </parent>
-    
     <artifactId>bucket4j-infinispan</artifactId>
+    <name>bucket4j-infinispan</name>
+    <description>Bucket4j integration with Infinispan</description>
 
     <!-- https://mvnrepository.com/artifact/org.infinispan/infinispan-core -->
     <dependencies>

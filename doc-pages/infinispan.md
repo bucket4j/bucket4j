@@ -9,7 +9,7 @@ at bucket construction time.
 
 
 ## Dependencies
-To use ```bucket4j-infinispan``` extension you need to add following dependency:
+To use ```bucket4j-infinispan``` with ```Infinispan 9.x``` extension you need to add following dependency:
 ```xml
 <dependency>
     <groupId>com.github.vladimir-bukhtoyarov</groupId>
@@ -17,10 +17,18 @@ To use ```bucket4j-infinispan``` extension you need to add following dependency:
     <version>${bucket4j.version}</version>
 </dependency>
 ```
+If you are using legacy version of Infinispan ```8.x``` then you need to add following dependency:
+```xml
+<dependency>
+    <groupId>com.github.vladimir-bukhtoyarov</groupId>
+    <artifactId>bucket4j-infinispan-8</artifactId>
+    <version>${bucket4j.version}</version>
+</dependency>
+```
 
 ## Example of Bucket instantiation
 ```java
-org.infinispan.functional.FunctionalMap.ReadWriteMap map = ...;
+org.infinispan.functional.FunctionalMap.ReadWriteMap<K, GridBucketState> map = ...;
 ...
 
 Bucket bucket = Bucket4j.extension(Infinispan.class).builder()
@@ -30,7 +38,7 @@ Bucket bucket = Bucket4j.extension(Infinispan.class).builder()
 
 ## Example of ProxyManager instantiation
 ```java
-org.infinispan.functional.FunctionalMap.ReadWriteMap map = ...;
+org.infinispan.functional.FunctionalMap.ReadWriteMap<K, GridBucketState> map = ...;
 ...
 
 ProxyManager proxyManager = Bucket4j.extension(Infinispan.class).proxyManagerForMap(map);

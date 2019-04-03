@@ -28,6 +28,8 @@
         <relativePath>../bucket4j-parent</relativePath>
     </parent>
     <artifactId>bucket4j-benchmarks</artifactId>
+    <name>bucket4j-benchmarks</name>
+    <description>Bucket4j benchmarks</description>
 
     <properties>
         <maven.deploy.skip>true</maven.deploy.skip>

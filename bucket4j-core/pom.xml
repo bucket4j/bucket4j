@@ -28,6 +28,8 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>bucket4j-core</artifactId>
+    <name>bucket4j-core</name>
+    <description>Bucket4j core library</description>
 
     <build>
         <plugins>

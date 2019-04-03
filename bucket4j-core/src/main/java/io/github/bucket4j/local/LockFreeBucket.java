@@ -117,6 +117,22 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket {
     }
 
     @Override
+    protected EstimationProbe estimateAbilityToConsumeImpl(long tokensToEstimate) {
+        StateWithConfiguration previousState = stateRef.get();
+        StateWithConfiguration newState = previousState.copy();
+        long currentTimeNanos = timeMeter.currentTimeNanos();
+
+        newState.refillAllBandwidth(currentTimeNanos);
+        long availableToConsume = newState.getAvailableTokens();
+        if (tokensToEstimate > availableToConsume) {
+            long nanosToWaitForRefill = newState.delayNanosAfterWillBePossibleToConsume(tokensToEstimate, currentTimeNanos);
+            return EstimationProbe.canNotBeConsumed(availableToConsume, nanosToWaitForRefill);
+        } else {
+            return EstimationProbe.canBeConsumed(availableToConsume);
+        }
+    }
+
+    @Override
     protected long reserveAndCalculateTimeToSleepImpl(long tokensToConsume, long waitIfBusyNanosLimit) {
         StateWithConfiguration previousState = stateRef.get();
         StateWithConfiguration newState = previousState.copy();
@@ -220,6 +236,12 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket {
     @Override
     protected CompletableFuture<ConsumptionProbe> tryConsumeAndReturnRemainingTokensAsyncImpl(long tokensToConsume) {
         ConsumptionProbe result = tryConsumeAndReturnRemainingTokensImpl(tokensToConsume);
+        return CompletableFuture.completedFuture(result);
+    }
+
+    @Override
+    protected CompletableFuture<EstimationProbe> estimateAbilityToConsumeAsyncImpl(long tokensToEstimate) {
+        EstimationProbe result = estimateAbilityToConsumeImpl(tokensToEstimate);
         return CompletableFuture.completedFuture(result);
     }
 

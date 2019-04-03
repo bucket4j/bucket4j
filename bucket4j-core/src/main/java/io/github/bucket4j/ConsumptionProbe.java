@@ -23,6 +23,7 @@ import java.io.Serializable;
  * Describes both result of consumption and tokens remaining in the bucket after consumption.
  *
  * @see Bucket#tryConsumeAndReturnRemaining(long)
+ * @see AsyncBucket#tryConsumeAndReturnRemaining(long)
  */
 public class ConsumptionProbe implements Serializable {
 

@@ -27,8 +27,9 @@
         <relativePath>../bucket4j-parent</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-
     <artifactId>bucket4j-jcache</artifactId>
+    <name>bucket4j-jcache</name>
+    <description>Bucket4j integration with JCache</description>
 
     <dependencies>
         <dependency>

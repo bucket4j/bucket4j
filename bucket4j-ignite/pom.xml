@@ -28,6 +28,8 @@
         <relativePath>../bucket4j-parent</relativePath>
     </parent>
     <artifactId>bucket4j-ignite</artifactId>
+    <name>bucket4j-ignite</name>
+    <description>Bucket4j integration with Ignite</description>
 
     <dependencies>
         <dependency>
