@@ -17,11 +17,8 @@
 
 package io.github.bucket4j.remote;
 
-import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.BackendOptions;
-
 import java.io.Serializable;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -41,17 +38,5 @@ public interface Backend<K extends Serializable> {
 
     // TODO javadocs
     <T extends Serializable> CompletableFuture<CommandResult<T>> executeAsync(K key, RemoteCommand<T> command);
-
-    // TODO javadocs
-    void createInitialState(K key, BucketConfiguration configuration);
-
-    // TODO javadocs
-    <T extends Serializable> T createInitialStateAndExecute(K key, BucketConfiguration configuration, RemoteCommand<T> command);
-
-    // TODO javadocs
-    <T extends Serializable> CompletableFuture<T> createInitialStateAndExecuteAsync(K key, BucketConfiguration configuration, RemoteCommand<T> command);
-
-    // TODO javadocs
-    Optional<BucketConfiguration> getConfiguration(K key);
 
 }

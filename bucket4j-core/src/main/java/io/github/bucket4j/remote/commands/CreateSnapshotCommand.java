@@ -18,6 +18,8 @@
 package io.github.bucket4j.remote.commands;
 
 import io.github.bucket4j.BucketState;
+import io.github.bucket4j.remote.CommandResult;
+import io.github.bucket4j.remote.MutableBucketEntry;
 import io.github.bucket4j.remote.RemoteBucketState;
 import io.github.bucket4j.remote.RemoteCommand;
 
@@ -26,14 +28,14 @@ public class CreateSnapshotCommand implements RemoteCommand<BucketState> {
     private static final long serialVersionUID = 42;
 
     @Override
-    public BucketState execute(RemoteBucketState state, long currentTimeNanos) {
-        state.refillAllBandwidth(currentTimeNanos);
-        return state.copyBucketState();
-    }
+    public CommandResult<BucketState> execute(MutableBucketEntry mutableEntry, long currentTimeNanos) {
+        if (!mutableEntry.exists()) {
+            return CommandResult.bucketNotFound();
+        }
 
-    @Override
-    public boolean isBucketStateModified() {
-        return false;
+        RemoteBucketState state = mutableEntry.get();
+        state.refillAllBandwidth(currentTimeNanos);
+        return CommandResult.success(state.copyBucketState());
     }
 
 }

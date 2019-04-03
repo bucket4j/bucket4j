@@ -18,6 +18,8 @@
 package io.github.bucket4j.remote.commands;
 
 import io.github.bucket4j.Nothing;
+import io.github.bucket4j.remote.CommandResult;
+import io.github.bucket4j.remote.MutableBucketEntry;
 import io.github.bucket4j.remote.RemoteBucketState;
 import io.github.bucket4j.remote.RemoteCommand;
 
@@ -32,15 +34,15 @@ public class AddTokensCommand implements RemoteCommand<Nothing> {
     }
 
     @Override
-    public Nothing execute(RemoteBucketState state, long currentTimeNanos) {
+    public CommandResult<Nothing> execute(MutableBucketEntry mutableEntry, long currentTimeNanos) {
+        if (!mutableEntry.exists()) {
+            return CommandResult.bucketNotFound();
+        }
+        RemoteBucketState state = mutableEntry.get();
         state.refillAllBandwidth(currentTimeNanos);
         state.addTokens(tokensToAdd);
-        return Nothing.INSTANCE;
-    }
-
-    @Override
-    public boolean isBucketStateModified() {
-        return true;
+        mutableEntry.set(state);
+        return CommandResult.NOTHING;
     }
 
     public long getTokensToAdd() {

@@ -17,6 +17,8 @@
 
 package io.github.bucket4j.remote.commands;
 import io.github.bucket4j.EstimationProbe;
+import io.github.bucket4j.remote.CommandResult;
+import io.github.bucket4j.remote.MutableBucketEntry;
 import io.github.bucket4j.remote.RemoteBucketState;
 import io.github.bucket4j.remote.RemoteCommand;
 
@@ -32,20 +34,20 @@ public class EstimateAbilityToConsumeCommand implements RemoteCommand<Estimation
     }
 
     @Override
-    public EstimationProbe execute(RemoteBucketState state, long currentTimeNanos) {
+    public CommandResult<EstimationProbe> execute(MutableBucketEntry mutableEntry, long currentTimeNanos) {
+        if (!mutableEntry.exists()) {
+            return CommandResult.bucketNotFound();
+        }
+
+        RemoteBucketState state = mutableEntry.get();
         state.refillAllBandwidth(currentTimeNanos);
         long availableToConsume = state.getAvailableTokens();
         if (tokensToConsume <= availableToConsume) {
-            return EstimationProbe.canBeConsumed(availableToConsume);
+            return CommandResult.success(EstimationProbe.canBeConsumed(availableToConsume));
         } else {
             long nanosToWaitForRefill = state.calculateDelayNanosAfterWillBePossibleToConsume(tokensToConsume, currentTimeNanos);
-            return EstimationProbe.canNotBeConsumed(availableToConsume, nanosToWaitForRefill);
+            return CommandResult.success(EstimationProbe.canNotBeConsumed(availableToConsume, nanosToWaitForRefill));
         }
-    }
-
-    @Override
-    public boolean isBucketStateModified() {
-        return false;
     }
 
 }

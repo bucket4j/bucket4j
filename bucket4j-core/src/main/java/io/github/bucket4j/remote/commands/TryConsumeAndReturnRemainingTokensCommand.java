@@ -18,6 +18,8 @@
 package io.github.bucket4j.remote.commands;
 
 import io.github.bucket4j.ConsumptionProbe;
+import io.github.bucket4j.remote.CommandResult;
+import io.github.bucket4j.remote.MutableBucketEntry;
 import io.github.bucket4j.remote.RemoteBucketState;
 import io.github.bucket4j.remote.RemoteCommand;
 
@@ -27,29 +29,28 @@ public class TryConsumeAndReturnRemainingTokensCommand implements RemoteCommand<
     private static final long serialVersionUID = 42;
 
     private long tokensToConsume;
-    private boolean bucketStateModified = false;
 
     public TryConsumeAndReturnRemainingTokensCommand(long tokensToConsume) {
         this.tokensToConsume = tokensToConsume;
     }
 
     @Override
-    public ConsumptionProbe execute(RemoteBucketState state, long currentTimeNanos) {
+    public CommandResult<ConsumptionProbe> execute(MutableBucketEntry mutableEntry, long currentTimeNanos) {
+        if (!mutableEntry.exists()) {
+            return CommandResult.bucketNotFound();
+        }
+
+        RemoteBucketState state = mutableEntry.get();
         state.refillAllBandwidth(currentTimeNanos);
         long availableToConsume = state.getAvailableTokens();
         if (tokensToConsume <= availableToConsume) {
             state.consume(tokensToConsume);
-            bucketStateModified = true;
-            return ConsumptionProbe.consumed(availableToConsume - tokensToConsume);
+            mutableEntry.set(state);
+            return CommandResult.success(ConsumptionProbe.consumed(availableToConsume - tokensToConsume));
         } else {
             long nanosToWaitForRefill = state.calculateDelayNanosAfterWillBePossibleToConsume(tokensToConsume, currentTimeNanos);
-            return ConsumptionProbe.rejected(availableToConsume, nanosToWaitForRefill);
+            return CommandResult.success(ConsumptionProbe.rejected(availableToConsume, nanosToWaitForRefill));
         }
-    }
-
-    @Override
-    public boolean isBucketStateModified() {
-        return bucketStateModified;
     }
 
     public long getTokensToConsume() {

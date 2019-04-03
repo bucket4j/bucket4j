@@ -1,6 +1,6 @@
 /*
  *
- * Copyright 2015-2018 Vladimir Bukhtoyarov
+ * Copyright 2015-2019 Vladimir Bukhtoyarov
  *
  *       Licensed under the Apache License, Version 2.0 (the "License");
  *       you may not use this file except in compliance with the License.
@@ -17,10 +17,15 @@
 
 package io.github.bucket4j.remote;
 
-import java.io.Serializable;
+/**
+ * TODO javadocs
+ */
+public interface MutableBucketEntry {
 
-public interface RemoteCommand<T extends Serializable> extends Serializable {
+    boolean exists();
 
-    CommandResult<T> execute(MutableBucketEntry mutableEntry, long currentTimeNanos);
+    void set(RemoteBucketState state);
+
+    RemoteBucketState get();
 
 }

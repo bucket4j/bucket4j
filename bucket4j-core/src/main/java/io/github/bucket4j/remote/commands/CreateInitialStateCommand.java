@@ -1,6 +1,6 @@
 /*
  *
- * Copyright 2015-2018 Vladimir Bukhtoyarov
+ * Copyright 2015-2019 Vladimir Bukhtoyarov
  *
  *       Licensed under the Apache License, Version 2.0 (the "License");
  *       you may not use this file except in compliance with the License.
@@ -15,38 +15,40 @@
  *      limitations under the License.
  */
 
-package io.github.bucket4j.grid.jcache;
+package io.github.bucket4j.remote.commands;
 
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.BucketState;
 import io.github.bucket4j.Nothing;
 import io.github.bucket4j.remote.CommandResult;
+import io.github.bucket4j.remote.MutableBucketEntry;
 import io.github.bucket4j.remote.RemoteBucketState;
+import io.github.bucket4j.remote.RemoteCommand;
 
-import javax.cache.processor.MutableEntry;
-import java.io.Serializable;
-
-public class InitStateProcessor<K extends Serializable> extends JCacheEntryProcessor<K, Nothing> {
+public class CreateInitialStateCommand implements RemoteCommand<Nothing> {
 
     private static final long serialVersionUID = 1;
 
     private BucketConfiguration configuration;
 
-    public InitStateProcessor(BucketConfiguration configuration, Long clientTimeNanos) {
-        super(clientTimeNanos);
+    public CreateInitialStateCommand(BucketConfiguration configuration) {
         this.configuration = configuration;
     }
 
     @Override
-    public CommandResult<Nothing> process(MutableEntry<K, RemoteBucketState> mutableEntry, Object... arguments) {
+    public CommandResult<Nothing> execute(MutableBucketEntry mutableEntry, long currentTimeNanos) {
         if (mutableEntry.exists()) {
-            return CommandResult.success(null);
+            return CommandResult.NOTHING;
         }
-        long currentTimeNanos = currentTimeNanos();
+
         BucketState bucketState = BucketState.createInitialState(configuration, currentTimeNanos);
         RemoteBucketState remoteBucketState = new RemoteBucketState(configuration, bucketState);
-        mutableEntry.setValue(remoteBucketState);
-        return CommandResult.success(null);
+        mutableEntry.set(remoteBucketState);
+        return CommandResult.NOTHING;
+    }
+
+    public BucketConfiguration getConfiguration() {
+        return configuration;
     }
 
 }

@@ -45,11 +45,6 @@
         </dependency>
         <dependency>
             <groupId>com.github.vladimir-bukhtoyarov</groupId>
-            <artifactId>bucket4j-jcache</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.github.vladimir-bukhtoyarov</groupId>
             <artifactId>bucket4j-core</artifactId>
             <version>${project.version}</version>
             <type>test-jar</type>
@@ -59,7 +54,7 @@
             <groupId>javax.cache</groupId>
             <artifactId>cache-api</artifactId>
             <version>${jcache.version}</version>
-            <scope>provided</scope>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.infinispan</groupId>

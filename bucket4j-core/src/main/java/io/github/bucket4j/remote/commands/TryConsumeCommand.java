@@ -17,6 +17,8 @@
 
 package io.github.bucket4j.remote.commands;
 
+import io.github.bucket4j.remote.CommandResult;
+import io.github.bucket4j.remote.MutableBucketEntry;
 import io.github.bucket4j.remote.RemoteBucketState;
 import io.github.bucket4j.remote.RemoteCommand;
 
@@ -25,28 +27,27 @@ public class TryConsumeCommand implements RemoteCommand<Boolean> {
     private static final long serialVersionUID = 42;
 
     private long tokensToConsume;
-    private boolean bucketStateModified;
 
     public TryConsumeCommand(long tokensToConsume) {
         this.tokensToConsume = tokensToConsume;
     }
 
     @Override
-    public Boolean execute(RemoteBucketState state, long currentTimeNanos) {
+    public CommandResult<Boolean> execute(MutableBucketEntry mutableEntry, long currentTimeNanos) {
+        if (!mutableEntry.exists()) {
+            return CommandResult.bucketNotFound();
+        }
+
+        RemoteBucketState state = mutableEntry.get();
         state.refillAllBandwidth(currentTimeNanos);
         long availableToConsume = state.getAvailableTokens();
         if (tokensToConsume <= availableToConsume) {
             state.consume(tokensToConsume);
-            bucketStateModified = true;
-            return true;
+            mutableEntry.set(state);
+            return CommandResult.TRUE;
         } else {
-            return false;
+            return CommandResult.FALSE;
         }
-    }
-
-    @Override
-    public boolean isBucketStateModified() {
-        return bucketStateModified;
     }
 
     public long getTokensToConsume() {

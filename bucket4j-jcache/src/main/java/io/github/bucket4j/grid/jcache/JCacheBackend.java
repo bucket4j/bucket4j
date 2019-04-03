@@ -18,13 +18,12 @@
 package io.github.bucket4j.grid.jcache;
 
 import io.github.bucket4j.*;
-import io.github.bucket4j.remote.Backend;
-import io.github.bucket4j.remote.CommandResult;
-import io.github.bucket4j.remote.RemoteBucketState;
-import io.github.bucket4j.remote.RemoteCommand;
+import io.github.bucket4j.remote.*;
 
 import javax.cache.Cache;
 import javax.cache.CacheManager;
+import javax.cache.processor.EntryProcessor;
+import javax.cache.processor.MutableEntry;
 import javax.cache.spi.CachingProvider;
 import java.io.Serializable;
 import java.util.*;
@@ -64,43 +63,14 @@ public class JCacheBackend<K extends Serializable> implements Backend<K> {
 
     @Override
     public <T extends Serializable> CommandResult<T> execute(K key, RemoteCommand<T> command) {
-        JCacheEntryProcessor<K, T> entryProcessor = JCacheEntryProcessor.executeProcessor(command, getClientSideTimeNanos());
+        BucketProcessor<K, T> entryProcessor = new BucketProcessor<>(command, getClientSideTimeNanos());
         return cache.invoke(key, entryProcessor);
-    }
-
-    @Override
-    public void createInitialState(K key, BucketConfiguration configuration) {
-        JCacheEntryProcessor<K, Nothing> entryProcessor = JCacheEntryProcessor.initStateProcessor(configuration, getClientSideTimeNanos());
-        cache.invoke(key, entryProcessor);
-    }
-
-    @Override
-    public <T extends Serializable> T createInitialStateAndExecute(K key, BucketConfiguration configuration, RemoteCommand<T> command) {
-        JCacheEntryProcessor<K, T> entryProcessor = JCacheEntryProcessor.initStateAndExecuteProcessor(command, configuration, getClientSideTimeNanos());
-        CommandResult<T> result = cache.invoke(key, entryProcessor);
-        return result.getData();
     }
 
     @Override
     public <T extends Serializable> CompletableFuture<CommandResult<T>> executeAsync(K key, RemoteCommand<T> command) {
         // because JCache does not specify async API
         throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public <T extends Serializable> CompletableFuture<T> createInitialStateAndExecuteAsync(K key, BucketConfiguration configuration, RemoteCommand<T> command) {
-        // because JCache does not specify async API
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Optional<BucketConfiguration> getConfiguration(K key) {
-        RemoteBucketState state = cache.get(key);
-        if (state == null) {
-            return Optional.empty();
-        } else {
-            return Optional.of(state.getConfiguration());
-        }
     }
 
     private void checkProviders(Cache<K, RemoteBucketState> cache) {
@@ -125,6 +95,62 @@ public class JCacheBackend<K extends Serializable> implements Backend<K> {
 
     private Long getClientSideTimeNanos() {
         return clientClock == null? null : clientClock.currentTimeNanos();
+    }
+
+
+
+    private static class BucketProcessor<K extends Serializable, T extends Serializable> implements Serializable, EntryProcessor<K, RemoteBucketState, CommandResult<T>> {
+
+        private static final long serialVersionUID = 1;
+
+        private RemoteCommand<T> targetCommand;
+        private Long clientSideTimeNanos;
+
+        public BucketProcessor(RemoteCommand<T> targetCommand, Long clientSideTimeNanos) {
+            this.clientSideTimeNanos = clientSideTimeNanos;
+            this.targetCommand = targetCommand;
+        }
+
+        @Override
+        public CommandResult<T> process(MutableEntry<K, RemoteBucketState> mutableEntry, Object... arguments) {
+            JCacheBucketEntry bucketEntry = new JCacheBucketEntry(mutableEntry);
+            return targetCommand.execute(bucketEntry, currentTimeNanos());
+        }
+
+        public long currentTimeNanos() {
+            if (clientSideTimeNanos != null) {
+                return clientSideTimeNanos;
+            } else {
+                return System.currentTimeMillis() * 1_000_000;
+            }
+        }
+
+    }
+
+
+    private static class JCacheBucketEntry implements MutableBucketEntry {
+
+        private final MutableEntry<?, RemoteBucketState> targetEntry;
+
+        private JCacheBucketEntry(MutableEntry<?, RemoteBucketState> targetEntry) {
+            this.targetEntry = targetEntry;
+        }
+
+        @Override
+        public boolean exists() {
+            return targetEntry.exists();
+        }
+
+        @Override
+        public void set(RemoteBucketState state) {
+            targetEntry.setValue(state);
+        }
+
+        @Override
+        public RemoteBucketState get() {
+            return targetEntry.getValue();
+        }
+
     }
 
 }

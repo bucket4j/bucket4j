@@ -60,7 +60,7 @@ public class BucketProxy<K extends Serializable> extends AbstractBucket {
         }
         if (initializeBucket) {
             BucketConfiguration configuration = getConfiguration();
-            backend.createInitialState(key, configuration);
+            backend.execute(key, new CreateInitialStateCommand(configuration));
         }
     }
 
@@ -186,7 +186,8 @@ public class BucketProxy<K extends Serializable> extends AbstractBucket {
         }
 
         // retry command execution
-        return backend.createInitialStateAndExecute(key, getConfiguration(), command);
+        CreateInitialStateAndExecuteCommand<T> initAndExecuteCommand = new CreateInitialStateAndExecuteCommand<>(getConfiguration(), command);
+        return backend.execute(key, initAndExecuteCommand).getData();
     }
 
     private <T extends Serializable> CompletableFuture<T> executeAsync(RemoteCommand<T> command) {
@@ -201,7 +202,8 @@ public class BucketProxy<K extends Serializable> extends AbstractBucket {
                 failedFuture.completeExceptionally(new BucketNotFoundException(key));
                 return failedFuture;
             }
-            return backend.createInitialStateAndExecuteAsync(key, getConfiguration(), command);
+            CreateInitialStateAndExecuteCommand<T> initAndExecute = new CreateInitialStateAndExecuteCommand<>(getConfiguration(), command);
+            return backend.executeAsync(key, initAndExecute).thenApply(CommandResult::getData);
         });
     }
 

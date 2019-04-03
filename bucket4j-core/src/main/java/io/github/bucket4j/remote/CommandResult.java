@@ -17,13 +17,22 @@
 
 package io.github.bucket4j.remote;
 
+import io.github.bucket4j.Nothing;
+
 import java.io.Serializable;
 
 public class CommandResult<T> implements Serializable {
 
     private static final long serialVersionUID = 42;
 
+    public static final CommandResult<Nothing> NOTHING = CommandResult.success(Nothing.INSTANCE);
+    public static final CommandResult<Long> ZERO = CommandResult.success(0L);
+    public static final CommandResult<Long> MAX_VALUE = CommandResult.success(Long.MAX_VALUE);
+    public static final CommandResult<Boolean> TRUE = CommandResult.success(true);
+    public static final CommandResult<Boolean> FALSE = CommandResult.success(false);
+
     private static final CommandResult<?> NOT_FOUND = new CommandResult<>(null, true);
+    private static final CommandResult<?> NULL = new CommandResult<>(null, false);
 
     private T data;
     private boolean bucketNotFound;
@@ -39,6 +48,10 @@ public class CommandResult<T> implements Serializable {
 
     public static <R> CommandResult<R> bucketNotFound() {
         return (CommandResult<R>) NOT_FOUND;
+    }
+
+    public static <R> CommandResult<R> empty() {
+        return (CommandResult<R>) NULL;
     }
 
     public T getData() {

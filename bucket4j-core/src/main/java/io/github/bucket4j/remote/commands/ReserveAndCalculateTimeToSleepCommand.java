@@ -17,6 +17,8 @@
 
 package io.github.bucket4j.remote.commands;
 
+import io.github.bucket4j.remote.CommandResult;
+import io.github.bucket4j.remote.MutableBucketEntry;
 import io.github.bucket4j.remote.RemoteBucketState;
 import io.github.bucket4j.remote.RemoteCommand;
 
@@ -26,7 +28,6 @@ public class ReserveAndCalculateTimeToSleepCommand implements RemoteCommand<Long
 
     private long tokensToConsume;
     private long waitIfBusyNanosLimit;
-    private boolean bucketStateModified;
 
     public ReserveAndCalculateTimeToSleepCommand(long tokensToConsume, long waitIfBusyNanosLimit) {
         this.tokensToConsume = tokensToConsume;
@@ -34,22 +35,22 @@ public class ReserveAndCalculateTimeToSleepCommand implements RemoteCommand<Long
     }
 
     @Override
-    public Long execute(RemoteBucketState state, long currentTimeNanos) {
+    public CommandResult<Long> execute(MutableBucketEntry mutableEntry, long currentTimeNanos) {
+        if (!mutableEntry.exists()) {
+            return CommandResult.bucketNotFound();
+        }
+
+        RemoteBucketState state = mutableEntry.get();
         state.refillAllBandwidth(currentTimeNanos);
 
         long nanosToCloseDeficit = state.calculateDelayNanosAfterWillBePossibleToConsume(tokensToConsume, currentTimeNanos);
         if (nanosToCloseDeficit == Long.MAX_VALUE || nanosToCloseDeficit > waitIfBusyNanosLimit) {
-            return Long.MAX_VALUE;
+            return CommandResult.MAX_VALUE;
         } else {
             state.consume(tokensToConsume);
-            bucketStateModified = true;
-            return nanosToCloseDeficit;
+            mutableEntry.set(state);
+            return CommandResult.success(nanosToCloseDeficit);
         }
-    }
-
-    @Override
-    public boolean isBucketStateModified() {
-        return bucketStateModified;
     }
 
     public long getTokensToConsume() {

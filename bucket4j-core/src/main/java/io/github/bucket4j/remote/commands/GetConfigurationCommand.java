@@ -1,6 +1,6 @@
 /*
  *
- * Copyright 2015-2018 Vladimir Bukhtoyarov
+ * Copyright 2015-2019 Vladimir Bukhtoyarov
  *
  *       Licensed under the Apache License, Version 2.0 (the "License");
  *       you may not use this file except in compliance with the License.
@@ -17,41 +17,24 @@
 
 package io.github.bucket4j.remote.commands;
 
+import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.remote.CommandResult;
 import io.github.bucket4j.remote.MutableBucketEntry;
 import io.github.bucket4j.remote.RemoteBucketState;
 import io.github.bucket4j.remote.RemoteCommand;
 
-public class ConsumeAsMuchAsPossibleCommand implements RemoteCommand<Long> {
+public class GetConfigurationCommand implements RemoteCommand<BucketConfiguration> {
 
     private static final long serialVersionUID = 42;
 
-    private long limit;
-
-    public ConsumeAsMuchAsPossibleCommand(long limit) {
-        this.limit = limit;
-    }
-
     @Override
-    public CommandResult<Long> execute(MutableBucketEntry mutableEntry, long currentTimeNanos) {
+    public CommandResult<BucketConfiguration> execute(MutableBucketEntry mutableEntry, long currentTimeNanos) {
         if (!mutableEntry.exists()) {
             return CommandResult.bucketNotFound();
         }
 
         RemoteBucketState state = mutableEntry.get();
-        state.refillAllBandwidth(currentTimeNanos);
-        long availableToConsume = state.getAvailableTokens();
-        long toConsume = Math.min(limit, availableToConsume);
-        if (toConsume <= 0) {
-            return CommandResult.ZERO;
-        }
-        state.consume(toConsume);
-        mutableEntry.set(state);
-        return CommandResult.success(toConsume);
-    }
-
-    public long getLimit() {
-        return limit;
+        return CommandResult.success(state.getConfiguration());
     }
 
 }

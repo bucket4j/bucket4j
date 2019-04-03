@@ -18,6 +18,8 @@
 package io.github.bucket4j.remote.commands;
 
 import io.github.bucket4j.BucketConfiguration;
+import io.github.bucket4j.remote.CommandResult;
+import io.github.bucket4j.remote.MutableBucketEntry;
 import io.github.bucket4j.remote.RemoteBucketState;
 import io.github.bucket4j.remote.RemoteCommand;
 
@@ -27,26 +29,25 @@ public class ReplaceConfigurationOrReturnPreviousCommand implements RemoteComman
     private static final long serialVersionUID = 42;
 
     private BucketConfiguration newConfiguration;
-    private boolean bucketStateModified;
 
     public ReplaceConfigurationOrReturnPreviousCommand(BucketConfiguration newConfiguration) {
         this.newConfiguration = newConfiguration;
     }
 
     @Override
-    public BucketConfiguration execute(RemoteBucketState state, long currentTimeNanos) {
+    public CommandResult<BucketConfiguration> execute(MutableBucketEntry mutableEntry, long currentTimeNanos) {
+        if (!mutableEntry.exists()) {
+            return CommandResult.bucketNotFound();
+        }
+
+        RemoteBucketState state = mutableEntry.get();
         state.refillAllBandwidth(currentTimeNanos);
         BucketConfiguration previousConfiguration = state.replaceConfigurationOrReturnPrevious(newConfiguration);
         if (previousConfiguration != null) {
-            return previousConfiguration;
+            return CommandResult.success(previousConfiguration);
         }
-        bucketStateModified = true;
-        return null;
-    }
-
-    @Override
-    public boolean isBucketStateModified() {
-        return bucketStateModified;
+        mutableEntry.set(state);
+        return CommandResult.empty();
     }
 
     public BucketConfiguration getNewConfiguration() {

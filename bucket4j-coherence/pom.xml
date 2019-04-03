@@ -40,11 +40,6 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.github.vladimir-bukhtoyarov</groupId>
-            <artifactId>bucket4j-jcache</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
             <groupId>com.oracle</groupId>
             <artifactId>coherence</artifactId>
             <version>12.2.1.0</version>
@@ -56,7 +51,7 @@
             <groupId>javax.cache</groupId>
             <artifactId>cache-api</artifactId>
             <version>${jcache.version}</version>
-            <scope>provided</scope>
+            <scope>test</scope>
         </dependency>
 
         <dependency>

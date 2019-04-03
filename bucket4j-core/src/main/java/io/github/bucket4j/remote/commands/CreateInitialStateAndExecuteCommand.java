@@ -1,6 +1,6 @@
 /*
  *
- * Copyright 2015-2018 Vladimir Bukhtoyarov
+ * Copyright 2015-2019 Vladimir Bukhtoyarov
  *
  *       Licensed under the Apache License, Version 2.0 (the "License");
  *       you may not use this file except in compliance with the License.
@@ -15,48 +15,51 @@
  *      limitations under the License.
  */
 
-package io.github.bucket4j.grid.jcache;
+package io.github.bucket4j.remote.commands;
 
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.BucketState;
 import io.github.bucket4j.remote.CommandResult;
+import io.github.bucket4j.remote.MutableBucketEntry;
 import io.github.bucket4j.remote.RemoteBucketState;
 import io.github.bucket4j.remote.RemoteCommand;
 
-import javax.cache.processor.MutableEntry;
 import java.io.Serializable;
 
-public class InitStateAndExecuteProcessor<K extends Serializable, T extends Serializable> extends JCacheEntryProcessor<K, T> {
+public class CreateInitialStateAndExecuteCommand<T extends Serializable> implements RemoteCommand<T> {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1;
 
-    private RemoteCommand<T> targetCommand;
+    private final RemoteCommand<T> targetCommand;
     private BucketConfiguration configuration;
 
-    public InitStateAndExecuteProcessor(RemoteCommand<T> targetCommand, BucketConfiguration configuration, Long clientSideTimeNanos) {
-        super(clientSideTimeNanos);
+    public CreateInitialStateAndExecuteCommand(BucketConfiguration configuration, RemoteCommand<T> targetCommand) {
         this.configuration = configuration;
         this.targetCommand = targetCommand;
     }
 
     @Override
-    public CommandResult<T> process(MutableEntry<K, RemoteBucketState> mutableEntry, Object... arguments) {
-        boolean newStateCreated = false;
-        long currentTimeNanos = currentTimeNanos();
-        RemoteBucketState remoteBucketState;
+    public CommandResult<T> execute(MutableBucketEntry mutableEntry, long currentTimeNanos) {
+        RemoteBucketState state;
         if (mutableEntry.exists()) {
-            remoteBucketState = mutableEntry.getValue();
+            state = mutableEntry.get();
         } else {
             BucketState bucketState = BucketState.createInitialState(configuration, currentTimeNanos);
-            remoteBucketState = new RemoteBucketState(configuration, bucketState);
-            newStateCreated = true;
+            state = new RemoteBucketState(configuration, bucketState);
+            mutableEntry.set(state);
         }
 
-        T result = targetCommand.execute(remoteBucketState, currentTimeNanos);
-        if (newStateCreated || targetCommand.isBucketStateModified()) {
-            mutableEntry.setValue(remoteBucketState);
-        }
-        return CommandResult.success(result);
+        CommandResult<T> result = targetCommand.execute(mutableEntry, currentTimeNanos);
+        mutableEntry.set(state);
+        return result;
+    }
+
+    public BucketConfiguration getConfiguration() {
+        return configuration;
+    }
+
+    public RemoteCommand<T> getTargetCommand() {
+        return targetCommand;
     }
 
 }
