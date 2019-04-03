@@ -20,72 +20,86 @@ package io.github.bucket4j.grid.coherence;
 
 import com.tangosol.net.NamedCache;
 import com.tangosol.util.processor.SingleEntryAsynchronousProcessor;
-import io.github.bucket4j.BucketConfiguration;
-import io.github.bucket4j.Nothing;
-import io.github.bucket4j.grid.CommandResult;
-import io.github.bucket4j.grid.GridBucketState;
-import io.github.bucket4j.grid.GridCommand;
-import io.github.bucket4j.grid.GridProxy;
+import io.github.bucket4j.*;
 import io.github.bucket4j.grid.jcache.JCacheEntryProcessor;
+import io.github.bucket4j.remote.Backend;
+import io.github.bucket4j.remote.CommandResult;
+import io.github.bucket4j.remote.RemoteBucketState;
+import io.github.bucket4j.remote.RemoteCommand;
 
 import java.io.Serializable;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-public class CoherenceProxy<K extends Serializable> implements GridProxy<K> {
+/**
+ * The extension of Bucket4j library addressed to support <a href="https://www.oracle.com/technetwork/middleware/coherence/overview/index.html">Oracle Coherence</a> in-memory computing platform.
+ *
+ * @param <K>
+ */
+public class CoherenceBackend<K extends Serializable> implements Backend<K> {
 
-    private final NamedCache<K, GridBucketState> cache;
+    private static final BackendOptions OPTIONS = new BackendOptions(true, MathType.ALL, MathType.INTEGER_64_BITS);
 
-    public CoherenceProxy(NamedCache<K, GridBucketState> cache) {
+    private final NamedCache<K, RemoteBucketState> cache;
+    private final TimeMeter clientClock;
+
+    public CoherenceBackend(NamedCache<K, RemoteBucketState> cache) {
         this.cache = cache;
+        this.clientClock = null;
+    }
+
+    CoherenceBackend(NamedCache<K, RemoteBucketState> cache, TimeMeter clientClock) {
+        this.cache = cache;
+        this.clientClock = Objects.requireNonNull(clientClock);
     }
 
     @Override
-    public <T extends Serializable> CommandResult<T> execute(K key, GridCommand<T> command) {
-        JCacheEntryProcessor<K, T> entryProcessor = JCacheEntryProcessor.executeProcessor(command);
+    public BackendOptions getOptions() {
+        return OPTIONS;
+    }
+
+    @Override
+    public <T extends Serializable> CommandResult<T> execute(K key, RemoteCommand<T> command) {
+        JCacheEntryProcessor<K, T> entryProcessor = JCacheEntryProcessor.executeProcessor(command, getClientSideTimeNanos());
         return (CommandResult<T>) cache.invoke(key, adoptEntryProcessor(entryProcessor));
     }
 
     @Override
     public void createInitialState(K key, BucketConfiguration configuration) {
-        JCacheEntryProcessor<K, Nothing> entryProcessor = JCacheEntryProcessor.initStateProcessor(configuration);
+        JCacheEntryProcessor<K, Nothing> entryProcessor = JCacheEntryProcessor.initStateProcessor(configuration, getClientSideTimeNanos());
         cache.invoke(key, adoptEntryProcessor(entryProcessor));
     }
 
     @Override
-    public <T extends Serializable> T createInitialStateAndExecute(K key, BucketConfiguration configuration, GridCommand<T> command) {
-        JCacheEntryProcessor<K, T> entryProcessor = JCacheEntryProcessor.initStateAndExecuteProcessor(command, configuration);
+    public <T extends Serializable> T createInitialStateAndExecute(K key, BucketConfiguration configuration, RemoteCommand<T> command) {
+        JCacheEntryProcessor<K, T> entryProcessor = JCacheEntryProcessor.initStateAndExecuteProcessor(command, configuration, getClientSideTimeNanos());
         CommandResult<T> result = (CommandResult<T>) cache.invoke(key, adoptEntryProcessor(entryProcessor));
         return result.getData();
     }
 
     @Override
-    public <T extends Serializable> CompletableFuture<CommandResult<T>> executeAsync(K key, GridCommand<T> command) {
-        JCacheEntryProcessor<K, T> entryProcessor = JCacheEntryProcessor.executeProcessor(command);
+    public <T extends Serializable> CompletableFuture<CommandResult<T>> executeAsync(K key, RemoteCommand<T> command) {
+        JCacheEntryProcessor<K, T> entryProcessor = JCacheEntryProcessor.executeProcessor(command, getClientSideTimeNanos());
         return invokeAsync(key, entryProcessor);
     }
 
     @Override
-    public <T extends Serializable> CompletableFuture<T> createInitialStateAndExecuteAsync(K key, BucketConfiguration configuration, GridCommand<T> command) {
-        JCacheEntryProcessor<K, T> entryProcessor = JCacheEntryProcessor.initStateAndExecuteProcessor(command, configuration);
+    public <T extends Serializable> CompletableFuture<T> createInitialStateAndExecuteAsync(K key, BucketConfiguration configuration, RemoteCommand<T> command) {
+        JCacheEntryProcessor<K, T> entryProcessor = JCacheEntryProcessor.initStateAndExecuteProcessor(command, configuration, getClientSideTimeNanos());
         CompletableFuture<CommandResult<T>> result = invokeAsync(key, entryProcessor);
         return result.thenApply(CommandResult::getData);
     }
 
     @Override
     public Optional<BucketConfiguration> getConfiguration(K key) {
-        GridBucketState state = cache.get(key);
+        RemoteBucketState state = cache.get(key);
         if (state == null) {
             return Optional.empty();
         } else {
             return Optional.of(state.getConfiguration());
         }
-    }
-
-    @Override
-    public boolean isAsyncModeSupported() {
-        return true;
     }
 
     private <T extends Serializable>  CoherenceEntryProcessorAdapter adoptEntryProcessor(final JCacheEntryProcessor<K, T> entryProcessor) {
@@ -94,8 +108,8 @@ public class CoherenceProxy<K extends Serializable> implements GridProxy<K> {
 
     private <T extends Serializable> CompletableFuture<CommandResult<T>> invokeAsync(K key, JCacheEntryProcessor<K, T> entryProcessor) {
         CompletableFuture<CommandResult<T>> future = new CompletableFuture<>();
-        SingleEntryAsynchronousProcessor<K, GridBucketState, CommandResult<T>> asyncProcessor =
-                new SingleEntryAsynchronousProcessor<K, GridBucketState, CommandResult<T>>(adoptEntryProcessor(entryProcessor)) {
+        SingleEntryAsynchronousProcessor<K, RemoteBucketState, CommandResult<T>> asyncProcessor =
+                new SingleEntryAsynchronousProcessor<K, RemoteBucketState, CommandResult<T>>(adoptEntryProcessor(entryProcessor)) {
             @Override
             public void onResult(Map.Entry<K, CommandResult<T>> entry) {
                 super.onResult(entry);
@@ -109,6 +123,10 @@ public class CoherenceProxy<K extends Serializable> implements GridProxy<K> {
         };
         cache.invoke(key, asyncProcessor);
         return future;
+    }
+
+    private Long getClientSideTimeNanos() {
+        return clientClock == null? null : clientClock.currentTimeNanos();
     }
 
 }

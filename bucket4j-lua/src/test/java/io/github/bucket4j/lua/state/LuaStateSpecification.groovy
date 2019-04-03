@@ -23,11 +23,9 @@ import io.github.bucket4j.local.LocalBucket
 
 class LuaStateSpecification extends BucketStateSpecification {
 
-
-
     @Override
-    protected BucketState replace(LocalBucket bucket) {
-        return super.getState(state)
+    protected BucketState getState(LocalBucket bucket) {
+        return super.getState(bucket)
     }
 
 }

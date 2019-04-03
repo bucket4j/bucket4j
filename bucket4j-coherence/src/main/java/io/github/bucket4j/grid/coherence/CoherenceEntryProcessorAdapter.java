@@ -19,14 +19,14 @@ package io.github.bucket4j.grid.coherence;
 
 import com.tangosol.util.InvocableMap;
 import com.tangosol.util.processor.AbstractProcessor;
-import io.github.bucket4j.grid.CommandResult;
-import io.github.bucket4j.grid.GridBucketState;
 import io.github.bucket4j.grid.jcache.JCacheEntryProcessor;
+import io.github.bucket4j.remote.CommandResult;
+import io.github.bucket4j.remote.RemoteBucketState;
 
 import java.io.Serializable;
 
 
-class CoherenceEntryProcessorAdapter<K extends Serializable, T extends Serializable> extends AbstractProcessor<K, GridBucketState, CommandResult<?>> {
+class CoherenceEntryProcessorAdapter<K extends Serializable, T extends Serializable> extends AbstractProcessor<K, RemoteBucketState, CommandResult<?>> {
 
     private static final long serialVersionUID = 1L;
 
@@ -37,10 +37,9 @@ class CoherenceEntryProcessorAdapter<K extends Serializable, T extends Serializa
     }
 
     @Override
-    public CommandResult<?> process(InvocableMap.Entry<K, GridBucketState> entry) {
+    public CommandResult<?> process(InvocableMap.Entry<K, RemoteBucketState> entry) {
         CoherenceMutableEntryAdapter<K> entryAdapter = new CoherenceMutableEntryAdapter<>(entry);
         return entryProcessor.process(entryAdapter);
     }
-
 
 }

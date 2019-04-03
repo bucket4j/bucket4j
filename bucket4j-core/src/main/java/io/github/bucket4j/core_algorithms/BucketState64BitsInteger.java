@@ -208,11 +208,11 @@ public class BucketState64BitsInteger implements BucketState {
         if (bandwidth.isRefillIntervally()) {
             return calculateDelayNanosAfterWillBePossibleToConsumeForIntervalBandwidth(bandwidthIndex, bandwidth, deficit, currentTimeNanos);
         } else {
-            return calculateDelayNanosAfterWillBePossibleToConsumeForGreedyBandwidth(bandwidth, deficit);
+            return calculateDelayNanosAfterWillBePossibleToConsumeForGreedyBandwidth(bandwidthIndex, bandwidth, deficit);
         }
     }
 
-    private long calculateDelayNanosAfterWillBePossibleToConsumeForGreedyBandwidth(Bandwidth bandwidth, long deficit) {
+    private long calculateDelayNanosAfterWillBePossibleToConsumeForGreedyBandwidth(int bandwidthIndex, Bandwidth bandwidth, long deficit) {
         long refillPeriodNanos = bandwidth.getRefillPeriodNanos();
         long refillPeriodTokens = bandwidth.getRefillTokens();
         long divided = multiplyExactOrReturnMaxValue(refillPeriodNanos, deficit);
@@ -221,6 +221,8 @@ public class BucketState64BitsInteger implements BucketState {
             // there is no sense to stay in integer arithmetic when having deal with so big numbers
             return (long)((double) deficit / (double)refillPeriodTokens * (double)refillPeriodNanos);
         } else {
+            long correctionForPartiallyRefilledToken = getRoundingError(bandwidthIndex);
+            divided -= correctionForPartiallyRefilledToken;
             return divided / refillPeriodTokens;
         }
     }

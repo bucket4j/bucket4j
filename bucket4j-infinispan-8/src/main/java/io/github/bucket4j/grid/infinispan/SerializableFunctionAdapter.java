@@ -1,32 +1,32 @@
 /*
  *
- *   Copyright 2015-2017 Vladimir Bukhtoyarov
+ * Copyright 2015-2019 Vladimir Bukhtoyarov
  *
- *     Licensed under the Apache License, Version 2.0 (the "License");
- *     you may not use this file except in compliance with the License.
- *     You may obtain a copy of the License at
+ *       Licensed under the Apache License, Version 2.0 (the "License");
+ *       you may not use this file except in compliance with the License.
+ *       You may obtain a copy of the License at
  *
- *           http://www.apache.org/licenses/LICENSE-2.0
+ *             http://www.apache.org/licenses/LICENSE-2.0
  *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *    See the License for the specific language governing permissions and
- *    limitations under the License.
+ *      Unless required by applicable law or agreed to in writing, software
+ *      distributed under the License is distributed on an "AS IS" BASIS,
+ *      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *      See the License for the specific language governing permissions and
+ *      limitations under the License.
  */
 
 package io.github.bucket4j.grid.infinispan;
 
-import io.github.bucket4j.grid.CommandResult;
-import io.github.bucket4j.grid.GridBucketState;
 import io.github.bucket4j.grid.jcache.JCacheEntryProcessor;
-import org.infinispan.commons.api.functional.EntryView;
+import io.github.bucket4j.remote.CommandResult;
+import io.github.bucket4j.remote.RemoteBucketState;
+import org.infinispan.commons.api.functional.EntryView.ReadWriteEntryView;
 import org.infinispan.util.SerializableFunction;
 
 import javax.cache.processor.MutableEntry;
 import java.io.Serializable;
 
-public class SerializableFunctionAdapter<K extends Serializable, R extends Serializable> implements SerializableFunction<EntryView.ReadWriteEntryView<K, GridBucketState>, CommandResult<R>> {
+public class SerializableFunctionAdapter<K extends Serializable, R extends Serializable> implements SerializableFunction<ReadWriteEntryView<K, RemoteBucketState>, CommandResult<R>> {
 
     private static final long serialVersionUID = 42L;
 
@@ -37,15 +37,15 @@ public class SerializableFunctionAdapter<K extends Serializable, R extends Seria
     }
 
     @Override
-    public CommandResult<R> apply(EntryView.ReadWriteEntryView<K, GridBucketState> entryView) {
+    public CommandResult<R> apply(ReadWriteEntryView<K, RemoteBucketState> entryView) {
         return entryProcessor.process(new MutableEntryAdapter<>(entryView));
     }
 
-    private static class MutableEntryAdapter<K extends Serializable> implements MutableEntry<K, GridBucketState> {
+    private static class MutableEntryAdapter<K extends Serializable> implements MutableEntry<K, RemoteBucketState> {
 
-        private final EntryView.ReadWriteEntryView<K, GridBucketState> entryView;
+        private final ReadWriteEntryView<K, RemoteBucketState> entryView;
 
-        public MutableEntryAdapter(EntryView.ReadWriteEntryView<K, GridBucketState> entryView) {
+        public MutableEntryAdapter(ReadWriteEntryView<K, RemoteBucketState> entryView) {
             this.entryView = entryView;
         }
 
@@ -55,8 +55,8 @@ public class SerializableFunctionAdapter<K extends Serializable, R extends Seria
         }
 
         @Override
-        public GridBucketState getValue() {
-            GridBucketState sourceState = entryView.get();
+        public RemoteBucketState getValue() {
+            RemoteBucketState sourceState = entryView.get();
             return sourceState.deepCopy();
         }
 
@@ -71,7 +71,7 @@ public class SerializableFunctionAdapter<K extends Serializable, R extends Seria
         }
 
         @Override
-        public void setValue(GridBucketState value) {
+        public void setValue(RemoteBucketState value) {
             entryView.set(value);
         }
 

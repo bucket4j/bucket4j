@@ -1,6 +1,6 @@
 /*
  *
- * Copyright 2015-2018 Vladimir Bukhtoyarov
+ * Copyright 2015-2019 Vladimir Bukhtoyarov
  *
  *       Licensed under the Apache License, Version 2.0 (the "License");
  *       you may not use this file except in compliance with the License.
@@ -15,11 +15,13 @@
  *      limitations under the License.
  */
 
-package io.github.bucket4j.grid;
+package io.github.bucket4j.remote.commands;
 import io.github.bucket4j.EstimationProbe;
+import io.github.bucket4j.remote.RemoteBucketState;
+import io.github.bucket4j.remote.RemoteCommand;
 
 
-public class EstimateAbilityToConsumeCommand implements GridCommand<EstimationProbe> {
+public class EstimateAbilityToConsumeCommand implements RemoteCommand<EstimationProbe> {
 
     private static final long serialVersionUID = 1L;
 
@@ -30,7 +32,7 @@ public class EstimateAbilityToConsumeCommand implements GridCommand<EstimationPr
     }
 
     @Override
-    public EstimationProbe execute(GridBucketState state, long currentTimeNanos) {
+    public EstimationProbe execute(RemoteBucketState state, long currentTimeNanos) {
         state.refillAllBandwidth(currentTimeNanos);
         long availableToConsume = state.getAvailableTokens();
         if (tokensToConsume <= availableToConsume) {

@@ -18,18 +18,18 @@
 package io.github.bucket4j.grid.coherence;
 
 import com.tangosol.util.InvocableMap;
-import io.github.bucket4j.grid.GridBucketState;
+import io.github.bucket4j.remote.RemoteBucketState;
 
 import java.io.Serializable;
 import java.util.Map;
 import javax.cache.processor.MutableEntry;
 
 
-class CoherenceMutableEntryAdapter<K extends Serializable> implements MutableEntry<K, GridBucketState> {
+class CoherenceMutableEntryAdapter<K extends Serializable> implements MutableEntry<K, RemoteBucketState> {
 
-    private final Map.Entry<K, GridBucketState> entry;
+    private final Map.Entry<K, RemoteBucketState> entry;
 
-    public CoherenceMutableEntryAdapter(InvocableMap.Entry<K, GridBucketState> entry) {
+    public CoherenceMutableEntryAdapter(InvocableMap.Entry<K, RemoteBucketState> entry) {
         this.entry = entry;
     }
 
@@ -44,7 +44,7 @@ class CoherenceMutableEntryAdapter<K extends Serializable> implements MutableEnt
     }
 
     @Override
-    public void setValue(GridBucketState value) {
+    public void setValue(RemoteBucketState value) {
         entry.setValue(value);
     }
 
@@ -54,7 +54,7 @@ class CoherenceMutableEntryAdapter<K extends Serializable> implements MutableEnt
     }
 
     @Override
-    public GridBucketState getValue() {
+    public RemoteBucketState getValue() {
         return entry.getValue();
     }
 
