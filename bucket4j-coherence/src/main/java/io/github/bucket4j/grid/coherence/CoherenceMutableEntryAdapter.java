@@ -28,7 +28,6 @@ import javax.cache.processor.MutableEntry;
 class CoherenceMutableEntryAdapter<K extends Serializable> implements MutableEntry<K, GridBucketState> {
 
     private final Map.Entry<K, GridBucketState> entry;
-    private boolean modified;
 
     public CoherenceMutableEntryAdapter(InvocableMap.Entry<K, GridBucketState> entry) {
         this.entry = entry;
@@ -47,7 +46,6 @@ class CoherenceMutableEntryAdapter<K extends Serializable> implements MutableEnt
     @Override
     public void setValue(GridBucketState value) {
         entry.setValue(value);
-        this.modified = true;
     }
 
     @Override
@@ -63,10 +61,6 @@ class CoherenceMutableEntryAdapter<K extends Serializable> implements MutableEnt
     @Override
     public <T> T unwrap(Class<T> clazz) {
         throw new UnsupportedOperationException();
-    }
-
-    public boolean isModified() {
-        return modified;
     }
 
 }

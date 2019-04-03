@@ -19,6 +19,7 @@ package io.github.bucket4j.grid.coherence;
 
 
 import com.tangosol.net.NamedCache;
+import com.tangosol.util.processor.SingleEntryAsynchronousProcessor;
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.Nothing;
 import io.github.bucket4j.grid.CommandResult;
@@ -28,6 +29,7 @@ import io.github.bucket4j.grid.GridProxy;
 import io.github.bucket4j.grid.jcache.JCacheEntryProcessor;
 
 import java.io.Serializable;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -92,17 +94,20 @@ public class CoherenceProxy<K extends Serializable> implements GridProxy<K> {
 
     private <T extends Serializable> CompletableFuture<CommandResult<T>> invokeAsync(K key, JCacheEntryProcessor<K, T> entryProcessor) {
         CompletableFuture<CommandResult<T>> future = new CompletableFuture<>();
-        cache.submitToKey(key, adoptEntryProcessor(entryProcessor), new ExecutionCallback() {
+        SingleEntryAsynchronousProcessor<K, GridBucketState, CommandResult<T>> asyncProcessor =
+                new SingleEntryAsynchronousProcessor<K, GridBucketState, CommandResult<T>>(adoptEntryProcessor(entryProcessor)) {
             @Override
-            public void onResponse(Object response) {
-                future.complete((CommandResult<T>) response);
+            public void onResult(Map.Entry<K, CommandResult<T>> entry) {
+                super.onResult(entry);
+                future.complete(entry.getValue());
             }
-
             @Override
-            public void onFailure(Throwable t) {
-                future.completeExceptionally(t);
+            public void onException(Throwable error) {
+                super.onException(error);
+                future.completeExceptionally(error);
             }
-        });
+        };
+        cache.invoke(key, asyncProcessor);
         return future;
     }
 
