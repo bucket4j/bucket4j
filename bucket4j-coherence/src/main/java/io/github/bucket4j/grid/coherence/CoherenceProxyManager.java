@@ -30,7 +30,7 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 /**
- * Ignite specific implementation of {@link ProxyManager}
+ * Coherence specific implementation of {@link ProxyManager}
  *
  * @param <K> type of key for buckets
  */

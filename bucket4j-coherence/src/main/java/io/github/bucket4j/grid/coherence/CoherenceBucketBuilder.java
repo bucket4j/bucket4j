@@ -30,7 +30,7 @@ import java.io.Serializable;
 /**
  * {@inheritDoc}
  *
- * This builder creates the buckets backed by <a href="https://ignite.apache.org/">Apache ignite</a> in-memory computing platform.
+ * This builder creates the buckets backed by <a href="https://www.oracle.com/technetwork/middleware/coherence/overview/index.html">Oracle Coherence</a> in-memory computing platform.
  *
  * @see io.github.bucket4j.grid.jcache.JCacheBucketBuilder
  *

@@ -21,7 +21,7 @@ To use ```bucket4j-hazelcast``` extension you need to add following dependency:
 
 ## Example of Bucket instantiation
 ```java
-com.hazelcast.core.IMap map = ...;
+com.hazelcast.core.IMap<K, GridBucketState> map = ...;
 ...
 
 Bucket bucket = Bucket4j.extension(Hazelcast.class).builder()
@@ -31,7 +31,7 @@ Bucket bucket = Bucket4j.extension(Hazelcast.class).builder()
 
 ## Example of ProxyManager instantiation
 ```java
-com.hazelcast.core.IMap map = ...;
+com.hazelcast.core.IMap<K, GridBucketState> map = ...;
 ...
 
 ProxyManager proxyManager = Bucket4j.extension(Hazelcast.class).proxyManagerForMap(map);

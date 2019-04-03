@@ -28,7 +28,7 @@ If you are using legacy version of Infinispan ```8.x``` then you need to add fol
 
 ## Example of Bucket instantiation
 ```java
-org.infinispan.functional.FunctionalMap.ReadWriteMap map = ...;
+org.infinispan.functional.FunctionalMap.ReadWriteMap<K, GridBucketState> map = ...;
 ...
 
 Bucket bucket = Bucket4j.extension(Infinispan.class).builder()
@@ -38,7 +38,7 @@ Bucket bucket = Bucket4j.extension(Infinispan.class).builder()
 
 ## Example of ProxyManager instantiation
 ```java
-org.infinispan.functional.FunctionalMap.ReadWriteMap map = ...;
+org.infinispan.functional.FunctionalMap.ReadWriteMap<K, GridBucketState> map = ...;
 ...
 
 ProxyManager proxyManager = Bucket4j.extension(Infinispan.class).proxyManagerForMap(map);
