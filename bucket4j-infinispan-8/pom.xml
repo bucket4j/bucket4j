@@ -24,11 +24,13 @@
     <parent>
         <groupId>com.github.vladimir-bukhtoyarov</groupId>
         <artifactId>bucket4j-parent</artifactId>
-        <version>4.4.0</version>
+        <version>4.4.1</version>
         <relativePath>../bucket4j-parent</relativePath>
     </parent>
     
     <artifactId>bucket4j-infinispan-8</artifactId>
+    <name>bucket4j-infinispan-8</name>
+    <description>Bucket4j integration with Infinispan 8.x</description>
 
     <properties>
         <infinispan-8.version>8.2.0.Final</infinispan-8.version>

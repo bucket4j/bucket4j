@@ -24,11 +24,12 @@
     <parent>
         <groupId>com.github.vladimir-bukhtoyarov</groupId>
         <artifactId>bucket4j-parent</artifactId>
-        <version>4.4.0</version>
+        <version>4.4.1</version>
         <relativePath>../bucket4j-parent</relativePath>
     </parent>
-    
     <artifactId>bucket4j-infinispan</artifactId>
+    <name>bucket4j-infinispan</name>
+    <description>Bucket4j integration with Infinispan</description>
 
     <!-- https://mvnrepository.com/artifact/org.infinispan/infinispan-core -->
     <dependencies>
