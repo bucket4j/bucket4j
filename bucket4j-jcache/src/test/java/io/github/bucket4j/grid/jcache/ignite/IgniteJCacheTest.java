@@ -54,7 +54,8 @@ public class IgniteJCacheTest extends AbstractJCacheTest {
         server = cloud.node("stateful-ignite-server");
 
         int serverDiscoveryPort = 47500;
-        String serverNodeAdress = InetAddress.getLocalHost().getHostAddress() + ":" + serverDiscoveryPort;
+//        String serverNodeAdress = InetAddress.getLocalHost().getHostAddress() + ":" + serverDiscoveryPort;
+        String serverNodeAdress = "localhost:" + serverDiscoveryPort;
 
         server.exec((Runnable & Serializable) () -> {
             TcpDiscoveryVmIpFinder neverFindOthers = new TcpDiscoveryVmIpFinder();
