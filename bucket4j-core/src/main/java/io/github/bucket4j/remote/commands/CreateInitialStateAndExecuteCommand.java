@@ -46,11 +46,11 @@ public class CreateInitialStateAndExecuteCommand<T extends Serializable> impleme
         } else {
             BucketState bucketState = BucketState.createInitialState(configuration, currentTimeNanos);
             state = new RemoteBucketState(configuration, bucketState);
-            mutableEntry.set(state);
         }
 
-        CommandResult<T> result = targetCommand.execute(mutableEntry, currentTimeNanos);
-        mutableEntry.set(state);
+        BucketEntryWrapper entryWrapper = new BucketEntryWrapper(state);
+        CommandResult<T> result = targetCommand.execute(entryWrapper, currentTimeNanos);
+        mutableEntry.set(entryWrapper.get());
         return result;
     }
 
@@ -60,6 +60,31 @@ public class CreateInitialStateAndExecuteCommand<T extends Serializable> impleme
 
     public RemoteCommand<T> getTargetCommand() {
         return targetCommand;
+    }
+
+
+    private static class BucketEntryWrapper implements MutableBucketEntry {
+
+        private RemoteBucketState state;
+
+        public BucketEntryWrapper(RemoteBucketState state) {
+            this.state = state;
+        }
+
+        @Override
+        public boolean exists() {
+            return true;
+        }
+
+        @Override
+        public void set(RemoteBucketState state) {
+            this.state = state;
+        }
+
+        @Override
+        public RemoteBucketState get() {
+            return state;
+        }
     }
 
 }
