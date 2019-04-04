@@ -19,10 +19,7 @@ package io.github.bucket4j.mock;
 
 
 import io.github.bucket4j.*;
-import io.github.bucket4j.remote.Backend;
-import io.github.bucket4j.remote.CommandResult;
-import io.github.bucket4j.remote.RemoteBucketState;
-import io.github.bucket4j.remote.RemoteCommand;
+import io.github.bucket4j.remote.*;
 
 import java.io.*;
 import java.util.Objects;
@@ -54,18 +51,26 @@ public class BackendMock<K extends Serializable> implements Backend<K> {
         if (exception != null) {
             throw new RuntimeException();
         }
-        if (state == null) {
-            return CommandResult.bucketNotFound();
-        }
         emulateSerialization(key);
         command = emulateSerialization(command);
-        RemoteBucketState newState = emulateSerialization(state);
-        T resultData = command.execute(newState, timeMeter.currentTimeNanos());
-        if (command.isBucketStateModified()) {
-            state = newState;
-        }
-        resultData = emulateSerialization(resultData);
-        return CommandResult.success(resultData);
+
+        MutableBucketEntry entry = new MutableBucketEntry() {
+            @Override
+            public boolean exists() {
+                return state != null;
+            }
+            @Override
+            public void set(RemoteBucketState state) {
+                BackendMock.this.state = emulateSerialization(state);
+            }
+            @Override
+            public RemoteBucketState get() {
+                return emulateSerialization(state);
+            }
+        };
+
+        CommandResult<T> result = command.execute(entry, timeMeter.currentTimeNanos());
+        return emulateSerialization(result);
     }
 
     @Override
@@ -79,6 +84,9 @@ public class BackendMock<K extends Serializable> implements Backend<K> {
     }
 
     private static <T> T emulateSerialization(T object) {
+        if (object == null) {
+            return null;
+        }
         try {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             ObjectOutputStream oos = new ObjectOutputStream(baos);

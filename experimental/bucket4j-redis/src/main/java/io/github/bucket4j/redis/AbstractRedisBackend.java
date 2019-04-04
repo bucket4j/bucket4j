@@ -17,14 +17,12 @@
 
 package io.github.bucket4j.redis;
 
-import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.BackendOptions;
 import io.github.bucket4j.remote.Backend;
 import io.github.bucket4j.remote.CommandResult;
 import io.github.bucket4j.remote.RemoteCommand;
 
 import java.io.Serializable;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 // TODO javadocs
@@ -43,26 +41,6 @@ public abstract class AbstractRedisBackend<K extends Serializable> implements Ba
     @Override
     public <T extends Serializable> CompletableFuture<CommandResult<T>> executeAsync(K key, RemoteCommand<T> command) {
         return null;
-    }
-
-    @Override
-    public void createInitialState(K key, BucketConfiguration configuration) {
-        // TODO
-    }
-
-    @Override
-    public <T extends Serializable> T createInitialStateAndExecute(K key, BucketConfiguration configuration, RemoteCommand<T> command) {
-        return null;
-    }
-
-    @Override
-    public <T extends Serializable> CompletableFuture<T> createInitialStateAndExecuteAsync(K key, BucketConfiguration configuration, RemoteCommand<T> command) {
-        return null;
-    }
-
-    @Override
-    public Optional<BucketConfiguration> getConfiguration(K key) {
-        return Optional.empty();
     }
 
 }
