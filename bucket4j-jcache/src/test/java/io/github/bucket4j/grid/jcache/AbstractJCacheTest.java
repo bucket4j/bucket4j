@@ -21,10 +21,7 @@ package io.github.bucket4j.grid.jcache;
 import io.github.bucket4j.AbstractDistributedBucketTest;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
-import io.github.bucket4j.Bucket4j;
 import io.github.bucket4j.remote.Backend;
-import io.github.bucket4j.remote.ProxyManager;
-import io.github.bucket4j.remote.RecoveryStrategy;
 import io.github.bucket4j.remote.RemoteBucketState;
 import org.junit.Test;
 
@@ -38,7 +35,7 @@ public abstract class AbstractJCacheTest extends AbstractDistributedBucketTest {
 
     @Test(expected = UnsupportedOperationException.class)
     public void testThatAsyncNotSupported() {
-        Bucket bucket = Bucket4j.builder(getBackend())
+        Bucket bucket = getBackend().builder()
                 .addLimit(Bandwidth.simple(1_000, Duration.ofMinutes(1)))
                 .build(UUID.randomUUID().toString(), RECONSTRUCT);
 

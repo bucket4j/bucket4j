@@ -18,11 +18,7 @@
 package io.github.bucket4j.grid.ignite;
 
 import io.github.bucket4j.AbstractDistributedBucketTest;
-import io.github.bucket4j.Bucket;
-import io.github.bucket4j.Bucket4j;
 import io.github.bucket4j.remote.Backend;
-import io.github.bucket4j.remote.ProxyManager;
-import io.github.bucket4j.remote.RecoveryStrategy;
 import io.github.bucket4j.remote.RemoteBucketState;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.IgniteCache;

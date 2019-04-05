@@ -19,7 +19,6 @@ package io.github.bucket4j.local;
 
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
-import io.github.bucket4j.Bucket4j;
 import io.github.bucket4j.UninterruptibleBlockingStrategy;
 import io.github.bucket4j.util.ConsumptionScenario;
 import org.junit.Test;

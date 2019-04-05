@@ -29,7 +29,7 @@ ServletFilter would be obvious place to check limits:
 ```java
 public class IpThrottlingFilter implements javax.servlet.Filter {
     
-    private static final BucketConfiguration configuration = Bucket4j.configurationBuilder()
+    private static final BucketConfiguration configuration = BucketConfiguration.builder()
                                                               .addLimit(Bandwidth.simple(30, Duration.ofMinutes(1)))
                                                               .build();
     
@@ -124,7 +124,7 @@ public class IpThrottlingFilter implements javax.servlet.Filter {
     private Supplier<BucketConfiguration> getConfigSupplierForUser(String userId) {
          return () -> {
              long translationsPerDay = limitProvider.readPerDayLimitFromAgreementsDatabase(userId);
-             return Bucket4j.configurationBuilder()
+             return BucketConfiguration.builder()
                          .addLimit(Bandwidth.simple(translationsPerDay, Duration.ofDays(1)))
                          .build();
          };

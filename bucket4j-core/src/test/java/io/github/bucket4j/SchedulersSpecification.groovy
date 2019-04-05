@@ -159,7 +159,7 @@ class SchedulersSpecification extends Specification {
     @Timeout(value = 2, unit = TimeUnit.SECONDS)
     def "should complete future exceptionally if scheduler failed to schedule the task"() {
         setup:
-            BucketConfiguration configuration = Bucket4j.configurationBuilder()
+            BucketConfiguration configuration = BucketConfiguration.builder()
                 .addLimit(Bandwidth.simple(1, Duration.ofNanos(1)))
                 .build()
             BackendMock mockProxy = new BackendMock(SYSTEM_MILLISECONDS)

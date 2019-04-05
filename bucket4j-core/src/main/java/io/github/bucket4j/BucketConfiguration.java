@@ -17,6 +17,8 @@
 
 package io.github.bucket4j;
 
+import io.github.bucket4j.local.LocalBucketBuilder;
+
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
@@ -40,6 +42,11 @@ public final class BucketConfiguration implements Serializable {
         for (int i = 0; i < bandwidths.size() ; i++) {
             this.bandwidths[i] = Objects.requireNonNull(bandwidths.get(i));
         }
+    }
+
+    // TODO javadocs
+    public static ConfigurationBuilder builder() {
+        return new ConfigurationBuilder(LocalBucketBuilder.OPTIONS);
     }
 
     public Bandwidth[] getBandwidths() {

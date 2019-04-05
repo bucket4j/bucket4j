@@ -35,7 +35,7 @@ class ConfigurationReplacementSpecification extends Specification {
             Bucket bucket = bucketType.createBucket(Bucket.builder()
                     .addLimit(Bandwidth.simple(10, Duration.ofMinutes(100)))
             )
-            BucketConfiguration newConfiguration = Bucket4j.configurationBuilder()
+            BucketConfiguration newConfiguration = BucketConfiguration.builder()
                     .addLimit(Bandwidth.simple(100, Duration.ofMinutes(1)))
                     .addLimit(Bandwidth.simple(1000, Duration.ofHours(1)))
                     .build()
@@ -65,7 +65,7 @@ class ConfigurationReplacementSpecification extends Specification {
                     .addLimit(Bandwidth.simple(100, Duration.ofMinutes(1)))
                     .addLimit(Bandwidth.simple(1000, Duration.ofHours(1)))
             )
-            BucketConfiguration newConfiguration = Bucket4j.configurationBuilder()
+            BucketConfiguration newConfiguration = BucketConfiguration.builder()
                     .addLimit(Bandwidth.simple(10, Duration.ofMinutes(100)))
                     .build()
 
@@ -97,7 +97,7 @@ class ConfigurationReplacementSpecification extends Specification {
                         .withCustomTimePrecision(clock)
                 )
                 clock.addTime(10)
-                BucketConfiguration newConfiguration = Bucket4j.configurationBuilder()
+                BucketConfiguration newConfiguration = BucketConfiguration.builder()
                         .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)))
                         .build()
                 if (sync) {
@@ -120,7 +120,7 @@ class ConfigurationReplacementSpecification extends Specification {
                     .addLimit(Bandwidth.classic (500, Refill.greedy(100, Duration.ofNanos(100)) ))
                     .withCustomTimePrecision(clock)
             )
-            BucketConfiguration newConfiguration = Bucket4j.configurationBuilder()
+            BucketConfiguration newConfiguration = BucketConfiguration.builder()
                     .addLimit(Bandwidth.classic (200, Refill.greedy(100, Duration.ofNanos(100)) ))
                     .build()
             if (sync) {
@@ -143,7 +143,7 @@ class ConfigurationReplacementSpecification extends Specification {
                     .addLimit(Bandwidth.simple(100, Duration.ofNanos(100)).withInitialTokens(0))
                     .withCustomTimePrecision(clock)
             )
-            BucketConfiguration newConfiguration = Bucket4j.configurationBuilder()
+            BucketConfiguration newConfiguration = BucketConfiguration.builder()
                     .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)))
                     .build()
             if (sync) {

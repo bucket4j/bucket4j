@@ -32,7 +32,6 @@ non-blocking architecture means that both SMS sending and limit checking should 
 
 **Mockup of service based on top of Servlet API and bucket4j-infinispan**:
 ```java
-import io.github.bucket4j.Bucket4j;
 
 public class SmsServlet extends javax.servlet.http.HttpServlet {
 
@@ -47,14 +46,14 @@ public class SmsServlet extends javax.servlet.http.HttpServlet {
         
         smsSender = (SmsSender) ctx.getAttribute("sms-sender");
         
-        FunctionalMapImpl<String, GridBucketState> bucketMap = (FunctionalMapImpl<String, GridBucketState>) ctx.getAttribute("bucket-map")
+        FunctionalMapImpl<String, GridBucketState> bucketMap = (FunctionalMapImpl<String, GridBucketState>) ctx.getAttribute("bucket-map");
         this.buckets = Bucket4j.extension(Infinispan.class).proxyManagerForMap(bucketMap);
         
         this.configuration = () -> {
             long overdraft = 20;
             Refill refill = Refill.greedy(10, Duration.ofMinutes(1));
             Bandwidth limit = Bandwidth.classic(overdraft, refill);
-            return Bucket4j.configurationBuilder()
+            return BucketConfiguration.builder()
                 .addLimit(limit)
                 .build();
         };

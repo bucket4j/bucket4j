@@ -18,18 +18,13 @@
 package io.github.bucket4j.grid.infinispan;
 
 import io.github.bucket4j.AbstractDistributedBucketTest;
-import io.github.bucket4j.Bucket;
-import io.github.bucket4j.Bucket4j;
 import io.github.bucket4j.remote.Backend;
-import io.github.bucket4j.remote.ProxyManager;
-import io.github.bucket4j.remote.RecoveryStrategy;
 import io.github.bucket4j.remote.RemoteBucketState;
 import org.infinispan.functional.FunctionalMap.ReadWriteMap;
 import org.infinispan.functional.impl.FunctionalMapImpl;
 import org.infinispan.functional.impl.ReadWriteMapImpl;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Test;
 
 import javax.cache.Cache;
 import javax.cache.CacheManager;

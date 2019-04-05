@@ -18,7 +18,6 @@
 package io.github.bucket4j.grid.jcache.infinispan;
 
 import io.github.bucket4j.Bandwidth;
-import io.github.bucket4j.Bucket4j;
 import io.github.bucket4j.grid.jcache.JCacheBackend;
 import io.github.bucket4j.remote.RecoveryStrategy;
 import io.github.bucket4j.remote.RemoteBucketState;
@@ -67,7 +66,7 @@ public class InfinispanJCacheTest {
 
     @Test(expected = UnsupportedOperationException.class)
     public void checkThatInfinispanProviderUnsupported() {
-        Bucket4j.builder(new JCacheBackend<>(cache))
+        new JCacheBackend<>(cache).builder()
                 .addLimit(Bandwidth.simple(10, Duration.ofSeconds(60)))
                 .build("42", RecoveryStrategy.RECONSTRUCT);
     }

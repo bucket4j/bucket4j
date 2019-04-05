@@ -224,7 +224,7 @@ class BucketSpecification extends Specification {
     def "should complete future exceptionally if backend failed"() {
         setup:
             BackendMock mockProxy = new BackendMock(SYSTEM_MILLISECONDS);
-            BucketConfiguration configuration = Bucket4j.configurationBuilder(mockProxy)
+            BucketConfiguration configuration = BucketConfiguration.builder()
                                                     .addLimit(Bandwidth.simple(1, Duration.ofNanos(1)))
                                                     .build()
 

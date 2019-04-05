@@ -41,7 +41,7 @@ public abstract class AbstractDistributedBucketTest {
     private final String anotherKey = UUID.randomUUID().toString();
     private final Backend<String> backend = getBackend();
 
-    private RemoteBucketBuilder<String> builderForLongRunningTests = Bucket4j.builder(backend)
+    private RemoteBucketBuilder<String> builderForLongRunningTests = backend.builder()
             .addLimit(Bandwidth.simple(1_000, Duration.ofMinutes(1)).withInitialTokens(0))
             .addLimit(Bandwidth.simple(200, Duration.ofSeconds(10)).withInitialTokens(0));
     private double permittedRatePerSecond = Math.min(1_000d / 60, 200.0 / 10);
@@ -52,7 +52,7 @@ public abstract class AbstractDistributedBucketTest {
 
     @Test
     public void testReconstructRecoveryStrategy() {
-        Bucket bucket = Bucket4j.builder(backend)
+        Bucket bucket = backend.builder()
                 .addLimit(Bandwidth.simple(1_000, Duration.ofMinutes(1)))
                 .addLimit(Bandwidth.simple(200, Duration.ofSeconds(10)))
                 .build(key, RECONSTRUCT);
@@ -67,7 +67,7 @@ public abstract class AbstractDistributedBucketTest {
 
     @Test
     public void testThrowExceptionRecoveryStrategy() {
-        Bucket bucket = Bucket4j.builder(backend)
+        Bucket bucket = backend.builder()
                 .addLimit(Bandwidth.simple(1_000, Duration.ofMinutes(1)))
                 .build(key, THROW_BUCKET_NOT_FOUND_EXCEPTION);
 
@@ -86,44 +86,40 @@ public abstract class AbstractDistributedBucketTest {
 
     @Test
     public void testLocateConfigurationThroughProxyManager() {
-        ProxyManager<String> proxyManager = Bucket4j.proxyManager(backend);
-
         // should return empty optional if bucket is not stored
-        Optional<BucketConfiguration> remoteConfiguration = proxyManager.getProxyConfiguration(key);
+        Optional<BucketConfiguration> remoteConfiguration = backend.getProxyConfiguration(key);
         assertFalse(remoteConfiguration.isPresent());
 
         // should return not empty options if bucket is stored
-        Bucket4j.builder(backend)
+        backend.builder()
                 .addLimit(Bandwidth.simple(1_000, Duration.ofMinutes(1)))
                 .build(key, THROW_BUCKET_NOT_FOUND_EXCEPTION);
-        remoteConfiguration = proxyManager.getProxyConfiguration(key);
+        remoteConfiguration = backend.getProxyConfiguration(key);
         assertTrue(remoteConfiguration.isPresent());
 
         // should return empty optional if bucket is removed
         removeBucketFromBackingStorage(key);
-        remoteConfiguration = proxyManager.getProxyConfiguration(key);
+        remoteConfiguration = backend.getProxyConfiguration(key);
         assertFalse(remoteConfiguration.isPresent());
     }
 
     @Test
     public void testLocateBucketThroughProxyManager() {
-        ProxyManager<String> proxyManager = Bucket4j.proxyManager(backend);
-
         // should return empty optional if bucket is not stored
-        Optional<Bucket> remoteBucket = proxyManager.getProxy(key);
+        Optional<Bucket> remoteBucket = backend.getProxy(key);
         assertFalse(remoteBucket.isPresent());
 
         // should return not empty options if bucket is stored
-        RemoteBucketBuilder<String> builder = Bucket4j.builder(backend)
+        RemoteBucketBuilder<String> builder = backend.builder()
                 .addLimit(Bandwidth.simple(1_000, Duration.ofMinutes(1)))
                 .addLimit(Bandwidth.simple(200, Duration.ofSeconds(10)));
         builder.build(key, THROW_BUCKET_NOT_FOUND_EXCEPTION);
-        remoteBucket = proxyManager.getProxy(key);
+        remoteBucket = backend.getProxy(key);
         assertTrue(remoteBucket.isPresent());
 
         // should return empty optional if bucket is removed
         removeBucketFromBackingStorage(key);
-        remoteBucket = proxyManager.getProxy(key);
+        remoteBucket = backend.getProxy(key);
         assertFalse(remoteBucket.isPresent());
     }
 
@@ -182,28 +178,26 @@ public abstract class AbstractDistributedBucketTest {
 
     @Test
     public void testBucketRegistryWithKeyIndependentConfiguration() {
-        BucketConfiguration configuration = Bucket4j.configurationBuilder(backend)
+        BucketConfiguration configuration = backend.configurationBuilder()
                 .addLimit(Bandwidth.simple(10, Duration.ofDays(1)))
                 .build();
 
-        ProxyManager<String> registry = Bucket4j.proxyManager(backend);
-        Bucket bucket1 = registry.getProxy(key, () -> configuration);
+        Bucket bucket1 = backend.getProxy(key, () -> configuration);
         assertTrue(bucket1.tryConsume(10));
         assertFalse(bucket1.tryConsume(1));
 
-        Bucket bucket2 = registry.getProxy(anotherKey, () -> configuration);
+        Bucket bucket2 = backend.getProxy(anotherKey, () -> configuration);
         assertTrue(bucket2.tryConsume(10));
         assertFalse(bucket2.tryConsume(1));
     }
 
     @Test
     public void testBucketWithNotLazyConfiguration() {
-        BucketConfiguration configuration = Bucket4j.configurationBuilder(backend)
+        BucketConfiguration configuration = backend.configurationBuilder()
                 .addLimit(Bandwidth.simple(10, Duration.ofDays(1)))
                 .build();
 
-        ProxyManager<String> registry = Bucket4j.proxyManager(backend);
-        Bucket bucket = registry.getProxy(key, configuration);
+        Bucket bucket = backend.getProxy(key, configuration);
         assertTrue(bucket.tryConsume(10));
         assertFalse(bucket.tryConsume(1));
     }

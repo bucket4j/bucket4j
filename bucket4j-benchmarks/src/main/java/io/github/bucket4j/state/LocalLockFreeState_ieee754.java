@@ -19,7 +19,6 @@ package io.github.bucket4j.state;
 
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
-import io.github.bucket4j.Bucket4j;
 import io.github.bucket4j.MathType;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.State;

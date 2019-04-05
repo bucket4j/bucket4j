@@ -19,7 +19,6 @@ package io.github.bucket4j.core_algorithms.integer
 
 import io.github.bucket4j.Bandwidth
 import io.github.bucket4j.Bucket
-import io.github.bucket4j.Bucket4j
 import io.github.bucket4j.BucketConfiguration
 import io.github.bucket4j.BucketState
 import io.github.bucket4j.Refill
