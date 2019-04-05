@@ -47,6 +47,21 @@ class ConfigurationReplacementSpecification extends Specification {
             isConfigEquals(ex.newConfiguration, newConfiguration)
             isConfigEquals(ex.previousConfiguration, bucket.getConfiguration())
 
+        where:
+            bucketType << BucketType.values()
+    }
+
+    @Unroll
+    def "#bucketType should prevent increasing count of bandwidths when replacing configuration async"(BucketType bucketType) {
+        setup:
+            Bucket bucket = bucketType.createBucket(Bucket.builder()
+                    .addLimit(Bandwidth.simple(10, Duration.ofMinutes(100)))
+            )
+            BucketConfiguration newConfiguration = BucketConfiguration.builder()
+                .addLimit(Bandwidth.simple(100, Duration.ofMinutes(1)))
+                .addLimit(Bandwidth.simple(1000, Duration.ofHours(1)))
+                .build()
+
         when:
             bucket.asAsync().replaceConfiguration(newConfiguration).get()
         then:
@@ -54,8 +69,9 @@ class ConfigurationReplacementSpecification extends Specification {
             IncompatibleConfigurationException asyncException = executionException.getCause()
             isConfigEquals(asyncException.newConfiguration, newConfiguration)
             isConfigEquals(asyncException.previousConfiguration, bucket.getConfiguration())
+
         where:
-            bucketType << BucketType.values()
+            bucketType << BucketType.withAsyncSupport()
     }
 
     @Unroll
@@ -71,10 +87,25 @@ class ConfigurationReplacementSpecification extends Specification {
 
         when:
             bucket.replaceConfiguration(newConfiguration)
-            then:
+        then:
             IncompatibleConfigurationException ex = thrown(IncompatibleConfigurationException)
             isConfigEquals(ex.newConfiguration, newConfiguration)
             isConfigEquals(ex.previousConfiguration, bucket.getConfiguration())
+
+        where:
+            bucketType << BucketType.values()
+    }
+
+    @Unroll
+    def "#bucketType should prevent decreasing count of bandwidths when replacing configuration async"(BucketType bucketType) {
+        setup:
+            Bucket bucket = bucketType.createBucket(Bucket.builder()
+                    .addLimit(Bandwidth.simple(100, Duration.ofMinutes(1)))
+                    .addLimit(Bandwidth.simple(1000, Duration.ofHours(1)))
+            )
+            BucketConfiguration newConfiguration = BucketConfiguration.builder()
+                    .addLimit(Bandwidth.simple(10, Duration.ofMinutes(100)))
+                    .build()
 
         when:
             bucket.asAsync().replaceConfiguration(newConfiguration).get()
@@ -84,7 +115,7 @@ class ConfigurationReplacementSpecification extends Specification {
             isConfigEquals(asyncException.newConfiguration, newConfiguration)
             isConfigEquals(asyncException.previousConfiguration, bucket.getConfiguration())
         where:
-            bucketType << BucketType.values()
+            bucketType << BucketType.withAsyncSupport()
     }
 
     @Unroll
@@ -100,7 +131,7 @@ class ConfigurationReplacementSpecification extends Specification {
                 BucketConfiguration newConfiguration = BucketConfiguration.builder()
                         .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)))
                         .build()
-                if (sync) {
+                if (sync || !bucket.isAsyncModeSupported()) {
                     bucket.replaceConfiguration(newConfiguration)
                 } else {
                     bucket.asAsync().replaceConfiguration(newConfiguration).get()
@@ -123,7 +154,7 @@ class ConfigurationReplacementSpecification extends Specification {
             BucketConfiguration newConfiguration = BucketConfiguration.builder()
                     .addLimit(Bandwidth.classic (200, Refill.greedy(100, Duration.ofNanos(100)) ))
                     .build()
-            if (sync) {
+            if (sync || !bucket.isAsyncModeSupported()) {
                 bucket.replaceConfiguration(newConfiguration)
             } else {
                 bucket.asAsync().replaceConfiguration(newConfiguration).get()
@@ -146,7 +177,7 @@ class ConfigurationReplacementSpecification extends Specification {
             BucketConfiguration newConfiguration = BucketConfiguration.builder()
                     .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)))
                     .build()
-            if (sync) {
+            if (sync || !bucket.isAsyncModeSupported()) {
                 bucket.replaceConfiguration(newConfiguration)
             } else {
                 bucket.asAsync().replaceConfiguration(newConfiguration).get()

@@ -330,7 +330,7 @@ class BucketListenerSpecification extends Specification {
             listener.getRejected() == 6
 
         where:
-            type << BucketType.values()
+            type << BucketType.withAsyncSupport()
     }
 
 	@Unroll
@@ -363,7 +363,7 @@ class BucketListenerSpecification extends Specification {
             listener.getInterrupted() == 0
 
         where:
-            type << BucketType.values()
+            type << BucketType.withAsyncSupport()
     }
 
 
@@ -389,7 +389,7 @@ class BucketListenerSpecification extends Specification {
             listener.getInterrupted() == 0
 
         where:
-            type << BucketType.values()
+            type << BucketType.withAsyncSupport()
     }
 
     @Unroll
@@ -410,7 +410,7 @@ class BucketListenerSpecification extends Specification {
             listener.getRejected() == 0
 
         where:
-            type << BucketType.values()
+            type << BucketType.withAsyncSupport()
     }
 
 	  @Unroll
@@ -437,7 +437,7 @@ class BucketListenerSpecification extends Specification {
             listener.getRejected() == 0
 
         where:
-            type << BucketType.values()
+            type << BucketType.withAsyncSupport()
     }
 
 	@Unroll
@@ -458,7 +458,7 @@ class BucketListenerSpecification extends Specification {
             listener.getRejected() == 6
 
         where:
-            type << BucketType.values()
+            type << BucketType.withAsyncSupport()
     }
 
 }

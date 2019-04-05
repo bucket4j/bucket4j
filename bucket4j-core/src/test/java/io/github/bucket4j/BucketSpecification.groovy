@@ -17,7 +17,7 @@
 
 package io.github.bucket4j
 
-import io.github.bucket4j.mock.BackendMock
+import io.github.bucket4j.mock.GridBackendMock
 import io.github.bucket4j.mock.BucketType
 import io.github.bucket4j.mock.TimeMeterMock
 import io.github.bucket4j.distributed.proxy.BucketProxy
@@ -40,7 +40,7 @@ class BucketSpecification extends Specification {
                 for (boolean sync : [true, false]) {
                     def timeMeter = new TimeMeterMock(0)
                     Bucket bucket = type.createBucket(builder, timeMeter)
-                    if (sync) {
+                    if (sync || !bucket.isAsyncModeSupported()) {
                         assert bucket.tryConsume(1) == requiredResult
                     } else {
                         assert bucket.asAsync().tryConsume(1).get() == requiredResult
@@ -61,7 +61,7 @@ class BucketSpecification extends Specification {
                 for (boolean sync : [true, false]) {
                     def timeMeter = new TimeMeterMock(0)
                     Bucket bucket = type.createBucket(builder, timeMeter)
-                    if (sync) {
+                    if (sync || !bucket.isAsyncModeSupported()) {
                         assert bucket.tryConsume(toConsume) == requiredResult
                     } else {
                         assert bucket.asAsync().tryConsume(toConsume).get() == requiredResult
@@ -82,7 +82,7 @@ class BucketSpecification extends Specification {
                     TimeMeterMock timeMeter = new TimeMeterMock(0)
                     Bucket bucket = type.createBucket(builder, timeMeter)
                     ConsumptionProbe probe
-                    if (sync) {
+                    if (sync || !bucket.isAsyncModeSupported()) {
                         probe = bucket.tryConsumeAndReturnRemaining(toConsume)
                     } else {
                         probe = bucket.asAsync().tryConsumeAndReturnRemaining(toConsume).get()
@@ -111,7 +111,7 @@ class BucketSpecification extends Specification {
                     long availableTokensBeforeEstimation = bucket.getAvailableTokens()
 
                     EstimationProbe probe
-                    if (sync) {
+                    if (sync || !bucket.isAsyncModeSupported()) {
                         probe = bucket.estimateAbilityToConsume(toEstimate)
                     } else {
                         probe = bucket.asAsync().estimateAbilityToConsume(toEstimate).get()
@@ -142,7 +142,7 @@ class BucketSpecification extends Specification {
                 for (boolean sync : [true, false]) {
                     TimeMeterMock timeMeter = new TimeMeterMock(0)
                     Bucket bucket = bucketType.createBucket(builder, timeMeter)
-                    if (sync) {
+                    if (sync || !bucket.isAsyncModeSupported()) {
                         assert bucket.tryConsumeAsMuchAsPossible() == requiredResult
                     } else {
                         assert bucket.asAsync().tryConsumeAsMuchAsPossible().get() == requiredResult
@@ -163,7 +163,7 @@ class BucketSpecification extends Specification {
                 for (boolean sync : [true, false]) {
                     TimeMeterMock timeMeter = new TimeMeterMock(0)
                     Bucket bucket = bucketType.createBucket(builder, timeMeter)
-                    if (sync) {
+                    if (sync || !bucket.isAsyncModeSupported()) {
                         assert bucket.tryConsumeAsMuchAsPossible(limit) == requiredResult
                     } else {
                         assert bucket.asAsync().tryConsumeAsMuchAsPossible(limit).get() == requiredResult
@@ -186,7 +186,7 @@ class BucketSpecification extends Specification {
                     TimeMeterMock timeMeter = new TimeMeterMock(0)
                     Bucket bucket = type.createBucket(builder, timeMeter)
                     timeMeter.addTime(nanosIncrement)
-                    if (sync) {
+                    if (sync || !bucket.isAsyncModeSupported()) {
                         bucket.addTokens(tokensToAdd)
                     } else {
                         bucket.asAsync().addTokens(tokensToAdd).get()
@@ -223,7 +223,7 @@ class BucketSpecification extends Specification {
 
     def "should complete future exceptionally if backend failed"() {
         setup:
-            BackendMock mockProxy = new BackendMock(SYSTEM_MILLISECONDS);
+            GridBackendMock mockProxy = new GridBackendMock(SYSTEM_MILLISECONDS);
             BucketConfiguration configuration = BucketConfiguration.builder()
                                                     .addLimit(Bandwidth.simple(1, Duration.ofNanos(1)))
                                                     .build()

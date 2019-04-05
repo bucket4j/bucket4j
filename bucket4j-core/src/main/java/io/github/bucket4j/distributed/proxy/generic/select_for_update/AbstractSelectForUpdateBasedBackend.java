@@ -18,30 +18,38 @@
 package io.github.bucket4j.distributed.proxy.generic.select_for_update;
 
 import io.github.bucket4j.MathType;
+import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.proxy.Backend;
 import io.github.bucket4j.distributed.proxy.BackendOptions;
+import io.github.bucket4j.distributed.proxy.generic.GenericEntry;
 import io.github.bucket4j.distributed.remote.CommandResult;
-import io.github.bucket4j.distributed.remote.MutableBucketEntry;
-import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 
 import java.io.Serializable;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 public abstract class AbstractSelectForUpdateBasedBackend<K extends Serializable> implements Backend<K> {
 
     private static final BackendOptions OPTIONS = new BackendOptions(false, MathType.ALL, MathType.INTEGER_64_BITS);
 
+    private final TimeMeter timeMeter;
+
+    protected AbstractSelectForUpdateBasedBackend(TimeMeter timeMeter) {
+        this.timeMeter = timeMeter;
+    }
+
+    protected AbstractSelectForUpdateBasedBackend() {
+        timeMeter = TimeMeter.SYSTEM_MILLISECONDS;
+    }
+
     @Override
     public <T extends Serializable> CommandResult<T> execute(K key, RemoteCommand<T> command) {
-        SelectForUpdateBasedTransaction<K> transaction = createTransaction();
+        SelectForUpdateBasedTransaction transaction = allocateTransaction(key);
         try {
-            Optional<byte[]> state = transaction.selectForUpdate(key);
+            return execute(command, transaction);
         } finally {
-
+            releaseTransaction(transaction);
         }
-        return null;
     }
 
     @Override
@@ -54,38 +62,27 @@ public abstract class AbstractSelectForUpdateBasedBackend<K extends Serializable
         return OPTIONS;
     }
 
-    protected abstract SelectForUpdateBasedTransaction<K> createTransaction();
+    protected abstract SelectForUpdateBasedTransaction allocateTransaction(K key);
 
+    protected abstract void releaseTransaction(SelectForUpdateBasedTransaction transaction);
 
-    private static class Entry implements MutableBucketEntry {
-
-        private final Optional<byte[]> originalStateBytes;
-
-        private RemoteBucketState parsedState;
-        private RemoteBucketState modifiedState;
-
-        private Entry(Optional<byte[]> originalStateBytes) {
-            this.originalStateBytes = originalStateBytes;
-        }
-
-        @Override
-        public boolean exists() {
-            return originalStateBytes.isPresent();
-        }
-
-        @Override
-        public void set(RemoteBucketState state) {
-            modifiedState = state;
-        }
-
-        @Override
-        public RemoteBucketState get() {
-            if (parsedState != null) {
-
+    private <T extends Serializable> CommandResult<T> execute(RemoteCommand<T> command, SelectForUpdateBasedTransaction transaction) {
+        transaction.begin();
+        try {
+            byte[] stateBytes = transaction.lockAndGet().orElse(null);
+            GenericEntry entry = new GenericEntry(stateBytes);
+            CommandResult<T> result = command.execute(entry, timeMeter.currentTimeNanos());
+            if (entry.isModified()) {
+                byte[] bytes = entry.getModifiedStateBytes();
+                transaction.update(bytes);
             }
-            return null;
+            transaction.commit();
+            return result;
+        } catch (RuntimeException e) {
+            transaction.rollback();
+            throw e;
         }
-
     }
+
 
 }

@@ -22,6 +22,9 @@ import io.github.bucket4j.local.LocalBucketBuilder;
 import io.github.bucket4j.local.SynchronizationStrategy;
 import io.github.bucket4j.distributed.proxy.BucketProxy;
 
+import java.util.Arrays;
+import java.util.List;
+
 import static io.github.bucket4j.distributed.proxy.RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION;
 
 public enum BucketType {
@@ -54,15 +57,36 @@ public enum BucketType {
                     .build();
         }
     },
-    REMOTE {
+    GRID {
         @Override
         public Bucket createBucket(AbstractBucketBuilder builder, TimeMeter timeMeter) {
             BucketConfiguration configuration = PackageAcessor.buildConfiguration(builder);
-            BackendMock backend = new BackendMock(timeMeter);
+            GridBackendMock backend = new GridBackendMock(timeMeter);
             return BucketProxy.createInitializedBucket(42, configuration, backend, THROW_BUCKET_NOT_FOUND_EXCEPTION);
         }
 
-    };
+    },
+    COMPARE_AND_SWAP {
+        @Override
+        public Bucket createBucket(AbstractBucketBuilder builder, TimeMeter timeMeter) {
+            BucketConfiguration configuration = PackageAcessor.buildConfiguration(builder);
+            CompareAndSwapBasedBackendMock backend = new CompareAndSwapBasedBackendMock(timeMeter);
+            return BucketProxy.createInitializedBucket(42, configuration, backend, THROW_BUCKET_NOT_FOUND_EXCEPTION);
+        }
+    },
+    SELECT_FOR_UPDATE {
+        @Override
+        public Bucket createBucket(AbstractBucketBuilder builder, TimeMeter timeMeter) {
+            BucketConfiguration configuration = PackageAcessor.buildConfiguration(builder);
+            SelectForUpdateBasedBackendMock backend = new SelectForUpdateBasedBackendMock(timeMeter);
+            return BucketProxy.createInitializedBucket(42, configuration, backend, THROW_BUCKET_NOT_FOUND_EXCEPTION);
+        }
+    }
+    ;
+
+    public static List<BucketType> withAsyncSupport() {
+        return Arrays.asList(LOCAL_LOCK_FREE, LOCAL_SYNCHRONIZED, LOCAL_UNSAFE, GRID);
+    }
 
     abstract public Bucket createBucket(AbstractBucketBuilder builder, TimeMeter timeMeter);
 

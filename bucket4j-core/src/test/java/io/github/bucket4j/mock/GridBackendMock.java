@@ -25,18 +25,20 @@ import io.github.bucket4j.distributed.proxy.Backend;
 import io.github.bucket4j.distributed.remote.*;
 
 import java.io.*;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
-public class BackendMock<K extends Serializable> implements Backend<K> {
+public class GridBackendMock<K extends Serializable> implements Backend<K> {
 
     private static final BackendOptions OPTIONS = new BackendOptions(true, MathType.ALL, MathType.INTEGER_64_BITS);
 
     private final TimeMeter timeMeter;
-    private RemoteBucketState state;
+    private Map<K, RemoteBucketState> stateMap = new HashMap<>();
     private RuntimeException exception;
 
-    public BackendMock(TimeMeter timeMeter) {
+    public GridBackendMock(TimeMeter timeMeter) {
         this.timeMeter = Objects.requireNonNull(timeMeter);
     }
 
@@ -60,14 +62,16 @@ public class BackendMock<K extends Serializable> implements Backend<K> {
         MutableBucketEntry entry = new MutableBucketEntry() {
             @Override
             public boolean exists() {
-                return state != null;
+                return stateMap.containsKey(key);
             }
             @Override
             public void set(RemoteBucketState state) {
-                BackendMock.this.state = emulateSerialization(state);
+                GridBackendMock.this.stateMap.put(key, emulateSerialization(state));
             }
             @Override
             public RemoteBucketState get() {
+                RemoteBucketState state = stateMap.get(key);
+                Objects.requireNonNull(state);
                 return emulateSerialization(state);
             }
         };

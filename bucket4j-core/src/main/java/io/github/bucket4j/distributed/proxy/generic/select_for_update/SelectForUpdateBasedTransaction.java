@@ -17,15 +17,18 @@
 
 package io.github.bucket4j.distributed.proxy.generic.select_for_update;
 
-import java.io.Serializable;
 import java.util.Optional;
 
-public interface SelectForUpdateBasedTransaction<K extends Serializable> {
+public interface SelectForUpdateBasedTransaction {
 
-    Optional<byte[]> selectForUpdate(K key);
+    void begin();
 
-    Optional<byte[]> updateAndCommit(K key, byte[] data);
+    Optional<byte[]> lockAndGet();
+
+    void update(byte[] data);
 
     void rollback();
+
+    void commit();
 
 }

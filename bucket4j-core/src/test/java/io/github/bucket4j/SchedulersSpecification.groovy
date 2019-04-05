@@ -44,7 +44,7 @@ class SchedulersSpecification extends Specification {
                     for (boolean limitAsDuration: [true, false]) {
                         TimeMeterMock meter = new TimeMeterMock(0)
                         Bucket bucket = type.createBucket(builder, meter)
-                        if (sync) {
+                        if (sync || !bucket.isAsyncModeSupported()) {
                             BlockingStrategyMock sleepStrategy = new BlockingStrategyMock(meter)
                             if (uniterruptible) {
                                 if (limitAsDuration) {
@@ -87,7 +87,7 @@ class SchedulersSpecification extends Specification {
                         for (boolean limitAsDuration: [true, false]) {
                             TimeMeterMock meter = new TimeMeterMock(0)
                             Bucket bucket = type.createBucket(builder, meter)
-                            if (sync) {
+                            if (sync || !bucket.isAsyncModeSupported()) {
                                 BlockingStrategyMock sleepStrategy = new BlockingStrategyMock(meter)
                                 if (uniterruptible) {
                                     if (limitAsDuration) {
@@ -162,7 +162,7 @@ class SchedulersSpecification extends Specification {
             BucketConfiguration configuration = BucketConfiguration.builder()
                 .addLimit(Bandwidth.simple(1, Duration.ofNanos(1)))
                 .build()
-            BackendMock mockProxy = new BackendMock(SYSTEM_MILLISECONDS)
+            GridBackendMock mockProxy = new GridBackendMock(SYSTEM_MILLISECONDS)
             SchedulerMock schedulerMock = new SchedulerMock()
             Bucket bucket = BucketProxy.createInitializedBucket("66", configuration, mockProxy, THROW_BUCKET_NOT_FOUND_EXCEPTION)
         when:
@@ -278,7 +278,7 @@ class SchedulersSpecification extends Specification {
             ex.getCause().class == IllegalStateException
 
         where:
-            type << BucketType.values()
+            type << BucketType.withAsyncSupport()
     }
 
 
