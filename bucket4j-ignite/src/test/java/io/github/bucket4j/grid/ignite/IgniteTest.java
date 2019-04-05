@@ -18,8 +18,8 @@
 package io.github.bucket4j.grid.ignite;
 
 import io.github.bucket4j.AbstractDistributedBucketTest;
-import io.github.bucket4j.remote.Backend;
-import io.github.bucket4j.remote.RemoteBucketState;
+import io.github.bucket4j.distributed.proxy.Backend;
+import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.IgniteCache;
 import org.apache.ignite.Ignition;
@@ -33,10 +33,8 @@ import org.gridkit.nanocloud.VX;
 import org.gridkit.vicluster.ViNode;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Test;
 
 import java.io.Serializable;
-import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Collections;
 

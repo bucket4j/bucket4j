@@ -23,7 +23,7 @@ import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ICacheManager;
 import io.github.bucket4j.grid.jcache.AbstractJCacheTest;
-import io.github.bucket4j.remote.RemoteBucketState;
+import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import org.gridkit.nanocloud.Cloud;
 import org.gridkit.nanocloud.CloudFactory;
 import org.gridkit.nanocloud.VX;

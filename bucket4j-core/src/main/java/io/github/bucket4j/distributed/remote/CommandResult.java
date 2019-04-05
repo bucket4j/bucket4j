@@ -15,7 +15,7 @@
  *      limitations under the License.
  */
 
-package io.github.bucket4j.remote;
+package io.github.bucket4j.distributed.remote;
 
 import io.github.bucket4j.Nothing;
 

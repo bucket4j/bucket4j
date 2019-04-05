@@ -21,15 +21,15 @@ package io.github.bucket4j.grid.jcache;
 import io.github.bucket4j.AbstractDistributedBucketTest;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
-import io.github.bucket4j.remote.Backend;
-import io.github.bucket4j.remote.RemoteBucketState;
+import io.github.bucket4j.distributed.proxy.Backend;
+import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import org.junit.Test;
 
 import javax.cache.Cache;
 import java.time.Duration;
 import java.util.UUID;
 
-import static io.github.bucket4j.remote.RecoveryStrategy.RECONSTRUCT;
+import static io.github.bucket4j.distributed.proxy.RecoveryStrategy.RECONSTRUCT;
 
 public abstract class AbstractJCacheTest extends AbstractDistributedBucketTest {
 

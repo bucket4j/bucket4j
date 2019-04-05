@@ -17,9 +17,6 @@
 
 package io.github.bucket4j;
 
-import io.github.bucket4j.core_algorithms.BucketState64BitsInteger;
-import io.github.bucket4j.core_algorithms.BucketStateIEEE754;
-
 import java.io.Serializable;
 
 public interface BucketState extends Serializable {

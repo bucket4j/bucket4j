@@ -18,7 +18,7 @@
 package io.github.bucket4j
 
 import io.github.bucket4j.mock.*
-import io.github.bucket4j.remote.BucketProxy
+import io.github.bucket4j.distributed.proxy.BucketProxy
 import spock.lang.Specification
 import spock.lang.Timeout
 import spock.lang.Unroll
@@ -29,7 +29,7 @@ import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
 
 import static io.github.bucket4j.TimeMeter.SYSTEM_MILLISECONDS
-import static io.github.bucket4j.remote.RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION
+import static io.github.bucket4j.distributed.proxy.RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION
 
 class SchedulersSpecification extends Specification {
 

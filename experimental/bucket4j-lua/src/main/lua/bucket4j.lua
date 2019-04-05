@@ -157,7 +157,7 @@ Bucket4j.addBehaviorToConfiguration = function(configuration)
 
 end
 
--- This is Lua re-implementation of io.github.bucket4j.remote.RemoteBucketState
+-- This is Lua re-implementation of io.github.bucket4j.distributed.remote.RemoteBucketState
 Bucket4j.addBehaviorToStateWithConfiguration = function(stateWithConfiguration)
     Bucket4j.addBehaviorToState(stateWithConfiguration.state);
     Bucket4j.addBehaviorToConfiguration(stateWithConfiguration.configuration);
@@ -192,7 +192,7 @@ Bucket4j.addBehaviorToStateWithConfiguration = function(stateWithConfiguration)
     end
 end
 
--- This is Lua re-implementation of io.github.bucket4j.remote.commands java package
+-- This is Lua re-implementation of io.github.bucket4j.distributed.remote.commands java package
 Bucket4j.addBehaviorToCommand = function(command)
     command.bucketStateModified = false;
     local cmdName = command.name;

@@ -15,43 +15,27 @@
  *      limitations under the License.
  */
 
-package io.github.bucket4j.remote.commands;
+package io.github.bucket4j.distributed.remote.commands;
 
-import io.github.bucket4j.remote.CommandResult;
-import io.github.bucket4j.remote.MutableBucketEntry;
-import io.github.bucket4j.remote.RemoteBucketState;
-import io.github.bucket4j.remote.RemoteCommand;
+import io.github.bucket4j.BucketState;
+import io.github.bucket4j.distributed.remote.CommandResult;
+import io.github.bucket4j.distributed.remote.MutableBucketEntry;
+import io.github.bucket4j.distributed.remote.RemoteBucketState;
+import io.github.bucket4j.distributed.remote.RemoteCommand;
 
-public class TryConsumeCommand implements RemoteCommand<Boolean> {
+public class CreateSnapshotCommand implements RemoteCommand<BucketState> {
 
     private static final long serialVersionUID = 42;
 
-    private long tokensToConsume;
-
-    public TryConsumeCommand(long tokensToConsume) {
-        this.tokensToConsume = tokensToConsume;
-    }
-
     @Override
-    public CommandResult<Boolean> execute(MutableBucketEntry mutableEntry, long currentTimeNanos) {
+    public CommandResult<BucketState> execute(MutableBucketEntry mutableEntry, long currentTimeNanos) {
         if (!mutableEntry.exists()) {
             return CommandResult.bucketNotFound();
         }
 
         RemoteBucketState state = mutableEntry.get();
         state.refillAllBandwidth(currentTimeNanos);
-        long availableToConsume = state.getAvailableTokens();
-        if (tokensToConsume <= availableToConsume) {
-            state.consume(tokensToConsume);
-            mutableEntry.set(state);
-            return CommandResult.TRUE;
-        } else {
-            return CommandResult.FALSE;
-        }
-    }
-
-    public long getTokensToConsume() {
-        return tokensToConsume;
+        return CommandResult.success(state.copyBucketState());
     }
 
 }

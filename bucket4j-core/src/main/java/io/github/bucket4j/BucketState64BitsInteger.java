@@ -1,6 +1,6 @@
 /*
  *
- * Copyright 2015-2018 Vladimir Bukhtoyarov
+ * Copyright 2015-2019 Vladimir Bukhtoyarov
  *
  *       Licensed under the Apache License, Version 2.0 (the "License");
  *       you may not use this file except in compliance with the License.
@@ -15,11 +15,7 @@
  *      limitations under the License.
  */
 
-package io.github.bucket4j.core_algorithms;
-
-import io.github.bucket4j.Bandwidth;
-import io.github.bucket4j.BucketConfiguration;
-import io.github.bucket4j.BucketState;
+package io.github.bucket4j;
 
 import java.util.Arrays;
 

@@ -15,17 +15,15 @@
  *      limitations under the License.
  */
 
-package io.github.bucket4j.remote;
+package io.github.bucket4j.distributed.remote;
 
-/**
- * TODO javadocs
- */
-public interface MutableBucketEntry {
+import io.github.bucket4j.distributed.remote.CommandResult;
+import io.github.bucket4j.distributed.remote.MutableBucketEntry;
 
-    boolean exists();
+import java.io.Serializable;
 
-    void set(RemoteBucketState state);
+public interface RemoteCommand<T extends Serializable> extends Serializable {
 
-    RemoteBucketState get();
+    CommandResult<T> execute(MutableBucketEntry mutableEntry, long currentTimeNanos);
 
 }

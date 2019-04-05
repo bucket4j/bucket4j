@@ -20,9 +20,9 @@ package io.github.bucket4j.mock;
 import io.github.bucket4j.*;
 import io.github.bucket4j.local.LocalBucketBuilder;
 import io.github.bucket4j.local.SynchronizationStrategy;
-import io.github.bucket4j.remote.BucketProxy;
+import io.github.bucket4j.distributed.proxy.BucketProxy;
 
-import static io.github.bucket4j.remote.RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION;
+import static io.github.bucket4j.distributed.proxy.RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION;
 
 public enum BucketType {
 

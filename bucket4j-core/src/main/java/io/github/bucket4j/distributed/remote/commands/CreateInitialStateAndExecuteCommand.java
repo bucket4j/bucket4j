@@ -15,14 +15,14 @@
  *      limitations under the License.
  */
 
-package io.github.bucket4j.remote.commands;
+package io.github.bucket4j.distributed.remote.commands;
 
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.BucketState;
-import io.github.bucket4j.remote.CommandResult;
-import io.github.bucket4j.remote.MutableBucketEntry;
-import io.github.bucket4j.remote.RemoteBucketState;
-import io.github.bucket4j.remote.RemoteCommand;
+import io.github.bucket4j.distributed.remote.CommandResult;
+import io.github.bucket4j.distributed.remote.MutableBucketEntry;
+import io.github.bucket4j.distributed.remote.RemoteBucketState;
+import io.github.bucket4j.distributed.remote.RemoteCommand;
 
 import java.io.Serializable;
 

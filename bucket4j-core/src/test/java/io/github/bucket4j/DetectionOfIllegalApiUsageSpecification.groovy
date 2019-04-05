@@ -17,17 +17,17 @@
 
 package io.github.bucket4j
 
-import io.github.bucket4j.local.LocalBucketBuilder
+
 import io.github.bucket4j.mock.BackendMock
 import io.github.bucket4j.mock.BucketType
-import io.github.bucket4j.remote.BucketProxy
+import io.github.bucket4j.distributed.proxy.BucketProxy
 import spock.lang.Specification
 import spock.lang.Unroll
 
 import java.time.Duration
 
 import static io.github.bucket4j.BucketExceptions.*
-import static io.github.bucket4j.remote.RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION
+import static io.github.bucket4j.distributed.proxy.RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION
 
 class DetectionOfIllegalApiUsageSpecification extends Specification {
 

@@ -15,27 +15,38 @@
  *      limitations under the License.
  */
 
-package io.github.bucket4j.remote.commands;
+package io.github.bucket4j.distributed.remote.commands;
 
-import io.github.bucket4j.BucketState;
-import io.github.bucket4j.remote.CommandResult;
-import io.github.bucket4j.remote.MutableBucketEntry;
-import io.github.bucket4j.remote.RemoteBucketState;
-import io.github.bucket4j.remote.RemoteCommand;
+import io.github.bucket4j.Nothing;
+import io.github.bucket4j.distributed.remote.CommandResult;
+import io.github.bucket4j.distributed.remote.MutableBucketEntry;
+import io.github.bucket4j.distributed.remote.RemoteBucketState;
+import io.github.bucket4j.distributed.remote.RemoteCommand;
 
-public class CreateSnapshotCommand implements RemoteCommand<BucketState> {
+public class AddTokensCommand implements RemoteCommand<Nothing> {
 
     private static final long serialVersionUID = 42;
 
+    private long tokensToAdd;
+
+    public AddTokensCommand(long tokensToAdd) {
+        this.tokensToAdd = tokensToAdd;
+    }
+
     @Override
-    public CommandResult<BucketState> execute(MutableBucketEntry mutableEntry, long currentTimeNanos) {
+    public CommandResult<Nothing> execute(MutableBucketEntry mutableEntry, long currentTimeNanos) {
         if (!mutableEntry.exists()) {
             return CommandResult.bucketNotFound();
         }
-
         RemoteBucketState state = mutableEntry.get();
         state.refillAllBandwidth(currentTimeNanos);
-        return CommandResult.success(state.copyBucketState());
+        state.addTokens(tokensToAdd);
+        mutableEntry.set(state);
+        return CommandResult.NOTHING;
+    }
+
+    public long getTokensToAdd() {
+        return tokensToAdd;
     }
 
 }

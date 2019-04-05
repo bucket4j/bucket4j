@@ -23,7 +23,9 @@ import com.tangosol.util.InvocableMap;
 import com.tangosol.util.processor.AbstractProcessor;
 import com.tangosol.util.processor.SingleEntryAsynchronousProcessor;
 import io.github.bucket4j.*;
-import io.github.bucket4j.remote.*;
+import io.github.bucket4j.distributed.remote.RemoteCommand;
+import io.github.bucket4j.distributed.proxy.Backend;
+import io.github.bucket4j.distributed.remote.*;
 
 import java.io.Serializable;
 import java.util.Map;

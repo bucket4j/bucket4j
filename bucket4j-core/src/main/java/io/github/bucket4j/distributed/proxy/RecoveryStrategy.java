@@ -1,6 +1,6 @@
 /*
  *
- * Copyright 2015-2018 Vladimir Bukhtoyarov
+ * Copyright 2015-2019 Vladimir Bukhtoyarov
  *
  *       Licensed under the Apache License, Version 2.0 (the "License");
  *       you may not use this file except in compliance with the License.
@@ -15,7 +15,10 @@
  *      limitations under the License.
  */
 
-package io.github.bucket4j.remote;
+package io.github.bucket4j.distributed.proxy;
+
+import io.github.bucket4j.distributed.proxy.BucketNotFoundException;
+import io.github.bucket4j.distributed.proxy.BucketProxy;
 
 /**
  * Specifies the reaction which should be applied in case of previously saved state of bucket has been lost.

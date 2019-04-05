@@ -1,6 +1,6 @@
 /*
  *
- * Copyright 2015-2019 Vladimir Bukhtoyarov
+ * Copyright 2015-2018 Vladimir Bukhtoyarov
  *
  *       Licensed under the Apache License, Version 2.0 (the "License");
  *       you may not use this file except in compliance with the License.
@@ -15,26 +15,27 @@
  *      limitations under the License.
  */
 
-package io.github.bucket4j.remote.commands;
-import io.github.bucket4j.EstimationProbe;
-import io.github.bucket4j.remote.CommandResult;
-import io.github.bucket4j.remote.MutableBucketEntry;
-import io.github.bucket4j.remote.RemoteBucketState;
-import io.github.bucket4j.remote.RemoteCommand;
+package io.github.bucket4j.distributed.remote.commands;
+
+import io.github.bucket4j.ConsumptionProbe;
+import io.github.bucket4j.distributed.remote.CommandResult;
+import io.github.bucket4j.distributed.remote.MutableBucketEntry;
+import io.github.bucket4j.distributed.remote.RemoteBucketState;
+import io.github.bucket4j.distributed.remote.RemoteCommand;
 
 
-public class EstimateAbilityToConsumeCommand implements RemoteCommand<EstimationProbe> {
+public class TryConsumeAndReturnRemainingTokensCommand implements RemoteCommand<ConsumptionProbe> {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 42;
 
     private long tokensToConsume;
 
-    public EstimateAbilityToConsumeCommand(long tokensToEstimate) {
-        this.tokensToConsume = tokensToEstimate;
+    public TryConsumeAndReturnRemainingTokensCommand(long tokensToConsume) {
+        this.tokensToConsume = tokensToConsume;
     }
 
     @Override
-    public CommandResult<EstimationProbe> execute(MutableBucketEntry mutableEntry, long currentTimeNanos) {
+    public CommandResult<ConsumptionProbe> execute(MutableBucketEntry mutableEntry, long currentTimeNanos) {
         if (!mutableEntry.exists()) {
             return CommandResult.bucketNotFound();
         }
@@ -43,11 +44,17 @@ public class EstimateAbilityToConsumeCommand implements RemoteCommand<Estimation
         state.refillAllBandwidth(currentTimeNanos);
         long availableToConsume = state.getAvailableTokens();
         if (tokensToConsume <= availableToConsume) {
-            return CommandResult.success(EstimationProbe.canBeConsumed(availableToConsume));
+            state.consume(tokensToConsume);
+            mutableEntry.set(state);
+            return CommandResult.success(ConsumptionProbe.consumed(availableToConsume - tokensToConsume));
         } else {
             long nanosToWaitForRefill = state.calculateDelayNanosAfterWillBePossibleToConsume(tokensToConsume, currentTimeNanos);
-            return CommandResult.success(EstimationProbe.canNotBeConsumed(availableToConsume, nanosToWaitForRefill));
+            return CommandResult.success(ConsumptionProbe.rejected(availableToConsume, nanosToWaitForRefill));
         }
+    }
+
+    public long getTokensToConsume() {
+        return tokensToConsume;
     }
 
 }

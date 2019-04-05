@@ -18,9 +18,9 @@
 package io.github.bucket4j.redis;
 
 import io.github.bucket4j.BackendOptions;
-import io.github.bucket4j.remote.Backend;
-import io.github.bucket4j.remote.CommandResult;
-import io.github.bucket4j.remote.RemoteCommand;
+import io.github.bucket4j.distributed.proxy.Backend;
+import io.github.bucket4j.distributed.remote.CommandResult;
+import io.github.bucket4j.distributed.remote.RemoteCommand;
 
 import java.io.Serializable;
 import java.util.concurrent.CompletableFuture;

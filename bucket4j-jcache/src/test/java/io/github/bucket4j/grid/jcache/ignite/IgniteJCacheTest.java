@@ -18,7 +18,7 @@
 package io.github.bucket4j.grid.jcache.ignite;
 
 import io.github.bucket4j.grid.jcache.AbstractJCacheTest;
-import io.github.bucket4j.remote.RemoteBucketState;
+import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.Ignition;
 import org.apache.ignite.configuration.CacheConfiguration;
@@ -34,7 +34,6 @@ import org.junit.BeforeClass;
 
 import javax.cache.Cache;
 import java.io.Serializable;
-import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Collections;
 
