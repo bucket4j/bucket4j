@@ -17,7 +17,7 @@
 
 package io.github.bucket4j.redis;
 
-import io.github.bucket4j.BackendOptions;
+import io.github.bucket4j.distributed.proxy.BackendOptions;
 import io.github.bucket4j.distributed.proxy.Backend;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.RemoteCommand;

@@ -17,6 +17,8 @@
 
 package io.github.bucket4j;
 
+import io.github.bucket4j.distributed.proxy.BackendOptions;
+
 /**
  * A builder for buckets. Builder can be reused, i.e. one builder can create multiple buckets with similar configuration.
  *

@@ -19,6 +19,7 @@ package io.github.bucket4j.mock;
 
 
 import io.github.bucket4j.*;
+import io.github.bucket4j.distributed.proxy.BackendOptions;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.proxy.Backend;
 import io.github.bucket4j.distributed.remote.*;

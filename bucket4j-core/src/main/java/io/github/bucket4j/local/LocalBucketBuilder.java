@@ -18,6 +18,7 @@
 package io.github.bucket4j.local;
 
 import io.github.bucket4j.*;
+import io.github.bucket4j.distributed.proxy.BackendOptions;
 
 /**
  * This builder creates in-memory buckets ({@link LockFreeBucket}).

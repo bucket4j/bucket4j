@@ -18,6 +18,8 @@
 package io.github.bucket4j;
 
 
+import io.github.bucket4j.distributed.proxy.BackendOptions;
+
 import java.util.ArrayList;
 import java.util.List;
 

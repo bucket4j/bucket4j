@@ -17,7 +17,6 @@
 
 package io.github.bucket4j.distributed.proxy;
 
-import io.github.bucket4j.BackendOptions;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.ConfigurationBuilder;
