@@ -33,7 +33,7 @@ class BucketListenerSpecification extends Specification {
     SimpleBucketListener listener = new SimpleBucketListener()
 	SchedulerMock scheduler = new SchedulerMock(clock)
 
-    AbstractBucketBuilder builder = Bucket4j.builder()
+    AbstractBucketBuilder builder = Bucket.builder()
             .withCustomTimePrecision(clock)
             .addLimit(Bandwidth.simple(10, Duration.ofSeconds(1)))
 

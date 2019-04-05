@@ -32,7 +32,7 @@ class ConfigurationReplacementSpecification extends Specification {
     @Unroll
     def "#bucketType should prevent increasing count of bandwidths"(BucketType bucketType) {
         setup:
-            Bucket bucket = bucketType.createBucket(Bucket4j.builder()
+            Bucket bucket = bucketType.createBucket(Bucket.builder()
                     .addLimit(Bandwidth.simple(10, Duration.ofMinutes(100)))
             )
             BucketConfiguration newConfiguration = Bucket4j.configurationBuilder()
@@ -61,7 +61,7 @@ class ConfigurationReplacementSpecification extends Specification {
     @Unroll
     def "#bucketType should prevent decreasing count of bandwidths"(BucketType bucketType) {
         setup:
-            Bucket bucket = bucketType.createBucket(Bucket4j.builder()
+            Bucket bucket = bucketType.createBucket(Bucket.builder()
                     .addLimit(Bandwidth.simple(100, Duration.ofMinutes(1)))
                     .addLimit(Bandwidth.simple(1000, Duration.ofHours(1)))
             )
@@ -92,7 +92,7 @@ class ConfigurationReplacementSpecification extends Specification {
         expect:
             for (boolean sync : [true, false]) {
                 TimeMeterMock clock = new TimeMeterMock(0)
-                Bucket bucket = bucketType.createBucket(Bucket4j.builder()
+                Bucket bucket = bucketType.createBucket(Bucket.builder()
                         .addLimit(Bandwidth.simple(100, Duration.ofNanos(100)).withInitialTokens(0))
                         .withCustomTimePrecision(clock)
                 )
@@ -116,7 +116,7 @@ class ConfigurationReplacementSpecification extends Specification {
         expect:
         for (boolean sync : [true, false]) {
             TimeMeterMock clock = new TimeMeterMock(0)
-            Bucket bucket = bucketType.createBucket(Bucket4j.builder()
+            Bucket bucket = bucketType.createBucket(Bucket.builder()
                     .addLimit(Bandwidth.classic (500, Refill.greedy(100, Duration.ofNanos(100)) ))
                     .withCustomTimePrecision(clock)
             )
@@ -139,7 +139,7 @@ class ConfigurationReplacementSpecification extends Specification {
         expect:
         for (boolean sync : [true, false]) {
             TimeMeterMock clock = new TimeMeterMock(0)
-            Bucket bucket = bucketType.createBucket(Bucket4j.builder()
+            Bucket bucket = bucketType.createBucket(Bucket.builder()
                     .addLimit(Bandwidth.simple(100, Duration.ofNanos(100)).withInitialTokens(0))
                     .withCustomTimePrecision(clock)
             )

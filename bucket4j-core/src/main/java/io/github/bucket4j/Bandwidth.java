@@ -49,7 +49,7 @@ import java.time.Duration;
  * in other words any token can not be partially consumed.
  * <br> Example of multiple bandwidth:
  * <pre>{@code // Adds bandwidth that restricts to consume not often 1000 tokens per 1 minute and not often than 100 tokens per second
- * Bucket bucket = Bucket4j.builder().
+ * Bucket bucket = Bucket.builder().
  *      .addLimit(Bandwidth.create(1000, Duration.ofMinutes(1)));
  *      .addLimit(Bandwidth.create(100, Duration.ofSeconds(1)));
  *      .build()

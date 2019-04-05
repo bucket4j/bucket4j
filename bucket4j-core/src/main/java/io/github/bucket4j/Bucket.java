@@ -17,6 +17,8 @@
 
 package io.github.bucket4j;
 
+import io.github.bucket4j.local.LocalBucketBuilder;
+
 /**
  * Performs rate limiting using algorithm based on top of ideas of <a href="https://en.wikipedia.org/wiki/Token_bucket">Token Bucket</a>.
  * <p>
@@ -27,6 +29,15 @@ package io.github.bucket4j;
  * </ul>
  */
 public interface Bucket {
+
+    /**
+     * Creates the new builder of in-memory buckets.
+     *
+     * @return new instance of {@link LocalBucketBuilder}
+     */
+    public static LocalBucketBuilder builder() {
+        return new LocalBucketBuilder();
+    }
 
     /**
      * Returns the {@link BlockingBucket} view of this bucket, that provides operations which are able to block caller thread.

@@ -71,9 +71,9 @@ class SchedulersSpecification extends Specification {
         }
         where:
         n | requiredSleep | toConsume | builder
-        1 |      10       |     1     | Bucket4j.builder().addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(0))
-        2 |       0       |     1     | Bucket4j.builder().addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(1))
-        3 |    9990       |  1000     | Bucket4j.builder().addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(1))
+        1 |      10       |     1     | Bucket.builder().addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(0))
+        2 |       0       |     1     | Bucket.builder().addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(1))
+        3 |    9990       |  1000     | Bucket.builder().addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(1))
     }
 
     @Timeout(value = 2, unit = TimeUnit.SECONDS)
@@ -118,20 +118,20 @@ class SchedulersSpecification extends Specification {
             }
         where:
             n | requiredSleep | requiredResult | toConsume | sleepLimit |  builder
-            1 |      10       |     true       |     1     |     11     |  Bucket4j.builder().addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(0))
-            2 |      10       |     true       |     1     |     11     |  Bucket4j.builder().addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(0))
-            3 |       0       |     true       |     1     |     11     |  Bucket4j.builder().addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(1))
-            4 |       0       |     false      |   1000    |     11     |  Bucket4j.builder().addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(1))
-            5 |      40       |     true       |     5     |     40     |  Bucket4j.builder().addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(1))
-            6 |      40       |     true       |     5     |     41     |  Bucket4j.builder().addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(1))
-            6 |       0       |     false      |     5     |     39     |  Bucket4j.builder().addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(1))
+            1 |      10       |     true       |     1     |     11     |  Bucket.builder().addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(0))
+            2 |      10       |     true       |     1     |     11     |  Bucket.builder().addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(0))
+            3 |       0       |     true       |     1     |     11     |  Bucket.builder().addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(1))
+            4 |       0       |     false      |   1000    |     11     |  Bucket.builder().addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(1))
+            5 |      40       |     true       |     5     |     40     |  Bucket.builder().addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(1))
+            6 |      40       |     true       |     5     |     41     |  Bucket.builder().addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(1))
+            6 |       0       |     false      |     5     |     39     |  Bucket.builder().addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(1))
     }
 
     @Timeout(value = 2, unit = TimeUnit.SECONDS)
     def "Should throw InterruptedException when thread interrupted during waiting for token refill"() {
         expect:
         for (TimeMeter meter : [SYSTEM_MILLISECONDS, TimeMeter.SYSTEM_NANOTIME]) {
-            Bucket bucket = Bucket4j.builder()
+            Bucket bucket = Bucket.builder()
                     .withCustomTimePrecision(meter)
                     .addLimit(Bandwidth.simple(1, Duration.ofMinutes(1)).withInitialTokens(0))
                     .build()
@@ -178,7 +178,7 @@ class SchedulersSpecification extends Specification {
             TimeMeterMock clock = new TimeMeterMock()
             BlockingStrategyMock blocker = new BlockingStrategyMock(clock)
 
-            Bucket bucket = type.createBucket(Bucket4j.builder()
+            Bucket bucket = type.createBucket(Bucket.builder()
                     .withCustomTimePrecision(clock)
                     .addLimit(Bandwidth.simple(10, Duration.ofSeconds(1))),
                 clock)
@@ -218,7 +218,7 @@ class SchedulersSpecification extends Specification {
             TimeMeterMock clock = new TimeMeterMock()
             BlockingStrategyMock blocker = new BlockingStrategyMock(clock)
 
-            Bucket bucket = type.createBucket(Bucket4j.builder()
+            Bucket bucket = type.createBucket(Bucket.builder()
                     .withCustomTimePrecision(clock)
                     .addLimit(Bandwidth.simple(10, Duration.ofSeconds(1))),
                 clock)
@@ -256,7 +256,7 @@ class SchedulersSpecification extends Specification {
             TimeMeterMock clock = new TimeMeterMock()
             SchedulerMock scheduler = new SchedulerMock(clock)
 
-            Bucket bucket = type.createBucket(Bucket4j.builder()
+            Bucket bucket = type.createBucket(Bucket.builder()
                         .withCustomTimePrecision(clock)
                         .addLimit(Bandwidth.simple(10, Duration.ofSeconds(1))),
                     clock)

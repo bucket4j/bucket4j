@@ -28,7 +28,7 @@ The bucket can be decorated by listener via ```toListenable``` method.
 ```java
 BucketListener listener = new MyCoolListener();
 
-Bucket bucket = Bucket4j.builder()
+Bucket bucket = Bucket.builder()
                     .addLimit(Bandwidth.simple(100, Duration.ofMinutes(1)))
                     .build()
                     .toListenable(listener);
@@ -46,7 +46,7 @@ public static Bucket buildMonitoredBucket(Bandwidth limit, String bucketName, Me
   registry.register(name + ".interrupted", (Gauge<Long>) stat::getInterrupted);
   registry.register(name + ".delayedNanos", (Gauge<Long>) stat::getDelayedNanos);
   
-  return Bucket4j.builder().addLimit(limit).build().toListenable(stat);
+  return Bucket.builder().addLimit(limit).build().toListenable(stat);
   
 }
 ```

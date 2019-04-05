@@ -29,14 +29,7 @@ import java.io.Serializable;
  */
 public abstract class Bucket4j {
 
-    /**
-     * Creates the new builder of in-memory buckets.
-     *
-     * @return new instance of {@link LocalBucketBuilder}
-     */
-    public static LocalBucketBuilder builder() {
-        return new LocalBucketBuilder();
-    }
+
 
     // TODO javadocs
     public static ConfigurationBuilder configurationBuilder() {

@@ -30,7 +30,7 @@ class BucketRoundingRulesSpecification extends Specification {
     def "rest of division should not be missed on next consumption"() {
         setup:
             TimeMeterMock meter = new TimeMeterMock(0)
-            Bucket bucket = Bucket4j.builder()
+            Bucket bucket = Bucket.builder()
                                 .withCustomTimePrecision(meter)
                                 .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(0))
                                 .build()
@@ -49,7 +49,7 @@ class BucketRoundingRulesSpecification extends Specification {
     def "rest of division should cleared when addTokens increases bucket to maximum"() {
         setup:
             TimeMeterMock meter = new TimeMeterMock(0)
-            Bucket bucket = Bucket4j.builder()
+            Bucket bucket = Bucket.builder()
                     .withCustomTimePrecision(meter)
                     .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(0))
                     .build()
@@ -72,7 +72,7 @@ class BucketRoundingRulesSpecification extends Specification {
     def "Partially refilled token should not be missed when calculating time for refill #bucketType"(BucketType bucketType) {
         expect:
             def timeMeter = new TimeMeterMock(0)
-            def builder = Bucket4j.builder()
+            def builder = Bucket.builder()
                     .addLimit(Bandwidth.simple(1, Duration.ofSeconds(1)))
             Bucket bucket = bucketType.createBucket(builder, timeMeter)
 

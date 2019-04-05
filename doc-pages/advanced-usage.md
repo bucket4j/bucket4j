@@ -9,7 +9,7 @@ To solve problem you can construct following bucket:
 static final long MAX_WAIT_NANOS = TimeUnit.HOURS.toNanos(1);
 // ...
 
-Bucket bucket = Bucket4j.builder()
+Bucket bucket = Bucket.builder()
        // allows 1000 tokens per 1 minute
        .addLimit(Bandwidth.simple(1000, Duration.ofMinutes(1)))
        // but not often then 50 tokens per 1 second
@@ -34,7 +34,7 @@ int initialTokens = 42;
 Bandwidth limit = Bandwidth
     .simple(1000, Duration.ofHours(1))
     .withInitialTokens(initialTokens);
-Bucket bucket = Bucket4j.builder()
+Bucket bucket = Bucket.builder()
     .addLimit(limit)
     .build();
 ```
@@ -72,7 +72,7 @@ if (wallet.tryConsume(50)) { // get 50 cents from wallet
 By default Bucket4j uses millisecond time resolution, it is preferred time measurement strategy. 
 But rarely(for example benchmarking) you wish the nanosecond precision:
 ``` java
-Bucket4j.builder().withNanosecondPrecision()
+Bucket.builder().withNanosecondPrecision()
 ```
 Be very careful to choose this time measurement strategy, because ```System.nanoTime()``` produces inaccurate results, 
 use this strategy only if period of bandwidth is too small that millisecond resolution will be undesired.
@@ -93,7 +93,7 @@ public class ClusteredTimeMeter implements TimeMeter {
 }
 
 Bandwidth limit = Bandwidth.simple(100, Duration.ofMinutes(1));
-Bucket bucket = Bucket4j.builder()
+Bucket bucket = Bucket.builder()
                 .withCustomTimePrecision(new ClusteredTimeMeter())
                 .addLimit(limit)
                 .build();

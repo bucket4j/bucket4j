@@ -28,12 +28,12 @@ import java.time.Duration;
 @State(Scope.Benchmark)
 public class LocalLockFreeState {
 
-    public final Bucket unlimitedBucket = Bucket4j.builder()
+    public final Bucket unlimitedBucket = Bucket.builder()
             .addLimit(
                     Bandwidth.simple(Long.MAX_VALUE / 2, Duration.ofNanos(Long.MAX_VALUE / 2))
             ).build();
 
-    public final Bucket _10_milion_rps_Bucket = Bucket4j.builder()
+    public final Bucket _10_milion_rps_Bucket = Bucket.builder()
             .addLimit(Bandwidth.simple(10_000_000, Duration.ofSeconds(1)).withInitialTokens(0))
             .build();
 
