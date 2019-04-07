@@ -39,11 +39,6 @@ public class CompareAndSwapBasedBackendMock<K extends Serializable> extends Abst
         byte[] backup = stateMap.get(key);
         return new CompareAndSwapBasedTransaction() {
             @Override
-            public void begin() {
-                // do nothing
-            }
-
-            @Override
             public Optional<byte[]> get() {
                 return Optional.ofNullable(backup);
             }
@@ -52,16 +47,6 @@ public class CompareAndSwapBasedBackendMock<K extends Serializable> extends Abst
             public boolean compareAndSwap(byte[] originalData, byte[] newData) {
                 stateMap.put(key, newData);
                 return true;
-            }
-
-            @Override
-            public void rollback() {
-                stateMap.put(key, backup);
-            }
-
-            @Override
-            public void commit() {
-                // do nothing
             }
         };
     }

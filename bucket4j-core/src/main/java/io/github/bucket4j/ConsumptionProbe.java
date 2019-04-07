@@ -32,19 +32,21 @@ public class ConsumptionProbe implements Serializable {
     private final boolean consumed;
     private final long remainingTokens;
     private final long nanosToWaitForRefill;
+    private final long nanosToWaitForReset;
 
-    public static ConsumptionProbe consumed(long remainingTokens) {
-        return new ConsumptionProbe(true, remainingTokens, 0);
+    public static ConsumptionProbe consumed(long remainingTokens, long nanosToWaitForReset) {
+        return new ConsumptionProbe(true, remainingTokens, 0, nanosToWaitForReset);
     }
 
-    public static ConsumptionProbe rejected(long remainingTokens, long nanosToWaitForRefill) {
-        return new ConsumptionProbe(false, remainingTokens, nanosToWaitForRefill);
+    public static ConsumptionProbe rejected(long remainingTokens, long nanosToWaitForRefill, long nanosToWaitForReset) {
+        return new ConsumptionProbe(false, remainingTokens, nanosToWaitForRefill, nanosToWaitForReset);
     }
 
-    private ConsumptionProbe(boolean consumed, long remainingTokens, long nanosToWaitForRefill) {
+    private ConsumptionProbe(boolean consumed, long remainingTokens, long nanosToWaitForRefill, long nanosToWaitForReset) {
         this.consumed = consumed;
         this.remainingTokens = Math.max(0L, remainingTokens);
         this.nanosToWaitForRefill = nanosToWaitForRefill;
+        this.nanosToWaitForReset = nanosToWaitForReset;
     }
 
     /**
@@ -74,12 +76,22 @@ public class ConsumptionProbe implements Serializable {
         return nanosToWaitForRefill;
     }
 
+    /**
+     * Time in nanos which need to wait until bucket will be fully refilled to its maximum
+     *
+     * @return time in nanos which need to wait until bucket will be fully refilled to its maximum
+     */
+    public long getNanosToWaitForReset() {
+        return nanosToWaitForReset;
+    }
+
     @Override
     public String toString() {
-        return "ConsumptionResult{" +
+        return "ConsumptionProbe{" +
                 "consumed=" + consumed +
                 ", remainingTokens=" + remainingTokens +
                 ", nanosToWaitForRefill=" + nanosToWaitForRefill +
+                ", nanosToWaitForReset=" + nanosToWaitForReset +
                 '}';
     }
 

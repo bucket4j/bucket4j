@@ -21,14 +21,8 @@ import java.util.Optional;
 
 public interface CompareAndSwapBasedTransaction {
 
-    void begin();
-
     Optional<byte[]> get();
 
     boolean compareAndSwap(byte[] originalData, byte[] newData);
-
-    void rollback();
-
-    void commit();
 
 }

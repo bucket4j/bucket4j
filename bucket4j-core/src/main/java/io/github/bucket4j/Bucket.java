@@ -35,7 +35,7 @@ public interface Bucket {
      *
      * @return new instance of {@link LocalBucketBuilder}
      */
-    public static LocalBucketBuilder builder() {
+    static LocalBucketBuilder builder() {
         return new LocalBucketBuilder();
     }
 

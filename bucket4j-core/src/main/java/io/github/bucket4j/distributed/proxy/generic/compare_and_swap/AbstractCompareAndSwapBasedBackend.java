@@ -72,27 +72,18 @@ public abstract class AbstractCompareAndSwapBasedBackend<K extends Serializable>
     protected abstract void releaseTransaction(CompareAndSwapBasedTransaction transaction);
 
     private <T extends Serializable> CommandResult<T> execute(RemoteCommand<T> command, CompareAndSwapBasedTransaction transaction) {
-        transaction.begin();
-        try {
-            byte[] originalStateBytes = transaction.get().orElse(null);
-            GenericEntry entry = new GenericEntry(originalStateBytes);
-            CommandResult<T> result = command.execute(entry, timeMeter.currentTimeNanos());
-            if (!entry.isModified()) {
-                transaction.commit();
-                return result;
-            }
+        byte[] originalStateBytes = transaction.get().orElse(null);
+        GenericEntry entry = new GenericEntry(originalStateBytes);
+        CommandResult<T> result = command.execute(entry, timeMeter.currentTimeNanos());
+        if (!entry.isModified()) {
+            return result;
+        }
 
-            byte[] newStateBytes = entry.getModifiedStateBytes();
-            if (transaction.compareAndSwap(originalStateBytes, newStateBytes)) {
-                transaction.commit();
-                return result;
-            } else {
-                transaction.rollback();
-                return null;
-            }
-        } catch (RuntimeException e) {
-            transaction.rollback();
-            throw e;
+        byte[] newStateBytes = entry.getModifiedStateBytes();
+        if (transaction.compareAndSwap(originalStateBytes, newStateBytes)) {
+            return result;
+        } else {
+            return null;
         }
     }
 
