@@ -53,6 +53,11 @@ public class LuaStateProxy implements BucketState {
     }
 
     @Override
+    public long calculateFullRefillingTime(Bandwidth[] bandwidths, long currentTimeNanos) {
+        return 0;
+    }
+
+    @Override
     public void refillAllBandwidth(Bandwidth[] limits, long currentTimeNanos) {
 
     }

@@ -157,6 +157,31 @@ public class BucketStateIEEE754 implements BucketState {
         return delayAfterWillBePossibleToConsume;
     }
 
+    @Override
+    public long calculateFullRefillingTime(Bandwidth[] bandwidths, long currentTimeNanos) {
+        long maxTimeToFullRefillNanos = calculateFullRefillingTime(0, bandwidths[0], currentTimeNanos);
+        for (int i = 1; i < bandwidths.length; i++) {
+            maxTimeToFullRefillNanos = Math.max(maxTimeToFullRefillNanos, calculateFullRefillingTime(i, bandwidths[i], currentTimeNanos));
+        }
+        return maxTimeToFullRefillNanos;
+    }
+
+    private long calculateFullRefillingTime(int bandwidthIndex, Bandwidth bandwidth, long currentTimeNanos) {
+        long availableTokens = getCurrentSize(bandwidthIndex);
+        if (availableTokens >= bandwidth.capacity) {
+            return 0L;
+        }
+        double deficit = bandwidth.capacity - availableTokens;
+
+        double nanosToWait;
+        if (bandwidth.isRefillIntervally()) {
+            nanosToWait = calculateDelayNanosAfterWillBePossibleToConsumeForIntervalBandwidth(bandwidthIndex, bandwidth, deficit, currentTimeNanos);
+        } else {
+            nanosToWait = calculateDelayNanosAfterWillBePossibleToConsumeForGreedyBandwidth(bandwidth, deficit);
+        }
+        return nanosToWait < Long.MAX_VALUE? (long) nanosToWait : Long.MAX_VALUE;
+    }
+
     private long calculateDelayNanosAfterWillBePossibleToConsumeForBandwidth(int bandwidthIndex, Bandwidth bandwidth, long tokensToConsume, long currentTimeNanos) {
         double currentSize = tokens[bandwidthIndex];
         if (tokensToConsume <= currentSize) {

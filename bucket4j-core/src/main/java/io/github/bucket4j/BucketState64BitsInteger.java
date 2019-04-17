@@ -96,6 +96,29 @@ public class BucketState64BitsInteger implements BucketState {
         }
     }
 
+    @Override
+    public long calculateFullRefillingTime(Bandwidth[] bandwidths, long currentTimeNanos) {
+        long maxTimeToFullRefillNanos = calculateFullRefillingTime(0, bandwidths[0], currentTimeNanos);
+        for (int i = 1; i < bandwidths.length; i++) {
+            maxTimeToFullRefillNanos = Math.max(maxTimeToFullRefillNanos, calculateFullRefillingTime(i, bandwidths[i], currentTimeNanos));
+        }
+        return maxTimeToFullRefillNanos;
+    }
+
+    private long calculateFullRefillingTime(int bandwidthIndex, Bandwidth bandwidth, long currentTimeNanos) {
+        long availableTokens = getCurrentSize(bandwidthIndex);
+        if (availableTokens >= bandwidth.capacity) {
+            return 0L;
+        }
+        long deficit = bandwidth.capacity - availableTokens;
+
+        if (bandwidth.isRefillIntervally()) {
+            return calculateDelayNanosAfterWillBePossibleToConsumeForIntervalBandwidth(bandwidthIndex, bandwidth, deficit, currentTimeNanos);
+        } else {
+            return calculateDelayNanosAfterWillBePossibleToConsumeForGreedyBandwidth(bandwidthIndex, bandwidth, deficit);
+        }
+    }
+
     private void addTokens(int bandwidthIndex, Bandwidth bandwidth, long tokensToAdd) {
         long currentSize = getCurrentSize(bandwidthIndex);
         long newSize = currentSize + tokensToAdd;

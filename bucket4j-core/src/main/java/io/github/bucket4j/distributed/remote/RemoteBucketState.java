@@ -50,6 +50,10 @@ public class RemoteBucketState implements Serializable {
         state.consume(configuration.getBandwidths(), tokensToConsume);
     }
 
+    public long calculateFullRefillingTime(long currentTimeNanos) {
+        return state.calculateFullRefillingTime(configuration.getBandwidths(), currentTimeNanos);
+    }
+
     public long calculateDelayNanosAfterWillBePossibleToConsume(long tokensToConsume, long currentTimeNanos) {
         return state.calculateDelayNanosAfterWillBePossibleToConsume(configuration.getBandwidths(), tokensToConsume, currentTimeNanos);
     }

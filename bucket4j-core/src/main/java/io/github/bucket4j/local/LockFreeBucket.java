@@ -104,11 +104,14 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket {
             long availableToConsume = newState.getAvailableTokens();
             if (tokensToConsume > availableToConsume) {
                 long nanosToWaitForRefill = newState.delayNanosAfterWillBePossibleToConsume(tokensToConsume, currentTimeNanos);
-                return ConsumptionProbe.rejected(availableToConsume, nanosToWaitForRefill);
+                long nanosToWaitForReset = newState.calculateFullRefillingTime(currentTimeNanos);
+                return ConsumptionProbe.rejected(availableToConsume, nanosToWaitForRefill, nanosToWaitForReset);
             }
             newState.consume(tokensToConsume);
             if (stateRef.compareAndSet(previousState, newState)) {
-                return ConsumptionProbe.consumed(availableToConsume - tokensToConsume);
+                long remainingTokens = availableToConsume - tokensToConsume;
+                long nanosToWaitForReset = newState.calculateFullRefillingTime(currentTimeNanos);
+                return ConsumptionProbe.consumed(remainingTokens, nanosToWaitForReset);
             } else {
                 previousState = stateRef.get();
                 newState.copyStateFrom(previousState);
@@ -301,6 +304,10 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket {
 
         void consume(long tokensToConsume) {
             state.consume(configuration.getBandwidths(), tokensToConsume);
+        }
+
+        long calculateFullRefillingTime(long currentTimeNanos) {
+            return state.calculateFullRefillingTime(configuration.getBandwidths(), currentTimeNanos);
         }
 
         long delayNanosAfterWillBePossibleToConsume(long tokensToConsume, long currentTimeNanos) {

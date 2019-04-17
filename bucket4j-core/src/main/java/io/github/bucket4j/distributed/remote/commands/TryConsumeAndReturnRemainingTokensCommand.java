@@ -46,10 +46,13 @@ public class TryConsumeAndReturnRemainingTokensCommand implements RemoteCommand<
         if (tokensToConsume <= availableToConsume) {
             state.consume(tokensToConsume);
             mutableEntry.set(state);
-            return CommandResult.success(ConsumptionProbe.consumed(availableToConsume - tokensToConsume));
+            long nanosToWaitForReset = state.calculateFullRefillingTime(currentTimeNanos);
+            long remainingTokens = availableToConsume - tokensToConsume;
+            return CommandResult.success(ConsumptionProbe.consumed(remainingTokens, nanosToWaitForReset));
         } else {
+            long nanosToWaitForReset = state.calculateFullRefillingTime(currentTimeNanos);
             long nanosToWaitForRefill = state.calculateDelayNanosAfterWillBePossibleToConsume(tokensToConsume, currentTimeNanos);
-            return CommandResult.success(ConsumptionProbe.rejected(availableToConsume, nanosToWaitForRefill));
+            return CommandResult.success(ConsumptionProbe.rejected(availableToConsume, nanosToWaitForRefill, nanosToWaitForReset));
         }
     }
 

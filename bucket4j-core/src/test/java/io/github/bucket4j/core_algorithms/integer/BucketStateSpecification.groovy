@@ -130,9 +130,9 @@ class BucketStateSpecification extends Specification {
 
     @Unroll
     def "delayAfterWillBePossibleToConsume specification #testNumber"(String testNumber, long toConsume, long requiredTime, Bucket bucket) {
-            def configuration = bucket.configuration
-        TimeMeter timeMeter = bucket.timeMeter
         setup:
+            def configuration = bucket.configuration
+            TimeMeter timeMeter = bucket.timeMeter
             BucketState state = bucket.createSnapshot()
         when:
             long actualTime = state.calculateDelayNanosAfterWillBePossibleToConsume(configuration.bandwidths, toConsume, timeMeter.currentTimeNanos())
@@ -209,6 +209,90 @@ class BucketStateSpecification extends Specification {
                             .build()
                 ]
             ]
+    }
+
+    @Unroll
+    def "calculateFullRefillingTime specification #testNumber"(String testNumber, long requiredTime,
+           long timeShiftBeforeAsk, long tokensConsumeBeforeAsk, BucketConfiguration configuration) {
+        setup:
+            BucketState state = BucketState.createInitialState(configuration, 0L)
+            state.refillAllBandwidth(configuration.bandwidths, timeShiftBeforeAsk)
+            state.consume(configuration.bandwidths, tokensConsumeBeforeAsk)
+        when:
+            long actualTime = state.calculateFullRefillingTime(configuration.bandwidths, timeShiftBeforeAsk)
+        then:
+            actualTime == requiredTime
+        where:
+            [testNumber, requiredTime, timeShiftBeforeAsk, tokensConsumeBeforeAsk, configuration] << [
+                [
+                        "#1",
+                        90,
+                        0,
+                        0,
+                        BucketConfiguration.builder()
+                                .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(1))
+                                .build()
+                ], [
+                        "#2",
+                        100,
+                        0,
+                        0,
+                        BucketConfiguration.builder()
+                                .addLimit(Bandwidth.classic(10, Refill.intervally(10, Duration.ofNanos(100))).withInitialTokens(1))
+                                .build()
+                ], [
+                        "#3",
+                        1650,
+                        0,
+                        23,
+                        BucketConfiguration.builder()
+                                .addLimit(Bandwidth.classic(10, Refill.greedy(2, Duration.ofNanos(100))).withInitialTokens(0))
+                                .build()
+                ], [
+                        "#4",
+                        1650,
+                        0,
+                        23,
+                        BucketConfiguration.builder()
+                                .addLimit(Bandwidth.classic(10, Refill.intervally(2, Duration.ofNanos(100))).withInitialTokens(0))
+                                .build()
+                ], [
+                        "#5",
+                        70,
+                        0,
+                        0,
+                        BucketConfiguration.builder()
+                                .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(4))
+                                .build()
+                ], [
+                        "#6",
+                        20,
+                        0,
+                        0,
+                        BucketConfiguration.builder()
+                                .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(1))
+                                .addLimit(Bandwidth.simple(5, Duration.ofNanos(10)).withInitialTokens(2))
+                                .build()
+                ], [
+                        "#7",
+                        20,
+                        0,
+                        0,
+                        BucketConfiguration.builder()
+                                .addLimit(Bandwidth.simple(5, Duration.ofNanos(10)).withInitialTokens(2))
+                                .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(1))
+                                .build()
+                ], [
+                        "#8",
+                        0,
+                        0,
+                        0,
+                        BucketConfiguration.builder()
+                                .addLimit(Bandwidth.simple(5, Duration.ofNanos(10)).withInitialTokens(5))
+                                .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(3))
+                                .build()
+                ]
+        ]
     }
 
     @Unroll

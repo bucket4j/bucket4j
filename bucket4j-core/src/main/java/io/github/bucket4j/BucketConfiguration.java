@@ -74,12 +74,4 @@ public final class BucketConfiguration implements Serializable {
         return mathType;
     }
 
-    public long getMaxCapacity() {
-        long maxCapacity = bandwidths[0].capacity;
-        for (int i = 1; i < bandwidths.length; i++) {
-            maxCapacity = Math.max(maxCapacity, bandwidths[i].capacity);
-        }
-        return maxCapacity;
-    }
-
 }

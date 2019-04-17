@@ -31,6 +31,8 @@ public interface BucketState extends Serializable {
 
     long calculateDelayNanosAfterWillBePossibleToConsume(Bandwidth[] bandwidths, long tokensToConsume, long currentTimeNanos);
 
+    long calculateFullRefillingTime(Bandwidth[] bandwidths, long currentTimeNanos);
+
     void refillAllBandwidth(Bandwidth[] limits, long currentTimeNanos);
 
     void addTokens(Bandwidth[] bandwidths, long tokensToAdd);
