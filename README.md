@@ -1,7 +1,7 @@
+![](/doc-pages/logo.png)
+
 # Bucket4j - is Java rate-limiting library based on token-bucket algorithm.
-[![Build Status](https://travis-ci.org/vladimir-bukhtoyarov/bucket4j.svg?branch=master)](https://travis-ci.org/vladimir-bukhtoyarov/bucket4j)
 [![Join the chat at https://gitter.im/vladimir-bukhtoyarov/bucket4j](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/vladimir-bukhtoyarov/bucket4j?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-[![Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=com.github.vladimir-bukhtoyarov:bucket4j&metric=alert_status)](https://sonarqube.com/dashboard/index/com.github.vladimir-bukhtoyarov:bucket4j)
 [![Licence](https://img.shields.io/hexpm/l/plug.svg)](https://github.com/vladimir-bukhtoyarov/bucket4j/blob/master/LICENSE)
 
 ## Advantages of Bucket4j
