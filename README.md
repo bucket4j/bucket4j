@@ -1,4 +1,4 @@
-![](/doc-pages/logo.png)
+![](/doc-pages/white-logo.png)
 
 # Java rate-limiting library based on token-bucket algorithm.
 [![Join the chat at https://gitter.im/vladimir-bukhtoyarov/bucket4j](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/vladimir-bukhtoyarov/bucket4j?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
