@@ -1,6 +1,6 @@
 ![](/doc-pages/logo.png)
 
-# Bucket4j - is Java rate-limiting library based on token-bucket algorithm.
+# Java rate-limiting library based on token-bucket algorithm.
 [![Join the chat at https://gitter.im/vladimir-bukhtoyarov/bucket4j](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/vladimir-bukhtoyarov/bucket4j?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Licence](https://img.shields.io/hexpm/l/plug.svg)](https://github.com/vladimir-bukhtoyarov/bucket4j/blob/master/LICENSE)
 
@@ -77,8 +77,5 @@ mvn clean install
 Feel free to ask in the [gitter chat](https://gitter.im/vladimir-bukhtoyarov/bucket4j) 
 
 ## License
-Copyright 2015-2018 Vladimir Bukhtoyarov
+Copyright 2015-2019 Vladimir Bukhtoyarov
 Licensed under the Apache Software License, Version 2.0: <http://www.apache.org/licenses/LICENSE-2.0>.
-
-## Give beer to author
-[PayPalMe Donation link](http://paypal.me/vladimirbukhtoyarov)
