@@ -33,19 +33,19 @@ public class EqualsUtil {
         for (int i = 0; i < config1.getBandwidths().length; i++) {
             Bandwidth bandwidth1 = config1.getBandwidths()[i];
             Bandwidth bandwidth2 = config2.getBandwidths()[i];
-            if (bandwidth1.capacity != bandwidth2.capacity) {
+            if (bandwidth1.getCapacity() != bandwidth2.getCapacity()) {
                 return false;
             }
-            if (bandwidth1.initialTokens != bandwidth2.initialTokens) {
+            if (bandwidth1.getInitialTokens() != bandwidth2.getInitialTokens()) {
                 return false;
             }
-            if (bandwidth1.refillPeriodNanos != bandwidth2.refillPeriodNanos) {
+            if (bandwidth1.getRefillPeriodNanos() != bandwidth2.getRefillPeriodNanos()) {
                 return false;
             }
-            if (bandwidth1.refillIntervally != bandwidth2.refillIntervally) {
+            if (bandwidth1.isRefillIntervally() != bandwidth2.isRefillIntervally()) {
                 return false;
             }
-            if (bandwidth1.refillTokens != bandwidth2.refillTokens) {
+            if (bandwidth1.getRefillTokens() != bandwidth2.getRefillTokens()) {
                 return false;
             }
         }

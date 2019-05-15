@@ -59,11 +59,11 @@ public class Bandwidth implements Serializable {
 
     private static final long serialVersionUID = 101L;
 
-    final long capacity;
-    final long initialTokens;
-    final long refillPeriodNanos;
-    final long refillTokens;
-    final boolean refillIntervally;
+    private final long capacity;
+    private final long initialTokens;
+    private final long refillPeriodNanos;
+    private final long refillTokens;
+    private final boolean refillIntervally;
 
     private Bandwidth(long capacity, long refillPeriodNanos, long refillTokens, long initialTokens, boolean refillIntervally) {
         this.capacity = capacity;
@@ -131,4 +131,23 @@ public class Bandwidth implements Serializable {
         return sb.toString();
     }
 
+    public long getCapacity() {
+        return capacity;
+    }
+
+    public long getInitialTokens() {
+        return initialTokens;
+    }
+
+    public long getRefillPeriodNanos() {
+        return refillPeriodNanos;
+    }
+
+    public long getRefillTokens() {
+        return refillTokens;
+    }
+
+    public boolean isRefillIntervally() {
+        return refillIntervally;
+    }
 }

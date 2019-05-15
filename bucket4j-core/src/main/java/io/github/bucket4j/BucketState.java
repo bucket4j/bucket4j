@@ -37,7 +37,7 @@ public class BucketState implements Serializable {
 
         this.stateData = new long[bandwidths.length * 3];
         for(int i = 0; i < bandwidths.length; i++) {
-            setCurrentSize(i, bandwidths[i].initialTokens);
+            setCurrentSize(i, bandwidths[i].getInitialTokens());
             setLastRefillTimeNanos(i, currentTimeNanos);
         }
     }
@@ -93,12 +93,12 @@ public class BucketState implements Serializable {
     private void addTokens(int bandwidthIndex, Bandwidth bandwidth, long tokensToAdd) {
         long currentSize = getCurrentSize(bandwidthIndex);
         long newSize = currentSize + tokensToAdd;
-        if (newSize >= bandwidth.capacity) {
-            resetBandwidth(bandwidthIndex, bandwidth.capacity);
+        if (newSize >= bandwidth.getCapacity()) {
+            resetBandwidth(bandwidthIndex, bandwidth.getCapacity());
         } else if (newSize < currentSize) {
             // arithmetic overflow happens. This mean that bucket reached Long.MAX_VALUE tokens.
             // just reset bandwidth state
-            resetBandwidth(bandwidthIndex, bandwidth.capacity);
+            resetBandwidth(bandwidthIndex, bandwidth.getCapacity());
         } else {
             setCurrentSize(bandwidthIndex, newSize);
         }
@@ -110,8 +110,8 @@ public class BucketState implements Serializable {
             return;
         }
 
-        if (bandwidth.refillIntervally) {
-            long incompleteIntervalCorrection = (currentTimeNanos - previousRefillNanos) % bandwidth.refillPeriodNanos;
+        if (bandwidth.isRefillIntervally()) {
+            long incompleteIntervalCorrection = (currentTimeNanos - previousRefillNanos) % bandwidth.getRefillPeriodNanos();
             currentTimeNanos -= incompleteIntervalCorrection;
         }
         if (currentTimeNanos <= previousRefillNanos) {
@@ -120,9 +120,9 @@ public class BucketState implements Serializable {
             setLastRefillTimeNanos(bandwidthIndex, currentTimeNanos);
         }
 
-        final long capacity = bandwidth.capacity;
-        final long refillPeriodNanos = bandwidth.refillPeriodNanos;
-        final long refillTokens = bandwidth.refillTokens;
+        final long capacity = bandwidth.getCapacity();
+        final long refillPeriodNanos = bandwidth.getRefillPeriodNanos();
+        final long refillTokens = bandwidth.getRefillTokens();
         final long currentSize = getCurrentSize(bandwidthIndex);
 
         long durationSinceLastRefillNanos = currentTimeNanos - previousRefillNanos;
@@ -195,7 +195,7 @@ public class BucketState implements Serializable {
             return Long.MAX_VALUE;
         }
 
-        if (bandwidth.refillIntervally) {
+        if (bandwidth.isRefillIntervally()) {
             return calculateDelayNanosAfterWillBePossibleToConsumeForIntervalBandwidth(bandwidthIndex, bandwidth, deficit, currentTimeNanos);
         } else {
             return calculateDelayNanosAfterWillBePossibleToConsumeForGreedyBandwidth(bandwidthIndex, bandwidth, deficit);
@@ -203,8 +203,8 @@ public class BucketState implements Serializable {
     }
 
     private long calculateDelayNanosAfterWillBePossibleToConsumeForGreedyBandwidth(int bandwidthIndex, Bandwidth bandwidth, long deficit) {
-        long refillPeriodNanos = bandwidth.refillPeriodNanos;
-        long refillPeriodTokens = bandwidth.refillTokens;
+        long refillPeriodNanos = bandwidth.getRefillPeriodNanos();
+        long refillPeriodTokens = bandwidth.getRefillTokens();
         long divided = multiplyExactOrReturnMaxValue(refillPeriodNanos, deficit);
         if (divided == Long.MAX_VALUE) {
             // math overflow happen.
@@ -218,8 +218,8 @@ public class BucketState implements Serializable {
     }
 
     private long calculateDelayNanosAfterWillBePossibleToConsumeForIntervalBandwidth(int bandwidthIndex, Bandwidth bandwidth, long deficit, long currentTimeNanos) {
-        long refillPeriodNanos = bandwidth.refillPeriodNanos;
-        long refillTokens = bandwidth.refillTokens;
+        long refillPeriodNanos = bandwidth.getRefillPeriodNanos();
+        long refillTokens = bandwidth.getRefillTokens();
         long previousRefillNanos = getLastRefillTimeNanos(bandwidthIndex);
 
         long timeOfNextRefillNanos = previousRefillNanos + refillPeriodNanos;
