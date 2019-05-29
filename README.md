@@ -81,8 +81,8 @@ Copyright 2015-2019 Vladimir Bukhtoyarov
 Licensed under the Apache Software License, Version 2.0: <http://www.apache.org/licenses/LICENSE-2.0>.
 
 ## Who use Bucket4j?
-![Ringcentral](/doc-pages/images/ringcentral.png)
-![JHipster](/doc-pages/images/jhipster.png)
-![Opentable](/doc-pages/images/opentable.png)
-![Apereo CAS](/doc-pages/images/apereo_cas.jpg)
+![Ringcentral](/doc-pages/images/ringcentral.png "Ringcentral")
+![JHipster](/doc-pages/images/jhipster.png "JHipster")
+![Opentable](/doc-pages/images/opentable.png "Opentable")
+![Apereo CAS](/doc-pages/images/apereo_cas.jpg "Apereo CAS")
 
