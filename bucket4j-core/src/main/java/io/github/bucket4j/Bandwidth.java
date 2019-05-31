@@ -131,6 +131,30 @@ public class Bandwidth implements Serializable {
         return timeOfFirstRefillMillis != Refill.UNSPECIFIED_TIME_OF_FIRST_REFILL;
     }
 
+    public long getCapacity() {
+        return capacity;
+    }
+
+    public long getInitialTokens() {
+        return initialTokens;
+    }
+
+    public long getRefillPeriodNanos() {
+        return refillPeriodNanos;
+    }
+
+    public long getRefillTokens() {
+        return refillTokens;
+    }
+
+    public static long getSerialVersionUID() {
+        return serialVersionUID;
+    }
+
+    public long getTimeOfFirstRefillMillis() {
+        return timeOfFirstRefillMillis;
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("Bandwidth{");
