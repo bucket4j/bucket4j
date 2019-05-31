@@ -45,4 +45,9 @@ public class TimeMeterMock implements TimeMeter {
         return currentTimeNanos;
     }
 
+    @Override
+    public boolean isWallClockBased() {
+        return true;
+    }
+
 }
