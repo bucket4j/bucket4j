@@ -21,6 +21,7 @@ import io.github.bucket4j.mock.TimeMeterMock
 import spock.lang.Specification
 
 import java.time.Duration
+import java.time.Instant
 
 class HandlingArithmeticOverflowSpecification extends Specification {
 
@@ -191,6 +192,28 @@ class HandlingArithmeticOverflowSpecification extends Specification {
         then:
             state.getAvailableTokens(limits) == 0
             state.calculateDelayNanosAfterWillBePossibleToConsume(limits, Long.MAX_VALUE - 10, meter.currentTimeNanos()) == Long.MAX_VALUE
+    }
+
+    def "Should detect math overflow during initial tokens calculation for intervally aligned refill"() {
+        setup:
+            long bandwidthPeriodNanos = (long) Long.MAX_VALUE / 2
+            long capacity = (long) Long.MAX_VALUE / 2
+            long timeOfFirstRefillMillis = (Long.MAX_VALUE - 1) / 1_000_000
+            Refill refill = Refill.intervallyAligned(capacity,
+                    Duration.ofNanos(bandwidthPeriodNanos),
+                    Instant.ofEpochMilli(timeOfFirstRefillMillis),
+                    true)
+            Bandwidth limit = Bandwidth.classic(capacity, refill)
+            TimeMeterMock meter = new TimeMeterMock(0)
+            Bucket bucket = Bucket4j.builder()
+                    .addLimit(limit)
+                    .withCustomTimePrecision(meter)
+                    .build()
+            BucketState state = bucket.createSnapshot()
+            Bandwidth[] limits = bucket.configuration.bandwidths
+
+        expect:
+            state.getAvailableTokens(limits) == 4611686018427387903
     }
 
 }
