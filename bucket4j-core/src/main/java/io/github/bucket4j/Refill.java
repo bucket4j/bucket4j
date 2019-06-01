@@ -113,7 +113,7 @@ public class Refill implements Serializable {
      * Creates the {@link Refill} that does refill of tokens in intervally manner.
      * "Intervally" in opposite to "greedy"  will wait until whole {@code period} will be elapsed before regenerate {@code tokens}.
      * <br>
-     * In additional to {@link #intervally(long, Duration)}</p> it is possible to specify the time when first refill should happen via {@code timeOfFirstRefill}.
+     * In additional to {@link #intervally(long, Duration)} it is possible to specify the time when first refill should happen via {@code timeOfFirstRefill}.
      * This option can be used to configure clear interval boundary i.e. start of second, minute, hour, day.
      *
      * <p>
@@ -149,7 +149,7 @@ public class Refill implements Serializable {
      *        // calculated by formula min(400, max(0, 400 - 100) +  40/60*100) = min(400, 300 + 66) = 366
      * }</pre>
      *
-     * <ul>
+     *
      *     <strong>Restrictions:</strong>
      *     <ul>
      *         <li>
@@ -161,7 +161,7 @@ public class Refill implements Serializable {
      *             in order to properly measure the distance from {@code timeOfFirstRefill}
      *         </li>
      *     </ul>
-     * </ul>
+     *
      *
      * @param tokens amount of tokens
      * @param period the period within {@code tokens} will be fully regenerated
