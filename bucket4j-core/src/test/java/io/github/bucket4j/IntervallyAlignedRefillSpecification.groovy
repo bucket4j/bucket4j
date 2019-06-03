@@ -17,6 +17,7 @@
 
 package io.github.bucket4j
 
+import io.github.bucket4j.local.LocalBucket
 import io.github.bucket4j.mock.TimeMeterMock
 import spock.lang.Specification
 import spock.lang.Unroll
@@ -169,6 +170,29 @@ class IntervallyAlignedRefillSpecification extends Specification {
             bucket.tryConsumeAsMuchAsPossible()
         then: "bucket should report that 3 minute required to wait in order to consume 401 tokens"
             bucket.tryConsumeAndReturnRemaining(401).nanosToWaitForRefill == TimeUnit.MINUTES.toNanos(3)
+    }
+
+    def "check that boundary of interval is not missed during long time of inactivity"() {
+        setup:
+            TimeMeterMock timeMeter = new TimeMeterMock(TimeUnit.MILLISECONDS.toNanos(103))
+
+            Refill refill = Refill.intervallyAligned(400, Duration.ofMillis(100), new Date(200).toInstant(), false);
+            LocalBucket bucket = Bucket4j.builder()
+                    .withCustomTimePrecision(timeMeter)
+                    .addLimit(Bandwidth.classic(400, refill))
+                    .build()
+
+            bucket.tryConsumeAsMuchAsPossible()
+
+        when: "when bucket was inactive for significant time and consumption resumed something int the middle of interval"
+           timeMeter.setCurrentTimeMillis(32849)
+        then: "bucket should be refilled to max capacity"
+           bucket.getAvailableTokens() == 400
+        and: "original boundary of interval should not be missed, next refill date should be chosen based on original boundary instead of current time"
+           bucket.tryConsumeAsMuchAsPossible() == 400
+           bucket.getAvailableTokens() == 0
+           timeMeter.addMillis(51)
+           bucket.getAvailableTokens() == 400
     }
 
 }
