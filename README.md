@@ -73,12 +73,19 @@ cd bucket4j
 mvn clean install
 ```
 
-## Have a question?
-Feel free to ask in the [gitter chat](https://gitter.im/vladimir-bukhtoyarov/bucket4j) 
-
 ## License
 Copyright 2015-2019 Vladimir Bukhtoyarov
 Licensed under the Apache Software License, Version 2.0: <http://www.apache.org/licenses/LICENSE-2.0>.
+
+## Have a question?
+Feel free to ask in:
+* Gitter chat [https://gitter.im/vladimir-bukhtoyarov/bucket4j](https://gitter.im/vladimir-bukhtoyarov/bucket4j) 
+* Github issue tracker [https://github.com/vladimir-bukhtoyarov/bucket4j/issues/new](https://github.com/vladimir-bukhtoyarov/bucket4j/issues/new)
+
+## Have a sensitive question?
+If any information in the question should not be made publicly available, then try to contact with author via:
+* Twitter private message [https://twitter.com/monitoring_king](https://twitter.com/monitoring_king)
+* Linkedin private message [https://www.linkedin.com/in/vladimir-bukhtoyarov-a2385224](https://www.linkedin.com/in/vladimir-bukhtoyarov-a2385224)
 
 ## Who use Bucket4j?
 ![Ringcentral](/doc-pages/images/ringcentral.png "Ringcentral")
