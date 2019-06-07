@@ -52,8 +52,9 @@ As mentioned above in addition to local in-memory buckets, the Bucket4j supports
 * [JHipster/JHipster API Gateway](https://jhipster.github.io/api-gateway/#rate_limiting)
 * [Zivver/Dropwizard Ratelimit](https://github.com/zivver/dropwizard-ratelimit)
 
-## Third-party Demos:
+## Third-party demos and articles:
 * [Abdennebi/spring-boot-bucket4j-hazelcast-demo](https://github.com/Abdennebi/spring-boot-bucket4j-hazelcast-demo)
+* [ProgrammerSought Bucket4j - preliminary understanding](http://www.programmersought.com/article/2524209291/)
 
 ## Get Bucket4j library
 #### You can add Bucket4j to your project as maven dependency
