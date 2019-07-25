@@ -61,6 +61,7 @@
         <testcontainers.version>1.9.1</testcontainers.version>
         <lettuce-version>5.0.2.RELEASE</lettuce-version>
         <jedis.version>2.9.0</jedis.version>
+        <spring.version>2.1.9.RELEASE</spring.version>
     </properties>
 
     <scm>
