@@ -53,6 +53,7 @@ As mentioned above in addition to local in-memory buckets, the Bucket4j supports
 * [Zivver/Dropwizard Ratelimit](https://github.com/zivver/dropwizard-ratelimit)
 
 ## Third-party demos and articles:
+* [Rate limiting Spring MVC endpoints with bucket4j](https://golb.hplar.ch/2019/08/rate-limit-bucket4j.html)
 * [Abdennebi/spring-boot-bucket4j-hazelcast-demo](https://github.com/Abdennebi/spring-boot-bucket4j-hazelcast-demo)
 * [ProgrammerSought Bucket4j - preliminary understanding](http://www.programmersought.com/article/2524209291/)
 
