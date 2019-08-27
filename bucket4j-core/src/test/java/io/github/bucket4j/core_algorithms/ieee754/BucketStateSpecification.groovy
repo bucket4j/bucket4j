@@ -225,6 +225,83 @@ class BucketStateSpecification extends Specification {
     }
 
     @Unroll
+    def "calculateFullRefillingTime specification #testNumber"(String testNumber, long requiredTime,
+                                                               long timeShiftBeforeAsk, long tokensConsumeBeforeAsk, ConfigurationBuilder builder) {
+        setup:
+            BucketConfiguration configuration = builder.withMath(MathType.IEEE_754).build()
+            BucketState state = BucketState.createInitialState(configuration, 0L)
+            state.refillAllBandwidth(configuration.bandwidths, timeShiftBeforeAsk)
+            state.consume(configuration.bandwidths, tokensConsumeBeforeAsk)
+        when:
+            long actualTime = state.calculateFullRefillingTime(configuration.bandwidths, timeShiftBeforeAsk)
+        then:
+            actualTime == requiredTime
+        where:
+            [testNumber, requiredTime, timeShiftBeforeAsk, tokensConsumeBeforeAsk, builder] << [
+                    [
+//                            "#1",
+//                            90,
+//                            0,
+//                            0,
+//                            BucketConfiguration.builder()
+//                                    .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(1))
+//                    ], [
+//                            "#2",
+//                            100,
+//                            0,
+//                            0,
+//                            BucketConfiguration.builder()
+//                                    .addLimit(Bandwidth.classic(10, Refill.intervally(10, Duration.ofNanos(100))).withInitialTokens(1))
+//                    ], [
+//                            "#3",
+//                            1650,
+//                            0,
+//                            23,
+//                            BucketConfiguration.builder()
+//                                    .addLimit(Bandwidth.classic(10, Refill.greedy(2, Duration.ofNanos(100))).withInitialTokens(0))
+//                    ], [
+//                            "#4",
+//                            1700,
+//                            0,
+//                            23,
+//                            BucketConfiguration.builder()
+//                                    .addLimit(Bandwidth.classic(10, Refill.intervally(2, Duration.ofNanos(100))).withInitialTokens(0))
+//                    ], [
+//                            "#5",
+//                            60,
+//                            0,
+//                            0,
+//                            BucketConfiguration.builder()
+//                                    .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(4))
+//                    ], [
+//                            "#6",
+//                            90,
+//                            0,
+//                            0,
+//                            BucketConfiguration.builder()
+//                                    .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(1))
+//                                    .addLimit(Bandwidth.simple(5, Duration.ofNanos(10)).withInitialTokens(2))
+//                    ], [
+                            "#7",
+                            90,
+                            0,
+                            0,
+                            BucketConfiguration.builder()
+                                    .addLimit(Bandwidth.simple(5, Duration.ofNanos(10)).withInitialTokens(2))
+                                    .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(1))
+                    ], [
+                            "#8",
+                            70,
+                            0,
+                            0,
+                            BucketConfiguration.builder()
+                                    .addLimit(Bandwidth.simple(5, Duration.ofNanos(10)).withInitialTokens(5))
+                                    .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(3))
+                    ]
+            ]
+    }
+
+    @Unroll
     def "Specification for refill simple bandwidth #n"(int n, long initialTokens, long capacity, long period,
                                                        long initTime, long timeOnRefill, long tokensAfterRefill) {
         setup:

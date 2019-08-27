@@ -59,7 +59,7 @@ public class BucketStateIEEE754 implements BucketState {
 
     @Override
     public long getCurrentSize(int bandwidth) {
-        return (long) tokens[0];
+        return (long) tokens[bandwidth];
     }
 
     @Override
