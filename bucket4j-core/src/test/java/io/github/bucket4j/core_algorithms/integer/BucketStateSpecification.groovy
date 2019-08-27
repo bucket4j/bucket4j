@@ -250,7 +250,7 @@ class BucketStateSpecification extends Specification {
                                 .build()
                 ], [
                         "#4",
-                        1650,
+                        1700,
                         0,
                         23,
                         BucketConfiguration.builder()
@@ -258,7 +258,7 @@ class BucketStateSpecification extends Specification {
                                 .build()
                 ], [
                         "#5",
-                        70,
+                        60,
                         0,
                         0,
                         BucketConfiguration.builder()
@@ -266,7 +266,7 @@ class BucketStateSpecification extends Specification {
                                 .build()
                 ], [
                         "#6",
-                        20,
+                        90,
                         0,
                         0,
                         BucketConfiguration.builder()
@@ -275,7 +275,7 @@ class BucketStateSpecification extends Specification {
                                 .build()
                 ], [
                         "#7",
-                        20,
+                        90,
                         0,
                         0,
                         BucketConfiguration.builder()
@@ -284,7 +284,7 @@ class BucketStateSpecification extends Specification {
                                 .build()
                 ], [
                         "#8",
-                        0,
+                        70,
                         0,
                         0,
                         BucketConfiguration.builder()
