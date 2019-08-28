@@ -52,6 +52,22 @@ Refill refill = Refill.intervally(10, Duration.ofSeconds(1));
 Bandwidth bandwidth = Bandwidth.classic(600, refill);
 ```
 
+Also it is possible to specify the time when first refill should happen. 
+This option can be used to configure clear interval boundary i.e. start of second, minute, hour, day.
+```java
+   // imagine that wall clock is 16:20, and we need to schedule the first refill to 17:00
+   Instant firstRefillTime = ZonedDateTime.now()
+             .truncatedTo(ChronoUnit.HOURS)
+             .plus(1, ChronoUnit.HOURS)
+             .toInstant();
+   
+   // see detailed explanation for useAdaptiveInitialTokens in the javadocs for 'intervallyAligned' method 
+   boolean useAdaptiveInitialTokens = false;
+   
+   Bandwidth.classic(400, Refill.intervallyAligned(400, Duration.ofHours(1), firstRefillTime, useAdaptiveInitialTokens));
+```
+
+
 ### Returning tokens back to bucket.
 The [compensating transaction](https://en.wikipedia.org/wiki/Compensating_transaction) is one of obvious use case when you want to return tokens back to bucket:
 ```java

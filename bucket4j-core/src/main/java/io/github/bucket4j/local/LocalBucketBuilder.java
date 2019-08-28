@@ -91,6 +91,13 @@ public class LocalBucketBuilder extends AbstractBucketBuilder<LocalBucketBuilder
      */
     public LocalBucket build() {
         BucketConfiguration configuration = buildConfiguration();
+
+        for (Bandwidth bandwidth : configuration.getBandwidths()) {
+            if (bandwidth.isIntervallyAligned() && !timeMeter.isWallClockBased()) {
+                throw BucketExceptions.intervallyAlignedRefillCompatibleOnlyWithWallClock();
+            }
+        }
+
         switch (synchronizationStrategy) {
             case LOCK_FREE: return new LockFreeBucket(configuration, timeMeter);
             case SYNCHRONIZED: return new SynchronizedBucket(configuration, timeMeter);

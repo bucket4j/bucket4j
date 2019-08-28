@@ -1,7 +1,7 @@
-# Bucket4j - is Java rate-limiting library based on token-bucket algorithm.
-[![Build Status](https://travis-ci.org/vladimir-bukhtoyarov/bucket4j.svg?branch=master)](https://travis-ci.org/vladimir-bukhtoyarov/bucket4j)
+![](/doc-pages/white-logo.png)
+
+# Java rate-limiting library based on token-bucket algorithm.
 [![Join the chat at https://gitter.im/vladimir-bukhtoyarov/bucket4j](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/vladimir-bukhtoyarov/bucket4j?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-[![Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=com.github.vladimir-bukhtoyarov:bucket4j&metric=alert_status)](https://sonarqube.com/dashboard/index/com.github.vladimir-bukhtoyarov:bucket4j)
 [![Licence](https://img.shields.io/hexpm/l/plug.svg)](https://github.com/vladimir-bukhtoyarov/bucket4j/blob/master/LICENSE)
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=BCY8T8GHTT5T4)
 
@@ -53,8 +53,10 @@ As mentioned above in addition to local in-memory buckets, the Bucket4j supports
 * [JHipster/JHipster API Gateway](https://jhipster.github.io/api-gateway/#rate_limiting)
 * [Zivver/Dropwizard Ratelimit](https://github.com/zivver/dropwizard-ratelimit)
 
-## Third-party Demos:
+## Third-party demos and articles:
+* [Rate limiting Spring MVC endpoints with bucket4j](https://golb.hplar.ch/2019/08/rate-limit-bucket4j.html)
 * [Abdennebi/spring-boot-bucket4j-hazelcast-demo](https://github.com/Abdennebi/spring-boot-bucket4j-hazelcast-demo)
+* [ProgrammerSought Bucket4j - preliminary understanding](http://www.programmersought.com/article/2524209291/)
 
 ## Get Bucket4j library
 #### You can add Bucket4j to your project as maven dependency
@@ -74,12 +76,23 @@ cd bucket4j
 mvn clean install
 ```
 
-## Have a question?
-Feel free to ask in the [gitter chat](https://gitter.im/vladimir-bukhtoyarov/bucket4j) 
-
 ## License
-Copyright 2015-2018 Vladimir Bukhtoyarov
+Copyright 2015-2019 Vladimir Bukhtoyarov
 Licensed under the Apache Software License, Version 2.0: <http://www.apache.org/licenses/LICENSE-2.0>.
 
-## Give beer to author
-[PayPalMe Donation link](http://paypal.me/vladimirbukhtoyarov)
+## Have a question?
+Feel free to ask in:
+* Gitter chat [https://gitter.im/vladimir-bukhtoyarov/bucket4j](https://gitter.im/vladimir-bukhtoyarov/bucket4j) 
+* Github issue tracker [https://github.com/vladimir-bukhtoyarov/bucket4j/issues/new](https://github.com/vladimir-bukhtoyarov/bucket4j/issues/new)
+
+## Have a sensitive question?
+If any information in the question should not be made publicly available, then try to contact with author via:
+* Twitter private message [https://twitter.com/monitoring_king](https://twitter.com/monitoring_king)
+* Linkedin private message [https://www.linkedin.com/in/vladimir-bukhtoyarov-a2385224](https://www.linkedin.com/in/vladimir-bukhtoyarov-a2385224)
+
+## Who use Bucket4j?
+![Ringcentral](/doc-pages/images/ringcentral.png "Ringcentral")
+![JHipster](/doc-pages/images/jhipster.png "JHipster")
+![Opentable](/doc-pages/images/opentable.png "Opentable")
+![Apereo CAS](/doc-pages/images/apereo_cas.jpg "Apereo CAS")
+

@@ -19,6 +19,7 @@ package io.github.bucket4j;
 
 import java.text.MessageFormat;
 import java.time.Duration;
+import java.time.Instant;
 
 public final class BucketExceptions {
 
@@ -113,6 +114,22 @@ public final class BucketExceptions {
         String pattern = "{0} token/nanosecond is not permitted refill rate" +
                 ", because highest supported rate is 1 token/nanosecond";
         String msg = MessageFormat.format(pattern, actualRate);
+        return new IllegalArgumentException(msg);
+    }
+
+    public static IllegalArgumentException nonPositiveTimeOfFirstRefill(Instant timeOfFirstRefill) {
+        String pattern = "{0} is wrong value for timeOfFirstRefill, because timeOfFirstRefill should be a positive date";
+        String msg = MessageFormat.format(pattern, timeOfFirstRefill);
+        return new IllegalArgumentException(msg);
+    }
+
+    public static IllegalArgumentException intervallyAlignedRefillWithAdaptiveInitialTokensIncompatipleWithManualSpecifiedInitialTokens() {
+        String msg = "Intervally aligned Refill With adaptive initial tokens incompatiple with maanual specified initial tokens";
+        return new IllegalArgumentException(msg);
+    }
+
+    public static IllegalArgumentException intervallyAlignedRefillCompatibleOnlyWithWallClock() {
+        String msg = "intervally aligned refill is compatible only with wall-clock style TimeMeter";
         return new IllegalArgumentException(msg);
     }
 
