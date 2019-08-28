@@ -26,43 +26,56 @@ import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.TimeUnit
 
+import static io.github.bucket4j.MathType.*
+
 
 class IntervallyAlignedRefillSpecification extends Specification {
 
-
     @Unroll
     def "#n Initial token calculation spec"(int n, long currentTimeMillis, long firstRefillTimeMillis, long capacity,
-            long refillTokens, long refillPeriodMillis, long requiredInitialTokens) {
+            long refillTokens, long refillPeriodMillis, long requiredInitialTokens, MathType mathType) {
         setup:
             Instant firstRefillTime = new Date(firstRefillTimeMillis).toInstant()
             Duration refillPeriod = Duration.ofMillis(refillPeriodMillis)
             Refill refill = Refill.intervallyAligned(refillTokens, refillPeriod, firstRefillTime, true)
             Bandwidth bandwidth = Bandwidth.classic(capacity, refill)
             TimeMeterMock mockTimer = new TimeMeterMock(currentTimeMillis * 1_000_000)
-            Bucket bucket = Bucket4j.builder()
+
+            Bucket bucket = Bucket.builder()
                     .withCustomTimePrecision(mockTimer)
                     .addLimit(bandwidth)
+                    .withMath(mathType)
                     .build()
 
         expect:
             bucket.getAvailableTokens() == requiredInitialTokens
 
         where:
-            n | currentTimeMillis | firstRefillTimeMillis | capacity  |  refillTokens | refillPeriodMillis | requiredInitialTokens
-            0 |      60_000       |        60_000         |    400    |       400     |       60_000       |          400
-            1 |      20_000       |        60_000         |    400    |       400     |       60_000       |          266
-            2 |      20_000       |        60_000         |    400    |       300     |       60_000       |          300
-            3 |      20_000       |        60_000         |    400    |       200     |       60_000       |          333
-            4 |      20_000       |        60_000         |    400    |       100     |       60_000       |          366
-            5 |      60_000       |        60_000         |    400    |       100     |       60_000       |          400
-            6 |      60_001       |        60_000         |    400    |       100     |       60_000       |          400
-            7 |      20_000       |       180_000         |    400    |       100     |       60_000       |          400
-            8 |      20_000       |        60_000         |    100    |       400     |       60_000       |          100
-            9 |      59_000       |        60_000         |    100    |       400     |       60_000       |          6
+            n  | currentTimeMillis | firstRefillTimeMillis | capacity  |  refillTokens | refillPeriodMillis | requiredInitialTokens | mathType
+            0  |      60_000       |        60_000         |    400    |       400     |       60_000       |          400          | INTEGER_64_BITS
+            1  |      20_000       |        60_000         |    400    |       400     |       60_000       |          266          | INTEGER_64_BITS
+            2  |      20_000       |        60_000         |    400    |       300     |       60_000       |          300          | INTEGER_64_BITS
+            3  |      20_000       |        60_000         |    400    |       200     |       60_000       |          333          | INTEGER_64_BITS
+            4  |      20_000       |        60_000         |    400    |       100     |       60_000       |          366          | INTEGER_64_BITS
+            5  |      60_000       |        60_000         |    400    |       100     |       60_000       |          400          | INTEGER_64_BITS
+            6  |      60_001       |        60_000         |    400    |       100     |       60_000       |          400          | INTEGER_64_BITS
+            7  |      20_000       |       180_000         |    400    |       100     |       60_000       |          400          | INTEGER_64_BITS
+            8  |      20_000       |        60_000         |    100    |       400     |       60_000       |          100          | INTEGER_64_BITS
+            9  |      59_000       |        60_000         |    100    |       400     |       60_000       |          6            | INTEGER_64_BITS
+            10 |      60_000       |        60_000         |    400    |       400     |       60_000       |          400          | IEEE_754
+            11 |      20_000       |        60_000         |    400    |       400     |       60_000       |          266          | IEEE_754
+            12 |      20_000       |        60_000         |    400    |       300     |       60_000       |          300          | IEEE_754
+            13 |      20_000       |        60_000         |    400    |       200     |       60_000       |          333          | IEEE_754
+            14 |      20_000       |        60_000         |    400    |       100     |       60_000       |          366          | IEEE_754
+            15 |      60_000       |        60_000         |    400    |       100     |       60_000       |          400          | IEEE_754
+            16 |      60_001       |        60_000         |    400    |       100     |       60_000       |          400          | IEEE_754
+            17 |      20_000       |       180_000         |    400    |       100     |       60_000       |          400          | IEEE_754
+            18 |      20_000       |        60_000         |    100    |       400     |       60_000       |          100          | IEEE_754
+            19 |      59_000       |        60_000         |    100    |       400     |       60_000       |          6            | IEEE_754
     }
 
-
-    def "complex spec for case when useAdaptiveInitialTokens=false"() {
+    @Unroll
+    def "complex spec for case when useAdaptiveInitialTokens=false mathType = #mathType"(MathType mathType) {
         setup: """
                   Having the refill 200 tokens/1 minute, capacity is 400, 
                   20 seconds past from beginning of current minute, 
@@ -74,9 +87,10 @@ class IntervallyAlignedRefillSpecification extends Specification {
             TimeMeterMock mockTimer = new TimeMeterMock()
             mockTimer.setCurrentTimeSeconds(80)
 
-            Bucket bucket = Bucket4j.builder()
+            Bucket bucket = Bucket.builder()
                 .withCustomTimePrecision(mockTimer)
                 .addLimit(bandwidth)
+                .withMath(mathType)
                 .build()
 
         expect: "initialTokens == capacity because useAdaptiveInitialTokens == false"
@@ -115,9 +129,13 @@ class IntervallyAlignedRefillSpecification extends Specification {
             bucket.tryConsumeAsMuchAsPossible()
         then: "bucket should report that 3 minute required to wait in order to consume 401 tokens"
             bucket.tryConsumeAndReturnRemaining(401).nanosToWaitForRefill == TimeUnit.MINUTES.toNanos(3)
+
+        where:
+            mathType << MathType.values()
     }
 
-    def "complex spec for case when useAdaptiveInitialTokens=true"() {
+    @Unroll
+    def "complex spec for case when useAdaptiveInitialTokens=true mathType = #mathType"(MathType mathType) {
         setup: """
                   Having the refill 200 tokens/1 minute, capacity is 400, 
                   20 seconds past from beginning of current minute, 
@@ -129,9 +147,10 @@ class IntervallyAlignedRefillSpecification extends Specification {
             TimeMeterMock mockTimer = new TimeMeterMock()
             mockTimer.setCurrentTimeSeconds(80)
 
-            Bucket bucket = Bucket4j.builder()
+            Bucket bucket = Bucket.builder()
                     .withCustomTimePrecision(mockTimer)
                     .addLimit(bandwidth)
+                    .withMath(mathType)
                     .build()
 
         expect: "initialTokens == capacity because useAdaptiveInitialTokens == false"
@@ -170,16 +189,21 @@ class IntervallyAlignedRefillSpecification extends Specification {
             bucket.tryConsumeAsMuchAsPossible()
         then: "bucket should report that 3 minute required to wait in order to consume 401 tokens"
             bucket.tryConsumeAndReturnRemaining(401).nanosToWaitForRefill == TimeUnit.MINUTES.toNanos(3)
+
+        where:
+            mathType << MathType.values()
     }
 
-    def "check that boundary of interval is not missed during long time of inactivity"() {
+    @Unroll
+    def "check that boundary of interval is not missed during long time of inactivity mathType = #mathType"(MathType mathType) {
         setup:
             TimeMeterMock timeMeter = new TimeMeterMock(TimeUnit.MILLISECONDS.toNanos(103))
 
             Refill refill = Refill.intervallyAligned(400, Duration.ofMillis(100), new Date(200).toInstant(), false);
-            LocalBucket bucket = Bucket4j.builder()
+            LocalBucket bucket = Bucket.builder()
                     .withCustomTimePrecision(timeMeter)
                     .addLimit(Bandwidth.classic(400, refill))
+                    .withMath(mathType)
                     .build()
 
             bucket.tryConsumeAsMuchAsPossible()
@@ -193,6 +217,9 @@ class IntervallyAlignedRefillSpecification extends Specification {
            bucket.getAvailableTokens() == 0
            timeMeter.addMillis(51)
            bucket.getAvailableTokens() == 400
+
+        where:
+            mathType << MathType.values()
     }
 
 }

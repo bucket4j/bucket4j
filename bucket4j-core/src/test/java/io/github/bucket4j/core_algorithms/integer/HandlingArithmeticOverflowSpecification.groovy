@@ -209,7 +209,7 @@ class HandlingArithmeticOverflowSpecification extends Specification {
                     true)
             Bandwidth limit = Bandwidth.classic(capacity, refill)
             TimeMeterMock meter = new TimeMeterMock(0)
-            Bucket bucket = Bucket4j.builder()
+            Bucket bucket = Bucket.builder()
                     .addLimit(limit)
                     .withCustomTimePrecision(meter)
                     .build()

@@ -215,13 +215,13 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
             Bandwidth bandwidth = Bandwidth.classic(2, refill)
 
         when:
-            Bucket4j.builder().withNanosecondPrecision().addLimit(bandwidth).build()
+            Bucket.builder().withNanosecondPrecision().addLimit(bandwidth).build()
         then:
             IllegalArgumentException ex = thrown()
             ex.message == intervallyAlignedRefillCompatibleOnlyWithWallClock().message
 
         when:
-            Bucket4j.builder().addLimit(bandwidth).withNanosecondPrecision().build()
+            Bucket.builder().addLimit(bandwidth).withNanosecondPrecision().build()
         then:
             ex = thrown()
             ex.message == intervallyAlignedRefillCompatibleOnlyWithWallClock().message
