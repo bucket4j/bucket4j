@@ -30,7 +30,7 @@ import java.util.function.Supplier;
 
 public class LocalTest {
 
-    private LocalBucketBuilder builder = Bucket.builder()
+    private BucketBuilder builder = Bucket.builder()
             .addLimit(Bandwidth.simple(1_000, Duration.ofMinutes(1)).withInitialTokens(0))
             .addLimit(Bandwidth.simple(200, Duration.ofSeconds(10)).withInitialTokens(0));
 

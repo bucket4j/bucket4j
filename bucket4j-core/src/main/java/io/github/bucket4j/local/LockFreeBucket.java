@@ -28,8 +28,8 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket {
 
     private final AtomicReference<StateWithConfiguration> stateRef;
 
-    public LockFreeBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
-        this(new AtomicReference<>(createStateWithConfiguration(configuration, timeMeter)), timeMeter, BucketListener.NOPE);
+    public LockFreeBucket(BucketConfiguration configuration, MathType mathType, TimeMeter timeMeter) {
+        this(new AtomicReference<>(createStateWithConfiguration(configuration, mathType, timeMeter)), timeMeter, BucketListener.NOPE);
     }
 
     private LockFreeBucket(AtomicReference<StateWithConfiguration> stateRef, TimeMeter timeMeter, BucketListener listener) {
@@ -315,8 +315,8 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket {
         }
     }
 
-    private static StateWithConfiguration createStateWithConfiguration(BucketConfiguration configuration, TimeMeter timeMeter) {
-        BucketState initialState = BucketState.createInitialState(configuration, timeMeter.currentTimeNanos());
+    private static StateWithConfiguration createStateWithConfiguration(BucketConfiguration configuration, MathType mathType, TimeMeter timeMeter) {
+        BucketState initialState = BucketState.createInitialState(configuration, mathType, timeMeter.currentTimeNanos());
         return new StateWithConfiguration(configuration, initialState);
     }
 

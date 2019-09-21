@@ -180,7 +180,7 @@ public abstract class AbstractDistributedBucketTest {
 
     @Test
     public void testBucketRegistryWithKeyIndependentConfiguration() {
-        BucketConfiguration configuration = backend.configurationBuilder()
+        BucketConfiguration configuration = BucketConfiguration.builder()
                 .addLimit(Bandwidth.simple(10, Duration.ofDays(1)))
                 .build();
 
@@ -195,7 +195,7 @@ public abstract class AbstractDistributedBucketTest {
 
     @Test
     public void testBucketWithNotLazyConfiguration() {
-        BucketConfiguration configuration = backend.configurationBuilder()
+        BucketConfiguration configuration = BucketConfiguration.builder()
                 .addLimit(Bandwidth.simple(10, Duration.ofDays(1)))
                 .build();
 

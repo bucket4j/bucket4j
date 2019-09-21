@@ -17,9 +17,8 @@
 
 package io.github.bucket4j.distributed.proxy;
 
-import io.github.bucket4j.Bucket;
+import io.github.bucket4j.AsyncBucket;
 import io.github.bucket4j.BucketConfiguration;
-import io.github.bucket4j.ConfigurationBuilder;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.commands.GetConfigurationCommand;
@@ -51,69 +50,45 @@ import java.util.function.Supplier;
 public interface Backend<K extends Serializable> {
 
     /**
-     * Creates new instance of {@link ConfigurationBuilder}
+     * TODO fix javadocs
      *
-     * @return instance of {@link ConfigurationBuilder}
-     */
-    default ConfigurationBuilder configurationBuilder() {
-        return new ConfigurationBuilder(getOptions());
-    }
-
-    /**
-     * Creates new instance of builder specific for this back-end.
-     *
-     * @return new builder instance
-     */
-    default RemoteBucketBuilder<K> builder() {
-        return new RemoteBucketBuilder<>(this);
-    }
-
-    /**
      * Provides light-weight proxy to bucket which actually stored outside current JVM.
      * This method do not perform any hard work or network calls, it is not necessary to cache results of its invocation.
      *
-     * <p>Use this method if you use same configuration for all buckets(it can be easy stored as constant),
-     * or configuration is very cheap to create.
-     * </p>
-     *
      * @param key the unique identifier used to point to the bucket in external storage.
-     * @param configuration this configuration will be used to initialize bucket if it is not initialized before
-     *
-     * @return proxy to bucket that can be actually stored outside current JVM.
-     */
-    default Bucket getProxy(K key, BucketConfiguration configuration) {
-        return getProxy(key, () -> configuration);
-    }
-
-    /**
-     * Provides light-weight proxy to bucket which actually stored outside current JVM.
-     * This method do not perform any hard work or network calls, it is not necessary to cache results of its invocation.
-     *
-     * <p>Use this method in case of different configurations for each bucket and configuration is very expensive to create.
-     * </p>
-     *
-     * @param key the unique identifier used to point to the bucket in external storage.
-     * @param configurationLazySupplier supplier for configuration which can be called to build bucket configuration,
+     * @param configurationSupplier supplier for configuration which can be called to build bucket configuration,
      *                                  if and only if first invocation of any method on proxy detects that bucket absents in remote storage,
      *                                  in this case provide configuration will be used to instantiate and persist the missed bucket.
      *
      * @return proxy to bucket that can be actually stored outside current JVM.
      */
-    default Bucket getProxy(K key, Supplier<BucketConfiguration> configurationLazySupplier) {
-        return BucketProxy.createLazyBucket(key, configurationLazySupplier, this);
-    }
+    BucketProxy getProxy(K key, Supplier<BucketConfiguration> configurationSupplier);
 
     /**
-     * Locates proxy to bucket which actually stored outside current JVM.
+     * TODO fix javadocs
      *
-     * @param key the unique identifier used to point to the bucket in external storage.
+     * Constructs an instance of {@link BucketProxy} which state actually stored inside in-memory data-jvm,
+     * the bucket stored in the jvm immediately, so one network request will be issued to jvm.
+     * Due to this method performs network IO, returned result must not be treated as light-weight entity,
+     * it will be a performance anti-pattern to use this method multiple times for same key,
+     * you need to cache result somewhere and reuse between invocations,
+     * else performance of all operation with bucket will be 2-x times slower.
      *
-     * @return Optional surround the proxy to bucket or empty optional if bucket with specified key are not stored.
+     * <p>
+     * Use this method if and only if you need to full control over bucket lifecycle(especially specify {@link RecoveryStrategy}),
+     * and you have clean caching strategy which suitable for storing buckets,
+     * else it would be better to work through {@link JCache#proxyManagerForCache(Cache) ProxyManager},
+     * which does not require any caching, because ProxyManager operates with light-weight versions of buckets.
+     *
+     * @param cache distributed cache which will hold bucket inside cluster.
+     *             Feel free to store inside single {@code cache} as mush buckets as you need.
+     * @param key  for storing bucket inside {@code cache}.
+     *             If you plan to store multiple buckets inside single {@code cache}, then each bucket should has own unique {@code key}.
+     * @param recoveryStrategy specifies the reaction which should be applied in case of previously saved state of bucket has been lost.
+     *
+     * @return new distributed bucket
      */
-    default Optional<Bucket> getProxy(K key) {
-        return getProxyConfiguration(key)
-                .map(configuration -> BucketProxy.createLazyBucket(key, () -> configuration, this));
-    }
+    BucketProxy<K> getDurableProxy(K key, Supplier<BucketConfiguration> configurationSupplier, RecoveryStrategy recoveryStrategy);
 
     /**
      * Locates configuration of bucket which actually stored outside current JVM.
@@ -122,22 +97,6 @@ public interface Backend<K extends Serializable> {
      *
      * @return Optional surround the configuration or empty optional if bucket with specified key are not stored.
      */
-    default Optional<BucketConfiguration> getProxyConfiguration(K key) {
-        GetConfigurationCommand cmd = new GetConfigurationCommand();
-        CommandResult<BucketConfiguration> result = this.execute(key, cmd);
-        if (result.isBucketNotFound()) {
-            return Optional.empty();
-        }
-        return Optional.of(result.getData());
-    }
-
-    // TODO javadocs
-    <T extends Serializable> CommandResult<T> execute(K key, RemoteCommand<T> command);
-
-    // TODO javadocs
-    <T extends Serializable> CompletableFuture<CommandResult<T>> executeAsync(K key, RemoteCommand<T> command);
-
-    // TODO javadocs
-    BackendOptions getOptions();
+    Optional<BucketConfiguration> getProxyConfiguration(K key);
 
 }

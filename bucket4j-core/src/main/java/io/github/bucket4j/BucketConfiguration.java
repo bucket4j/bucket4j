@@ -17,8 +17,6 @@
 
 package io.github.bucket4j;
 
-import io.github.bucket4j.local.LocalBucketBuilder;
-
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
@@ -29,11 +27,8 @@ public final class BucketConfiguration implements Serializable {
     private static final long serialVersionUID = 42L;
 
     private final Bandwidth[] bandwidths;
-    private final MathType mathType;
 
-    public BucketConfiguration(List<Bandwidth> bandwidths, MathType mathType) {
-        this.mathType = Objects.requireNonNull(mathType);
-
+    public BucketConfiguration(List<Bandwidth> bandwidths) {
         Objects.requireNonNull(bandwidths);
         if (bandwidths.isEmpty()) {
             throw BucketExceptions.restrictionsNotSpecified();
@@ -46,7 +41,7 @@ public final class BucketConfiguration implements Serializable {
 
     // TODO javadocs
     public static ConfigurationBuilder builder() {
-        return new ConfigurationBuilder(LocalBucketBuilder.OPTIONS);
+        return new ConfigurationBuilder();
     }
 
     public Bandwidth[] getBandwidths() {
@@ -68,10 +63,6 @@ public final class BucketConfiguration implements Serializable {
 
     public boolean isCompatible(BucketConfiguration newConfiguration) {
         return bandwidths.length == newConfiguration.bandwidths.length;
-    }
-
-    public MathType getMathType() {
-        return mathType;
     }
 
 }

@@ -34,16 +34,16 @@ import java.util.function.Supplier;
 public class BucketProxy<K extends Serializable> extends AbstractBucket {
 
     private final K key;
-    private final Backend<K> backend;
+    private final CommandExecutor<K> backend;
     private final RecoveryStrategy recoveryStrategy;
     private final Supplier<BucketConfiguration> configurationSupplier;
 
-    public static <T extends Serializable> BucketProxy<T> createLazyBucket(T key, Supplier<BucketConfiguration> configurationSupplier, Backend<T> backend) {
+    public static <T extends Serializable> BucketProxy<T> createLazyBucket(T key, Supplier<BucketConfiguration> configurationSupplier, CommandExecutor<T> backend) {
         return new BucketProxy<>(BucketListener.NOPE, key, configurationSupplier, backend, RecoveryStrategy.RECONSTRUCT, false);
     }
 
-    public static <T extends Serializable> BucketProxy<T> createInitializedBucket(T key, BucketConfiguration configuration, Backend<T> backend, RecoveryStrategy recoveryStrategy) {
-        return new BucketProxy<>(BucketListener.NOPE, key, () -> configuration, backend, recoveryStrategy, true);
+    public static <T extends Serializable> BucketProxy<T> createInitializedBucket(T key, Supplier<BucketConfiguration> configurationSupplier, CommandExecutor<T> backend, RecoveryStrategy recoveryStrategy) {
+        return new BucketProxy<>(BucketListener.NOPE, key, configurationSupplier, backend, recoveryStrategy, true);
     }
 
     @Override
@@ -51,7 +51,7 @@ public class BucketProxy<K extends Serializable> extends AbstractBucket {
         return new BucketProxy<>(listener, key, configurationSupplier, backend, recoveryStrategy, false);
     }
 
-    private BucketProxy(BucketListener listener, K key, Supplier<BucketConfiguration> configurationSupplier, Backend<K> backend, RecoveryStrategy recoveryStrategy, boolean initializeBucket) {
+    private BucketProxy(BucketListener listener, K key, Supplier<BucketConfiguration> configurationSupplier, CommandExecutor<K> backend, RecoveryStrategy recoveryStrategy, boolean initializeBucket) {
         super(listener);
         this.key = key;
         this.backend = backend;
@@ -68,7 +68,7 @@ public class BucketProxy<K extends Serializable> extends AbstractBucket {
 
     @Override
     public boolean isAsyncModeSupported() {
-        return backend.getOptions().isAsyncModeSupported();
+        return backend.isAsyncModeSupported();
     }
 
     @Override

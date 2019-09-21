@@ -17,9 +17,6 @@
 
 package io.github.bucket4j;
 
-
-import io.github.bucket4j.distributed.proxy.BackendOptions;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,20 +27,16 @@ import java.util.List;
 public class ConfigurationBuilder {
 
     private final List<Bandwidth> bandwidths;
-    private final BackendOptions options;
-    private MathType mathType;
 
-    public ConfigurationBuilder(BackendOptions options) {
+    public ConfigurationBuilder() {
         this.bandwidths = new ArrayList<>(1);
-        this.options = options;
-        this.mathType = options.getDefaultMathType();
     }
 
     /**
      * @return configuration that used for bucket construction.
      */
     public BucketConfiguration build() {
-        return new BucketConfiguration(this.bandwidths, mathType);
+        return new BucketConfiguration(this.bandwidths);
     }
 
     /**
@@ -60,22 +53,10 @@ public class ConfigurationBuilder {
         return this;
     }
 
-    // TODO javadocs
-    public ConfigurationBuilder withMath(MathType mathType) {
-        if (!options.getSupportedMathTypes().contains(mathType)) {
-            // TODO provide message and implement tests
-            throw new IllegalArgumentException();
-        }
-        this.mathType = mathType;
-        return this;
-    }
-
     @Override
     public String toString() {
         return "ConfigurationBuilder{" +
                 "bandwidths=" + bandwidths +
-                ", options=" + options +
-                ", mathType=" + mathType +
                 '}';
     }
 

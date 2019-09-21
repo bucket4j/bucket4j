@@ -17,7 +17,7 @@
 
 package io.github.bucket4j;
 
-import io.github.bucket4j.local.LocalBucketBuilder;
+import io.github.bucket4j.local.BucketBuilder;
 
 /**
  * Performs rate limiting using algorithm based on top of ideas of <a href="https://en.wikipedia.org/wiki/Token_bucket">Token Bucket</a>.
@@ -33,10 +33,10 @@ public interface Bucket {
     /**
      * Creates the new builder of in-memory buckets.
      *
-     * @return new instance of {@link LocalBucketBuilder}
+     * @return new instance of {@link BucketBuilder}
      */
-    static LocalBucketBuilder builder() {
-        return new LocalBucketBuilder();
+    static BucketBuilder builder() {
+        return new BucketBuilder();
     }
 
     /**
@@ -65,7 +65,7 @@ public interface Bucket {
      *
      * @throws UnsupportedOperationException if particular extension behind the bucket does not support asynchronous mode.
      */
-    AsyncBucket asAsync();
+     asAsync();
 
     /**
      * Returns asynchronous view of this bucket that allows to use bucket as async scheduler.
@@ -208,5 +208,8 @@ public interface Bucket {
      * @return new bucket instance decorated by {@code listener}
      */
     Bucket toListenable(BucketListener listener);
+
+    // TODO
+    BucketConfiguration getConfiguration();
 
 }

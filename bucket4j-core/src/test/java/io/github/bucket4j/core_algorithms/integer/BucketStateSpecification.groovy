@@ -213,7 +213,7 @@ class BucketStateSpecification extends Specification {
 
     @Unroll
     def "calculateFullRefillingTime specification #testNumber"(String testNumber, long requiredTime,
-           long timeShiftBeforeAsk, long tokensConsumeBeforeAsk, BucketConfiguration configuration) {
+                                                               long timeShiftBeforeAsk, long tokensConsumeBeforeAsk, BucketConfiguration configuration) {
         setup:
             BucketState state = BucketState.createInitialState(configuration, 0L)
             state.refillAllBandwidth(configuration.bandwidths, timeShiftBeforeAsk)

@@ -18,28 +18,41 @@
 package io.github.bucket4j.local;
 
 import io.github.bucket4j.*;
-import io.github.bucket4j.distributed.proxy.BackendOptions;
+
+import java.util.Objects;
 
 /**
  * This builder creates in-memory buckets ({@link LockFreeBucket}).
  */
-public class LocalBucketBuilder extends AbstractBucketBuilder<LocalBucketBuilder> {
+public class BucketBuilder {
 
-    public static final BackendOptions OPTIONS = new BackendOptions(true, MathType.ALL, MathType.INTEGER_64_BITS);
+    private final ConfigurationBuilder configurationBuilder;
+
+    protected BucketBuilder() {
+        configurationBuilder = new ConfigurationBuilder();
+    }
+
+    /**
+     * Adds limited bandwidth for all buckets which will be constructed by this builder.
+     *
+     * @param bandwidth limitation
+     * @return this builder instance
+     */
+    public BucketBuilder addLimit(Bandwidth bandwidth) {
+        configurationBuilder.addLimit(bandwidth);
+        return this;
+    }
 
     private TimeMeter timeMeter = TimeMeter.SYSTEM_MILLISECONDS;
     private SynchronizationStrategy synchronizationStrategy = SynchronizationStrategy.LOCK_FREE;
-
-    public LocalBucketBuilder() {
-        super(OPTIONS);
-    }
+    private MathType mathType = MathType.INTEGER_64_BITS;
 
     /**
      * Specifies {@link TimeMeter#SYSTEM_NANOTIME} as time meter for buckets that will be created by this builder.
      *
      * @return this builder instance
      */
-    public LocalBucketBuilder withNanosecondPrecision() {
+    public BucketBuilder withNanosecondPrecision() {
         this.timeMeter = TimeMeter.SYSTEM_NANOTIME;
         return this;
     }
@@ -49,7 +62,7 @@ public class LocalBucketBuilder extends AbstractBucketBuilder<LocalBucketBuilder
      *
      * @return this builder instance
      */
-    public LocalBucketBuilder withMillisecondPrecision() {
+    public BucketBuilder withMillisecondPrecision() {
         this.timeMeter = TimeMeter.SYSTEM_MILLISECONDS;
         return this;
     }
@@ -61,7 +74,7 @@ public class LocalBucketBuilder extends AbstractBucketBuilder<LocalBucketBuilder
      *
      * @return this builder instance
      */
-    public LocalBucketBuilder withCustomTimePrecision(TimeMeter customTimeMeter) {
+    public BucketBuilder withCustomTimePrecision(TimeMeter customTimeMeter) {
         if (customTimeMeter == null) {
             throw BucketExceptions.nullTimeMeter();
         }
@@ -76,11 +89,17 @@ public class LocalBucketBuilder extends AbstractBucketBuilder<LocalBucketBuilder
      *
      * @return this builder instance
      */
-    public LocalBucketBuilder withSynchronizationStrategy(SynchronizationStrategy synchronizationStrategy) {
+    public BucketBuilder withSynchronizationStrategy(SynchronizationStrategy synchronizationStrategy) {
         if (synchronizationStrategy == null) {
             throw BucketExceptions.nullSynchronizationStrategy();
         }
         this.synchronizationStrategy = synchronizationStrategy;
+        return this;
+    }
+
+    // TODO javadocs
+    public BucketBuilder withMath(MathType mathType) {
+        this.mathType = Objects.requireNonNull(mathType);
         return this;
     }
 
@@ -90,11 +109,11 @@ public class LocalBucketBuilder extends AbstractBucketBuilder<LocalBucketBuilder
      * @return the new bucket
      */
     public LocalBucket build() {
-        BucketConfiguration configuration = buildConfiguration();
+        BucketConfiguration configuration = configurationBuilder.build();
         switch (synchronizationStrategy) {
-            case LOCK_FREE: return new LockFreeBucket(configuration, timeMeter);
-            case SYNCHRONIZED: return new SynchronizedBucket(configuration, timeMeter);
-            case NONE: return new SynchronizedBucket(configuration, timeMeter, FakeLock.INSTANCE);
+            case LOCK_FREE: return new LockFreeBucket(configuration, mathType, timeMeter);
+            case SYNCHRONIZED: return new SynchronizedBucket(configuration, mathType, timeMeter);
+            case NONE: return new SynchronizedBucket(configuration, mathType, timeMeter, FakeLock.INSTANCE);
             default: throw new IllegalStateException();
         }
     }
