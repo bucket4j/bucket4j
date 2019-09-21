@@ -31,7 +31,7 @@ public enum SynchronizationStrategy {
      * <br>Disadvantages: The sequence "read-clone-update-save" needs to allocate one object per each invocation of consumption method.
      * <br>Usage recommendations: when you are not sure what kind of strategy is better for you.
      *
-     * <p> The {@link BucketBuilder#build()} without parameters uses this strategy.
+     * <p> The {@link LocalBucketBuilder#build()} without parameters uses this strategy.
      */
     LOCK_FREE,
 

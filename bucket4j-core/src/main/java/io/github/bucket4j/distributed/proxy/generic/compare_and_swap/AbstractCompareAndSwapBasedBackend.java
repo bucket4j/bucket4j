@@ -17,10 +17,8 @@
 
 package io.github.bucket4j.distributed.proxy.generic.compare_and_swap;
 
-import io.github.bucket4j.MathType;
 import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.proxy.Backend;
-import io.github.bucket4j.distributed.proxy.BackendOptions;
 import io.github.bucket4j.distributed.proxy.generic.GenericEntry;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
@@ -29,8 +27,6 @@ import java.io.Serializable;
 import java.util.concurrent.CompletableFuture;
 
 public abstract class AbstractCompareAndSwapBasedBackend<K extends Serializable> implements Backend<K> {
-
-    private static final BackendOptions OPTIONS = new BackendOptions(false, MathType.ALL, MathType.INTEGER_64_BITS);
 
     private final TimeMeter timeMeter;
 
@@ -60,11 +56,6 @@ public abstract class AbstractCompareAndSwapBasedBackend<K extends Serializable>
     @Override
     public <T extends Serializable> CompletableFuture<CommandResult<T>> executeAsync(K key, RemoteCommand<T> command) {
         throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public BackendOptions getOptions() {
-        return OPTIONS;
     }
 
     protected abstract CompareAndSwapBasedTransaction allocateTransaction(K key);

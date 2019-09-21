@@ -35,7 +35,7 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
     private static final Duration VALID_PERIOD = Duration.ofMinutes(10)
     private static final long VALID_CAPACITY = 1000
 
-    AbstractBucketBuilder builder = Bucket.builder()
+    def builder = Bucket4j.builder()
 
     @Unroll
     def "Should detect that capacity #capacity is wrong"(long capacity) {
@@ -110,7 +110,7 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
 
     def "Should check that time meter is not null"() {
         when:
-            Bucket.builder().withCustomTimePrecision(null)
+            Bucket4j.builder().withCustomTimePrecision(null)
         then:
             IllegalArgumentException ex = thrown()
             ex.message == nullTimeMeter().message
@@ -119,7 +119,7 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
     @Unroll
     def "Should check that listener is not null when decorating bucket with type #bucketType"(BucketType bucketType) {
         when:
-            bucketType.createBucket(Bucket.builder().addLimit(Bandwidth.simple(3, Duration.ofMinutes(1))))
+            bucketType.createBucket(Bucket4j.builder().addLimit(Bandwidth.simple(3, Duration.ofMinutes(1))))
                     .toListenable(null)
         then:
             IllegalArgumentException ex = thrown()
@@ -130,7 +130,7 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
 
     def  "Should check that limited bandwidth list is not empty"() {
         setup:
-            def builder = Bucket.builder()
+            def builder = Bucket4j.builder()
         when:
             builder.build()
         then:
@@ -140,7 +140,7 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
 
     def "Should check that tokens to consume should be positive"() {
         setup:
-            def bucket = Bucket.builder().addLimit(
+            def bucket = Bucket4j.builder().addLimit(
                     Bandwidth.simple(VALID_CAPACITY, VALID_PERIOD)
             ).build()
 
@@ -169,13 +169,13 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
             ex.message == nonPositiveTokensToConsume(-1).message
 
         when:
-            bucket.asScheduler().tryConsume(0L, VALID_PERIOD.toNanos(), BlockingStrategy.PARKING)
+            bucket.asBlocking().tryConsume(0L, VALID_PERIOD.toNanos(), BlockingStrategy.PARKING)
         then:
             ex = thrown()
             ex.message == nonPositiveTokensToConsume(0).message
 
         when:
-            bucket.asScheduler().tryConsume(-1, VALID_PERIOD.toNanos(), BlockingStrategy.PARKING)
+            bucket.asBlocking().tryConsume(-1, VALID_PERIOD.toNanos(), BlockingStrategy.PARKING)
         then:
             ex = thrown()
             ex.message == nonPositiveTokensToConsume(-1).message
@@ -183,7 +183,7 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
 
     def "Should detect the high rate of refill"() {
         when:
-           Bucket.builder().addLimit(Bandwidth.simple(2, Duration.ofNanos(1)))
+           Bucket4j.builder().addLimit(Bandwidth.simple(2, Duration.ofNanos(1)))
         then:
             IllegalArgumentException ex = thrown()
             ex.message == tooHighRefillRate(1, 2).message
@@ -215,13 +215,13 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
             Bandwidth bandwidth = Bandwidth.classic(2, refill)
 
         when:
-            Bucket.builder().withNanosecondPrecision().addLimit(bandwidth).build()
+            Bucket4j.builder().withNanosecondPrecision().addLimit(bandwidth).build()
         then:
             IllegalArgumentException ex = thrown()
             ex.message == intervallyAlignedRefillCompatibleOnlyWithWallClock().message
 
         when:
-            Bucket.builder().addLimit(bandwidth).withNanosecondPrecision().build()
+            Bucket4j.builder().addLimit(bandwidth).withNanosecondPrecision().build()
         then:
             ex = thrown()
             ex.message == intervallyAlignedRefillCompatibleOnlyWithWallClock().message
@@ -229,7 +229,7 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
 
     def "Should check that time units to wait should be positive"() {
         setup:
-            def bucket = Bucket.builder().addLimit(
+            def bucket = Bucket4j.builder().addLimit(
                     Bandwidth.simple(VALID_CAPACITY, VALID_PERIOD)
             ).build()
         when:
@@ -248,7 +248,7 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
     @Unroll
     def "Should check that #tokens tokens is not positive to add"(long tokens) {
         setup:
-            def bucket = Bucket.builder().addLimit(
+            def bucket = Bucket4j.builder().addLimit(
                     Bandwidth.simple(VALID_CAPACITY, VALID_PERIOD)
             ).build()
         when:
@@ -261,7 +261,7 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
 
     def "Should that scheduler passed to tryConsume is not null"() {
         setup:
-            def bucket = Bucket.builder().addLimit(
+            def bucket = Bucket4j.builder().addLimit(
                     Bandwidth.simple(VALID_CAPACITY, VALID_PERIOD)
             ).build()
         when:

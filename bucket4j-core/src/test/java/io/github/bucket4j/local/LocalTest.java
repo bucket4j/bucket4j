@@ -19,6 +19,7 @@ package io.github.bucket4j.local;
 
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
+import io.github.bucket4j.Bucket4j;
 import io.github.bucket4j.UninterruptibleBlockingStrategy;
 import io.github.bucket4j.util.ConsumptionScenario;
 import org.junit.Test;
@@ -30,7 +31,7 @@ import java.util.function.Supplier;
 
 public class LocalTest {
 
-    private BucketBuilder builder = Bucket.builder()
+    private LocalBucketBuilder builder = Bucket4j.builder()
             .addLimit(Bandwidth.simple(1_000, Duration.ofMinutes(1)).withInitialTokens(0))
             .addLimit(Bandwidth.simple(200, Duration.ofSeconds(10)).withInitialTokens(0));
 
@@ -46,7 +47,7 @@ public class LocalTest {
     @Test
     public void testTryConsume_lockFree_Limited() throws Exception {
         int threadCount = 4;
-        Function<Bucket, Long> action = b -> b.asScheduler().tryConsumeUninterruptibly(1, Duration.ofMillis(50))? 1L : 0L;
+        Function<Bucket, Long> action = b -> b.asBlocking().tryConsumeUninterruptibly(1, Duration.ofMillis(50))? 1L : 0L;
         test15Seconds(() -> builder.build(), threadCount, action);
     }
 
@@ -60,7 +61,7 @@ public class LocalTest {
     @Test
     public void testTryConsume_SynchronizedLimited() throws Exception {
         int threadCount = 4;
-        Function<Bucket, Long> action = b -> b.asScheduler().tryConsumeUninterruptibly(1, Duration.ofMillis(50), UninterruptibleBlockingStrategy.PARKING)? 1L : 0L;
+        Function<Bucket, Long> action = b -> b.asBlocking().tryConsumeUninterruptibly(1, Duration.ofMillis(50), UninterruptibleBlockingStrategy.PARKING)? 1L : 0L;
         test15Seconds(() -> builder.withSynchronizationStrategy(SynchronizationStrategy.SYNCHRONIZED).build(), threadCount, action);
     }
 
@@ -74,7 +75,7 @@ public class LocalTest {
     @Test
     public void testTryConsume_UnsafeLimited() throws Exception {
         int threadCount = 1;
-        Function<Bucket, Long> action = b -> b.asScheduler().tryConsumeUninterruptibly(1, TimeUnit.MILLISECONDS.toNanos(50))? 1L: 0L;
+        Function<Bucket, Long> action = b -> b.asBlocking().tryConsumeUninterruptibly(1, TimeUnit.MILLISECONDS.toNanos(50))? 1L: 0L;
         test15Seconds(() -> builder.withSynchronizationStrategy(SynchronizationStrategy.NONE).build(), threadCount, action);
     }
 

@@ -72,18 +72,8 @@ public class BucketProxy<K extends Serializable> extends AbstractBucket {
     }
 
     @Override
-    protected CompletableFuture<Long> tryConsumeAsMuchAsPossibleAsyncImpl(long limit) {
-        return executeAsync(new ConsumeAsMuchAsPossibleCommand(limit));
-    }
-
-    @Override
     protected boolean tryConsumeImpl(long tokensToConsume) {
         return execute(new TryConsumeCommand(tokensToConsume));
-    }
-
-    @Override
-    protected CompletableFuture<Boolean> tryConsumeAsyncImpl(long tokensToConsume) {
-        return executeAsync(new TryConsumeCommand(tokensToConsume));
     }
 
     @Override
@@ -97,36 +87,14 @@ public class BucketProxy<K extends Serializable> extends AbstractBucket {
     }
 
     @Override
-    protected CompletableFuture<ConsumptionProbe> tryConsumeAndReturnRemainingTokensAsyncImpl(long tokensToConsume) {
-        return executeAsync(new TryConsumeAndReturnRemainingTokensCommand(tokensToConsume));
-    }
-
-    @Override
-    protected CompletableFuture<EstimationProbe> estimateAbilityToConsumeAsyncImpl(long tokensToEstimate) {
-        return executeAsync(new EstimateAbilityToConsumeCommand(tokensToEstimate));
-    }
-
-    @Override
     protected long reserveAndCalculateTimeToSleepImpl(long tokensToConsume, long waitIfBusyNanosLimit) {
         ReserveAndCalculateTimeToSleepCommand consumeCommand = new ReserveAndCalculateTimeToSleepCommand(tokensToConsume, waitIfBusyNanosLimit);
         return execute(consumeCommand);
     }
 
     @Override
-    protected CompletableFuture<Long> reserveAndCalculateTimeToSleepAsyncImpl(long tokensToConsume, long maxWaitTimeNanos) {
-        ReserveAndCalculateTimeToSleepCommand consumeCommand = new ReserveAndCalculateTimeToSleepCommand(tokensToConsume, maxWaitTimeNanos);
-        return executeAsync(consumeCommand);
-    }
-
-    @Override
     protected void addTokensImpl(long tokensToAdd) {
         execute(new AddTokensCommand(tokensToAdd));
-    }
-
-    @Override
-    protected CompletableFuture<Void> addTokensAsyncImpl(long tokensToAdd) {
-        CompletableFuture<Nothing> future = executeAsync(new AddTokensCommand(tokensToAdd));
-        return future.thenApply(nothing -> null);
     }
 
     @Override
@@ -136,21 +104,6 @@ public class BucketProxy<K extends Serializable> extends AbstractBucket {
         if (previousConfiguration != null) {
             throw new IncompatibleConfigurationException(previousConfiguration, newConfiguration);
         }
-    }
-
-    @Override
-    protected CompletableFuture<Void> replaceConfigurationAsyncImpl(BucketConfiguration newConfiguration) {
-        ReplaceConfigurationOrReturnPreviousCommand replaceConfigCommand = new ReplaceConfigurationOrReturnPreviousCommand(newConfiguration);
-        CompletableFuture<BucketConfiguration> result = executeAsync(replaceConfigCommand);
-        return result.thenCompose(previousConfiguration -> {
-            if (previousConfiguration == null) {
-                return CompletableFuture.completedFuture(null);
-            } else {
-                CompletableFuture<Void> future = new CompletableFuture<>();
-                future.completeExceptionally(new IncompatibleConfigurationException(previousConfiguration, newConfiguration));
-                return future;
-            }
-        });
     }
 
     @Override
@@ -185,23 +138,6 @@ public class BucketProxy<K extends Serializable> extends AbstractBucket {
         // retry command execution
         CreateInitialStateAndExecuteCommand<T> initAndExecuteCommand = new CreateInitialStateAndExecuteCommand<>(getConfiguration(), command);
         return backend.execute(key, initAndExecuteCommand).getData();
-    }
-
-    private <T extends Serializable> CompletableFuture<T> executeAsync(RemoteCommand<T> command) {
-        CompletableFuture<CommandResult<T>> futureResult = backend.executeAsync(key, command);
-        return futureResult.thenCompose(cmdResult -> {
-            if (!cmdResult.isBucketNotFound()) {
-                T resultDate = cmdResult.getData();
-                return CompletableFuture.completedFuture(resultDate);
-            }
-            if (recoveryStrategy == RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION) {
-                CompletableFuture<T> failedFuture = new CompletableFuture<>();
-                failedFuture.completeExceptionally(new BucketNotFoundException(key));
-                return failedFuture;
-            }
-            CreateInitialStateAndExecuteCommand<T> initAndExecute = new CreateInitialStateAndExecuteCommand<>(getConfiguration(), command);
-            return backend.executeAsync(key, initAndExecute).thenApply(CommandResult::getData);
-        });
     }
 
 }

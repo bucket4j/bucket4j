@@ -17,11 +17,10 @@
 
 package io.github.bucket4j.distributed.proxy;
 
-import io.github.bucket4j.AsyncBucket;
 import io.github.bucket4j.BucketConfiguration;
-import io.github.bucket4j.distributed.remote.RemoteCommand;
+import io.github.bucket4j.distributed.AsyncBucket;
 import io.github.bucket4j.distributed.remote.CommandResult;
-import io.github.bucket4j.distributed.remote.commands.GetConfigurationCommand;
+import io.github.bucket4j.distributed.remote.RemoteCommand;
 
 import java.io.Serializable;
 import java.util.Optional;
@@ -52,21 +51,6 @@ public interface Backend<K extends Serializable> {
     /**
      * TODO fix javadocs
      *
-     * Provides light-weight proxy to bucket which actually stored outside current JVM.
-     * This method do not perform any hard work or network calls, it is not necessary to cache results of its invocation.
-     *
-     * @param key the unique identifier used to point to the bucket in external storage.
-     * @param configurationSupplier supplier for configuration which can be called to build bucket configuration,
-     *                                  if and only if first invocation of any method on proxy detects that bucket absents in remote storage,
-     *                                  in this case provide configuration will be used to instantiate and persist the missed bucket.
-     *
-     * @return proxy to bucket that can be actually stored outside current JVM.
-     */
-    BucketProxy getProxy(K key, Supplier<BucketConfiguration> configurationSupplier);
-
-    /**
-     * TODO fix javadocs
-     *
      * Constructs an instance of {@link BucketProxy} which state actually stored inside in-memory data-jvm,
      * the bucket stored in the jvm immediately, so one network request will be issued to jvm.
      * Due to this method performs network IO, returned result must not be treated as light-weight entity,
@@ -90,6 +74,9 @@ public interface Backend<K extends Serializable> {
      */
     BucketProxy<K> getDurableProxy(K key, Supplier<BucketConfiguration> configurationSupplier, RecoveryStrategy recoveryStrategy);
 
+    // TODO javadocs
+    <T extends Serializable> CommandResult<T> execute(K key, RemoteCommand<T> command);
+
     /**
      * Locates configuration of bucket which actually stored outside current JVM.
      *
@@ -98,5 +85,19 @@ public interface Backend<K extends Serializable> {
      * @return Optional surround the configuration or empty optional if bucket with specified key are not stored.
      */
     Optional<BucketConfiguration> getProxyConfiguration(K key);
+
+    /**
+     * TODO
+     *
+     * Describes whether or not this backend supports asynchronous mode.
+     *
+     * <p>If asynchronous mode is  not supported any attempt to call {@link #asAsync()} will fail with {@link UnsupportedOperationException}
+     *
+     * @return true if this extension supports asynchronous mode.
+     */
+    boolean isAsyncModeSupported();
+
+    // TODO javadocs
+    <T extends Serializable> CompletableFuture<CommandResult<T>> executeAsync(K key, RemoteCommand<T> command);
 
 }

@@ -23,6 +23,7 @@ import io.github.bucket4j.distributed.remote.RemoteCommand;
 import java.io.Serializable;
 import java.util.concurrent.CompletableFuture;
 
+
 // TODO javadocs
 public interface CommandExecutor<K extends Serializable> {
 
@@ -32,7 +33,18 @@ public interface CommandExecutor<K extends Serializable> {
     // TODO javadocs
     <T extends Serializable> CompletableFuture<CommandResult<T>> executeAsync(K key, RemoteCommand<T> command);
 
-    // TODO javadocs
-    boolean isAsyncModeSupported();
+    static <K extends Serializable> CommandExecutor<K> nonOptimized(final Backend<K> backend) {
+        return new CommandExecutor<K>() {
+            @Override
+            public <T extends Serializable> CommandResult<T> execute(K key, RemoteCommand<T> command) {
+                return backend.execute(key, command);
+            }
+
+            @Override
+            public <T extends Serializable> CompletableFuture<CommandResult<T>> executeAsync(K key, RemoteCommand<T> command) {
+                return backend.executeAsync(key, command);
+            }
+        };
+    }
 
 }

@@ -8,7 +8,7 @@ But acquiring stacktraces is very cost operation by itself, and you want to do i
 // define the limit 1 time per 10 minute
 Bandwidth limit = Bandwidth.simple(1, Duration.ofMinutes(10));
 // construct the bucket
-Bucket bucket = Bucket.builder().addLimit(limit).build();
+Bucket bucket = Bucket4j.builder().addLimit(limit).build();
 
 ...
 
@@ -33,7 +33,7 @@ and by contract with provider you should poll not often than 100 times per 1 min
 // define the limit 100 times per 1 minute
 Bandwidth limit = Bandwidth.simple(100, Duration.ofMinutes(1));
 // construct the bucket
-Bucket bucket = Bucket.builder().addLimit(limit).build();
+Bucket bucket = Bucket4j.builder().addLimit(limit).build();
 
 ...
 volatile double exchangeRate;
@@ -68,7 +68,7 @@ public class ThrottlingFilter implements javax.servlet.Filter {
          long overdraft = 50; 
          Refill refill = Refill.greedy(10, Duration.ofSeconds(1));
          Bandwidth limit = Bandwidth.classic(overdraft, refill);
-         return Bucket.builder().addLimit(limit).build();
+         return Bucket4j.builder().addLimit(limit).build();
     }
     
     @Override

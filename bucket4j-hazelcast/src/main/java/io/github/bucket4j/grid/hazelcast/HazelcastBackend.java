@@ -37,17 +37,10 @@ import java.util.concurrent.CompletableFuture;
  */
 public class HazelcastBackend<K extends Serializable> implements Backend<K> {
 
-    private static final BackendOptions OPTIONS = new BackendOptions(true, MathType.ALL, MathType.INTEGER_64_BITS);
-
     private final IMap<K, RemoteBucketState> cache;
 
     public HazelcastBackend(IMap<K, RemoteBucketState> cache) {
         this.cache = Objects.requireNonNull(cache);
-    }
-
-    @Override
-    public BackendOptions getOptions() {
-        return OPTIONS;
     }
 
     @Override

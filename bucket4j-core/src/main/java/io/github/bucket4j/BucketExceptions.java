@@ -152,4 +152,9 @@ public final class BucketExceptions {
         // private constructor for utility class
     }
 
+    public static IllegalArgumentException asyncModeIsNotSupported() {
+        String msg = "Asynchronous mode is not supported";
+        return new IllegalArgumentException(msg);
+    }
+
 }

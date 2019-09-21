@@ -18,7 +18,7 @@
 package io.github.bucket4j.mock;
 
 import io.github.bucket4j.*;
-import io.github.bucket4j.local.BucketBuilder;
+import io.github.bucket4j.local.LocalBucketBuilder;
 import io.github.bucket4j.local.SynchronizationStrategy;
 import io.github.bucket4j.distributed.proxy.BucketProxy;
 
@@ -32,7 +32,7 @@ public enum BucketType {
     LOCAL_LOCK_FREE {
         @Override
         public Bucket createBucket(AbstractBucketBuilder builder, TimeMeter timeMeter) {
-            return ((BucketBuilder) builder)
+            return ((LocalBucketBuilder) builder)
                     .withCustomTimePrecision(timeMeter)
                     .build();
         }
@@ -41,7 +41,7 @@ public enum BucketType {
     LOCAL_SYNCHRONIZED {
         @Override
         public Bucket createBucket(AbstractBucketBuilder builder, TimeMeter timeMeter) {
-            return ((BucketBuilder) builder)
+            return ((LocalBucketBuilder) builder)
                     .withCustomTimePrecision(timeMeter)
                     .withSynchronizationStrategy(SynchronizationStrategy.SYNCHRONIZED)
                     .build();
@@ -51,7 +51,7 @@ public enum BucketType {
     LOCAL_UNSAFE {
         @Override
         public Bucket createBucket(AbstractBucketBuilder builder, TimeMeter timeMeter) {
-            return ((BucketBuilder) builder)
+            return ((LocalBucketBuilder) builder)
                     .withCustomTimePrecision(timeMeter)
                     .withSynchronizationStrategy(SynchronizationStrategy.NONE)
                     .build();

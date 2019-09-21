@@ -19,6 +19,7 @@ package io.github.bucket4j.state;
 
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
+import io.github.bucket4j.Bucket4j;
 import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.local.SynchronizationStrategy;
 import org.openjdk.jmh.annotations.Scope;
@@ -29,7 +30,7 @@ import java.time.Duration;
 @State(Scope.Benchmark)
 public class LocalUnsafeState {
 
-    public final Bucket bucket = Bucket.builder()
+    public final Bucket bucket = Bucket4j.builder()
             .withMillisecondPrecision()
             .addLimit(
                     Bandwidth.simple(Long.MAX_VALUE / 2, Duration.ofNanos(Long.MAX_VALUE / 2))
@@ -38,7 +39,7 @@ public class LocalUnsafeState {
             .build();
 
 
-    public final Bucket bucketWithoutRefill = Bucket.builder()
+    public final Bucket bucketWithoutRefill = Bucket4j.builder()
             .withMillisecondPrecision()
             .withCustomTimePrecision(new TimeMeter() {
                 @Override

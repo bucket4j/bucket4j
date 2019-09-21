@@ -20,7 +20,6 @@ package io.github.bucket4j.local;
 
 import io.github.bucket4j.*;
 
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -52,11 +51,6 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket {
     @Override
     public Bucket toListenable(BucketListener listener) {
         return new SynchronizedBucket(listener, configuration, timeMeter, lock, state);
-    }
-
-    @Override
-    public boolean isAsyncModeSupported() {
-        return true;
     }
 
     @Override
@@ -186,54 +180,6 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket {
             this.bandwidths = newConfiguration.getBandwidths();
         } finally {
             lock.unlock();
-        }
-    }
-
-    @Override
-    protected CompletableFuture<Boolean> tryConsumeAsyncImpl(long tokensToConsume) {
-        boolean result = tryConsumeImpl(tokensToConsume);
-        return CompletableFuture.completedFuture(result);
-    }
-
-    @Override
-    protected CompletableFuture<Void> addTokensAsyncImpl(long tokensToAdd) {
-        addTokensImpl(tokensToAdd);
-        return CompletableFuture.completedFuture(null);
-    }
-
-    @Override
-    protected CompletableFuture<ConsumptionProbe> tryConsumeAndReturnRemainingTokensAsyncImpl(long tokensToConsume) {
-        ConsumptionProbe result = tryConsumeAndReturnRemainingTokensImpl(tokensToConsume);
-        return CompletableFuture.completedFuture(result);
-    }
-
-    @Override
-    protected CompletableFuture<EstimationProbe> estimateAbilityToConsumeAsyncImpl(long tokensToEstimate) {
-        EstimationProbe result = estimateAbilityToConsumeImpl(tokensToEstimate);
-        return CompletableFuture.completedFuture(result);
-    }
-
-    @Override
-    protected CompletableFuture<Long> tryConsumeAsMuchAsPossibleAsyncImpl(long limit) {
-        long result = consumeAsMuchAsPossibleImpl(limit);
-        return CompletableFuture.completedFuture(result);
-    }
-
-    @Override
-    protected CompletableFuture<Long> reserveAndCalculateTimeToSleepAsyncImpl(long tokensToConsume, long maxWaitTimeNanos) {
-        long result = reserveAndCalculateTimeToSleepImpl(tokensToConsume, maxWaitTimeNanos);
-        return CompletableFuture.completedFuture(result);
-    }
-
-    @Override
-    protected CompletableFuture<Void> replaceConfigurationAsyncImpl(BucketConfiguration newConfiguration) {
-        try {
-            replaceConfigurationImpl(newConfiguration);
-            return CompletableFuture.completedFuture(null);
-        } catch (IncompatibleConfigurationException e) {
-            CompletableFuture<Void> fail = new CompletableFuture<>();
-            fail.completeExceptionally(e);
-            return fail;
         }
     }
 

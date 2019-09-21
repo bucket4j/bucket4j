@@ -17,6 +17,8 @@
 
 package io.github.bucket4j;
 
+import io.github.bucket4j.distributed.AsyncBucket;
+
 import java.io.Serializable;
 
 /**

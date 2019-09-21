@@ -53,7 +53,7 @@ public class SmsServlet extends javax.servlet.http.HttpServlet {
             long overdraft = 20;
             Refill refill = Refill.greedy(10, Duration.ofMinutes(1));
             Bandwidth limit = Bandwidth.classic(overdraft, refill);
-            return BucketConfiguration.builder()
+            return Bucket4j.configurationBuilder()
                 .addLimit(limit)
                 .build();
         };

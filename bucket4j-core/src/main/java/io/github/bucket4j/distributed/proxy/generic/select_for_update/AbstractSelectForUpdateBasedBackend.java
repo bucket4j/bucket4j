@@ -17,10 +17,8 @@
 
 package io.github.bucket4j.distributed.proxy.generic.select_for_update;
 
-import io.github.bucket4j.MathType;
 import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.proxy.Backend;
-import io.github.bucket4j.distributed.proxy.BackendOptions;
 import io.github.bucket4j.distributed.proxy.generic.GenericEntry;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
@@ -29,8 +27,6 @@ import java.io.Serializable;
 import java.util.concurrent.CompletableFuture;
 
 public abstract class AbstractSelectForUpdateBasedBackend<K extends Serializable> implements Backend<K> {
-
-    private static final BackendOptions OPTIONS = new BackendOptions(false, MathType.ALL, MathType.INTEGER_64_BITS);
 
     private final TimeMeter timeMeter;
 
@@ -57,11 +53,6 @@ public abstract class AbstractSelectForUpdateBasedBackend<K extends Serializable
         throw new UnsupportedOperationException();
     }
 
-    @Override
-    public BackendOptions getOptions() {
-        return OPTIONS;
-    }
-
     protected abstract SelectForUpdateBasedTransaction allocateTransaction(K key);
 
     protected abstract void releaseTransaction(SelectForUpdateBasedTransaction transaction);
@@ -83,6 +74,5 @@ public abstract class AbstractSelectForUpdateBasedBackend<K extends Serializable
             throw e;
         }
     }
-
 
 }

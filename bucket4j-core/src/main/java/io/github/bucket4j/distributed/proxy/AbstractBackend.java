@@ -18,19 +18,17 @@
 package io.github.bucket4j.distributed.proxy;
 
 import io.github.bucket4j.BucketConfiguration;
+import io.github.bucket4j.BucketExceptions;
+import io.github.bucket4j.distributed.AsyncBucket;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.commands.GetConfigurationCommand;
 
 import java.io.Serializable;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
-public abstract class AbstractBackend<K extends Serializable> implements Backend<K>, CommandExecutor<K> {
-
-    @Override
-    public BucketProxy getProxy(K key, Supplier<BucketConfiguration> configurationSupplier) {
-        return BucketProxy.createLazyBucket(key, configurationSupplier, this);
-    }
+public abstract class AbstractBackend<K extends Serializable> implements Backend<K> {
 
     @Override
     public BucketProxy<K> getDurableProxy(K key, Supplier<BucketConfiguration> configurationSupplier, RecoveryStrategy recoveryStrategy) {

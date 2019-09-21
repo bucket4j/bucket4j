@@ -24,11 +24,11 @@ import java.util.Objects;
 /**
  * This builder creates in-memory buckets ({@link LockFreeBucket}).
  */
-public class BucketBuilder {
+public class LocalBucketBuilder {
 
     private final ConfigurationBuilder configurationBuilder;
 
-    public BucketBuilder() {
+    public LocalBucketBuilder() {
         configurationBuilder = new ConfigurationBuilder();
     }
 
@@ -38,7 +38,7 @@ public class BucketBuilder {
      * @param bandwidth limitation
      * @return this builder instance
      */
-    public BucketBuilder addLimit(Bandwidth bandwidth) {
+    public LocalBucketBuilder addLimit(Bandwidth bandwidth) {
         configurationBuilder.addLimit(bandwidth);
         return this;
     }
@@ -52,7 +52,7 @@ public class BucketBuilder {
      *
      * @return this builder instance
      */
-    public BucketBuilder withNanosecondPrecision() {
+    public LocalBucketBuilder withNanosecondPrecision() {
         this.timeMeter = TimeMeter.SYSTEM_NANOTIME;
         return this;
     }
@@ -62,7 +62,7 @@ public class BucketBuilder {
      *
      * @return this builder instance
      */
-    public BucketBuilder withMillisecondPrecision() {
+    public LocalBucketBuilder withMillisecondPrecision() {
         this.timeMeter = TimeMeter.SYSTEM_MILLISECONDS;
         return this;
     }
@@ -74,7 +74,7 @@ public class BucketBuilder {
      *
      * @return this builder instance
      */
-    public BucketBuilder withCustomTimePrecision(TimeMeter customTimeMeter) {
+    public LocalBucketBuilder withCustomTimePrecision(TimeMeter customTimeMeter) {
         if (customTimeMeter == null) {
             throw BucketExceptions.nullTimeMeter();
         }
@@ -89,7 +89,7 @@ public class BucketBuilder {
      *
      * @return this builder instance
      */
-    public BucketBuilder withSynchronizationStrategy(SynchronizationStrategy synchronizationStrategy) {
+    public LocalBucketBuilder withSynchronizationStrategy(SynchronizationStrategy synchronizationStrategy) {
         if (synchronizationStrategy == null) {
             throw BucketExceptions.nullSynchronizationStrategy();
         }
@@ -98,7 +98,7 @@ public class BucketBuilder {
     }
 
     // TODO javadocs
-    public BucketBuilder withMath(MathType mathType) {
+    public LocalBucketBuilder withMath(MathType mathType) {
         this.mathType = Objects.requireNonNull(mathType);
         return this;
     }
