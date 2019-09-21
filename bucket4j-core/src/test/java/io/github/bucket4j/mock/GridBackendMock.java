@@ -19,7 +19,6 @@ package io.github.bucket4j.mock;
 
 
 import io.github.bucket4j.*;
-import io.github.bucket4j.distributed.proxy.BackendOptions;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.proxy.Backend;
 import io.github.bucket4j.distributed.remote.*;
@@ -32,8 +31,6 @@ import java.util.concurrent.CompletableFuture;
 
 public class GridBackendMock<K extends Serializable> implements Backend<K> {
 
-    private static final BackendOptions OPTIONS = new BackendOptions(true, MathType.ALL, MathType.INTEGER_64_BITS);
-
     private final TimeMeter timeMeter;
     private Map<K, RemoteBucketState> stateMap = new HashMap<>();
     private RuntimeException exception;
@@ -44,11 +41,6 @@ public class GridBackendMock<K extends Serializable> implements Backend<K> {
 
     public void setException(RuntimeException exception) {
         this.exception = exception;
-    }
-
-    @Override
-    public BackendOptions getOptions() {
-        return OPTIONS;
     }
 
     @Override
@@ -78,6 +70,11 @@ public class GridBackendMock<K extends Serializable> implements Backend<K> {
 
         CommandResult<T> result = command.execute(entry, timeMeter.currentTimeNanos());
         return emulateSerialization(result);
+    }
+
+    @Override
+    public boolean isAsyncModeSupported() {
+        return true;
     }
 
     @Override

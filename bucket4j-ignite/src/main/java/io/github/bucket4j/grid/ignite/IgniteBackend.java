@@ -18,7 +18,6 @@
 package io.github.bucket4j.grid.ignite;
 
 import io.github.bucket4j.*;
-import io.github.bucket4j.distributed.proxy.BackendOptions;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.proxy.Backend;
 import io.github.bucket4j.distributed.remote.*;
@@ -39,8 +38,6 @@ import java.util.concurrent.CompletableFuture;
  */
 public class IgniteBackend<K extends Serializable> implements Backend<K> {
 
-    private static final BackendOptions OPTIONS = new BackendOptions(true, MathType.ALL, MathType.INTEGER_64_BITS);
-
     private final IgniteCache<K, RemoteBucketState> cache;
 
     public IgniteBackend(IgniteCache<K, RemoteBucketState> cache) {
@@ -48,14 +45,14 @@ public class IgniteBackend<K extends Serializable> implements Backend<K> {
     }
 
     @Override
-    public BackendOptions getOptions() {
-        return OPTIONS;
-    }
-
-    @Override
     public <T extends Serializable> CommandResult<T> execute(K key, RemoteCommand<T> command) {
         IgniteProcessor<K, T> entryProcessor = new IgniteProcessor<>(command);
         return cache.invoke(key, entryProcessor);
+    }
+
+    @Override
+    public boolean isAsyncModeSupported() {
+        return true;
     }
 
     @Override

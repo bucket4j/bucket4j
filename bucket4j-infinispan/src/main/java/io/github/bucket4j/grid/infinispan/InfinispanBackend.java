@@ -18,7 +18,6 @@
 package io.github.bucket4j.grid.infinispan;
 
 import io.github.bucket4j.*;
-import io.github.bucket4j.distributed.proxy.BackendOptions;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.proxy.Backend;
 import io.github.bucket4j.distributed.remote.*;
@@ -37,18 +36,11 @@ import java.util.concurrent.ExecutionException;
  */
 public class InfinispanBackend<K extends Serializable> implements Backend<K> {
 
-    private static final BackendOptions OPTIONS = new BackendOptions(true, MathType.ALL, MathType.INTEGER_64_BITS);
-
     private final ReadWriteMap<K, RemoteBucketState> readWriteMap;
 
     // TODO javadocs
     public InfinispanBackend(ReadWriteMap<K, RemoteBucketState> readWriteMap) {
         this.readWriteMap = Objects.requireNonNull(readWriteMap);
-    }
-
-    @Override
-    public BackendOptions getOptions() {
-        return OPTIONS;
     }
 
     @Override
@@ -59,6 +51,11 @@ public class InfinispanBackend<K extends Serializable> implements Backend<K> {
         } catch (InterruptedException | ExecutionException e) {
             throw new CacheException(e);
         }
+    }
+
+    @Override
+    public boolean isAsyncModeSupported() {
+        return true;
     }
 
     @Override

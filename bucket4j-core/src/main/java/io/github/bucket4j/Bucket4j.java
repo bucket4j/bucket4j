@@ -17,13 +17,13 @@
 
 package io.github.bucket4j;
 
-import io.github.bucket4j.distributed.proxy.AsyncBucketProxy;
-import io.github.bucket4j.distributed.proxy.Backend;
-import io.github.bucket4j.distributed.proxy.BucketProxy;
-import io.github.bucket4j.distributed.proxy.CommandExecutor;
+import io.github.bucket4j.distributed.proxy.*;
+import io.github.bucket4j.distributed.remote.CommandResult;
+import io.github.bucket4j.distributed.remote.commands.GetConfigurationCommand;
 import io.github.bucket4j.local.LocalBucketBuilder;
 
 import java.io.Serializable;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
@@ -67,24 +67,57 @@ public class Bucket4j {
      *
      * @return proxy to bucket that can be actually stored outside current JVM.
      */
-    public static <K extends Serializable> BucketProxy onShotProxy(K key, Backend<K> backend, Supplier<BucketConfiguration> configurationSupplier) {
+    public static <K extends Serializable> BucketProxy cheapProxy(K key, Backend<K> backend, Supplier<BucketConfiguration> configurationSupplier) {
         CommandExecutor<K> commandExecutor = CommandExecutor.nonOptimized(backend);
         return BucketProxy.createLazyBucket(key, configurationSupplier, commandExecutor);
     }
 
-    public static <K extends Serializable> BucketProxy onShotProxy(K key, Backend<K> backend, BucketConfiguration configuration) {
+    public static <K extends Serializable> BucketProxy cheapProxy(K key, Backend<K> backend, BucketConfiguration configuration) {
         // TODO fix javadocs
         throw new UnsupportedOperationException();
     }
 
-    public static <K extends Serializable> AsyncBucketProxy onShotAsyncProxy(K key, Backend<K> backend, BucketConfiguration configuration) {
+    public static <K extends Serializable> AsyncBucketProxy cheapAsyncProxy(K key, Backend<K> backend, BucketConfiguration configuration) {
         // TODO fix javadocs
         throw new UnsupportedOperationException();
     }
 
-    public static <K extends Serializable> AsyncBucketProxy onShotAsyncProxy(K key, Backend<K> backend, Supplier<CompletableFuture<BucketConfiguration>> asyncConfigurationSupplier) {
+    public static <K extends Serializable> AsyncBucketProxy cheapAsyncProxy(K key, Backend<K> backend, Supplier<CompletableFuture<BucketConfiguration>> asyncConfigurationSupplier) {
         // TODO fix javadocs
         throw new UnsupportedOperationException();
+    }
+
+    /**
+     * TODO fix javadocs
+     *
+     * Constructs an instance of {@link BucketProxy} which state actually stored inside in-memory data-jvm,
+     * the bucket stored in the jvm immediately, so one network request will be issued to jvm.
+     * Due to this method performs network IO, returned result must not be treated as light-weight entity,
+     * it will be a performance anti-pattern to use this method multiple times for same key,
+     * you need to cache result somewhere and reuse between invocations,
+     * else performance of all operation with bucket will be 2-x times slower.
+     *
+     * <p>
+     * Use this method if and only if you need to full control over bucket lifecycle(especially specify {@link RecoveryStrategy}),
+     * and you have clean caching strategy which suitable for storing buckets,
+     * else it would be better to work through {@link JCache#proxyManagerForCache(Cache) ProxyManager},
+     * which does not require any caching, because ProxyManager operates with light-weight versions of buckets.
+     *
+     * @param cache distributed cache which will hold bucket inside cluster.
+     *             Feel free to store inside single {@code cache} as mush buckets as you need.
+     * @param key  for storing bucket inside {@code cache}.
+     *             If you plan to store multiple buckets inside single {@code cache}, then each bucket should has own unique {@code key}.
+     * @param recoveryStrategy specifies the reaction which should be applied in case of previously saved state of bucket has been lost.
+     *
+     * @return new distributed bucket
+     */
+    static <K extends Serializable> BucketProxy<K> getDurableProxy(K key, Supplier<BucketConfiguration> configurationSupplier, RecoveryStrategy recoveryStrategy) {
+
+    }
+
+    @Override
+    public BucketProxy<K> getDurableProxy(K key, Supplier<BucketConfiguration> configurationSupplier, RecoveryStrategy recoveryStrategy) {
+        return BucketProxy.createInitializedBucket(key, configurationSupplier, this, recoveryStrategy);
     }
 
 }

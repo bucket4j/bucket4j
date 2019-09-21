@@ -22,7 +22,6 @@ import com.hazelcast.core.IMap;
 import com.hazelcast.map.EntryBackupProcessor;
 import com.hazelcast.map.EntryProcessor;
 import io.github.bucket4j.*;
-import io.github.bucket4j.distributed.proxy.BackendOptions;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.proxy.Backend;
 import io.github.bucket4j.distributed.remote.*;
@@ -47,6 +46,11 @@ public class HazelcastBackend<K extends Serializable> implements Backend<K> {
     public <T extends Serializable> CommandResult<T> execute(K key, RemoteCommand<T> command) {
         HazelcastEntryProcessor<K, T> entryProcessor = new HazelcastEntryProcessor<>(command);
         return (CommandResult<T>) cache.executeOnKey(key, entryProcessor);
+    }
+
+    @Override
+    public boolean isAsyncModeSupported() {
+        return true;
     }
 
     @Override

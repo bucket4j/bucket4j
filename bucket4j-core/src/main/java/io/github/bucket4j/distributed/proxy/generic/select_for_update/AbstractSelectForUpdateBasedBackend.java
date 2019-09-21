@@ -49,6 +49,11 @@ public abstract class AbstractSelectForUpdateBasedBackend<K extends Serializable
     }
 
     @Override
+    public boolean isAsyncModeSupported() {
+        return false;
+    }
+
+    @Override
     public <T extends Serializable> CompletableFuture<CommandResult<T>> executeAsync(K key, RemoteCommand<T> command) {
         throw new UnsupportedOperationException();
     }

@@ -17,7 +17,6 @@
 
 package io.github.bucket4j.redis;
 
-import io.github.bucket4j.distributed.proxy.BackendOptions;
 import io.github.bucket4j.distributed.proxy.Backend;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
@@ -29,8 +28,8 @@ import java.util.concurrent.CompletableFuture;
 public abstract class AbstractRedisBackend<K extends Serializable> implements Backend<K> {
 
     @Override
-    public BackendOptions getOptions() {
-        return null;
+    public boolean isAsyncModeSupported() {
+        return true;
     }
 
     @Override

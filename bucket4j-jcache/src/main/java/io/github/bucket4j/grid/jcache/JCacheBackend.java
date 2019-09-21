@@ -18,7 +18,6 @@
 package io.github.bucket4j.grid.jcache;
 
 import io.github.bucket4j.*;
-import io.github.bucket4j.distributed.proxy.BackendOptions;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.proxy.Backend;
 import io.github.bucket4j.distributed.remote.*;
@@ -37,8 +36,6 @@ import java.util.concurrent.CompletableFuture;
  */
 public class JCacheBackend<K extends Serializable> implements Backend<K> {
 
-    private static final BackendOptions OPTIONS = new BackendOptions(false, MathType.ALL, MathType.INTEGER_64_BITS);
-
     private static final Map<String, String> incompatibleProviders = new HashMap<>();
     static {
         incompatibleProviders.put("org.infinispan", " use module bucket4j-infinispan directly");
@@ -52,14 +49,14 @@ public class JCacheBackend<K extends Serializable> implements Backend<K> {
     }
 
     @Override
-    public BackendOptions getOptions() {
-        return OPTIONS;
-    }
-
-    @Override
     public <T extends Serializable> CommandResult<T> execute(K key, RemoteCommand<T> command) {
         BucketProcessor<K, T> entryProcessor = new BucketProcessor<>(command);
         return cache.invoke(key, entryProcessor);
+    }
+
+    @Override
+    public boolean isAsyncModeSupported() {
+        return false;
     }
 
     @Override

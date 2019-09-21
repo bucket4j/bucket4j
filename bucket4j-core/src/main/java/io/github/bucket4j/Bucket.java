@@ -17,8 +17,6 @@
 
 package io.github.bucket4j;
 
-import io.github.bucket4j.local.LocalBucketBuilder;
-
 /**
  * Performs rate limiting using algorithm based on top of ideas of <a href="https://en.wikipedia.org/wiki/Token_bucket">Token Bucket</a>.
  * <p>

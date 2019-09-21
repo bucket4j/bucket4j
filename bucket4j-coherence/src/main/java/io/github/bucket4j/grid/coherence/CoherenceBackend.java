@@ -23,7 +23,6 @@ import com.tangosol.util.InvocableMap;
 import com.tangosol.util.processor.AbstractProcessor;
 import com.tangosol.util.processor.SingleEntryAsynchronousProcessor;
 import io.github.bucket4j.*;
-import io.github.bucket4j.distributed.proxy.BackendOptions;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.proxy.Backend;
 import io.github.bucket4j.distributed.remote.*;
@@ -40,8 +39,6 @@ import java.util.concurrent.CompletableFuture;
  */
 public class CoherenceBackend<K extends Serializable> implements Backend<K> {
 
-    private static final BackendOptions OPTIONS = new BackendOptions(true, MathType.ALL, MathType.INTEGER_64_BITS);
-
     private final NamedCache<K, RemoteBucketState> cache;
 
     public CoherenceBackend(NamedCache<K, RemoteBucketState> cache) {
@@ -49,14 +46,14 @@ public class CoherenceBackend<K extends Serializable> implements Backend<K> {
     }
 
     @Override
-    public BackendOptions getOptions() {
-        return OPTIONS;
-    }
-
-    @Override
     public <T extends Serializable> CommandResult<T> execute(K key, RemoteCommand<T> command) {
         CoherenceProcessor<K, T> entryProcessor = new CoherenceProcessor<>(command);
         return cache.invoke(key, entryProcessor);
+    }
+
+    @Override
+    public boolean isAsyncModeSupported() {
+        return true;
     }
 
     @Override
