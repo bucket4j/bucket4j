@@ -67,11 +67,6 @@ public class BucketProxy<K extends Serializable> extends AbstractBucket {
     }
 
     @Override
-    public boolean isAsyncModeSupported() {
-        return backend.isAsyncModeSupported();
-    }
-
-    @Override
     protected long consumeAsMuchAsPossibleImpl(long limit) {
         return execute(new ConsumeAsMuchAsPossibleCommand(limit));
     }

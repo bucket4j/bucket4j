@@ -263,4 +263,16 @@ public interface AsyncBucket {
      */
     CompletableFuture<Void> replaceConfiguration(BucketConfiguration newConfiguration);
 
+    /**
+     * Returns asynchronous view of this bucket that allows to use bucket as async scheduler.
+     *
+     * <p>If asynchronous mode is not supported by particular extension behind this bucket,
+     * then any attempt to call this method will fail with {@link UnsupportedOperationException}.
+     *
+     * @return Asynchronous view of this bucket that allows to use bucket as async scheduler.
+     *
+     * @throws UnsupportedOperationException if particular extension behind the bucket does not support asynchronous mode.
+     */
+    AsyncScheduledBucket asAsyncScheduler();
+
 }

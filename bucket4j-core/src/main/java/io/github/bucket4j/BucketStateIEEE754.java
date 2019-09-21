@@ -40,8 +40,8 @@ public class BucketStateIEEE754 implements BucketState {
         this.tokens = new double[bandwidths.length];
         this.lastRefillTime = new long[bandwidths.length];
         for(int i = 0; i < bandwidths.length; i++) {
-            tokens[i] = bandwidths[i].getInitialTokens();
-            lastRefillTime[i] = currentTimeNanos;
+            tokens[i] = calculateInitialTokens(bandwidths[i], currentTimeNanos);
+            lastRefillTime[i] = calculateLastRefillTimeNanos(bandwidths[i], currentTimeNanos);
         }
     }
 
@@ -59,7 +59,7 @@ public class BucketStateIEEE754 implements BucketState {
 
     @Override
     public long getCurrentSize(int bandwidth) {
-        return (long) tokens[0];
+        return (long) tokens[bandwidth];
     }
 
     @Override
@@ -219,6 +219,32 @@ public class BucketStateIEEE754 implements BucketState {
         double deficitNanos = deficitPeriodsAsDouble * refillPeriodNanos;
         return deficitNanos + waitForNextRefillNanos;
     }
+
+    private long calculateLastRefillTimeNanos(Bandwidth bandwidth, long currentTimeNanos) {
+        if (!bandwidth.isIntervallyAligned()) {
+            return currentTimeNanos;
+        }
+        return bandwidth.timeOfFirstRefillMillis * 1_000_000 - bandwidth.refillPeriodNanos;
+    }
+
+    private long calculateInitialTokens(Bandwidth bandwidth, long currentTimeNanos) {
+        if (!bandwidth.useAdaptiveInitialTokens) {
+            return bandwidth.initialTokens;
+        }
+
+        long timeOfFirstRefillNanos = bandwidth.timeOfFirstRefillMillis * 1_000_000;
+        if (currentTimeNanos >= timeOfFirstRefillNanos) {
+            return bandwidth.initialTokens;
+        }
+
+        long guaranteedBase = Math.max(0, bandwidth.capacity - bandwidth.refillTokens);
+        long nanosBeforeFirstRefill = timeOfFirstRefillNanos - currentTimeNanos;
+
+        return Math.min(
+                bandwidth.capacity,
+                guaranteedBase + (long)((double)nanosBeforeFirstRefill * (double) bandwidth.refillTokens / (double) bandwidth.refillPeriodNanos));
+    }
+
 
     @Override
     public String toString() {

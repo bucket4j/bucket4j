@@ -36,8 +36,8 @@ public class BucketState64BitsInteger implements BucketState {
 
         this.stateData = new long[bandwidths.length * 3];
         for(int i = 0; i < bandwidths.length; i++) {
-            setCurrentSize(i, bandwidths[i].getInitialTokens());
-            setLastRefillTimeNanos(i, currentTimeNanos);
+            setCurrentSize(i, calculateInitialTokens(bandwidths[i], currentTimeNanos));
+            setLastRefillTimeNanos(i, calculateLastRefillTimeNanos(bandwidths[i], currentTimeNanos));
         }
     }
 
@@ -93,6 +93,34 @@ public class BucketState64BitsInteger implements BucketState {
     public void addTokens(Bandwidth[] limits, long tokensToAdd) {
         for (int i = 0; i < limits.length; i++) {
             addTokens(i, limits[i], tokensToAdd);
+        }
+    }
+
+    private long calculateLastRefillTimeNanos(Bandwidth bandwidth, long currentTimeNanos) {
+        if (!bandwidth.isIntervallyAligned()) {
+            return currentTimeNanos;
+        }
+        return bandwidth.timeOfFirstRefillMillis * 1_000_000 - bandwidth.refillPeriodNanos;
+    }
+
+    private long calculateInitialTokens(Bandwidth bandwidth, long currentTimeNanos) {
+        if (!bandwidth.useAdaptiveInitialTokens) {
+            return bandwidth.initialTokens;
+        }
+
+        long timeOfFirstRefillNanos = bandwidth.timeOfFirstRefillMillis * 1_000_000;
+        if (currentTimeNanos >= timeOfFirstRefillNanos) {
+            return bandwidth.initialTokens;
+        }
+
+        long guaranteedBase = Math.max(0, bandwidth.capacity - bandwidth.refillTokens);
+        long nanosBeforeFirstRefill = timeOfFirstRefillNanos - currentTimeNanos;
+        if (multiplyExactOrReturnMaxValue(nanosBeforeFirstRefill, bandwidth.refillTokens) != Long.MAX_VALUE) {
+            return Math.min(bandwidth.capacity, guaranteedBase + nanosBeforeFirstRefill * bandwidth.refillTokens / bandwidth.refillPeriodNanos);
+        } else {
+            // arithmetic overflow happens.
+            // there is no sense to stay in integer arithmetic when having deal with so big numbers
+            return Math.min(bandwidth.capacity, guaranteedBase + (long)((double)nanosBeforeFirstRefill * (double) bandwidth.refillTokens / (double) bandwidth.refillPeriodNanos));
         }
     }
 

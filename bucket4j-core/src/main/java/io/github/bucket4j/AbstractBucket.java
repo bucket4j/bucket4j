@@ -203,22 +203,6 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket {
     }
 
     @Override
-    public AsyncBucket asAsync() {
-        if (!isAsyncModeSupported()) {
-            throw new UnsupportedOperationException();
-        }
-        return asyncView;
-    }
-
-    @Override
-    public AsyncScheduledBucket asAsyncScheduler() {
-        if (!isAsyncModeSupported()) {
-            throw new UnsupportedOperationException();
-        }
-        return asyncView;
-    }
-
-    @Override
     public BlockingBucket asScheduler() {
         return this;
     }

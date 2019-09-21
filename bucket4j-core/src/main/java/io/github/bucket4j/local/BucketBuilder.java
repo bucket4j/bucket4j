@@ -28,7 +28,7 @@ public class BucketBuilder {
 
     private final ConfigurationBuilder configurationBuilder;
 
-    protected BucketBuilder() {
+    public BucketBuilder() {
         configurationBuilder = new ConfigurationBuilder();
     }
 
@@ -110,6 +110,12 @@ public class BucketBuilder {
      */
     public LocalBucket build() {
         BucketConfiguration configuration = configurationBuilder.build();
+
+        for (Bandwidth bandwidth : configuration.getBandwidths()) {
+            if (bandwidth.isIntervallyAligned() && !timeMeter.isWallClockBased()) {
+                throw BucketExceptions.intervallyAlignedRefillCompatibleOnlyWithWallClock();
+            }
+        }
         switch (synchronizationStrategy) {
             case LOCK_FREE: return new LockFreeBucket(configuration, mathType, timeMeter);
             case SYNCHRONIZED: return new SynchronizedBucket(configuration, mathType, timeMeter);

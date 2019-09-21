@@ -25,6 +25,7 @@ import spock.lang.Specification
 import spock.lang.Unroll
 
 import java.time.Duration
+import java.time.Instant
 
 import static io.github.bucket4j.BucketExceptions.*
 import static io.github.bucket4j.distributed.proxy.RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION
@@ -186,6 +187,44 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
         then:
             IllegalArgumentException ex = thrown()
             ex.message == tooHighRefillRate(1, 2).message
+    }
+
+    def "Should detect the negative time of first refill"() {
+        when:
+            Instant timeOfFirstRefill = new Date(-10).toInstant();
+            Bandwidth.classic(2, Refill.intervallyAligned(2, Duration.ofMinutes(2), timeOfFirstRefill, true))
+        then:
+            IllegalArgumentException ex = thrown()
+            ex.message == nonPositiveTimeOfFirstRefill(timeOfFirstRefill).message
+    }
+
+    def "Should prevent specification of initial tokens if intervally aligned refill used with useAdaptiveInitialTokens=true"() {
+        when:
+            Instant timeOfFirstRefill = Instant.now()
+            Bandwidth.classic(2, Refill.intervallyAligned(2, Duration.ofMinutes(2), timeOfFirstRefill, true))
+                    .withInitialTokens(1)
+        then:
+            IllegalArgumentException ex = thrown()
+            ex.message == intervallyAlignedRefillWithAdaptiveInitialTokensIncompatipleWithManualSpecifiedInitialTokens().message
+    }
+
+    def "Should prevent specification of nanoTime based clock if intervally aligned refill used"() {
+        setup:
+            Instant timeOfFirstRefill = Instant.now()
+            Refill refill = Refill.intervallyAligned(2, Duration.ofMinutes(2), timeOfFirstRefill, true)
+            Bandwidth bandwidth = Bandwidth.classic(2, refill)
+
+        when:
+            Bucket.builder().withNanosecondPrecision().addLimit(bandwidth).build()
+        then:
+            IllegalArgumentException ex = thrown()
+            ex.message == intervallyAlignedRefillCompatibleOnlyWithWallClock().message
+
+        when:
+            Bucket.builder().addLimit(bandwidth).withNanosecondPrecision().build()
+        then:
+            ex = thrown()
+            ex.message == intervallyAlignedRefillCompatibleOnlyWithWallClock().message
     }
 
     def "Should check that time units to wait should be positive"() {

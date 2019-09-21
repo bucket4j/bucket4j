@@ -64,13 +64,18 @@ public class Bandwidth implements Serializable {
     final long refillPeriodNanos;
     final long refillTokens;
     final boolean refillIntervally;
+    final long timeOfFirstRefillMillis;
+    final boolean useAdaptiveInitialTokens;
 
-    private Bandwidth(long capacity, long refillPeriodNanos, long refillTokens, long initialTokens, boolean refillIntervally) {
+    private Bandwidth(long capacity, long refillPeriodNanos, long refillTokens, long initialTokens, boolean refillIntervally,
+                      long timeOfFirstRefillMillis, boolean useAdaptiveInitialTokens) {
         this.capacity = capacity;
         this.initialTokens = initialTokens;
         this.refillPeriodNanos = refillPeriodNanos;
         this.refillTokens = refillTokens;
         this.refillIntervally = refillIntervally;
+        this.timeOfFirstRefillMillis = timeOfFirstRefillMillis;
+        this.useAdaptiveInitialTokens = useAdaptiveInitialTokens;
     }
 
     /**
@@ -101,7 +106,7 @@ public class Bandwidth implements Serializable {
         if (refill == null) {
             throw BucketExceptions.nullBandwidthRefill();
         }
-        return new Bandwidth(capacity, refill.periodNanos, refill.tokens, capacity, refill.refillIntervally);
+        return new Bandwidth(capacity, refill.periodNanos, refill.tokens, capacity, refill.refillIntervally, refill.timeOfFirstRefillMillis, refill.useAdaptiveInitialTokens);
     }
 
     /**
@@ -116,7 +121,18 @@ public class Bandwidth implements Serializable {
         if (initialTokens < 0) {
             throw BucketExceptions.nonPositiveInitialTokens(initialTokens);
         }
-        return new Bandwidth(capacity, refillPeriodNanos, refillTokens, initialTokens, refillIntervally);
+        if (isIntervallyAligned() && useAdaptiveInitialTokens) {
+            throw BucketExceptions.intervallyAlignedRefillWithAdaptiveInitialTokensIncompatipleWithManualSpecifiedInitialTokens();
+        }
+        return new Bandwidth(capacity, refillPeriodNanos, refillTokens, initialTokens, refillIntervally, timeOfFirstRefillMillis, useAdaptiveInitialTokens);
+    }
+
+    public boolean isIntervallyAligned() {
+        return timeOfFirstRefillMillis != Refill.UNSPECIFIED_TIME_OF_FIRST_REFILL;
+    }
+
+    public long getTimeOfFirstRefillMillis() {
+        return timeOfFirstRefillMillis;
     }
 
     public long getCapacity() {
@@ -147,6 +163,8 @@ public class Bandwidth implements Serializable {
         sb.append(", refillPeriodNanos=").append(refillPeriodNanos);
         sb.append(", refillTokens=").append(refillTokens);
         sb.append(", refillIntervally=").append(refillIntervally);
+        sb.append(", timeOfFirstRefillMillis=").append(timeOfFirstRefillMillis);
+        sb.append(", useAdaptiveInitialTokens=").append(useAdaptiveInitialTokens);
         sb.append('}');
         return sb.toString();
     }

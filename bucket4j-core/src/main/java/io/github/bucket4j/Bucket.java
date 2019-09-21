@@ -47,15 +47,6 @@ public interface Bucket {
     BlockingBucket asScheduler();
 
     /**
-     * Describes whether or not this bucket supports asynchronous mode.
-     *
-     * <p>If asynchronous mode is  not supported any attempt to call {@link #asAsync()} will fail with {@link UnsupportedOperationException}
-     *
-     * @return true if this extension supports asynchronous mode.
-     */
-    boolean isAsyncModeSupported();
-
-    /**
      * Returns asynchronous view of this bucket.
      *
      * <p>If asynchronous mode is not supported by particular extension behind this bucket,
@@ -65,19 +56,7 @@ public interface Bucket {
      *
      * @throws UnsupportedOperationException if particular extension behind the bucket does not support asynchronous mode.
      */
-     asAsync();
-
-    /**
-     * Returns asynchronous view of this bucket that allows to use bucket as async scheduler.
-     *
-     * <p>If asynchronous mode is not supported by particular extension behind this bucket,
-     * then any attempt to call this method will fail with {@link UnsupportedOperationException}.
-     *
-     * @return Asynchronous view of this bucket that allows to use bucket as async scheduler.
-     *
-     * @throws UnsupportedOperationException if particular extension behind the bucket does not support asynchronous mode.
-     */
-    AsyncScheduledBucket asAsyncScheduler();
+    AsyncBucket asAsync();
 
     /**
      * Tries to consume a specified number of tokens from this bucket.
