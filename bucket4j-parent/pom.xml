@@ -54,6 +54,7 @@
         <benchmark.jar.name>benchmarks</benchmark.jar.name>
         <sonar.jacoco.reportPath>${project.basedir}/../bucket4j-parent/target/jacoco-merged.exec</sonar.jacoco.reportPath>
         <argLine/>
+        <maven.build.timestamp.format>yyyy-MM-dd HH</maven.build.timestamp.format>
         <jcache.version>1.0.0</jcache.version>
         <ignite.version>2.1.0</ignite.version>
         <hazelcast.version>3.8</hazelcast.version>
@@ -194,11 +195,17 @@
                         <version>1.6.0</version>
                         <configuration>
                             <sourceDirectory>${project.basedir}/../asciidoc</sourceDirectory>
-                            <outputDirectory>target/docs/asciidoc</outputDirectory>
+                            <outputDirectory>target/docs/asciidoc/${project.version}</outputDirectory>
                             <backend>html</backend>
                             <doctype>book</doctype>
                             <attributes>
                                 <project-version>${project.version}</project-version>
+                                <toc>left</toc>
+                                <linkcss>false</linkcss>
+                                <sectnums>true</sectnums>
+                                <revnumber>${project.version}</revnumber>
+                                <revdate>${maven.build.timestamp}</revdate>
+                                <organization>${project.organization.name}</organization>
                             </attributes>
                         </configuration>
                         <executions>
