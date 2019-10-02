@@ -17,7 +17,7 @@
 
 package io.github.bucket4j;
 
-import io.github.bucket4j.distributed.AsyncBucket;
+import io.github.bucket4j.distributed.AsyncBucketProxy;
 
 import java.io.Serializable;
 
@@ -25,7 +25,7 @@ import java.io.Serializable;
  * Describes the estimation result.
  *
  * @see Bucket#estimateAbilityToConsume(long)
- * @see AsyncBucket#estimateAbilityToConsume(long)
+ * @see AsyncBucketProxy#estimateAbilityToConsume(long)
  */
 public class EstimationProbe implements Serializable {
 

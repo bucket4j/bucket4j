@@ -18,7 +18,7 @@
 package io.github.bucket4j
 
 import io.github.bucket4j.mock.*
-import io.github.bucket4j.distributed.proxy.BucketProxy
+import io.github.bucket4j.distributed.proxy.BucketProxyImpl
 import spock.lang.Specification
 import spock.lang.Timeout
 import spock.lang.Unroll
@@ -164,7 +164,7 @@ class SchedulersSpecification extends Specification {
                 .build()
             GridBackendMock mockProxy = new GridBackendMock(SYSTEM_MILLISECONDS)
             SchedulerMock schedulerMock = new SchedulerMock()
-            Bucket bucket = BucketProxy.createInitializedBucket("66", configuration, mockProxy, THROW_BUCKET_NOT_FOUND_EXCEPTION)
+            Bucket bucket = BucketProxyImpl.createInitializedBucket("66", configuration, mockProxy, THROW_BUCKET_NOT_FOUND_EXCEPTION)
         when:
             schedulerMock.setException(new RuntimeException())
             CompletableFuture<Boolean> future = bucket.asAsyncScheduler().tryConsume(10, Duration.ofNanos(100000), schedulerMock)

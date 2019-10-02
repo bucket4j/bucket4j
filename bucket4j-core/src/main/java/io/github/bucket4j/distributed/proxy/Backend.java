@@ -19,7 +19,7 @@ package io.github.bucket4j.distributed.proxy;
 
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.BucketExceptions;
-import io.github.bucket4j.distributed.AsyncBucket;
+import io.github.bucket4j.distributed.AsyncBucketProxy;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.remote.commands.GetConfigurationCommand;
@@ -47,6 +47,9 @@ public interface Backend<K extends Serializable> {
     // TODO javadocs
     <T extends Serializable> CommandResult<T> execute(K key, RemoteCommand<T> command);
 
+    // TODO javadocs
+    <T extends Serializable> CompletableFuture<CommandResult<T>> executeAsync(K key, RemoteCommand<T> command);
+
     /**
      * TODO
      *
@@ -58,8 +61,62 @@ public interface Backend<K extends Serializable> {
      */
     boolean isAsyncModeSupported();
 
-    // TODO javadocs
-    <T extends Serializable> CompletableFuture<CommandResult<T>> executeAsync(K key, RemoteCommand<T> command);
+    /**
+     * TODO fix javadocs
+     *
+     * Provides light-weight proxy to bucket which actually stored outside current JVM.
+     * This method do not perform any hard work or network calls, it is not necessary to cache results of its invocation.
+     *
+     * @param key the unique identifier used to point to the bucket in external storage.
+     * @param configurationSupplier supplier for configuration which can be called to build bucket configuration,
+     *                                  if and only if first invocation of any method on proxy detects that bucket absents in remote storage,
+     *                                  in this case provide configuration will be used to instantiate and persist the missed bucket.
+     *
+     * @return proxy to bucket that can be actually stored outside current JVM.
+     */
+    default BucketProxy proxy(K key, Backend<K> backend, Supplier<BucketConfiguration> configurationSupplier) {
+        CommandExecutor<K> commandExecutor = CommandExecutor.nonOptimized(backend);
+        return BucketProxyImpl.createLazyBucket(key, configurationSupplier, commandExecutor);
+    }
+
+    default BucketProxy proxy(K key, Backend<K> backend, BucketConfiguration configuration) {
+        // TODO fix javadocs
+        throw new UnsupportedOperationException();
+    }
+
+    public static <K extends Serializable> AsyncBucketProxyProxyImpl asyncProxy(K key, Backend<K> backend, BucketConfiguration configuration) {
+        // TODO fix javadocs
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * TODO fix javadocs
+     *
+     * Constructs an instance of {@link BucketProxyImpl} which state actually stored inside in-memory data-jvm,
+     * the bucket stored in the jvm immediately, so one network request will be issued to jvm.
+     * Due to this method performs network IO, returned result must not be treated as light-weight entity,
+     * it will be a performance anti-pattern to use this method multiple times for same key,
+     * you need to cache result somewhere and reuse between invocations,
+     * else performance of all operation with bucket will be 2-x times slower.
+     *
+     * <p>
+     * Use this method if and only if you need to full control over bucket lifecycle(especially specify {@link RecoveryStrategy}),
+     * and you have clean caching strategy which suitable for storing buckets,
+     * else it would be better to work through {@link JCache#proxyManagerForCache(Cache) ProxyManager},
+     * which does not require any caching, because ProxyManager operates with light-weight versions of buckets.
+     *
+     * @param cache distributed cache which will hold bucket inside cluster.
+     *             Feel free to store inside single {@code cache} as mush buckets as you need.
+     * @param key  for storing bucket inside {@code cache}.
+     *             If you plan to store multiple buckets inside single {@code cache}, then each bucket should has own unique {@code key}.
+     * @param recoveryStrategy specifies the reaction which should be applied in case of previously saved state of bucket has been lost.
+     *
+     * @return new distributed bucket
+     */
+    default AsyncBucketProxy<K> asyncProxy(K key, Backend<K> backend, Supplier<CompletableFuture<BucketConfiguration>> asyncConfigurationSupplier) {
+        // TODO fix javadocs
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Locates configuration of bucket which actually stored outside current JVM.

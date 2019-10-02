@@ -17,7 +17,7 @@
 
 package io.github.bucket4j;
 
-import io.github.bucket4j.distributed.AsyncBucket;
+import io.github.bucket4j.distributed.AsyncBucketProxy;
 
 import java.io.Serializable;
 
@@ -25,7 +25,7 @@ import java.io.Serializable;
  * Describes both result of consumption and tokens remaining in the bucket after consumption.
  *
  * @see Bucket#tryConsumeAndReturnRemaining(long)
- * @see AsyncBucket#tryConsumeAndReturnRemaining(long)
+ * @see AsyncBucketProxy#tryConsumeAndReturnRemaining(long)
  */
 public class ConsumptionProbe implements Serializable {
 

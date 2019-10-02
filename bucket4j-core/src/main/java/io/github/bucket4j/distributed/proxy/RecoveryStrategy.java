@@ -17,9 +17,6 @@
 
 package io.github.bucket4j.distributed.proxy;
 
-import io.github.bucket4j.distributed.proxy.BucketNotFoundException;
-import io.github.bucket4j.distributed.proxy.BucketProxy;
-
 /**
  * Specifies the reaction which should be applied in case of previously saved state of bucket has been lost.
  *
@@ -32,7 +29,7 @@ import io.github.bucket4j.distributed.proxy.BucketProxy;
  *     <li>Human mistake.</li>
  * </ul>
  *
- * Each time when {@link BucketProxy} detects that bucket state is missed, it applies this strategy to react.
+ * Each time when {@link BucketProxyImpl} detects that bucket state is missed, it applies this strategy to react.
  */
 public enum RecoveryStrategy {
 

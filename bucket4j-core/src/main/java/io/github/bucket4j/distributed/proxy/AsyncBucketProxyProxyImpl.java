@@ -18,7 +18,7 @@
 package io.github.bucket4j.distributed.proxy;
 
 import io.github.bucket4j.*;
-import io.github.bucket4j.distributed.AsyncBucket;
+import io.github.bucket4j.distributed.AsyncBucketProxy;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.remote.commands.*;
@@ -31,11 +31,11 @@ import java.util.function.Supplier;
 
 import static io.github.bucket4j.LimitChecker.*;
 
-public abstract class AsyncBucketProxy<K extends Serializable> implements AsyncBucket, AsyncScheduledBucket {
+public class AsyncBucketProxyProxyImpl<K extends Serializable> implements AsyncBucketProxy {
 
     private final BucketListener listener;
 
-    public AsyncBucketProxy(BucketListener listener, K key, CommandExecutor<K> backend, RecoveryStrategy recoveryStrategy, Supplier<BucketConfiguration> configurationSupplier) {
+    public AsyncBucketProxyProxyImpl(BucketListener listener, K key, CommandExecutor<K> backend, RecoveryStrategy recoveryStrategy, Supplier<BucketConfiguration> configurationSupplier) {
         this.key = key;
         this.backend = backend;
         this.recoveryStrategy = recoveryStrategy;
@@ -191,6 +191,16 @@ public abstract class AsyncBucketProxy<K extends Serializable> implements AsyncB
                 return future;
             }
         });
+    }
+
+    @Override
+    public AsyncBucketProxy asLossAware(RecoveryStrategy recoveryStrategy) {
+        return null;
+    }
+
+    @Override
+    public AsyncBucketProxy asOptimized(RequestOptimizer optimizer) {
+        return null;
     }
 
     @Override
