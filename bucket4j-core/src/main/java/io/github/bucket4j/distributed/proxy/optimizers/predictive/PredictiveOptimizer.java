@@ -17,8 +17,22 @@
 
 package io.github.bucket4j.distributed.proxy.optimizers.predictive;
 
+import io.github.bucket4j.distributed.proxy.AsyncCommandExecutor;
+import io.github.bucket4j.distributed.proxy.CommandExecutor;
 import io.github.bucket4j.distributed.proxy.RequestOptimizer;
 
 public class PredictiveOptimizer implements RequestOptimizer {
+
+    @Override
+    public CommandExecutor optimize(CommandExecutor originalExecutor) {
+        // TODO
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public AsyncCommandExecutor optimize(AsyncCommandExecutor originalExecutor) {
+        // TODO
+        throw new UnsupportedOperationException();
+    }
 
 }

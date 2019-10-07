@@ -18,6 +18,7 @@
 package io.github.bucket4j.grid.jcache;
 
 import io.github.bucket4j.*;
+import io.github.bucket4j.distributed.proxy.AbstractBackend;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.proxy.Backend;
 import io.github.bucket4j.distributed.remote.*;
@@ -34,7 +35,7 @@ import java.util.concurrent.CompletableFuture;
 /**
  * The extension of Bucket4j library addressed to support <a href="https://www.jcp.org/en/jsr/detail?id=107">JCache API (JSR 107)</a> specification.
  */
-public class JCacheBackend<K extends Serializable> implements Backend<K> {
+public class JCacheBackend<K extends Serializable> extends AbstractBackend<K> {
 
     private static final Map<String, String> incompatibleProviders = new HashMap<>();
     static {

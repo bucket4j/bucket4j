@@ -20,7 +20,7 @@ package io.github.bucket4j
 import io.github.bucket4j.mock.GridBackendMock
 import io.github.bucket4j.mock.BucketType
 import io.github.bucket4j.mock.TimeMeterMock
-import io.github.bucket4j.distributed.proxy.BucketProxyImpl
+import io.github.bucket4j.distributed.proxy.BucketProxy
 import spock.lang.Specification
 import spock.lang.Unroll
 
@@ -228,7 +228,7 @@ class BucketSpecification extends Specification {
                                                     .addLimit(Bandwidth.simple(1, Duration.ofNanos(1)))
                                                     .build()
 
-            Bucket bucket = BucketProxyImpl.createInitializedBucket("66", configuration, mockProxy, THROW_BUCKET_NOT_FOUND_EXCEPTION)
+            Bucket bucket = BucketProxy.createInitializedBucket("66", configuration, mockProxy, THROW_BUCKET_NOT_FOUND_EXCEPTION)
         when:
             mockProxy.setException(new RuntimeException())
             CompletableFuture<Boolean> future = bucket.asAsync().tryConsume(1)

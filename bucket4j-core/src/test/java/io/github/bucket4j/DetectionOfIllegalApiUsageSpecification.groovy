@@ -20,7 +20,7 @@ package io.github.bucket4j
 
 import io.github.bucket4j.mock.GridBackendMock
 import io.github.bucket4j.mock.BucketType
-import io.github.bucket4j.distributed.proxy.BucketProxyImpl
+import io.github.bucket4j.distributed.proxy.BucketProxy
 import spock.lang.Specification
 import spock.lang.Unroll
 
@@ -275,21 +275,21 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
         setup:
             GridBackendMock mockProxy = new GridBackendMock(TimeMeter.SYSTEM_MILLISECONDS)
         when:
-            BucketProxyImpl.createInitializedBucket("66", null, mockProxy, THROW_BUCKET_NOT_FOUND_EXCEPTION)
+            BucketProxy.createInitializedBucket("66", null, mockProxy, THROW_BUCKET_NOT_FOUND_EXCEPTION)
 
         then:
             IllegalArgumentException ex = thrown()
             ex.message == nullConfiguration().message
 
         when:
-            BucketProxyImpl.createLazyBucket("66", {null}, mockProxy)
+            BucketProxy.createLazyBucket("66", {null}, mockProxy)
                     .tryConsume(1)
         then:
             ex = thrown()
             ex.message == nullConfiguration().message
 
         when:
-            BucketProxyImpl.createLazyBucket("66", null, mockProxy)
+            BucketProxy.createLazyBucket("66", null, mockProxy)
                     .tryConsume(1)
         then:
             ex = thrown()

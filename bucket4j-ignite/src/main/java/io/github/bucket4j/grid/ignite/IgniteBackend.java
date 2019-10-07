@@ -18,6 +18,7 @@
 package io.github.bucket4j.grid.ignite;
 
 import io.github.bucket4j.*;
+import io.github.bucket4j.distributed.proxy.AbstractBackend;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.proxy.Backend;
 import io.github.bucket4j.distributed.remote.*;
@@ -36,7 +37,7 @@ import java.util.concurrent.CompletableFuture;
 /**
  * The extension of Bucket4j library addressed to support <a href="https://ignite.apache.org/">Apache ignite</a> in-memory computing platform.
  */
-public class IgniteBackend<K extends Serializable> implements Backend<K> {
+public class IgniteBackend<K extends Serializable> extends AbstractBackend<K> {
 
     private final IgniteCache<K, RemoteBucketState> cache;
 

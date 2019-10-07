@@ -19,7 +19,7 @@ package io.github.bucket4j;
 
 import io.github.bucket4j.distributed.proxy.Backend;
 import io.github.bucket4j.distributed.proxy.BucketNotFoundException;
-import io.github.bucket4j.distributed.proxy.RemoteBucketBuilder;
+import io.github.bucket4j.distributed.proxy.builder.sync.RemoteBucketBuilder;
 import io.github.bucket4j.util.ConsumptionScenario;
 import org.junit.Test;
 

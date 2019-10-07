@@ -23,6 +23,7 @@ import com.tangosol.util.InvocableMap;
 import com.tangosol.util.processor.AbstractProcessor;
 import com.tangosol.util.processor.SingleEntryAsynchronousProcessor;
 import io.github.bucket4j.*;
+import io.github.bucket4j.distributed.proxy.AbstractBackend;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.proxy.Backend;
 import io.github.bucket4j.distributed.remote.*;
@@ -37,7 +38,7 @@ import java.util.concurrent.CompletableFuture;
  *
  * @param <K>
  */
-public class CoherenceBackend<K extends Serializable> implements Backend<K> {
+public class CoherenceBackend<K extends Serializable> extends AbstractBackend<K> {
 
     private final NamedCache<K, RemoteBucketState> cache;
 

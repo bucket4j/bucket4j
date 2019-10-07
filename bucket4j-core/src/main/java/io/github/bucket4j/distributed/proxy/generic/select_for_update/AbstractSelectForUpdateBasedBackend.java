@@ -18,6 +18,7 @@
 package io.github.bucket4j.distributed.proxy.generic.select_for_update;
 
 import io.github.bucket4j.TimeMeter;
+import io.github.bucket4j.distributed.proxy.AbstractBackend;
 import io.github.bucket4j.distributed.proxy.Backend;
 import io.github.bucket4j.distributed.proxy.generic.GenericEntry;
 import io.github.bucket4j.distributed.remote.CommandResult;
@@ -26,7 +27,7 @@ import io.github.bucket4j.distributed.remote.RemoteCommand;
 import java.io.Serializable;
 import java.util.concurrent.CompletableFuture;
 
-public abstract class AbstractSelectForUpdateBasedBackend<K extends Serializable> implements Backend<K> {
+public abstract class AbstractSelectForUpdateBasedBackend<K extends Serializable> extends AbstractBackend<K> {
 
     private final TimeMeter timeMeter;
 

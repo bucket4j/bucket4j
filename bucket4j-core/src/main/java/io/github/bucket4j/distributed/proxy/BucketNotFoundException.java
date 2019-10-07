@@ -18,26 +18,15 @@
 package io.github.bucket4j.distributed.proxy;
 
 /**
- * Exception which thrown each time when {@link BucketProxyImpl} found that bucket state has been lost,
- * and {@link BucketProxyImpl} is unable to repair bucket state or recovery strategy is {@link RecoveryStrategy#THROW_BUCKET_NOT_FOUND_EXCEPTION}.
+ * Exception which thrown each time when {@link BucketProxy} found that bucket state has been lost,
+ * and {@link BucketProxy} is unable to repair bucket state or recovery strategy is {@link RecoveryStrategy#THROW_BUCKET_NOT_FOUND_EXCEPTION}.
  */
 public class BucketNotFoundException extends IllegalStateException {
 
     private static final long serialVersionUID = 42;
 
-    private final Object bucketId;
-
-    public BucketNotFoundException(Object bucketId) {
-        super(createErrorMessage(bucketId));
-        this.bucketId = bucketId;
-    }
-
-    private static String createErrorMessage(Object bucketId) {
-        return "Bucket with key [" + bucketId + "] does not exist";
-    }
-
-    public Object getBucketId() {
-        return bucketId;
+    public BucketNotFoundException() {
+        super("Bucket does not exist");
     }
 
 }

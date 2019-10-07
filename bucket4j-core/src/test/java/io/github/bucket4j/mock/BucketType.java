@@ -20,7 +20,7 @@ package io.github.bucket4j.mock;
 import io.github.bucket4j.*;
 import io.github.bucket4j.local.LocalBucketBuilder;
 import io.github.bucket4j.local.SynchronizationStrategy;
-import io.github.bucket4j.distributed.proxy.BucketProxyImpl;
+import io.github.bucket4j.distributed.proxy.BucketProxy;
 
 import java.util.Arrays;
 import java.util.List;
@@ -62,7 +62,7 @@ public enum BucketType {
         public Bucket createBucket(AbstractBucketBuilder builder, TimeMeter timeMeter) {
             BucketConfiguration configuration = PackageAcessor.buildConfiguration(builder);
             GridBackendMock backend = new GridBackendMock(timeMeter);
-            return BucketProxyImpl.createInitializedBucket(42, configuration, backend, THROW_BUCKET_NOT_FOUND_EXCEPTION);
+            return BucketProxy.createInitializedBucket(42, configuration, backend, THROW_BUCKET_NOT_FOUND_EXCEPTION);
         }
 
     },
@@ -71,7 +71,7 @@ public enum BucketType {
         public Bucket createBucket(AbstractBucketBuilder builder, TimeMeter timeMeter) {
             BucketConfiguration configuration = PackageAcessor.buildConfiguration(builder);
             CompareAndSwapBasedBackendMock backend = new CompareAndSwapBasedBackendMock(timeMeter);
-            return BucketProxyImpl.createInitializedBucket(42, configuration, backend, THROW_BUCKET_NOT_FOUND_EXCEPTION);
+            return BucketProxy.createInitializedBucket(42, configuration, backend, THROW_BUCKET_NOT_FOUND_EXCEPTION);
         }
     },
     SELECT_FOR_UPDATE {
@@ -79,7 +79,7 @@ public enum BucketType {
         public Bucket createBucket(AbstractBucketBuilder builder, TimeMeter timeMeter) {
             BucketConfiguration configuration = PackageAcessor.buildConfiguration(builder);
             SelectForUpdateBasedBackendMock backend = new SelectForUpdateBasedBackendMock(timeMeter);
-            return BucketProxyImpl.createInitializedBucket(42, configuration, backend, THROW_BUCKET_NOT_FOUND_EXCEPTION);
+            return BucketProxy.createInitializedBucket(42, configuration, backend, THROW_BUCKET_NOT_FOUND_EXCEPTION);
         }
     }
     ;

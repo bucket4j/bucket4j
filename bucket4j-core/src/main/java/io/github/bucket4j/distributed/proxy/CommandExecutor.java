@@ -21,17 +21,11 @@ import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 
 import java.io.Serializable;
-import java.util.concurrent.CompletableFuture;
-
 
 // TODO javadocs
-public interface CommandExecutor<K extends Serializable> {
+public interface CommandExecutor {
 
     // TODO javadocs
-    <T extends Serializable> CommandResult<T> execute(K key, RemoteCommand<T> command);
-
-    static <K extends Serializable> CommandExecutor<K> nonOptimized(final Backend<K> backend) {
-        return backend::execute;
-    }
+    <T extends Serializable> CommandResult<T> execute(RemoteCommand<T> command);
 
 }

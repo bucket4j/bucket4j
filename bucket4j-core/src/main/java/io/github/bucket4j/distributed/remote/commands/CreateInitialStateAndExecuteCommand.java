@@ -19,6 +19,7 @@ package io.github.bucket4j.distributed.remote.commands;
 
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.BucketState;
+import io.github.bucket4j.MathType;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.MutableBucketEntry;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
@@ -44,7 +45,7 @@ public class CreateInitialStateAndExecuteCommand<T extends Serializable> impleme
         if (mutableEntry.exists()) {
             state = mutableEntry.get();
         } else {
-            BucketState bucketState = BucketState.createInitialState(configuration, currentTimeNanos);
+            BucketState bucketState = BucketState.createInitialState(configuration, MathType.INTEGER_64_BITS, currentTimeNanos);
             state = new RemoteBucketState(configuration, bucketState);
         }
 

@@ -19,6 +19,7 @@ package io.github.bucket4j.distributed.remote.commands;
 
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.BucketState;
+import io.github.bucket4j.MathType;
 import io.github.bucket4j.Nothing;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.MutableBucketEntry;
@@ -41,7 +42,7 @@ public class CreateInitialStateCommand implements RemoteCommand<Nothing> {
             return CommandResult.NOTHING;
         }
 
-        BucketState bucketState = BucketState.createInitialState(configuration, currentTimeNanos);
+        BucketState bucketState = BucketState.createInitialState(configuration, MathType.INTEGER_64_BITS, currentTimeNanos);
         RemoteBucketState remoteBucketState = new RemoteBucketState(configuration, bucketState);
         mutableEntry.set(remoteBucketState);
         return CommandResult.NOTHING;

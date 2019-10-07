@@ -21,8 +21,20 @@ import java.io.Serializable;
 
 public interface RequestOptimizer {
 
-    <K extends Serializable> CommandExecutor<K> optimize(CommandExecutor<K> originalExecutor);
+    RequestOptimizer NONE_OPTIMIZED = new RequestOptimizer() {
+        @Override
+        public CommandExecutor optimize(CommandExecutor originalExecutor) {
+            return originalExecutor;
+        }
 
-    <K extends Serializable> CommandExecutor<K> optimize(AsyncCommandExecutor<K> originalExecutor);
+        @Override
+        public AsyncCommandExecutor optimize(AsyncCommandExecutor originalExecutor) {
+            return originalExecutor;
+        }
+    };
+
+    CommandExecutor optimize(CommandExecutor originalExecutor);
+
+    AsyncCommandExecutor optimize(AsyncCommandExecutor originalExecutor);
 
 }

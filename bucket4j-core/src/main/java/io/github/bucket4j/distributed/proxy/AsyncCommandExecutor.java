@@ -25,13 +25,9 @@ import java.util.concurrent.CompletableFuture;
 
 
 // TODO javadocs
-public interface AsyncCommandExecutor<K extends Serializable> {
+public interface AsyncCommandExecutor {
 
     // TODO javadocs
-    <T extends Serializable> CompletableFuture<CommandResult<T>> executeAsync(K key, RemoteCommand<T> command);
-
-    static <K extends Serializable> AsyncCommandExecutor<K> nonOptimized(final Backend<K> backend) {
-        return backend::executeAsync;
-    }
+    <T extends Serializable> CompletableFuture<CommandResult<T>> executeAsync(RemoteCommand<T> command);
 
 }

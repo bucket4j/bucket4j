@@ -22,6 +22,7 @@ import com.hazelcast.core.IMap;
 import com.hazelcast.map.EntryBackupProcessor;
 import com.hazelcast.map.EntryProcessor;
 import io.github.bucket4j.*;
+import io.github.bucket4j.distributed.proxy.AbstractBackend;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.proxy.Backend;
 import io.github.bucket4j.distributed.remote.*;
@@ -34,7 +35,7 @@ import java.util.concurrent.CompletableFuture;
 /**
  * The extension of Bucket4j library addressed to support <a href="https://hazelcast.com//">Hazelcast</a> in-memory data grid.
  */
-public class HazelcastBackend<K extends Serializable> implements Backend<K> {
+public class HazelcastBackend<K extends Serializable> extends AbstractBackend<K> {
 
     private final IMap<K, RemoteBucketState> cache;
 

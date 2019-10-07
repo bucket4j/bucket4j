@@ -18,6 +18,7 @@
 package io.github.bucket4j.grid.infinispan;
 
 import io.github.bucket4j.*;
+import io.github.bucket4j.distributed.proxy.AbstractBackend;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.proxy.Backend;
 import io.github.bucket4j.distributed.remote.*;
@@ -34,7 +35,7 @@ import java.util.concurrent.ExecutionException;
 /**
  * The extension of Bucket4j library addressed to support <a href="https://infinispan.org/">Infinispan</a> in-memory computing platform.
  */
-public class InfinispanBackend<K extends Serializable> implements Backend<K> {
+public class InfinispanBackend<K extends Serializable> extends AbstractBackend<K> {
 
     private final ReadWriteMap<K, RemoteBucketState> readWriteMap;
 

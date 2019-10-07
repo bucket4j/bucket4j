@@ -17,9 +17,11 @@
 
 package io.github.bucket4j.distributed.proxy;
 
+import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.BucketExceptions;
 import io.github.bucket4j.BucketListener;
+import io.github.bucket4j.distributed.AsyncBucket;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.remote.commands.GetConfigurationCommand;
@@ -43,12 +45,6 @@ import java.util.function.Supplier;
  * @param <K> type of key
  */
 public interface Backend<K extends Serializable> {
-
-    // TODO javadocs
-    <T extends Serializable> CommandResult<T> execute(K key, RemoteCommand<T> command);
-
-    // TODO javadocs
-    <T extends Serializable> CompletableFuture<CommandResult<T>> executeAsync(K key, RemoteCommand<T> command);
 
     /**
      * TODO
@@ -74,25 +70,25 @@ public interface Backend<K extends Serializable> {
      *
      * @return proxy to bucket that can be actually stored outside current JVM.
      */
-    default BucketProxy proxy(K key, Backend<K> backend, Supplier<BucketConfiguration> configurationSupplier) {
-        CommandExecutor<K> commandExecutor = CommandExecutor.nonOptimized(backend);
-        return new BucketProxyImpl<K>(BucketListener.NOPE, key, configurationSupplier, commandExecutor, RecoveryStrategy.RECONSTRUCT);
-    }
-
-    default BucketProxy proxy(K key, Backend<K> backend, BucketConfiguration configuration) {
-        // TODO fix javadocs
-        throw new UnsupportedOperationException();
-    }
-
-    public static <K extends Serializable> AsyncBucketProxyProxyImpl asyncProxy(K key, Backend<K> backend, BucketConfiguration configuration) {
-        // TODO fix javadocs
-        throw new UnsupportedOperationException();
+    default Bucket proxy(K key, Supplier<BucketConfiguration> configurationSupplier) {
+        return durableProxy(key, configurationSupplier, RequestOptimizer.NONE_OPTIMIZED, RecoveryStrategy.RECONSTRUCT);
     }
 
     /**
      * TODO fix javadocs
      *
-     * Constructs an instance of {@link BucketProxyImpl} which state actually stored inside in-memory data-jvm,
+     * @param key
+     * @param configurationSupplier
+     * @param optimizer
+     * @param recoveryStrategy
+     * @return
+     */
+    Bucket durableProxy(K key, Supplier<BucketConfiguration> configurationSupplier, RequestOptimizer optimizer, RecoveryStrategy recoveryStrategy);
+
+    /**
+     * TODO fix javadocs
+     *
+     * Constructs an instance of {@link BucketProxy} which state actually stored inside in-memory data-jvm,
      * the bucket stored in the jvm immediately, so one network request will be issued to jvm.
      * Due to this method performs network IO, returned result must not be treated as light-weight entity,
      * it will be a performance anti-pattern to use this method multiple times for same key,
@@ -113,10 +109,20 @@ public interface Backend<K extends Serializable> {
      *
      * @return new distributed bucket
      */
-    default AsyncBucketProxy asyncProxy(K key, Backend<K> backend, Supplier<CompletableFuture<BucketConfiguration>> asyncConfigurationSupplier) {
-        // TODO fix javadocs
-        throw new UnsupportedOperationException();
+    default AsyncBucket asyncProxy(K key, Supplier<CompletableFuture<BucketConfiguration>> asyncConfigurationSupplier) {
+        return asyncDurableProxy(key, asyncConfigurationSupplier, RequestOptimizer.NONE_OPTIMIZED, RecoveryStrategy.RECONSTRUCT);
     }
+
+    /**
+     * TODO fix javadocs
+     *
+     * @param key
+     * @param configurationSupplier
+     * @param optimizer
+     * @param recoveryStrategy
+     * @return
+     */
+    AsyncBucket asyncDurableProxy(K key, Supplier<CompletableFuture<BucketConfiguration>> configurationSupplier, RequestOptimizer optimizer, RecoveryStrategy recoveryStrategy);
 
     /**
      * Locates configuration of bucket which actually stored outside current JVM.
@@ -125,14 +131,7 @@ public interface Backend<K extends Serializable> {
      *
      * @return Optional surround the configuration or empty optional if bucket with specified key are not stored.
      */
-    default Optional<BucketConfiguration> getProxyConfiguration(K key) {
-        GetConfigurationCommand cmd = new GetConfigurationCommand();
-        CommandResult<BucketConfiguration> result = this.execute(key, cmd);
-        if (result.isBucketNotFound()) {
-            return Optional.empty();
-        }
-        return Optional.of(result.getData());
-    }
+    Optional<BucketConfiguration> getProxyConfiguration(K key);
 
     /**
      * TODO
@@ -143,17 +142,6 @@ public interface Backend<K extends Serializable> {
      *
      * @return Optional surround the configuration or empty optional if bucket with specified key are not stored.
      */
-    default CompletableFuture<Optional<BucketConfiguration>> getProxyConfigurationAsync(K key) {
-        if (!isAsyncModeSupported()) {
-            throw BucketExceptions.asyncModeIsNotSupported();
-        }
-        GetConfigurationCommand cmd = new GetConfigurationCommand();
-        return this.executeAsync(key, cmd).thenApply(result -> {
-            if (result.isBucketNotFound()) {
-                return Optional.empty();
-            }
-            return Optional.of(result.getData());
-        });
-    }
+    CompletableFuture<Optional<BucketConfiguration>> getProxyConfigurationAsync(K key);
 
 }
