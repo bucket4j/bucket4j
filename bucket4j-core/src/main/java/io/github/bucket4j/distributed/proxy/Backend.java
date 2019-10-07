@@ -19,7 +19,7 @@ package io.github.bucket4j.distributed.proxy;
 
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.BucketExceptions;
-import io.github.bucket4j.distributed.AsyncBucketProxy;
+import io.github.bucket4j.BucketListener;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.remote.commands.GetConfigurationCommand;
@@ -76,7 +76,7 @@ public interface Backend<K extends Serializable> {
      */
     default BucketProxy proxy(K key, Backend<K> backend, Supplier<BucketConfiguration> configurationSupplier) {
         CommandExecutor<K> commandExecutor = CommandExecutor.nonOptimized(backend);
-        return BucketProxyImpl.createLazyBucket(key, configurationSupplier, commandExecutor);
+        return new BucketProxyImpl<K>(BucketListener.NOPE, key, configurationSupplier, commandExecutor, RecoveryStrategy.RECONSTRUCT);
     }
 
     default BucketProxy proxy(K key, Backend<K> backend, BucketConfiguration configuration) {
@@ -113,7 +113,7 @@ public interface Backend<K extends Serializable> {
      *
      * @return new distributed bucket
      */
-    default AsyncBucketProxy<K> asyncProxy(K key, Backend<K> backend, Supplier<CompletableFuture<BucketConfiguration>> asyncConfigurationSupplier) {
+    default AsyncBucketProxy asyncProxy(K key, Backend<K> backend, Supplier<CompletableFuture<BucketConfiguration>> asyncConfigurationSupplier) {
         // TODO fix javadocs
         throw new UnsupportedOperationException();
     }

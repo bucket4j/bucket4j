@@ -39,6 +39,10 @@ public final class BucketConfiguration implements Serializable {
         }
     }
 
+    public static ConfigurationBuilder builder() {
+        return new ConfigurationBuilder();
+    }
+
     public Bandwidth[] getBandwidths() {
         return bandwidths;
     }

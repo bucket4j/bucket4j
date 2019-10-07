@@ -17,18 +17,21 @@
 
 package io.github.bucket4j.distributed.proxy;
 
-import io.github.bucket4j.Bucket;
+import io.github.bucket4j.distributed.remote.CommandResult;
+import io.github.bucket4j.distributed.remote.RemoteCommand;
 
 import java.io.Serializable;
+import java.util.concurrent.CompletableFuture;
 
-/**
- * Represents the bucket which state actually stored outside current JVM.
- *
- */
-public interface BucketProxy extends Bucket {
 
-    BucketProxy asDurable(RecoveryStrategy recoveryStrategy);
+// TODO javadocs
+public interface AsyncCommandExecutor<K extends Serializable> {
 
-    BucketProxy asOptimized(RequestOptimizer optimizer);
+    // TODO javadocs
+    <T extends Serializable> CompletableFuture<CommandResult<T>> executeAsync(K key, RemoteCommand<T> command);
+
+    static <K extends Serializable> AsyncCommandExecutor<K> nonOptimized(final Backend<K> backend) {
+        return backend::executeAsync;
+    }
 
 }

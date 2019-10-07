@@ -28,7 +28,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
 /**
- * This is entry point for functionality provided bucket4j library.
+ * @deprecated
  */
 public class Bucket4j {
 
@@ -37,21 +37,19 @@ public class Bucket4j {
     }
 
     /**
-     * Creates the new builder of in-memory buckets.
-     *
-     * @return new instance of {@link LocalBucketBuilder}
+     * @deprecated
+     * @see Bucket#builder()
      */
     public static LocalBucketBuilder builder() {
-        return new LocalBucketBuilder();
+        return Bucket.builder();
     }
 
     /**
-     * Creates new instance of {@link ConfigurationBuilder}
-     *
-     * @return instance of {@link ConfigurationBuilder}
+     * @deprecated
+     * @see BucketConfiguration#builder()
      */
     public static ConfigurationBuilder configurationBuilder() {
-        return new ConfigurationBuilder();
+        return BucketConfiguration.builder();
     }
 
 }

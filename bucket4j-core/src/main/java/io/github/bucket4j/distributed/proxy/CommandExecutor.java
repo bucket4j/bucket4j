@@ -30,21 +30,8 @@ public interface CommandExecutor<K extends Serializable> {
     // TODO javadocs
     <T extends Serializable> CommandResult<T> execute(K key, RemoteCommand<T> command);
 
-    // TODO javadocs
-    <T extends Serializable> CompletableFuture<CommandResult<T>> executeAsync(K key, RemoteCommand<T> command);
-
     static <K extends Serializable> CommandExecutor<K> nonOptimized(final Backend<K> backend) {
-        return new CommandExecutor<K>() {
-            @Override
-            public <T extends Serializable> CommandResult<T> execute(K key, RemoteCommand<T> command) {
-                return backend.execute(key, command);
-            }
-
-            @Override
-            public <T extends Serializable> CompletableFuture<CommandResult<T>> executeAsync(K key, RemoteCommand<T> command) {
-                return backend.executeAsync(key, command);
-            }
-        };
+        return backend::execute;
     }
 
 }

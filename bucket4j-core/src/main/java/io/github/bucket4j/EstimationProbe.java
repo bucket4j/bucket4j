@@ -17,7 +17,7 @@
 
 package io.github.bucket4j;
 
-import io.github.bucket4j.distributed.AsyncBucketProxy;
+import io.github.bucket4j.distributed.proxy.AsyncBucketProxy;
 
 import java.io.Serializable;
 

@@ -17,18 +17,17 @@
 
 package io.github.bucket4j.distributed.proxy;
 
-import io.github.bucket4j.Bucket;
-
-import java.io.Serializable;
+import io.github.bucket4j.distributed.AsyncBucket;
 
 /**
- * Represents the bucket which state actually stored outside current JVM.
+ * Provides asynchronous API for bucket.
  *
+ * TODO fix javadocs
  */
-public interface BucketProxy extends Bucket {
+public interface AsyncBucketProxy extends AsyncBucket {
 
-    BucketProxy asDurable(RecoveryStrategy recoveryStrategy);
+    AsyncBucketProxy asDurable(RecoveryStrategy recoveryStrategy);
 
-    BucketProxy asOptimized(RequestOptimizer optimizer);
+    AsyncBucketProxy asOptimized(RequestOptimizer optimizer);
 
 }

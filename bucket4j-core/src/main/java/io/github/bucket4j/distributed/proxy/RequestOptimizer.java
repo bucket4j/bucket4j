@@ -17,8 +17,12 @@
 
 package io.github.bucket4j.distributed.proxy;
 
+import java.io.Serializable;
+
 public interface RequestOptimizer {
 
+    <K extends Serializable> CommandExecutor<K> optimize(CommandExecutor<K> originalExecutor);
 
+    <K extends Serializable> CommandExecutor<K> optimize(AsyncCommandExecutor<K> originalExecutor);
 
 }

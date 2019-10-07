@@ -18,12 +18,13 @@
 package io.github.bucket4j.distributed.proxy;
 
 import io.github.bucket4j.*;
-import io.github.bucket4j.distributed.AsyncBucketProxy;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.remote.commands.*;
 
 import java.io.Serializable;
+import java.time.Duration;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -33,9 +34,7 @@ import static io.github.bucket4j.LimitChecker.*;
 
 public class AsyncBucketProxyProxyImpl<K extends Serializable> implements AsyncBucketProxy {
 
-    private final BucketListener listener;
-
-    public AsyncBucketProxyProxyImpl(BucketListener listener, K key, CommandExecutor<K> backend, RecoveryStrategy recoveryStrategy, Supplier<BucketConfiguration> configurationSupplier) {
+    public AsyncBucketProxyProxyImpl(BucketListener listener, K key, AsyncCommandExecutor<K> backend, RecoveryStrategy recoveryStrategy, Supplier<CompletableFuture<BucketConfiguration>> configurationSupplier) {
         this.key = key;
         this.backend = backend;
         this.recoveryStrategy = recoveryStrategy;
@@ -48,9 +47,10 @@ public class AsyncBucketProxyProxyImpl<K extends Serializable> implements AsyncB
     }
 
     private final K key;
-    private final CommandExecutor<K> backend;
+    private final AsyncCommandExecutor<K> backend;
     private final RecoveryStrategy recoveryStrategy;
-    private final Supplier<BucketConfiguration> configurationSupplier;
+    private final Supplier<CompletableFuture<BucketConfiguration>> configurationSupplier;
+    private final BucketListener listener;
 
     @Override
     public CompletableFuture<Boolean> tryConsume(long tokensToConsume) {
@@ -194,12 +194,14 @@ public class AsyncBucketProxyProxyImpl<K extends Serializable> implements AsyncB
     }
 
     @Override
-    public AsyncBucketProxy asLossAware(RecoveryStrategy recoveryStrategy) {
-        return null;
+    public AsyncBucketProxy asDurable(RecoveryStrategy recoveryStrategy) {
+        Objects.requireNonNull();
+        return new AsyncBucketProxyProxyImpl(listener, key, backend, recoveryStrategy, configurationSupplier);
     }
 
     @Override
     public AsyncBucketProxy asOptimized(RequestOptimizer optimizer) {
+        // TODO
         return null;
     }
 

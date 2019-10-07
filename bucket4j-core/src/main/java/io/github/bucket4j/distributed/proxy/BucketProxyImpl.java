@@ -23,6 +23,7 @@ import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.commands.*;
 
 import java.io.Serializable;
+import java.util.Objects;
 import java.util.function.Supplier;
 
 public class BucketProxyImpl<K extends Serializable> extends AbstractBucket implements BucketProxy {
@@ -32,32 +33,23 @@ public class BucketProxyImpl<K extends Serializable> extends AbstractBucket impl
     private final RecoveryStrategy recoveryStrategy;
     private final Supplier<BucketConfiguration> configurationSupplier;
 
-    public static <T extends Serializable> BucketProxyImpl<T> createLazyBucket(T key, Supplier<BucketConfiguration> configurationSupplier, CommandExecutor<T> backend) {
-        return new BucketProxyImpl<>(BucketListener.NOPE, key, configurationSupplier, backend, RecoveryStrategy.RECONSTRUCT, false);
-    }
-
-    public static <T extends Serializable> BucketProxyImpl<T> createInitializedBucket(T key, Supplier<BucketConfiguration> configurationSupplier, CommandExecutor<T> backend, RecoveryStrategy recoveryStrategy) {
-        return new BucketProxyImpl<>(BucketListener.NOPE, key, configurationSupplier, backend, recoveryStrategy, true);
-    }
-
     @Override
     public Bucket toListenable(BucketListener listener) {
-        return new BucketProxyImpl<>(listener, key, configurationSupplier, backend, recoveryStrategy, false);
+        return new BucketProxyImpl<>(listener, key, configurationSupplier, backend, recoveryStrategy);
     }
 
-    private BucketProxyImpl(BucketListener listener, K key, Supplier<BucketConfiguration> configurationSupplier, CommandExecutor<K> backend, RecoveryStrategy recoveryStrategy, boolean initializeBucket) {
+    public BucketProxyImpl(BucketListener listener, K key, Supplier<BucketConfiguration> configurationSupplier, CommandExecutor<K> backend, RecoveryStrategy recoveryStrategy) {
         super(listener);
-        this.key = key;
-        this.backend = backend;
-        this.recoveryStrategy = recoveryStrategy;
-        this.configurationSupplier = configurationSupplier;
+
+        // TODO replace Objects.requireNonNull
+        this.key = Objects.requireNonNull(key);
+        this.backend = Objects.requireNonNull(backend);
+        this.recoveryStrategy = Objects.requireNonNull(recoveryStrategy);
+
         if (configurationSupplier == null) {
             throw BucketExceptions.nullConfigurationSupplier();
         }
-        if (initializeBucket) {
-            BucketConfiguration configuration = getConfiguration();
-            backend.execute(key, new CreateInitialStateCommand(configuration));
-        }
+        this.configurationSupplier = configurationSupplier;
     }
 
     @Override
@@ -135,15 +127,23 @@ public class BucketProxyImpl<K extends Serializable> extends AbstractBucket impl
     }
 
     @Override
-    public BucketProxy asLossAware(RecoveryStrategy recoveryStrategy) {
-        // TODO
-        return null;
+    public BucketProxy asDurable(RecoveryStrategy recoveryStrategy) {
+        if (recoveryStrategy == this.recoveryStrategy) {
+            return this;
+        }
+
+        if (recoveryStrategy == RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION) {
+            // just call something that does not change bucket state but provides guarantee that bucket will be persistent if it was not persisted yet
+            this.getAvailableTokens();
+        }
+
+        return new BucketProxyImpl<>(super.getListener(), key, configurationSupplier, backend, recoveryStrategy);
     }
 
     @Override
     public BucketProxy asOptimized(RequestOptimizer optimizer) {
-        // TODO
-        return null;
+        CommandExecutor<K> optimizedBackend = optimizer.optimize(backend);
+        return new BucketProxyImpl<>(super.getListener(), key, configurationSupplier, optimizedBackend, recoveryStrategy);
     }
 
 }
