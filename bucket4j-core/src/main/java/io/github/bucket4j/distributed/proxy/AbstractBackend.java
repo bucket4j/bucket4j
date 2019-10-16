@@ -9,38 +9,19 @@ import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.remote.commands.GetConfigurationCommand;
 
 import java.io.Serializable;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
 public abstract class AbstractBackend<K extends Serializable> implements Backend<K> {
 
-    @Override
-    public Bucket durableProxy(K key, Supplier<BucketConfiguration> configurationSupplier, RequestOptimizer optimizer, RecoveryStrategy recoveryStrategy) {
-        CommandExecutor commandExecutor = new CommandExecutor() {
-            @Override
-            public <T extends Serializable> CommandResult<T> execute(RemoteCommand<T> command) {
-                return AbstractBackend.this.execute(key, command);
-            }
-        };
-
-        return new BucketProxy(configurationSupplier, commandExecutor, recoveryStrategy);
-    }
+    private static final RecoveryStrategy DEFAULT_RECOVERY_STRATEGY = RecoveryStrategy.RECONSTRUCT;
+    private static final RequestOptimizer DEFAULT_REQUEST_OPTIMIZER = RequestOptimizer.NONE_OPTIMIZED;
 
     @Override
-    public AsyncBucket asyncDurableProxy(K key, Supplier<CompletableFuture<BucketConfiguration>> configurationSupplier, RequestOptimizer optimizer, RecoveryStrategy recoveryStrategy) {
-        if (isAsyncModeSupported()) {
-            throw new UnsupportedOperationException();
-        }
-
-        AsyncCommandExecutor commandExecutor = new AsyncCommandExecutor() {
-            @Override
-            public <T extends Serializable> CompletableFuture<CommandResult<T>> executeAsync(RemoteCommand<T> command) {
-                return AbstractBackend.this.executeAsync(key, command);
-            }
-        };
-
-        return new AsyncBucketProxy(commandExecutor, recoveryStrategy, configurationSupplier);
+    public RemoteBucketBuilder<K> builder() {
+        return new DefaultRemoteBucketBuilder();
     }
 
     @Override
@@ -65,6 +46,65 @@ public abstract class AbstractBackend<K extends Serializable> implements Backend
             }
             return Optional.of(result.getData());
         });
+    }
+
+    private class DefaultRemoteBucketBuilder implements RemoteBucketBuilder<K> {
+
+        private RecoveryStrategy recoveryStrategy = DEFAULT_RECOVERY_STRATEGY;
+        private RequestOptimizer requestOptimizer = DEFAULT_REQUEST_OPTIMIZER;
+
+        @Override
+        public RemoteBucketBuilder<K> withRecoveryStrategy(RecoveryStrategy recoveryStrategy) {
+            this.recoveryStrategy = Objects.requireNonNull(recoveryStrategy);
+            return this;
+        }
+
+        @Override
+        public RemoteBucketBuilder<K> withRequestOptimizer(RequestOptimizer requestOptimizer) {
+            this.requestOptimizer = Objects.requireNonNull(requestOptimizer);
+            return this;
+        }
+
+        @Override
+        public Bucket buildProxy(K key, BucketConfiguration configuration) {
+            return buildProxy(key, () -> configuration);
+        }
+
+        @Override
+        public Bucket buildProxy(K key, Supplier<BucketConfiguration> configurationSupplier) {
+            CommandExecutor commandExecutor = new CommandExecutor() {
+                @Override
+                public <T extends Serializable> CommandResult<T> execute(RemoteCommand<T> command) {
+                    return AbstractBackend.this.execute(key, command);
+                }
+            };
+            commandExecutor = requestOptimizer.optimize(commandExecutor);
+
+            return new BucketProxy(configurationSupplier, commandExecutor, recoveryStrategy);
+        }
+
+        @Override
+        public AsyncBucket buildAsyncProxy(K key, BucketConfiguration configuration) {
+            return buildAsyncProxy(key, () -> CompletableFuture.completedFuture(configuration));
+        }
+
+        @Override
+        public AsyncBucket buildAsyncProxy(K key, Supplier<CompletableFuture<BucketConfiguration>> configurationSupplier) {
+            if (isAsyncModeSupported()) {
+                throw new UnsupportedOperationException();
+            }
+
+            AsyncCommandExecutor commandExecutor = new AsyncCommandExecutor() {
+                @Override
+                public <T extends Serializable> CompletableFuture<CommandResult<T>> executeAsync(RemoteCommand<T> command) {
+                    return AbstractBackend.this.executeAsync(key, command);
+                }
+            };
+            commandExecutor = requestOptimizer.optimize(commandExecutor);
+
+            return new AsyncBucketProxy(commandExecutor, recoveryStrategy, configurationSupplier);
+        }
+
     }
 
     // TODO javadocs

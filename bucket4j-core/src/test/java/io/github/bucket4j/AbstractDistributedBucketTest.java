@@ -19,6 +19,7 @@ package io.github.bucket4j;
 
 import io.github.bucket4j.distributed.proxy.Backend;
 import io.github.bucket4j.distributed.proxy.BucketNotFoundException;
+import io.github.bucket4j.distributed.proxy.RemoteBucketBuilder;
 import io.github.bucket4j.distributed.proxy.builder.sync.RemoteBucketBuilder;
 import io.github.bucket4j.util.ConsumptionScenario;
 import org.junit.Test;
@@ -57,7 +58,9 @@ public abstract class AbstractDistributedBucketTest {
         Bucket bucket = backend.builder()
                 .addLimit(Bandwidth.simple(1_000, Duration.ofMinutes(1)))
                 .addLimit(Bandwidth.simple(200, Duration.ofSeconds(10)))
-                .build(key, RECONSTRUCT);
+                .build(key, BucketConfiguration.builder()
+
+                );
 
         assertTrue(bucket.tryConsume(1));
 

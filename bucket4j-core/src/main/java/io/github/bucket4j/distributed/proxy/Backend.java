@@ -47,45 +47,6 @@ import java.util.function.Supplier;
 public interface Backend<K extends Serializable> {
 
     /**
-     * TODO
-     *
-     * Describes whether or not this backend supports asynchronous mode.
-     *
-     * <p>If asynchronous mode is  not supported any attempt to call {@link #asAsync()} will fail with {@link UnsupportedOperationException}
-     *
-     * @return true if this extension supports asynchronous mode.
-     */
-    boolean isAsyncModeSupported();
-
-    /**
-     * TODO fix javadocs
-     *
-     * Provides light-weight proxy to bucket which actually stored outside current JVM.
-     * This method do not perform any hard work or network calls, it is not necessary to cache results of its invocation.
-     *
-     * @param key the unique identifier used to point to the bucket in external storage.
-     * @param configurationSupplier supplier for configuration which can be called to build bucket configuration,
-     *                                  if and only if first invocation of any method on proxy detects that bucket absents in remote storage,
-     *                                  in this case provide configuration will be used to instantiate and persist the missed bucket.
-     *
-     * @return proxy to bucket that can be actually stored outside current JVM.
-     */
-    default Bucket proxy(K key, Supplier<BucketConfiguration> configurationSupplier) {
-        return durableProxy(key, configurationSupplier, RequestOptimizer.NONE_OPTIMIZED, RecoveryStrategy.RECONSTRUCT);
-    }
-
-    /**
-     * TODO fix javadocs
-     *
-     * @param key
-     * @param configurationSupplier
-     * @param optimizer
-     * @param recoveryStrategy
-     * @return
-     */
-    Bucket durableProxy(K key, Supplier<BucketConfiguration> configurationSupplier, RequestOptimizer optimizer, RecoveryStrategy recoveryStrategy);
-
-    /**
      * TODO fix javadocs
      *
      * Constructs an instance of {@link BucketProxy} which state actually stored inside in-memory data-jvm,
@@ -109,20 +70,18 @@ public interface Backend<K extends Serializable> {
      *
      * @return new distributed bucket
      */
-    default AsyncBucket asyncProxy(K key, Supplier<CompletableFuture<BucketConfiguration>> asyncConfigurationSupplier) {
-        return asyncDurableProxy(key, asyncConfigurationSupplier, RequestOptimizer.NONE_OPTIMIZED, RecoveryStrategy.RECONSTRUCT);
-    }
+    RemoteBucketBuilder<K> builder();
 
     /**
-     * TODO fix javadocs
+     * TODO
      *
-     * @param key
-     * @param configurationSupplier
-     * @param optimizer
-     * @param recoveryStrategy
-     * @return
+     * Describes whether or not this backend supports asynchronous mode.
+     *
+     * <p>If asynchronous mode is  not supported any attempt to call {@link #asAsync()} will fail with {@link UnsupportedOperationException}
+     *
+     * @return true if this extension supports asynchronous mode.
      */
-    AsyncBucket asyncDurableProxy(K key, Supplier<CompletableFuture<BucketConfiguration>> configurationSupplier, RequestOptimizer optimizer, RecoveryStrategy recoveryStrategy);
+    boolean isAsyncModeSupported();
 
     /**
      * Locates configuration of bucket which actually stored outside current JVM.
