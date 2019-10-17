@@ -18,6 +18,7 @@
 package io.github.bucket4j.mock;
 
 import io.github.bucket4j.*;
+import io.github.bucket4j.distributed.AsyncBucket;
 import io.github.bucket4j.local.LocalBucketBuilder;
 import io.github.bucket4j.local.SynchronizationStrategy;
 import io.github.bucket4j.distributed.proxy.BucketProxy;
@@ -31,8 +32,12 @@ public enum BucketType {
 
     LOCAL_LOCK_FREE {
         @Override
-        public Bucket createBucket(AbstractBucketBuilder builder, TimeMeter timeMeter) {
-            return ((LocalBucketBuilder) builder)
+        public Bucket createBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
+            LocalBucketBuilder builder = Bucket.builder();
+            for (Bandwidth bandwidth : configuration.getBandwidths()) {
+                builder.addLimit(bandwidth);
+            }
+            return builder
                     .withCustomTimePrecision(timeMeter)
                     .build();
         }
@@ -40,8 +45,12 @@ public enum BucketType {
     },
     LOCAL_SYNCHRONIZED {
         @Override
-        public Bucket createBucket(AbstractBucketBuilder builder, TimeMeter timeMeter) {
-            return ((LocalBucketBuilder) builder)
+        public Bucket createBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
+            LocalBucketBuilder builder = Bucket.builder();
+            for (Bandwidth bandwidth : configuration.getBandwidths()) {
+                builder.addLimit(bandwidth);
+            }
+            return builder
                     .withCustomTimePrecision(timeMeter)
                     .withSynchronizationStrategy(SynchronizationStrategy.SYNCHRONIZED)
                     .build();
@@ -50,8 +59,12 @@ public enum BucketType {
     },
     LOCAL_UNSAFE {
         @Override
-        public Bucket createBucket(AbstractBucketBuilder builder, TimeMeter timeMeter) {
-            return ((LocalBucketBuilder) builder)
+        public Bucket createBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
+            LocalBucketBuilder builder = Bucket.builder();
+            for (Bandwidth bandwidth : configuration.getBandwidths()) {
+                builder.addLimit(bandwidth);
+            }
+            return builder
                     .withCustomTimePrecision(timeMeter)
                     .withSynchronizationStrategy(SynchronizationStrategy.NONE)
                     .build();
@@ -59,39 +72,56 @@ public enum BucketType {
     },
     GRID {
         @Override
-        public Bucket createBucket(AbstractBucketBuilder builder, TimeMeter timeMeter) {
-            BucketConfiguration configuration = PackageAcessor.buildConfiguration(builder);
+        public Bucket createBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
             GridBackendMock backend = new GridBackendMock(timeMeter);
-            return BucketProxy.createInitializedBucket(42, configuration, backend, THROW_BUCKET_NOT_FOUND_EXCEPTION);
+            return backend.builder()
+                    .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
+                    .buildProxy(42, configuration);
         }
 
+        @Override
+        public AsyncBucket createAsyncBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
+            GridBackendMock backend = new GridBackendMock(timeMeter);
+            return backend.builder()
+                    .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
+                    .buildAsyncProxy(42, configuration);
+        }
     },
     COMPARE_AND_SWAP {
         @Override
-        public Bucket createBucket(AbstractBucketBuilder builder, TimeMeter timeMeter) {
-            BucketConfiguration configuration = PackageAcessor.buildConfiguration(builder);
+        public Bucket createBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
             CompareAndSwapBasedBackendMock backend = new CompareAndSwapBasedBackendMock(timeMeter);
-            return BucketProxy.createInitializedBucket(42, configuration, backend, THROW_BUCKET_NOT_FOUND_EXCEPTION);
+            return backend.builder()
+                    .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
+                    .buildProxy(42, configuration);
         }
     },
     SELECT_FOR_UPDATE {
         @Override
-        public Bucket createBucket(AbstractBucketBuilder builder, TimeMeter timeMeter) {
-            BucketConfiguration configuration = PackageAcessor.buildConfiguration(builder);
+        public Bucket createBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
             SelectForUpdateBasedBackendMock backend = new SelectForUpdateBasedBackendMock(timeMeter);
-            return BucketProxy.createInitializedBucket(42, configuration, backend, THROW_BUCKET_NOT_FOUND_EXCEPTION);
+            return backend.builder()
+                    .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
+                    .buildProxy(42, configuration);
         }
-    }
-    ;
+    };
 
     public static List<BucketType> withAsyncSupport() {
-        return Arrays.asList(LOCAL_LOCK_FREE, LOCAL_SYNCHRONIZED, LOCAL_UNSAFE, GRID);
+        return Arrays.asList(GRID);
     }
 
-    abstract public Bucket createBucket(AbstractBucketBuilder builder, TimeMeter timeMeter);
+    abstract public Bucket createBucket(BucketConfiguration configuration, TimeMeter timeMeter);
 
-    public Bucket createBucket(AbstractBucketBuilder builder) {
-        return createBucket(builder, TimeMeter.SYSTEM_MILLISECONDS);
+    public Bucket createBucket(BucketConfiguration configuration) {
+        return createBucket(configuration, TimeMeter.SYSTEM_MILLISECONDS);
+    }
+
+    public AsyncBucket createAsyncBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
+        throw new UnsupportedOperationException();
+    }
+
+    public AsyncBucket createAsyncBucket(BucketConfiguration configuration) {
+        return createAsyncBucket(configuration, TimeMeter.SYSTEM_MILLISECONDS);
     }
 
 }

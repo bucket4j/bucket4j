@@ -19,8 +19,8 @@ package io.github.bucket4j.mock;
 
 
 import io.github.bucket4j.*;
+import io.github.bucket4j.distributed.proxy.AbstractBackend;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
-import io.github.bucket4j.distributed.proxy.Backend;
 import io.github.bucket4j.distributed.remote.*;
 
 import java.io.*;
@@ -29,7 +29,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
-public class GridBackendMock<K extends Serializable> implements Backend<K> {
+public class GridBackendMock<K extends Serializable> extends AbstractBackend<K> {
 
     private final TimeMeter timeMeter;
     private Map<K, RemoteBucketState> stateMap = new HashMap<>();
