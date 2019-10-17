@@ -19,7 +19,7 @@ package io.github.bucket4j;
 
 import static io.github.bucket4j.LimitChecker.*;
 
-public abstract class AbstractBucket implements Bucket {
+public abstract class AbstractBucket implements Bucket, BlockingBucket {
 
     protected abstract long consumeAsMuchAsPossibleImpl(long limit);
 
@@ -43,6 +43,11 @@ public abstract class AbstractBucket implements Bucket {
         }
 
         this.listener = listener;
+    }
+
+    @Override
+    public BlockingBucket asBlocking() {
+        return this;
     }
 
     @Override

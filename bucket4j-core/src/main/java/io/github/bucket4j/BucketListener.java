@@ -17,6 +17,8 @@
 
 package io.github.bucket4j;
 
+import io.github.bucket4j.distributed.AsyncScheduledBucket;
+
 /**
  * Interface for listening bucket related events. The typical use-cases of this interface are logging and monitoring.
  * The bucket can be decorated by listener via {@link Bucket#toListenable(BucketListener)} method.

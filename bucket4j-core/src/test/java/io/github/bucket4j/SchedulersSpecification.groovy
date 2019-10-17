@@ -17,8 +17,8 @@
 
 package io.github.bucket4j
 
+import io.github.bucket4j.distributed.AsyncBucket
 import io.github.bucket4j.mock.*
-import io.github.bucket4j.distributed.proxy.BucketProxy
 import spock.lang.Specification
 import spock.lang.Timeout
 import spock.lang.Unroll
@@ -35,96 +35,57 @@ class SchedulersSpecification extends Specification {
 
     @Timeout(value = 2, unit = TimeUnit.SECONDS)
     @Unroll
-    def "#n Should sleep #requiredSleep when trying to consuming #toConsume tokens from Bucket #builder"(
-            int n, long requiredSleep, long toConsume, AbstractBucketBuilder builder) {
+    def "#n Should sleep #requiredSleep when trying to consuming #toConsume tokens from Bucket #configuration"(
+            int n, long requiredSleep, long toConsume, BucketConfiguration configuration) {
         expect:
-        for (BucketType type : BucketType.values()) {
-            for (boolean sync : [true, false]) {
-                for (boolean uniterruptible : [true, false]) {
-                    for (boolean limitAsDuration: [true, false]) {
-                        TimeMeterMock meter = new TimeMeterMock(0)
-                        Bucket bucket = type.createBucket(builder, meter)
-                        if (sync || !bucket.isAsyncModeSupported()) {
-                            BlockingStrategyMock sleepStrategy = new BlockingStrategyMock(meter)
-                            if (uniterruptible) {
-                                if (limitAsDuration) {
-                                    bucket.asBlocking().tryConsumeUninterruptibly(toConsume, Duration.ofHours(1), sleepStrategy)
-                                } else {
-                                    bucket.asBlocking().tryConsumeUninterruptibly(toConsume, TimeUnit.HOURS.toNanos(1), sleepStrategy)
-                                }
-                            } else {
-                                if (limitAsDuration) {
-                                    bucket.asBlocking().tryConsume(toConsume, Duration.ofHours(1), sleepStrategy)
-                                } else {
-                                    bucket.asBlocking().tryConsume(toConsume, TimeUnit.HOURS.toNanos(1), sleepStrategy)
-                                }
-                            }
-                            assert sleepStrategy.parkedNanos == requiredSleep
-                        } else {
-                            SchedulerMock scheduler = new SchedulerMock()
-                            bucket.asAsyncScheduler().tryConsume(toConsume, TimeUnit.HOURS.toNanos(1), scheduler).get()
-                            assert scheduler.acummulatedDelayNanos == requiredSleep
-                        }
-                    }
+        for (BucketType type : BucketType.withAsyncSupport()) {
+            for (boolean limitAsDuration: [true, false]) {
+                TimeMeterMock meter = new TimeMeterMock(0)
+                AsyncBucket bucket = type.createAsyncBucket(configuration, meter)
+                SchedulerMock scheduler = new SchedulerMock()
+
+                if (limitAsDuration) {
+                    bucket.asScheduler().tryConsume(toConsume, TimeUnit.HOURS.toNanos(1), scheduler).get()
+                } else {
+                    bucket.asScheduler().tryConsume(toConsume, Duration.ofHours(1), scheduler).get()
                 }
+                assert scheduler.acummulatedDelayNanos == requiredSleep
             }
         }
         where:
-        n | requiredSleep | toConsume | builder
-        1 |      10       |     1     | Bucket4j.builder().addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(0))
-        2 |       0       |     1     | Bucket4j.builder().addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(1))
-        3 |    9990       |  1000     | Bucket4j.builder().addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(1))
+        n | requiredSleep | toConsume | configuration
+        1 |      10       |     1     | BucketConfiguration.builder().addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(0)).build()
+        2 |       0       |     1     | BucketConfiguration.builder().addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(1)).build()
+        3 |    9990       |  1000     | BucketConfiguration.builder().addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(1)).build()
     }
 
     @Timeout(value = 2, unit = TimeUnit.SECONDS)
     @Unroll
-    def "#n Should sleep #requiredSleep and return #requiredResult when trying to synchronous consume #toConsume tokens with limit #sleepLimit from Bucket #builder"(
-            int n, long requiredSleep, boolean requiredResult, long toConsume, long sleepLimit, AbstractBucketBuilder builder) {
+    def "#n Should sleep #requiredSleep and return #requiredResult when trying to synchronous consume #toConsume tokens with limit #sleepLimit from Bucket #configuration"(
+            int n, long requiredSleep, boolean requiredResult, long toConsume, long sleepLimit, BucketConfiguration configuration) {
         expect:
-            for (BucketType type : BucketType.values()) {
-                for (boolean sync : [true, false]) {
-                    for (boolean uniterruptible : [true, false]) {
-                        for (boolean limitAsDuration: [true, false]) {
-                            TimeMeterMock meter = new TimeMeterMock(0)
-                            Bucket bucket = type.createBucket(builder, meter)
-                            if (sync || !bucket.isAsyncModeSupported()) {
-                                BlockingStrategyMock sleepStrategy = new BlockingStrategyMock(meter)
-                                if (uniterruptible) {
-                                    if (limitAsDuration) {
-                                        assert bucket.asBlocking().tryConsumeUninterruptibly(toConsume, Duration.ofNanos(sleepLimit), sleepStrategy) == requiredResult
-                                    } else {
-                                        assert bucket.asBlocking().tryConsumeUninterruptibly(toConsume, sleepLimit, sleepStrategy) == requiredResult
-                                    }
-                                } else {
-                                    if (limitAsDuration) {
-                                        assert bucket.asBlocking().tryConsume(toConsume, Duration.ofNanos(sleepLimit), sleepStrategy) == requiredResult
-                                    } else {
-                                        assert bucket.asBlocking().tryConsume(toConsume, sleepLimit, sleepStrategy) == requiredResult
-                                    }
-                                }
-                                assert sleepStrategy.parkedNanos == requiredSleep
-                            } else {
-                                SchedulerMock scheduler = new SchedulerMock()
-                                if (limitAsDuration) {
-                                    assert bucket.asAsyncScheduler().tryConsume(toConsume, Duration.ofNanos(sleepLimit), scheduler).get() == requiredResult
-                                } else {
-                                    assert bucket.asAsyncScheduler().tryConsume(toConsume, sleepLimit, scheduler).get() == requiredResult
-                                }
-                                assert scheduler.acummulatedDelayNanos == requiredSleep
-                            }
-                        }
+            for (BucketType type : BucketType.withAsyncSupport()) {
+                for (boolean limitAsDuration: [true, false]) {
+                    TimeMeterMock meter = new TimeMeterMock(0)
+                    AsyncBucket bucket = type.createAsyncBucket(configuration, meter)
+                    SchedulerMock scheduler = new SchedulerMock()
+                    if (limitAsDuration) {
+                        assert bucket.asScheduler().tryConsume(toConsume, Duration.ofNanos(sleepLimit), scheduler).get() == requiredResult
+                    } else {
+                        assert bucket.asScheduler().tryConsume(toConsume, sleepLimit, scheduler).get() == requiredResult
                     }
+                    assert scheduler.acummulatedDelayNanos == requiredSleep
                 }
             }
         where:
-            n | requiredSleep | requiredResult | toConsume | sleepLimit |  builder
-            1 |      10       |     true       |     1     |     11     |  Bucket4j.builder().addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(0))
-            2 |      10       |     true       |     1     |     11     |  Bucket4j.builder().addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(0))
-            3 |       0       |     true       |     1     |     11     |  Bucket4j.builder().addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(1))
-            4 |       0       |     false      |   1000    |     11     |  Bucket4j.builder().addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(1))
-            5 |      40       |     true       |     5     |     40     |  Bucket4j.builder().addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(1))
-            6 |      40       |     true       |     5     |     41     |  Bucket4j.builder().addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(1))
-            6 |       0       |     false      |     5     |     39     |  Bucket4j.builder().addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(1))
+            n | requiredSleep | requiredResult | toConsume | sleepLimit |  configuration
+            1 |      10       |     true       |     1     |     11     |  BucketConfiguration.builder().addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(0)).build()
+            2 |      10       |     true       |     1     |     11     |  BucketConfiguration.builder().addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(0)).build()
+            3 |       0       |     true       |     1     |     11     |  BucketConfiguration.builder().addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(1)).build()
+            4 |       0       |     false      |   1000    |     11     |  BucketConfiguration.builder().addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(1)).build()
+            5 |      40       |     true       |     5     |     40     |  BucketConfiguration.builder().addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(1)).build()
+            6 |      40       |     true       |     5     |     41     |  BucketConfiguration.builder().addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(1)).build()
+            6 |       0       |     false      |     5     |     39     |  BucketConfiguration.builder().addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(1)).build()
     }
 
     @Timeout(value = 2, unit = TimeUnit.SECONDS)
@@ -159,98 +120,19 @@ class SchedulersSpecification extends Specification {
     @Timeout(value = 2, unit = TimeUnit.SECONDS)
     def "should complete future exceptionally if scheduler failed to schedule the task"() {
         setup:
-            BucketConfiguration configuration = Bucket4j.configurationBuilder()
-                .addLimit(Bandwidth.simple(1, Duration.ofNanos(1)))
-                .build()
+            BucketConfiguration configuration = BucketConfiguration.builder()
+                    .addLimit(Bandwidth.simple(1, Duration.ofNanos(1)))
+                    .build()
             GridBackendMock mockProxy = new GridBackendMock(SYSTEM_MILLISECONDS)
             SchedulerMock schedulerMock = new SchedulerMock()
-            Bucket bucket = BucketProxy.createInitializedBucket("66", configuration, mockProxy, THROW_BUCKET_NOT_FOUND_EXCEPTION)
+            AsyncBucket bucket = mockProxy.builder()
+                    .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
+                    .buildAsyncProxy("66", configuration)
         when:
             schedulerMock.setException(new RuntimeException())
-            CompletableFuture<Boolean> future = bucket.asAsyncScheduler().tryConsume(10, Duration.ofNanos(100000), schedulerMock)
+            CompletableFuture<Boolean> future = bucket.asScheduler().tryConsume(10, Duration.ofNanos(100000), schedulerMock)
         then:
             future.isCompletedExceptionally()
-    }
-
-    @Unroll
-    def "#type test listener for blocking consume"(BucketType type) {
-        setup:
-            TimeMeterMock clock = new TimeMeterMock()
-            BlockingStrategyMock blocker = new BlockingStrategyMock(clock)
-
-            Bucket bucket = type.createBucket(Bucket4j.builder()
-                    .withCustomTimePrecision(clock)
-                    .addLimit(Bandwidth.simple(10, Duration.ofSeconds(1))),
-                clock)
-
-        when:
-            bucket.asBlocking().consume(9, blocker)
-        then:
-            blocker.parkedNanos == 0
-
-        when:
-            bucket.asBlocking().consume(2, blocker)
-        then:
-            blocker.parkedNanos == 100_000_000
-
-        when:
-            Thread.currentThread().interrupt()
-            bucket.asBlocking().consume(1, blocker)
-        then:
-            thrown(InterruptedException)
-            !Thread.interrupted()
-            blocker.parkedNanos == 100_000_000
-            blocker.atemptToParkNanos == 200_000_000
-
-        when:
-            bucket.asBlocking().consume(Long.MAX_VALUE, blocker)
-        then:
-            thrown(IllegalStateException)
-            blocker.parkedNanos == 100_000_000
-
-        where:
-            type << BucketType.values()
-    }
-
-    @Unroll
-    def "#type test listener for blocking consumeUninterruptibly"(BucketType type) {
-        setup:
-            TimeMeterMock clock = new TimeMeterMock()
-            BlockingStrategyMock blocker = new BlockingStrategyMock(clock)
-
-            Bucket bucket = type.createBucket(
-                Bucket4j.builder()
-                    .withCustomTimePrecision(clock)
-                    .addLimit(
-                        Bandwidth.simple(10, Duration.ofSeconds(1))
-                    )
-            )
-
-        when:
-            bucket.asBlocking().consumeUninterruptibly(9, blocker)
-        then:
-            blocker.parkedNanos == 0
-
-        when:
-            bucket.asBlocking().consumeUninterruptibly(2, blocker)
-        then:
-            blocker.parkedNanos == 100_000_000
-
-        when:
-            Thread.currentThread().interrupt()
-            bucket.asBlocking().consumeUninterruptibly(1, blocker)
-        then:
-            Thread.interrupted()
-            blocker.parkedNanos == 200_000_000
-
-        when:
-            bucket.asBlocking().consumeUninterruptibly(Long.MAX_VALUE, blocker)
-        then:
-            thrown(IllegalStateException)
-            blocker.parkedNanos == 200_000_000
-
-        where:
-            type << BucketType.values()
     }
 
     @Unroll
@@ -259,23 +141,23 @@ class SchedulersSpecification extends Specification {
             TimeMeterMock clock = new TimeMeterMock()
             SchedulerMock scheduler = new SchedulerMock(clock)
 
-            Bucket bucket = type.createBucket(Bucket4j.builder()
-                        .withCustomTimePrecision(clock)
-                        .addLimit(Bandwidth.simple(10, Duration.ofSeconds(1))),
-                    clock)
+            def configuration = BucketConfiguration.builder()
+                    .addLimit(Bandwidth.simple(10, Duration.ofSeconds(1)))
+                    .build()
+            AsyncBucket bucket = type.createAsyncBucket(configuration, clock)
 
         when:
-            bucket.asAsyncScheduler().consume(9, scheduler).get()
+            bucket.asScheduler().consume(9, scheduler).get()
         then:
             scheduler.acummulatedDelayNanos == 0
 
         when:
-            bucket.asAsyncScheduler().consume(2, scheduler).get()
+            bucket.asScheduler().consume(2, scheduler).get()
         then:
             scheduler.acummulatedDelayNanos == 100_000_000
 
         when:
-            bucket.asAsyncScheduler().consume(Long.MAX_VALUE, scheduler).get()
+            bucket.asScheduler().consume(Long.MAX_VALUE, scheduler).get()
         then:
             ExecutionException ex = thrown(ExecutionException)
             ex.getCause().class == IllegalStateException
@@ -283,6 +165,5 @@ class SchedulersSpecification extends Specification {
         where:
             type << BucketType.withAsyncSupport()
     }
-
 
 }

@@ -19,6 +19,7 @@ package io.github.bucket4j.distributed.proxy;
 
 import io.github.bucket4j.*;
 import io.github.bucket4j.distributed.AsyncBucket;
+import io.github.bucket4j.distributed.AsyncScheduledBucket;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.remote.commands.*;
@@ -33,7 +34,7 @@ import java.util.function.Supplier;
 
 import static io.github.bucket4j.LimitChecker.*;
 
-public class AsyncBucketProxy implements AsyncBucket {
+public class AsyncBucketProxy implements AsyncBucket, AsyncScheduledBucket {
 
     private final AsyncCommandExecutor commandExecutor;
     private final RecoveryStrategy recoveryStrategy;
@@ -61,6 +62,11 @@ public class AsyncBucketProxy implements AsyncBucket {
         }
 
         this.listener = listener;
+    }
+
+    @Override
+    public AsyncScheduledBucket asScheduler() {
+        return this;
     }
 
     @Override

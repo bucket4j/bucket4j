@@ -127,7 +127,7 @@ public abstract class AbstractDistributedBucketTest {
 
     @Test
     public void testTryConsumeWithLimit() throws Exception {
-        Function<Bucket, Long> action = bucket -> bucket.tryConsumeUninterruptibly(1, TimeUnit.MILLISECONDS.toNanos(50), UninterruptibleBlockingStrategy.PARKING) ? 1L : 0L;
+        Function<Bucket, Long> action = bucket -> bucket.asBlocking().tryConsumeUninterruptibly(1, TimeUnit.MILLISECONDS.toNanos(50), UninterruptibleBlockingStrategy.PARKING) ? 1L : 0L;
         Supplier<Bucket> bucketSupplier = () -> backend.builder()
                 .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
                 .buildProxy(key, configurationForLongRunningTests);
@@ -164,7 +164,7 @@ public abstract class AbstractDistributedBucketTest {
         ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
         Function<AsyncBucket, Long> action = bucket -> {
             try {
-                return bucket.tryConsume(1, TimeUnit.MILLISECONDS.toNanos(50), scheduler).get() ? 1L :0L;
+                return bucket.asScheduler().tryConsume(1, TimeUnit.MILLISECONDS.toNanos(50), scheduler).get() ? 1L :0L;
             } catch (InterruptedException | ExecutionException e) {
                 throw new RuntimeException(e);
             }
