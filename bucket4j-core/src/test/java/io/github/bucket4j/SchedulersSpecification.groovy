@@ -92,7 +92,7 @@ class SchedulersSpecification extends Specification {
     def "Should throw InterruptedException when thread interrupted during waiting for token refill"() {
         expect:
         for (TimeMeter meter : [SYSTEM_MILLISECONDS, TimeMeter.SYSTEM_NANOTIME]) {
-            Bucket bucket = Bucket4j.builder()
+            Bucket bucket = Bucket.builder()
                     .withCustomTimePrecision(meter)
                     .addLimit(Bandwidth.simple(1, Duration.ofMinutes(1)).withInitialTokens(0))
                     .build()

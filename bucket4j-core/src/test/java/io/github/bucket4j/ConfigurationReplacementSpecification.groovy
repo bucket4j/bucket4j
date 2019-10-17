@@ -17,6 +17,7 @@
 
 package io.github.bucket4j
 
+import io.github.bucket4j.distributed.AsyncBucket
 import io.github.bucket4j.mock.BucketType
 import io.github.bucket4j.mock.TimeMeterMock
 import spock.lang.Specification
@@ -32,10 +33,11 @@ class ConfigurationReplacementSpecification extends Specification {
     @Unroll
     def "#bucketType should prevent increasing count of bandwidths"(BucketType bucketType) {
         setup:
-            Bucket bucket = bucketType.createBucket(Bucket4j.builder()
+            BucketConfiguration configuration = BucketConfiguration.builder()
                     .addLimit(Bandwidth.simple(10, Duration.ofMinutes(100)))
-            )
-            BucketConfiguration newConfiguration = Bucket4j.configurationBuilder()
+                    .build()
+            Bucket bucket = bucketType.createBucket(configuration)
+            BucketConfiguration newConfiguration = BucketConfiguration.builder()
                     .addLimit(Bandwidth.simple(100, Duration.ofMinutes(1)))
                     .addLimit(Bandwidth.simple(1000, Duration.ofHours(1)))
                     .build()
@@ -54,21 +56,22 @@ class ConfigurationReplacementSpecification extends Specification {
     @Unroll
     def "#bucketType should prevent increasing count of bandwidths when replacing configuration async"(BucketType bucketType) {
         setup:
-            Bucket bucket = bucketType.createBucket(Bucket4j.builder()
+            BucketConfiguration configuration = BucketConfiguration.builder()
                     .addLimit(Bandwidth.simple(10, Duration.ofMinutes(100)))
-            )
-            BucketConfiguration newConfiguration = Bucket4j.configurationBuilder()
+                    .build()
+            AsyncBucket bucket = bucketType.createAsyncBucket(configuration)
+            BucketConfiguration newConfiguration = BucketConfiguration.builder()
                 .addLimit(Bandwidth.simple(100, Duration.ofMinutes(1)))
                 .addLimit(Bandwidth.simple(1000, Duration.ofHours(1)))
                 .build()
 
         when:
-            bucket.asAsync().replaceConfiguration(newConfiguration).get()
+            bucket.replaceConfiguration(newConfiguration).get()
         then:
             ExecutionException executionException = thrown(ExecutionException)
             IncompatibleConfigurationException asyncException = executionException.getCause()
             isConfigEquals(asyncException.newConfiguration, newConfiguration)
-            isConfigEquals(asyncException.previousConfiguration, bucket.getConfiguration())
+            isConfigEquals(asyncException.previousConfiguration, configuration)
 
         where:
             bucketType << BucketType.withAsyncSupport()
@@ -77,11 +80,13 @@ class ConfigurationReplacementSpecification extends Specification {
     @Unroll
     def "#bucketType should prevent decreasing count of bandwidths"(BucketType bucketType) {
         setup:
-            Bucket bucket = bucketType.createBucket(Bucket4j.builder()
+            BucketConfiguration configuration = BucketConfiguration.builder()
                     .addLimit(Bandwidth.simple(100, Duration.ofMinutes(1)))
                     .addLimit(Bandwidth.simple(1000, Duration.ofHours(1)))
-            )
-            BucketConfiguration newConfiguration = Bucket4j.configurationBuilder()
+                    .build()
+
+            Bucket bucket = bucketType.createBucket(configuration)
+            BucketConfiguration newConfiguration = BucketConfiguration.builder()
                     .addLimit(Bandwidth.simple(10, Duration.ofMinutes(100)))
                     .build()
 
@@ -90,7 +95,7 @@ class ConfigurationReplacementSpecification extends Specification {
         then:
             IncompatibleConfigurationException ex = thrown(IncompatibleConfigurationException)
             isConfigEquals(ex.newConfiguration, newConfiguration)
-            isConfigEquals(ex.previousConfiguration, bucket.getConfiguration())
+            isConfigEquals(ex.previousConfiguration, configuration)
 
         where:
             bucketType << BucketType.values()
@@ -99,21 +104,22 @@ class ConfigurationReplacementSpecification extends Specification {
     @Unroll
     def "#bucketType should prevent decreasing count of bandwidths when replacing configuration async"(BucketType bucketType) {
         setup:
-            Bucket bucket = bucketType.createBucket(Bucket4j.builder()
+            BucketConfiguration configuration = BucketConfiguration.builder()
                     .addLimit(Bandwidth.simple(100, Duration.ofMinutes(1)))
                     .addLimit(Bandwidth.simple(1000, Duration.ofHours(1)))
-            )
-            BucketConfiguration newConfiguration = Bucket4j.configurationBuilder()
+                    .build()
+            AsyncBucket bucket = bucketType.createAsyncBucket(configuration)
+            BucketConfiguration newConfiguration = BucketConfiguration.builder()
                     .addLimit(Bandwidth.simple(10, Duration.ofMinutes(100)))
                     .build()
 
         when:
-            bucket.asAsync().replaceConfiguration(newConfiguration).get()
+            bucket.replaceConfiguration(newConfiguration).get()
         then:
             ExecutionException executionException = thrown(ExecutionException)
             IncompatibleConfigurationException asyncException = executionException.getCause()
             isConfigEquals(asyncException.newConfiguration, newConfiguration)
-            isConfigEquals(asyncException.previousConfiguration, bucket.getConfiguration())
+            isConfigEquals(asyncException.previousConfiguration, configuration)
         where:
             bucketType << BucketType.withAsyncSupport()
     }
@@ -123,20 +129,23 @@ class ConfigurationReplacementSpecification extends Specification {
         expect:
             for (boolean sync : [true, false]) {
                 TimeMeterMock clock = new TimeMeterMock(0)
-                Bucket bucket = bucketType.createBucket(Bucket4j.builder()
+                def configuration = BucketConfiguration.builder()
                         .addLimit(Bandwidth.simple(100, Duration.ofNanos(100)).withInitialTokens(0))
-                        .withCustomTimePrecision(clock)
-                )
-                clock.addTime(10)
-                BucketConfiguration newConfiguration = Bucket4j.configurationBuilder()
+                        .build()
+                BucketConfiguration newConfiguration = BucketConfiguration.builder()
                         .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)))
                         .build()
-                if (sync || !bucket.isAsyncModeSupported()) {
+                if (sync || !bucketType.isAsyncModeSupported()) {
+                    Bucket bucket = bucketType.createBucket(configuration, clock)
+                    clock.addTime(10)
                     bucket.replaceConfiguration(newConfiguration)
+                    bucket.getAvailableTokens() == 10
                 } else {
-                    bucket.asAsync().replaceConfiguration(newConfiguration).get()
+                    AsyncBucket bucket = bucketType.createAsyncBucket(configuration, clock)
+                    clock.addTime(10)
+                    bucket.replaceConfiguration(newConfiguration).get()
+                    bucket.getAvailableTokens().get() == 10
                 }
-                bucket.getAvailableTokens() == 10
             }
         where:
             bucketType << BucketType.values()
@@ -147,19 +156,21 @@ class ConfigurationReplacementSpecification extends Specification {
         expect:
         for (boolean sync : [true, false]) {
             TimeMeterMock clock = new TimeMeterMock(0)
-            Bucket bucket = bucketType.createBucket(Bucket4j.builder()
-                    .addLimit(Bandwidth.classic (500, Refill.greedy(100, Duration.ofNanos(100)) ))
-                    .withCustomTimePrecision(clock)
-            )
-            BucketConfiguration newConfiguration = Bucket4j.configurationBuilder()
+            BucketConfiguration configuration = BucketConfiguration.builder()
+                    .addLimit(Bandwidth.classic(500, Refill.greedy(100, Duration.ofNanos(100))))
+                    .build()
+            BucketConfiguration newConfiguration = BucketConfiguration.builder()
                     .addLimit(Bandwidth.classic (200, Refill.greedy(100, Duration.ofNanos(100)) ))
                     .build()
-            if (sync || !bucket.isAsyncModeSupported()) {
+            if (sync || !bucketType.isAsyncModeSupported()) {
+                Bucket bucket = bucketType.createBucket(configuration, clock)
                 bucket.replaceConfiguration(newConfiguration)
+                bucket.getAvailableTokens() == 200
             } else {
-                bucket.asAsync().replaceConfiguration(newConfiguration).get()
+                AsyncBucket bucket = bucketType.createAsyncBucket(configuration, clock)
+                bucket.replaceConfiguration(newConfiguration).get()
+                bucket.getAvailableTokens().get() == 200
             }
-            bucket.getAvailableTokens() == 200
         }
         where:
             bucketType << BucketType.values()
@@ -170,20 +181,23 @@ class ConfigurationReplacementSpecification extends Specification {
         expect:
         for (boolean sync : [true, false]) {
             TimeMeterMock clock = new TimeMeterMock(0)
-            Bucket bucket = bucketType.createBucket(Bucket4j.builder()
+            def configuration = BucketConfiguration.builder()
                     .addLimit(Bandwidth.simple(100, Duration.ofNanos(100)).withInitialTokens(0))
-                    .withCustomTimePrecision(clock)
-            )
-            BucketConfiguration newConfiguration = Bucket4j.configurationBuilder()
+                    .build()
+            BucketConfiguration newConfiguration = BucketConfiguration.builder()
                     .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)))
                     .build()
-            if (sync || !bucket.isAsyncModeSupported()) {
+            if (sync || !bucketType.isAsyncModeSupported()) {
+                Bucket bucket = bucketType.createBucket(configuration, clock)
                 bucket.replaceConfiguration(newConfiguration)
+                clock.addTime(10)
+                bucket.getAvailableTokens() == 1
             } else {
-                bucket.asAsync().replaceConfiguration(newConfiguration).get()
+                AsyncBucket bucket = bucketType.createAsyncBucket(configuration, clock)
+                bucket.replaceConfiguration(newConfiguration).get()
+                clock.addTime(10)
+                bucket.getAvailableTokens().get() == 1
             }
-            clock.addTime(10)
-            bucket.getAvailableTokens() == 1
         }
         where:
             bucketType << BucketType.values()

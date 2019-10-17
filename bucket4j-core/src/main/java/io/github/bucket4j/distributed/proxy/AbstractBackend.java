@@ -67,11 +67,18 @@ public abstract class AbstractBackend<K extends Serializable> implements Backend
 
         @Override
         public Bucket buildProxy(K key, BucketConfiguration configuration) {
+            if (configuration == null) {
+                throw BucketExceptions.nullConfiguration();
+            }
             return buildProxy(key, () -> configuration);
         }
 
         @Override
         public Bucket buildProxy(K key, Supplier<BucketConfiguration> configurationSupplier) {
+            if (configurationSupplier == null) {
+                throw BucketExceptions.nullConfigurationSupplier();
+            }
+
             CommandExecutor commandExecutor = new CommandExecutor() {
                 @Override
                 public <T extends Serializable> CommandResult<T> execute(RemoteCommand<T> command) {
@@ -85,13 +92,20 @@ public abstract class AbstractBackend<K extends Serializable> implements Backend
 
         @Override
         public AsyncBucket buildAsyncProxy(K key, BucketConfiguration configuration) {
+            if (configuration == null) {
+                throw BucketExceptions.nullConfiguration();
+            }
             return buildAsyncProxy(key, () -> CompletableFuture.completedFuture(configuration));
         }
 
         @Override
         public AsyncBucket buildAsyncProxy(K key, Supplier<CompletableFuture<BucketConfiguration>> configurationSupplier) {
-            if (isAsyncModeSupported()) {
+            if (!isAsyncModeSupported()) {
                 throw new UnsupportedOperationException();
+            }
+
+            if (configurationSupplier == null) {
+                throw BucketExceptions.nullConfigurationSupplier();
             }
 
             AsyncCommandExecutor commandExecutor = new AsyncCommandExecutor() {

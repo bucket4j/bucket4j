@@ -30,7 +30,7 @@ import java.time.Duration;
 @State(Scope.Benchmark)
 public class LocalUnsafeState {
 
-    public final Bucket bucket = Bucket4j.builder()
+    public final Bucket bucket = Bucket.builder()
             .withMillisecondPrecision()
             .addLimit(
                     Bandwidth.simple(Long.MAX_VALUE / 2, Duration.ofNanos(Long.MAX_VALUE / 2))
@@ -39,7 +39,7 @@ public class LocalUnsafeState {
             .build();
 
 
-    public final Bucket bucketWithoutRefill = Bucket4j.builder()
+    public final Bucket bucketWithoutRefill = Bucket.builder()
             .withMillisecondPrecision()
             .withCustomTimePrecision(new TimeMeter() {
                 @Override

@@ -41,7 +41,7 @@ class IntervallyAlignedRefillSpecification extends Specification {
             Bandwidth bandwidth = Bandwidth.classic(capacity, refill)
             TimeMeterMock mockTimer = new TimeMeterMock(currentTimeMillis * 1_000_000)
 
-            Bucket bucket = Bucket4j.builder()
+            Bucket bucket = Bucket.builder()
                     .withCustomTimePrecision(mockTimer)
                     .addLimit(bandwidth)
                     .withMath(mathType)
@@ -87,7 +87,7 @@ class IntervallyAlignedRefillSpecification extends Specification {
             TimeMeterMock mockTimer = new TimeMeterMock()
             mockTimer.setCurrentTimeSeconds(80)
 
-            Bucket bucket = Bucket4j.builder()
+            Bucket bucket = Bucket.builder()
                 .withCustomTimePrecision(mockTimer)
                 .addLimit(bandwidth)
                 .withMath(mathType)
@@ -147,7 +147,7 @@ class IntervallyAlignedRefillSpecification extends Specification {
             TimeMeterMock mockTimer = new TimeMeterMock()
             mockTimer.setCurrentTimeSeconds(80)
 
-            Bucket bucket = Bucket4j.builder()
+            Bucket bucket = Bucket.builder()
                     .withCustomTimePrecision(mockTimer)
                     .addLimit(bandwidth)
                     .withMath(mathType)
@@ -200,7 +200,7 @@ class IntervallyAlignedRefillSpecification extends Specification {
             TimeMeterMock timeMeter = new TimeMeterMock(TimeUnit.MILLISECONDS.toNanos(103))
 
             Refill refill = Refill.intervallyAligned(400, Duration.ofMillis(100), new Date(200).toInstant(), false);
-            LocalBucket bucket = Bucket4j.builder()
+            LocalBucket bucket = Bucket.builder()
                     .withCustomTimePrecision(timeMeter)
                     .addLimit(Bandwidth.classic(400, refill))
                     .withMath(mathType)

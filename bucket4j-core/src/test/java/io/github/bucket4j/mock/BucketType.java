@@ -124,4 +124,8 @@ public enum BucketType {
         return createAsyncBucket(configuration, TimeMeter.SYSTEM_MILLISECONDS);
     }
 
+    public boolean isAsyncModeSupported() {
+        return BucketType.withAsyncSupport().contains(this);
+    }
+
 }

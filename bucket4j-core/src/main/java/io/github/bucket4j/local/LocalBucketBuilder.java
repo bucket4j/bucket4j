@@ -109,19 +109,23 @@ public class LocalBucketBuilder {
      * @return the new bucket
      */
     public LocalBucket build() {
-        BucketConfiguration configuration = configurationBuilder.build();
-
-        for (Bandwidth bandwidth : configuration.getBandwidths()) {
-            if (bandwidth.isIntervallyAligned() && !timeMeter.isWallClockBased()) {
-                throw BucketExceptions.intervallyAlignedRefillCompatibleOnlyWithWallClock();
-            }
-        }
+        BucketConfiguration configuration = buildConfiguration();
         switch (synchronizationStrategy) {
             case LOCK_FREE: return new LockFreeBucket(configuration, mathType, timeMeter);
             case SYNCHRONIZED: return new SynchronizedBucket(configuration, mathType, timeMeter);
             case NONE: return new SynchronizedBucket(configuration, mathType, timeMeter, FakeLock.INSTANCE);
             default: throw new IllegalStateException();
         }
+    }
+
+    private BucketConfiguration buildConfiguration() {
+        BucketConfiguration configuration = configurationBuilder.build();
+        for (Bandwidth bandwidth : configuration.getBandwidths()) {
+            if (bandwidth.isIntervallyAligned() && !timeMeter.isWallClockBased()) {
+                throw BucketExceptions.intervallyAlignedRefillCompatibleOnlyWithWallClock();
+            }
+        }
+        return configuration;
     }
 
 }

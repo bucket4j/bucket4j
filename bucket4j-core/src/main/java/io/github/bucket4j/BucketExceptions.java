@@ -81,6 +81,11 @@ public final class BucketExceptions {
         return new IllegalArgumentException(msg);
     }
 
+    public static Throwable nullConfigurationFuture() {
+        String msg = "Configuration future can not be null";
+        return new IllegalArgumentException(msg);
+    }
+
     public static IllegalArgumentException nullConfigurationSupplier() {
         String msg = "Configuration supplier can not be null";
         return new IllegalArgumentException(msg);
@@ -152,9 +157,9 @@ public final class BucketExceptions {
         // private constructor for utility class
     }
 
-    public static IllegalArgumentException asyncModeIsNotSupported() {
+    public static UnsupportedOperationException asyncModeIsNotSupported() {
         String msg = "Asynchronous mode is not supported";
-        return new IllegalArgumentException(msg);
+        return new UnsupportedOperationException(msg);
     }
 
 }

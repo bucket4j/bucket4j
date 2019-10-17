@@ -217,6 +217,11 @@ public class AsyncBucketProxy implements AsyncBucket, AsyncScheduledBucket {
         return future.thenApply(nothing -> null);
     }
 
+    @Override
+    public CompletableFuture<Long> getAvailableTokens() {
+        return execute(new GetAvailableTokensCommand());
+    }
+
     private <T extends Serializable> CompletableFuture<T> execute(RemoteCommand<T> command) {
         CompletableFuture<CommandResult<T>> futureResult = commandExecutor.executeAsync(command);
         return futureResult.thenCompose(cmdResult -> {
@@ -234,11 +239,22 @@ public class AsyncBucketProxy implements AsyncBucket, AsyncScheduledBucket {
             try {
                 configurationFuture = configurationSupplier.get();
             } catch (Throwable t) {
-                configurationFuture = new CompletableFuture<>();
-                configurationFuture.completeExceptionally(t);
+                CompletableFuture<T> failedFuture = new CompletableFuture<>();
+                failedFuture.completeExceptionally(t);
+                return failedFuture;
+            }
+            if (configurationFuture == null) {
+                CompletableFuture<T> failedFuture = new CompletableFuture<>();
+                failedFuture.completeExceptionally(BucketExceptions.nullConfigurationFuture());
+                return failedFuture;
             }
 
             return configurationFuture.thenCompose(configuration -> {
+                if (configuration == null) {
+                    CompletableFuture<T> failedFuture = new CompletableFuture<>();
+                    failedFuture.completeExceptionally(BucketExceptions.nullConfiguration());
+                    return failedFuture;
+                }
                 CreateInitialStateAndExecuteCommand<T> initAndExecute = new CreateInitialStateAndExecuteCommand<>(configuration, command);
                 return commandExecutor.executeAsync(initAndExecute).thenApply(initAndExecuteCmdResult -> {
                     wasInitialized.set(true);

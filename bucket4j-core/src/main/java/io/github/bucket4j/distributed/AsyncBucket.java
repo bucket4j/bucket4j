@@ -19,11 +19,8 @@ package io.github.bucket4j.distributed;
 
 import io.github.bucket4j.*;
 
-import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 /**
@@ -282,5 +279,15 @@ public interface AsyncBucket {
      * @return new bucket instance decorated by {@code listener}
      */
     AsyncBucket toListenable(BucketListener listener);
+
+    /**
+     * Returns amount of available tokens in this bucket.
+
+     * <p> This method designed to be used only for monitoring and testing, you should never use this method for business cases,
+     * because available tokens can be changed by concurrent transactions for case of multithreaded/multi-process environment.
+     *
+     * @return amount of available tokens
+     */
+    CompletableFuture<Long> getAvailableTokens();
 
 }

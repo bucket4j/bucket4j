@@ -17,7 +17,7 @@
 
 package io.github.bucket4j
 
-import io.github.bucket4j.local.LocalBucketBuilder
+import io.github.bucket4j.distributed.AsyncBucket
 import io.github.bucket4j.mock.BlockingStrategyMock
 import io.github.bucket4j.mock.BucketType
 import io.github.bucket4j.mock.SchedulerMock
@@ -34,15 +34,14 @@ class BucketListenerSpecification extends Specification {
     SimpleBucketListener listener = new SimpleBucketListener()
 	SchedulerMock scheduler = new SchedulerMock(clock)
 
-    LocalBucketBuilder builder = Bucket4j.builder()
-            .withCustomTimePrecision(clock)
+    BucketConfiguration configuration = BucketConfiguration.builder()
             .addLimit(Bandwidth.simple(10, Duration.ofSeconds(1)))
-
+            .build()
 
     @Unroll
     def "#type bucket created by toListenable should share tokens with source bucket"(BucketType type) {
         setup:
-            Bucket sourceBucket = type.createBucket(builder, clock);
+            Bucket sourceBucket = type.createBucket(configuration, clock);
             Bucket listenableBucket = sourceBucket.toListenable(listener)
 
         when:
@@ -69,7 +68,7 @@ class BucketListenerSpecification extends Specification {
     @Unroll
     def "#type test listener for tryConsume"(BucketType type) {
         setup:
-            Bucket bucket = type.createBucket(builder, clock).toListenable(listener)
+            Bucket bucket = type.createBucket(configuration, clock).toListenable(listener)
 
         when:
             bucket.tryConsume(9)
@@ -90,7 +89,7 @@ class BucketListenerSpecification extends Specification {
     @Unroll
     def "#type test listener for blocking tryConsume"(BucketType type) {
         setup:
-            Bucket bucket = type.createBucket(builder, clock).toListenable(listener)
+            Bucket bucket = type.createBucket(configuration, clock).toListenable(listener)
 
         when:
            bucket.asBlocking().tryConsume(9, Duration.ofSeconds(1), blocker)
@@ -133,7 +132,7 @@ class BucketListenerSpecification extends Specification {
     @Unroll
     def "#type test listener for blocking tryConsumeUninterruptibly"(BucketType type) {
         setup:
-            Bucket bucket = type.createBucket(builder, clock).toListenable(listener)
+            Bucket bucket = type.createBucket(configuration, clock).toListenable(listener)
 
         when:
             bucket.asBlocking().tryConsume(9, Duration.ofSeconds(1), blocker)
@@ -176,7 +175,7 @@ class BucketListenerSpecification extends Specification {
     @Unroll
     def "#type test listener for blocking consume"(BucketType type) {
         setup:
-            Bucket bucket = type.createBucket(builder, clock).toListenable(listener)
+            Bucket bucket = type.createBucket(configuration, clock).toListenable(listener)
 
         when:
             bucket.asBlocking().consume(9, blocker)
@@ -211,7 +210,7 @@ class BucketListenerSpecification extends Specification {
     @Unroll
     def "#type test listener for blocking consumeUninterruptibly"(BucketType type) {
         setup:
-            Bucket bucket = type.createBucket(builder, clock).toListenable(listener)
+            Bucket bucket = type.createBucket(configuration, clock).toListenable(listener)
 
         when:
             bucket.asBlocking().consume(9, blocker)
@@ -246,7 +245,7 @@ class BucketListenerSpecification extends Specification {
     @Unroll
     def "#type test listener for tryConsumeAsMuchAsPossible"(BucketType type) {
         setup:
-            Bucket bucket = type.createBucket(builder, clock).toListenable(listener)
+            Bucket bucket = type.createBucket(configuration, clock).toListenable(listener)
 
         when:
             bucket.tryConsumeAsMuchAsPossible()
@@ -267,7 +266,7 @@ class BucketListenerSpecification extends Specification {
     @Unroll
     def "#type test listener for tryConsumeAsMuchAsPossible with limit"(BucketType type) {
         setup:
-            Bucket bucket = type.createBucket(builder, clock).toListenable(listener)
+            Bucket bucket = type.createBucket(configuration, clock).toListenable(listener)
 
         when:
             bucket.tryConsumeAsMuchAsPossible(8)
@@ -294,7 +293,7 @@ class BucketListenerSpecification extends Specification {
     @Unroll
     def "#type test listener for tryConsumeAndReturnRemaining"(BucketType type) {
         setup:
-            Bucket bucket = type.createBucket(builder, clock).toListenable(listener)
+            Bucket bucket = type.createBucket(configuration, clock).toListenable(listener)
 
         when:
             bucket.tryConsumeAndReturnRemaining(9)
@@ -316,16 +315,16 @@ class BucketListenerSpecification extends Specification {
     @Unroll
     def "#type test listener for async tryConsume"(BucketType type) {
         setup:
-            Bucket bucket = type.createBucket(builder, clock).toListenable(listener)
+            AsyncBucket bucket = type.createAsyncBucket(configuration, clock).toListenable(listener)
 
         when:
-            bucket.asAsync().tryConsume(9).get()
+            bucket.tryConsume(9).get()
         then:
             listener.getConsumed() == 9
             listener.getRejected() == 0
 
         when:
-            bucket.asAsync().tryConsume(6).get()
+            bucket.tryConsume(6).get()
         then:
             listener.getConsumed() == 9
             listener.getRejected() == 6
@@ -337,10 +336,10 @@ class BucketListenerSpecification extends Specification {
 	@Unroll
     def "#type test listener for async scheduled tryConsume"(BucketType type) {
         setup:
-            Bucket bucket = type.createBucket(builder, clock).toListenable(listener)
+            AsyncBucket bucket = type.createAsyncBucket(configuration, clock).toListenable(listener)
 
         when:
-            bucket.asAsyncScheduler().tryConsume(9, Duration.ofSeconds(1).toNanos(), scheduler)
+            bucket.asScheduler().tryConsume(9, Duration.ofSeconds(1).toNanos(), scheduler)
         then:
             listener.getConsumed() == 9
             listener.getRejected() == 0
@@ -348,7 +347,7 @@ class BucketListenerSpecification extends Specification {
             listener.getInterrupted() == 0
 
         when:
-            bucket.asAsyncScheduler().tryConsume(1000, Duration.ofSeconds(1).toNanos(), scheduler)
+            bucket.asScheduler().tryConsume(1000, Duration.ofSeconds(1).toNanos(), scheduler)
         then:
             listener.getConsumed() == 9
             listener.getRejected() == 1000
@@ -356,7 +355,7 @@ class BucketListenerSpecification extends Specification {
             listener.getInterrupted() == 0
 
         when:
-            bucket.asAsyncScheduler().tryConsume(2, Duration.ofSeconds(1).toNanos(), scheduler)
+            bucket.asScheduler().tryConsume(2, Duration.ofSeconds(1).toNanos(), scheduler)
         then:
             listener.getConsumed() == 11
             listener.getRejected() == 1000
@@ -371,10 +370,10 @@ class BucketListenerSpecification extends Specification {
     @Unroll
     def "#type test listener for async delayed consume"(BucketType type) {
         setup:
-            Bucket bucket = type.createBucket(builder, clock).toListenable(listener)
+            AsyncBucket bucket = type.createAsyncBucket(configuration, clock).toListenable(listener)
 
         when:
-            bucket.asAsyncScheduler().consume(9, scheduler)
+            bucket.asScheduler().consume(9, scheduler)
         then:
             listener.getConsumed() == 9
             listener.getRejected() == 0
@@ -382,7 +381,7 @@ class BucketListenerSpecification extends Specification {
             listener.getInterrupted() == 0
 
         when:
-            bucket.asAsyncScheduler().consume(2, scheduler)
+            bucket.asScheduler().consume(2, scheduler)
         then:
             listener.getConsumed() == 11
             listener.getRejected() == 0
@@ -396,16 +395,16 @@ class BucketListenerSpecification extends Specification {
     @Unroll
     def "#type test listener for async tryConsumeAsMuchAsPossible"(BucketType type) {
         setup:
-            Bucket bucket = type.createBucket(builder, clock).toListenable(listener)
+            AsyncBucket bucket = type.createAsyncBucket(configuration, clock).toListenable(listener)
 
         when:
-            bucket.asAsync().tryConsumeAsMuchAsPossible().get()
+            bucket.tryConsumeAsMuchAsPossible().get()
         then:
             listener.getConsumed() == 10
             listener.getRejected() == 0
 
         when:
-            bucket.asAsync().tryConsumeAsMuchAsPossible().get()
+            bucket.tryConsumeAsMuchAsPossible().get()
         then:
             listener.getConsumed() == 10
             listener.getRejected() == 0
@@ -417,22 +416,22 @@ class BucketListenerSpecification extends Specification {
 	  @Unroll
     def "#type test listener for async tryConsumeAsMuchAsPossible with limit"(BucketType type) {
         setup:
-            Bucket bucket = type.createBucket(builder, clock).toListenable(listener)
+            AsyncBucket bucket = type.createAsyncBucket(configuration, clock).toListenable(listener)
 
         when:
-            bucket.asAsync().tryConsumeAsMuchAsPossible(8).get()
+            bucket.tryConsumeAsMuchAsPossible(8).get()
         then:
             listener.getConsumed() == 8
             listener.getRejected() == 0
 
         when:
-            bucket.asAsync().tryConsumeAsMuchAsPossible(8).get()
+            bucket.tryConsumeAsMuchAsPossible(8).get()
         then:
             listener.getConsumed() == 10
             listener.getRejected() == 0
 
         when:
-            bucket.asAsync().tryConsumeAsMuchAsPossible(3).get()
+            bucket.tryConsumeAsMuchAsPossible(3).get()
         then:
             listener.getConsumed() == 10
             listener.getRejected() == 0
@@ -444,16 +443,16 @@ class BucketListenerSpecification extends Specification {
 	@Unroll
     def "#type test listener for async tryConsumeAndReturnRemaining"(BucketType type) {
         setup:
-            Bucket bucket = type.createBucket(builder, clock).toListenable(listener)
+            AsyncBucket bucket = type.createAsyncBucket(configuration, clock).toListenable(listener)
 
         when:
-            bucket.asAsync().tryConsumeAndReturnRemaining(9).get()
+            bucket.tryConsumeAndReturnRemaining(9).get()
         then:
             listener.getConsumed() == 9
             listener.getRejected() == 0
 
         when:
-            bucket.asAsync().tryConsumeAndReturnRemaining(6).get()
+            bucket.tryConsumeAndReturnRemaining(6).get()
         then:
             listener.getConsumed() == 9
             listener.getRejected() == 6
