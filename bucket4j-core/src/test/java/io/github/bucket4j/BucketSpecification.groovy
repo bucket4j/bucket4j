@@ -177,6 +177,8 @@ class BucketSpecification extends Specification {
             for (BucketType type : BucketType.values()) {
                 TimeMeterMock timeMeter = new TimeMeterMock(0)
                 Bucket bucket = type.createBucket(configuration, timeMeter)
+                bucket.getAvailableTokens() // touch the bucket in order to initialize
+
                 timeMeter.addTime(nanosIncrement)
                 bucket.addTokens(tokensToAdd)
                 assert bucket.getAvailableTokens() == requiredResult
@@ -184,6 +186,8 @@ class BucketSpecification extends Specification {
                 if (type.isAsyncModeSupported()) {
                     timeMeter = new TimeMeterMock(0)
                     AsyncBucket asyncBucket = type.createAsyncBucket(configuration, timeMeter)
+                    asyncBucket.getAvailableTokens().get() // touch the bucket in order to initialize
+                    timeMeter.addTime(nanosIncrement)
                     asyncBucket.addTokens(tokensToAdd).get()
                     assert asyncBucket.getAvailableTokens().get() == requiredResult
                 }
@@ -203,6 +207,8 @@ class BucketSpecification extends Specification {
             for (BucketType type : BucketType.values()) {
                 TimeMeterMock timeMeter = new TimeMeterMock(0)
                 Bucket bucket = type.createBucket(configuration, timeMeter)
+                bucket.estimateAbilityToConsume(1) // touch the bucket in order to create it
+
                 timeMeter.addTime(nanosSinceBucketCreation)
                 assert bucket.getAvailableTokens() == expectedTokens
             }

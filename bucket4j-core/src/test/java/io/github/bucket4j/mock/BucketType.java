@@ -73,7 +73,7 @@ public enum BucketType {
     GRID {
         @Override
         public Bucket createBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
-            GridBackendMock backend = new GridBackendMock(timeMeter);
+            GridBackendMock<Integer> backend = new GridBackendMock<>(timeMeter);
             return backend.builder()
                     .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
                     .buildProxy(42, configuration);
@@ -81,7 +81,7 @@ public enum BucketType {
 
         @Override
         public AsyncBucket createAsyncBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
-            GridBackendMock backend = new GridBackendMock(timeMeter);
+            GridBackendMock<Integer> backend = new GridBackendMock<>(timeMeter);
             return backend.builder()
                     .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
                     .buildAsyncProxy(42, configuration);
@@ -90,7 +90,7 @@ public enum BucketType {
     COMPARE_AND_SWAP {
         @Override
         public Bucket createBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
-            CompareAndSwapBasedBackendMock backend = new CompareAndSwapBasedBackendMock(timeMeter);
+            CompareAndSwapBasedBackendMock<Integer> backend = new CompareAndSwapBasedBackendMock<>(timeMeter);
             return backend.builder()
                     .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
                     .buildProxy(42, configuration);
@@ -99,7 +99,7 @@ public enum BucketType {
     SELECT_FOR_UPDATE {
         @Override
         public Bucket createBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
-            SelectForUpdateBasedBackendMock backend = new SelectForUpdateBasedBackendMock(timeMeter);
+            SelectForUpdateBasedBackendMock<Integer> backend = new SelectForUpdateBasedBackendMock<>(timeMeter);
             return backend.builder()
                     .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
                     .buildProxy(42, configuration);

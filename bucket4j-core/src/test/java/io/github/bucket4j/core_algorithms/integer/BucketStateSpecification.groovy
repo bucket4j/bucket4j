@@ -19,9 +19,9 @@ package io.github.bucket4j.core_algorithms.integer
 
 import io.github.bucket4j.Bandwidth
 import io.github.bucket4j.Bucket
-import io.github.bucket4j.Bucket4j
 import io.github.bucket4j.BucketConfiguration
 import io.github.bucket4j.BucketState
+import io.github.bucket4j.MathType
 import io.github.bucket4j.Refill
 import io.github.bucket4j.TimeMeter
 import io.github.bucket4j.mock.TimeMeterMock
@@ -216,7 +216,7 @@ class BucketStateSpecification extends Specification {
     def "calculateFullRefillingTime specification #testNumber"(String testNumber, long requiredTime,
                                                                long timeShiftBeforeAsk, long tokensConsumeBeforeAsk, BucketConfiguration configuration) {
         setup:
-            BucketState state = BucketState.createInitialState(configuration, 0L)
+            BucketState state = BucketState.createInitialState(configuration, MathType.INTEGER_64_BITS, 0L)
             state.refillAllBandwidth(configuration.bandwidths, timeShiftBeforeAsk)
             state.consume(configuration.bandwidths, tokensConsumeBeforeAsk)
         when:
