@@ -15,7 +15,7 @@
  *      limitations under the License.
  */
 
-package example.distributed.generic.select_for_update.postgresql;
+package example.distributed.generic.postgresql.advisory_lock;
 
 import io.github.bucket4j.distributed.proxy.generic.select_for_update.AbstractSelectForUpdateBasedBackend;
 import io.github.bucket4j.distributed.proxy.generic.select_for_update.SelectForUpdateBasedTransaction;
@@ -24,7 +24,7 @@ import javax.sql.DataSource;
 import java.sql.*;
 import java.util.Optional;
 
-public class PostgreSQLBackend extends AbstractSelectForUpdateBasedBackend<Long> {
+public class AdvisoryLockBasedPostgreSQLBackend extends AbstractSelectForUpdateBasedBackend<Long> {
 
     private static final String INIT_TABLE_SCRIPT =
             "CREATE TABLE IF NOT EXISTS buckets(" +
@@ -34,7 +34,7 @@ public class PostgreSQLBackend extends AbstractSelectForUpdateBasedBackend<Long>
 
     private final DataSource dataSource;
 
-    public PostgreSQLBackend(DataSource dataSource) throws SQLException {
+    public AdvisoryLockBasedPostgreSQLBackend(DataSource dataSource) throws SQLException {
         this.dataSource = dataSource;
 
         // TODO for real application table initialization should be moved to the right place
@@ -78,6 +78,8 @@ public class PostgreSQLBackend extends AbstractSelectForUpdateBasedBackend<Long>
         private final long key;
         private final Connection connection;
 
+        private boolean bucketWasPersistedBeforeTransaction = false;
+
         private PostgreSelectForUpdateBasedTransaction(long key, Connection connection) {
             this.key = key;
             this.connection = connection;
@@ -99,39 +101,25 @@ public class PostgreSQLBackend extends AbstractSelectForUpdateBasedBackend<Long>
         @Override
         public Optional<byte[]> lockAndGet() {
             try {
-                String selectForUpdateSQL = "SELECT state FROM buckets WHERE id = ? FOR UPDATE";
-                try (PreparedStatement selectStatement = connection.prepareStatement(selectForUpdateSQL)) {
+                // acquire pessimistic lock
+                String lockSQL = "SELECT pg_advisory_xact_lock(?)";
+                try (PreparedStatement lockStatement = connection.prepareStatement(lockSQL)) {
+                    lockStatement.setLong(1, key);
+                    try (ResultSet rs = lockStatement.executeQuery()) {}
+                }
+
+                // select data if exists
+                String selectSQL = "SELECT state FROM buckets WHERE id = ?";
+                try (PreparedStatement selectStatement = connection.prepareStatement(selectSQL)) {
                     selectStatement.setLong(1, key);
                     try (ResultSet rs = selectStatement.executeQuery()) {
                         if (rs.next()) {
                             byte[] bucketState = rs.getBytes("state");
-                            return Optional.ofNullable(bucketState);
+                            bucketWasPersistedBeforeTransaction = true;
+                            return Optional.of(bucketState);
+                        } else {
+                            return Optional.empty();
                         }
-                    }
-                }
-
-                // there are not persisted data for this bucket, so there is no raw which can act as lock
-                String insertSQL = "INSERT INTO buckets(id, state) VALUES(?, null) ON CONFLICT(id) DO NOTHING";
-                try (PreparedStatement insertStatement = connection.prepareStatement(insertSQL)) {
-                    insertStatement.setLong(1, key);
-                    int rowsModified = insertStatement.executeUpdate();
-                    if (rowsModified > 0) {
-                        System.out.println(Thread.currentThread().getName() + " created new bucket key=" + key);
-                    } else {
-                        System.out.println(Thread.currentThread().getName() + " did not create new bucket key=" + key + " because it already created by other parallel thread");
-                    }
-                }
-
-                // it is need to execute select for update again in order to obtain the lock
-                try (PreparedStatement selectStatement = connection.prepareStatement(selectForUpdateSQL)) {
-                    selectStatement.setLong(1, key);
-                    try (ResultSet rs = selectStatement.executeQuery()) {
-                        if (!rs.next()) {
-                            // query does not see the record which inserted on step above
-                            throw new IllegalStateException("Something unexpected happen, it needs to read PostgreSQL manual");
-                        }
-                        // we need to return epmty Optional because bucket is not initialized yet
-                        return Optional.empty();
                     }
                 }
             } catch (SQLException e) {
@@ -146,11 +134,20 @@ public class PostgreSQLBackend extends AbstractSelectForUpdateBasedBackend<Long>
         @Override
         public void update(byte[] data) {
             try {
-                String updateSQL = "UPDATE buckets SET state=? WHERE id=?";
-                try (PreparedStatement updateStatement = connection.prepareStatement(updateSQL)) {
-                    updateStatement.setBytes(1, data);
-                    updateStatement.setLong(2, key);
-                    updateStatement.executeUpdate();
+                if (bucketWasPersistedBeforeTransaction) {
+                    String updateSQL = "UPDATE buckets SET state=? WHERE id=?";
+                    try (PreparedStatement updateStatement = connection.prepareStatement(updateSQL)) {
+                        updateStatement.setBytes(1, data);
+                        updateStatement.setLong(2, key);
+                        updateStatement.executeUpdate();
+                    }
+                } else {
+                    String insertSQL = "INSERT INTO buckets(id, state) VALUES(?, ?)";
+                    try (PreparedStatement insertStatement = connection.prepareStatement(insertSQL)) {
+                        insertStatement.setLong(1, key);
+                        insertStatement.setBytes(2, data);
+                        insertStatement.executeUpdate();
+                    }
                 }
             } catch (SQLException e) {
                 // TODO implement logging here

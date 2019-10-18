@@ -15,7 +15,7 @@
  *      limitations under the License.
  */
 
-package example.distributed.generic.select_for_update.postgresql;
+package example.distributed.generic.postgresql.select_for_update;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
@@ -29,13 +29,14 @@ import javax.sql.DataSource;
 import java.sql.SQLException;
 import java.time.Duration;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class Select_For_Update_PostgreSQL_Example {
 
-    public static void main(String[] args) throws SQLException {
+    public static void main(String[] args) throws SQLException, InterruptedException {
         PostgreSQLContainer container = startPostgreSQLContainer();
         final DataSource dataSource = createJdbcDataSource(container);
-        PostgreSQLBackend backend = new PostgreSQLBackend(dataSource);
+        SelectForUpdateBasedPostgreSQLBackend backend = new SelectForUpdateBasedPostgreSQLBackend(dataSource);
 
         BucketConfiguration configuration = BucketConfiguration.builder()
                 .addLimit(Bandwidth.simple(10, Duration.ofSeconds(1)))
@@ -43,25 +44,30 @@ public class Select_For_Update_PostgreSQL_Example {
 
         Bucket bucket = backend.builder().buildProxy(42L, configuration);
 
-        CountDownLatch countDownLatch = new CountDownLatch(4);
+        CountDownLatch startLatch = new CountDownLatch(4);
+        CountDownLatch stopLatch = new CountDownLatch(4);
+        AtomicLong consumed = new AtomicLong();
         for (int i = 0; i < 4; i++) {
             new Thread(() -> {
-                countDownLatch.countDown();
+                startLatch.countDown();
                 try {
-                    countDownLatch.await();
+                    startLatch.await();
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
                 try {
                     while (bucket.tryConsume(1)) {
+                        consumed.incrementAndGet();
                         System.out.println("consumed from Thread " + Thread.currentThread().getName());
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
+                stopLatch.countDown();
             }).start();
         }
-        System.out.println("By");
+        stopLatch.await();
+        System.out.println("Was consumed " + consumed.get() + " tokens");
     }
 
     @NotNull
