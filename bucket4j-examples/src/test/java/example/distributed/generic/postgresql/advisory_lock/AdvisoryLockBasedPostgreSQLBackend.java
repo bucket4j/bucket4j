@@ -49,7 +49,7 @@ public class AdvisoryLockBasedPostgreSQLBackend extends AbstractSelectForUpdateB
     @Override
     protected SelectForUpdateBasedTransaction allocateTransaction(Long key) {
         try {
-            return new PostgreSelectForUpdateBasedTransaction(key, dataSource.getConnection());
+            return new PostgreAdvisoryLockBasedTransaction(key, dataSource.getConnection());
         } catch (SQLException e) {
             // TODO implement logging here
             e.printStackTrace();
@@ -63,7 +63,7 @@ public class AdvisoryLockBasedPostgreSQLBackend extends AbstractSelectForUpdateB
     protected void releaseTransaction(SelectForUpdateBasedTransaction transaction) {
         try {
             // return connection to pool
-            ((PostgreSelectForUpdateBasedTransaction) transaction).connection.close();
+            ((PostgreAdvisoryLockBasedTransaction) transaction).connection.close();
         } catch (SQLException e) {
             // TODO implement logging here
             e.printStackTrace();
@@ -73,14 +73,14 @@ public class AdvisoryLockBasedPostgreSQLBackend extends AbstractSelectForUpdateB
         }
     }
 
-    private class PostgreSelectForUpdateBasedTransaction implements SelectForUpdateBasedTransaction {
+    private class PostgreAdvisoryLockBasedTransaction implements SelectForUpdateBasedTransaction {
 
         private final long key;
         private final Connection connection;
 
         private boolean bucketWasPersistedBeforeTransaction = false;
 
-        private PostgreSelectForUpdateBasedTransaction(long key, Connection connection) {
+        private PostgreAdvisoryLockBasedTransaction(long key, Connection connection) {
             this.key = key;
             this.connection = connection;
         }
