@@ -37,6 +37,7 @@
         <module>experimental</module>
         <module>bucket4j-benchmarks</module>
         <module>bucket4j-coherence</module>
+        <module>bucket4j-examples</module>
     </modules>
 
     <properties>
