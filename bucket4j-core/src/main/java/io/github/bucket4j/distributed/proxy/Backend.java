@@ -38,10 +38,6 @@ import java.util.function.Supplier;
  * Provides an light-weight proxy to bucket which state actually stored in any external storage outside current JVM,
  * like in-memory jvm or relational database.
  *
- * The proxies instantiated by ProxyManager is very cheap, you are free to instantiate as many proxies as you wish,
- * there are no any hard work performed inside {@link #getProxy(K, Supplier) getProxy} method,
- * so it is not necessary to cache results of its invocation.
- *
  * @param <K> type of key
  */
 public interface Backend<K extends Serializable> {
@@ -56,18 +52,6 @@ public interface Backend<K extends Serializable> {
      * you need to cache result somewhere and reuse between invocations,
      * else performance of all operation with bucket will be 2-x times slower.
      *
-     * <p>
-     * Use this method if and only if you need to full control over bucket lifecycle(especially specify {@link RecoveryStrategy}),
-     * and you have clean caching strategy which suitable for storing buckets,
-     * else it would be better to work through {@link JCache#proxyManagerForCache(Cache) ProxyManager},
-     * which does not require any caching, because ProxyManager operates with light-weight versions of buckets.
-     *
-     * @param cache distributed cache which will hold bucket inside cluster.
-     *             Feel free to store inside single {@code cache} as mush buckets as you need.
-     * @param key  for storing bucket inside {@code cache}.
-     *             If you plan to store multiple buckets inside single {@code cache}, then each bucket should has own unique {@code key}.
-     * @param recoveryStrategy specifies the reaction which should be applied in case of previously saved state of bucket has been lost.
-     *
      * @return new distributed bucket
      */
     RemoteBucketBuilder<K> builder();
@@ -76,8 +60,6 @@ public interface Backend<K extends Serializable> {
      * TODO
      *
      * Describes whether or not this backend supports asynchronous mode.
-     *
-     * <p>If asynchronous mode is  not supported any attempt to call {@link #asAsync()} will fail with {@link UnsupportedOperationException}
      *
      * @return true if this extension supports asynchronous mode.
      */
