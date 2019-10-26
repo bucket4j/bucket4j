@@ -21,8 +21,21 @@ import java.util.Optional;
 
 public interface CompareAndSwapBasedTransaction {
 
+    /**
+     * Reads data if it exists
+     *
+     * @return persisted data or empty optional if data not exists
+     */
     Optional<byte[]> get();
 
+    /**
+     * Compares and swap data associated with key
+     *
+     * @param originalData previous bucket state(can be null).
+     * @param newData new bucket state
+     *
+     * @return {@code true} if data changed, {@code false} if another parallel transaction achieved success instead of current transaction
+     */
     boolean compareAndSwap(byte[] originalData, byte[] newData);
 
 }

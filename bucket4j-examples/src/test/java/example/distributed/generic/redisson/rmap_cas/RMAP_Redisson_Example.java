@@ -15,29 +15,32 @@
  *      limitations under the License.
  */
 
-package example.distributed.generic.postgresql.select_for_update;
+package example.distributed.generic.redisson.rmap_cas;
 
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketConfiguration;
 import org.jetbrains.annotations.NotNull;
-import org.testcontainers.containers.PostgreSQLContainer;
-
-import javax.sql.DataSource;
+import org.redisson.Redisson;
+import org.redisson.api.RMap;
+import org.redisson.api.RedissonClient;
+import org.redisson.config.Config;
+import org.testcontainers.containers.GenericContainer;
 import java.sql.SQLException;
 import java.time.Duration;
 import java.util.Date;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class Select_For_Update_PostgreSQL_Example {
+public class RMAP_Redisson_Example {
 
     public static void main(String[] args) throws SQLException, InterruptedException {
-        PostgreSQLContainer container = startPostgreSQLContainer();
-        final DataSource dataSource = createJdbcDataSource(container);
-        SelectForUpdateBasedPostgreSQLBackend backend = new SelectForUpdateBasedPostgreSQLBackend(dataSource);
+        GenericContainer container = startRedisContainer();
+        RedissonClient redisson = createRedissonClient(container);
+
+        RMap<Long, byte[]> buckets = redisson.getMap("buckets");
+
+        RMapBasedRedissonBackend backend = new RMapBasedRedissonBackend(buckets);
 
         BucketConfiguration configuration = BucketConfiguration.builder()
                 .addLimit(Bandwidth.simple(10, Duration.ofSeconds(1)))
@@ -68,7 +71,7 @@ public class Select_For_Update_PostgreSQL_Example {
             }).start();
         }
         stopLatch.await();
-        System.out.println("Was consumed " + consumed.get() + " tokens");
+        System.out.println("Was consumed " + consumed.get() + " tokens ");
 
         for (int i = 0; i < 5; i++) {
             bucket.asBlocking().consume(10);
@@ -77,21 +80,24 @@ public class Select_For_Update_PostgreSQL_Example {
     }
 
     @NotNull
-    private static DataSource createJdbcDataSource(PostgreSQLContainer container) {
-        HikariConfig hikariConfig = new HikariConfig();
-        hikariConfig.setJdbcUrl(container.getJdbcUrl());
-        hikariConfig.setUsername(container.getUsername());
-        hikariConfig.setPassword(container.getPassword());
-        hikariConfig.setDriverClassName(container.getDriverClassName());
-        hikariConfig.setMaximumPoolSize(100);
-        return new HikariDataSource(hikariConfig);
+    private static RedissonClient createRedissonClient(GenericContainer container) {
+        String redisAddress = container.getContainerIpAddress();
+        Integer redisPort = container.getMappedPort(6379);
+        String redisUrl = "redis://" + redisAddress + ":" + redisPort;
+
+        Config config = new Config();
+        config.useSingleServer()
+                .setAddress(redisUrl);
+
+        return Redisson.create(config);
     }
 
     @NotNull
-    private static PostgreSQLContainer startPostgreSQLContainer() {
-        PostgreSQLContainer container = new PostgreSQLContainer();
-        container.start();
-        return container;
+    private static GenericContainer startRedisContainer() {
+        GenericContainer genericContainer = new GenericContainer("redis:4.0.11")
+                .withExposedPorts(6379);
+        genericContainer.start();
+        return genericContainer;
     }
 
 }

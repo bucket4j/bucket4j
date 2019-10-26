@@ -28,6 +28,7 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import javax.sql.DataSource;
 import java.sql.SQLException;
 import java.time.Duration;
+import java.util.Date;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -70,9 +71,9 @@ public class Advisory_Lock_PostgreSQL_Example {
         System.out.println("Was consumed " + consumed.get() + " tokens");
 
         for (int i = 0; i < 5; i++) {
-            bucket.asBlocking().consume(1);
+            bucket.asBlocking().consume(10);
+            System.out.println("Was consumed 10 token in blocking mode " + new Date());
         }
-        System.out.println("Was consumed 5 tokens");
     }
 
     @NotNull

@@ -23,7 +23,6 @@ import io.github.bucket4j.distributed.proxy.generic.select_for_update.LockResult
 
 import javax.sql.DataSource;
 import java.sql.*;
-import java.util.Optional;
 
 public class SelectForUpdateBasedPostgreSQLBackend extends AbstractLockBasedBackend<Long> {
 
