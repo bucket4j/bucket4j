@@ -19,7 +19,6 @@ package io.github.bucket4j.distributed.proxy.generic.select_for_update;
 
 import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.proxy.AbstractBackend;
-import io.github.bucket4j.distributed.proxy.Backend;
 import io.github.bucket4j.distributed.proxy.generic.GenericEntry;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
@@ -27,21 +26,21 @@ import io.github.bucket4j.distributed.remote.RemoteCommand;
 import java.io.Serializable;
 import java.util.concurrent.CompletableFuture;
 
-public abstract class AbstractSelectForUpdateBasedBackend<K extends Serializable> extends AbstractBackend<K> {
+public abstract class AbstractLockBasedBackend<K extends Serializable> extends AbstractBackend<K> {
 
     private final TimeMeter timeMeter;
 
-    protected AbstractSelectForUpdateBasedBackend(TimeMeter timeMeter) {
+    protected AbstractLockBasedBackend(TimeMeter timeMeter) {
         this.timeMeter = timeMeter;
     }
 
-    protected AbstractSelectForUpdateBasedBackend() {
+    protected AbstractLockBasedBackend() {
         timeMeter = TimeMeter.SYSTEM_MILLISECONDS;
     }
 
     @Override
     public <T extends Serializable> CommandResult<T> execute(K key, RemoteCommand<T> command) {
-        SelectForUpdateBasedTransaction transaction = allocateTransaction(key);
+        LockBasedTransaction transaction = allocateTransaction(key);
         try {
             return execute(command, transaction);
         } finally {
@@ -59,22 +58,38 @@ public abstract class AbstractSelectForUpdateBasedBackend<K extends Serializable
         throw new UnsupportedOperationException();
     }
 
-    protected abstract SelectForUpdateBasedTransaction allocateTransaction(K key);
+    protected abstract LockBasedTransaction allocateTransaction(K key);
 
-    protected abstract void releaseTransaction(SelectForUpdateBasedTransaction transaction);
+    protected abstract void releaseTransaction(LockBasedTransaction transaction);
 
-    private <T extends Serializable> CommandResult<T> execute(RemoteCommand<T> command, SelectForUpdateBasedTransaction transaction) {
+    private <T extends Serializable> CommandResult<T> execute(RemoteCommand<T> command, LockBasedTransaction transaction) {
         transaction.begin();
         try {
-            byte[] stateBytes = transaction.lockAndGet().orElse(null);
-            GenericEntry entry = new GenericEntry(stateBytes);
-            CommandResult<T> result = command.execute(entry, timeMeter.currentTimeNanos());
-            if (entry.isModified()) {
-                byte[] bytes = entry.getModifiedStateBytes();
-                transaction.update(bytes);
+            try {
+                byte[] persistedDataOnBeginOfTransaction;
+                LockResult lockResult = transaction.lock();
+                if (lockResult == LockResult.DATA_EXISTS_AND_LOCKED) {
+                    persistedDataOnBeginOfTransaction = transaction.getData();
+                } else if (command.isInitializationCommand()) {
+                    persistedDataOnBeginOfTransaction = null;
+                } else {
+                    return CommandResult.bucketNotFound();
+                }
+                GenericEntry entry = new GenericEntry(persistedDataOnBeginOfTransaction);
+                CommandResult<T> result = command.execute(entry, timeMeter.currentTimeNanos());
+                if (entry.isModified()) {
+                    byte[] bytes = entry.getModifiedStateBytes();
+                    if (persistedDataOnBeginOfTransaction == null) {
+                        transaction.create(bytes);
+                    } else {
+                        transaction.update(bytes);
+                    }
+                }
+                transaction.commit();
+                return result;
+            } finally {
+                transaction.unlock();
             }
-            transaction.commit();
-            return result;
         } catch (RuntimeException e) {
             transaction.rollback();
             throw e;

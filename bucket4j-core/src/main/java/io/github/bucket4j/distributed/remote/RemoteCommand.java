@@ -17,13 +17,14 @@
 
 package io.github.bucket4j.distributed.remote;
 
-import io.github.bucket4j.distributed.remote.CommandResult;
-import io.github.bucket4j.distributed.remote.MutableBucketEntry;
-
 import java.io.Serializable;
 
 public interface RemoteCommand<T extends Serializable> extends Serializable {
 
     CommandResult<T> execute(MutableBucketEntry mutableEntry, long currentTimeNanos);
+
+    default boolean isInitializationCommand() {
+        return false;
+    }
 
 }

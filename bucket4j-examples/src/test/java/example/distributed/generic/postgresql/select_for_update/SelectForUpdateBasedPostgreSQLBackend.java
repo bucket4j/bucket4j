@@ -17,14 +17,15 @@
 
 package example.distributed.generic.postgresql.select_for_update;
 
-import io.github.bucket4j.distributed.proxy.generic.select_for_update.AbstractSelectForUpdateBasedBackend;
-import io.github.bucket4j.distributed.proxy.generic.select_for_update.SelectForUpdateBasedTransaction;
+import io.github.bucket4j.distributed.proxy.generic.select_for_update.AbstractLockBasedBackend;
+import io.github.bucket4j.distributed.proxy.generic.select_for_update.LockBasedTransaction;
+import io.github.bucket4j.distributed.proxy.generic.select_for_update.LockResult;
 
 import javax.sql.DataSource;
 import java.sql.*;
 import java.util.Optional;
 
-public class SelectForUpdateBasedPostgreSQLBackend extends AbstractSelectForUpdateBasedBackend<Long> {
+public class SelectForUpdateBasedPostgreSQLBackend extends AbstractLockBasedBackend<Long> {
 
     private static final String INIT_TABLE_SCRIPT =
             "CREATE TABLE IF NOT EXISTS buckets(" +
@@ -47,9 +48,9 @@ public class SelectForUpdateBasedPostgreSQLBackend extends AbstractSelectForUpda
     }
 
     @Override
-    protected SelectForUpdateBasedTransaction allocateTransaction(Long key) {
+    protected LockBasedTransaction allocateTransaction(Long key) {
         try {
-            return new PostgreSelectForUpdateBasedTransaction(key, dataSource.getConnection());
+            return new PostgreLockBasedTransaction(key, dataSource.getConnection());
         } catch (SQLException e) {
             // TODO implement logging here
             e.printStackTrace();
@@ -60,10 +61,10 @@ public class SelectForUpdateBasedPostgreSQLBackend extends AbstractSelectForUpda
     }
 
     @Override
-    protected void releaseTransaction(SelectForUpdateBasedTransaction transaction) {
+    protected void releaseTransaction(LockBasedTransaction transaction) {
         try {
             // return connection to pool
-            ((PostgreSelectForUpdateBasedTransaction) transaction).connection.close();
+            ((PostgreLockBasedTransaction) transaction).connection.close();
         } catch (SQLException e) {
             // TODO implement logging here
             e.printStackTrace();
@@ -73,12 +74,14 @@ public class SelectForUpdateBasedPostgreSQLBackend extends AbstractSelectForUpda
         }
     }
 
-    private class PostgreSelectForUpdateBasedTransaction implements SelectForUpdateBasedTransaction {
+    private class PostgreLockBasedTransaction implements LockBasedTransaction {
 
         private final long key;
         private final Connection connection;
 
-        private PostgreSelectForUpdateBasedTransaction(long key, Connection connection) {
+        private byte[] bucketStateBeforeTransaction;
+
+        private PostgreLockBasedTransaction(long key, Connection connection) {
             this.key = key;
             this.connection = connection;
         }
@@ -97,20 +100,26 @@ public class SelectForUpdateBasedPostgreSQLBackend extends AbstractSelectForUpda
         }
 
         @Override
-        public Optional<byte[]> lockAndGet() {
+        public LockResult lock() {
             try {
                 String selectForUpdateSQL = "SELECT state FROM buckets WHERE id = ? FOR UPDATE";
                 try (PreparedStatement selectStatement = connection.prepareStatement(selectForUpdateSQL)) {
                     selectStatement.setLong(1, key);
                     try (ResultSet rs = selectStatement.executeQuery()) {
                         if (rs.next()) {
-                            byte[] bucketState = rs.getBytes("state");
-                            return Optional.ofNullable(bucketState);
+                            bucketStateBeforeTransaction = rs.getBytes("state");
+                            if (bucketStateBeforeTransaction != null) {
+                                return LockResult.DATA_EXISTS_AND_LOCKED;
+                            } else {
+                                // we detected fake data that inserted by previous transaction
+                                return LockResult.DATA_NOT_EXISTS_AND_LOCKED;
+                            }
                         }
                     }
                 }
 
-                // there are not persisted data for this bucket, so there is no raw which can act as lock
+                // there are not persisted data for this bucket, so there is no raw which can act as lock.
+                // lets insert the raw with fake state which will acts as lock
                 String insertSQL = "INSERT INTO buckets(id, state) VALUES(?, null) ON CONFLICT(id) DO NOTHING";
                 try (PreparedStatement insertStatement = connection.prepareStatement(insertSQL)) {
                     insertStatement.setLong(1, key);
@@ -131,7 +140,7 @@ public class SelectForUpdateBasedPostgreSQLBackend extends AbstractSelectForUpda
                             throw new IllegalStateException("Something unexpected happen, it needs to read PostgreSQL manual");
                         }
                         // we need to return epmty Optional because bucket is not initialized yet
-                        return Optional.empty();
+                        return LockResult.DATA_NOT_EXISTS_AND_LOCKED;
                     }
                 }
             } catch (SQLException e) {
@@ -162,6 +171,12 @@ public class SelectForUpdateBasedPostgreSQLBackend extends AbstractSelectForUpda
         }
 
         @Override
+        public void create(byte[] data) {
+            // just do update because row always exists either with real or fake data.
+            update(data);
+        }
+
+        @Override
         public void rollback() {
             try {
                 connection.rollback();
@@ -185,6 +200,16 @@ public class SelectForUpdateBasedPostgreSQLBackend extends AbstractSelectForUpda
                 // TODO use appropriate type of exception
                 throw new IllegalStateException(e);
             }
+        }
+
+        @Override
+        public void unlock() {
+            // do nothing, because locked rows will be auto unlocked when transaction finishes
+        }
+
+        @Override
+        public byte[] getData() {
+            return bucketStateBeforeTransaction;
         }
 
     }

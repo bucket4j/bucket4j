@@ -63,6 +63,10 @@ public class CreateInitialStateAndExecuteCommand<T extends Serializable> impleme
         return targetCommand;
     }
 
+    @Override
+    public boolean isInitializationCommand() {
+        return true;
+    }
 
     private static class BucketEntryWrapper implements MutableBucketEntry {
 

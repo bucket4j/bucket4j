@@ -17,14 +17,15 @@
 
 package example.distributed.generic.postgresql.advisory_lock;
 
-import io.github.bucket4j.distributed.proxy.generic.select_for_update.AbstractSelectForUpdateBasedBackend;
-import io.github.bucket4j.distributed.proxy.generic.select_for_update.SelectForUpdateBasedTransaction;
+import io.github.bucket4j.distributed.proxy.generic.select_for_update.AbstractLockBasedBackend;
+import io.github.bucket4j.distributed.proxy.generic.select_for_update.LockBasedTransaction;
+import io.github.bucket4j.distributed.proxy.generic.select_for_update.LockResult;
 
 import javax.sql.DataSource;
 import java.sql.*;
 import java.util.Optional;
 
-public class AdvisoryLockBasedPostgreSQLBackend extends AbstractSelectForUpdateBasedBackend<Long> {
+public class AdvisoryLockBasedPostgreSQLBackend extends AbstractLockBasedBackend<Long> {
 
     private static final String INIT_TABLE_SCRIPT =
             "CREATE TABLE IF NOT EXISTS buckets(" +
@@ -47,7 +48,7 @@ public class AdvisoryLockBasedPostgreSQLBackend extends AbstractSelectForUpdateB
     }
 
     @Override
-    protected SelectForUpdateBasedTransaction allocateTransaction(Long key) {
+    protected LockBasedTransaction allocateTransaction(Long key) {
         try {
             return new PostgreAdvisoryLockBasedTransaction(key, dataSource.getConnection());
         } catch (SQLException e) {
@@ -60,7 +61,7 @@ public class AdvisoryLockBasedPostgreSQLBackend extends AbstractSelectForUpdateB
     }
 
     @Override
-    protected void releaseTransaction(SelectForUpdateBasedTransaction transaction) {
+    protected void releaseTransaction(LockBasedTransaction transaction) {
         try {
             // return connection to pool
             ((PostgreAdvisoryLockBasedTransaction) transaction).connection.close();
@@ -73,12 +74,12 @@ public class AdvisoryLockBasedPostgreSQLBackend extends AbstractSelectForUpdateB
         }
     }
 
-    private class PostgreAdvisoryLockBasedTransaction implements SelectForUpdateBasedTransaction {
+    private class PostgreAdvisoryLockBasedTransaction implements LockBasedTransaction {
 
         private final long key;
         private final Connection connection;
 
-        private boolean bucketWasPersistedBeforeTransaction = false;
+        private byte[] bucketStateBeforeTransaction;
 
         private PostgreAdvisoryLockBasedTransaction(long key, Connection connection) {
             this.key = key;
@@ -99,7 +100,7 @@ public class AdvisoryLockBasedPostgreSQLBackend extends AbstractSelectForUpdateB
         }
 
         @Override
-        public Optional<byte[]> lockAndGet() {
+        public LockResult lock() {
             try {
                 // acquire pessimistic lock
                 String lockSQL = "SELECT pg_advisory_xact_lock(?)";
@@ -114,11 +115,10 @@ public class AdvisoryLockBasedPostgreSQLBackend extends AbstractSelectForUpdateB
                     selectStatement.setLong(1, key);
                     try (ResultSet rs = selectStatement.executeQuery()) {
                         if (rs.next()) {
-                            byte[] bucketState = rs.getBytes("state");
-                            bucketWasPersistedBeforeTransaction = true;
-                            return Optional.of(bucketState);
+                            bucketStateBeforeTransaction = rs.getBytes("state");
+                            return LockResult.DATA_EXISTS_AND_LOCKED;
                         } else {
-                            return Optional.empty();
+                            return LockResult.DATA_NOT_EXISTS_AND_LOCKED;
                         }
                     }
                 }
@@ -134,20 +134,29 @@ public class AdvisoryLockBasedPostgreSQLBackend extends AbstractSelectForUpdateB
         @Override
         public void update(byte[] data) {
             try {
-                if (bucketWasPersistedBeforeTransaction) {
-                    String updateSQL = "UPDATE buckets SET state=? WHERE id=?";
-                    try (PreparedStatement updateStatement = connection.prepareStatement(updateSQL)) {
-                        updateStatement.setBytes(1, data);
-                        updateStatement.setLong(2, key);
-                        updateStatement.executeUpdate();
-                    }
-                } else {
-                    String insertSQL = "INSERT INTO buckets(id, state) VALUES(?, ?)";
-                    try (PreparedStatement insertStatement = connection.prepareStatement(insertSQL)) {
-                        insertStatement.setLong(1, key);
-                        insertStatement.setBytes(2, data);
-                        insertStatement.executeUpdate();
-                    }
+                String updateSQL = "UPDATE buckets SET state=? WHERE id=?";
+                try (PreparedStatement updateStatement = connection.prepareStatement(updateSQL)) {
+                    updateStatement.setBytes(1, data);
+                    updateStatement.setLong(2, key);
+                    updateStatement.executeUpdate();
+                }
+            } catch (SQLException e) {
+                // TODO implement logging here
+                e.printStackTrace();
+
+                // TODO use appropriate type of exception
+                throw new IllegalStateException(e);
+            }
+        }
+
+        @Override
+        public void create(byte[] data) {
+            try {
+                String insertSQL = "INSERT INTO buckets(id, state) VALUES(?, ?)";
+                try (PreparedStatement insertStatement = connection.prepareStatement(insertSQL)) {
+                    insertStatement.setLong(1, key);
+                    insertStatement.setBytes(2, data);
+                    insertStatement.executeUpdate();
                 }
             } catch (SQLException e) {
                 // TODO implement logging here
@@ -182,6 +191,16 @@ public class AdvisoryLockBasedPostgreSQLBackend extends AbstractSelectForUpdateB
                 // TODO use appropriate type of exception
                 throw new IllegalStateException(e);
             }
+        }
+
+        @Override
+        public void unlock() {
+            // do nothing, because advisory lock will be auto unlocked when transaction finishes
+        }
+
+        @Override
+        public byte[] getData() {
+            return bucketStateBeforeTransaction;
         }
 
     }

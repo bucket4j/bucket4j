@@ -21,7 +21,6 @@ import io.github.bucket4j.*;
 import io.github.bucket4j.distributed.AsyncBucket;
 import io.github.bucket4j.local.LocalBucketBuilder;
 import io.github.bucket4j.local.SynchronizationStrategy;
-import io.github.bucket4j.distributed.proxy.BucketProxy;
 
 import java.util.Arrays;
 import java.util.List;
@@ -99,7 +98,7 @@ public enum BucketType {
     SELECT_FOR_UPDATE {
         @Override
         public Bucket createBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
-            SelectForUpdateBasedBackendMock<Integer> backend = new SelectForUpdateBasedBackendMock<>(timeMeter);
+            LockBasedBackendMock<Integer> backend = new LockBasedBackendMock<>(timeMeter);
             return backend.builder()
                     .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
                     .buildProxy(42, configuration);
