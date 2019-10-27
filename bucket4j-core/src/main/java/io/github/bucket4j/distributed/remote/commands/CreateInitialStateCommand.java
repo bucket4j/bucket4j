@@ -48,6 +48,11 @@ public class CreateInitialStateCommand implements RemoteCommand<Nothing> {
         return CommandResult.NOTHING;
     }
 
+    @Override
+    public boolean isInitializationCommand() {
+        return true;
+    }
+
     public BucketConfiguration getConfiguration() {
         return configuration;
     }

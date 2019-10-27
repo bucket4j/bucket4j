@@ -15,17 +15,12 @@
  *    limitations under the License.
  */
 
-package io.github.bucket4j.distributed.proxy.optimizers.predictive;
+package io.github.bucket4j.distributed.proxy;
 
-import io.github.bucket4j.distributed.proxy.CommandExecutor;
-import io.github.bucket4j.distributed.proxy.RequestOptimizer;
+public interface AsyncRequestOptimizer {
 
-public class PredictiveOptimizer implements RequestOptimizer {
+    AsyncRequestOptimizer NONE_OPTIMIZED = originalExecutor -> originalExecutor;
 
-    @Override
-    public CommandExecutor optimize(CommandExecutor originalExecutor) {
-        // TODO
-        throw new UnsupportedOperationException();
-    }
+    AsyncCommandExecutor optimize(AsyncCommandExecutor originalExecutor);
 
 }

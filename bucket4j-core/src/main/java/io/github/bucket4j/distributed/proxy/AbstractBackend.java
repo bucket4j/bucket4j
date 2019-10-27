@@ -18,6 +18,7 @@ public abstract class AbstractBackend<K extends Serializable> implements Backend
 
     private static final RecoveryStrategy DEFAULT_RECOVERY_STRATEGY = RecoveryStrategy.RECONSTRUCT;
     private static final RequestOptimizer DEFAULT_REQUEST_OPTIMIZER = RequestOptimizer.NONE_OPTIMIZED;
+    private static final AsyncRequestOptimizer DEFAULT_ASYNC_REQUEST_OPTIMIZER = AsyncRequestOptimizer.NONE_OPTIMIZED;
 
     @Override
     public RemoteBucketBuilder<K> builder() {
@@ -52,6 +53,7 @@ public abstract class AbstractBackend<K extends Serializable> implements Backend
 
         private RecoveryStrategy recoveryStrategy = DEFAULT_RECOVERY_STRATEGY;
         private RequestOptimizer requestOptimizer = DEFAULT_REQUEST_OPTIMIZER;
+        private AsyncRequestOptimizer asyncRequestOptimizer = DEFAULT_ASYNC_REQUEST_OPTIMIZER;
 
         @Override
         public RemoteBucketBuilder<K> withRecoveryStrategy(RecoveryStrategy recoveryStrategy) {
@@ -62,6 +64,12 @@ public abstract class AbstractBackend<K extends Serializable> implements Backend
         @Override
         public RemoteBucketBuilder<K> withRequestOptimizer(RequestOptimizer requestOptimizer) {
             this.requestOptimizer = Objects.requireNonNull(requestOptimizer);
+            return this;
+        }
+
+        @Override
+        public RemoteBucketBuilder<K> withAsyncRequestOptimizer(AsyncRequestOptimizer requestOptimizer) {
+            this.asyncRequestOptimizer = Objects.requireNonNull(requestOptimizer);
             return this;
         }
 
@@ -114,7 +122,7 @@ public abstract class AbstractBackend<K extends Serializable> implements Backend
                     return AbstractBackend.this.executeAsync(key, command);
                 }
             };
-            commandExecutor = requestOptimizer.optimize(commandExecutor);
+            commandExecutor = asyncRequestOptimizer.optimize(commandExecutor);
 
             return new AsyncBucketProxy(commandExecutor, recoveryStrategy, configurationSupplier);
         }

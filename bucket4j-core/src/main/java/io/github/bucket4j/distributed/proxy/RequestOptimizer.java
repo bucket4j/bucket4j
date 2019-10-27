@@ -17,24 +17,10 @@
 
 package io.github.bucket4j.distributed.proxy;
 
-import java.io.Serializable;
-
 public interface RequestOptimizer {
 
-    RequestOptimizer NONE_OPTIMIZED = new RequestOptimizer() {
-        @Override
-        public CommandExecutor optimize(CommandExecutor originalExecutor) {
-            return originalExecutor;
-        }
-
-        @Override
-        public AsyncCommandExecutor optimize(AsyncCommandExecutor originalExecutor) {
-            return originalExecutor;
-        }
-    };
+    RequestOptimizer NONE_OPTIMIZED = originalExecutor -> originalExecutor;
 
     CommandExecutor optimize(CommandExecutor originalExecutor);
-
-    AsyncCommandExecutor optimize(AsyncCommandExecutor originalExecutor);
 
 }

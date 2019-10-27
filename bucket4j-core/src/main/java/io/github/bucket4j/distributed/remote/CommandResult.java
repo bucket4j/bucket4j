@@ -55,6 +55,9 @@ public class CommandResult<T> implements Serializable {
     }
 
     public T getData() {
+        if (bucketNotFound) {
+            throw new IllegalStateException("getData must not be called when bucket not exists");
+        }
         return data;
     }
 

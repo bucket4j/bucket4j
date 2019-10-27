@@ -127,7 +127,11 @@ public class BucketProxy extends AbstractBucket {
 
         // retry command execution
         CreateInitialStateAndExecuteCommand<T> initAndExecuteCommand = new CreateInitialStateAndExecuteCommand<>(getConfiguration(), command);
-        T data = commandExecutor.execute(initAndExecuteCommand).getData();
+        CommandResult<T> resultAfterInitialization = commandExecutor.execute(initAndExecuteCommand);
+        if (resultAfterInitialization.isBucketNotFound()) {
+            throw new IllegalStateException("Bucket is not initialized properly");
+        }
+        T data = resultAfterInitialization.getData();
         wasInitialized.set(true);
         return data;
     }

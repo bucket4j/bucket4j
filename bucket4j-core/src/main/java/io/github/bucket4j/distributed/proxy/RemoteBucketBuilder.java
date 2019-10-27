@@ -51,6 +51,14 @@ public interface RemoteBucketBuilder<K extends Serializable> {
     /**
      * TODO
      *
+     * @param requestOptimizer
+     * @return
+     */
+    RemoteBucketBuilder<K> withAsyncRequestOptimizer(AsyncRequestOptimizer requestOptimizer);
+
+    /**
+     * TODO
+     *
      * @param key
      * @param configuration
      * @return
