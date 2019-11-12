@@ -98,6 +98,6 @@ If any information in the question should not be made publicly available, then t
 
 ## Announcement from the author
 I am looking for a long-term stable remote job 40 hours per week with an 8000$ gross per month salary. 
-Especially you should not miss to hire me if you are interested to modify Buckre4j or Rolling-Metrics libraries to behave in a way that you need. 
+Especially you should not miss to hire me if you are interested to modify Bucket4j or Rolling-Metrics libraries to behave in a way that you need. 
 [https://www.linkedin.com/in/vladimir-bukhtoyarov-a2385224](https://www.linkedin.com/in/vladimir-bukhtoyarov-a2385224)
 
