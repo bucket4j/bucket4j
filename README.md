@@ -96,3 +96,7 @@ If any information in the question should not be made publicly available, then t
 ![Opentable](/doc-pages/images/opentable.png "Opentable")
 ![Apereo CAS](/doc-pages/images/apereo_cas.jpg "Apereo CAS")
 
+## Announcement from the author
+I am looking for a long-term stable remote job 40 hours per week with an 8000$ gross per month salary. 
+Especially you should not miss to hire me if you are interested to modify Buckre4j or Rolling-Metrics libraries to behave in a way that you need.
+
