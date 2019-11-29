@@ -31,6 +31,10 @@
     <name>bucket4j-infinispan</name>
     <description>Bucket4j integration with Infinispan</description>
 
+    <properties>
+        <modular-name>infinispan</modular-name>
+    </properties>
+
     <!-- https://mvnrepository.com/artifact/org.infinispan/infinispan-core -->
     <dependencies>
         <dependency>

@@ -33,6 +33,10 @@
     <description>Bucket4j integration with Coherence</description>
     <artifactId>bucket4j-coherence</artifactId>
 
+    <properties>
+        <modular-name>coherence</modular-name>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>com.github.vladimir-bukhtoyarov</groupId>

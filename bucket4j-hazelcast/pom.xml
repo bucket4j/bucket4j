@@ -31,6 +31,10 @@
     <name>bucket4j-hazelcast</name>
     <description>Bucket4j integration with Hazelcast</description>
 
+    <properties>
+        <modular-name>hazelcast</modular-name>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>com.github.vladimir-bukhtoyarov</groupId>

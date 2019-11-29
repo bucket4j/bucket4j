@@ -31,6 +31,10 @@
     <name>bucket4j-core</name>
     <description>Bucket4j core library</description>
 
+    <properties>
+        <modular-name>core</modular-name>
+    </properties>
+
     <build>
         <plugins>
             <plugin>
