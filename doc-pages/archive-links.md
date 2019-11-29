@@ -1,4 +1,5 @@
 # Documentation links for legacy releases:
+* [4.5](https://github.com/vladimir-bukhtoyarov/bucket4j/tree/4.5) ```2 June 2019``` Option to allow interval refill to happen on interval boundary
 * [4.4](https://github.com/vladimir-bukhtoyarov/bucket4j/tree/4.4) ```3 Apr 2019``` Integration with Oracle Coherence
 * [4.3](https://github.com/vladimir-bukhtoyarov/bucket4j/tree/4.3) ```29 December 2018``` New method for estimation of ability to consume
 * [4.2](https://github.com/vladimir-bukhtoyarov/bucket4j/tree/4.2) ```21 November 2018``` Support of legacy Infinispan 8.x
