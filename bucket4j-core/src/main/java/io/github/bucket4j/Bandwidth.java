@@ -67,8 +67,8 @@ public class Bandwidth implements Serializable {
     final long timeOfFirstRefillMillis;
     final boolean useAdaptiveInitialTokens;
 
-    private Bandwidth(long capacity, long refillPeriodNanos, long refillTokens, long initialTokens, boolean refillIntervally,
-                      long timeOfFirstRefillMillis, boolean useAdaptiveInitialTokens) {
+    Bandwidth(long capacity, long refillPeriodNanos, long refillTokens, long initialTokens, boolean refillIntervally,
+              long timeOfFirstRefillMillis, boolean useAdaptiveInitialTokens) {
         this.capacity = capacity;
         this.initialTokens = initialTokens;
         this.refillPeriodNanos = refillPeriodNanos;
