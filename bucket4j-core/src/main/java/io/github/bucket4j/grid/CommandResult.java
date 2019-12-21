@@ -17,9 +17,15 @@
 
 package io.github.bucket4j.grid;
 
+import io.github.bucket4j.serialization.DeserializationBinding;
+import io.github.bucket4j.serialization.Deserializer;
+import io.github.bucket4j.serialization.SelfSerializable;
+import io.github.bucket4j.serialization.SerializationBinding;
+
+import java.io.IOException;
 import java.io.Serializable;
 
-public class CommandResult<T extends Serializable> implements Serializable {
+public class CommandResult<T extends Serializable> implements Serializable, SelfSerializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -48,5 +54,23 @@ public class CommandResult<T extends Serializable> implements Serializable {
     public boolean isBucketNotFound() {
         return bucketNotFound;
     }
+
+    @Override
+    public <T> void serializeItself(SerializationBinding<T> binding, T target) throws IOException {
+        binding.writeBoolean(target, bucketNotFound);
+        if (!bucketNotFound) {
+            binding.writeObject(target, data);
+        }
+    }
+
+    public static Deserializer<CommandResult<?>> DESERIALIZER = new Deserializer<CommandResult<?>>() {
+        @Override
+        public <S> CommandResult<?> deserialize(DeserializationBinding<S> binding, S source) throws IOException {
+            boolean isBucketNotFound = binding.readBoolean(source);
+            return isBucketNotFound
+                    ? CommandResult.bucketNotFound()
+                    : CommandResult.success((Serializable) binding.readObject(source));
+        }
+    };
 
 }

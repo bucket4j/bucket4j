@@ -17,10 +17,16 @@
 
 package io.github.bucket4j;
 
+import io.github.bucket4j.serialization.DeserializationBinding;
+import io.github.bucket4j.serialization.Deserializer;
+import io.github.bucket4j.serialization.SelfSerializable;
+import io.github.bucket4j.serialization.SerializationBinding;
+
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.Arrays;
 
-public class BucketState implements Serializable {
+public class BucketState implements Serializable, SelfSerializable {
 
     private static final long serialVersionUID = 42L;
 
@@ -304,10 +310,36 @@ public class BucketState implements Serializable {
     }
 
     @Override
+    public <T> void serializeItself(SerializationBinding<T> binding, T target) throws IOException {
+        binding.writeLongArray(target, stateData);
+    }
+
+    public static Deserializer<BucketState> DESERIALIZER = new Deserializer<BucketState>() {
+        @Override
+        public <S> BucketState deserialize(DeserializationBinding<S> binding, S source) throws IOException {
+            long[] data = binding.readLongArray(source);
+            return new BucketState(data);
+        }
+    };
+
+    @Override
     public String toString() {
         return "BucketState{" +
                 "bandwidthStates=" + Arrays.toString(stateData) +
                 '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        BucketState that = (BucketState) o;
+        return Arrays.equals(stateData, that.stateData);
+    }
+
+    @Override
+    public int hashCode() {
+        return Arrays.hashCode(stateData);
     }
 
     // just a copy of JDK method Math#multiplyExact,
@@ -326,5 +358,4 @@ public class BucketState implements Serializable {
         }
         return r;
     }
-
 }

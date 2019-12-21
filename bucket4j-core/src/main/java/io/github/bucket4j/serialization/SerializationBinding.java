@@ -1,17 +1,19 @@
 package io.github.bucket4j.serialization;
 
+import java.io.IOException;
+
 public interface SerializationBinding<T> {
 
-    void writeBoolean(T target, boolean value);
+    void writeBoolean(T target, boolean value) throws IOException;
 
-    void writeByte(T target, byte value);
+    void writeByte(T target, byte value) throws IOException;
 
-    void writeInt(T target, int value);
+    void writeInt(T target, int value) throws IOException;
 
-    void writeLong(T target, long value);
+    void writeLong(T target, long value) throws IOException;
 
-    void writeLongArray(T target, long[] value);
+    void writeLongArray(T target, long[] value) throws IOException;
 
-    void writeObject(T target, Object value);
+    void writeObject(T target, Object value) throws IOException;
 
 }

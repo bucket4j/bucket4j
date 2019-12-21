@@ -1,6 +1,10 @@
-package io.github.bucket4j;
+package io.github.bucket4j.hazelcast.serialization;
 
 import com.hazelcast.nio.serialization.StreamSerializer;
+import io.github.bucket4j.Bandwidth;
+import io.github.bucket4j.BucketConfiguration;
+import io.github.bucket4j.BucketState;
+import io.github.bucket4j.grid.hazelcast.serialization.HazelcastSerializer;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -19,7 +23,7 @@ public class BucketStateSerializerTest extends SerializerTest<BucketState> {
 
     @Override
     protected StreamSerializer<BucketState> getSerializerUnderTest() {
-        return this.bucketStateSerializer;
+        return HazelcastSerializer.BUCKET_STATE_SERIALIZER;
     }
 
     @Override

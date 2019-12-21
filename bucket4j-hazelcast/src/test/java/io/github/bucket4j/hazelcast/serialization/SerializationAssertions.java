@@ -1,19 +1,17 @@
-package io.github.bucket4j;
+package io.github.bucket4j.hazelcast.serialization;
 
+import io.github.bucket4j.Bandwidth;
+import io.github.bucket4j.BucketConfiguration;
+import io.github.bucket4j.BucketState;
 import org.junit.Assert;
 
 import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertTrue;
 
 class SerializationAssertions {
 
     static void assertEquals(Bandwidth original, Bandwidth deserialized) {
-        Assert.assertEquals(original.getCapacity(), deserialized.getCapacity());
-        Assert.assertEquals(original.getInitialTokens(), deserialized.getInitialTokens());
-        Assert.assertEquals(original.getRefillPeriodNanos(), deserialized.getRefillPeriodNanos());
-        Assert.assertEquals(original.getRefillTokens(), deserialized.getRefillTokens());
-        Assert.assertEquals(original.refillIntervally, deserialized.refillIntervally);
-        Assert.assertEquals(original.getTimeOfFirstRefillMillis(), deserialized.getTimeOfFirstRefillMillis());
-        Assert.assertEquals(original.useAdaptiveInitialTokens, deserialized.useAdaptiveInitialTokens);
+        original.equals(deserialized);
     }
 
     static void assertEquals(BucketConfiguration original, BucketConfiguration deserialized) {
@@ -29,7 +27,7 @@ class SerializationAssertions {
     }
 
     static void assertEquals(BucketState original, BucketState deserialized) {
-        assertArrayEquals(original.stateData, deserialized.stateData);
+        assertTrue(original.equals(deserialized));
     }
 
     private SerializationAssertions() {

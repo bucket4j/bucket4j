@@ -1,4 +1,4 @@
-/*
+package io.github.bucket4j.hazelcast;/*
  *
  * Copyright 2015-2018 Vladimir Bukhtoyarov
  *

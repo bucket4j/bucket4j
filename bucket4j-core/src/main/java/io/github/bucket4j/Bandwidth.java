@@ -17,8 +17,15 @@
 
 package io.github.bucket4j;
 
+import io.github.bucket4j.serialization.DeserializationBinding;
+import io.github.bucket4j.serialization.Deserializer;
+import io.github.bucket4j.serialization.SelfSerializable;
+import io.github.bucket4j.serialization.SerializationBinding;
+
+import java.io.IOException;
 import java.io.Serializable;
 import java.time.Duration;
+import java.util.Objects;
 
 /**
  * <h3>Anatomy of bandwidth:</h3>
@@ -55,7 +62,7 @@ import java.time.Duration;
  *      .build()
  * }</pre>
  */
-public class Bandwidth implements Serializable {
+public class Bandwidth implements Serializable, SelfSerializable {
 
     private static final long serialVersionUID = 101L;
 
@@ -147,6 +154,14 @@ public class Bandwidth implements Serializable {
         return refillTokens;
     }
 
+    public boolean isRefillIntervally() {
+        return refillIntervally;
+    }
+
+    public boolean isUseAdaptiveInitialTokens() {
+        return useAdaptiveInitialTokens;
+    }
+
     public static long getSerialVersionUID() {
         return serialVersionUID;
     }
@@ -154,6 +169,33 @@ public class Bandwidth implements Serializable {
     public long getTimeOfFirstRefillMillis() {
         return timeOfFirstRefillMillis;
     }
+
+    @Override
+    public <T> void serializeItself(SerializationBinding<T> binding, T target) throws IOException {
+        binding.writeLong(target, capacity);
+        binding.writeLong(target, initialTokens);
+        binding.writeLong(target, refillPeriodNanos);
+        binding.writeLong(target, refillTokens);
+        binding.writeBoolean(target, refillIntervally);
+        binding.writeLong(target, timeOfFirstRefillMillis);
+        binding.writeBoolean(target, useAdaptiveInitialTokens);
+    }
+
+    public static Deserializer<Bandwidth> DESERIALIZER = new Deserializer<Bandwidth>() {
+        @Override
+        public <S> Bandwidth deserialize(DeserializationBinding<S> binding, S source) throws IOException {
+            long capacity = binding.readLong(source);
+            long initialTokens = binding.readLong(source);
+            long refillPeriodNanos = binding.readLong(source);
+            long refillTokens = binding.readLong(source);
+            boolean refillIntervally = binding.readBoolean(source);
+            long timeOfFirstRefillMillis = binding.readLong(source);
+            boolean useAdaptiveInitialTokens = binding.readBoolean(source);
+
+            return new Bandwidth(capacity, refillPeriodNanos, refillTokens, initialTokens, refillIntervally,
+                    timeOfFirstRefillMillis, useAdaptiveInitialTokens);
+        }
+    };
 
     @Override
     public String toString() {
@@ -169,4 +211,22 @@ public class Bandwidth implements Serializable {
         return sb.toString();
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Bandwidth bandwidth = (Bandwidth) o;
+        return capacity == bandwidth.capacity &&
+                initialTokens == bandwidth.initialTokens &&
+                refillPeriodNanos == bandwidth.refillPeriodNanos &&
+                refillTokens == bandwidth.refillTokens &&
+                refillIntervally == bandwidth.refillIntervally &&
+                timeOfFirstRefillMillis == bandwidth.timeOfFirstRefillMillis &&
+                useAdaptiveInitialTokens == bandwidth.useAdaptiveInitialTokens;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(capacity, initialTokens, refillPeriodNanos, refillTokens, refillIntervally, timeOfFirstRefillMillis, useAdaptiveInitialTokens);
+    }
 }

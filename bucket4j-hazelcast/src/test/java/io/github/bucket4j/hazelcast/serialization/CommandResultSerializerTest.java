@@ -1,7 +1,8 @@
-package io.github.bucket4j;
+package io.github.bucket4j.hazelcast.serialization;
 
 import com.hazelcast.nio.serialization.StreamSerializer;
 import io.github.bucket4j.grid.CommandResult;
+import io.github.bucket4j.grid.hazelcast.serialization.HazelcastSerializer;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -13,7 +14,7 @@ public class CommandResultSerializerTest<T extends Serializable> extends Seriali
 
     @Override
     protected StreamSerializer<CommandResult<T>> getSerializerUnderTest() {
-        return this.commandResultSerializer;
+        return (StreamSerializer) HazelcastSerializer.COMMAND_RESULT_SERIALIZER;
     }
 
     @Override

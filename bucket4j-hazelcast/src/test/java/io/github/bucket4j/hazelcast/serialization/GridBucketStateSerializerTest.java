@@ -1,7 +1,11 @@
-package io.github.bucket4j;
+package io.github.bucket4j.hazelcast.serialization;
 
 import com.hazelcast.nio.serialization.StreamSerializer;
+import io.github.bucket4j.Bandwidth;
+import io.github.bucket4j.BucketConfiguration;
+import io.github.bucket4j.BucketState;
 import io.github.bucket4j.grid.GridBucketState;
+import io.github.bucket4j.grid.hazelcast.serialization.HazelcastSerializer;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -20,7 +24,7 @@ public class GridBucketStateSerializerTest extends SerializerTest<GridBucketStat
 
     @Override
     protected StreamSerializer<GridBucketState> getSerializerUnderTest() {
-        return this.gridBucketStateSerializer;
+        return HazelcastSerializer.GRID_BUCKET_STATE_SERIALIZER;
     }
 
     @Override

@@ -1,6 +1,8 @@
-package io.github.bucket4j;
+package io.github.bucket4j.hazelcast.serialization;
 
 import com.hazelcast.nio.serialization.StreamSerializer;
+import io.github.bucket4j.Bandwidth;
+import io.github.bucket4j.grid.hazelcast.serialization.HazelcastSerializer;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -18,7 +20,7 @@ public class BandwidthSerializerTest extends SerializerTest<Bandwidth> {
 
     @Override
     protected StreamSerializer<Bandwidth> getSerializerUnderTest() {
-        return this.bandwidthSerializer;
+        return HazelcastSerializer.BANDWIDTH_SERIALIZER;
     }
 
     @Override
@@ -49,4 +51,5 @@ public class BandwidthSerializerTest extends SerializerTest<Bandwidth> {
         Bandwidth bandwidth = classic(40, intervallyAligned(300, Duration.ofSeconds(4200), Instant.now(), true));
         testSerialization(bandwidth);
     }
+
 }

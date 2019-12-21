@@ -19,10 +19,15 @@ package io.github.bucket4j.grid;
 
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.BucketState;
+import io.github.bucket4j.serialization.DeserializationBinding;
+import io.github.bucket4j.serialization.Deserializer;
+import io.github.bucket4j.serialization.SelfSerializable;
+import io.github.bucket4j.serialization.SerializationBinding;
 
+import java.io.IOException;
 import java.io.Serializable;
 
-public class GridBucketState implements Serializable {
+public class GridBucketState implements Serializable, SelfSerializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -77,5 +82,20 @@ public class GridBucketState implements Serializable {
     public BucketState getState() {
         return state;
     }
+
+    @Override
+    public <T> void serializeItself(SerializationBinding<T> binding, T target) throws IOException {
+        binding.writeObject(target, configuration);
+        binding.writeObject(target, state);
+    }
+
+    public static Deserializer<GridBucketState> DESERIALIZER = new Deserializer<GridBucketState>() {
+        @Override
+        public <S> GridBucketState deserialize(DeserializationBinding<S> binding, S source) throws IOException {
+            BucketConfiguration bucketConfiguration = binding.readObject(source, BucketConfiguration.class);
+            BucketState bucketState = binding.readObject(source, BucketState.class);
+            return new GridBucketState(bucketConfiguration, bucketState);
+        }
+    };
 
 }

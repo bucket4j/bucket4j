@@ -17,12 +17,19 @@
 
 package io.github.bucket4j;
 
+import io.github.bucket4j.serialization.DeserializationBinding;
+import io.github.bucket4j.serialization.Deserializer;
+import io.github.bucket4j.serialization.SelfSerializable;
+import io.github.bucket4j.serialization.SerializationBinding;
+
+import java.io.IOException;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
-public final class BucketConfiguration implements Serializable {
+public final class BucketConfiguration implements Serializable, SelfSerializable {
 
     private static final long serialVersionUID = 42L;
 
@@ -59,5 +66,26 @@ public final class BucketConfiguration implements Serializable {
     public boolean isCompatible(BucketConfiguration newConfiguration) {
         return bandwidths.length == newConfiguration.bandwidths.length;
     }
+
+    @Override
+    public <T> void serializeItself(SerializationBinding<T> binding, T target) throws IOException {
+        binding.writeInt(target, bandwidths.length);
+        for (Bandwidth bandwidth : bandwidths) {
+            binding.writeObject(target, bandwidth);
+        }
+    }
+
+    public static Deserializer<BucketConfiguration> DESERIALIZER = new Deserializer<BucketConfiguration>() {
+        @Override
+        public <S> BucketConfiguration deserialize(DeserializationBinding<S> binding, S source) throws IOException {
+            int bandwidthAmount = binding.readInt(source);
+            List<Bandwidth> bandwidths = new ArrayList<>(bandwidthAmount);
+            for (int ii = 0; ii < bandwidthAmount; ii++) {
+                Bandwidth bandwidth = binding.readObject(source, Bandwidth.class);
+                bandwidths.add(bandwidth);
+            }
+            return new BucketConfiguration(bandwidths);
+        }
+    };
 
 }
