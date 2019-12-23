@@ -18,8 +18,7 @@
 package io.github.bucket4j;
 
 import io.github.bucket4j.serialization.DeserializationBinding;
-import io.github.bucket4j.serialization.Deserializer;
-import io.github.bucket4j.serialization.SelfSerializable;
+import io.github.bucket4j.serialization.SerializationHandle;
 import io.github.bucket4j.serialization.SerializationBinding;
 
 import java.io.IOException;
@@ -62,7 +61,7 @@ import java.util.Objects;
  *      .build()
  * }</pre>
  */
-public class Bandwidth implements Serializable, SelfSerializable {
+public class Bandwidth implements Serializable {
 
     private static final long serialVersionUID = 101L;
 
@@ -170,18 +169,7 @@ public class Bandwidth implements Serializable, SelfSerializable {
         return timeOfFirstRefillMillis;
     }
 
-    @Override
-    public <T> void serializeItself(SerializationBinding<T> binding, T target) throws IOException {
-        binding.writeLong(target, capacity);
-        binding.writeLong(target, initialTokens);
-        binding.writeLong(target, refillPeriodNanos);
-        binding.writeLong(target, refillTokens);
-        binding.writeBoolean(target, refillIntervally);
-        binding.writeLong(target, timeOfFirstRefillMillis);
-        binding.writeBoolean(target, useAdaptiveInitialTokens);
-    }
-
-    public static Deserializer<Bandwidth> DESERIALIZER = new Deserializer<Bandwidth>() {
+    public static SerializationHandle<Bandwidth> SERIALIZATION_HANDLE = new SerializationHandle<Bandwidth>() {
         @Override
         public <S> Bandwidth deserialize(DeserializationBinding<S> binding, S source) throws IOException {
             long capacity = binding.readLong(source);
@@ -195,6 +183,18 @@ public class Bandwidth implements Serializable, SelfSerializable {
             return new Bandwidth(capacity, refillPeriodNanos, refillTokens, initialTokens, refillIntervally,
                     timeOfFirstRefillMillis, useAdaptiveInitialTokens);
         }
+
+        @Override
+        public <O> void serialize(SerializationBinding<O> binding, O target, Bandwidth bandwidth) throws IOException {
+            binding.writeLong(target, bandwidth.capacity);
+            binding.writeLong(target, bandwidth.initialTokens);
+            binding.writeLong(target, bandwidth.refillPeriodNanos);
+            binding.writeLong(target, bandwidth.refillTokens);
+            binding.writeBoolean(target, bandwidth.refillIntervally);
+            binding.writeLong(target, bandwidth.timeOfFirstRefillMillis);
+            binding.writeBoolean(target, bandwidth.useAdaptiveInitialTokens);
+        }
+
     };
 
     @Override

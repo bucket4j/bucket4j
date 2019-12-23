@@ -18,15 +18,14 @@
 package io.github.bucket4j;
 
 import io.github.bucket4j.serialization.DeserializationBinding;
-import io.github.bucket4j.serialization.Deserializer;
-import io.github.bucket4j.serialization.SelfSerializable;
+import io.github.bucket4j.serialization.SerializationHandle;
 import io.github.bucket4j.serialization.SerializationBinding;
 
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Arrays;
 
-public class BucketState implements Serializable, SelfSerializable {
+public class BucketState implements Serializable {
 
     private static final long serialVersionUID = 42L;
 
@@ -309,16 +308,16 @@ public class BucketState implements Serializable, SelfSerializable {
         stateData[bandwidth * BANDWIDTH_SIZE + 2] = roundingError;
     }
 
-    @Override
-    public <T> void serializeItself(SerializationBinding<T> binding, T target) throws IOException {
-        binding.writeLongArray(target, stateData);
-    }
-
-    public static Deserializer<BucketState> DESERIALIZER = new Deserializer<BucketState>() {
+    public static SerializationHandle<BucketState> SERIALIZATION_HANDLE = new SerializationHandle<BucketState>() {
         @Override
         public <S> BucketState deserialize(DeserializationBinding<S> binding, S source) throws IOException {
             long[] data = binding.readLongArray(source);
             return new BucketState(data);
+        }
+
+        @Override
+        public <O> void serialize(SerializationBinding<O> binding, O target, BucketState state) throws IOException {
+            binding.writeLongArray(target, state.stateData);
         }
     };
 

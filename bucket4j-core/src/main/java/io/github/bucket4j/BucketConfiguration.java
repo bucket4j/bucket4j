@@ -18,8 +18,7 @@
 package io.github.bucket4j;
 
 import io.github.bucket4j.serialization.DeserializationBinding;
-import io.github.bucket4j.serialization.Deserializer;
-import io.github.bucket4j.serialization.SelfSerializable;
+import io.github.bucket4j.serialization.SerializationHandle;
 import io.github.bucket4j.serialization.SerializationBinding;
 
 import java.io.IOException;
@@ -29,7 +28,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
-public final class BucketConfiguration implements Serializable, SelfSerializable {
+public final class BucketConfiguration implements Serializable {
 
     private static final long serialVersionUID = 42L;
 
@@ -67,15 +66,7 @@ public final class BucketConfiguration implements Serializable, SelfSerializable
         return bandwidths.length == newConfiguration.bandwidths.length;
     }
 
-    @Override
-    public <T> void serializeItself(SerializationBinding<T> binding, T target) throws IOException {
-        binding.writeInt(target, bandwidths.length);
-        for (Bandwidth bandwidth : bandwidths) {
-            binding.writeObject(target, bandwidth);
-        }
-    }
-
-    public static Deserializer<BucketConfiguration> DESERIALIZER = new Deserializer<BucketConfiguration>() {
+    public static SerializationHandle<BucketConfiguration> SERIALIZATION_HANDLE = new SerializationHandle<BucketConfiguration>() {
         @Override
         public <S> BucketConfiguration deserialize(DeserializationBinding<S> binding, S source) throws IOException {
             int bandwidthAmount = binding.readInt(source);
@@ -85,6 +76,14 @@ public final class BucketConfiguration implements Serializable, SelfSerializable
                 bandwidths.add(bandwidth);
             }
             return new BucketConfiguration(bandwidths);
+        }
+
+        @Override
+        public <O> void serialize(SerializationBinding<O> binding, O target, BucketConfiguration configuration) throws IOException {
+            binding.writeInt(target, configuration.bandwidths.length);
+            for (Bandwidth bandwidth : configuration.bandwidths) {
+                binding.writeObject(target, bandwidth);
+            }
         }
     };
 

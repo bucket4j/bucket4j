@@ -9,21 +9,20 @@ import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.BucketState;
 import io.github.bucket4j.grid.CommandResult;
 import io.github.bucket4j.grid.GridBucketState;
-import io.github.bucket4j.serialization.Deserializer;
-import io.github.bucket4j.serialization.SelfSerializable;
+import io.github.bucket4j.serialization.SerializationHandle;
 
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
 
-public class HazelcastSerializer<T extends SelfSerializable> implements StreamSerializer<T>, TypedStreamDeserializer<T> {
+public class HazelcastSerializer<T> implements StreamSerializer<T>, TypedStreamDeserializer<T> {
 
-    public static HazelcastSerializer<Bandwidth> BANDWIDTH_SERIALIZER = new HazelcastSerializer<>(1, Bandwidth.class, Bandwidth.DESERIALIZER);
-    public static HazelcastSerializer<BucketConfiguration> BUCKET_CONFIGURATION_SERIALIZER = new HazelcastSerializer<>(2, BucketConfiguration.class, BucketConfiguration.DESERIALIZER);
-    public static HazelcastSerializer<BucketState> BUCKET_STATE_SERIALIZER = new HazelcastSerializer<>(3, BucketState.class, BucketState.DESERIALIZER);
-    public static HazelcastSerializer<GridBucketState> GRID_BUCKET_STATE_SERIALIZER = new HazelcastSerializer<>(4, GridBucketState.class, GridBucketState.DESERIALIZER);
-    public static HazelcastSerializer<CommandResult<?>> COMMAND_RESULT_SERIALIZER = new HazelcastSerializer<CommandResult<?>>(5, (Class) CommandResult.class, CommandResult.DESERIALIZER);
+    public static HazelcastSerializer<Bandwidth> BANDWIDTH_SERIALIZER = new HazelcastSerializer<>(1, Bandwidth.class, Bandwidth.SERIALIZATION_HANDLE);
+    public static HazelcastSerializer<BucketConfiguration> BUCKET_CONFIGURATION_SERIALIZER = new HazelcastSerializer<>(2, BucketConfiguration.class, BucketConfiguration.SERIALIZATION_HANDLE);
+    public static HazelcastSerializer<BucketState> BUCKET_STATE_SERIALIZER = new HazelcastSerializer<>(3, BucketState.class, BucketState.SERIALIZATION_HANDLE);
+    public static HazelcastSerializer<GridBucketState> GRID_BUCKET_STATE_SERIALIZER = new HazelcastSerializer<>(4, GridBucketState.class, GridBucketState.SERIALIZATION_HANDLE);
+    public static HazelcastSerializer<CommandResult<?>> COMMAND_RESULT_SERIALIZER = new HazelcastSerializer<CommandResult<?>>(5, (Class) CommandResult.class, CommandResult.SERIALIZATION_HANDLE);
 
     public static List<HazelcastSerializer<?>> getAllSerializers(int typeIdBase) {
         return Arrays.asList(
@@ -39,16 +38,16 @@ public class HazelcastSerializer<T extends SelfSerializable> implements StreamSe
 
     private final int typeId;
     private final Class<T> serializableType;
-    private final Deserializer<T> deserializer;
+    private final SerializationHandle<T> serializationHandle;
 
-    public HazelcastSerializer(int typeId, Class<T> serializableType, Deserializer<T> deserializer) {
+    public HazelcastSerializer(int typeId, Class<T> serializableType, SerializationHandle<T> serializationHandle) {
         this.typeId = typeId;
         this.serializableType = serializableType;
-        this.deserializer = deserializer;
+        this.serializationHandle = serializationHandle;
     }
 
     public HazelcastSerializer<T> withTypeId(int typeId) {
-        return new HazelcastSerializer<>(typeId, serializableType, deserializer);
+        return new HazelcastSerializer<>(typeId, serializableType, serializationHandle);
     }
 
     public Class<T> getSerializableType() {
@@ -66,8 +65,8 @@ public class HazelcastSerializer<T extends SelfSerializable> implements StreamSe
     }
 
     @Override
-    public void write(ObjectDataOutput out, T selfSerializable) throws IOException {
-        selfSerializable.serializeItself(BINDING, out);
+    public void write(ObjectDataOutput out, T serializable) throws IOException {
+        serializationHandle.serialize(BINDING, out, serializable);
     }
 
     @Override
@@ -81,7 +80,7 @@ public class HazelcastSerializer<T extends SelfSerializable> implements StreamSe
     }
 
     private T read0(ObjectDataInput in) throws IOException {
-        return deserializer.deserialize(BINDING, in);
+        return serializationHandle.deserialize(BINDING, in);
     }
 
 }
