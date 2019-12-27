@@ -22,8 +22,12 @@ import io.github.bucket4j.BucketState;
 import io.github.bucket4j.grid.CommandResult;
 import io.github.bucket4j.grid.GridBucketState;
 import io.github.bucket4j.grid.GridCommand;
+import io.github.bucket4j.serialization.DeserializationBinding;
+import io.github.bucket4j.serialization.SerializationBinding;
+import io.github.bucket4j.serialization.SerializationHandle;
 
 import javax.cache.processor.MutableEntry;
+import java.io.IOException;
 import java.io.Serializable;
 
 public class InitStateAndExecuteProcessor<K extends Serializable, T extends Serializable> implements JCacheEntryProcessor<K, T> {
@@ -32,6 +36,22 @@ public class InitStateAndExecuteProcessor<K extends Serializable, T extends Seri
 
     private GridCommand<T> targetCommand;
     private BucketConfiguration configuration;
+
+    public static SerializationHandle<InitStateAndExecuteProcessor<?, ?>> SERIALIZATION_HANDLE = new SerializationHandle<InitStateAndExecuteProcessor<?, ?>>() {
+        @Override
+        public <S> InitStateAndExecuteProcessor<?, ?> deserialize(DeserializationBinding<S> binding, S source) throws IOException {
+            GridCommand<?> targetCommand = (GridCommand<?>) binding.readObject(source);
+            BucketConfiguration configuration = binding.readObject(source, BucketConfiguration.class);
+            return new InitStateAndExecuteProcessor<>(targetCommand, configuration);
+        }
+
+        @Override
+        public <O> void serialize(SerializationBinding<O> binding, O target, InitStateAndExecuteProcessor<?, ?> processor) throws IOException {
+            binding.writeObject(target, processor.targetCommand);
+            binding.writeObject(target, processor.configuration);
+        }
+
+    };
 
     public InitStateAndExecuteProcessor(GridCommand<T> targetCommand, BucketConfiguration configuration) {
         this.configuration = configuration;

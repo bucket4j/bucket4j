@@ -22,8 +22,12 @@ import io.github.bucket4j.BucketState;
 import io.github.bucket4j.Nothing;
 import io.github.bucket4j.grid.CommandResult;
 import io.github.bucket4j.grid.GridBucketState;
+import io.github.bucket4j.serialization.DeserializationBinding;
+import io.github.bucket4j.serialization.SerializationBinding;
+import io.github.bucket4j.serialization.SerializationHandle;
 
 import javax.cache.processor.MutableEntry;
+import java.io.IOException;
 import java.io.Serializable;
 
 public class InitStateProcessor<K extends Serializable> implements JCacheEntryProcessor<K, Nothing> {
@@ -35,6 +39,20 @@ public class InitStateProcessor<K extends Serializable> implements JCacheEntryPr
     public InitStateProcessor(BucketConfiguration configuration) {
         this.configuration = configuration;
     }
+
+    public static SerializationHandle<InitStateProcessor<?>> SERIALIZATION_HANDLE = new SerializationHandle<InitStateProcessor<?>>() {
+        @Override
+        public <S> InitStateProcessor<?> deserialize(DeserializationBinding<S> binding, S source) throws IOException {
+            BucketConfiguration configuration = (BucketConfiguration) binding.readObject(source, BucketConfiguration.class);
+            return new InitStateProcessor<>(configuration);
+        }
+
+        @Override
+        public <O> void serialize(SerializationBinding<O> binding, O target, InitStateProcessor<?> processor) throws IOException {
+            binding.writeObject(target, processor.configuration);
+        }
+
+    };
 
     @Override
     public CommandResult<Nothing> process(MutableEntry<K, GridBucketState> mutableEntry, Object... arguments) {
