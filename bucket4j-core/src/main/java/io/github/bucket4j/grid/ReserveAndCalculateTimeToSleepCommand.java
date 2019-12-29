@@ -17,6 +17,13 @@
 
 package io.github.bucket4j.grid;
 
+import io.github.bucket4j.Bandwidth;
+import io.github.bucket4j.serialization.DeserializationAdapter;
+import io.github.bucket4j.serialization.SerializationAdapter;
+import io.github.bucket4j.serialization.SerializationHandle;
+
+import java.io.IOException;
+
 public class ReserveAndCalculateTimeToSleepCommand implements GridCommand<Long> {
 
     private static final long serialVersionUID = 1L;
@@ -24,6 +31,23 @@ public class ReserveAndCalculateTimeToSleepCommand implements GridCommand<Long> 
     private long tokensToConsume;
     private long waitIfBusyNanosLimit;
     private boolean bucketStateModified;
+
+    public static SerializationHandle<ReserveAndCalculateTimeToSleepCommand> SERIALIZATION_HANDLE = new SerializationHandle<ReserveAndCalculateTimeToSleepCommand>() {
+        @Override
+        public <S> ReserveAndCalculateTimeToSleepCommand deserialize(DeserializationAdapter<S> adapter, S source) throws IOException {
+            long tokensToConsume = adapter.readLong(source);
+            long waitIfBusyNanosLimit = adapter.readLong(source);
+
+            return new ReserveAndCalculateTimeToSleepCommand(tokensToConsume, waitIfBusyNanosLimit);
+        }
+
+        @Override
+        public <O> void serialize(SerializationAdapter<O> adapter, O target, ReserveAndCalculateTimeToSleepCommand command) throws IOException {
+            adapter.writeLong(target, command.tokensToConsume);
+            adapter.writeLong(target, command.waitIfBusyNanosLimit);
+        }
+
+    };
 
     public ReserveAndCalculateTimeToSleepCommand(long tokensToConsume, long waitIfBusyNanosLimit) {
         this.tokensToConsume = tokensToConsume;

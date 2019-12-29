@@ -18,12 +18,32 @@
 package io.github.bucket4j.grid;
 
 import io.github.bucket4j.Nothing;
+import io.github.bucket4j.serialization.DeserializationAdapter;
+import io.github.bucket4j.serialization.SerializationAdapter;
+import io.github.bucket4j.serialization.SerializationHandle;
+
+import java.io.IOException;
 
 public class AddTokensCommand implements GridCommand<Nothing> {
 
     private static final long serialVersionUID = 1L;
 
     private long tokensToAdd;
+
+    public static SerializationHandle<AddTokensCommand> SERIALIZATION_HANDLE = new SerializationHandle<AddTokensCommand>() {
+        @Override
+        public <S> AddTokensCommand deserialize(DeserializationAdapter<S> adapter, S source) throws IOException {
+            long tokensToAdd = adapter.readLong(source);
+
+            return new AddTokensCommand(tokensToAdd);
+        }
+
+        @Override
+        public <O> void serialize(SerializationAdapter<O> adapter, O target, AddTokensCommand command) throws IOException {
+            adapter.writeLong(target, command.tokensToAdd);
+        }
+
+    };
 
     public AddTokensCommand(long tokensToAdd) {
         this.tokensToAdd = tokensToAdd;

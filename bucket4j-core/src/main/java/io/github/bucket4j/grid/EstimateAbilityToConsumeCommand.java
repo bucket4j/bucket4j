@@ -17,6 +17,11 @@
 
 package io.github.bucket4j.grid;
 import io.github.bucket4j.EstimationProbe;
+import io.github.bucket4j.serialization.DeserializationAdapter;
+import io.github.bucket4j.serialization.SerializationAdapter;
+import io.github.bucket4j.serialization.SerializationHandle;
+
+import java.io.IOException;
 
 
 public class EstimateAbilityToConsumeCommand implements GridCommand<EstimationProbe> {
@@ -24,6 +29,21 @@ public class EstimateAbilityToConsumeCommand implements GridCommand<EstimationPr
     private static final long serialVersionUID = 1L;
 
     private long tokensToConsume;
+
+    public static SerializationHandle<EstimateAbilityToConsumeCommand> SERIALIZATION_HANDLE = new SerializationHandle<EstimateAbilityToConsumeCommand>() {
+        @Override
+        public <S> EstimateAbilityToConsumeCommand deserialize(DeserializationAdapter<S> adapter, S source) throws IOException {
+            long tokensToConsume = adapter.readLong(source);
+
+            return new EstimateAbilityToConsumeCommand(tokensToConsume);
+        }
+
+        @Override
+        public <O> void serialize(SerializationAdapter<O> adapter, O target, EstimateAbilityToConsumeCommand command) throws IOException {
+            adapter.writeLong(target, command.tokensToConsume);
+        }
+
+    };
 
     public EstimateAbilityToConsumeCommand(long tokensToEstimate) {
         this.tokensToConsume = tokensToEstimate;

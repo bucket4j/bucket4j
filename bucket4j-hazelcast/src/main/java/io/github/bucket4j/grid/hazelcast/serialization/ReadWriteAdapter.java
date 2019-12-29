@@ -2,12 +2,12 @@ package io.github.bucket4j.grid.hazelcast.serialization;
 
 import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;
-import io.github.bucket4j.serialization.DeserializationBinding;
-import io.github.bucket4j.serialization.SerializationBinding;
+import io.github.bucket4j.serialization.DeserializationAdapter;
+import io.github.bucket4j.serialization.SerializationAdapter;
 
 import java.io.IOException;
 
-class ReadWriteBinding implements SerializationBinding<ObjectDataOutput>, DeserializationBinding<ObjectDataInput> {
+class ReadWriteAdapter implements SerializationAdapter<ObjectDataOutput>, DeserializationAdapter<ObjectDataInput> {
 
     @Override
     public boolean readBoolean(ObjectDataInput source) throws IOException {

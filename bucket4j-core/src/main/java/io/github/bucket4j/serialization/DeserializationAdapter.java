@@ -2,7 +2,7 @@ package io.github.bucket4j.serialization;
 
 import java.io.IOException;
 
-public interface DeserializationBinding<S> {
+public interface DeserializationAdapter<S> {
 
     boolean readBoolean(S source) throws IOException;
 

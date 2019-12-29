@@ -18,12 +18,33 @@
 package io.github.bucket4j.grid;
 
 
+import io.github.bucket4j.serialization.DeserializationAdapter;
+import io.github.bucket4j.serialization.SerializationAdapter;
+import io.github.bucket4j.serialization.SerializationHandle;
+
+import java.io.IOException;
+
 public class ConsumeAsMuchAsPossibleCommand implements GridCommand<Long> {
 
     private static final long serialVersionUID = 1L;
 
     private long limit;
     private boolean bucketStateModified;
+
+    public static SerializationHandle<ConsumeAsMuchAsPossibleCommand> SERIALIZATION_HANDLE = new SerializationHandle<ConsumeAsMuchAsPossibleCommand>() {
+        @Override
+        public <S> ConsumeAsMuchAsPossibleCommand deserialize(DeserializationAdapter<S> adapter, S source) throws IOException {
+            long limit = adapter.readLong(source);
+
+            return new ConsumeAsMuchAsPossibleCommand(limit);
+        }
+
+        @Override
+        public <O> void serialize(SerializationAdapter<O> adapter, O target, ConsumeAsMuchAsPossibleCommand command) throws IOException {
+            adapter.writeLong(target, command.limit);
+        }
+
+    };
 
     public ConsumeAsMuchAsPossibleCommand(long limit) {
         this.limit = limit;

@@ -18,6 +18,11 @@
 package io.github.bucket4j.grid;
 
 import io.github.bucket4j.ConsumptionProbe;
+import io.github.bucket4j.serialization.DeserializationAdapter;
+import io.github.bucket4j.serialization.SerializationAdapter;
+import io.github.bucket4j.serialization.SerializationHandle;
+
+import java.io.IOException;
 
 
 public class TryConsumeAndReturnRemainingTokensCommand implements GridCommand<ConsumptionProbe> {
@@ -26,6 +31,21 @@ public class TryConsumeAndReturnRemainingTokensCommand implements GridCommand<Co
 
     private long tokensToConsume;
     private boolean bucketStateModified = false;
+
+    public static SerializationHandle<TryConsumeAndReturnRemainingTokensCommand> SERIALIZATION_HANDLE = new SerializationHandle<TryConsumeAndReturnRemainingTokensCommand>() {
+        @Override
+        public <S> TryConsumeAndReturnRemainingTokensCommand deserialize(DeserializationAdapter<S> adapter, S source) throws IOException {
+            long tokensToConsume = adapter.readLong(source);
+
+            return new TryConsumeAndReturnRemainingTokensCommand(tokensToConsume);
+        }
+
+        @Override
+        public <O> void serialize(SerializationAdapter<O> adapter, O target, TryConsumeAndReturnRemainingTokensCommand command) throws IOException {
+            adapter.writeLong(target, command.tokensToConsume);
+        }
+
+    };
 
     public TryConsumeAndReturnRemainingTokensCommand(long tokensToConsume) {
         this.tokensToConsume = tokensToConsume;

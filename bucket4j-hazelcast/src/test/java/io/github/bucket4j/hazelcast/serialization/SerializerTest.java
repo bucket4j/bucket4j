@@ -7,7 +7,6 @@ import com.hazelcast.internal.serialization.impl.DefaultSerializationServiceBuil
 import com.hazelcast.nio.BufferObjectDataInput;
 import com.hazelcast.nio.BufferObjectDataOutput;
 import com.hazelcast.nio.serialization.StreamSerializer;
-import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.grid.hazelcast.serialization.*;
 import org.junit.Before;
 

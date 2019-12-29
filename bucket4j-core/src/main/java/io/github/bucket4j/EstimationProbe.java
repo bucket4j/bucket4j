@@ -17,6 +17,12 @@
 
 package io.github.bucket4j;
 
+import io.github.bucket4j.grid.ReserveAndCalculateTimeToSleepCommand;
+import io.github.bucket4j.serialization.DeserializationAdapter;
+import io.github.bucket4j.serialization.SerializationAdapter;
+import io.github.bucket4j.serialization.SerializationHandle;
+
+import java.io.IOException;
 import java.io.Serializable;
 
 /**
@@ -32,6 +38,25 @@ public class EstimationProbe implements Serializable {
     private final boolean canBeConsumed;
     private final long remainingTokens;
     private final long nanosToWaitForRefill;
+
+    public static SerializationHandle<EstimationProbe> SERIALIZATION_HANDLE = new SerializationHandle<EstimationProbe>() {
+        @Override
+        public <S> EstimationProbe deserialize(DeserializationAdapter<S> adapter, S source) throws IOException {
+            boolean canBeConsumed = adapter.readBoolean(source);
+            long remainingTokens = adapter.readLong(source);
+            long nanosToWaitForRefill = adapter.readLong(source);
+
+            return new EstimationProbe(canBeConsumed, remainingTokens, nanosToWaitForRefill);
+        }
+
+        @Override
+        public <O> void serialize(SerializationAdapter<O> adapter, O target, EstimationProbe probe) throws IOException {
+            adapter.writeBoolean(target, probe.canBeConsumed);
+            adapter.writeLong(target, probe.remainingTokens);
+            adapter.writeLong(target, probe.nanosToWaitForRefill);
+        }
+
+    };
 
     public static EstimationProbe canBeConsumed(long remainingTokens) {
         return new EstimationProbe(true, remainingTokens, 0);

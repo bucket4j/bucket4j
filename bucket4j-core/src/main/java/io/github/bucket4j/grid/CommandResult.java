@@ -17,9 +17,9 @@
 
 package io.github.bucket4j.grid;
 
-import io.github.bucket4j.serialization.DeserializationBinding;
+import io.github.bucket4j.serialization.DeserializationAdapter;
 import io.github.bucket4j.serialization.SerializationHandle;
-import io.github.bucket4j.serialization.SerializationBinding;
+import io.github.bucket4j.serialization.SerializationAdapter;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -56,18 +56,18 @@ public class CommandResult<T extends Serializable> implements Serializable {
 
     public static SerializationHandle<CommandResult<?>> SERIALIZATION_HANDLE = new SerializationHandle<CommandResult<?>>() {
         @Override
-        public <S> CommandResult<?> deserialize(DeserializationBinding<S> binding, S source) throws IOException {
-            boolean isBucketNotFound = binding.readBoolean(source);
+        public <S> CommandResult<?> deserialize(DeserializationAdapter<S> adapter, S source) throws IOException {
+            boolean isBucketNotFound = adapter.readBoolean(source);
             return isBucketNotFound
                     ? CommandResult.bucketNotFound()
-                    : CommandResult.success((Serializable) binding.readObject(source));
+                    : CommandResult.success((Serializable) adapter.readObject(source));
         }
 
         @Override
-        public <O> void serialize(SerializationBinding<O> binding, O target, CommandResult<?> result) throws IOException {
-            binding.writeBoolean(target, result.bucketNotFound);
+        public <O> void serialize(SerializationAdapter<O> adapter, O target, CommandResult<?> result) throws IOException {
+            adapter.writeBoolean(target, result.bucketNotFound);
             if (!result.bucketNotFound) {
-                binding.writeObject(target, result.data);
+                adapter.writeObject(target, result.data);
             }
         }
     };

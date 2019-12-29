@@ -18,6 +18,11 @@
 package io.github.bucket4j.grid;
 
 import io.github.bucket4j.BucketConfiguration;
+import io.github.bucket4j.serialization.DeserializationAdapter;
+import io.github.bucket4j.serialization.SerializationAdapter;
+import io.github.bucket4j.serialization.SerializationHandle;
+
+import java.io.IOException;
 
 
 public class ReplaceConfigurationOrReturnPreviousCommand implements GridCommand<BucketConfiguration> {
@@ -26,6 +31,21 @@ public class ReplaceConfigurationOrReturnPreviousCommand implements GridCommand<
 
     private BucketConfiguration newConfiguration;
     private boolean replaced;
+
+    public static SerializationHandle<ReplaceConfigurationOrReturnPreviousCommand> SERIALIZATION_HANDLE = new SerializationHandle<ReplaceConfigurationOrReturnPreviousCommand>() {
+        @Override
+        public <S> ReplaceConfigurationOrReturnPreviousCommand deserialize(DeserializationAdapter<S> adapter, S source) throws IOException {
+            BucketConfiguration newConfiguration = adapter.readObject(source, BucketConfiguration.class);
+
+            return new ReplaceConfigurationOrReturnPreviousCommand(newConfiguration);
+        }
+
+        @Override
+        public <O> void serialize(SerializationAdapter<O> adapter, O target, ReplaceConfigurationOrReturnPreviousCommand command) throws IOException {
+            adapter.writeObject(target, command.newConfiguration);
+        }
+
+    };
 
     public ReplaceConfigurationOrReturnPreviousCommand(BucketConfiguration newConfiguration) {
         this.newConfiguration = newConfiguration;
