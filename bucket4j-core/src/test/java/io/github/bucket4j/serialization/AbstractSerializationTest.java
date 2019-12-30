@@ -17,28 +17,31 @@
 
 package io.github.bucket4j.serialization;
 
-import io.github.bucket4j.Bandwidth;
-import io.github.bucket4j.EqualityUtils;
+import io.github.bucket4j.*;
+import io.github.bucket4j.grid.CommandResult;
+import io.github.bucket4j.grid.GridBucketState;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Arrays;
 
 import static io.github.bucket4j.Bandwidth.classic;
 import static io.github.bucket4j.Bandwidth.simple;
 import static io.github.bucket4j.Refill.*;
-import static java.time.Duration.ofSeconds;
+import static java.time.Duration.*;
 import static org.junit.Assert.assertTrue;
 
 public abstract class AbstractSerializationTest {
 
     private void testSerialization(Object object) {
-        Object object2 = serializeAndDesirialize(object);
+        Object object2 = serializeAndDeserialize(object);
         assertTrue(EqualityUtils.equals(object, object2));
     }
 
-    protected abstract <T> T serializeAndDesirialize(T object);
+    protected abstract <T> T serializeAndDeserialize(T object);
 
 
     @Test
@@ -63,6 +66,127 @@ public abstract class AbstractSerializationTest {
     public void serializeClassicBandwidthWithIntervallyAlignedRefill() throws IOException {
         Bandwidth bandwidth = classic(40, intervallyAligned(300, Duration.ofSeconds(4200), Instant.now(), true));
         testSerialization(bandwidth);
+    }
+
+
+    @Test
+    public void serializeBucketConfiguration_withSingleBandwidth() throws IOException {
+        Bandwidth[] bandwidths = new Bandwidth[] {
+                simple(10, ofSeconds(42))
+        };
+        BucketConfiguration bucketConfiguration = new BucketConfiguration(Arrays.asList(bandwidths));
+        testSerialization(bucketConfiguration);
+    }
+
+    @Test
+    public void serializeBucketConfiguration_withMultipleBandwidths() throws IOException {
+        Bandwidth[] bandwidths = new Bandwidth[] {
+                simple(10, ofSeconds(42)),
+                classic(20, greedy(300, ofHours(2))),
+                classic(400, intervallyAligned(1000, ofDays(2), Instant.now().plusNanos(1), true))
+        };
+        BucketConfiguration bucketConfiguration = new BucketConfiguration(Arrays.asList(bandwidths));
+        testSerialization(bucketConfiguration);
+    }
+
+    @Test
+    public void serializeBucketState_withSingleBandwidth_withoutState() throws IOException {
+        Bandwidth[] bandwidths = new Bandwidth[]{
+                simple(10, ofSeconds(42))
+        };
+        BucketConfiguration bucketConfiguration = new BucketConfiguration(Arrays.asList(bandwidths));
+        BucketState bucketState = new BucketState(bucketConfiguration, System.nanoTime());
+
+        testSerialization(bucketState);
+    }
+
+    @Test
+    public void serializeBucketState_withSingleBandwidth_withState() throws IOException {
+        Bandwidth[] bandwidths = new Bandwidth[]{
+                simple(10, ofSeconds(42))
+        };
+        BucketConfiguration bucketConfiguration = new BucketConfiguration(Arrays.asList(bandwidths));
+        BucketState bucketState = new BucketState(bucketConfiguration, System.nanoTime());
+
+        bucketState.addTokens(bandwidths, 300);
+
+        testSerialization(bucketState);
+    }
+
+    @Test
+    public void serializeBucketState_withMultipleBandwidths_withState() throws IOException {
+        Bandwidth[] bandwidths = new Bandwidth[]{
+                simple(10, ofSeconds(42)),
+                classic(20, greedy(300, ofHours(2))),
+                classic(400, intervallyAligned(1000, ofDays(2), Instant.now(), false))
+        };
+        BucketConfiguration bucketConfiguration = new BucketConfiguration(Arrays.asList(bandwidths));
+        BucketState bucketState = new BucketState(bucketConfiguration, System.nanoTime());
+
+        bucketState.addTokens(bandwidths, 42);
+
+        testSerialization(bucketState);
+    }
+
+
+    @Test
+    public void serializeCommandResult_withoutPayload() throws IOException {
+        CommandResult<Serializable> commandResult = CommandResult.bucketNotFound();
+        testSerialization(commandResult);
+    }
+
+    @Test
+    public void serializeCommandResult_withIntegerPayload() throws IOException {
+        CommandResult<?> commandResult = CommandResult.success(42L);
+        testSerialization(commandResult);
+    }
+
+    @Test
+    public void serializeCommandResult_withComplexPayload() throws IOException {
+        CommandResult<?> commandResult = CommandResult.success(EstimationProbe.canNotBeConsumed(10, 20));
+        testSerialization(commandResult);
+    }
+
+    @Test
+    public void serializeGridBucketState_withSingleBandwidth_withoutState() throws IOException {
+        Bandwidth[] bandwidths = new Bandwidth[] {
+                simple(10, ofSeconds(42))
+        };
+        BucketConfiguration bucketConfiguration = new BucketConfiguration(Arrays.asList(bandwidths));
+        BucketState bucketState = new BucketState(bucketConfiguration, System.nanoTime());
+        GridBucketState gridBucketState = new GridBucketState(bucketConfiguration, bucketState);
+
+        testSerialization(gridBucketState);
+    }
+
+    @Test
+    public void serializeGridBucketState_withSingleBandwidth_withState() throws IOException {
+        Bandwidth[] bandwidths = new Bandwidth[] {
+                simple(10, ofSeconds(42))
+        };
+        BucketConfiguration bucketConfiguration = new BucketConfiguration(Arrays.asList(bandwidths));
+        BucketState bucketState = new BucketState(bucketConfiguration, System.nanoTime());
+
+        bucketState.addTokens(bandwidths, 300);
+        GridBucketState gridBucketState = new GridBucketState(bucketConfiguration, bucketState);
+
+        testSerialization(gridBucketState);
+    }
+
+    @Test
+    public void serializeGridBucketState_withMultipleBandwidths_withState() throws IOException {
+        Bandwidth[] bandwidths = new Bandwidth[] {
+                simple(10, ofSeconds(42)),
+                classic(20, greedy(300, ofHours(2))),
+                classic(400, intervallyAligned(1000, ofDays(2), Instant.now(), false))
+        };
+        BucketConfiguration bucketConfiguration = new BucketConfiguration(Arrays.asList(bandwidths));
+        BucketState bucketState = new BucketState(bucketConfiguration, System.nanoTime());
+
+        bucketState.addTokens(bandwidths, 42);
+        GridBucketState gridBucketState = new GridBucketState(bucketConfiguration, bucketState);
+
+        testSerialization(gridBucketState);
     }
 
 }

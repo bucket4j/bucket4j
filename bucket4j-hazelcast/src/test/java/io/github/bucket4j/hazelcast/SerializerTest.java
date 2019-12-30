@@ -1,4 +1,4 @@
-package io.github.bucket4j.hazelcast.serialization;
+package io.github.bucket4j.hazelcast;
 
 import com.hazelcast.config.SerializationConfig;
 import com.hazelcast.config.SerializerConfig;
@@ -8,13 +8,18 @@ import com.hazelcast.nio.BufferObjectDataInput;
 import com.hazelcast.nio.BufferObjectDataOutput;
 import com.hazelcast.nio.serialization.StreamSerializer;
 import io.github.bucket4j.grid.hazelcast.serialization.*;
+import io.github.bucket4j.serialization.AbstractSerializationTest;
 import org.junit.Before;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
-public abstract class SerializerTest {
+public class SerializerTest extends AbstractSerializationTest {
 
     private InternalSerializationService serializationService;
+    private Map<Class<?>, HazelcastSerializer<?>> serializerByClass = new HashMap<>();
+
 
     @Before
     public void setup() {
@@ -25,6 +30,8 @@ public abstract class SerializerTest {
                     .setImplementation(serializer)
                     .setTypeClass(serializer.getSerializableType())
             );
+
+            serializerByClass.put(serializer.getSerializableType(), serializer);
         }
 
         this.serializationService = new DefaultSerializationServiceBuilder()
@@ -32,19 +39,19 @@ public abstract class SerializerTest {
                 .build();
     }
 
-    protected abstract StreamSerializer<T> getSerializerUnderTest();
+    @Override
+    protected <T> T serializeAndDeserialize(T original) {
+        try {
+            StreamSerializer<T> serializer = (StreamSerializer<T>) serializerByClass.get(original.getClass());
 
-    protected abstract void runAssertions(T original, T deserialized);
+            BufferObjectDataOutput out = serializationService.createObjectDataOutput();
+            serializer.write(out, original);
 
-    void testSerialization(T original) throws IOException {
-        StreamSerializer<T> serializer = getSerializerUnderTest();
-
-        BufferObjectDataOutput out = serializationService.createObjectDataOutput();
-        serializer.write(out, original);
-
-        BufferObjectDataInput in = serializationService.createObjectDataInput(out.toByteArray());
-        T deserialized = serializer.read(in);
-
-        runAssertions(original, deserialized);
+            BufferObjectDataInput in = serializationService.createObjectDataInput(out.toByteArray());
+            return serializer.read(in);
+        } catch (IOException e) {
+            throw new IllegalArgumentException(e);
+        }
     }
+
 }
