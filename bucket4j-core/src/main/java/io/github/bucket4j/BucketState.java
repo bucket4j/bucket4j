@@ -17,9 +17,9 @@
 
 package io.github.bucket4j;
 
-import io.github.bucket4j.serialization.DeserializationBinding;
+import io.github.bucket4j.serialization.DeserializationAdapter;
 import io.github.bucket4j.serialization.SerializationHandle;
-import io.github.bucket4j.serialization.SerializationBinding;
+import io.github.bucket4j.serialization.SerializationAdapter;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -310,14 +310,14 @@ public class BucketState implements Serializable {
 
     public static SerializationHandle<BucketState> SERIALIZATION_HANDLE = new SerializationHandle<BucketState>() {
         @Override
-        public <S> BucketState deserialize(DeserializationBinding<S> binding, S source) throws IOException {
-            long[] data = binding.readLongArray(source);
+        public <S> BucketState deserialize(DeserializationAdapter<S> adapter, S source) throws IOException {
+            long[] data = adapter.readLongArray(source);
             return new BucketState(data);
         }
 
         @Override
-        public <O> void serialize(SerializationBinding<O> binding, O target, BucketState state) throws IOException {
-            binding.writeLongArray(target, state.stateData);
+        public <O> void serialize(SerializationAdapter<O> adapter, O target, BucketState state) throws IOException {
+            adapter.writeLongArray(target, state.stateData);
         }
     };
 

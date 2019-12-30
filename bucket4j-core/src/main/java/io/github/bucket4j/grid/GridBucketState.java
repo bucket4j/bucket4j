@@ -19,9 +19,9 @@ package io.github.bucket4j.grid;
 
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.BucketState;
-import io.github.bucket4j.serialization.DeserializationBinding;
+import io.github.bucket4j.serialization.DeserializationAdapter;
 import io.github.bucket4j.serialization.SerializationHandle;
-import io.github.bucket4j.serialization.SerializationBinding;
+import io.github.bucket4j.serialization.SerializationAdapter;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -32,6 +32,22 @@ public class GridBucketState implements Serializable {
 
     private BucketConfiguration configuration;
     private BucketState state;
+
+    public static SerializationHandle<GridBucketState> SERIALIZATION_HANDLE = new SerializationHandle<GridBucketState>() {
+        @Override
+        public <S> GridBucketState deserialize(DeserializationAdapter<S> adapter, S source) throws IOException {
+            BucketConfiguration bucketConfiguration = adapter.readObject(source, BucketConfiguration.class);
+            BucketState bucketState = adapter.readObject(source, BucketState.class);
+            return new GridBucketState(bucketConfiguration, bucketState);
+        }
+
+        @Override
+        public <O> void serialize(SerializationAdapter<O> adapter, O target, GridBucketState gridState) throws IOException {
+            adapter.writeObject(target, gridState.configuration);
+            adapter.writeObject(target, gridState.state);
+        }
+
+    };
 
     public GridBucketState(BucketConfiguration configuration, BucketState state) {
         this.configuration = configuration;
@@ -81,22 +97,5 @@ public class GridBucketState implements Serializable {
     public BucketState getState() {
         return state;
     }
-
-
-    public static SerializationHandle<GridBucketState> SERIALIZATION_HANDLE = new SerializationHandle<GridBucketState>() {
-        @Override
-        public <S> GridBucketState deserialize(DeserializationBinding<S> binding, S source) throws IOException {
-            BucketConfiguration bucketConfiguration = binding.readObject(source, BucketConfiguration.class);
-            BucketState bucketState = binding.readObject(source, BucketState.class);
-            return new GridBucketState(bucketConfiguration, bucketState);
-        }
-
-        @Override
-        public <O> void serialize(SerializationBinding<O> binding, O target, GridBucketState gridState) throws IOException {
-            binding.writeObject(target, gridState.configuration);
-            binding.writeObject(target, gridState.state);
-        }
-
-    };
 
 }

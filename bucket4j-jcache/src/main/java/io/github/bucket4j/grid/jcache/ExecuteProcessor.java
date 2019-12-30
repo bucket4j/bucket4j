@@ -20,8 +20,8 @@ package io.github.bucket4j.grid.jcache;
 import io.github.bucket4j.grid.CommandResult;
 import io.github.bucket4j.grid.GridBucketState;
 import io.github.bucket4j.grid.GridCommand;
-import io.github.bucket4j.serialization.DeserializationBinding;
-import io.github.bucket4j.serialization.SerializationBinding;
+import io.github.bucket4j.serialization.DeserializationAdapter;
+import io.github.bucket4j.serialization.SerializationAdapter;
 import io.github.bucket4j.serialization.SerializationHandle;
 
 import javax.cache.processor.MutableEntry;
@@ -40,14 +40,14 @@ public class ExecuteProcessor<K extends Serializable, T extends Serializable> im
 
     public static SerializationHandle<ExecuteProcessor<?, ?>> SERIALIZATION_HANDLE = new SerializationHandle<ExecuteProcessor<?, ?>>() {
         @Override
-        public <S> ExecuteProcessor<?, ?> deserialize(DeserializationBinding<S> binding, S source) throws IOException {
-            GridCommand<?> targetCommand = (GridCommand<?>) binding.readObject(source);
+        public <S> ExecuteProcessor<?, ?> deserialize(DeserializationAdapter<S> adapter, S source) throws IOException {
+            GridCommand<?> targetCommand = (GridCommand<?>) adapter.readObject(source);
             return new ExecuteProcessor<>(targetCommand);
         }
 
         @Override
-        public <O> void serialize(SerializationBinding<O> binding, O target, ExecuteProcessor<?, ?> processor) throws IOException {
-            binding.writeObject(target, processor.targetCommand);
+        public <O> void serialize(SerializationAdapter<O> adapter, O target, ExecuteProcessor<?, ?> processor) throws IOException {
+            adapter.writeObject(target, processor.targetCommand);
         }
 
     };

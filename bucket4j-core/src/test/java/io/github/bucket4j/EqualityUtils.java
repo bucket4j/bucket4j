@@ -17,10 +17,18 @@
 
 package io.github.bucket4j;
 
+public class EqualityUtils {
 
-public class EqualsUtil {
+    public static boolean equals(Object object, Object object2) {
+        if (object == object2) {
+            return true;
+        }
+        if (object == null ) {
+            return true;
+        }
+    }
 
-    public static boolean isConfigEquals(BucketConfiguration config1, BucketConfiguration config2) {
+    public static boolean isBucketConfigurationsEqual(BucketConfiguration config1, BucketConfiguration config2) {
         if (config1 == config2) {
             return true;
         }
@@ -33,23 +41,21 @@ public class EqualsUtil {
         for (int i = 0; i < config1.getBandwidths().length; i++) {
             Bandwidth bandwidth1 = config1.getBandwidths()[i];
             Bandwidth bandwidth2 = config2.getBandwidths()[i];
-            if (bandwidth1.capacity != bandwidth2.capacity) {
-                return false;
-            }
-            if (bandwidth1.initialTokens != bandwidth2.initialTokens) {
-                return false;
-            }
-            if (bandwidth1.refillPeriodNanos != bandwidth2.refillPeriodNanos) {
-                return false;
-            }
-            if (bandwidth1.refillIntervally != bandwidth2.refillIntervally) {
-                return false;
-            }
-            if (bandwidth1.refillTokens != bandwidth2.refillTokens) {
+            if (!isBandwidthsEqual(bandwidth1, bandwidth2)) {
                 return false;
             }
         }
         return true;
+    }
+
+    public static boolean isBandwidthsEqual(Bandwidth bandwidth1, Bandwidth bandwidth2) {
+        return bandwidth1.capacity == bandwidth2.capacity &&
+                bandwidth1.initialTokens == bandwidth2.initialTokens &&
+                bandwidth1.refillPeriodNanos == bandwidth2.refillPeriodNanos &&
+                bandwidth1.refillTokens == bandwidth2.refillTokens &&
+                bandwidth1.refillIntervally == bandwidth2.refillIntervally &&
+                bandwidth1.timeOfFirstRefillMillis == bandwidth2.timeOfFirstRefillMillis &&
+                bandwidth1.useAdaptiveInitialTokens == bandwidth2.useAdaptiveInitialTokens;
     }
 
 }

@@ -17,9 +17,9 @@
 
 package io.github.bucket4j;
 
-import io.github.bucket4j.serialization.DeserializationBinding;
+import io.github.bucket4j.serialization.DeserializationAdapter;
 import io.github.bucket4j.serialization.SerializationHandle;
-import io.github.bucket4j.serialization.SerializationBinding;
+import io.github.bucket4j.serialization.SerializationAdapter;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -68,21 +68,21 @@ public final class BucketConfiguration implements Serializable {
 
     public static SerializationHandle<BucketConfiguration> SERIALIZATION_HANDLE = new SerializationHandle<BucketConfiguration>() {
         @Override
-        public <S> BucketConfiguration deserialize(DeserializationBinding<S> binding, S source) throws IOException {
-            int bandwidthAmount = binding.readInt(source);
+        public <S> BucketConfiguration deserialize(DeserializationAdapter<S> adapter, S source) throws IOException {
+            int bandwidthAmount = adapter.readInt(source);
             List<Bandwidth> bandwidths = new ArrayList<>(bandwidthAmount);
             for (int ii = 0; ii < bandwidthAmount; ii++) {
-                Bandwidth bandwidth = binding.readObject(source, Bandwidth.class);
+                Bandwidth bandwidth = adapter.readObject(source, Bandwidth.class);
                 bandwidths.add(bandwidth);
             }
             return new BucketConfiguration(bandwidths);
         }
 
         @Override
-        public <O> void serialize(SerializationBinding<O> binding, O target, BucketConfiguration configuration) throws IOException {
-            binding.writeInt(target, configuration.bandwidths.length);
+        public <O> void serialize(SerializationAdapter<O> adapter, O target, BucketConfiguration configuration) throws IOException {
+            adapter.writeInt(target, configuration.bandwidths.length);
             for (Bandwidth bandwidth : configuration.bandwidths) {
-                binding.writeObject(target, bandwidth);
+                adapter.writeObject(target, bandwidth);
             }
         }
     };

@@ -2,7 +2,7 @@ package io.github.bucket4j.serialization;
 
 import java.io.IOException;
 
-public interface SerializationBinding<T> {
+public interface SerializationAdapter<T> {
 
     void writeBoolean(T target, boolean value) throws IOException;
 

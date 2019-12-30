@@ -17,9 +17,9 @@
 
 package io.github.bucket4j;
 
-import io.github.bucket4j.serialization.DeserializationBinding;
+import io.github.bucket4j.serialization.DeserializationAdapter;
 import io.github.bucket4j.serialization.SerializationHandle;
-import io.github.bucket4j.serialization.SerializationBinding;
+import io.github.bucket4j.serialization.SerializationAdapter;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -171,28 +171,28 @@ public class Bandwidth implements Serializable {
 
     public static SerializationHandle<Bandwidth> SERIALIZATION_HANDLE = new SerializationHandle<Bandwidth>() {
         @Override
-        public <S> Bandwidth deserialize(DeserializationBinding<S> binding, S source) throws IOException {
-            long capacity = binding.readLong(source);
-            long initialTokens = binding.readLong(source);
-            long refillPeriodNanos = binding.readLong(source);
-            long refillTokens = binding.readLong(source);
-            boolean refillIntervally = binding.readBoolean(source);
-            long timeOfFirstRefillMillis = binding.readLong(source);
-            boolean useAdaptiveInitialTokens = binding.readBoolean(source);
+        public <S> Bandwidth deserialize(DeserializationAdapter<S> adapter, S source) throws IOException {
+            long capacity = adapter.readLong(source);
+            long initialTokens = adapter.readLong(source);
+            long refillPeriodNanos = adapter.readLong(source);
+            long refillTokens = adapter.readLong(source);
+            boolean refillIntervally = adapter.readBoolean(source);
+            long timeOfFirstRefillMillis = adapter.readLong(source);
+            boolean useAdaptiveInitialTokens = adapter.readBoolean(source);
 
             return new Bandwidth(capacity, refillPeriodNanos, refillTokens, initialTokens, refillIntervally,
                     timeOfFirstRefillMillis, useAdaptiveInitialTokens);
         }
 
         @Override
-        public <O> void serialize(SerializationBinding<O> binding, O target, Bandwidth bandwidth) throws IOException {
-            binding.writeLong(target, bandwidth.capacity);
-            binding.writeLong(target, bandwidth.initialTokens);
-            binding.writeLong(target, bandwidth.refillPeriodNanos);
-            binding.writeLong(target, bandwidth.refillTokens);
-            binding.writeBoolean(target, bandwidth.refillIntervally);
-            binding.writeLong(target, bandwidth.timeOfFirstRefillMillis);
-            binding.writeBoolean(target, bandwidth.useAdaptiveInitialTokens);
+        public <O> void serialize(SerializationAdapter<O> adapter, O target, Bandwidth bandwidth) throws IOException {
+            adapter.writeLong(target, bandwidth.capacity);
+            adapter.writeLong(target, bandwidth.initialTokens);
+            adapter.writeLong(target, bandwidth.refillPeriodNanos);
+            adapter.writeLong(target, bandwidth.refillTokens);
+            adapter.writeBoolean(target, bandwidth.refillIntervally);
+            adapter.writeLong(target, bandwidth.timeOfFirstRefillMillis);
+            adapter.writeBoolean(target, bandwidth.useAdaptiveInitialTokens);
         }
 
     };
@@ -211,22 +211,4 @@ public class Bandwidth implements Serializable {
         return sb.toString();
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Bandwidth bandwidth = (Bandwidth) o;
-        return capacity == bandwidth.capacity &&
-                initialTokens == bandwidth.initialTokens &&
-                refillPeriodNanos == bandwidth.refillPeriodNanos &&
-                refillTokens == bandwidth.refillTokens &&
-                refillIntervally == bandwidth.refillIntervally &&
-                timeOfFirstRefillMillis == bandwidth.timeOfFirstRefillMillis &&
-                useAdaptiveInitialTokens == bandwidth.useAdaptiveInitialTokens;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(capacity, initialTokens, refillPeriodNanos, refillTokens, refillIntervally, timeOfFirstRefillMillis, useAdaptiveInitialTokens);
-    }
 }

@@ -17,6 +17,11 @@
 
 package io.github.bucket4j;
 
+import io.github.bucket4j.serialization.DeserializationAdapter;
+import io.github.bucket4j.serialization.SerializationAdapter;
+import io.github.bucket4j.serialization.SerializationHandle;
+
+import java.io.IOException;
 import java.io.Serializable;
 
 /**
@@ -32,6 +37,25 @@ public class ConsumptionProbe implements Serializable {
     private final boolean consumed;
     private final long remainingTokens;
     private final long nanosToWaitForRefill;
+
+    public static SerializationHandle<ConsumptionProbe> SERIALIZATION_HANDLE = new SerializationHandle<ConsumptionProbe>() {
+        @Override
+        public <S> ConsumptionProbe deserialize(DeserializationAdapter<S> adapter, S source) throws IOException {
+            boolean consumed = adapter.readBoolean(source);
+            long remainingTokens = adapter.readLong(source);
+            long nanosToWaitForRefill = adapter.readLong(source);
+
+            return new ConsumptionProbe(consumed, remainingTokens, nanosToWaitForRefill);
+        }
+
+        @Override
+        public <O> void serialize(SerializationAdapter<O> adapter, O target, ConsumptionProbe probe) throws IOException {
+            adapter.writeBoolean(target, probe.consumed);
+            adapter.writeLong(target, probe.remainingTokens);
+            adapter.writeLong(target, probe.nanosToWaitForRefill);
+        }
+
+    };
 
     public static ConsumptionProbe consumed(long remainingTokens) {
         return new ConsumptionProbe(true, remainingTokens, 0);

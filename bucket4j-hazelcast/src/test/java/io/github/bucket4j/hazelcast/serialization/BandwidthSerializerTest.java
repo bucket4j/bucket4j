@@ -28,28 +28,6 @@ public class BandwidthSerializerTest extends SerializerTest<Bandwidth> {
         SerializationAssertions.assertEquals(original, deserialized);
     }
 
-    @Test
-    public void serializeSimpleBandwidth() throws IOException {
-        Bandwidth bandwidth = simple(10, ofSeconds(20));
-        testSerialization(bandwidth);
-    }
 
-    @Test
-    public void serializeClassicBandwidthWithGreedyRefill() throws IOException {
-        Bandwidth bandwidth = classic(20, greedy(100, Duration.ofSeconds(42)));
-        testSerialization(bandwidth);
-    }
-
-    @Test
-    public void serializeClassicBandwidthWithIntervallyRefill() throws IOException {
-        Bandwidth bandwidth = classic(30, intervally(200, Duration.ofSeconds(420)));
-        testSerialization(bandwidth);
-    }
-
-    @Test
-    public void serializeClassicBandwidthWithIntervallyAlignedRefill() throws IOException {
-        Bandwidth bandwidth = classic(40, intervallyAligned(300, Duration.ofSeconds(4200), Instant.now(), true));
-        testSerialization(bandwidth);
-    }
 
 }

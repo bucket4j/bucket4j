@@ -17,12 +17,33 @@
 
 package io.github.bucket4j.grid;
 
+import io.github.bucket4j.serialization.DeserializationAdapter;
+import io.github.bucket4j.serialization.SerializationAdapter;
+import io.github.bucket4j.serialization.SerializationHandle;
+
+import java.io.IOException;
+
 public class TryConsumeCommand implements GridCommand<Boolean> {
 
     private static final long serialVersionUID = 1L;
 
     private long tokensToConsume;
     private boolean bucketStateModified;
+
+    public static SerializationHandle<TryConsumeCommand> SERIALIZATION_HANDLE = new SerializationHandle<TryConsumeCommand>() {
+        @Override
+        public <S> TryConsumeCommand deserialize(DeserializationAdapter<S> adapter, S source) throws IOException {
+            long tokensToConsume = adapter.readLong(source);
+
+            return new TryConsumeCommand(tokensToConsume);
+        }
+
+        @Override
+        public <O> void serialize(SerializationAdapter<O> adapter, O target, TryConsumeCommand command) throws IOException {
+            adapter.writeLong(target, command.tokensToConsume);
+        }
+
+    };
 
     public TryConsumeCommand(long tokensToConsume) {
         this.tokensToConsume = tokensToConsume;
