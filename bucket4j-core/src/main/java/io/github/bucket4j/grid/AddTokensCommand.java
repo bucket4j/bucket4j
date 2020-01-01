@@ -61,4 +61,8 @@ public class AddTokensCommand implements GridCommand<Nothing> {
         return true;
     }
 
+    public long getTokensToAdd() {
+        return tokensToAdd;
+    }
+
 }

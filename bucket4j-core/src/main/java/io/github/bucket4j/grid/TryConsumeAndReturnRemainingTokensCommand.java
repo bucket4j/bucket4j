@@ -70,4 +70,8 @@ public class TryConsumeAndReturnRemainingTokensCommand implements GridCommand<Co
         return bucketStateModified;
     }
 
+    public long getTokensToConsume() {
+        return tokensToConsume;
+    }
+
 }

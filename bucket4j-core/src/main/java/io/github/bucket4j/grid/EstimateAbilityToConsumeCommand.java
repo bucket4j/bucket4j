@@ -66,4 +66,8 @@ public class EstimateAbilityToConsumeCommand implements GridCommand<EstimationPr
         return false;
     }
 
+    public long getTokensToConsume() {
+        return tokensToConsume;
+    }
+
 }

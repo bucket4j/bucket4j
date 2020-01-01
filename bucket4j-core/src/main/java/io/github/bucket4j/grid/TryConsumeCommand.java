@@ -67,4 +67,8 @@ public class TryConsumeCommand implements GridCommand<Boolean> {
         return bucketStateModified;
     }
 
+    public long getTokensToConsume() {
+        return tokensToConsume;
+    }
+
 }

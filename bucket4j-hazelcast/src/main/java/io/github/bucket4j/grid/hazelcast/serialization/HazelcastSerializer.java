@@ -51,34 +51,47 @@ public class HazelcastSerializer<T> implements StreamSerializer<T>, TypedStreamD
     public static HazelcastSerializer<InitStateProcessor> INIT_STATE_PROCESSOR_SERIALIZER = new HazelcastSerializer<>(18, (Class) InitStateProcessor.class, InitStateProcessor.SERIALIZATION_HANDLE);
     public static HazelcastSerializer<InitStateAndExecuteProcessor<?, ?>> INIT_STATE_AND_EXECUTE_PROCESSOR_SERIALIZER = new HazelcastSerializer<>(19, (Class) InitStateAndExecuteProcessor.class, InitStateAndExecuteProcessor.SERIALIZATION_HANDLE);
 
-    public static List<HazelcastSerializer<?>> getAllSerializers(int typeIdBase) {
+    /**
+     * Returns the list custom Hazelcast serializers for all classes from Bucket4j library which can be transferred over network.
+     * Each serializer will have different typeId, and this id will not be changed in the feature releases.
+     *
+     * <p>
+     *     <strong>Note:</strong> it would be better to leave an empty space in the Ids in order to handle the extension of Bucket4j library when new classes can be added to library.
+     *     For example if you called {@code getAllSerializers(10000)} then it would be reasonable to avoid registering your custom types in the interval 10000-10100.
+     * </p>
+     *
+     * @param typeIdBase a starting number from for typeId sequence
+     *
+     * @return
+     */
+    public static List<HazelcastSerializer<?>> getAllSerializers(final int typeIdBase) {
         return Arrays.asList(
-                BANDWIDTH_SERIALIZER.withTypeId(++typeIdBase),
-                BUCKET_CONFIGURATION_SERIALIZER.withTypeId(++typeIdBase),
-                BUCKET_STATE_SERIALIZER.withTypeId(++typeIdBase),
-                GRID_BUCKET_STATE_SERIALIZER.withTypeId(++typeIdBase),
+                BANDWIDTH_SERIALIZER.withBaseTypeId(typeIdBase),
+                BUCKET_CONFIGURATION_SERIALIZER.withBaseTypeId(typeIdBase),
+                BUCKET_STATE_SERIALIZER.withBaseTypeId(typeIdBase),
+                GRID_BUCKET_STATE_SERIALIZER.withBaseTypeId(typeIdBase),
 
-                RESERVE_AND_CALCULATE_TIME_TO_SLEEP_COMMAND_SERIALIZER.withTypeId(++typeIdBase),
-                ADD_TOKENS_COMMAND_SERIALIZER.withTypeId(++typeIdBase),
-                CONSUME_AS_MUCH_AS_POSSIBLE_COMMAND_SERIALIZER.withTypeId(++typeIdBase),
-                CREATE_SNAPSHOT_COMMAND_SERIALIZER.withTypeId(++typeIdBase),
-                GET_AVAILABLE_TOKENS_COMMAND_SERIALIZER.withTypeId(++typeIdBase),
-                ESTIMATE_ABILITY_TO_CONSUME_COMMAND_SERIALIZER.withTypeId(++typeIdBase),
-                TRY_CONSUME_COMMAND_SERIALIZER.withTypeId(++typeIdBase),
-                TRY_CONSUME_AND_RETURN_REMAINING_TOKENS_COMMAND_SERIALIZER.withTypeId(++typeIdBase),
-                REPLACE_CONFIGURATION_OR_RETURN_PREVIOUS_COMMAND_SERIALIZER.withTypeId(++typeIdBase),
+                RESERVE_AND_CALCULATE_TIME_TO_SLEEP_COMMAND_SERIALIZER.withBaseTypeId(typeIdBase),
+                ADD_TOKENS_COMMAND_SERIALIZER.withBaseTypeId(typeIdBase),
+                CONSUME_AS_MUCH_AS_POSSIBLE_COMMAND_SERIALIZER.withBaseTypeId(typeIdBase),
+                CREATE_SNAPSHOT_COMMAND_SERIALIZER.withBaseTypeId(typeIdBase),
+                GET_AVAILABLE_TOKENS_COMMAND_SERIALIZER.withBaseTypeId(typeIdBase),
+                ESTIMATE_ABILITY_TO_CONSUME_COMMAND_SERIALIZER.withBaseTypeId(typeIdBase),
+                TRY_CONSUME_COMMAND_SERIALIZER.withBaseTypeId(typeIdBase),
+                TRY_CONSUME_AND_RETURN_REMAINING_TOKENS_COMMAND_SERIALIZER.withBaseTypeId(typeIdBase),
+                REPLACE_CONFIGURATION_OR_RETURN_PREVIOUS_COMMAND_SERIALIZER.withBaseTypeId(typeIdBase),
 
-                COMMAND_RESULT_SERIALIZER.withTypeId(++typeIdBase),
-                ESTIMATION_PROBE_SERIALIZER.withTypeId(++typeIdBase),
-                CONSUMPTION_PROBE_SERIALIZER.withTypeId(++typeIdBase),
+                COMMAND_RESULT_SERIALIZER.withBaseTypeId(typeIdBase),
+                ESTIMATION_PROBE_SERIALIZER.withBaseTypeId(typeIdBase),
+                CONSUMPTION_PROBE_SERIALIZER.withBaseTypeId(typeIdBase),
 
-                EXECUTE_PROCESSOR_SERIALIZER.withTypeId(++typeIdBase),
-                INIT_STATE_PROCESSOR_SERIALIZER.withTypeId(++typeIdBase),
-                INIT_STATE_AND_EXECUTE_PROCESSOR_SERIALIZER.withTypeId(++typeIdBase)
+                EXECUTE_PROCESSOR_SERIALIZER.withBaseTypeId(typeIdBase),
+                INIT_STATE_PROCESSOR_SERIALIZER.withBaseTypeId(typeIdBase),
+                INIT_STATE_AND_EXECUTE_PROCESSOR_SERIALIZER.withBaseTypeId(typeIdBase)
         );
     }
 
-    private static ReadWriteAdapter BINDING = new ReadWriteAdapter();
+    private static ReadWriteAdapter ADAPTER = new ReadWriteAdapter();
 
     private final int typeId;
     private final Class<T> serializableType;
@@ -90,8 +103,8 @@ public class HazelcastSerializer<T> implements StreamSerializer<T>, TypedStreamD
         this.serializationHandle = serializationHandle;
     }
 
-    public HazelcastSerializer<T> withTypeId(int typeId) {
-        return new HazelcastSerializer<>(typeId, serializableType, serializationHandle);
+    public HazelcastSerializer<T> withBaseTypeId(int baseTypeId) {
+        return new HazelcastSerializer<>(typeId + baseTypeId, serializableType, serializationHandle);
     }
 
     public Class<T> getSerializableType() {
@@ -110,7 +123,7 @@ public class HazelcastSerializer<T> implements StreamSerializer<T>, TypedStreamD
 
     @Override
     public void write(ObjectDataOutput out, T serializable) throws IOException {
-        serializationHandle.serialize(BINDING, out, serializable);
+        serializationHandle.serialize(ADAPTER, out, serializable);
     }
 
     @Override
@@ -124,7 +137,7 @@ public class HazelcastSerializer<T> implements StreamSerializer<T>, TypedStreamD
     }
 
     private T read0(ObjectDataInput in) throws IOException {
-        return serializationHandle.deserialize(BINDING, in);
+        return serializationHandle.deserialize(ADAPTER, in);
     }
 
 }

@@ -18,12 +18,10 @@
 package io.github.bucket4j.serialization;
 
 import io.github.bucket4j.*;
-import io.github.bucket4j.grid.CommandResult;
-import io.github.bucket4j.grid.GridBucketState;
+import io.github.bucket4j.grid.*;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.io.Serializable;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
@@ -36,7 +34,7 @@ import static org.junit.Assert.assertTrue;
 
 public abstract class AbstractSerializationTest {
 
-    private void testSerialization(Object object) {
+    protected void testSerialization(Object object) {
         Object object2 = serializeAndDeserialize(object);
         assertTrue(EqualityUtils.equals(object, object2));
     }
@@ -130,24 +128,6 @@ public abstract class AbstractSerializationTest {
 
 
     @Test
-    public void serializeCommandResult_withoutPayload() throws IOException {
-        CommandResult<Serializable> commandResult = CommandResult.bucketNotFound();
-        testSerialization(commandResult);
-    }
-
-    @Test
-    public void serializeCommandResult_withIntegerPayload() throws IOException {
-        CommandResult<?> commandResult = CommandResult.success(42L);
-        testSerialization(commandResult);
-    }
-
-    @Test
-    public void serializeCommandResult_withComplexPayload() throws IOException {
-        CommandResult<?> commandResult = CommandResult.success(EstimationProbe.canNotBeConsumed(10, 20));
-        testSerialization(commandResult);
-    }
-
-    @Test
     public void serializeGridBucketState_withSingleBandwidth_withoutState() throws IOException {
         Bandwidth[] bandwidths = new Bandwidth[] {
                 simple(10, ofSeconds(42))
@@ -187,6 +167,50 @@ public abstract class AbstractSerializationTest {
         GridBucketState gridBucketState = new GridBucketState(bucketConfiguration, bucketState);
 
         testSerialization(gridBucketState);
+    }
+
+    @Test
+    public void serializationOfCommandResults() throws IOException {
+        // without payload
+        testSerialization(CommandResult.bucketNotFound());
+
+        // with integer payload
+        testSerialization(CommandResult.success(42L));
+
+        // with complex payload
+        testSerialization(CommandResult.success(EstimationProbe.canNotBeConsumed(10, 20)));
+
+        // estimation probes
+        testSerialization(EstimationProbe.canNotBeConsumed(10, 20));
+        testSerialization(EstimationProbe.canBeConsumed(10));
+
+        // consumption probes
+        testSerialization(ConsumptionProbe.rejected(10, 20));
+        testSerialization(ConsumptionProbe.consumed(10));
+    }
+
+    @Test
+    public void serializationOfCommands() throws IOException {
+        testSerialization(new ReserveAndCalculateTimeToSleepCommand(10, 20));
+
+        testSerialization(new AddTokensCommand(3));
+
+        testSerialization(new ConsumeAsMuchAsPossibleCommand(13));
+
+        testSerialization(new GetAvailableTokensCommand());
+
+        testSerialization(new CreateSnapshotCommand());
+
+        testSerialization(new EstimateAbilityToConsumeCommand(3));
+
+        testSerialization(new TryConsumeCommand(10));
+
+        testSerialization(new TryConsumeAndReturnRemainingTokensCommand(11));
+
+        BucketConfiguration configuration = Bucket4j.configurationBuilder()
+                .addLimit(simple(10, ofSeconds(1)))
+                .build();
+        testSerialization(new ReplaceConfigurationOrReturnPreviousCommand(configuration));
     }
 
 }

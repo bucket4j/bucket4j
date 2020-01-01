@@ -68,4 +68,8 @@ public class ConsumeAsMuchAsPossibleCommand implements GridCommand<Long> {
         return bucketStateModified;
     }
 
+    public long getLimit() {
+        return limit;
+    }
+
 }

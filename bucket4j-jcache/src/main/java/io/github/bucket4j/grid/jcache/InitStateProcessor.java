@@ -66,4 +66,8 @@ public class InitStateProcessor<K extends Serializable> implements JCacheEntryPr
         return CommandResult.success(null);
     }
 
+    public BucketConfiguration getConfiguration() {
+        return configuration;
+    }
+
 }

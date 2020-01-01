@@ -67,4 +67,8 @@ public class ReplaceConfigurationOrReturnPreviousCommand implements GridCommand<
         return replaced;
     }
 
+    public BucketConfiguration getNewConfiguration() {
+        return newConfiguration;
+    }
+
 }

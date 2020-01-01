@@ -67,4 +67,8 @@ public class ExecuteProcessor<K extends Serializable, T extends Serializable> im
         return CommandResult.success(result);
     }
 
+    public GridCommand<T> getTargetCommand() {
+        return targetCommand;
+    }
+
 }

@@ -7,19 +7,45 @@ import com.hazelcast.internal.serialization.impl.DefaultSerializationServiceBuil
 import com.hazelcast.nio.BufferObjectDataInput;
 import com.hazelcast.nio.BufferObjectDataOutput;
 import com.hazelcast.nio.serialization.StreamSerializer;
+import io.github.bucket4j.Bucket4j;
+import io.github.bucket4j.BucketConfiguration;
+import io.github.bucket4j.EqualityUtils;
+import io.github.bucket4j.grid.AddTokensCommand;
+import io.github.bucket4j.grid.GridCommand;
 import io.github.bucket4j.grid.hazelcast.serialization.*;
+import io.github.bucket4j.grid.jcache.ExecuteProcessor;
+import io.github.bucket4j.grid.jcache.InitStateAndExecuteProcessor;
+import io.github.bucket4j.grid.jcache.InitStateProcessor;
 import io.github.bucket4j.serialization.AbstractSerializationTest;
 import org.junit.Before;
+import org.junit.Test;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-public class SerializerTest extends AbstractSerializationTest {
+import static io.github.bucket4j.Bandwidth.simple;
+import static java.time.Duration.ofSeconds;
+
+public class HazelcastSerializerTest extends AbstractSerializationTest {
 
     private InternalSerializationService serializationService;
     private Map<Class<?>, HazelcastSerializer<?>> serializerByClass = new HashMap<>();
 
+    static {
+        EqualityUtils.registerComparator(ExecuteProcessor.class, (processor1, processor2) -> {
+            return EqualityUtils.equals(processor1.getTargetCommand(), processor2.getTargetCommand());
+        });
+
+        EqualityUtils.registerComparator(InitStateProcessor.class, (processor1, processor2) -> {
+            return EqualityUtils.equals(processor1.getConfiguration(), processor2.getConfiguration());
+        });
+
+        EqualityUtils.registerComparator(InitStateAndExecuteProcessor.class, (processor1, processor2) -> {
+            return EqualityUtils.equals(processor1.getTargetCommand(), processor2.getTargetCommand())
+                    && EqualityUtils.equals(processor1.getConfiguration(), processor2.getConfiguration());
+        });
+    }
 
     @Before
     public void setup() {
@@ -52,6 +78,18 @@ public class SerializerTest extends AbstractSerializationTest {
         } catch (IOException e) {
             throw new IllegalArgumentException(e);
         }
+    }
+
+    @Test
+    public void tetsSerializationOfEntryProcessors() {
+        BucketConfiguration configuration = Bucket4j.configurationBuilder()
+                .addLimit(simple(10, ofSeconds(1)))
+                .build();
+        GridCommand command = new AddTokensCommand(42);
+
+        testSerialization(new InitStateProcessor<>(configuration));
+        testSerialization(new ExecuteProcessor<>(command));
+        testSerialization(new InitStateAndExecuteProcessor(command, configuration));
     }
 
 }

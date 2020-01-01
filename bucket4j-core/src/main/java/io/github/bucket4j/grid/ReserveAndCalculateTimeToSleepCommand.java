@@ -73,4 +73,15 @@ public class ReserveAndCalculateTimeToSleepCommand implements GridCommand<Long> 
         return bucketStateModified;
     }
 
+    public static long getSerialVersionUID() {
+        return serialVersionUID;
+    }
+
+    public long getTokensToConsume() {
+        return tokensToConsume;
+    }
+
+    public long getWaitIfBusyNanosLimit() {
+        return waitIfBusyNanosLimit;
+    }
 }

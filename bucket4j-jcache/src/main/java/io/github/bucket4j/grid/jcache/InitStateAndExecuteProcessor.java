@@ -78,4 +78,12 @@ public class InitStateAndExecuteProcessor<K extends Serializable, T extends Seri
         return CommandResult.success(result);
     }
 
+    public GridCommand<T> getTargetCommand() {
+        return targetCommand;
+    }
+
+    public BucketConfiguration getConfiguration() {
+        return configuration;
+    }
+
 }

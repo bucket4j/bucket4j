@@ -17,14 +17,12 @@
 
 package io.github.bucket4j;
 
-import io.github.bucket4j.grid.CommandResult;
-import io.github.bucket4j.grid.GridBucketState;
+import io.github.bucket4j.grid.*;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiFunction;
 
-import static org.junit.Assert.assertEquals;
 
 public class EqualityUtils {
 
@@ -65,9 +63,63 @@ public class EqualityUtils {
                     equals(state1.getState(), state2.getState());
         });
 
+        registerComparator(GridBucketState.class, (state1, state2) -> {
+            return equals(state1.getConfiguration(), state2.getConfiguration()) &&
+                    equals(state1.getState(), state2.getState());
+        });
+
+        registerComparator(EstimationProbe.class, (probe1, probe2) -> {
+            return probe1.canBeConsumed() == probe2.canBeConsumed() &&
+                    probe1.getNanosToWaitForRefill() == probe2.getNanosToWaitForRefill() &&
+                    probe1.getRemainingTokens() == probe2.getRemainingTokens();
+        });
+
+        registerComparator(ConsumptionProbe.class, (probe1, probe2) -> {
+            return probe1.isConsumed() == probe2.isConsumed() &&
+                    probe1.getNanosToWaitForRefill() == probe2.getNanosToWaitForRefill() &&
+                    probe1.getRemainingTokens() == probe2.getRemainingTokens();
+        });
+
+        registerComparator(ReserveAndCalculateTimeToSleepCommand.class, (cmd1, cmd2) -> {
+            return cmd1.getTokensToConsume() == cmd2.getTokensToConsume() &&
+                    cmd1.getWaitIfBusyNanosLimit() == cmd2.getWaitIfBusyNanosLimit();
+        });
+
+        registerComparator(AddTokensCommand.class, (cmd1, cmd2) -> {
+            return cmd1.getTokensToAdd() == cmd2.getTokensToAdd();
+        });
+
+        registerComparator(ConsumeAsMuchAsPossibleCommand.class, (cmd1, cmd2) -> {
+            return cmd1.getLimit() == cmd2.getLimit();
+        });
+
+        registerComparator(CreateSnapshotCommand.class, (cmd1, cmd2) -> {
+            return true;
+        });
+
+        registerComparator(GetAvailableTokensCommand.class, (cmd1, cmd2) -> {
+            return true;
+        });
+
+        registerComparator(EstimateAbilityToConsumeCommand.class, (cmd1, cmd2) -> {
+            return cmd1.getTokensToConsume() == cmd2.getTokensToConsume();
+        });
+
+        registerComparator(TryConsumeCommand.class, (cmd1, cmd2) -> {
+            return cmd1.getTokensToConsume() == cmd2.getTokensToConsume();
+        });
+
+        registerComparator(TryConsumeAndReturnRemainingTokensCommand.class, (cmd1, cmd2) -> {
+            return cmd1.getTokensToConsume() == cmd2.getTokensToConsume();
+        });
+
+        registerComparator(ReplaceConfigurationOrReturnPreviousCommand.class, (cmd1, cmd2) -> {
+            return equals(cmd1.getNewConfiguration(), cmd2.getNewConfiguration());
+        });
+
     }
 
-    private static <T> void registerComparator(Class<T> clazz, BiFunction<T, T, Boolean> comparator) {
+    public static <T> void registerComparator(Class<T> clazz, BiFunction<T, T, Boolean> comparator) {
         comparators.put(clazz, comparator);
     }
 
