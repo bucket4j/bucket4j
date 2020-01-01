@@ -20,10 +20,14 @@ package io.github.bucket4j.grid.infinispan;
 import io.github.bucket4j.grid.CommandResult;
 import io.github.bucket4j.grid.GridBucketState;
 import io.github.bucket4j.grid.jcache.JCacheEntryProcessor;
+import io.github.bucket4j.serialization.DeserializationAdapter;
+import io.github.bucket4j.serialization.SerializationAdapter;
+import io.github.bucket4j.serialization.SerializationHandle;
 import org.infinispan.functional.EntryView;
 import org.infinispan.util.function.SerializableFunction;
 
 import javax.cache.processor.MutableEntry;
+import java.io.IOException;
 import java.io.Serializable;
 
 public class SerializableFunctionAdapter<K extends Serializable, R extends Serializable> implements SerializableFunction<EntryView.ReadWriteEntryView<K, GridBucketState>, CommandResult<R>> {
@@ -35,6 +39,30 @@ public class SerializableFunctionAdapter<K extends Serializable, R extends Seria
     public SerializableFunctionAdapter(JCacheEntryProcessor<K, R> entryProcessor) {
         this.entryProcessor = entryProcessor;
     }
+
+    public static SerializationHandle<SerializableFunctionAdapter> SERIALIZATION_HANDLE = new SerializationHandle<SerializableFunctionAdapter>() {
+
+        @Override
+        public <I> SerializableFunctionAdapter deserialize(DeserializationAdapter<I> adapter, I input) throws IOException {
+            JCacheEntryProcessor entryProcessor = (JCacheEntryProcessor) adapter.readObject(input);
+            return new SerializableFunctionAdapter(entryProcessor);
+        }
+
+        @Override
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, SerializableFunctionAdapter serializableObject) throws IOException {
+            adapter.writeObject(output, serializableObject.entryProcessor);
+        }
+
+        @Override
+        public int getTypeId() {
+            return 21;
+        }
+
+        @Override
+        public Class<SerializableFunctionAdapter> getSerializedType() {
+            return SerializableFunctionAdapter.class;
+        }
+    };
 
     @Override
     public CommandResult<R> apply(EntryView.ReadWriteEntryView<K, GridBucketState> entryView) {

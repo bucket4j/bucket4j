@@ -30,13 +30,23 @@ public class GetAvailableTokensCommand implements GridCommand<Long> {
 
     public static SerializationHandle<GetAvailableTokensCommand> SERIALIZATION_HANDLE = new SerializationHandle<GetAvailableTokensCommand>() {
         @Override
-        public <S> GetAvailableTokensCommand deserialize(DeserializationAdapter<S> adapter, S source) throws IOException {
+        public <S> GetAvailableTokensCommand deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             return new GetAvailableTokensCommand();
         }
 
         @Override
-        public <O> void serialize(SerializationAdapter<O> adapter, O target, GetAvailableTokensCommand command) throws IOException {
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, GetAvailableTokensCommand command) throws IOException {
             // do nothing
+        }
+
+        @Override
+        public int getTypeId() {
+            return 9;
+        }
+
+        @Override
+        public Class<GetAvailableTokensCommand> getSerializedType() {
+            return GetAvailableTokensCommand.class;
         }
 
     };

@@ -58,7 +58,8 @@
         <jcache.version>1.0.0</jcache.version>
         <ignite.version>2.1.0</ignite.version>
         <hazelcast.version>3.8</hazelcast.version>
-        <infinispan.version>9.1.0.Final</infinispan.version>
+<!--        <infinispan.version>10.0.0.Final</infinispan.version>-->
+        <infinispan.version>10.1.0.CR1</infinispan.version>
         <testcontainers.version>1.9.0</testcontainers.version>
         <lettuce-version>5.0.2.RELEASE</lettuce-version>
     </properties>

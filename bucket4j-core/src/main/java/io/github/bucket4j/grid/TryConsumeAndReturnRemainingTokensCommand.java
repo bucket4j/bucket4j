@@ -34,15 +34,25 @@ public class TryConsumeAndReturnRemainingTokensCommand implements GridCommand<Co
 
     public static SerializationHandle<TryConsumeAndReturnRemainingTokensCommand> SERIALIZATION_HANDLE = new SerializationHandle<TryConsumeAndReturnRemainingTokensCommand>() {
         @Override
-        public <S> TryConsumeAndReturnRemainingTokensCommand deserialize(DeserializationAdapter<S> adapter, S source) throws IOException {
-            long tokensToConsume = adapter.readLong(source);
+        public <S> TryConsumeAndReturnRemainingTokensCommand deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
+            long tokensToConsume = adapter.readLong(input);
 
             return new TryConsumeAndReturnRemainingTokensCommand(tokensToConsume);
         }
 
         @Override
-        public <O> void serialize(SerializationAdapter<O> adapter, O target, TryConsumeAndReturnRemainingTokensCommand command) throws IOException {
-            adapter.writeLong(target, command.tokensToConsume);
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, TryConsumeAndReturnRemainingTokensCommand command) throws IOException {
+            adapter.writeLong(output, command.tokensToConsume);
+        }
+
+        @Override
+        public int getTypeId() {
+            return 12;
+        }
+
+        @Override
+        public Class<TryConsumeAndReturnRemainingTokensCommand> getSerializedType() {
+            return TryConsumeAndReturnRemainingTokensCommand.class;
         }
 
     };

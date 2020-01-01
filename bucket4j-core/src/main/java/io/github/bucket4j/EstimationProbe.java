@@ -41,19 +41,29 @@ public class EstimationProbe implements Serializable {
 
     public static SerializationHandle<EstimationProbe> SERIALIZATION_HANDLE = new SerializationHandle<EstimationProbe>() {
         @Override
-        public <S> EstimationProbe deserialize(DeserializationAdapter<S> adapter, S source) throws IOException {
-            boolean canBeConsumed = adapter.readBoolean(source);
-            long remainingTokens = adapter.readLong(source);
-            long nanosToWaitForRefill = adapter.readLong(source);
+        public <S> EstimationProbe deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
+            boolean canBeConsumed = adapter.readBoolean(input);
+            long remainingTokens = adapter.readLong(input);
+            long nanosToWaitForRefill = adapter.readLong(input);
 
             return new EstimationProbe(canBeConsumed, remainingTokens, nanosToWaitForRefill);
         }
 
         @Override
-        public <O> void serialize(SerializationAdapter<O> adapter, O target, EstimationProbe probe) throws IOException {
-            adapter.writeBoolean(target, probe.canBeConsumed);
-            adapter.writeLong(target, probe.remainingTokens);
-            adapter.writeLong(target, probe.nanosToWaitForRefill);
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, EstimationProbe probe) throws IOException {
+            adapter.writeBoolean(output, probe.canBeConsumed);
+            adapter.writeLong(output, probe.remainingTokens);
+            adapter.writeLong(output, probe.nanosToWaitForRefill);
+        }
+
+        @Override
+        public int getTypeId() {
+            return 16;
+        }
+
+        @Override
+        public Class<EstimationProbe> getSerializedType() {
+            return EstimationProbe.class;
         }
 
     };

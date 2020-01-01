@@ -32,15 +32,25 @@ public class TryConsumeCommand implements GridCommand<Boolean> {
 
     public static SerializationHandle<TryConsumeCommand> SERIALIZATION_HANDLE = new SerializationHandle<TryConsumeCommand>() {
         @Override
-        public <S> TryConsumeCommand deserialize(DeserializationAdapter<S> adapter, S source) throws IOException {
-            long tokensToConsume = adapter.readLong(source);
+        public <S> TryConsumeCommand deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
+            long tokensToConsume = adapter.readLong(input);
 
             return new TryConsumeCommand(tokensToConsume);
         }
 
         @Override
-        public <O> void serialize(SerializationAdapter<O> adapter, O target, TryConsumeCommand command) throws IOException {
-            adapter.writeLong(target, command.tokensToConsume);
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, TryConsumeCommand command) throws IOException {
+            adapter.writeLong(output, command.tokensToConsume);
+        }
+
+        @Override
+        public int getTypeId() {
+            return 11;
+        }
+
+        @Override
+        public Class<TryConsumeCommand> getSerializedType() {
+            return TryConsumeCommand.class;
         }
 
     };

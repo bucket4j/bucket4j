@@ -171,28 +171,38 @@ public class Bandwidth implements Serializable {
 
     public static SerializationHandle<Bandwidth> SERIALIZATION_HANDLE = new SerializationHandle<Bandwidth>() {
         @Override
-        public <S> Bandwidth deserialize(DeserializationAdapter<S> adapter, S source) throws IOException {
-            long capacity = adapter.readLong(source);
-            long initialTokens = adapter.readLong(source);
-            long refillPeriodNanos = adapter.readLong(source);
-            long refillTokens = adapter.readLong(source);
-            boolean refillIntervally = adapter.readBoolean(source);
-            long timeOfFirstRefillMillis = adapter.readLong(source);
-            boolean useAdaptiveInitialTokens = adapter.readBoolean(source);
+        public <S> Bandwidth deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
+            long capacity = adapter.readLong(input);
+            long initialTokens = adapter.readLong(input);
+            long refillPeriodNanos = adapter.readLong(input);
+            long refillTokens = adapter.readLong(input);
+            boolean refillIntervally = adapter.readBoolean(input);
+            long timeOfFirstRefillMillis = adapter.readLong(input);
+            boolean useAdaptiveInitialTokens = adapter.readBoolean(input);
 
             return new Bandwidth(capacity, refillPeriodNanos, refillTokens, initialTokens, refillIntervally,
                     timeOfFirstRefillMillis, useAdaptiveInitialTokens);
         }
 
         @Override
-        public <O> void serialize(SerializationAdapter<O> adapter, O target, Bandwidth bandwidth) throws IOException {
-            adapter.writeLong(target, bandwidth.capacity);
-            adapter.writeLong(target, bandwidth.initialTokens);
-            adapter.writeLong(target, bandwidth.refillPeriodNanos);
-            adapter.writeLong(target, bandwidth.refillTokens);
-            adapter.writeBoolean(target, bandwidth.refillIntervally);
-            adapter.writeLong(target, bandwidth.timeOfFirstRefillMillis);
-            adapter.writeBoolean(target, bandwidth.useAdaptiveInitialTokens);
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, Bandwidth bandwidth) throws IOException {
+            adapter.writeLong(output, bandwidth.capacity);
+            adapter.writeLong(output, bandwidth.initialTokens);
+            adapter.writeLong(output, bandwidth.refillPeriodNanos);
+            adapter.writeLong(output, bandwidth.refillTokens);
+            adapter.writeBoolean(output, bandwidth.refillIntervally);
+            adapter.writeLong(output, bandwidth.timeOfFirstRefillMillis);
+            adapter.writeBoolean(output, bandwidth.useAdaptiveInitialTokens);
+        }
+
+        @Override
+        public int getTypeId() {
+            return 1;
+        }
+
+        @Override
+        public Class<Bandwidth> getSerializedType() {
+            return Bandwidth.class;
         }
 
     };

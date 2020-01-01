@@ -56,19 +56,29 @@ public class CommandResult<T extends Serializable> implements Serializable {
 
     public static SerializationHandle<CommandResult<?>> SERIALIZATION_HANDLE = new SerializationHandle<CommandResult<?>>() {
         @Override
-        public <S> CommandResult<?> deserialize(DeserializationAdapter<S> adapter, S source) throws IOException {
-            boolean isBucketNotFound = adapter.readBoolean(source);
+        public <S> CommandResult<?> deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
+            boolean isBucketNotFound = adapter.readBoolean(input);
             return isBucketNotFound
                     ? CommandResult.bucketNotFound()
-                    : CommandResult.success((Serializable) adapter.readObject(source));
+                    : CommandResult.success((Serializable) adapter.readObject(input));
         }
 
         @Override
-        public <O> void serialize(SerializationAdapter<O> adapter, O target, CommandResult<?> result) throws IOException {
-            adapter.writeBoolean(target, result.bucketNotFound);
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, CommandResult<?> result) throws IOException {
+            adapter.writeBoolean(output, result.bucketNotFound);
             if (!result.bucketNotFound) {
-                adapter.writeObject(target, result.data);
+                adapter.writeObject(output, result.data);
             }
+        }
+
+        @Override
+        public int getTypeId() {
+            return 14;
+        }
+
+        @Override
+        public Class<CommandResult<?>> getSerializedType() {
+            return (Class) CommandResult.class;
         }
     };
 

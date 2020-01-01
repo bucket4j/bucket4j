@@ -32,15 +32,25 @@ public class EstimateAbilityToConsumeCommand implements GridCommand<EstimationPr
 
     public static SerializationHandle<EstimateAbilityToConsumeCommand> SERIALIZATION_HANDLE = new SerializationHandle<EstimateAbilityToConsumeCommand>() {
         @Override
-        public <S> EstimateAbilityToConsumeCommand deserialize(DeserializationAdapter<S> adapter, S source) throws IOException {
-            long tokensToConsume = adapter.readLong(source);
+        public <S> EstimateAbilityToConsumeCommand deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
+            long tokensToConsume = adapter.readLong(input);
 
             return new EstimateAbilityToConsumeCommand(tokensToConsume);
         }
 
         @Override
-        public <O> void serialize(SerializationAdapter<O> adapter, O target, EstimateAbilityToConsumeCommand command) throws IOException {
-            adapter.writeLong(target, command.tokensToConsume);
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, EstimateAbilityToConsumeCommand command) throws IOException {
+            adapter.writeLong(output, command.tokensToConsume);
+        }
+
+        @Override
+        public int getTypeId() {
+            return 10;
+        }
+
+        @Override
+        public Class<EstimateAbilityToConsumeCommand> getSerializedType() {
+            return EstimateAbilityToConsumeCommand.class;
         }
 
     };

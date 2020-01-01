@@ -68,23 +68,34 @@ public final class BucketConfiguration implements Serializable {
 
     public static SerializationHandle<BucketConfiguration> SERIALIZATION_HANDLE = new SerializationHandle<BucketConfiguration>() {
         @Override
-        public <S> BucketConfiguration deserialize(DeserializationAdapter<S> adapter, S source) throws IOException {
-            int bandwidthAmount = adapter.readInt(source);
+        public <S> BucketConfiguration deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
+            int bandwidthAmount = adapter.readInt(input);
             List<Bandwidth> bandwidths = new ArrayList<>(bandwidthAmount);
             for (int ii = 0; ii < bandwidthAmount; ii++) {
-                Bandwidth bandwidth = adapter.readObject(source, Bandwidth.class);
+                Bandwidth bandwidth = adapter.readObject(input, Bandwidth.class);
                 bandwidths.add(bandwidth);
             }
             return new BucketConfiguration(bandwidths);
         }
 
         @Override
-        public <O> void serialize(SerializationAdapter<O> adapter, O target, BucketConfiguration configuration) throws IOException {
-            adapter.writeInt(target, configuration.bandwidths.length);
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, BucketConfiguration configuration) throws IOException {
+            adapter.writeInt(output, configuration.bandwidths.length);
             for (Bandwidth bandwidth : configuration.bandwidths) {
-                adapter.writeObject(target, bandwidth);
+                adapter.writeObject(output, bandwidth);
             }
         }
+
+        @Override
+        public int getTypeId() {
+            return 2;
+        }
+
+        @Override
+        public Class<BucketConfiguration> getSerializedType() {
+            return BucketConfiguration.class;
+        }
+
     };
 
 }

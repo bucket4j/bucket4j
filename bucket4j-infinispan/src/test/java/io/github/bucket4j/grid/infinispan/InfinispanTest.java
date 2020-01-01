@@ -23,27 +23,35 @@ import io.github.bucket4j.Bucket4j;
 import io.github.bucket4j.grid.GridBucketState;
 import io.github.bucket4j.grid.ProxyManager;
 import io.github.bucket4j.grid.RecoveryStrategy;
+import io.github.bucket4j.grid.infinispan.serialization.Bucket4jMarshaller;
+import org.infinispan.Cache;
+import org.infinispan.commons.marshall.JavaSerializationMarshaller;
+import org.infinispan.configuration.cache.CacheMode;
+import org.infinispan.configuration.cache.ConfigurationBuilder;
+import org.infinispan.configuration.global.GlobalConfiguration;
+import org.infinispan.configuration.global.GlobalConfigurationBuilder;
 import org.infinispan.functional.FunctionalMap.ReadWriteMap;
 import org.infinispan.functional.impl.FunctionalMapImpl;
 import org.infinispan.functional.impl.ReadWriteMapImpl;
+import org.infinispan.manager.DefaultCacheManager;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import some.SomeSerializable;
 
-import javax.cache.Cache;
-import javax.cache.CacheManager;
-import javax.cache.Caching;
+import java.io.IOException;
 import java.net.MalformedURLException;
-import java.net.URI;
 import java.net.URISyntaxException;
+
+import static org.junit.Assert.assertEquals;
 
 
 public class InfinispanTest extends AbstractDistributedBucketTest<InfinispanBucketBuilder, Infinispan> {
 
     private static ReadWriteMap<String, GridBucketState> readWriteMap;
     private static Cache<String, GridBucketState> cache;
-    private static CacheManager cacheManager1;
-    private static CacheManager cacheManager2;
+    private static DefaultCacheManager cacheManager1;
+    private static DefaultCacheManager cacheManager2;
 
     @Test(expected = IllegalArgumentException.class)
     @Override
@@ -51,21 +59,52 @@ public class InfinispanTest extends AbstractDistributedBucketTest<InfinispanBuck
         Bucket4j.extension(getExtensionClass()).proxyManagerForMap(null);
     }
 
+    @Test
+    public void testSerializationOfRandomContent() {
+        Cache<String, SomeSerializable> cache = (Cache) InfinispanTest.cache;
+        SomeSerializable valueBefore = new SomeSerializable();
+        valueBefore.setValue(13);
+        cache.put("42", valueBefore);
+
+        SomeSerializable valueAfterSerialization = cache.get("42");
+        assertEquals(valueBefore.getValue(), valueAfterSerialization.getValue());
+    }
+
     @BeforeClass
     public static void init() throws MalformedURLException, URISyntaxException {
-        URI configurationUri = InfinispanTest.class.getResource("/infinispan-jcache-cluster.xml").toURI();
-        ClassLoader tccl = InfinispanTest.class.getClassLoader();
+        cacheManager1 = new DefaultCacheManager(getGlobalConfiguration());
+        cacheManager1.defineConfiguration("my-cache",
+                new ConfigurationBuilder()
+                        .clustering()
+                        .cacheMode(CacheMode.DIST_SYNC)
+                        .hash().numOwners(2)
+                        .build()
+        );
 
-        cacheManager1 = Caching.getCachingProvider().getCacheManager(configurationUri, new TestClassLoader(tccl));
-        cache = cacheManager1.getCache("namedCache");
+        cache = cacheManager1.getCache("my-cache");
         readWriteMap = toMap(cache);
 
-        cacheManager2 = Caching.getCachingProvider().getCacheManager(configurationUri, new TestClassLoader(tccl));
-        cacheManager2.getCache("namedCache");
+        cacheManager2 = new DefaultCacheManager(getGlobalConfiguration());
+        cacheManager2.defineConfiguration("my-cache",
+                new ConfigurationBuilder()
+                        .clustering()
+                        .cacheMode(CacheMode.DIST_SYNC)
+                        .hash().numOwners(2)
+                        .build()
+        );
+        cacheManager2.getCache("my-cache");
+    }
+
+    private static GlobalConfiguration getGlobalConfiguration() {
+        GlobalConfigurationBuilder globalConfigurationBuilder = GlobalConfigurationBuilder.defaultClusteredBuilder();
+        globalConfigurationBuilder.serialization().marshaller(new Bucket4jMarshaller()).whiteList().addRegexp("io.github.bucket4j.*");
+        globalConfigurationBuilder.serialization().marshaller(new JavaSerializationMarshaller()).whiteList().addClasses(SomeSerializable.class);
+
+        return globalConfigurationBuilder.build();
     }
 
     @AfterClass
-    public static void destroy() {
+    public static void destroy() throws IOException {
         cacheManager1.close();
         cacheManager2.close();
     }
@@ -97,8 +136,7 @@ public class InfinispanTest extends AbstractDistributedBucketTest<InfinispanBuck
     }
 
     private static ReadWriteMap<String, GridBucketState> toMap(Cache<String, GridBucketState> cache) {
-        org.infinispan.Cache<String, GridBucketState> nativeCache = cache.unwrap(org.infinispan.Cache.class);
-        FunctionalMapImpl<String, GridBucketState> functionalMap = FunctionalMapImpl.create(nativeCache.getAdvancedCache());
+        FunctionalMapImpl<String, GridBucketState> functionalMap = FunctionalMapImpl.create(cache.getAdvancedCache());
         return ReadWriteMapImpl.create(functionalMap);
     }
 

@@ -34,15 +34,25 @@ public class ReplaceConfigurationOrReturnPreviousCommand implements GridCommand<
 
     public static SerializationHandle<ReplaceConfigurationOrReturnPreviousCommand> SERIALIZATION_HANDLE = new SerializationHandle<ReplaceConfigurationOrReturnPreviousCommand>() {
         @Override
-        public <S> ReplaceConfigurationOrReturnPreviousCommand deserialize(DeserializationAdapter<S> adapter, S source) throws IOException {
-            BucketConfiguration newConfiguration = adapter.readObject(source, BucketConfiguration.class);
+        public <S> ReplaceConfigurationOrReturnPreviousCommand deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
+            BucketConfiguration newConfiguration = adapter.readObject(input, BucketConfiguration.class);
 
             return new ReplaceConfigurationOrReturnPreviousCommand(newConfiguration);
         }
 
         @Override
-        public <O> void serialize(SerializationAdapter<O> adapter, O target, ReplaceConfigurationOrReturnPreviousCommand command) throws IOException {
-            adapter.writeObject(target, command.newConfiguration);
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, ReplaceConfigurationOrReturnPreviousCommand command) throws IOException {
+            adapter.writeObject(output, command.newConfiguration);
+        }
+
+        @Override
+        public int getTypeId() {
+            return 13;
+        }
+
+        @Override
+        public Class<ReplaceConfigurationOrReturnPreviousCommand> getSerializedType() {
+            return ReplaceConfigurationOrReturnPreviousCommand.class;
         }
 
     };

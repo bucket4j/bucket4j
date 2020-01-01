@@ -42,14 +42,24 @@ public class InitStateProcessor<K extends Serializable> implements JCacheEntryPr
 
     public static SerializationHandle<InitStateProcessor<?>> SERIALIZATION_HANDLE = new SerializationHandle<InitStateProcessor<?>>() {
         @Override
-        public <S> InitStateProcessor<?> deserialize(DeserializationAdapter<S> adapter, S source) throws IOException {
-            BucketConfiguration configuration = (BucketConfiguration) adapter.readObject(source, BucketConfiguration.class);
+        public <S> InitStateProcessor<?> deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
+            BucketConfiguration configuration = (BucketConfiguration) adapter.readObject(input, BucketConfiguration.class);
             return new InitStateProcessor<>(configuration);
         }
 
         @Override
-        public <O> void serialize(SerializationAdapter<O> adapter, O target, InitStateProcessor<?> processor) throws IOException {
-            adapter.writeObject(target, processor.configuration);
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, InitStateProcessor<?> processor) throws IOException {
+            adapter.writeObject(output, processor.configuration);
+        }
+
+        @Override
+        public int getTypeId() {
+            return 18;
+        }
+
+        @Override
+        public Class<InitStateProcessor<?>> getSerializedType() {
+            return (Class) InitStateProcessor.class;
         }
 
     };

@@ -32,15 +32,25 @@ public class AddTokensCommand implements GridCommand<Nothing> {
 
     public static SerializationHandle<AddTokensCommand> SERIALIZATION_HANDLE = new SerializationHandle<AddTokensCommand>() {
         @Override
-        public <S> AddTokensCommand deserialize(DeserializationAdapter<S> adapter, S source) throws IOException {
-            long tokensToAdd = adapter.readLong(source);
+        public <S> AddTokensCommand deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
+            long tokensToAdd = adapter.readLong(input);
 
             return new AddTokensCommand(tokensToAdd);
         }
 
         @Override
-        public <O> void serialize(SerializationAdapter<O> adapter, O target, AddTokensCommand command) throws IOException {
-            adapter.writeLong(target, command.tokensToAdd);
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, AddTokensCommand command) throws IOException {
+            adapter.writeLong(output, command.tokensToAdd);
+        }
+
+        @Override
+        public int getTypeId() {
+            return 6;
+        }
+
+        @Override
+        public Class<AddTokensCommand> getSerializedType() {
+            return AddTokensCommand.class;
         }
 
     };

@@ -30,13 +30,23 @@ public class CreateSnapshotCommand implements GridCommand<BucketState> {
 
     public static SerializationHandle<CreateSnapshotCommand> SERIALIZATION_HANDLE = new SerializationHandle<CreateSnapshotCommand>() {
         @Override
-        public <S> CreateSnapshotCommand deserialize(DeserializationAdapter<S> adapter, S source) throws IOException {
+        public <S> CreateSnapshotCommand deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             return new CreateSnapshotCommand();
         }
 
         @Override
-        public <O> void serialize(SerializationAdapter<O> adapter, O target, CreateSnapshotCommand command) throws IOException {
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, CreateSnapshotCommand command) throws IOException {
             // do nothing
+        }
+
+        @Override
+        public int getTypeId() {
+            return 8;
+        }
+
+        @Override
+        public Class<CreateSnapshotCommand> getSerializedType() {
+            return CreateSnapshotCommand.class;
         }
 
     };

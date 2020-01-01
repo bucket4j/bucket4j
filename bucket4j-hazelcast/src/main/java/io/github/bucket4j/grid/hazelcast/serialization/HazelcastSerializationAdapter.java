@@ -7,7 +7,7 @@ import io.github.bucket4j.serialization.SerializationAdapter;
 
 import java.io.IOException;
 
-class ReadWriteAdapter implements SerializationAdapter<ObjectDataOutput>, DeserializationAdapter<ObjectDataInput> {
+public class HazelcastSerializationAdapter implements SerializationAdapter<ObjectDataOutput>, DeserializationAdapter<ObjectDataInput> {
 
     @Override
     public boolean readBoolean(ObjectDataInput source) throws IOException {

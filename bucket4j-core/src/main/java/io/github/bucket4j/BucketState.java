@@ -310,14 +310,24 @@ public class BucketState implements Serializable {
 
     public static SerializationHandle<BucketState> SERIALIZATION_HANDLE = new SerializationHandle<BucketState>() {
         @Override
-        public <S> BucketState deserialize(DeserializationAdapter<S> adapter, S source) throws IOException {
-            long[] data = adapter.readLongArray(source);
+        public <S> BucketState deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
+            long[] data = adapter.readLongArray(input);
             return new BucketState(data);
         }
 
         @Override
-        public <O> void serialize(SerializationAdapter<O> adapter, O target, BucketState state) throws IOException {
-            adapter.writeLongArray(target, state.stateData);
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, BucketState state) throws IOException {
+            adapter.writeLongArray(output, state.stateData);
+        }
+
+        @Override
+        public int getTypeId() {
+            return 3;
+        }
+
+        @Override
+        public Class<BucketState> getSerializedType() {
+            return BucketState.class;
         }
     };
 

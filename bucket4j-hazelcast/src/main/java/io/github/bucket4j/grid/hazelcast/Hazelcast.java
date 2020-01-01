@@ -22,7 +22,12 @@ import com.hazelcast.core.IMap;
 import io.github.bucket4j.Extension;
 import io.github.bucket4j.grid.GridBucketState;
 import io.github.bucket4j.grid.ProxyManager;
+import io.github.bucket4j.serialization.SerializationHandle;
+
 import java.io.Serializable;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 
 /**
  * The extension of Bucket4j library addressed to support <a href="https://hazelcast.com//">Hazelcast</a> in-memory data grid.
@@ -50,6 +55,11 @@ public class Hazelcast implements Extension<HazelcastBucketBuilder> {
      */
     public <T extends Serializable> ProxyManager<T> proxyManagerForMap(IMap<T, GridBucketState> map) {
         return new HazelcastProxyManager<>(map);
+    }
+
+    @Override
+    public Collection<SerializationHandle<?>> getSerializers() {
+        return Arrays.asList(SimpleBackupProcessor.SERIALIZATION_HANDLE);
     }
 
 }

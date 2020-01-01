@@ -35,16 +35,26 @@ public class GridBucketState implements Serializable {
 
     public static SerializationHandle<GridBucketState> SERIALIZATION_HANDLE = new SerializationHandle<GridBucketState>() {
         @Override
-        public <S> GridBucketState deserialize(DeserializationAdapter<S> adapter, S source) throws IOException {
-            BucketConfiguration bucketConfiguration = adapter.readObject(source, BucketConfiguration.class);
-            BucketState bucketState = adapter.readObject(source, BucketState.class);
+        public <S> GridBucketState deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
+            BucketConfiguration bucketConfiguration = adapter.readObject(input, BucketConfiguration.class);
+            BucketState bucketState = adapter.readObject(input, BucketState.class);
             return new GridBucketState(bucketConfiguration, bucketState);
         }
 
         @Override
-        public <O> void serialize(SerializationAdapter<O> adapter, O target, GridBucketState gridState) throws IOException {
-            adapter.writeObject(target, gridState.configuration);
-            adapter.writeObject(target, gridState.state);
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, GridBucketState gridState) throws IOException {
+            adapter.writeObject(output, gridState.configuration);
+            adapter.writeObject(output, gridState.state);
+        }
+
+        @Override
+        public int getTypeId() {
+            return 4;
+        }
+
+        @Override
+        public Class<GridBucketState> getSerializedType() {
+            return GridBucketState.class;
         }
 
     };

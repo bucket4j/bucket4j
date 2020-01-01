@@ -40,14 +40,24 @@ public class ExecuteProcessor<K extends Serializable, T extends Serializable> im
 
     public static SerializationHandle<ExecuteProcessor<?, ?>> SERIALIZATION_HANDLE = new SerializationHandle<ExecuteProcessor<?, ?>>() {
         @Override
-        public <S> ExecuteProcessor<?, ?> deserialize(DeserializationAdapter<S> adapter, S source) throws IOException {
-            GridCommand<?> targetCommand = (GridCommand<?>) adapter.readObject(source);
+        public <S> ExecuteProcessor<?, ?> deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
+            GridCommand<?> targetCommand = (GridCommand<?>) adapter.readObject(input);
             return new ExecuteProcessor<>(targetCommand);
         }
 
         @Override
-        public <O> void serialize(SerializationAdapter<O> adapter, O target, ExecuteProcessor<?, ?> processor) throws IOException {
-            adapter.writeObject(target, processor.targetCommand);
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, ExecuteProcessor<?, ?> processor) throws IOException {
+            adapter.writeObject(output, processor.targetCommand);
+        }
+
+        @Override
+        public int getTypeId() {
+            return 17;
+        }
+
+        @Override
+        public Class<ExecuteProcessor<?, ?>> getSerializedType() {
+            return (Class) ExecuteProcessor.class;
         }
 
     };

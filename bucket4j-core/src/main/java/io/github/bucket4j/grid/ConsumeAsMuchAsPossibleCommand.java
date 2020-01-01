@@ -33,15 +33,25 @@ public class ConsumeAsMuchAsPossibleCommand implements GridCommand<Long> {
 
     public static SerializationHandle<ConsumeAsMuchAsPossibleCommand> SERIALIZATION_HANDLE = new SerializationHandle<ConsumeAsMuchAsPossibleCommand>() {
         @Override
-        public <S> ConsumeAsMuchAsPossibleCommand deserialize(DeserializationAdapter<S> adapter, S source) throws IOException {
-            long limit = adapter.readLong(source);
+        public <S> ConsumeAsMuchAsPossibleCommand deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
+            long limit = adapter.readLong(input);
 
             return new ConsumeAsMuchAsPossibleCommand(limit);
         }
 
         @Override
-        public <O> void serialize(SerializationAdapter<O> adapter, O target, ConsumeAsMuchAsPossibleCommand command) throws IOException {
-            adapter.writeLong(target, command.limit);
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, ConsumeAsMuchAsPossibleCommand command) throws IOException {
+            adapter.writeLong(output, command.limit);
+        }
+
+        @Override
+        public int getTypeId() {
+            return 7;
+        }
+
+        @Override
+        public Class<ConsumeAsMuchAsPossibleCommand> getSerializedType() {
+            return ConsumeAsMuchAsPossibleCommand.class;
         }
 
     };

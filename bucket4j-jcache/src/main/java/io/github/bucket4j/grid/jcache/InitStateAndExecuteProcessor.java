@@ -39,16 +39,26 @@ public class InitStateAndExecuteProcessor<K extends Serializable, T extends Seri
 
     public static SerializationHandle<InitStateAndExecuteProcessor<?, ?>> SERIALIZATION_HANDLE = new SerializationHandle<InitStateAndExecuteProcessor<?, ?>>() {
         @Override
-        public <S> InitStateAndExecuteProcessor<?, ?> deserialize(DeserializationAdapter<S> adapter, S source) throws IOException {
-            GridCommand<?> targetCommand = (GridCommand<?>) adapter.readObject(source);
-            BucketConfiguration configuration = adapter.readObject(source, BucketConfiguration.class);
+        public <S> InitStateAndExecuteProcessor<?, ?> deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
+            GridCommand<?> targetCommand = (GridCommand<?>) adapter.readObject(input);
+            BucketConfiguration configuration = adapter.readObject(input, BucketConfiguration.class);
             return new InitStateAndExecuteProcessor<>(targetCommand, configuration);
         }
 
         @Override
-        public <O> void serialize(SerializationAdapter<O> adapter, O target, InitStateAndExecuteProcessor<?, ?> processor) throws IOException {
-            adapter.writeObject(target, processor.targetCommand);
-            adapter.writeObject(target, processor.configuration);
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, InitStateAndExecuteProcessor<?, ?> processor) throws IOException {
+            adapter.writeObject(output, processor.targetCommand);
+            adapter.writeObject(output, processor.configuration);
+        }
+
+        @Override
+        public int getTypeId() {
+            return 19;
+        }
+
+        @Override
+        public Class<InitStateAndExecuteProcessor<?, ?>> getSerializedType() {
+            return (Class)InitStateAndExecuteProcessor.class;
         }
 
     };

@@ -34,17 +34,27 @@ public class ReserveAndCalculateTimeToSleepCommand implements GridCommand<Long> 
 
     public static SerializationHandle<ReserveAndCalculateTimeToSleepCommand> SERIALIZATION_HANDLE = new SerializationHandle<ReserveAndCalculateTimeToSleepCommand>() {
         @Override
-        public <S> ReserveAndCalculateTimeToSleepCommand deserialize(DeserializationAdapter<S> adapter, S source) throws IOException {
-            long tokensToConsume = adapter.readLong(source);
-            long waitIfBusyNanosLimit = adapter.readLong(source);
+        public <S> ReserveAndCalculateTimeToSleepCommand deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
+            long tokensToConsume = adapter.readLong(input);
+            long waitIfBusyNanosLimit = adapter.readLong(input);
 
             return new ReserveAndCalculateTimeToSleepCommand(tokensToConsume, waitIfBusyNanosLimit);
         }
 
         @Override
-        public <O> void serialize(SerializationAdapter<O> adapter, O target, ReserveAndCalculateTimeToSleepCommand command) throws IOException {
-            adapter.writeLong(target, command.tokensToConsume);
-            adapter.writeLong(target, command.waitIfBusyNanosLimit);
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, ReserveAndCalculateTimeToSleepCommand command) throws IOException {
+            adapter.writeLong(output, command.tokensToConsume);
+            adapter.writeLong(output, command.waitIfBusyNanosLimit);
+        }
+
+        @Override
+        public int getTypeId() {
+            return 5;
+        }
+
+        @Override
+        public Class<ReserveAndCalculateTimeToSleepCommand> getSerializedType() {
+            return ReserveAndCalculateTimeToSleepCommand.class;
         }
 
     };

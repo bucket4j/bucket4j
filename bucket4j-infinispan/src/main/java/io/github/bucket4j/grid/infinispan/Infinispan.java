@@ -22,9 +22,12 @@ import io.github.bucket4j.Extension;
 import io.github.bucket4j.grid.GridBucketState;
 import io.github.bucket4j.grid.ProxyManager;
 
+import io.github.bucket4j.serialization.SerializationHandle;
 import org.infinispan.functional.FunctionalMap.ReadWriteMap;
 
 import java.io.Serializable;
+import java.util.Arrays;
+import java.util.Collection;
 
 /**
  * The extension of Bucket4j library addressed to support <a href="https://ignite.apache.org/">Apache ignite</a> in-memory computing platform.
@@ -52,6 +55,11 @@ public class Infinispan implements Extension<InfinispanBucketBuilder> {
      */
     public <K extends Serializable> ProxyManager<K> proxyManagerForMap(ReadWriteMap<K, GridBucketState> readWriteMap) {
         return new InfinispanProxyManager<>(readWriteMap);
+    }
+
+    @Override
+    public Collection<SerializationHandle<?>> getSerializers() {
+        return Arrays.asList(SerializableFunctionAdapter.SERIALIZATION_HANDLE);
     }
 
 }

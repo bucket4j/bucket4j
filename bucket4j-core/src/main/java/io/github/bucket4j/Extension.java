@@ -17,6 +17,11 @@
 
 package io.github.bucket4j;
 
+import io.github.bucket4j.serialization.SerializationHandle;
+
+import java.util.Collection;
+import java.util.Collections;
+
 /**
  * Represents an extension point of bucket4j library.
  *
@@ -30,5 +35,13 @@ public interface Extension<T extends AbstractBucketBuilder<T>> {
      * @return new builder instance
      */
     T builder();
+
+
+    /**
+     * @return serializers
+     */
+    default Collection<SerializationHandle<?>> getSerializers() {
+        return Collections.emptyList();
+    }
 
 }
