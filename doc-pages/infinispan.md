@@ -50,7 +50,7 @@ import io.github.bucket4j.grid.infinispan.serialization.Bucket4jProtobufContextI
 import org.infinispan.configuration.global.GlobalConfigurationBuilder;
 ...
 GlobalConfigurationBuilder builder = new GlobalConfigurationBuilder();
-globalConfigurationBuilder.serialization().addContextInitializer(new Bucket4jProtobufContextInitializer());
+builder.serialization().addContextInitializer(new Bucket4jProtobufContextInitializer());
 ```
 
 *Declarative registration of Bucket4jProtobufContextInitializer*
