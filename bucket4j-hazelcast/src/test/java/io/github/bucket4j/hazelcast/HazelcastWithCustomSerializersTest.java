@@ -56,7 +56,7 @@ public class HazelcastWithCustomSerializersTest extends AbstractDistributedBucke
 
         server.exec((Runnable & Serializable) () -> {
             Config config = new Config();
-            addCustomSerializers(config.getSerializationConfig());
+            HazelcastSerializer.addCustomSerializers(config.getSerializationConfig(), 10_000);
             config.setLiteMember(false);
             HazelcastInstance hazelcastInstance = Hazelcast.newHazelcastInstance(config);
             hazelcastInstance.getMap("my_buckets");
@@ -64,7 +64,7 @@ public class HazelcastWithCustomSerializersTest extends AbstractDistributedBucke
 
         // start hazelcast client which works inside current JVM and does not hold data
         Config config = new Config();
-        addCustomSerializers(config.getSerializationConfig());
+        HazelcastSerializer.addCustomSerializers(config.getSerializationConfig(), 10_000);
         config.setLiteMember(true);
         hazelcastInstance = Hazelcast.newHazelcastInstance(config);
         map = hazelcastInstance.getMap("my_buckets");
@@ -104,16 +104,6 @@ public class HazelcastWithCustomSerializersTest extends AbstractDistributedBucke
     @Override
     protected void removeBucketFromBackingStorage(String key) {
         map.remove(key);
-    }
-
-    private static void addCustomSerializers(SerializationConfig serializationConfig) {
-        for (HazelcastSerializer serializer : HazelcastSerializer.getAllSerializers(1000)) {
-            serializationConfig.addSerializerConfig(
-                    new SerializerConfig()
-                            .setImplementation(serializer)
-                            .setTypeClass(serializer.getSerializableType())
-            );
-        }
     }
 
 }

@@ -1,5 +1,7 @@
 package io.github.bucket4j.grid.hazelcast.serialization;
 
+import com.hazelcast.config.SerializationConfig;
+import com.hazelcast.config.SerializerConfig;
 import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;
 import com.hazelcast.nio.serialization.StreamSerializer;
@@ -13,6 +15,27 @@ import java.util.List;
 
 
 public class HazelcastSerializer<T> implements StreamSerializer<T>, TypedStreamDeserializer<T> {
+
+    /**
+     * Registers custom Hazelcast serializers for all classes from Bucket4j library which can be transferred over network.
+     * Each serializer will have different typeId, and this id will not be changed in the feature releases.
+     *
+     * <p>
+     *     <strong>Note:</strong> it would be better to leave an empty space in the Ids in order to handle the extension of Bucket4j library when new classes can be added to library.
+     *     For example if you called {@code getAllSerializers(10000)} then it would be reasonable to avoid registering your custom types in the interval 10000-10100.
+     * </p>
+     *
+     * @param typeIdBase a starting number from for typeId sequence
+     */
+    public static void addCustomSerializers(SerializationConfig serializationConfig, final int typeIdBase) {
+        for (HazelcastSerializer serializer : HazelcastSerializer.getAllSerializers(typeIdBase)) {
+            serializationConfig.addSerializerConfig(
+                    new SerializerConfig()
+                            .setImplementation(serializer)
+                            .setTypeClass(serializer.getSerializableType())
+            );
+        }
+    }
 
     /**
      * Returns the list custom Hazelcast serializers for all classes from Bucket4j library which can be transferred over network.
