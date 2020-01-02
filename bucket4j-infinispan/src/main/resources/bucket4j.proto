@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package bucket4j;
+
+message RawData {
+
+    bytes data = 2;
+
+}

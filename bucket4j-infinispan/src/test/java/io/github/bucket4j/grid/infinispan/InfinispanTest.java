@@ -23,7 +23,7 @@ import io.github.bucket4j.Bucket4j;
 import io.github.bucket4j.grid.GridBucketState;
 import io.github.bucket4j.grid.ProxyManager;
 import io.github.bucket4j.grid.RecoveryStrategy;
-import io.github.bucket4j.grid.infinispan.serialization.Bucket4jMarshaller;
+import io.github.bucket4j.grid.infinispan.serialization.Bucket4jContextInitializer;
 import org.infinispan.Cache;
 import org.infinispan.commons.marshall.JavaSerializationMarshaller;
 import org.infinispan.configuration.cache.CacheMode;
@@ -97,8 +97,9 @@ public class InfinispanTest extends AbstractDistributedBucketTest<InfinispanBuck
 
     private static GlobalConfiguration getGlobalConfiguration() {
         GlobalConfigurationBuilder globalConfigurationBuilder = GlobalConfigurationBuilder.defaultClusteredBuilder();
-        globalConfigurationBuilder.serialization().marshaller(new Bucket4jMarshaller()).whiteList().addRegexp("io.github.bucket4j.*");
-        globalConfigurationBuilder.serialization().marshaller(new JavaSerializationMarshaller()).whiteList().addClasses(SomeSerializable.class);
+        globalConfigurationBuilder.serialization().addContextInitializer(new Bucket4jContextInitializer());
+
+        //globalConfigurationBuilder.serialization().marshaller(new Bucket4jContextInitializer()).whiteList().addRegexp("io.github.bucket4j.*");
 
         return globalConfigurationBuilder.build();
     }
