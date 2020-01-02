@@ -23,9 +23,8 @@ import io.github.bucket4j.Bucket4j;
 import io.github.bucket4j.grid.GridBucketState;
 import io.github.bucket4j.grid.ProxyManager;
 import io.github.bucket4j.grid.RecoveryStrategy;
-import io.github.bucket4j.grid.infinispan.serialization.Bucket4jContextInitializer;
+import io.github.bucket4j.grid.infinispan.serialization.Bucket4jProtobufContextInitializer;
 import org.infinispan.Cache;
-import org.infinispan.commons.marshall.JavaSerializationMarshaller;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.configuration.global.GlobalConfiguration;
@@ -37,13 +36,10 @@ import org.infinispan.manager.DefaultCacheManager;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import some.SomeSerializable;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
-
-import static org.junit.Assert.assertEquals;
 
 
 public class InfinispanTest extends AbstractDistributedBucketTest<InfinispanBucketBuilder, Infinispan> {
@@ -57,17 +53,6 @@ public class InfinispanTest extends AbstractDistributedBucketTest<InfinispanBuck
     @Override
     public void testThatImpossibleToPassNullCacheToProxyManagerConstructor() {
         Bucket4j.extension(getExtensionClass()).proxyManagerForMap(null);
-    }
-
-    @Test
-    public void testSerializationOfRandomContent() {
-        Cache<String, SomeSerializable> cache = (Cache) InfinispanTest.cache;
-        SomeSerializable valueBefore = new SomeSerializable();
-        valueBefore.setValue(13);
-        cache.put("42", valueBefore);
-
-        SomeSerializable valueAfterSerialization = cache.get("42");
-        assertEquals(valueBefore.getValue(), valueAfterSerialization.getValue());
     }
 
     @BeforeClass
@@ -97,10 +82,7 @@ public class InfinispanTest extends AbstractDistributedBucketTest<InfinispanBuck
 
     private static GlobalConfiguration getGlobalConfiguration() {
         GlobalConfigurationBuilder globalConfigurationBuilder = GlobalConfigurationBuilder.defaultClusteredBuilder();
-        globalConfigurationBuilder.serialization().addContextInitializer(new Bucket4jContextInitializer());
-
-        //globalConfigurationBuilder.serialization().marshaller(new Bucket4jContextInitializer()).whiteList().addRegexp("io.github.bucket4j.*");
-
+        globalConfigurationBuilder.serialization().addContextInitializer(new Bucket4jProtobufContextInitializer());
         return globalConfigurationBuilder.build();
     }
 
@@ -128,12 +110,6 @@ public class InfinispanTest extends AbstractDistributedBucketTest<InfinispanBuck
     @Override
     protected void removeBucketFromBackingStorage(String key) {
         cache.remove(key);
-    }
-
-    public static class TestClassLoader extends ClassLoader {
-        public TestClassLoader(ClassLoader parent) {
-            super(parent);
-        }
     }
 
     private static ReadWriteMap<String, GridBucketState> toMap(Cache<String, GridBucketState> cache) {

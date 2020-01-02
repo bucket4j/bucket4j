@@ -1,6 +1,5 @@
 package io.github.bucket4j.grid.infinispan.serialization;
 
-import io.github.bucket4j.grid.CommandResult;
 import io.github.bucket4j.serialization.SerializationHandle;
 import org.infinispan.protostream.MessageMarshaller;
 
@@ -11,9 +10,11 @@ public class ProtobufMessageMarshaller<T> implements MessageMarshaller<T> {
     private static InfinispanSerializationAdapter ADAPTER = new InfinispanSerializationAdapter();
 
     private final SerializationHandle<T> serializationHandle;
+    private final String protoTypeName;
 
-    public ProtobufMessageMarshaller(SerializationHandle<T> serializationHandle) {
+    public ProtobufMessageMarshaller(SerializationHandle<T> serializationHandle, String protoTypeName) {
         this.serializationHandle = serializationHandle;
+        this.protoTypeName = protoTypeName;
     }
 
     @Override
@@ -45,7 +46,7 @@ public class ProtobufMessageMarshaller<T> implements MessageMarshaller<T> {
 
     @Override
     public String getTypeName() {
-        return "bucket4j.RawData";
+        return protoTypeName;
     }
 
 }

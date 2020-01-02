@@ -40,6 +40,10 @@ public class SerializableFunctionAdapter<K extends Serializable, R extends Seria
         this.entryProcessor = entryProcessor;
     }
 
+    public JCacheEntryProcessor<K, R> getEntryProcessor() {
+        return entryProcessor;
+    }
+
     public static SerializationHandle<SerializableFunctionAdapter> SERIALIZATION_HANDLE = new SerializationHandle<SerializableFunctionAdapter>() {
 
         @Override
