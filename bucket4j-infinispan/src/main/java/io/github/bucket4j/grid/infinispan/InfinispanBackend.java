@@ -17,15 +17,12 @@
 
 package io.github.bucket4j.grid.infinispan;
 
-import io.github.bucket4j.*;
 import io.github.bucket4j.distributed.proxy.AbstractBackend;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
-import io.github.bucket4j.distributed.proxy.Backend;
 import io.github.bucket4j.distributed.remote.*;
 import org.infinispan.commons.CacheException;
 import org.infinispan.functional.EntryView;
 import org.infinispan.functional.FunctionalMap.ReadWriteMap;
-import org.infinispan.util.function.SerializableFunction;
 
 import java.io.Serializable;
 import java.util.Objects;
@@ -66,26 +63,7 @@ public class InfinispanBackend<K extends Serializable> extends AbstractBackend<K
     }
 
 
-    private static class InfinispanProcessor<K extends Serializable, R extends Serializable> implements SerializableFunction<EntryView.ReadWriteEntryView<K, RemoteBucketState>, CommandResult<R>> {
-
-        private static final long serialVersionUID = 42L;
-
-        private final RemoteCommand<R> command;
-
-        public InfinispanProcessor(RemoteCommand<R> command) {
-            this.command = command;
-        }
-
-        @Override
-        public CommandResult<R> apply(EntryView.ReadWriteEntryView<K, RemoteBucketState> entryView) {
-            InfinispanEntry<K> mutableEntry = new InfinispanEntry<>(entryView);
-            return command.execute(mutableEntry, TimeMeter.SYSTEM_MILLISECONDS.currentTimeNanos());
-        }
-
-    }
-
-
-    private static class InfinispanEntry<K extends Serializable> implements MutableBucketEntry {
+    public static class InfinispanEntry<K extends Serializable> implements MutableBucketEntry {
 
         private final EntryView.ReadWriteEntryView<K, RemoteBucketState> entryView;
 

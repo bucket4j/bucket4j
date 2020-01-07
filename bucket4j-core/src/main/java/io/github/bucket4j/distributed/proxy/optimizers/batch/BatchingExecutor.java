@@ -4,7 +4,7 @@ import io.github.bucket4j.distributed.proxy.CommandExecutor;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.remote.commands.MultiCommand;
-import io.github.bucket4j.distributed.remote.commands.MultiResult;
+import io.github.bucket4j.distributed.remote.MultiResult;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -12,9 +12,11 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
+import static io.github.bucket4j.serialization.PrimitiveSerializationHandles.LONG_HANDLE;
+
 public class BatchingExecutor implements CommandExecutor {
 
-    private static final CommandResult SIGNAL_TO_SCHEDULE_NEXT_BATCH = CommandResult.success(42);
+    private static final CommandResult SIGNAL_TO_SCHEDULE_NEXT_BATCH = CommandResult.success(42L, LONG_HANDLE);
 
     private final CommandExecutor wrappedExecutor;
 

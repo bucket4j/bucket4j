@@ -18,6 +18,11 @@
 package io.github.bucket4j.distributed.remote.commands;
 
 import io.github.bucket4j.ConsumptionProbe;
+import io.github.bucket4j.serialization.DeserializationAdapter;
+import io.github.bucket4j.serialization.SerializationAdapter;
+import io.github.bucket4j.serialization.SerializationHandle;
+
+import java.io.IOException;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.MutableBucketEntry;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
@@ -29,6 +34,31 @@ public class TryConsumeAndReturnRemainingTokensCommand implements RemoteCommand<
     private static final long serialVersionUID = 42;
 
     private long tokensToConsume;
+
+    public static SerializationHandle<TryConsumeAndReturnRemainingTokensCommand> SERIALIZATION_HANDLE = new SerializationHandle<TryConsumeAndReturnRemainingTokensCommand>() {
+        @Override
+        public <S> TryConsumeAndReturnRemainingTokensCommand deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
+            long tokensToConsume = adapter.readLong(input);
+
+            return new TryConsumeAndReturnRemainingTokensCommand(tokensToConsume);
+        }
+
+        @Override
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, TryConsumeAndReturnRemainingTokensCommand command) throws IOException {
+            adapter.writeLong(output, command.tokensToConsume);
+        }
+
+        @Override
+        public int getTypeId() {
+            return 12;
+        }
+
+        @Override
+        public Class<TryConsumeAndReturnRemainingTokensCommand> getSerializedType() {
+            return TryConsumeAndReturnRemainingTokensCommand.class;
+        }
+
+    };
 
     public TryConsumeAndReturnRemainingTokensCommand(long tokensToConsume) {
         this.tokensToConsume = tokensToConsume;
@@ -48,16 +78,23 @@ public class TryConsumeAndReturnRemainingTokensCommand implements RemoteCommand<
             mutableEntry.set(state);
             long nanosToWaitForReset = state.calculateFullRefillingTime(currentTimeNanos);
             long remainingTokens = availableToConsume - tokensToConsume;
-            return CommandResult.success(ConsumptionProbe.consumed(remainingTokens, nanosToWaitForReset));
+            ConsumptionProbe probe = ConsumptionProbe.consumed(remainingTokens, nanosToWaitForReset);
+            return CommandResult.success(probe, ConsumptionProbe.SERIALIZATION_HANDLE);
         } else {
             long nanosToWaitForReset = state.calculateFullRefillingTime(currentTimeNanos);
             long nanosToWaitForRefill = state.calculateDelayNanosAfterWillBePossibleToConsume(tokensToConsume, currentTimeNanos);
-            return CommandResult.success(ConsumptionProbe.rejected(availableToConsume, nanosToWaitForRefill, nanosToWaitForReset));
+            ConsumptionProbe probe = ConsumptionProbe.rejected(availableToConsume, nanosToWaitForRefill, nanosToWaitForReset);
+            return CommandResult.success(probe, ConsumptionProbe.SERIALIZATION_HANDLE);
         }
     }
 
     public long getTokensToConsume() {
         return tokensToConsume;
+    }
+
+    @Override
+    public SerializationHandle getSerializationHandle() {
+        return SERIALIZATION_HANDLE;
     }
 
 }

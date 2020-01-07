@@ -22,12 +22,42 @@ import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.MutableBucketEntry;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
+import io.github.bucket4j.serialization.DeserializationAdapter;
+import io.github.bucket4j.serialization.SerializationAdapter;
+import io.github.bucket4j.serialization.SerializationHandle;
+
+import java.io.IOException;
 
 public class AddTokensCommand implements RemoteCommand<Nothing> {
 
     private static final long serialVersionUID = 42;
 
     private long tokensToAdd;
+
+    public static SerializationHandle<AddTokensCommand> SERIALIZATION_HANDLE = new SerializationHandle<AddTokensCommand>() {
+        @Override
+        public <S> AddTokensCommand deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
+            long tokensToAdd = adapter.readLong(input);
+
+            return new AddTokensCommand(tokensToAdd);
+        }
+
+        @Override
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, AddTokensCommand command) throws IOException {
+            adapter.writeLong(output, command.tokensToAdd);
+        }
+
+        @Override
+        public int getTypeId() {
+            return 6;
+        }
+
+        @Override
+        public Class<AddTokensCommand> getSerializedType() {
+            return AddTokensCommand.class;
+        }
+
+    };
 
     public AddTokensCommand(long tokensToAdd) {
         this.tokensToAdd = tokensToAdd;
@@ -47,6 +77,11 @@ public class AddTokensCommand implements RemoteCommand<Nothing> {
 
     public long getTokensToAdd() {
         return tokensToAdd;
+    }
+
+    @Override
+    public SerializationHandle getSerializationHandle() {
+        return SERIALIZATION_HANDLE;
     }
 
 }

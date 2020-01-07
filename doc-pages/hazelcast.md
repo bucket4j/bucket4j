@@ -36,3 +36,25 @@ com.hazelcast.core.IMap<K, GridBucketState> map = ...;
 
 ProxyManager proxyManager = Bucket4j.extension(Hazelcast.class).proxyManagerForMap(map);
 ```
+
+## Configuring Custom Serialization for Bucket4j library classes
+If you configure nothing, then by default Java serialization will be used for serialization Bucket4j library classes. Java serialization can be rather slow and should be avoided in general.
+```Bucket4j``` provides [custom serializers](https://docs.hazelcast.org/docs/3.0/manual/html/ch03s03.html) for all library claasses that could be transferred over network.  
+To let Hazelcast know about fast serializers you should register them programmatically in the serialization config:
+```java
+import com.hazelcast.config.Config;
+import com.hazelcast.config.SerializationConfig;
+import com.hazelcast.config.SerializerConfig;
+import io.github.bucket4j.grid.hazelcast.serialization.HazelcastSerializer;
+...
+    Config config = ...
+    SerializationConfig serializationConfig = config.getSerializationConfig();
+
+    // the starting type ID number for Bucket4j classes.
+    // you free to choose any unused ID, but be aware that Bucket4j uses 21 types currently,
+    // and may use more types in the future, so leave enough empty space after baseTypeIdNumber 
+    int baseTypeIdNumber = 10000;
+    
+    HazelcastSerializer.addCustomSerializers(serializationConfig, baseTypeIdNumber);
+```
+

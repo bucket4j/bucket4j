@@ -26,8 +26,6 @@ import spock.lang.Unroll
 import java.time.Duration
 import java.util.concurrent.ExecutionException
 
-import static EqualsUtil.isConfigEquals
-
 class ConfigurationReplacementSpecification extends Specification {
 
     @Unroll
@@ -46,8 +44,8 @@ class ConfigurationReplacementSpecification extends Specification {
             bucket.replaceConfiguration(newConfiguration)
         then:
             IncompatibleConfigurationException ex = thrown(IncompatibleConfigurationException)
-            isConfigEquals(ex.newConfiguration, newConfiguration)
-            isConfigEquals(ex.previousConfiguration, bucket.getConfiguration())
+            EqualityUtils.equals(ex.newConfiguration, newConfiguration)
+            EqualityUtils.equals(ex.previousConfiguration, bucket.getConfiguration())
 
         where:
             bucketType << BucketType.values()
@@ -70,9 +68,8 @@ class ConfigurationReplacementSpecification extends Specification {
         then:
             ExecutionException executionException = thrown(ExecutionException)
             IncompatibleConfigurationException asyncException = executionException.getCause()
-            isConfigEquals(asyncException.newConfiguration, newConfiguration)
-            isConfigEquals(asyncException.previousConfiguration, configuration)
-
+            EqualityUtils.equals(asyncException.newConfiguration, newConfiguration)
+            EqualityUtils.equals(asyncException.previousConfiguration, configuration)
         where:
             bucketType << BucketType.withAsyncSupport()
     }
@@ -94,8 +91,8 @@ class ConfigurationReplacementSpecification extends Specification {
             bucket.replaceConfiguration(newConfiguration)
         then:
             IncompatibleConfigurationException ex = thrown(IncompatibleConfigurationException)
-            isConfigEquals(ex.newConfiguration, newConfiguration)
-            isConfigEquals(ex.previousConfiguration, configuration)
+            EqualityUtils.equals(ex.newConfiguration, newConfiguration)
+            EqualityUtils.equals(ex.previousConfiguration, configuration)
 
         where:
             bucketType << BucketType.values()
@@ -118,8 +115,8 @@ class ConfigurationReplacementSpecification extends Specification {
         then:
             ExecutionException executionException = thrown(ExecutionException)
             IncompatibleConfigurationException asyncException = executionException.getCause()
-            isConfigEquals(asyncException.newConfiguration, newConfiguration)
-            isConfigEquals(asyncException.previousConfiguration, configuration)
+            EqualityUtils.equals(asyncException.newConfiguration, newConfiguration)
+            EqualityUtils.equals(asyncException.previousConfiguration, configuration)
         where:
             bucketType << BucketType.withAsyncSupport()
     }

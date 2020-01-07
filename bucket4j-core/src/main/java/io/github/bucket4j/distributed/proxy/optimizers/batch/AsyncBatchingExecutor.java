@@ -21,7 +21,7 @@ import io.github.bucket4j.distributed.proxy.AsyncCommandExecutor;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.remote.commands.MultiCommand;
-import io.github.bucket4j.distributed.remote.commands.MultiResult;
+import io.github.bucket4j.distributed.remote.MultiResult;
 
 import java.io.Serializable;
 import java.util.ArrayList;

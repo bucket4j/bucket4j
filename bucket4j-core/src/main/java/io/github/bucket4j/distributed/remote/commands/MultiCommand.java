@@ -1,10 +1,11 @@
 package io.github.bucket4j.distributed.remote.commands;
 
-import io.github.bucket4j.distributed.remote.CommandResult;
-import io.github.bucket4j.distributed.remote.MutableBucketEntry;
-import io.github.bucket4j.distributed.remote.RemoteBucketState;
-import io.github.bucket4j.distributed.remote.RemoteCommand;
+import io.github.bucket4j.distributed.remote.*;
+import io.github.bucket4j.serialization.DeserializationAdapter;
+import io.github.bucket4j.serialization.SerializationAdapter;
+import io.github.bucket4j.serialization.SerializationHandle;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,6 +16,38 @@ public class MultiCommand implements RemoteCommand<MultiResult>, Serializable {
     private static final long serialVersionUID = 42;
 
     private List<RemoteCommand<?>> commands;
+
+    public static SerializationHandle<MultiCommand> SERIALIZATION_HANDLE = new SerializationHandle<MultiCommand>() {
+        @Override
+        public <S> MultiCommand deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
+            int size = adapter.readInt(input);
+            List<RemoteCommand<?>> results = new ArrayList<>(size);
+            for (int i = 0; i < size; i++) {
+                RemoteCommand<?> result = RemoteCommand.deserialize(adapter, input);
+                results.add(result);
+            }
+            return new MultiCommand(results);
+        }
+
+        @Override
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, MultiCommand multiCommand) throws IOException {
+            adapter.writeInt(output, multiCommand.commands.size());
+            for (RemoteCommand<?> command : multiCommand.commands) {
+                RemoteCommand.serialize(adapter, output, command);
+            }
+        }
+
+        @Override
+        public int getTypeId() {
+            return 16;
+        }
+
+        @Override
+        public Class<MultiCommand> getSerializedType() {
+            return MultiCommand.class;
+        }
+
+    };
 
     public MultiCommand(List<RemoteCommand<?>> commands) {
         this.commands = commands;
@@ -34,7 +67,7 @@ public class MultiCommand implements RemoteCommand<MultiResult>, Serializable {
             mutableEntry.set(entryWrapper.state);
         }
 
-        return CommandResult.success(new MultiResult(singleResults));
+        return CommandResult.success(new MultiResult(singleResults), MultiResult.SERIALIZATION_HANDLE);
     }
 
     @Override
@@ -49,6 +82,11 @@ public class MultiCommand implements RemoteCommand<MultiResult>, Serializable {
 
     public List<RemoteCommand<?>> getCommands() {
         return commands;
+    }
+
+    @Override
+    public SerializationHandle getSerializationHandle() {
+        return SERIALIZATION_HANDLE;
     }
 
     private static class BucketEntryWrapper implements MutableBucketEntry {

@@ -22,6 +22,11 @@ import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.MutableBucketEntry;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
+import io.github.bucket4j.serialization.DeserializationAdapter;
+import io.github.bucket4j.serialization.SerializationAdapter;
+import io.github.bucket4j.serialization.SerializationHandle;
+
+import java.io.IOException;
 
 public class GetConfigurationCommand implements RemoteCommand<BucketConfiguration> {
 
@@ -34,7 +39,36 @@ public class GetConfigurationCommand implements RemoteCommand<BucketConfiguratio
         }
 
         RemoteBucketState state = mutableEntry.get();
-        return CommandResult.success(state.getConfiguration());
+        return CommandResult.success(state.getConfiguration(), RemoteBucketState.SERIALIZATION_HANDLE);
+    }
+
+    public static SerializationHandle<GetConfigurationCommand> SERIALIZATION_HANDLE = new SerializationHandle<GetConfigurationCommand>() {
+
+        @Override
+        public <S> GetConfigurationCommand deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
+            return new GetConfigurationCommand();
+        }
+
+        @Override
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, GetConfigurationCommand command) throws IOException {
+            // do nothing
+        }
+
+        @Override
+        public int getTypeId() {
+            return 15;
+        }
+
+        @Override
+        public Class<GetConfigurationCommand> getSerializedType() {
+            return GetConfigurationCommand.class;
+        }
+
+    };
+
+    @Override
+    public SerializationHandle getSerializationHandle() {
+        return SERIALIZATION_HANDLE;
     }
 
 }

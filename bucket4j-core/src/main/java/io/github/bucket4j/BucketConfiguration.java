@@ -17,7 +17,13 @@
 
 package io.github.bucket4j;
 
+import io.github.bucket4j.serialization.DeserializationAdapter;
+import io.github.bucket4j.serialization.SerializationHandle;
+import io.github.bucket4j.serialization.SerializationAdapter;
+
+import java.io.IOException;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -63,5 +69,37 @@ public final class BucketConfiguration implements Serializable {
     public boolean isCompatible(BucketConfiguration newConfiguration) {
         return bandwidths.length == newConfiguration.bandwidths.length;
     }
+
+    public static SerializationHandle<BucketConfiguration> SERIALIZATION_HANDLE = new SerializationHandle<BucketConfiguration>() {
+        @Override
+        public <S> BucketConfiguration deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
+            int bandwidthAmount = adapter.readInt(input);
+            List<Bandwidth> bandwidths = new ArrayList<>(bandwidthAmount);
+            for (int ii = 0; ii < bandwidthAmount; ii++) {
+                Bandwidth bandwidth = Bandwidth.SERIALIZATION_HANDLE.deserialize(adapter, input);
+                bandwidths.add(bandwidth);
+            }
+            return new BucketConfiguration(bandwidths);
+        }
+
+        @Override
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, BucketConfiguration configuration) throws IOException {
+            adapter.writeInt(output, configuration.bandwidths.length);
+            for (Bandwidth bandwidth : configuration.bandwidths) {
+                Bandwidth.SERIALIZATION_HANDLE.serialize(adapter, output, bandwidth);
+            }
+        }
+
+        @Override
+        public int getTypeId() {
+            return 2;
+        }
+
+        @Override
+        public Class<BucketConfiguration> getSerializedType() {
+            return BucketConfiguration.class;
+        }
+
+    };
 
 }

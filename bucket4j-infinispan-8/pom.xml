@@ -33,6 +33,7 @@
     <description>Bucket4j integration with Infinispan 8.x</description>
 
     <properties>
+        <modular-name>infinispan8</modular-name>
         <infinispan-8.version>8.2.0.Final</infinispan-8.version>
     </properties>
 

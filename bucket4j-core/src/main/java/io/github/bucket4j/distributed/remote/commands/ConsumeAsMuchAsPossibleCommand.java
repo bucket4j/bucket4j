@@ -22,11 +22,44 @@ import io.github.bucket4j.distributed.remote.MutableBucketEntry;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 
+import io.github.bucket4j.serialization.DeserializationAdapter;
+import io.github.bucket4j.serialization.SerializationAdapter;
+import io.github.bucket4j.serialization.SerializationHandle;
+
+import java.io.IOException;
+
+import static io.github.bucket4j.serialization.PrimitiveSerializationHandles.LONG_HANDLE;
+
 public class ConsumeAsMuchAsPossibleCommand implements RemoteCommand<Long> {
 
     private static final long serialVersionUID = 42;
 
     private long limit;
+
+    public static SerializationHandle<ConsumeAsMuchAsPossibleCommand> SERIALIZATION_HANDLE = new SerializationHandle<ConsumeAsMuchAsPossibleCommand>() {
+        @Override
+        public <S> ConsumeAsMuchAsPossibleCommand deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
+            long limit = adapter.readLong(input);
+
+            return new ConsumeAsMuchAsPossibleCommand(limit);
+        }
+
+        @Override
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, ConsumeAsMuchAsPossibleCommand command) throws IOException {
+            adapter.writeLong(output, command.limit);
+        }
+
+        @Override
+        public int getTypeId() {
+            return 7;
+        }
+
+        @Override
+        public Class<ConsumeAsMuchAsPossibleCommand> getSerializedType() {
+            return ConsumeAsMuchAsPossibleCommand.class;
+        }
+
+    };
 
     public ConsumeAsMuchAsPossibleCommand(long limit) {
         this.limit = limit;
@@ -47,11 +80,16 @@ public class ConsumeAsMuchAsPossibleCommand implements RemoteCommand<Long> {
         }
         state.consume(toConsume);
         mutableEntry.set(state);
-        return CommandResult.success(toConsume);
+        return CommandResult.success(toConsume, LONG_HANDLE);
     }
 
     public long getLimit() {
         return limit;
     }
 
+    @Override
+    public SerializationHandle getSerializationHandle() {
+        return SERIALIZATION_HANDLE;
+    }
+    
 }
