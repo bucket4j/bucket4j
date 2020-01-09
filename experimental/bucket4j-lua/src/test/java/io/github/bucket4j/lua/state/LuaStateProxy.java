@@ -17,10 +17,7 @@
 
 package io.github.bucket4j.lua.state;
 
-import io.github.bucket4j.Bandwidth;
-import io.github.bucket4j.BucketConfiguration;
-import io.github.bucket4j.BucketState;
-import io.github.bucket4j.TimeMeter;
+import io.github.bucket4j.*;
 import io.github.bucket4j.local.LocalBucket;
 import io.github.bucket4j.lua.Bucket4jScript;
 import org.classdump.luna.Table;
@@ -75,6 +72,11 @@ public class LuaStateProxy implements BucketState {
     @Override
     public long getRoundingError(int bandwidth) {
         return 0;
+    }
+
+    @Override
+    public MathType getMathType() {
+        return MathType.IEEE_754;
     }
 
     @Override

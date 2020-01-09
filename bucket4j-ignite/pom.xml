@@ -31,6 +31,10 @@
     <name>bucket4j-ignite</name>
     <description>Bucket4j integration with Ignite</description>
 
+    <properties>
+        <modular-name>ignite</modular-name>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>com.github.vladimir-bukhtoyarov</groupId>

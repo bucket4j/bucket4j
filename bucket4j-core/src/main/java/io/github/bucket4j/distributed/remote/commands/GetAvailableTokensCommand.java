@@ -22,10 +22,42 @@ import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.MutableBucketEntry;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
+import io.github.bucket4j.serialization.DeserializationAdapter;
+import io.github.bucket4j.serialization.SerializationAdapter;
+import io.github.bucket4j.serialization.SerializationHandle;
+import io.github.bucket4j.util.ComparableByContent;
 
-public class GetAvailableTokensCommand implements RemoteCommand<Long> {
+import java.io.IOException;
+
+import static io.github.bucket4j.serialization.PrimitiveSerializationHandles.LONG_HANDLE;
+
+public class GetAvailableTokensCommand implements RemoteCommand<Long>, ComparableByContent<GetAvailableTokensCommand> {
 
     private static final long serialVersionUID = 42;
+
+    public static SerializationHandle<GetAvailableTokensCommand> SERIALIZATION_HANDLE = new SerializationHandle<GetAvailableTokensCommand>() {
+
+        @Override
+        public <S> GetAvailableTokensCommand deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
+            return new GetAvailableTokensCommand();
+        }
+
+        @Override
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, GetAvailableTokensCommand command) throws IOException {
+            // do nothing
+        }
+
+        @Override
+        public int getTypeId() {
+            return 27;
+        }
+
+        @Override
+        public Class<GetAvailableTokensCommand> getSerializedType() {
+            return GetAvailableTokensCommand.class;
+        }
+
+    };
 
     @Override
     public CommandResult<Long> execute(MutableBucketEntry mutableEntry, long currentTimeNanos) {
@@ -35,7 +67,17 @@ public class GetAvailableTokensCommand implements RemoteCommand<Long> {
 
         RemoteBucketState state = mutableEntry.get();
         state.refillAllBandwidth(currentTimeNanos);
-        return CommandResult.success(state.getAvailableTokens());
+        return CommandResult.success(state.getAvailableTokens(), LONG_HANDLE);
+    }
+
+    @Override
+    public SerializationHandle getSerializationHandle() {
+        return SERIALIZATION_HANDLE;
+    }
+
+    @Override
+    public boolean equalsByContent(GetAvailableTokensCommand other) {
+        return true;
     }
 
 }

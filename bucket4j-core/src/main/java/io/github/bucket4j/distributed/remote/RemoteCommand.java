@@ -17,14 +17,32 @@
 
 package io.github.bucket4j.distributed.remote;
 
+import io.github.bucket4j.serialization.DeserializationAdapter;
+import io.github.bucket4j.serialization.SerializationAdapter;
+import io.github.bucket4j.serialization.SerializationHandle;
+import io.github.bucket4j.serialization.SerializationRoot;
+
+import java.io.IOException;
 import java.io.Serializable;
 
-public interface RemoteCommand<T extends Serializable> extends Serializable {
+public interface RemoteCommand<T extends Serializable> extends Serializable, SerializationRoot<RemoteCommand> {
 
     CommandResult<T> execute(MutableBucketEntry mutableEntry, long currentTimeNanos);
 
     default boolean isInitializationCommand() {
         return false;
+    }
+
+    static <O> void serialize(SerializationAdapter<O> adapter, O output, RemoteCommand<?> command) throws IOException {
+        SerializationHandle<RemoteCommand<?>> serializer = command.getSerializationHandle();
+        adapter.writeInt(output, serializer.getTypeId());
+        serializer.serialize(adapter, output, command);
+    }
+
+    static <I> RemoteCommand<?> deserialize(DeserializationAdapter<I> adapter, I input) throws IOException {
+        int typeId = adapter.readInt(input);
+        SerializationHandle<?> serializer = SerializationHandle.CORE_HANDLES.getHandleByTypeId(typeId);
+        return (RemoteCommand<?>) serializer.deserialize(adapter, input);
     }
 
 }

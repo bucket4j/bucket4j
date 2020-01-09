@@ -21,13 +21,49 @@ import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.MutableBucketEntry;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
+import io.github.bucket4j.serialization.DeserializationAdapter;
+import io.github.bucket4j.serialization.SerializationAdapter;
+import io.github.bucket4j.serialization.SerializationHandle;
+import io.github.bucket4j.util.ComparableByContent;
 
-public class ReserveAndCalculateTimeToSleepCommand implements RemoteCommand<Long> {
+import java.io.IOException;
+
+import static io.github.bucket4j.serialization.PrimitiveSerializationHandles.LONG_HANDLE;
+
+
+public class ReserveAndCalculateTimeToSleepCommand implements RemoteCommand<Long>, ComparableByContent<ReserveAndCalculateTimeToSleepCommand> {
 
     private static final long serialVersionUID = 42;
 
     private long tokensToConsume;
     private long waitIfBusyNanosLimit;
+
+    public static SerializationHandle<ReserveAndCalculateTimeToSleepCommand> SERIALIZATION_HANDLE = new SerializationHandle<ReserveAndCalculateTimeToSleepCommand>() {
+        @Override
+        public <S> ReserveAndCalculateTimeToSleepCommand deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
+            long tokensToConsume = adapter.readLong(input);
+            long waitIfBusyNanosLimit = adapter.readLong(input);
+
+            return new ReserveAndCalculateTimeToSleepCommand(tokensToConsume, waitIfBusyNanosLimit);
+        }
+
+        @Override
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, ReserveAndCalculateTimeToSleepCommand command) throws IOException {
+            adapter.writeLong(output, command.tokensToConsume);
+            adapter.writeLong(output, command.waitIfBusyNanosLimit);
+        }
+
+        @Override
+        public int getTypeId() {
+            return 23;
+        }
+
+        @Override
+        public Class<ReserveAndCalculateTimeToSleepCommand> getSerializedType() {
+            return ReserveAndCalculateTimeToSleepCommand.class;
+        }
+
+    };
 
     public ReserveAndCalculateTimeToSleepCommand(long tokensToConsume, long waitIfBusyNanosLimit) {
         this.tokensToConsume = tokensToConsume;
@@ -49,7 +85,7 @@ public class ReserveAndCalculateTimeToSleepCommand implements RemoteCommand<Long
         } else {
             state.consume(tokensToConsume);
             mutableEntry.set(state);
-            return CommandResult.success(nanosToCloseDeficit);
+            return CommandResult.success(nanosToCloseDeficit, LONG_HANDLE);
         }
     }
 
@@ -59,5 +95,16 @@ public class ReserveAndCalculateTimeToSleepCommand implements RemoteCommand<Long
 
     public long getWaitIfBusyNanosLimit() {
         return waitIfBusyNanosLimit;
+    }
+
+    @Override
+    public SerializationHandle getSerializationHandle() {
+        return SERIALIZATION_HANDLE;
+    }
+
+    @Override
+    public boolean equalsByContent(ReserveAndCalculateTimeToSleepCommand other) {
+        return tokensToConsume == other.tokensToConsume &&
+                waitIfBusyNanosLimit == other.waitIfBusyNanosLimit;
     }
 }

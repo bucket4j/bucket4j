@@ -47,6 +47,7 @@
     </licenses>
 
     <properties>
+        <modular-name>parent</modular-name>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <maven.compiler.source>1.8</maven.compiler.source>
@@ -58,7 +59,8 @@
         <jcache.version>1.0.0</jcache.version>
         <ignite.version>2.1.0</ignite.version>
         <hazelcast.version>3.8</hazelcast.version>
-        <infinispan.version>9.1.0.Final</infinispan.version>
+<!--        <infinispan.version>10.0.0.Final</infinispan.version>-->
+        <infinispan.version>10.1.0.CR1</infinispan.version>
         <testcontainers.version>1.12.2</testcontainers.version>
         <lettuce-version>5.0.2.RELEASE</lettuce-version>
         <jedis.version>2.9.0</jedis.version>
@@ -86,6 +88,17 @@
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifestEntries>
+                            <Automatic-Module-Name>io.github.bucket4j.${modular-name}</Automatic-Module-Name>
+                        </manifestEntries>
+                    </archive>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.codehaus.gmavenplus</groupId>
                 <artifactId>gmavenplus-plugin</artifactId>

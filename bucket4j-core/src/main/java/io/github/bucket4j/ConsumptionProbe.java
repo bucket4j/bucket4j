@@ -19,6 +19,12 @@ package io.github.bucket4j;
 
 import io.github.bucket4j.distributed.proxy.AsyncBucketProxy;
 
+import io.github.bucket4j.serialization.DeserializationAdapter;
+import io.github.bucket4j.serialization.SerializationAdapter;
+import io.github.bucket4j.serialization.SerializationHandle;
+import io.github.bucket4j.util.ComparableByContent;
+
+import java.io.IOException;
 import java.io.Serializable;
 
 /**
@@ -27,7 +33,7 @@ import java.io.Serializable;
  * @see Bucket#tryConsumeAndReturnRemaining(long)
  * @see AsyncBucketProxy#tryConsumeAndReturnRemaining(long)
  */
-public class ConsumptionProbe implements Serializable {
+public class ConsumptionProbe implements Serializable, ComparableByContent<ConsumptionProbe> {
 
     private static final long serialVersionUID = 42L;
 
@@ -35,6 +41,37 @@ public class ConsumptionProbe implements Serializable {
     private final long remainingTokens;
     private final long nanosToWaitForRefill;
     private final long nanosToWaitForReset;
+
+    public static SerializationHandle<ConsumptionProbe> SERIALIZATION_HANDLE = new SerializationHandle<ConsumptionProbe>() {
+        @Override
+        public <S> ConsumptionProbe deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
+            boolean consumed = adapter.readBoolean(input);
+            long remainingTokens = adapter.readLong(input);
+            long nanosToWaitForRefill = adapter.readLong(input);
+            long nanosToWaitForReset = adapter.readLong(input);
+
+            return new ConsumptionProbe(consumed, remainingTokens, nanosToWaitForRefill, nanosToWaitForReset);
+        }
+
+        @Override
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, ConsumptionProbe probe) throws IOException {
+            adapter.writeBoolean(output, probe.consumed);
+            adapter.writeLong(output, probe.remainingTokens);
+            adapter.writeLong(output, probe.nanosToWaitForRefill);
+            adapter.writeLong(output, probe.nanosToWaitForReset);
+        }
+
+        @Override
+        public int getTypeId() {
+            return 11;
+        }
+
+        @Override
+        public Class<ConsumptionProbe> getSerializedType() {
+            return ConsumptionProbe.class;
+        }
+
+    };
 
     public static ConsumptionProbe consumed(long remainingTokens, long nanosToWaitForReset) {
         return new ConsumptionProbe(true, remainingTokens, 0, nanosToWaitForReset);
@@ -95,6 +132,14 @@ public class ConsumptionProbe implements Serializable {
                 ", nanosToWaitForRefill=" + nanosToWaitForRefill +
                 ", nanosToWaitForReset=" + nanosToWaitForReset +
                 '}';
+    }
+
+    @Override
+    public boolean equalsByContent(ConsumptionProbe other) {
+        return consumed == other.consumed &&
+                remainingTokens == other.remainingTokens &&
+                nanosToWaitForRefill == other.nanosToWaitForRefill &&
+                nanosToWaitForReset == other.nanosToWaitForReset;
     }
 
 }

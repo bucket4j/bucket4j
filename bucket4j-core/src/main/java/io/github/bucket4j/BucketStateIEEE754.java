@@ -17,9 +17,15 @@
 
 package io.github.bucket4j;
 
+import io.github.bucket4j.serialization.DeserializationAdapter;
+import io.github.bucket4j.serialization.SerializationAdapter;
+import io.github.bucket4j.serialization.SerializationHandle;
+import io.github.bucket4j.util.ComparableByContent;
+
+import java.io.IOException;
 import java.util.Arrays;
 
-public class BucketStateIEEE754 implements BucketState {
+public class BucketStateIEEE754 implements BucketState, ComparableByContent<BucketStateIEEE754> {
 
     private static final long serialVersionUID = 42L;
 
@@ -28,6 +34,33 @@ public class BucketStateIEEE754 implements BucketState {
 
     // holds the last refill time per each bandwidth
     final long[] lastRefillTime;
+
+    public static SerializationHandle<BucketStateIEEE754> SERIALIZATION_HANDLE = new SerializationHandle<BucketStateIEEE754>() {
+
+        @Override
+        public <S> BucketStateIEEE754 deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
+            double[] tokens = adapter.readDoubleArray(input);
+            long[] lastRefillTime = adapter.readLongArray(input);
+            return new BucketStateIEEE754(tokens, lastRefillTime);
+        }
+
+        @Override
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, BucketStateIEEE754 state) throws IOException {
+            adapter.writeDoubleArray(output, state.tokens);
+            adapter.writeLongArray(output, state.lastRefillTime);
+        }
+
+        @Override
+        public int getTypeId() {
+            return 4;
+        }
+
+        @Override
+        public Class<BucketStateIEEE754> getSerializedType() {
+            return BucketStateIEEE754.class;
+        }
+
+    };
 
     BucketStateIEEE754(double[] tokens, long[] lastRefillTime) {
         this.tokens = tokens;
@@ -66,6 +99,11 @@ public class BucketStateIEEE754 implements BucketState {
     public long getRoundingError(int bandwidth) {
         // accumulated computational error is always zero for this type of state
         return 0;
+    }
+
+    @Override
+    public MathType getMathType() {
+        return MathType.IEEE_754;
     }
 
     @Override
@@ -253,6 +291,12 @@ public class BucketStateIEEE754 implements BucketState {
         sb.append(", lastRefillTime=").append(Arrays.toString(lastRefillTime));
         sb.append('}');
         return sb.toString();
+    }
+
+    @Override
+    public boolean equalsByContent(BucketStateIEEE754 other) {
+        return Arrays.equals(tokens, other.tokens) &&
+                Arrays.equals(lastRefillTime, other.lastRefillTime);
     }
 
 }

@@ -19,15 +19,46 @@ package io.github.bucket4j.distributed.remote;
 
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.BucketState;
+import io.github.bucket4j.serialization.DeserializationAdapter;
+import io.github.bucket4j.serialization.SerializationHandle;
+import io.github.bucket4j.serialization.SerializationAdapter;
+import io.github.bucket4j.util.ComparableByContent;
 
+import java.io.IOException;
 import java.io.Serializable;
 
-public class RemoteBucketState implements Serializable {
+public class RemoteBucketState implements Serializable, ComparableByContent<RemoteBucketState> {
 
     private static final long serialVersionUID = 42;
 
     private BucketConfiguration configuration;
     private BucketState state;
+
+    public static SerializationHandle<RemoteBucketState> SERIALIZATION_HANDLE = new SerializationHandle<RemoteBucketState>() {
+        @Override
+        public <S> RemoteBucketState deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
+            BucketConfiguration bucketConfiguration = BucketConfiguration.SERIALIZATION_HANDLE.deserialize(adapter, input);
+            BucketState bucketState = BucketState.deserialize(adapter, input);
+            return new RemoteBucketState(bucketConfiguration, bucketState);
+        }
+
+        @Override
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, RemoteBucketState gridState) throws IOException {
+            BucketConfiguration.SERIALIZATION_HANDLE.serialize(adapter, output, gridState.configuration);
+            BucketState.serialize(adapter, output, gridState.state);
+        }
+
+        @Override
+        public int getTypeId() {
+            return 5;
+        }
+
+        @Override
+        public Class<RemoteBucketState> getSerializedType() {
+            return RemoteBucketState.class;
+        }
+
+    };
 
     public RemoteBucketState(BucketConfiguration configuration, BucketState state) {
         this.configuration = configuration;
@@ -80,6 +111,12 @@ public class RemoteBucketState implements Serializable {
 
     public BucketState getState() {
         return state;
+    }
+
+    @Override
+    public boolean equalsByContent(RemoteBucketState other) {
+        return ComparableByContent.equals(state, other.state) &&
+                ComparableByContent.equals(configuration, other.configuration);
     }
 
 }

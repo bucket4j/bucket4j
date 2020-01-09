@@ -22,13 +22,43 @@ import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.MutableBucketEntry;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
+import io.github.bucket4j.serialization.DeserializationAdapter;
+import io.github.bucket4j.serialization.SerializationAdapter;
+import io.github.bucket4j.serialization.SerializationHandle;
+import io.github.bucket4j.util.ComparableByContent;
+
+import java.io.IOException;
 
 
-public class ReplaceConfigurationOrReturnPreviousCommand implements RemoteCommand<BucketConfiguration> {
+public class ReplaceConfigurationOrReturnPreviousCommand implements RemoteCommand<BucketConfiguration>, ComparableByContent<ReplaceConfigurationOrReturnPreviousCommand> {
 
     private static final long serialVersionUID = 42;
 
     private BucketConfiguration newConfiguration;
+
+    public static SerializationHandle<ReplaceConfigurationOrReturnPreviousCommand> SERIALIZATION_HANDLE = new SerializationHandle<ReplaceConfigurationOrReturnPreviousCommand>() {
+        @Override
+        public <S> ReplaceConfigurationOrReturnPreviousCommand deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
+            BucketConfiguration newConfiguration = BucketConfiguration.SERIALIZATION_HANDLE.deserialize(adapter, input);
+            return new ReplaceConfigurationOrReturnPreviousCommand(newConfiguration);
+        }
+
+        @Override
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, ReplaceConfigurationOrReturnPreviousCommand command) throws IOException {
+            BucketConfiguration.SERIALIZATION_HANDLE.serialize(adapter, output, command.newConfiguration);
+        }
+
+        @Override
+        public int getTypeId() {
+            return 32;
+        }
+
+        @Override
+        public Class<ReplaceConfigurationOrReturnPreviousCommand> getSerializedType() {
+            return ReplaceConfigurationOrReturnPreviousCommand.class;
+        }
+
+    };
 
     public ReplaceConfigurationOrReturnPreviousCommand(BucketConfiguration newConfiguration) {
         this.newConfiguration = newConfiguration;
@@ -44,7 +74,7 @@ public class ReplaceConfigurationOrReturnPreviousCommand implements RemoteComman
         state.refillAllBandwidth(currentTimeNanos);
         BucketConfiguration previousConfiguration = state.replaceConfigurationOrReturnPrevious(newConfiguration);
         if (previousConfiguration != null) {
-            return CommandResult.success(previousConfiguration);
+            return CommandResult.success(previousConfiguration, BucketConfiguration.SERIALIZATION_HANDLE);
         }
         mutableEntry.set(state);
         return CommandResult.empty();
@@ -52,6 +82,16 @@ public class ReplaceConfigurationOrReturnPreviousCommand implements RemoteComman
 
     public BucketConfiguration getNewConfiguration() {
         return newConfiguration;
+    }
+
+    @Override
+    public SerializationHandle getSerializationHandle() {
+        return SERIALIZATION_HANDLE;
+    }
+
+    @Override
+    public boolean equalsByContent(ReplaceConfigurationOrReturnPreviousCommand other) {
+        return ComparableByContent.equals(newConfiguration, other.newConfiguration);
     }
 
 }

@@ -16,16 +16,7 @@
  */
 
 package io.github.bucket4j;
-
-import io.github.bucket4j.distributed.proxy.*;
-import io.github.bucket4j.distributed.remote.CommandResult;
-import io.github.bucket4j.distributed.remote.commands.GetConfigurationCommand;
 import io.github.bucket4j.local.LocalBucketBuilder;
-
-import java.io.Serializable;
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.function.Supplier;
 
 /**
  * @deprecated

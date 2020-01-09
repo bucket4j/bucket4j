@@ -25,12 +25,43 @@ import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.MutableBucketEntry;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
+import io.github.bucket4j.serialization.DeserializationAdapter;
+import io.github.bucket4j.serialization.SerializationAdapter;
+import io.github.bucket4j.serialization.SerializationHandle;
+import io.github.bucket4j.util.ComparableByContent;
 
-public class CreateInitialStateCommand implements RemoteCommand<Nothing> {
+import java.io.IOException;
+
+public class CreateInitialStateCommand implements RemoteCommand<Nothing>, ComparableByContent<CreateInitialStateCommand> {
 
     private static final long serialVersionUID = 1;
 
     private BucketConfiguration configuration;
+
+    public static SerializationHandle<CreateInitialStateCommand> SERIALIZATION_HANDLE = new SerializationHandle<CreateInitialStateCommand>() {
+        @Override
+        public <S> CreateInitialStateCommand deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
+            BucketConfiguration configuration = BucketConfiguration.SERIALIZATION_HANDLE.deserialize(adapter, input);
+
+            return new CreateInitialStateCommand(configuration);
+        }
+
+        @Override
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, CreateInitialStateCommand command) throws IOException {
+            BucketConfiguration.SERIALIZATION_HANDLE.serialize(adapter, output, command.configuration);
+        }
+
+        @Override
+        public int getTypeId() {
+            return 20;
+        }
+
+        @Override
+        public Class<CreateInitialStateCommand> getSerializedType() {
+            return CreateInitialStateCommand.class;
+        }
+
+    };
 
     public CreateInitialStateCommand(BucketConfiguration configuration) {
         this.configuration = configuration;
@@ -55,6 +86,16 @@ public class CreateInitialStateCommand implements RemoteCommand<Nothing> {
 
     public BucketConfiguration getConfiguration() {
         return configuration;
+    }
+
+    @Override
+    public SerializationHandle getSerializationHandle() {
+        return SERIALIZATION_HANDLE;
+    }
+
+    @Override
+    public boolean equalsByContent(CreateInitialStateCommand other) {
+        return ComparableByContent.equals(configuration, other.configuration);
     }
 
 }

@@ -19,6 +19,12 @@ package io.github.bucket4j;
 
 import io.github.bucket4j.distributed.proxy.AsyncBucketProxy;
 
+import io.github.bucket4j.serialization.DeserializationAdapter;
+import io.github.bucket4j.serialization.SerializationAdapter;
+import io.github.bucket4j.serialization.SerializationHandle;
+import io.github.bucket4j.util.ComparableByContent;
+
+import java.io.IOException;
 import java.io.Serializable;
 
 /**
@@ -27,13 +33,42 @@ import java.io.Serializable;
  * @see Bucket#estimateAbilityToConsume(long)
  * @see AsyncBucketProxy#estimateAbilityToConsume(long)
  */
-public class EstimationProbe implements Serializable {
+public class EstimationProbe implements Serializable, ComparableByContent<EstimationProbe> {
 
     private static final long serialVersionUID = 42L;
 
     private final boolean canBeConsumed;
     private final long remainingTokens;
     private final long nanosToWaitForRefill;
+
+    public static SerializationHandle<EstimationProbe> SERIALIZATION_HANDLE = new SerializationHandle<EstimationProbe>() {
+        @Override
+        public <S> EstimationProbe deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
+            boolean canBeConsumed = adapter.readBoolean(input);
+            long remainingTokens = adapter.readLong(input);
+            long nanosToWaitForRefill = adapter.readLong(input);
+
+            return new EstimationProbe(canBeConsumed, remainingTokens, nanosToWaitForRefill);
+        }
+
+        @Override
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, EstimationProbe probe) throws IOException {
+            adapter.writeBoolean(output, probe.canBeConsumed);
+            adapter.writeLong(output, probe.remainingTokens);
+            adapter.writeLong(output, probe.nanosToWaitForRefill);
+        }
+
+        @Override
+        public int getTypeId() {
+            return 12;
+        }
+
+        @Override
+        public Class<EstimationProbe> getSerializedType() {
+            return EstimationProbe.class;
+        }
+
+    };
 
     public static EstimationProbe canBeConsumed(long remainingTokens) {
         return new EstimationProbe(true, remainingTokens, 0);
@@ -83,6 +118,13 @@ public class EstimationProbe implements Serializable {
                 ", remainingTokens=" + remainingTokens +
                 ", nanosToWaitForRefill=" + nanosToWaitForRefill +
                 '}';
+    }
+
+    @Override
+    public boolean equalsByContent(EstimationProbe other) {
+        return canBeConsumed == other.canBeConsumed &&
+                remainingTokens == other.remainingTokens &&
+                nanosToWaitForRefill == other.nanosToWaitForRefill;
     }
 
 }

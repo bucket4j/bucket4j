@@ -19,31 +19,81 @@ package io.github.bucket4j.distributed.remote;
 
 import io.github.bucket4j.Nothing;
 
+import io.github.bucket4j.serialization.DeserializationAdapter;
+import io.github.bucket4j.serialization.SerializationHandle;
+import io.github.bucket4j.serialization.SerializationAdapter;
+import io.github.bucket4j.util.ComparableByContent;
+
+import java.io.IOException;
 import java.io.Serializable;
 
-public class CommandResult<T> implements Serializable {
+import static io.github.bucket4j.serialization.PrimitiveSerializationHandles.*;
+
+public class CommandResult<T> implements Serializable, ComparableByContent<CommandResult> {
 
     private static final long serialVersionUID = 42;
 
-    public static final CommandResult<Nothing> NOTHING = CommandResult.success(Nothing.INSTANCE);
-    public static final CommandResult<Long> ZERO = CommandResult.success(0L);
-    public static final CommandResult<Long> MAX_VALUE = CommandResult.success(Long.MAX_VALUE);
-    public static final CommandResult<Boolean> TRUE = CommandResult.success(true);
-    public static final CommandResult<Boolean> FALSE = CommandResult.success(false);
+    public static final CommandResult<Nothing> NOTHING = CommandResult.success(Nothing.INSTANCE, NULL_HANDLE);
+    public static final CommandResult<Long> ZERO = CommandResult.success(0L, LONG_HANDLE);
+    public static final CommandResult<Long> MAX_VALUE = CommandResult.success(Long.MAX_VALUE, LONG_HANDLE);
+    public static final CommandResult<Boolean> TRUE = CommandResult.success(true, BOOLEAN_HANDLE);
+    public static final CommandResult<Boolean> FALSE = CommandResult.success(false, BOOLEAN_HANDLE);
 
-    private static final CommandResult<?> NOT_FOUND = new CommandResult<>(null, true);
-    private static final CommandResult<?> NULL = new CommandResult<>(null, false);
+    private static final CommandResult<?> NOT_FOUND = new CommandResult<>(null, NULL_HANDLE.getTypeId(), true);
+    private static final CommandResult<?> NULL = new CommandResult<>(null, NULL_HANDLE.getTypeId(), false);
 
     private T data;
+    private int resultTypeId;
     private boolean bucketNotFound;
 
-    public CommandResult(T data, boolean bucketNotFound) {
+    public static SerializationHandle<CommandResult<?>> SERIALIZATION_HANDLE = new SerializationHandle<CommandResult<?>>() {
+        @Override
+        public <S> CommandResult<?> deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
+            boolean isBucketNotFound = adapter.readBoolean(input);
+            if (isBucketNotFound) {
+                return CommandResult.bucketNotFound();
+            }
+            int typeId = adapter.readInt(input);
+            SerializationHandle handle = SerializationHandle.CORE_HANDLES.getHandleByTypeId(typeId);
+            Serializable resultData = (Serializable) handle.deserialize(adapter, input);
+
+            return CommandResult.success(resultData, typeId);
+        }
+
+        @Override
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, CommandResult<?> result) throws IOException {
+            adapter.writeBoolean(output, result.bucketNotFound);
+            if (!result.bucketNotFound) {
+                adapter.writeInt(output, result.resultTypeId);
+                SerializationHandle handle = SerializationHandle.CORE_HANDLES.getHandleByTypeId(result.resultTypeId);
+                handle.serialize(adapter, output, result.data);
+            }
+        }
+
+        @Override
+        public int getTypeId() {
+            return 10;
+        }
+
+        @Override
+        public Class<CommandResult<?>> getSerializedType() {
+            return (Class) CommandResult.class;
+        }
+
+    };
+
+    public CommandResult(T data, int resultTypeId, boolean bucketNotFound) {
         this.data = data;
+        this.resultTypeId = resultTypeId;
         this.bucketNotFound = bucketNotFound;
     }
 
-    public static <R> CommandResult<R> success(R data) {
-        return new CommandResult<>(data, false);
+    public static <R> CommandResult<R> success(R data, SerializationHandle dataSerializer) {
+        return new CommandResult<>(data, dataSerializer.getTypeId(), false);
+    }
+
+    public static <R> CommandResult<R> success(R data, int resultTypeId) {
+        return new CommandResult<>(data, resultTypeId, false);
     }
 
     public static <R> CommandResult<R> bucketNotFound() {
@@ -65,4 +115,14 @@ public class CommandResult<T> implements Serializable {
         return bucketNotFound;
     }
 
+    public int getResultTypeId() {
+        return resultTypeId;
+    }
+
+    @Override
+    public boolean equalsByContent(CommandResult other) {
+        return bucketNotFound == other.bucketNotFound &&
+                resultTypeId == other.resultTypeId &&
+                ComparableByContent.equals(data, other.data);
+    }
 }

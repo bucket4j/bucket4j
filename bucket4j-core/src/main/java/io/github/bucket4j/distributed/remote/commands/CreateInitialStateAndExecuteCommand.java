@@ -24,15 +24,47 @@ import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.MutableBucketEntry;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
+import io.github.bucket4j.serialization.DeserializationAdapter;
+import io.github.bucket4j.serialization.SerializationAdapter;
+import io.github.bucket4j.serialization.SerializationHandle;
+import io.github.bucket4j.util.ComparableByContent;
 
+import java.io.IOException;
 import java.io.Serializable;
 
-public class CreateInitialStateAndExecuteCommand<T extends Serializable> implements RemoteCommand<T> {
+public class CreateInitialStateAndExecuteCommand<T extends Serializable> implements RemoteCommand<T>, ComparableByContent<CreateInitialStateAndExecuteCommand> {
 
     private static final long serialVersionUID = 1;
 
-    private final RemoteCommand<T> targetCommand;
+    private RemoteCommand<T> targetCommand;
     private BucketConfiguration configuration;
+
+    public static SerializationHandle<CreateInitialStateAndExecuteCommand> SERIALIZATION_HANDLE = new SerializationHandle<CreateInitialStateAndExecuteCommand>() {
+        @Override
+        public <S> CreateInitialStateAndExecuteCommand deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
+            BucketConfiguration configuration = BucketConfiguration.SERIALIZATION_HANDLE.deserialize(adapter, input);
+            RemoteCommand<?> targetCommand = RemoteCommand.deserialize(adapter, input);
+
+            return new CreateInitialStateAndExecuteCommand(configuration, targetCommand);
+        }
+
+        @Override
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, CreateInitialStateAndExecuteCommand command) throws IOException {
+            BucketConfiguration.SERIALIZATION_HANDLE.serialize(adapter, output, command.configuration);
+            RemoteCommand.serialize(adapter, output, command.targetCommand);
+        }
+
+        @Override
+        public int getTypeId() {
+            return 21;
+        }
+
+        @Override
+        public Class<CreateInitialStateAndExecuteCommand> getSerializedType() {
+            return CreateInitialStateAndExecuteCommand.class;
+        }
+
+    };
 
     public CreateInitialStateAndExecuteCommand(BucketConfiguration configuration, RemoteCommand<T> targetCommand) {
         this.configuration = configuration;
@@ -66,6 +98,17 @@ public class CreateInitialStateAndExecuteCommand<T extends Serializable> impleme
     @Override
     public boolean isInitializationCommand() {
         return true;
+    }
+
+    @Override
+    public SerializationHandle getSerializationHandle() {
+        return SERIALIZATION_HANDLE;
+    }
+
+    @Override
+    public boolean equalsByContent(CreateInitialStateAndExecuteCommand other) {
+        return ComparableByContent.equals(configuration, other.configuration) &&
+                ComparableByContent.equals(targetCommand, other.targetCommand);
     }
 
     private static class BucketEntryWrapper implements MutableBucketEntry {

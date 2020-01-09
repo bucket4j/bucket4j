@@ -86,6 +86,23 @@ public enum BucketType {
                     .buildAsyncProxy(42, configuration);
         }
     },
+    GRID_WITH_CUSTOM_SERIALIZERS {
+        @Override
+        public Bucket createBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
+            GridWithCustomeSerializersBackendMock<Integer> backend = new GridWithCustomeSerializersBackendMock<>(timeMeter);
+            return backend.builder()
+                    .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
+                    .buildProxy(42, configuration);
+        }
+
+        @Override
+        public AsyncBucket createAsyncBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
+            GridBackendMock<Integer> backend = new GridBackendMock<>(timeMeter);
+            return backend.builder()
+                    .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
+                    .buildAsyncProxy(42, configuration);
+        }
+    },
     COMPARE_AND_SWAP {
         @Override
         public Bucket createBucket(BucketConfiguration configuration, TimeMeter timeMeter) {

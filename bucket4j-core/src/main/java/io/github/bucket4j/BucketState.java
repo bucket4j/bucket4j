@@ -17,6 +17,10 @@
 
 package io.github.bucket4j;
 
+import io.github.bucket4j.serialization.DeserializationAdapter;
+import io.github.bucket4j.serialization.SerializationAdapter;
+
+import java.io.IOException;
 import java.io.Serializable;
 
 public interface BucketState extends Serializable {
@@ -37,6 +41,12 @@ public interface BucketState extends Serializable {
 
     void addTokens(Bandwidth[] bandwidths, long tokensToAdd);
 
+    long getCurrentSize(int bandwidth);
+
+    long getRoundingError(int bandwidth);
+
+    MathType getMathType();
+
     static BucketState createInitialState(BucketConfiguration configuration, MathType mathType, long currentTimeNanos) {
         switch (mathType) {
             case INTEGER_64_BITS: return new BucketState64BitsInteger(configuration, currentTimeNanos);
@@ -45,7 +55,31 @@ public interface BucketState extends Serializable {
         }
     }
 
-    long getCurrentSize(int bandwidth);
+    static <S> BucketState deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
+        int typeId = adapter.readInt(input);
+        if (typeId == BucketState64BitsInteger.SERIALIZATION_HANDLE.getTypeId()) {
+            return BucketState64BitsInteger.SERIALIZATION_HANDLE.deserialize(adapter, input);
+        } else if (typeId == BucketStateIEEE754.SERIALIZATION_HANDLE.getTypeId()) {
+            return BucketStateIEEE754.SERIALIZATION_HANDLE.deserialize(adapter, input);
+        } else {
+            throw new IOException("Unknown typeId=" + typeId);
+        }
+    }
 
-    long getRoundingError(int bandwidth);
+    static <O> void serialize(SerializationAdapter<O> adapter, O output, BucketState state) throws IOException {
+        switch (state.getMathType()) {
+            case INTEGER_64_BITS:
+                adapter.writeInt(output, BucketState64BitsInteger.SERIALIZATION_HANDLE.getTypeId());
+                BucketState64BitsInteger.SERIALIZATION_HANDLE.serialize(adapter, output, (BucketState64BitsInteger) state);
+                break;
+            case IEEE_754:
+                adapter.writeInt(output, BucketStateIEEE754.SERIALIZATION_HANDLE.getTypeId());
+                BucketStateIEEE754.SERIALIZATION_HANDLE.serialize(adapter, output, (BucketStateIEEE754) state);
+                break;
+            default:
+                throw new IOException("Unknown mathType=" + state.getMathType());
+        }
+    }
+
+
 }

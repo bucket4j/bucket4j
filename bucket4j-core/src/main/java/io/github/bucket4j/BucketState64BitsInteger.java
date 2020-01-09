@@ -17,15 +17,44 @@
 
 package io.github.bucket4j;
 
+import io.github.bucket4j.serialization.DeserializationAdapter;
+import io.github.bucket4j.serialization.SerializationAdapter;
+import io.github.bucket4j.serialization.SerializationHandle;
+import io.github.bucket4j.util.ComparableByContent;
+
+import java.io.IOException;
 import java.util.Arrays;
 
-public class BucketState64BitsInteger implements BucketState {
+public class BucketState64BitsInteger implements BucketState, ComparableByContent<BucketState64BitsInteger> {
 
     private static final long serialVersionUID = 42L;
 
     private static final int BANDWIDTH_SIZE = 3;
 
     final long[] stateData;
+
+    public static SerializationHandle<BucketState64BitsInteger> SERIALIZATION_HANDLE = new SerializationHandle<BucketState64BitsInteger>() {
+        @Override
+        public <S> BucketState64BitsInteger deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
+            long[] data = adapter.readLongArray(input);
+            return new BucketState64BitsInteger(data);
+        }
+
+        @Override
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, BucketState64BitsInteger state) throws IOException {
+            adapter.writeLongArray(output, state.stateData);
+        }
+
+        @Override
+        public int getTypeId() {
+            return 3;
+        }
+
+        @Override
+        public Class<BucketState64BitsInteger> getSerializedType() {
+            return BucketState64BitsInteger.class;
+        }
+    };
 
     BucketState64BitsInteger(long[] stateData) {
         this.stateData = stateData;
@@ -322,6 +351,11 @@ public class BucketState64BitsInteger implements BucketState {
         return stateData[bandwidth * BANDWIDTH_SIZE + 2];
     }
 
+    @Override
+    public MathType getMathType() {
+        return MathType.INTEGER_64_BITS;
+    }
+
     private void setCurrentSize(int bandwidth, long currentSize) {
         stateData[bandwidth * BANDWIDTH_SIZE + 1] = currentSize;
     }
@@ -356,6 +390,11 @@ public class BucketState64BitsInteger implements BucketState {
             }
         }
         return r;
+    }
+
+    @Override
+    public boolean equalsByContent(BucketState64BitsInteger other) {
+        return Arrays.equals(stateData, other.stateData);
     }
 
 }

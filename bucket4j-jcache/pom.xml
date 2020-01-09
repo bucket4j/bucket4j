@@ -31,6 +31,10 @@
     <name>bucket4j-jcache</name>
     <description>Bucket4j integration with JCache</description>
 
+    <properties>
+        <modular-name>jcache</modular-name>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>com.github.vladimir-bukhtoyarov</groupId>
