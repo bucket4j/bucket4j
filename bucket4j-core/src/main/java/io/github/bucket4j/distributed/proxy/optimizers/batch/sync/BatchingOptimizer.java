@@ -1,6 +1,6 @@
 /*
  *
- * Copyright 2015-2019 Vladimir Bukhtoyarov
+ * Copyright 2015-2020 Vladimir Bukhtoyarov
  *
  *       Licensed under the Apache License, Version 2.0 (the "License");
  *       you may not use this file except in compliance with the License.
@@ -15,16 +15,17 @@
  *      limitations under the License.
  */
 
-package io.github.bucket4j.distributed.proxy.optimizers.batch;
+package io.github.bucket4j.distributed.proxy.optimizers.batch.sync;
 
-import io.github.bucket4j.distributed.proxy.AsyncCommandExecutor;
-import io.github.bucket4j.distributed.proxy.AsyncRequestOptimizer;
+import io.github.bucket4j.distributed.proxy.CommandExecutor;
+import io.github.bucket4j.distributed.proxy.RequestOptimizer;
+import io.github.bucket4j.distributed.proxy.optimizers.batch.sync.BatchingExecutor;
 
-public class AsyncBatchingOptimizer implements AsyncRequestOptimizer {
+public class BatchingOptimizer implements RequestOptimizer {
 
     @Override
-    public AsyncCommandExecutor optimize(AsyncCommandExecutor originalExecutor) {
-        return new AsyncBatchingExecutor(originalExecutor);
+    public CommandExecutor optimize(CommandExecutor originalExecutor) {
+        return new BatchingExecutor(originalExecutor);
     }
 
 }

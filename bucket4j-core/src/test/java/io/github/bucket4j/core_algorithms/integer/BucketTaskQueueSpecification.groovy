@@ -31,7 +31,7 @@ import spock.lang.Unroll
 import java.time.Duration
 
 
-class BucketStateSpecification extends Specification {
+class BucketTaskQueueSpecification extends Specification {
 
     @Unroll
     def "GetAvailableTokens specification #testNumber"(String testNumber, long requiredAvailableTokens, Bucket bucket) {
