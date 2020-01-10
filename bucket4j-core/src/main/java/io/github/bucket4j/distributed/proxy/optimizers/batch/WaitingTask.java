@@ -15,25 +15,31 @@
  *      limitations under the License.
  */
 
-package io.github.bucket4j.distributed.proxy.optimizers.batch.sync;
+package io.github.bucket4j.distributed.proxy.optimizers.batch;
 
+import io.github.bucket4j.distributed.proxy.optimizers.batch.sync.BatchFailedException;
+import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
+import static io.github.bucket4j.serialization.PrimitiveSerializationHandles.LONG_HANDLE;
+
 public class WaitingTask {
 
-    final RemoteCommand<?> command;
-    final CompletableFuture<WaitingTaskResult> future = new CompletableFuture<>();
+    public static final CommandResult<?> NEED_TO_EXECUTE_NEXT_BATCH = CommandResult.success(42L, LONG_HANDLE);
 
-    WaitingTask previous;
+    public final RemoteCommand<?> command;
+    public final CompletableFuture<CommandResult<?>> future = new CompletableFuture<>();
+
+    public WaitingTask previous;
 
     WaitingTask(RemoteCommand<?> command) {
         this.command = command;
     }
 
-    public WaitingTaskResult waitUninterruptedly() {
+    public CommandResult<?> waitUninterruptedly() {
         boolean wasInterrupted = false;;
         try {
             while (true) {

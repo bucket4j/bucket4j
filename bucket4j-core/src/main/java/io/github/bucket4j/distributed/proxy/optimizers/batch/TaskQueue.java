@@ -15,7 +15,7 @@
  *      limitations under the License.
  */
 
-package io.github.bucket4j.distributed.proxy.optimizers.batch.sync;
+package io.github.bucket4j.distributed.proxy.optimizers.batch;
 
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 
@@ -25,7 +25,7 @@ import java.util.List;
 
 import java.util.concurrent.atomic.AtomicReference;
 
-class TaskQueue {
+public class TaskQueue {
 
     private static final WaitingTask QUEUE_EMPTY_BUT_EXECUTION_IN_PROGRESS = new WaitingTask(null);
     private static final WaitingTask QUEUE_EMPTY = new WaitingTask(null);
@@ -54,25 +54,38 @@ class TaskQueue {
         }
     }
 
-    public void wakeupAnyThreadFromNextBatch() {
+    public void wakeupAnyThreadFromNextBatchOrFreeLock() {
         while (true) {
             WaitingTask previous = headReference.get();
             if (previous == QUEUE_EMPTY_BUT_EXECUTION_IN_PROGRESS) {
-                if (headReference.compareAndSet(previous, QUEUE_EMPTY)) {
+                if (headReference.compareAndSet(QUEUE_EMPTY_BUT_EXECUTION_IN_PROGRESS, QUEUE_EMPTY)) {
                     return;
                 } else {
                     continue;
                 }
+            } else if (previous != QUEUE_EMPTY) {
+                previous.future.complete(WaitingTask.NEED_TO_EXECUTE_NEXT_BATCH);
+                return;
+            } else {
+                // should never come there
+                String msg = "Detected illegal usage of API, wakeupAnyThreadFromNextBatchOrFreeLock should not be called on empty queue";
+                throw new IllegalStateException(msg);
             }
-            previous.future.complete(WaitingTaskResult.needToBeExecutedInBatch());
-            return;
         }
     }
 
-    public List<WaitingTask> takeAllWaitingTasks() {
+    public List<WaitingTask> takeAllWaitingTasksOrFreeLock() {
         WaitingTask head;
         while (true) {
             head = headReference.get();
+            if (head == QUEUE_EMPTY_BUT_EXECUTION_IN_PROGRESS) {
+                if (headReference.compareAndSet(QUEUE_EMPTY_BUT_EXECUTION_IN_PROGRESS, QUEUE_EMPTY)) {
+                    return Collections.emptyList();
+                } else {
+                    continue;
+                }
+            }
+
             if (headReference.compareAndSet(head, QUEUE_EMPTY_BUT_EXECUTION_IN_PROGRESS)) {
                 break;
             }

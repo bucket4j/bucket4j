@@ -18,6 +18,8 @@
 package io.github.bucket4j.distributed.proxy.optimizers.batch.async;
 
 import io.github.bucket4j.distributed.proxy.AsyncCommandExecutor;
+import io.github.bucket4j.distributed.proxy.optimizers.batch.TaskQueue;
+import io.github.bucket4j.distributed.proxy.optimizers.batch.WaitingTask;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.remote.commands.MultiCommand;
@@ -31,7 +33,7 @@ import java.util.concurrent.CompletableFuture;
 public class AsyncBatchingExecutor implements AsyncCommandExecutor {
 
     private final AsyncCommandExecutor wrappedExecutor;
-    private final State state = new State();
+    private final TaskQueue taskQueue = new TaskQueue();
 
     public AsyncBatchingExecutor(AsyncCommandExecutor originalExecutor) {
         this.wrappedExecutor = originalExecutor;
@@ -39,18 +41,11 @@ public class AsyncBatchingExecutor implements AsyncCommandExecutor {
 
     @Override
     public <T extends Serializable> CompletableFuture<CommandResult<T>> executeAsync(RemoteCommand<T> command) {
-        WaitingNode waitingNode = null;
-        synchronized (state) {
-            if (state.executionInProgress) {
-                waitingNode = new WaitingNode(command);
-                state.waitingCommands.add(waitingNode);
-            } else {
-                state.executionInProgress = true;
-            }
-        }
+        WaitingTask waitingTask = taskQueue.lockExclusivelyOrEnqueue(command);
 
-        if (waitingNode != null) {
-            return (CompletableFuture) waitingNode.future;
+        if (waitingTask != null) {
+            // there is another request is in progress, our request will be scheduled later
+            return (CompletableFuture) waitingTask.future;
         }
 
         try {
@@ -64,19 +59,14 @@ public class AsyncBatchingExecutor implements AsyncCommandExecutor {
     }
 
     private void scheduleNextBatch() {
-        List<WaitingNode> waitingNodes;
-        synchronized (state) {
-            if (state.waitingCommands.isEmpty()) {
-                state.executionInProgress = false;
-                return;
-            }
-            waitingNodes = state.waitingCommands;
-            state.waitingCommands = new ArrayList<>();
+        List<WaitingTask> waitingNodes = taskQueue.takeAllWaitingTasksOrFreeLock();
+        if (waitingNodes.isEmpty()) {
+            return;
         }
 
         try {
             List<RemoteCommand<?>> commandsInBatch = new ArrayList<>(waitingNodes.size());
-            for (WaitingNode waitingNode : waitingNodes) {
+            for (WaitingTask waitingNode : waitingNodes) {
                 commandsInBatch.add(waitingNode.command);
             }
             MultiCommand multiCommand = new MultiCommand(commandsInBatch);
@@ -86,7 +76,7 @@ public class AsyncBatchingExecutor implements AsyncCommandExecutor {
                 .whenComplete((multiResult, error) -> scheduleNextBatch());
         } catch (Throwable e) {
             try {
-                for (WaitingNode waitingNode : waitingNodes) {
+                for (WaitingTask waitingNode : waitingNodes) {
                     waitingNode.future.completeExceptionally(e);
                 }
             } finally {
@@ -95,9 +85,9 @@ public class AsyncBatchingExecutor implements AsyncCommandExecutor {
         }
     }
 
-    private void completeWaitingFutures(List<WaitingNode> waitingNodes, CommandResult<MultiResult> multiResult, Throwable error) {
+    private void completeWaitingFutures(List<WaitingTask> waitingNodes, CommandResult<MultiResult> multiResult, Throwable error) {
         if (error != null) {
-            for (WaitingNode waitingNode : waitingNodes) {
+            for (WaitingTask waitingNode : waitingNodes) {
                 try {
                     waitingNode.future.completeExceptionally(error);
                 } catch (Throwable t) {
@@ -114,25 +104,6 @@ public class AsyncBatchingExecutor implements AsyncCommandExecutor {
                 }
             }
         }
-    }
-
-    private static class State {
-
-        private List<WaitingNode> waitingCommands = new ArrayList<>();
-
-        private boolean executionInProgress;
-
-    }
-
-    private class WaitingNode {
-
-        private final RemoteCommand<?> command;
-        private final CompletableFuture<CommandResult> future = new CompletableFuture<>();
-
-        private WaitingNode(RemoteCommand<?> command) {
-            this.command = command;
-        }
-
     }
 
 }

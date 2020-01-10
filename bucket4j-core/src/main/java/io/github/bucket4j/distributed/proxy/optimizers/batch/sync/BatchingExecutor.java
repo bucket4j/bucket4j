@@ -18,6 +18,8 @@
 package io.github.bucket4j.distributed.proxy.optimizers.batch.sync;
 
 import io.github.bucket4j.distributed.proxy.CommandExecutor;
+import io.github.bucket4j.distributed.proxy.optimizers.batch.TaskQueue;
+import io.github.bucket4j.distributed.proxy.optimizers.batch.WaitingTask;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.remote.commands.MultiCommand;
@@ -45,26 +47,26 @@ public class BatchingExecutor implements CommandExecutor {
             try {
                 return wrappedExecutor.execute(command);
             } finally {
-                taskQueue.wakeupAnyThreadFromNextBatch();
+                taskQueue.wakeupAnyThreadFromNextBatchOrFreeLock();
             }
         }
 
-        WaitingTaskResult result = waitingNode.waitUninterruptedly();
-        if (result.isCompleted()) {
+        CommandResult<?> result = waitingNode.waitUninterruptedly();
+        if (result != WaitingTask.NEED_TO_EXECUTE_NEXT_BATCH) {
             // our future completed by another thread from current batch
-            return (CommandResult<T>) result.getResult();
+            return (CommandResult<T>) result;
         }
 
         // current thread is responsible to execute the batch of commands
         try {
             return executeBatch(waitingNode);
         } finally {
-            taskQueue.wakeupAnyThreadFromNextBatch();
+            taskQueue.wakeupAnyThreadFromNextBatchOrFreeLock();
         }
     }
 
     private <T extends Serializable> CommandResult<T> executeBatch(WaitingTask currentWaitingNode) {
-        List<WaitingTask> waitingNodes = taskQueue.takeAllWaitingTasks();
+        List<WaitingTask> waitingNodes = taskQueue.takeAllWaitingTasksOrFreeLock();
 
         if (waitingNodes.size() == 1) {
             RemoteCommand<?> singleCommand = waitingNodes.get(0).command;
@@ -86,7 +88,7 @@ public class BatchingExecutor implements CommandExecutor {
             CommandResult<MultiResult> multiResult = wrappedExecutor.execute(multiCommand);
             List<CommandResult<?>> singleResults = multiResult.getData().getResults();
             for (int i = 0; i < waitingNodes.size(); i++) {
-                WaitingTaskResult singleResult = WaitingTaskResult.completed(singleResults.get(i));
+                CommandResult<?> singleResult = singleResults.get(i);
                 waitingNodes.get(i).future.complete(singleResult);
             }
 
