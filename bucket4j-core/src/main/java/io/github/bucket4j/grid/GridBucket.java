@@ -115,6 +115,15 @@ public class GridBucket<K extends Serializable> extends AbstractBucket {
     }
 
     @Override
+    protected long consumeIgnoringRateLimitsImpl(long tokensToConsume) {
+        long timeToCloseDeficit = execute(new ConsumeIgnoringRateLimitsCommand(tokensToConsume));
+        if (timeToCloseDeficit == INFINITY_DURATION) {
+            throw BucketExceptions.reservationOverflow();
+        }
+        return timeToCloseDeficit;
+    }
+
+    @Override
     protected CompletableFuture<Long> reserveAndCalculateTimeToSleepAsyncImpl(long tokensToConsume, long maxWaitTimeNanos) {
         ReserveAndCalculateTimeToSleepCommand consumeCommand = new ReserveAndCalculateTimeToSleepCommand(tokensToConsume, maxWaitTimeNanos);
         return executeAsync(consumeCommand);
@@ -152,6 +161,16 @@ public class GridBucket<K extends Serializable> extends AbstractBucket {
                 future.completeExceptionally(new IncompatibleConfigurationException(previousConfiguration, newConfiguration));
                 return future;
             }
+        });
+    }
+
+    @Override
+    protected CompletableFuture<Long> consumeIgnoringRateLimitsAsyncImpl(long tokensToConsume) {
+        return executeAsync(new ConsumeIgnoringRateLimitsCommand(tokensToConsume)).thenApply(penaltyNanos -> {
+            if (penaltyNanos != INFINITY_DURATION) {
+                return penaltyNanos;
+            }
+            throw BucketExceptions.reservationOverflow();
         });
     }
 

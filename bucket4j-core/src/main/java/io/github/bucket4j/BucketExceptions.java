@@ -148,6 +148,11 @@ public final class BucketExceptions {
         return new IllegalArgumentException(msg);
     }
 
+    public static IllegalArgumentException reservationOverflow() {
+        String msg = "Existed hardware is unable to service the reservation of so many tokens";
+        return new IllegalArgumentException(msg);
+    }
+
     private BucketExceptions() {
         // private constructor for utility class
     }

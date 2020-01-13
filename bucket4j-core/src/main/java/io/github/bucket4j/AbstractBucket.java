@@ -23,7 +23,7 @@ import java.util.concurrent.TimeUnit;
 
 public abstract class AbstractBucket implements Bucket, BlockingBucket {
 
-    private static long INFINITY_DURATION = Long.MAX_VALUE;
+    protected static long INFINITY_DURATION = Long.MAX_VALUE;
     private static long UNLIMITED_AMOUNT = Long.MAX_VALUE;
 
     protected abstract long consumeAsMuchAsPossibleImpl(long limit);
@@ -40,6 +40,8 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket {
 
     protected abstract void replaceConfigurationImpl(BucketConfiguration newConfiguration);
 
+    protected abstract long consumeIgnoringRateLimitsImpl(long tokensToConsume);
+
     protected abstract CompletableFuture<Long> tryConsumeAsMuchAsPossibleAsyncImpl(long limit);
 
     protected abstract CompletableFuture<Boolean> tryConsumeAsyncImpl(long tokensToConsume);
@@ -53,6 +55,8 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket {
     protected abstract CompletableFuture<Void> addTokensAsyncImpl(long tokensToAdd);
 
     protected abstract CompletableFuture<Void> replaceConfigurationAsyncImpl(BucketConfiguration newConfiguration);
+
+    protected abstract CompletableFuture<Long> consumeIgnoringRateLimitsAsyncImpl(long tokensToConsume);
 
     private final AsyncScheduledBucketImpl asyncView;
     private final BucketListener listener;
@@ -75,6 +79,15 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket {
                         listener.onRejected(tokensToConsume);
                     }
                     return consumed;
+                });
+            }
+
+            @Override
+            public CompletableFuture<Long> consumeIgnoringRateLimits(long tokensToConsume) {
+                checkTokensToConsume(tokensToConsume);
+                return consumeIgnoringRateLimitsAsyncImpl(tokensToConsume).thenApply(penaltyNanos -> {
+                    listener.onConsumed(tokensToConsume);
+                    return penaltyNanos;
                 });
             }
 
@@ -166,8 +179,7 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket {
                         return;
                     }
                     if (nanosToSleep == INFINITY_DURATION) {
-                        String msg = "Existed hardware is unable to service the reservation of so many tokens";
-                        resultFuture.completeExceptionally(new IllegalStateException(msg));
+                        resultFuture.completeExceptionally(BucketExceptions.reservationOverflow());
                         return;
                     }
                     if (nanosToSleep == 0L) {
@@ -287,7 +299,7 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket {
 
         long nanosToSleep = reserveAndCalculateTimeToSleepImpl(tokensToConsume, INFINITY_DURATION);
         if (nanosToSleep == INFINITY_DURATION) {
-            throw new IllegalStateException("Existed hardware is unable to service the reservation of so many tokens");
+            throw BucketExceptions.reservationOverflow();
         }
 
         listener.onConsumed(tokensToConsume);
@@ -308,7 +320,7 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket {
 
         long nanosToSleep = reserveAndCalculateTimeToSleepImpl(tokensToConsume, INFINITY_DURATION);
         if (nanosToSleep == INFINITY_DURATION) {
-            throw new IllegalStateException("Existed hardware is unable to service the reservation of so many tokens");
+            throw BucketExceptions.reservationOverflow();
         }
 
         listener.onConsumed(tokensToConsume);
@@ -316,6 +328,14 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket {
             blockingStrategy.parkUninterruptibly(nanosToSleep);
             listener.onParked(nanosToSleep);
         }
+    }
+
+    @Override
+    public long consumeIgnoringRateLimits(long tokens) {
+        checkTokensToConsume(tokens);
+        long penaltyNanos = consumeIgnoringRateLimitsImpl(tokens);
+        listener.onConsumed(tokens);
+        return penaltyNanos;
     }
 
     @Override
