@@ -23,9 +23,7 @@ import io.github.bucket4j.serialization.SerializationAdapter;
 import io.github.bucket4j.util.ComparableByContent;
 
 import java.io.IOException;
-import java.io.Serializable;
 import java.time.Duration;
-import java.util.Objects;
 
 /**
  * <h3>Anatomy of bandwidth:</h3>
@@ -62,9 +60,7 @@ import java.util.Objects;
  *      .build()
  * }</pre>
  */
-public class Bandwidth implements Serializable, ComparableByContent<Bandwidth> {
-
-    private static final long serialVersionUID = 101L;
+public class Bandwidth implements ComparableByContent<Bandwidth> {
 
     final long capacity;
     final long initialTokens;

@@ -31,8 +31,6 @@ import java.io.IOException;
 
 public class EstimateAbilityToConsumeCommand implements RemoteCommand<EstimationProbe>, ComparableByContent<EstimateAbilityToConsumeCommand> {
 
-    private static final long serialVersionUID = 1L;
-
     private long tokensToConsume;
 
     public static SerializationHandle<EstimateAbilityToConsumeCommand> SERIALIZATION_HANDLE = new SerializationHandle<EstimateAbilityToConsumeCommand>() {

@@ -22,14 +22,13 @@ import io.github.bucket4j.BucketState;
 import io.github.bucket4j.serialization.DeserializationAdapter;
 import io.github.bucket4j.serialization.SerializationHandle;
 import io.github.bucket4j.serialization.SerializationAdapter;
+import io.github.bucket4j.serialization.SerializationRoot;
 import io.github.bucket4j.util.ComparableByContent;
 
 import java.io.IOException;
-import java.io.Serializable;
 
-public class RemoteBucketState implements Serializable, ComparableByContent<RemoteBucketState> {
 
-    private static final long serialVersionUID = 42;
+public class RemoteBucketState implements ComparableByContent<RemoteBucketState>, SerializationRoot<RemoteBucketState> {
 
     private BucketConfiguration configuration;
     private BucketState state;
@@ -117,6 +116,11 @@ public class RemoteBucketState implements Serializable, ComparableByContent<Remo
     public boolean equalsByContent(RemoteBucketState other) {
         return ComparableByContent.equals(state, other.state) &&
                 ComparableByContent.equals(configuration, other.configuration);
+    }
+
+    @Override
+    public <T> SerializationHandle<T> getSerializationHandle() {
+        return null;
     }
 
 }

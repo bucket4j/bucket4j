@@ -20,12 +20,10 @@ package io.github.bucket4j.distributed.proxy;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 
-import java.io.Serializable;
-
 // TODO javadocs
 public interface CommandExecutor {
 
     // TODO javadocs
-    <T extends Serializable> CommandResult<T> execute(RemoteCommand<T> command);
+    <T> CommandResult<T> execute(RemoteCommand<T> command);
 
 }

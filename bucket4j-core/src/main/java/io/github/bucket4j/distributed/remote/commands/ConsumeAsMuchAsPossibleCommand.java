@@ -33,8 +33,6 @@ import static io.github.bucket4j.serialization.PrimitiveSerializationHandles.LON
 
 public class ConsumeAsMuchAsPossibleCommand implements RemoteCommand<Long>, ComparableByContent<ConsumeAsMuchAsPossibleCommand> {
 
-    private static final long serialVersionUID = 42;
-
     private long limit;
 
     public static SerializationHandle<ConsumeAsMuchAsPossibleCommand> SERIALIZATION_HANDLE = new SerializationHandle<ConsumeAsMuchAsPossibleCommand>() {

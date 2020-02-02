@@ -23,15 +23,16 @@ import io.github.bucket4j.serialization.SerializationHandle;
 import io.github.bucket4j.serialization.SerializationRoot;
 
 import java.io.IOException;
-import java.io.Serializable;
 
-public interface RemoteCommand<T extends Serializable> extends Serializable, SerializationRoot<RemoteCommand> {
+public interface RemoteCommand<T> {
 
     CommandResult<T> execute(MutableBucketEntry mutableEntry, long currentTimeNanos);
 
     default boolean isInitializationCommand() {
         return false;
     }
+
+    SerializationHandle<RemoteCommand<?>> getSerializationHandle();
 
     static <O> void serialize(SerializationAdapter<O> adapter, O output, RemoteCommand<?> command) throws IOException {
         SerializationHandle<RemoteCommand<?>> serializer = command.getSerializationHandle();

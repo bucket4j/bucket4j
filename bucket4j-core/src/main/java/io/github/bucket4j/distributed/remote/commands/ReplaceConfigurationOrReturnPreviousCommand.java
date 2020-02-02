@@ -32,8 +32,6 @@ import java.io.IOException;
 
 public class ReplaceConfigurationOrReturnPreviousCommand implements RemoteCommand<BucketConfiguration>, ComparableByContent<ReplaceConfigurationOrReturnPreviousCommand> {
 
-    private static final long serialVersionUID = 42;
-
     private BucketConfiguration newConfiguration;
 
     public static SerializationHandle<ReplaceConfigurationOrReturnPreviousCommand> SERIALIZATION_HANDLE = new SerializationHandle<ReplaceConfigurationOrReturnPreviousCommand>() {

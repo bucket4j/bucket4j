@@ -25,7 +25,6 @@ import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.remote.commands.MultiCommand;
 import io.github.bucket4j.distributed.remote.MultiResult;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -40,7 +39,7 @@ public class AsyncBatchingExecutor implements AsyncCommandExecutor {
     }
 
     @Override
-    public <T extends Serializable> CompletableFuture<CommandResult<T>> executeAsync(RemoteCommand<T> command) {
+    public <T> CompletableFuture<CommandResult<T>> executeAsync(RemoteCommand<T> command) {
         WaitingTask waitingTask = taskQueue.lockExclusivelyOrEnqueue(command);
 
         if (waitingTask != null) {

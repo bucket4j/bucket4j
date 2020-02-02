@@ -25,10 +25,8 @@ import com.tangosol.util.processor.SingleEntryAsynchronousProcessor;
 import io.github.bucket4j.*;
 import io.github.bucket4j.distributed.proxy.AbstractBackend;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
-import io.github.bucket4j.distributed.proxy.Backend;
 import io.github.bucket4j.distributed.remote.*;
 
-import java.io.Serializable;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
@@ -38,7 +36,7 @@ import java.util.concurrent.CompletableFuture;
  *
  * @param <K>
  */
-public class CoherenceBackend<K extends Serializable> extends AbstractBackend<K> {
+public class CoherenceBackend<K> extends AbstractBackend<K> {
 
     private final NamedCache<K, RemoteBucketState> cache;
 
@@ -47,7 +45,7 @@ public class CoherenceBackend<K extends Serializable> extends AbstractBackend<K>
     }
 
     @Override
-    public <T extends Serializable> CommandResult<T> execute(K key, RemoteCommand<T> command) {
+    public <T> CommandResult<T> execute(K key, RemoteCommand<T> command) {
         CoherenceProcessor<K, T> entryProcessor = new CoherenceProcessor<>(command);
         return cache.invoke(key, entryProcessor);
     }
@@ -58,7 +56,7 @@ public class CoherenceBackend<K extends Serializable> extends AbstractBackend<K>
     }
 
     @Override
-    public <T extends Serializable> CompletableFuture<CommandResult<T>> executeAsync(K key, RemoteCommand<T> command) {
+    public <T> CompletableFuture<CommandResult<T>> executeAsync(K key, RemoteCommand<T> command) {
         CoherenceProcessor<K, T> entryProcessor = new CoherenceProcessor<>(command);
         CompletableFuture<CommandResult<T>> future = new CompletableFuture<>();
         SingleEntryAsynchronousProcessor<K, RemoteBucketState, CommandResult<T>> asyncProcessor =
@@ -79,7 +77,7 @@ public class CoherenceBackend<K extends Serializable> extends AbstractBackend<K>
     }
 
 
-    private static class CoherenceProcessor<K extends Serializable, T extends Serializable> extends AbstractProcessor<K, RemoteBucketState, CommandResult<T>> {
+    private static class CoherenceProcessor<K, T> extends AbstractProcessor<K, RemoteBucketState, CommandResult<T>> {
 
         private static final long serialVersionUID = 1L;
 
@@ -98,7 +96,7 @@ public class CoherenceBackend<K extends Serializable> extends AbstractBackend<K>
     }
 
 
-    private static class CoherenceEntry<K extends Serializable> implements MutableBucketEntry {
+    private static class CoherenceEntry<K> implements MutableBucketEntry {
 
         private final Map.Entry<K, RemoteBucketState> entry;
 

@@ -25,7 +25,6 @@ import io.github.bucket4j.serialization.SerializationHandle;
 import io.github.bucket4j.util.ComparableByContent;
 
 import java.io.IOException;
-import java.io.Serializable;
 
 /**
  * Describes both result of consumption and tokens remaining in the bucket after consumption.
@@ -33,9 +32,7 @@ import java.io.Serializable;
  * @see Bucket#tryConsumeAndReturnRemaining(long)
  * @see AsyncBucketProxy#tryConsumeAndReturnRemaining(long)
  */
-public class ConsumptionProbe implements Serializable, ComparableByContent<ConsumptionProbe> {
-
-    private static final long serialVersionUID = 42L;
+public class ConsumptionProbe implements ComparableByContent<ConsumptionProbe> {
 
     private final boolean consumed;
     private final long remainingTokens;

@@ -18,15 +18,13 @@
 package io.github.bucket4j.redis;
 
 import io.github.bucket4j.distributed.proxy.AbstractBackend;
-import io.github.bucket4j.distributed.proxy.Backend;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 
-import java.io.Serializable;
 import java.util.concurrent.CompletableFuture;
 
 // TODO javadocs
-public abstract class AbstractRedisBackend<K extends Serializable> extends AbstractBackend<K> {
+public abstract class AbstractRedisBackend<K> extends AbstractBackend<K> {
 
     @Override
     public boolean isAsyncModeSupported() {
@@ -34,12 +32,12 @@ public abstract class AbstractRedisBackend<K extends Serializable> extends Abstr
     }
 
     @Override
-    public <T extends Serializable> CommandResult<T> execute(K key, RemoteCommand<T> command) {
+    public <T> CommandResult<T> execute(K key, RemoteCommand<T> command) {
         return null;
     }
 
     @Override
-    public <T extends Serializable> CompletableFuture<CommandResult<T>> executeAsync(K key, RemoteCommand<T> command) {
+    public <T> CompletableFuture<CommandResult<T>> executeAsync(K key, RemoteCommand<T> command) {
         return null;
     }
 

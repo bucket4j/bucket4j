@@ -15,7 +15,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.Map;
 
-public class HazelcastEntryProcessor<K extends Serializable, T extends Serializable> implements EntryProcessor<K, RemoteBucketState>, ComparableByContent<HazelcastEntryProcessor> {
+public class HazelcastEntryProcessor<K, T> implements EntryProcessor<K, RemoteBucketState>, ComparableByContent<HazelcastEntryProcessor> {
 
     private static final long serialVersionUID = 1L;
 

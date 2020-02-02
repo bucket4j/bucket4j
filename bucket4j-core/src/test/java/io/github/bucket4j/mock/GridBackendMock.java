@@ -18,10 +18,14 @@
 package io.github.bucket4j.mock;
 
 
-import io.github.bucket4j.*;
+import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.proxy.AbstractBackend;
+import io.github.bucket4j.distributed.remote.CommandResult;
+import io.github.bucket4j.distributed.remote.MutableBucketEntry;
+import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
-import io.github.bucket4j.distributed.remote.*;
+import io.github.bucket4j.serialization.DataOutputSerializationAdapter;
+import io.github.bucket4j.serialization.SerializationHandle;
 
 import java.io.*;
 import java.util.HashMap;
@@ -29,7 +33,14 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
-public class GridBackendMock<K extends Serializable> extends AbstractBackend<K> {
+public class GridBackendMock<K> extends AbstractBackend<K> {
+
+    private static Map<Class, SerializationHandle> allHandles = new HashMap<Class, SerializationHandle>()
+    {{
+        for (SerializationHandle<?> handle : SerializationHandle.CORE_HANDLES.getAllHandles()) {
+            put(handle.getSerializedType(), handle);
+        }
+    }};
 
     private final TimeMeter timeMeter;
     private Map<K, RemoteBucketState> stateMap = new HashMap<>();
@@ -44,12 +55,11 @@ public class GridBackendMock<K extends Serializable> extends AbstractBackend<K> 
     }
 
     @Override
-    public <T extends Serializable> CommandResult<T> execute(K key, RemoteCommand<T> command) {
+    public <T> CommandResult<T> execute(K key, RemoteCommand<T> command) {
         if (exception != null) {
             throw new RuntimeException();
         }
-        emulateSerialization(key);
-        command = emulateSerialization(command);
+        command = emulateDataSerialization(command);
 
         MutableBucketEntry entry = new MutableBucketEntry() {
             @Override
@@ -58,18 +68,18 @@ public class GridBackendMock<K extends Serializable> extends AbstractBackend<K> 
             }
             @Override
             public void set(RemoteBucketState state) {
-                GridBackendMock.this.stateMap.put(key, emulateSerialization(state));
+                GridBackendMock.this.stateMap.put(key, emulateDataSerialization(state));
             }
             @Override
             public RemoteBucketState get() {
                 RemoteBucketState state = stateMap.get(key);
                 Objects.requireNonNull(state);
-                return emulateSerialization(state);
+                return emulateDataSerialization(state);
             }
         };
 
         CommandResult<T> result = command.execute(entry, timeMeter.currentTimeNanos());
-        return emulateSerialization(result);
+        return emulateDataSerialization(result);
     }
 
     @Override
@@ -78,7 +88,7 @@ public class GridBackendMock<K extends Serializable> extends AbstractBackend<K> 
     }
 
     @Override
-    public <T extends Serializable> CompletableFuture<CommandResult<T>> executeAsync(K key, RemoteCommand<T> command) {
+    public <T> CompletableFuture<CommandResult<T>> executeAsync(K key, RemoteCommand<T> command) {
         if (exception != null) {
             CompletableFuture future = new CompletableFuture();
             future.completeExceptionally(new RuntimeException());
@@ -87,19 +97,20 @@ public class GridBackendMock<K extends Serializable> extends AbstractBackend<K> 
         return CompletableFuture.completedFuture(execute(key, command));
     }
 
-    private static <T> T emulateSerialization(T object) {
-        if (object == null) {
-            return null;
+    protected <T> T emulateDataSerialization(T object) {
+        SerializationHandle serializationHandle = allHandles.get(object.getClass());
+        if (serializationHandle == null) {
+            throw new IllegalArgumentException("Serializer for class " + serializationHandle + " is not specified");
         }
         try {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            ObjectOutputStream oos = new ObjectOutputStream(baos);
-            oos.writeObject(object);
+            DataOutputStream dos = new DataOutputStream(baos);
+            serializationHandle.serialize(DataOutputSerializationAdapter.INSTANCE, dos, object);
             byte[] bytes = baos.toByteArray();
 
             ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
-            ObjectInputStream ois = new ObjectInputStream(bais);
-            return (T) ois.readObject();
+            DataInputStream dis = new DataInputStream(bais);
+            return (T) serializationHandle.deserialize(DataOutputSerializationAdapter.INSTANCE, dis);
         } catch (Exception e) {
             throw new IllegalStateException(e);
         }

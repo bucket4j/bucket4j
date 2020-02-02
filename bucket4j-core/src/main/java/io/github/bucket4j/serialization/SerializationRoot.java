@@ -1,7 +1,7 @@
 package io.github.bucket4j.serialization;
 
-public interface SerializationRoot<T> {
+public interface SerializationRoot {
 
-    <T> SerializationHandle<T> getSerializationHandle();
+    SerializationHandle<?> getSerializationHandle();
 
 }

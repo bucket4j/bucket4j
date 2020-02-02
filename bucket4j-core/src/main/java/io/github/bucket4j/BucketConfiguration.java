@@ -23,15 +23,12 @@ import io.github.bucket4j.serialization.SerializationAdapter;
 import io.github.bucket4j.util.ComparableByContent;
 
 import java.io.IOException;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
-public final class BucketConfiguration implements Serializable, ComparableByContent<BucketConfiguration> {
-
-    private static final long serialVersionUID = 42L;
+public final class BucketConfiguration implements ComparableByContent<BucketConfiguration> {
 
     private final Bandwidth[] bandwidths;
 

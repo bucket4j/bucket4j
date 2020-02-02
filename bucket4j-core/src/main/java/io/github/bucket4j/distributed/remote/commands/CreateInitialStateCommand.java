@@ -34,8 +34,6 @@ import java.io.IOException;
 
 public class CreateInitialStateCommand implements RemoteCommand<Nothing>, ComparableByContent<CreateInitialStateCommand> {
 
-    private static final long serialVersionUID = 1;
-
     private BucketConfiguration configuration;
 
     public static SerializationHandle<CreateInitialStateCommand> SERIALIZATION_HANDLE = new SerializationHandle<CreateInitialStateCommand>() {

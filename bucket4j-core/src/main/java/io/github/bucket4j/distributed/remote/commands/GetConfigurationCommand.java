@@ -31,8 +31,6 @@ import java.io.IOException;
 
 public class GetConfigurationCommand implements RemoteCommand<BucketConfiguration>, ComparableByContent<GetConfigurationCommand> {
 
-    private static final long serialVersionUID = 42;
-
     @Override
     public CommandResult<BucketConfiguration> execute(MutableBucketEntry mutableEntry, long currentTimeNanos) {
         if (!mutableEntry.exists()) {

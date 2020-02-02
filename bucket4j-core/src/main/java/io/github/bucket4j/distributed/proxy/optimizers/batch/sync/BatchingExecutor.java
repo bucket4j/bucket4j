@@ -25,7 +25,6 @@ import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.remote.commands.MultiCommand;
 import io.github.bucket4j.distributed.remote.MultiResult;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,7 +39,7 @@ public class BatchingExecutor implements CommandExecutor {
     }
 
     @Override
-    public <T extends Serializable> CommandResult<T> execute(RemoteCommand<T> command) {
+    public <T> CommandResult<T> execute(RemoteCommand<T> command) {
         WaitingTask waitingNode = taskQueue.lockExclusivelyOrEnqueue(command);
 
         if (waitingNode == null) {
@@ -65,7 +64,7 @@ public class BatchingExecutor implements CommandExecutor {
         }
     }
 
-    private <T extends Serializable> CommandResult<T> executeBatch(WaitingTask currentWaitingNode) {
+    private <T> CommandResult<T> executeBatch(WaitingTask currentWaitingNode) {
         List<WaitingTask> waitingNodes = taskQueue.takeAllWaitingTasksOrFreeLock();
 
         if (waitingNodes.size() == 1) {

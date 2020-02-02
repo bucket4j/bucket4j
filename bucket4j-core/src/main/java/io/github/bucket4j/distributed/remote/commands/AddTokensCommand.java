@@ -31,8 +31,6 @@ import java.io.IOException;
 
 public class AddTokensCommand implements RemoteCommand<Nothing>, ComparableByContent<AddTokensCommand> {
 
-    private static final long serialVersionUID = 42;
-
     private long tokensToAdd;
 
     public static SerializationHandle<AddTokensCommand> SERIALIZATION_HANDLE = new SerializationHandle<AddTokensCommand>() {

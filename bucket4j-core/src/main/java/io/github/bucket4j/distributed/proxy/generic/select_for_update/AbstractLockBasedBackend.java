@@ -23,10 +23,9 @@ import io.github.bucket4j.distributed.proxy.generic.GenericEntry;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 
-import java.io.Serializable;
 import java.util.concurrent.CompletableFuture;
 
-public abstract class AbstractLockBasedBackend<K extends Serializable> extends AbstractBackend<K> {
+public abstract class AbstractLockBasedBackend<K> extends AbstractBackend<K> {
 
     private final TimeMeter timeMeter;
 
@@ -39,7 +38,7 @@ public abstract class AbstractLockBasedBackend<K extends Serializable> extends A
     }
 
     @Override
-    public <T extends Serializable> CommandResult<T> execute(K key, RemoteCommand<T> command) {
+    public <T> CommandResult<T> execute(K key, RemoteCommand<T> command) {
         LockBasedTransaction transaction = allocateTransaction(key);
         try {
             return execute(command, transaction);
@@ -54,7 +53,7 @@ public abstract class AbstractLockBasedBackend<K extends Serializable> extends A
     }
 
     @Override
-    public <T extends Serializable> CompletableFuture<CommandResult<T>> executeAsync(K key, RemoteCommand<T> command) {
+    public <T> CompletableFuture<CommandResult<T>> executeAsync(K key, RemoteCommand<T> command) {
         throw new UnsupportedOperationException();
     }
 
@@ -62,7 +61,7 @@ public abstract class AbstractLockBasedBackend<K extends Serializable> extends A
 
     protected abstract void releaseTransaction(LockBasedTransaction transaction);
 
-    private <T extends Serializable> CommandResult<T> execute(RemoteCommand<T> command, LockBasedTransaction transaction) {
+    private <T> CommandResult<T> execute(RemoteCommand<T> command, LockBasedTransaction transaction) {
         transaction.begin();
         try {
             try {

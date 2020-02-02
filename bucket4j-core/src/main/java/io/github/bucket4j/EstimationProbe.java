@@ -25,7 +25,6 @@ import io.github.bucket4j.serialization.SerializationHandle;
 import io.github.bucket4j.util.ComparableByContent;
 
 import java.io.IOException;
-import java.io.Serializable;
 
 /**
  * Describes the estimation result.
@@ -33,9 +32,7 @@ import java.io.Serializable;
  * @see Bucket#estimateAbilityToConsume(long)
  * @see AsyncBucketProxy#estimateAbilityToConsume(long)
  */
-public class EstimationProbe implements Serializable, ComparableByContent<EstimationProbe> {
-
-    private static final long serialVersionUID = 42L;
+public class EstimationProbe implements ComparableByContent<EstimationProbe> {
 
     private final boolean canBeConsumed;
     private final long remainingTokens;

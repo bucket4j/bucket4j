@@ -21,12 +21,11 @@ import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AbstractCompareAndSwapBasedBackend;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.CompareAndSwapBasedTransaction;
 
-import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-public class CompareAndSwapBasedBackendMock<K extends Serializable> extends AbstractCompareAndSwapBasedBackend<K> {
+public class CompareAndSwapBasedBackendMock<K> extends AbstractCompareAndSwapBasedBackend<K> {
 
     private final Map<K, byte[]> stateMap = new HashMap<>();
 

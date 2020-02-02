@@ -22,11 +22,10 @@ import io.github.bucket4j.distributed.proxy.generic.select_for_update.AbstractLo
 import io.github.bucket4j.distributed.proxy.generic.select_for_update.LockBasedTransaction;
 import io.github.bucket4j.distributed.proxy.generic.select_for_update.LockResult;
 
-import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
-public class LockBasedBackendMock<K extends Serializable> extends AbstractLockBasedBackend<K> {
+public class LockBasedBackendMock<K> extends AbstractLockBasedBackend<K> {
 
     private final Map<K, byte[]> stateMap = new HashMap<>();
 

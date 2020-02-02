@@ -27,8 +27,6 @@ import java.util.Arrays;
 
 public class BucketState64BitsInteger implements BucketState, ComparableByContent<BucketState64BitsInteger> {
 
-    private static final long serialVersionUID = 42L;
-
     private static final int BANDWIDTH_SIZE = 3;
 
     final long[] stateData;

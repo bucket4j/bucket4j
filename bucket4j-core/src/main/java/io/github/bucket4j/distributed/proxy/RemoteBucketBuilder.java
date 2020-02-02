@@ -21,7 +21,7 @@ import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.distributed.AsyncBucket;
 
-import java.io.Serializable;
+
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
@@ -30,7 +30,7 @@ import java.util.function.Supplier;
  *
  * @param <K>
  */
-public interface RemoteBucketBuilder<K extends Serializable> {
+public interface RemoteBucketBuilder<K> {
 
     /**
      * TODO

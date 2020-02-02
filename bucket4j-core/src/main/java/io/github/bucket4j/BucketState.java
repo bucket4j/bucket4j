@@ -21,9 +21,8 @@ import io.github.bucket4j.serialization.DeserializationAdapter;
 import io.github.bucket4j.serialization.SerializationAdapter;
 
 import java.io.IOException;
-import java.io.Serializable;
 
-public interface BucketState extends Serializable {
+public interface BucketState {
 
     BucketState copy();
 

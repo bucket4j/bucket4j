@@ -31,7 +31,7 @@ import java.util.concurrent.CompletableFuture;
 /**
  * The extension of Bucket4j library addressed to support <a href="https://hazelcast.com//">Hazelcast</a> in-memory data grid.
  */
-public class HazelcastBackend<K extends Serializable> extends AbstractBackend<K> {
+public class HazelcastBackend<K> extends AbstractBackend<K> {
 
     private final IMap<K, RemoteBucketState> cache;
 
@@ -40,7 +40,7 @@ public class HazelcastBackend<K extends Serializable> extends AbstractBackend<K>
     }
 
     @Override
-    public <T extends Serializable> CommandResult<T> execute(K key, RemoteCommand<T> command) {
+    public <T> CommandResult<T> execute(K key, RemoteCommand<T> command) {
         HazelcastEntryProcessor<K, T> entryProcessor = new HazelcastEntryProcessor<>(command);
         return (CommandResult<T>) cache.executeOnKey(key, entryProcessor);
     }
@@ -51,7 +51,7 @@ public class HazelcastBackend<K extends Serializable> extends AbstractBackend<K>
     }
 
     @Override
-    public <T extends Serializable> CompletableFuture<CommandResult<T>> executeAsync(K key, RemoteCommand<T> command) {
+    public <T> CompletableFuture<CommandResult<T>> executeAsync(K key, RemoteCommand<T> command) {
         HazelcastEntryProcessor<K, T> entryProcessor = new HazelcastEntryProcessor<>(command);
         CompletableFuture<CommandResult<T>> future = new CompletableFuture<>();
         cache.submitToKey(key, entryProcessor, new ExecutionCallback() {
