@@ -1,5 +1,6 @@
 package io.github.bucket4j.grid.infinispan.serialization;
 
+import io.github.bucket4j.serialization.DataStreamAdapter;
 import io.github.bucket4j.serialization.SerializationHandle;
 import org.infinispan.protostream.MessageMarshaller;
 
@@ -7,7 +8,7 @@ import java.io.*;
 
 public class ProtobufMessageMarshaller<T> implements MessageMarshaller<T> {
 
-    private static InfinispanSerializationAdapter ADAPTER = new InfinispanSerializationAdapter();
+    private static DataStreamAdapter ADAPTER = new DataStreamAdapter();
 
     private final SerializationHandle<T> serializationHandle;
     private final String protoTypeName;

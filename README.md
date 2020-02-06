@@ -27,7 +27,7 @@ As mentioned above in addition to local in-memory buckets, the Bucket4j supports
 | ```Hazelcast```            | [bucket4j-hazelcast](doc-pages/hazelcast.md)        | Yes             | Yes                     |
 | ```Apache Ignite```        | [bucket4j-ignite](doc-pages/ignite.md)              | Yes             | n/a                     |
 | ```Inifinispan```          | [bucket4j-infinspan](doc-pages/infinispan.md)       | Yes             | Yes                     |
-| ```Oracle Coherence```     | [bucket4j-coherence](doc-pages/coherence.md)        | Yes             | No                      |
+| ```Oracle Coherence```     | [bucket4j-coherence](doc-pages/coherence.md)        | Yes             | Yes                     |
 
 ## General documentation
 #### Basics:
