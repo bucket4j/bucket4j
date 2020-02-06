@@ -70,5 +70,8 @@ public class CoherenceEntryProcessorAdapter<K extends Serializable, T extends Se
         return entryProcessor.process(entryAdapter);
     }
 
+    public JCacheEntryProcessor<K, T> getEntryProcessor() {
+        return entryProcessor;
+    }
 
 }

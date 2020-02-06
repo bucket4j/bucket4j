@@ -20,8 +20,11 @@ import com.tangosol.net.NamedCache;
 import io.github.bucket4j.Extension;
 import io.github.bucket4j.grid.GridBucketState;
 import io.github.bucket4j.grid.ProxyManager;
+import io.github.bucket4j.serialization.SerializationHandle;
 
 import java.io.Serializable;
+import java.util.Collection;
+import java.util.Collections;
 
 /**
  * The extension of Bucket4j library addressed to support <a href="https://www.oracle.com/technetwork/middleware/coherence/overview/index.html">Oracle Coherence</a> in-memory computing platform.
@@ -49,6 +52,11 @@ public class Coherence implements Extension<CoherenceBucketBuilder> {
      */
     public <T extends Serializable> ProxyManager<T> proxyManagerForCache(NamedCache<T, GridBucketState> cache) {
         return new CoherenceProxyManager<>(cache);
+    }
+
+    @Override
+    public Collection<SerializationHandle<?>> getSerializers() {
+        return Collections.singleton(CoherenceEntryProcessorAdapter.SERIALIZATION_HANDLE);
     }
 
 }

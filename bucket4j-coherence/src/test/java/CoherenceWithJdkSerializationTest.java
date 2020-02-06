@@ -33,7 +33,7 @@ import org.littlegrid.ClusterMemberGroupUtils;
 
 import static junit.framework.TestCase.assertEquals;
 
-public class CoherenceTest  extends AbstractDistributedBucketTest<CoherenceBucketBuilder, Coherence> {
+public class CoherenceWithJdkSerializationTest extends AbstractDistributedBucketTest<CoherenceBucketBuilder, Coherence> {
 
     private static ClusterMemberGroup memberGroup;
     private static NamedCache cache;
@@ -41,7 +41,7 @@ public class CoherenceTest  extends AbstractDistributedBucketTest<CoherenceBucke
     @BeforeClass
     public static void prepareCache() throws InterruptedException {
         memberGroup = ClusterMemberGroupUtils.newBuilder().setStorageEnabledCount(2)
-                .setCacheConfiguration("test-coherence-config.xml")
+                .setCacheConfiguration("test-coherence-jdk_serialization-config.xml")
                 .buildAndConfigureForStorageDisabledClient();
         cache = CacheFactory.getCache("my_buckets");
     }

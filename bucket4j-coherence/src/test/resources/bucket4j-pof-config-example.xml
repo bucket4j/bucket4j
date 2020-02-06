@@ -1,0 +1,49 @@
+<!--
+  ~
+  ~ Copyright 2015-2020 Vladimir Bukhtoyarov
+  ~
+  ~       Licensed under the Apache License, Version 2.0 (the "License");
+  ~       you may not use this file except in compliance with the License.
+  ~       You may obtain a copy of the License at
+  ~
+  ~             http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~      Unless required by applicable law or agreed to in writing, software
+  ~      distributed under the License is distributed on an "AS IS" BASIS,
+  ~      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~      See the License for the specific language governing permissions and
+  ~      limitations under the License.
+  -->
+
+<pof-config xmlns="http://xmlns.oracle.com/coherence/coherence-pof-config"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:schemaLocation="http://xmlns.oracle.com/coherence/coherence-pof-config coherence-pof-config.xsd">
+
+    <user-type-list>
+        <!-- Include default Coherence types -->
+        <include>coherence-pof-config.xml</include>
+
+        <!-- Define serializers for Bucket4j classes -->
+        <user-type>
+            <type-id>1001</type-id>
+            <class-name>io.github.bucket4j.grid.coherence.CoherenceEntryProcessorAdapter</class-name>
+            <serializer>
+                <class-name>io.github.bucket4j.grid.coherence.pof.CoherenceEntryProcessorAdapterPofSerializer</class-name>
+            </serializer>
+        </user-type>
+        <user-type>
+            <type-id>1002</type-id>
+            <class-name>io.github.bucket4j.grid.GridBucketState</class-name>
+            <serializer>
+                <class-name>io.github.bucket4j.grid.coherence.pof.GridBucketStatePofSerializer</class-name>
+            </serializer>
+        </user-type>
+        <user-type>
+            <type-id>1003</type-id>
+            <class-name>io.github.bucket4j.grid.CommandResult</class-name>
+            <serializer>
+                <class-name>io.github.bucket4j.grid.coherence.pof.CommandResultPofSerializer</class-name>
+            </serializer>
+        </user-type>
+    </user-type-list>
+</pof-config>

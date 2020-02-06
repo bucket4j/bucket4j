@@ -40,12 +40,13 @@ public class AbstractBucket4jPofSerializer<T> implements PofSerializer<T> {
         ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
         DataOutputStream output = new DataOutputStream(byteStream);
 
-        ADAPTER.writeObject(output, object);
+        serializationHandle.serialize(ADAPTER, output, object);
 
         output.close();
         byteStream.close();
         byte[] bytes = byteStream.toByteArray();
         pofWriter.writeByteArray(0, bytes);
+        pofWriter.writeRemainder(null);
     }
 
     @Override
@@ -53,7 +54,9 @@ public class AbstractBucket4jPofSerializer<T> implements PofSerializer<T> {
         byte bytes[] = pofReader.readByteArray(0);
 
         try (DataInputStream inputSteam = new DataInputStream(new ByteArrayInputStream(bytes))) {
-            return (T) ADAPTER.readObject(inputSteam);
+            T deserializeObject = serializationHandle.deserialize(ADAPTER, inputSteam);
+            pofReader.readRemainder();
+            return deserializeObject;
         }
     }
 
