@@ -117,6 +117,9 @@ public class EqualityUtils {
             return equals(cmd1.getNewConfiguration(), cmd2.getNewConfiguration());
         });
 
+        registerComparator(ConsumeIgnoringRateLimitsCommand.class, (cmd1, cmd2) -> {
+            return equals(cmd1.getTokensToConsume(), cmd2.getTokensToConsume());
+        });
     }
 
     public static <T> void registerComparator(Class<T> clazz, BiFunction<T, T, Boolean> comparator) {

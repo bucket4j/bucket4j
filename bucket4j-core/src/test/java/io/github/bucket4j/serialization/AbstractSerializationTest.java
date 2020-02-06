@@ -211,6 +211,8 @@ public abstract class AbstractSerializationTest {
                 .addLimit(simple(10, ofSeconds(1)))
                 .build();
         testSerialization(new ReplaceConfigurationOrReturnPreviousCommand(configuration));
+
+        testSerialization(new ConsumeIgnoringRateLimitsCommand(100));
     }
 
 }

@@ -55,7 +55,7 @@ public class CoherenceEntryProcessorAdapter<K extends Serializable, T extends Se
 
         @Override
         public int getTypeId() {
-            return 22;
+            return 23;
         }
 
         @Override
