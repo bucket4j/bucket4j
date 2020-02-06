@@ -22,11 +22,15 @@ import com.tangosol.util.processor.AbstractProcessor;
 import io.github.bucket4j.grid.CommandResult;
 import io.github.bucket4j.grid.GridBucketState;
 import io.github.bucket4j.grid.jcache.JCacheEntryProcessor;
+import io.github.bucket4j.serialization.DeserializationAdapter;
+import io.github.bucket4j.serialization.SerializationAdapter;
+import io.github.bucket4j.serialization.SerializationHandle;
 
+import java.io.IOException;
 import java.io.Serializable;
 
 
-class CoherenceEntryProcessorAdapter<K extends Serializable, T extends Serializable> extends AbstractProcessor<K, GridBucketState, CommandResult<?>> {
+public class CoherenceEntryProcessorAdapter<K extends Serializable, T extends Serializable> extends AbstractProcessor<K, GridBucketState, CommandResult<?>> {
 
     private static final long serialVersionUID = 1L;
 
@@ -36,11 +40,38 @@ class CoherenceEntryProcessorAdapter<K extends Serializable, T extends Serializa
         this.entryProcessor = entryProcessor;
     }
 
+    public static SerializationHandle<CoherenceEntryProcessorAdapter> SERIALIZATION_HANDLE = new SerializationHandle<CoherenceEntryProcessorAdapter>() {
+
+        @Override
+        public <I> CoherenceEntryProcessorAdapter deserialize(DeserializationAdapter<I> adapter, I input) throws IOException {
+            JCacheEntryProcessor entryProcessor = (JCacheEntryProcessor) adapter.readObject(input);
+            return new CoherenceEntryProcessorAdapter(entryProcessor);
+        }
+
+        @Override
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, CoherenceEntryProcessorAdapter serializableObject) throws IOException {
+            adapter.writeObject(output, serializableObject.entryProcessor);
+        }
+
+        @Override
+        public int getTypeId() {
+            return 23;
+        }
+
+        @Override
+        public Class<CoherenceEntryProcessorAdapter> getSerializedType() {
+            return CoherenceEntryProcessorAdapter.class;
+        }
+    };
+
     @Override
     public CommandResult<?> process(InvocableMap.Entry<K, GridBucketState> entry) {
         CoherenceMutableEntryAdapter<K> entryAdapter = new CoherenceMutableEntryAdapter<>(entry);
         return entryProcessor.process(entryAdapter);
     }
 
+    public JCacheEntryProcessor<K, T> getEntryProcessor() {
+        return entryProcessor;
+    }
 
 }

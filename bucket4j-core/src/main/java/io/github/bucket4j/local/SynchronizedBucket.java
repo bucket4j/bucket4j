@@ -149,6 +149,24 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket {
     }
 
     @Override
+    protected long consumeIgnoringRateLimitsImpl(long tokensToConsume) {
+        long currentTimeNanos = timeMeter.currentTimeNanos();
+        lock.lock();
+        try {
+            state.refillAllBandwidth(bandwidths, currentTimeNanos);
+            long nanosToCloseDeficit = state.calculateDelayNanosAfterWillBePossibleToConsume(bandwidths, tokensToConsume, currentTimeNanos);
+
+            if (nanosToCloseDeficit == INFINITY_DURATION) {
+                throw BucketExceptions.reservationOverflow();
+            }
+            state.consume(bandwidths, tokensToConsume);
+            return nanosToCloseDeficit;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    @Override
     protected void addTokensImpl(long tokensToAdd) {
         long currentTimeNanos = timeMeter.currentTimeNanos();
         lock.lock();
@@ -229,6 +247,17 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket {
             return CompletableFuture.completedFuture(null);
         } catch (IncompatibleConfigurationException e) {
             CompletableFuture<Void> fail = new CompletableFuture<>();
+            fail.completeExceptionally(e);
+            return fail;
+        }
+    }
+
+    @Override
+    protected CompletableFuture<Long> consumeIgnoringRateLimitsAsyncImpl(long tokensToConsume) {
+        try {
+            return CompletableFuture.completedFuture(consumeIgnoringRateLimitsImpl(tokensToConsume));
+        } catch (RuntimeException e) {
+            CompletableFuture<Long> fail = new CompletableFuture<>();
             fail.completeExceptionally(e);
             return fail;
         }

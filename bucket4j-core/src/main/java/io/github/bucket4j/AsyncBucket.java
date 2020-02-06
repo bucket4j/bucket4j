@@ -67,6 +67,13 @@ public interface AsyncBucket {
     CompletableFuture<Boolean> tryConsume(long numTokens);
 
     /**
+     * Asynchronous version of {@link Bucket#consumeIgnoringRateLimits(long)}, follows the same semantic.
+     *
+     * @see Bucket#consumeIgnoringRateLimits(long)
+     */
+    CompletableFuture<Long> consumeIgnoringRateLimits(long tokens);
+
+    /**
      * Asynchronous version of {@link Bucket#tryConsumeAndReturnRemaining(long)}, follows the same semantic.
      *
      * <p>

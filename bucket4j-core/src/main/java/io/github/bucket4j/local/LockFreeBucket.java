@@ -202,6 +202,29 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket {
     }
 
     @Override
+    protected long consumeIgnoringRateLimitsImpl(long tokensToConsume) {
+        StateWithConfiguration previousState = stateRef.get();
+        StateWithConfiguration newState = previousState.copy();
+        long currentTimeNanos = timeMeter.currentTimeNanos();
+
+        while (true) {
+            newState.refillAllBandwidth(currentTimeNanos);
+            long nanosToCloseDeficit = newState.delayNanosAfterWillBePossibleToConsume(tokensToConsume, currentTimeNanos);
+
+            if (nanosToCloseDeficit == INFINITY_DURATION) {
+                throw BucketExceptions.reservationOverflow();
+            }
+            newState.consume(tokensToConsume);
+            if (stateRef.compareAndSet(previousState, newState)) {
+                return nanosToCloseDeficit;
+            } else {
+                previousState = stateRef.get();
+                newState.copyStateFrom(previousState);
+            }
+        }
+    }
+
+    @Override
     public long getAvailableTokens() {
         long currentTimeNanos = timeMeter.currentTimeNanos();
         StateWithConfiguration snapshot = stateRef.get().copy();
@@ -228,6 +251,17 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket {
             return CompletableFuture.completedFuture(null);
         } catch (IncompatibleConfigurationException e) {
             CompletableFuture<Void> fail = new CompletableFuture<>();
+            fail.completeExceptionally(e);
+            return fail;
+        }
+    }
+
+    @Override
+    protected CompletableFuture<Long> consumeIgnoringRateLimitsAsyncImpl(long tokensToConsume) {
+        try {
+            return CompletableFuture.completedFuture(consumeIgnoringRateLimitsImpl(tokensToConsume));
+        } catch (RuntimeException e) {
+            CompletableFuture<Long> fail = new CompletableFuture<>();
             fail.completeExceptionally(e);
             return fail;
         }

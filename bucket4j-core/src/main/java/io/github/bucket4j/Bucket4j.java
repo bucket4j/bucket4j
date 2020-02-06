@@ -55,6 +55,7 @@ public class Bucket4j {
                 TryConsumeCommand.SERIALIZATION_HANDLE,
                 TryConsumeAndReturnRemainingTokensCommand.SERIALIZATION_HANDLE,
                 ReplaceConfigurationOrReturnPreviousCommand.SERIALIZATION_HANDLE,
+                ConsumeIgnoringRateLimitsCommand.SERIALIZATION_HANDLE,
                 CommandResult.SERIALIZATION_HANDLE,
                 ConsumptionProbe.SERIALIZATION_HANDLE,
                 EstimationProbe.SERIALIZATION_HANDLE

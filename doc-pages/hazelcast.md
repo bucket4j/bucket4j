@@ -39,7 +39,7 @@ ProxyManager proxyManager = Bucket4j.extension(Hazelcast.class).proxyManagerForM
 
 ## Configuring Custom Serialization for Bucket4j library classes
 If you configure nothing, then by default Java serialization will be used for serialization Bucket4j library classes. Java serialization can be rather slow and should be avoided in general.
-```Bucket4j``` provides [custom serializers](https://docs.hazelcast.org/docs/3.0/manual/html/ch03s03.html) for all library claasses that could be transferred over network.  
+```Bucket4j``` provides [custom serializers](https://docs.hazelcast.org/docs/3.0/manual/html/ch03s03.html) for all library classes that could be transferred over network.  
 To let Hazelcast know about fast serializers you should register them programmatically in the serialization config:
 ```java
 import com.hazelcast.config.Config;
