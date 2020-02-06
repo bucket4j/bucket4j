@@ -81,8 +81,8 @@ public interface Bucket {
      * Consumes {@code tokens} from bucket ignoring all limits.
      * In result of this operation amount of tokens in the bucket could became negative.
      *
-     * <ul>
      * There are two possible reasons to use this method:
+     * <ul>
      * <li>An operation with high priority should be executed independently of rate limits, but it should take effect to subsequent operation with bucket.</li>
      * <li>You want to apply custom blocking strategy instead of default which applied on {@code asScheduler().consume(tokens)} </li>
      * </ul>
@@ -90,12 +90,14 @@ public interface Bucket {
      * @param tokens amount of tokens that should be consumed from bucket.
      *
      * @return
-     * <ul> the amount of rate limit violation in nanoseconds calculated in following way:
-     *     <li><tt>zero</tt> if rate limit was not violated</li>. For example bucket had 5 tokens before invocation of {@code consumeIgnoringRateLimits(2)},
-     *     after invocation there are 3 tokens remain in the bucket, since limits were not violated <tt>zero</tt> returned as result.
-     *     <li>Positive value which describes the amount of rate limit violation in nanoseconds</li>.
+     * the amount of rate limit violation in nanoseconds calculated in following way:
+     * <ul>
+     *     <li><tt>zero</tt> if rate limit was not violated. For example bucket had 5 tokens before invocation of {@code consumeIgnoringRateLimits(2)},
+     *     after invocation there are 3 tokens remain in the bucket, since limits were not violated <tt>zero</tt> returned as result.</li>
+     *     <li>Positive value which describes the amount of rate limit violation in nanoseconds.
      *     For example bucket with limit 10 tokens per 1 second, currently has the 2 tokens available, last refill happen 100 milliseconds ago, and {@code consumeIgnoringRateLimits(6)} called.
      *     <tt>300_000_000</tt> will be returned as result and available tokens in the bucket will became <tt>-3</tt>, and any variation of {@code tryConsume...} will not be successful for 400 milliseconds(time required to refill amount of available tokens until 1).
+     *     </li>
      * </ul>
      */
     long consumeIgnoringRateLimits(long tokens);

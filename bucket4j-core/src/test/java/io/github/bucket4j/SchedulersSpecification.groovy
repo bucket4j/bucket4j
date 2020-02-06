@@ -208,7 +208,7 @@ class SchedulersSpecification extends Specification {
         when:
             bucket.asScheduler().consume(Long.MAX_VALUE, blocker)
         then:
-            thrown(IllegalStateException)
+            thrown(IllegalArgumentException)
             blocker.parkedNanos == 100_000_000
 
         where:
@@ -246,7 +246,7 @@ class SchedulersSpecification extends Specification {
         when:
             bucket.asScheduler().consumeUninterruptibly(Long.MAX_VALUE, blocker)
         then:
-            thrown(IllegalStateException)
+            thrown(IllegalArgumentException)
             blocker.parkedNanos == 200_000_000
 
         where:
@@ -278,7 +278,7 @@ class SchedulersSpecification extends Specification {
             bucket.asAsyncScheduler().consume(Long.MAX_VALUE, scheduler).get()
         then:
             ExecutionException ex = thrown(ExecutionException)
-            ex.getCause().class == IllegalStateException
+            ex.getCause().class == IllegalArgumentException
 
         where:
             type << BucketType.values()
