@@ -16,11 +16,10 @@ package io.github.bucket4j.hazelcast;/*
  */
 
 import com.hazelcast.config.Config;
-import com.hazelcast.config.SerializationConfig;
-import com.hazelcast.config.SerializerConfig;
+import com.hazelcast.config.JoinConfig;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.core.IMap;
+import com.hazelcast.map.IMap;
 import io.github.bucket4j.AbstractDistributedBucketTest;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.Bucket4j;
@@ -57,6 +56,10 @@ public class HazelcastWithCustomSerializersTest extends AbstractDistributedBucke
         server.exec((Runnable & Serializable) () -> {
             Config config = new Config();
             HazelcastSerializer.addCustomSerializers(config.getSerializationConfig(), 10_000);
+            JoinConfig joinConfig = config.getNetworkConfig().getJoin();
+            joinConfig.getMulticastConfig().setEnabled(false);
+            joinConfig.getTcpIpConfig().setEnabled(true);
+            joinConfig.getTcpIpConfig().addMember("127.0.0.1:5702");
             config.setLiteMember(false);
             HazelcastInstance hazelcastInstance = Hazelcast.newHazelcastInstance(config);
             hazelcastInstance.getMap("my_buckets");
@@ -64,6 +67,10 @@ public class HazelcastWithCustomSerializersTest extends AbstractDistributedBucke
 
         // start hazelcast client which works inside current JVM and does not hold data
         Config config = new Config();
+        JoinConfig joinConfig = config.getNetworkConfig().getJoin();
+        joinConfig.getMulticastConfig().setEnabled(false);
+        joinConfig.getTcpIpConfig().setEnabled(true);
+        joinConfig.getTcpIpConfig().addMember("127.0.0.1:5701");
         HazelcastSerializer.addCustomSerializers(config.getSerializationConfig(), 10_000);
         config.setLiteMember(true);
         hazelcastInstance = Hazelcast.newHazelcastInstance(config);

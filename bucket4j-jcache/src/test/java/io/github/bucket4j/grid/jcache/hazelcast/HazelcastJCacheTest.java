@@ -19,6 +19,7 @@ package io.github.bucket4j.grid.jcache.hazelcast;
 
 import com.hazelcast.config.CacheSimpleConfig;
 import com.hazelcast.config.Config;
+import com.hazelcast.config.JoinConfig;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ICacheManager;
@@ -51,6 +52,10 @@ public class HazelcastJCacheTest extends AbstractJCacheTest {
 
         server.exec((Runnable & Serializable) () -> {
             Config config = new Config();
+            JoinConfig joinConfig = config.getNetworkConfig().getJoin();
+            joinConfig.getMulticastConfig().setEnabled(false);
+            joinConfig.getTcpIpConfig().setEnabled(true);
+            joinConfig.getTcpIpConfig().addMember("127.0.0.1:5702");
             config.setLiteMember(false);
             CacheSimpleConfig cacheConfig = new CacheSimpleConfig();
             cacheConfig.setName("my_buckets");
@@ -63,6 +68,10 @@ public class HazelcastJCacheTest extends AbstractJCacheTest {
 
         // start hazelcast client which works inside current JVM and does not hold data
         Config config = new Config();
+        JoinConfig joinConfig = config.getNetworkConfig().getJoin();
+        joinConfig.getMulticastConfig().setEnabled(false);
+        joinConfig.getTcpIpConfig().setEnabled(true);
+        joinConfig.getTcpIpConfig().addMember("127.0.0.1:5701");
         config.setLiteMember(true);
         hazelcastInstance = Hazelcast.newHazelcastInstance(config);
         ICacheManager cacheManager = hazelcastInstance.getCacheManager();
