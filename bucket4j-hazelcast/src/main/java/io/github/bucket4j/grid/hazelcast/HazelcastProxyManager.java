@@ -17,7 +17,7 @@
 
 package io.github.bucket4j.grid.hazelcast;
 
-import com.hazelcast.core.IMap;
+import com.hazelcast.map.IMap;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.grid.GridBucket;
