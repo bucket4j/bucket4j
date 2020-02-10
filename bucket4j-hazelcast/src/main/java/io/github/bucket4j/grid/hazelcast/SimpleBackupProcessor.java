@@ -17,8 +17,8 @@
 
 package io.github.bucket4j.grid.hazelcast;
 
-import com.hazelcast.map.EntryBackupProcessor;
-import io.github.bucket4j.Bandwidth;
+import com.hazelcast.map.EntryProcessor;
+import io.github.bucket4j.grid.CommandResult;
 import io.github.bucket4j.grid.GridBucketState;
 import io.github.bucket4j.serialization.DeserializationAdapter;
 import io.github.bucket4j.serialization.SerializationAdapter;
@@ -29,7 +29,7 @@ import java.io.Serializable;
 import java.util.Map;
 
 
-public class SimpleBackupProcessor<K extends Serializable> implements EntryBackupProcessor<K, GridBucketState> {
+public class SimpleBackupProcessor<K extends Serializable> implements EntryProcessor<K, GridBucketState, Object> {
 
     private static final long serialVersionUID = 1L;
 
@@ -40,8 +40,9 @@ public class SimpleBackupProcessor<K extends Serializable> implements EntryBacku
     }
 
     @Override
-    public void processBackup(Map.Entry<K, GridBucketState> entry) {
+    public Object process(Map.Entry<K, GridBucketState> entry) {
         entry.setValue(state);
+        return null; // return value from backup processor is ignored, see https://github.com/hazelcast/hazelcast/pull/14995
     }
 
     public static SerializationHandle<SimpleBackupProcessor> SERIALIZATION_HANDLE = new SerializationHandle<SimpleBackupProcessor>() {

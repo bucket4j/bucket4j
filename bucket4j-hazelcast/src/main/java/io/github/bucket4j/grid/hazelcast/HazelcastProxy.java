@@ -17,9 +17,8 @@
 
 package io.github.bucket4j.grid.hazelcast;
 
-import com.hazelcast.core.ExecutionCallback;
-import com.hazelcast.core.IMap;
 import com.hazelcast.map.EntryProcessor;
+import com.hazelcast.map.IMap;
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.Nothing;
 import io.github.bucket4j.grid.CommandResult;
@@ -31,6 +30,7 @@ import io.github.bucket4j.grid.jcache.JCacheEntryProcessor;
 import java.io.Serializable;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 
 public class HazelcastProxy<K extends Serializable> implements GridProxy<K> {
 
@@ -87,24 +87,12 @@ public class HazelcastProxy<K extends Serializable> implements GridProxy<K> {
         return true;
     }
 
-    private <T extends Serializable>  EntryProcessor adoptEntryProcessor(final JCacheEntryProcessor<K, T> entryProcessor) {
+    private <T extends Serializable> EntryProcessor adoptEntryProcessor(final JCacheEntryProcessor<K, T> entryProcessor) {
         return new HazelcastEntryProcessorAdapter<>(entryProcessor);
     }
 
     private <T extends Serializable> CompletableFuture<CommandResult<T>> invokeAsync(K key, JCacheEntryProcessor<K, T> entryProcessor) {
-        CompletableFuture<CommandResult<T>> future = new CompletableFuture<>();
-        cache.submitToKey(key, adoptEntryProcessor(entryProcessor), new ExecutionCallback() {
-            @Override
-            public void onResponse(Object response) {
-                future.complete((CommandResult<T>) response);
-            }
-
-            @Override
-            public void onFailure(Throwable t) {
-                future.completeExceptionally(t);
-            }
-        });
-        return future;
+        return cache.submitToKey(key, adoptEntryProcessor(entryProcessor)).toCompletableFuture();
     }
 
 }

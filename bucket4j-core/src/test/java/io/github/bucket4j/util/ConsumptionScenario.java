@@ -19,7 +19,9 @@ package io.github.bucket4j.util;
 
 import io.github.bucket4j.Bucket;
 
+import java.time.temporal.ChronoUnit;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
