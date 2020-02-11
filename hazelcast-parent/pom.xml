@@ -7,13 +7,14 @@
         <groupId>com.github.vladimir-bukhtoyarov</groupId>
         <version>4.9.0</version>
     </parent>
-    <modelVersion>4.0.0</modelVersion>
     <packaging>pom</packaging>
+    <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>infinispan-parent</artifactId>
+    <artifactId>hazelcast-parent</artifactId>
+
     <modules>
-        <module>bucket4j-infinispan</module>
-        <module>bucket4j-infinispan-8</module>
+        <module>bucket4j-hazelcast</module>
+        <module>bucket4j-hazelcast-3</module>
     </modules>
 
     <properties>

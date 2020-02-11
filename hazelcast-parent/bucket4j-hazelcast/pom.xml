@@ -25,11 +25,11 @@
         <groupId>com.github.vladimir-bukhtoyarov</groupId>
         <artifactId>bucket4j-parent</artifactId>
         <version>4.9.0</version>
-        <relativePath>../bucket4j-parent</relativePath>
+        <relativePath>../../bucket4j-parent</relativePath>
     </parent>
-    <artifactId>bucket4j-hazelcast</artifactId>
-    <name>bucket4j-hazelcast</name>
-    <description>Bucket4j integration with Hazelcast</description>
+    <artifactId>bucket4j-hazelcast-4</artifactId>
+    <name>bucket4j-hazelcast-4</name>
+    <description>Bucket4j integration with Hazelcast 4.x branch</description>
 
     <properties>
         <modular-name>hazelcast</modular-name>
@@ -62,7 +62,7 @@
         <dependency>
             <groupId>com.hazelcast</groupId>
             <artifactId>hazelcast</artifactId>
-            <version>${hazelcast.version}</version>
+            <version>${hazelcast.latest.version}</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>
