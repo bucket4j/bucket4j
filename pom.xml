@@ -32,11 +32,10 @@
         <module>bucket4j-jcache</module>
         <module>bucket4j-hazelcast</module>
         <module>bucket4j-ignite</module>
-        <module>bucket4j-infinispan</module>
-        <module>bucket4j-infinispan-8</module>
         <module>experimental</module>
         <module>bucket4j-benchmarks</module>
         <module>bucket4j-coherence</module>
+        <module>bucket4j-infinispan-parent</module>
     </modules>
 
     <properties>
