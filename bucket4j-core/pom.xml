@@ -52,4 +52,13 @@
         </plugins>
     </build>
 
+    <dependencies>
+        <dependency>
+            <groupId>org.jetbrains.kotlinx</groupId>
+            <artifactId>lincheck</artifactId>
+            <version>2.5.3</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
 </project>
