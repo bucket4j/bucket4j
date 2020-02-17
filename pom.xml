@@ -31,11 +31,11 @@
         <module>bucket4j-core</module>
         <module>bucket4j-jcache</module>
         <module>bucket4j-ignite</module>
+        <module>bucket4j-infinispan-all</module>
+        <module>bucket4j-hazelcast-all</module>
+        <module>bucket4j-coherence</module>
         <module>experimental</module>
         <module>bucket4j-benchmarks</module>
-        <module>bucket4j-coherence</module>
-        <module>bucket4j-infinispan-parent</module>
-        <module>hazelcast-parent</module>
     </modules>
 
     <properties>

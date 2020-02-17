@@ -10,7 +10,7 @@
     <packaging>pom</packaging>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>hazelcast-parent</artifactId>
+    <artifactId>bucket4j-hazelcast-all</artifactId>
 
     <modules>
         <module>bucket4j-hazelcast</module>
