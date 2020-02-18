@@ -60,7 +60,7 @@
         <dependency>
             <groupId>com.hazelcast</groupId>
             <artifactId>hazelcast</artifactId>
-            <version>${hazelcast.version}</version>
+            <version>${hazelcast.latest.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -72,13 +72,13 @@
         <dependency>
             <groupId>org.infinispan</groupId>
             <artifactId>infinispan-core</artifactId>
-            <version>${infinispan.version}</version>
+            <version>${infinispan.latest.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.infinispan</groupId>
             <artifactId>infinispan-jcache</artifactId>
-            <version>${infinispan.version}</version>
+            <version>${infinispan.latest.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
