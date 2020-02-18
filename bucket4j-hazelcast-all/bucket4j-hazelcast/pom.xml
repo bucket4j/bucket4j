@@ -27,7 +27,7 @@
         <version>4.9.0</version>
         <relativePath>../../bucket4j-parent</relativePath>
     </parent>
-    <artifactId>bucket4j-hazelcast-4</artifactId>
+    <artifactId>bucket4j-hazelcast</artifactId>
     <name>bucket4j-hazelcast</name>
     <description>Bucket4j integration with Hazelcast 4.x branch</description>
 
