@@ -22,7 +22,7 @@ import java.util.Objects;
 
 public class WrongImplementedCounter {
 
-    private long value;
+    private volatile long value;
 
     public long add(long amount) {
         value += amount;

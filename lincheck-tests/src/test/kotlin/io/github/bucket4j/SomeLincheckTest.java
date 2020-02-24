@@ -46,7 +46,7 @@ public class SomeLincheckTest extends VerifierState {
         Options opts = new StressOptions()
                 .iterations(10)
                 .threads(3)
-                .minimizeFailedScenario(false)
+                .minimizeFailedScenario(true)
                 .logLevel(LoggingLevel.INFO)
         ;
         LinChecker.check(SomeLincheckTest.class, opts);
