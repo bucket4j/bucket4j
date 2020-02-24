@@ -15,9 +15,8 @@
  *      limitations under the License.
  */
 
-package io.github.bucket4j.experimental;
+package io.github.bucket4j;
 
-import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
 

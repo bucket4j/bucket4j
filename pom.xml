@@ -38,6 +38,7 @@
         <module>bucket4j-benchmarks</module>
         <module>bucket4j-coherence</module>
         <module>bucket4j-examples</module>
+        <module>lincheck-tests</module>
     </modules>
 
     <properties>
