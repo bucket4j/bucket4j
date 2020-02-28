@@ -171,6 +171,11 @@ public abstract class AbstractSerializationTest {
 
     @Test
     public void serializationOfCommandResults() throws IOException {
+        Bandwidth[] bandwidths = new Bandwidth[] {
+            simple(10, ofSeconds(42))
+        };
+        BucketConfiguration bucketConfiguration = new BucketConfiguration(Arrays.asList(bandwidths));
+
         // without payload
         testSerialization(CommandResult.bucketNotFound());
 
@@ -185,8 +190,8 @@ public abstract class AbstractSerializationTest {
         testSerialization(EstimationProbe.canBeConsumed(10));
 
         // consumption probes
-        testSerialization(ConsumptionProbe.rejected(10, 20));
-        testSerialization(ConsumptionProbe.consumed(10));
+        testSerialization(ConsumptionProbe.rejected(10, 20, bucketConfiguration));
+        testSerialization(ConsumptionProbe.consumed(10, bucketConfiguration));
     }
 
     @Test

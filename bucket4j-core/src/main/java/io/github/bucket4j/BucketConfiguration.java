@@ -50,6 +50,21 @@ public final class BucketConfiguration implements Serializable {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) { return true; }
+        if (o == null || getClass() != o.getClass()) { return false; }
+
+        BucketConfiguration that = (BucketConfiguration) o;
+
+        return Arrays.equals(bandwidths, that.bandwidths);
+    }
+
+    @Override
+    public int hashCode() {
+        return Arrays.hashCode(bandwidths);
+    }
+
+    @Override
     public String toString() {
         return "BucketConfiguration{" +
                 "bandwidths=" + Arrays.toString(bandwidths) +

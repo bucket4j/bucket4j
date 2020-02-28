@@ -24,7 +24,6 @@ import io.github.bucket4j.serialization.SerializationAdapter;
 import java.io.IOException;
 import java.io.Serializable;
 import java.time.Duration;
-import java.util.Objects;
 
 /**
  * <h3>Anatomy of bandwidth:</h3>
@@ -206,6 +205,34 @@ public class Bandwidth implements Serializable {
         }
 
     };
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) { return true; }
+        if (o == null || getClass() != o.getClass()) { return false; }
+
+        Bandwidth bandwidth = (Bandwidth) o;
+
+        if (capacity != bandwidth.capacity) { return false; }
+        if (initialTokens != bandwidth.initialTokens) { return false; }
+        if (refillPeriodNanos != bandwidth.refillPeriodNanos) { return false; }
+        if (refillTokens != bandwidth.refillTokens) { return false; }
+        if (refillIntervally != bandwidth.refillIntervally) { return false; }
+        if (timeOfFirstRefillMillis != bandwidth.timeOfFirstRefillMillis) { return false; }
+        return useAdaptiveInitialTokens == bandwidth.useAdaptiveInitialTokens;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = (int) (capacity ^ (capacity >>> 32));
+        result = 31 * result + (int) (initialTokens ^ (initialTokens >>> 32));
+        result = 31 * result + (int) (refillPeriodNanos ^ (refillPeriodNanos >>> 32));
+        result = 31 * result + (int) (refillTokens ^ (refillTokens >>> 32));
+        result = 31 * result + (refillIntervally ? 1 : 0);
+        result = 31 * result + (int) (timeOfFirstRefillMillis ^ (timeOfFirstRefillMillis >>> 32));
+        result = 31 * result + (useAdaptiveInitialTokens ? 1 : 0);
+        return result;
+    }
 
     @Override
     public String toString() {
