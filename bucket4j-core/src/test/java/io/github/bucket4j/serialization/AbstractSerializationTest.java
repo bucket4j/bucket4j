@@ -190,8 +190,8 @@ public abstract class AbstractSerializationTest {
         testSerialization(EstimationProbe.canBeConsumed(10));
 
         // consumption probes
-        testSerialization(ConsumptionProbe.rejected(10, 20, bucketConfiguration));
-        testSerialization(ConsumptionProbe.consumed(10, bucketConfiguration));
+        testSerialization(ConsumptionProbe.rejected(10, 20));
+        testSerialization(ConsumptionProbe.consumed(10));
     }
 
     @Test

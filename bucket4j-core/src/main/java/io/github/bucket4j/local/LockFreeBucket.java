@@ -104,11 +104,11 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket {
             long availableToConsume = newState.getAvailableTokens();
             if (tokensToConsume > availableToConsume) {
                 long nanosToWaitForRefill = newState.delayNanosAfterWillBePossibleToConsume(tokensToConsume, currentTimeNanos);
-                return ConsumptionProbe.rejected(availableToConsume, nanosToWaitForRefill, getConfiguration());
+                return ConsumptionProbe.rejected(availableToConsume, nanosToWaitForRefill);
             }
             newState.consume(tokensToConsume);
             if (stateRef.compareAndSet(previousState, newState)) {
-                return ConsumptionProbe.consumed(availableToConsume - tokensToConsume, getConfiguration());
+                return ConsumptionProbe.consumed(availableToConsume - tokensToConsume);
             } else {
                 previousState = stateRef.get();
                 newState.copyStateFrom(previousState);

@@ -37,7 +37,6 @@ public class ConsumptionProbe implements Serializable {
     private final boolean consumed;
     private final long remainingTokens;
     private final long nanosToWaitForRefill;
-    private final BucketConfiguration bucketConfiguration;
 
     public static SerializationHandle<ConsumptionProbe> SERIALIZATION_HANDLE = new SerializationHandle<ConsumptionProbe>() {
         @Override
@@ -45,9 +44,8 @@ public class ConsumptionProbe implements Serializable {
             boolean consumed = adapter.readBoolean(input);
             long remainingTokens = adapter.readLong(input);
             long nanosToWaitForRefill = adapter.readLong(input);
-            BucketConfiguration bucketConfiguration = (BucketConfiguration) adapter.readObject(input);
 
-            return new ConsumptionProbe(consumed, remainingTokens, nanosToWaitForRefill, bucketConfiguration);
+            return new ConsumptionProbe(consumed, remainingTokens, nanosToWaitForRefill);
         }
 
         @Override
@@ -55,7 +53,6 @@ public class ConsumptionProbe implements Serializable {
             adapter.writeBoolean(output, probe.consumed);
             adapter.writeLong(output, probe.remainingTokens);
             adapter.writeLong(output, probe.nanosToWaitForRefill);
-            adapter.writeObject(output, probe.bucketConfiguration);
         }
 
         @Override
@@ -70,19 +67,18 @@ public class ConsumptionProbe implements Serializable {
 
     };
 
-    public static ConsumptionProbe consumed(long remainingTokens, BucketConfiguration bucketConfiguration) {
-        return new ConsumptionProbe(true, remainingTokens, 0, bucketConfiguration);
+    public static ConsumptionProbe consumed(long remainingTokens) {
+        return new ConsumptionProbe(true, remainingTokens, 0);
     }
 
-    public static ConsumptionProbe rejected(long remainingTokens, long nanosToWaitForRefill, BucketConfiguration bucketConfiguration) {
-        return new ConsumptionProbe(false, remainingTokens, nanosToWaitForRefill, bucketConfiguration);
+    public static ConsumptionProbe rejected(long remainingTokens, long nanosToWaitForRefill) {
+        return new ConsumptionProbe(false, remainingTokens, nanosToWaitForRefill);
     }
 
-    private ConsumptionProbe(boolean consumed, long remainingTokens, long nanosToWaitForRefill, BucketConfiguration bucketConfiguration) {
+    private ConsumptionProbe(boolean consumed, long remainingTokens, long nanosToWaitForRefill) {
         this.consumed = consumed;
         this.remainingTokens = Math.max(0L, remainingTokens);
         this.nanosToWaitForRefill = nanosToWaitForRefill;
-        this.bucketConfiguration = bucketConfiguration;
     }
 
     /**
@@ -112,22 +108,12 @@ public class ConsumptionProbe implements Serializable {
         return nanosToWaitForRefill;
     }
 
-    /**
-     * Gets the bucket configuration present during token consumption.
-     *
-     * @return the bucket configuration
-     */
-    public BucketConfiguration getBucketConfiguration() {
-        return bucketConfiguration;
-    }
-
     @Override
     public String toString() {
         return "ConsumptionResult{" +
                 "consumed=" + consumed +
                 ", remainingTokens=" + remainingTokens +
                 ", nanosToWaitForRefill=" + nanosToWaitForRefill +
-                ", bucketConfiguration=" + bucketConfiguration +
                 '}';
     }
 

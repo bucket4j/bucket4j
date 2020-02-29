@@ -68,10 +68,10 @@ public class TryConsumeAndReturnRemainingTokensCommand implements GridCommand<Co
         if (tokensToConsume <= availableToConsume) {
             state.consume(tokensToConsume);
             bucketStateModified = true;
-            return ConsumptionProbe.consumed(availableToConsume - tokensToConsume, state.getConfiguration());
+            return ConsumptionProbe.consumed(availableToConsume - tokensToConsume);
         } else {
             long nanosToWaitForRefill = state.calculateDelayNanosAfterWillBePossibleToConsume(tokensToConsume, currentTimeNanos);
-            return ConsumptionProbe.rejected(availableToConsume, nanosToWaitForRefill, state.getConfiguration());
+            return ConsumptionProbe.rejected(availableToConsume, nanosToWaitForRefill);
         }
     }
 

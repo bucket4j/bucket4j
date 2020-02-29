@@ -103,10 +103,10 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket {
             long availableToConsume = state.getAvailableTokens(bandwidths);
             if (tokensToConsume > availableToConsume) {
                 long nanosToWaitForRefill = state.calculateDelayNanosAfterWillBePossibleToConsume(bandwidths, tokensToConsume, currentTimeNanos);
-                return ConsumptionProbe.rejected(availableToConsume, nanosToWaitForRefill, configuration);
+                return ConsumptionProbe.rejected(availableToConsume, nanosToWaitForRefill);
             }
             state.consume(bandwidths, tokensToConsume);
-            return ConsumptionProbe.consumed(availableToConsume - tokensToConsume, configuration);
+            return ConsumptionProbe.consumed(availableToConsume - tokensToConsume);
         } finally {
             lock.unlock();
         }

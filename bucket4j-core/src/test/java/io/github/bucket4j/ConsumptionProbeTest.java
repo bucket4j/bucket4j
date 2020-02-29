@@ -17,9 +17,6 @@
 
 package io.github.bucket4j;
 
-import java.time.Duration;
-import java.util.Collections;
-import org.junit.Before;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -27,25 +24,17 @@ import static org.junit.Assert.*;
 
 public class ConsumptionProbeTest {
 
-    private BucketConfiguration testBucketConfiguration;
-
-    @Before
-    public void before() {
-        Bandwidth bandwidth = Bandwidth.simple(1, Duration.ofSeconds(1));
-        testBucketConfiguration = new BucketConfiguration(Collections.singletonList(bandwidth));
-    }
-
     @Test
     public void getRemainingTokens() throws Exception {
-        assertEquals(0, ConsumptionProbe.rejected(-1, 10, testBucketConfiguration).getRemainingTokens());
-        assertEquals(0, ConsumptionProbe.rejected(0, 10, testBucketConfiguration).getRemainingTokens());
+        assertEquals(0, ConsumptionProbe.rejected(-1, 10).getRemainingTokens());
+        assertEquals(0, ConsumptionProbe.rejected(0, 10).getRemainingTokens());
     }
 
     @Test
     public void testToString() throws Exception {
-        System.out.println(ConsumptionProbe.consumed(1, testBucketConfiguration));
-        System.out.println(ConsumptionProbe.rejected(-1, 10, testBucketConfiguration));
-        System.out.println(ConsumptionProbe.rejected(0, 10, testBucketConfiguration));
+        System.out.println(ConsumptionProbe.consumed(1));
+        System.out.println(ConsumptionProbe.rejected(-1, 10));
+        System.out.println(ConsumptionProbe.rejected(0, 10));
     }
 
 }
