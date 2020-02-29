@@ -10,41 +10,41 @@ public interface AsyncVerboseBucket {
     /**
      * TODO write javadocs
      */
-    VerboseResult<CompletableFuture<Boolean>> tryConsume(long numTokens);
+    CompletableFuture<VerboseResult<Boolean>> tryConsume(long numTokens);
 
     /**
      * TODO write javadocs
      */
-    VerboseResult<CompletableFuture<Long>> consumeIgnoringRateLimits(long tokens);
+    CompletableFuture<VerboseResult<Long>> consumeIgnoringRateLimits(long tokens);
 
     /**
      * TODO write javadocs
      */
-    VerboseResult<CompletableFuture<ConsumptionProbe>> tryConsumeAndReturnRemaining(long numTokens);
+    CompletableFuture<VerboseResult<ConsumptionProbe>> tryConsumeAndReturnRemaining(long numTokens);
 
     /**
      * TODO write javadocs
      */
-    VerboseResult<CompletableFuture<EstimationProbe>> estimateAbilityToConsume(long numTokens);
+    CompletableFuture<VerboseResult<EstimationProbe>> estimateAbilityToConsume(long numTokens);
 
     /**
      * TODO write javadocs
      */
-    VerboseResult<CompletableFuture<Long>> tryConsumeAsMuchAsPossible();
+    CompletableFuture<VerboseResult<Long>> tryConsumeAsMuchAsPossible();
 
     /**
      * TODO write javadocs
      */
-    VerboseResult<CompletableFuture<Long>> tryConsumeAsMuchAsPossible(long limit);
+    CompletableFuture<VerboseResult<Long>> tryConsumeAsMuchAsPossible(long limit);
 
     /**
      * TODO write javadocs
      */
-    VerboseResult<CompletableFuture<Void>> addTokens(long tokensToAdd);
+    CompletableFuture<VerboseResult<Void>> addTokens(long tokensToAdd);
 
     /**
      * TODO write javadocs
      */
-    VerboseResult<CompletableFuture<Void>> replaceConfiguration(BucketConfiguration newConfiguration);
+    CompletableFuture<VerboseResult<Void>> replaceConfiguration(BucketConfiguration newConfiguration);
 
 }
