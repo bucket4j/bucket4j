@@ -119,6 +119,7 @@ class FixedIntervalRefillSpecification extends Specification {
             !probe.consumed
             probe.remainingTokens == 0
             probe.nanosToWaitForRefill == TimeUnit.SECONDS.toNanos(60)
+            probe.bucketConfiguration.bandwidths[0] == bandwidth
 
         when:
             probe = bucket.tryConsumeAndReturnRemaining(10)
@@ -126,6 +127,7 @@ class FixedIntervalRefillSpecification extends Specification {
             !probe.consumed
             probe.remainingTokens == 0
             probe.nanosToWaitForRefill == TimeUnit.SECONDS.toNanos(60)
+            probe.bucketConfiguration.bandwidths[0] == bandwidth
 
         when:
             mockTimer.addTime(TimeUnit.SECONDS.toNanos(15))
@@ -134,6 +136,7 @@ class FixedIntervalRefillSpecification extends Specification {
             !probe.consumed
             probe.remainingTokens == 0
             probe.nanosToWaitForRefill == TimeUnit.SECONDS.toNanos(45)
+            probe.bucketConfiguration.bandwidths[0] == bandwidth
 
         when:
             probe = bucket.tryConsumeAndReturnRemaining(15)
@@ -141,6 +144,7 @@ class FixedIntervalRefillSpecification extends Specification {
             !probe.consumed
             probe.remainingTokens == 0
             probe.nanosToWaitForRefill == TimeUnit.SECONDS.toNanos(45 + 60)
+            probe.bucketConfiguration.bandwidths[0] == bandwidth
 
         when:
             probe = bucket.tryConsumeAndReturnRemaining(21)
@@ -148,6 +152,7 @@ class FixedIntervalRefillSpecification extends Specification {
             !probe.consumed
             probe.remainingTokens == 0
             probe.nanosToWaitForRefill == TimeUnit.SECONDS.toNanos(45 + 60 + 60)
+            probe.bucketConfiguration.bandwidths[0] == bandwidth
     }
 
 }
