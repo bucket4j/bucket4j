@@ -35,6 +35,11 @@ import java.util.function.Function;
 public interface AsyncBucket {
 
     /**
+     * TODO write javadocs
+     */
+    AsyncVerboseBucket asVerbose();
+
+    /**
      * Asynchronous version of {@link Bucket#tryConsume(long)}, follows the same semantic.
      *
      * <p>

@@ -36,6 +36,11 @@ public interface Bucket {
     BlockingBucket asScheduler();
 
     /**
+     * TODO write javadocs
+     */
+    VerboseBucket asVerbose();
+
+    /**
      * Describes whether or not this bucket supports asynchronous mode.
      *
      * <p>If asynchronous mode is  not supported any attempt to call {@link #asAsync()} will fail with {@link UnsupportedOperationException}
