@@ -167,6 +167,139 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket {
     }
 
     @Override
+    protected VerboseResult<Long> consumeAsMuchAsPossibleVerboseImpl(long limit) {
+        long currentTimeNanos = timeMeter.currentTimeNanos();
+        lock.lock();
+        try {
+            state.refillAllBandwidth(bandwidths, currentTimeNanos);
+            long availableToConsume = state.getAvailableTokens(bandwidths);
+            long toConsume = Math.min(limit, availableToConsume);
+            if (toConsume == 0) {
+                return new VerboseResult<>(currentTimeNanos, 0L, configuration, state.copy());
+            }
+            state.consume(bandwidths, toConsume);
+            return new VerboseResult<>(currentTimeNanos, toConsume, configuration, state.copy());
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    @Override
+    protected VerboseResult<Boolean> tryConsumeVerboseImpl(long tokensToConsume) {
+        long currentTimeNanos = timeMeter.currentTimeNanos();
+        lock.lock();
+        try {
+            state.refillAllBandwidth(bandwidths, currentTimeNanos);
+            long availableToConsume = state.getAvailableTokens(bandwidths);
+            if (tokensToConsume > availableToConsume) {
+                return new VerboseResult<>(currentTimeNanos, false, configuration, state.copy());
+            }
+            state.consume(bandwidths, tokensToConsume);
+            return new VerboseResult<>(currentTimeNanos, true, configuration, state.copy());
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    @Override
+    protected VerboseResult<ConsumptionProbe> tryConsumeAndReturnRemainingTokensVerboseImpl(long tokensToConsume) {
+        long currentTimeNanos = timeMeter.currentTimeNanos();
+        lock.lock();
+        try {
+            state.refillAllBandwidth(bandwidths, currentTimeNanos);
+            long availableToConsume = state.getAvailableTokens(bandwidths);
+            if (tokensToConsume > availableToConsume) {
+                long nanosToWaitForRefill = state.calculateDelayNanosAfterWillBePossibleToConsume(bandwidths, tokensToConsume, currentTimeNanos);
+                ConsumptionProbe probe = ConsumptionProbe.rejected(availableToConsume, nanosToWaitForRefill);
+                return new VerboseResult<>(currentTimeNanos, probe, configuration, state.copy());
+            }
+            state.consume(bandwidths, tokensToConsume);
+            ConsumptionProbe probe = ConsumptionProbe.consumed(availableToConsume - tokensToConsume);
+            return new VerboseResult<>(currentTimeNanos, probe, configuration, state.copy());
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    @Override
+    protected VerboseResult<EstimationProbe> estimateAbilityToConsumeVerboseImpl(long tokensToEstimate) {
+        long currentTimeNanos = timeMeter.currentTimeNanos();
+        lock.lock();
+        try {
+            state.refillAllBandwidth(bandwidths, currentTimeNanos);
+            long availableToConsume = state.getAvailableTokens(bandwidths);
+            if (tokensToEstimate > availableToConsume) {
+                long nanosToWaitForRefill = state.calculateDelayNanosAfterWillBePossibleToConsume(bandwidths, tokensToEstimate, currentTimeNanos);
+                EstimationProbe estimationProbe = EstimationProbe.canNotBeConsumed(availableToConsume, nanosToWaitForRefill);
+                return new VerboseResult<>(currentTimeNanos, estimationProbe, configuration, state.copy());
+            }
+            EstimationProbe estimationProbe = EstimationProbe.canBeConsumed(availableToConsume);
+            return new VerboseResult<>(currentTimeNanos, estimationProbe, configuration, state.copy());
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    @Override
+    protected VerboseResult<Long> getAvailableTokensVerboseImpl() {
+        long currentTimeNanos = timeMeter.currentTimeNanos();
+        lock.lock();
+        try {
+            state.refillAllBandwidth(bandwidths, currentTimeNanos);
+            long availableTokens = state.getAvailableTokens(bandwidths);
+            return new VerboseResult<>(currentTimeNanos, availableTokens, configuration, state.copy());
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    @Override
+    protected VerboseResult<Nothing> addTokensVerboseImpl(long tokensToAdd) {
+        long currentTimeNanos = timeMeter.currentTimeNanos();
+        lock.lock();
+        try {
+            state.refillAllBandwidth(bandwidths, currentTimeNanos);
+            state.addTokens(bandwidths, tokensToAdd);
+            return new VerboseResult<>(currentTimeNanos, Nothing.INSTANCE, configuration, state.copy());
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    @Override
+    protected VerboseResult<Nothing> replaceConfigurationVerboseImpl(BucketConfiguration newConfiguration) {
+        long currentTimeNanos = timeMeter.currentTimeNanos();
+        lock.lock();
+        try {
+            configuration.checkCompatibility(newConfiguration);
+            this.state.refillAllBandwidth(bandwidths, currentTimeNanos);
+            this.configuration = newConfiguration;
+            this.bandwidths = newConfiguration.getBandwidths();
+            return new VerboseResult<>(currentTimeNanos, Nothing.INSTANCE, configuration, state.copy());
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    @Override
+    protected VerboseResult<Long> consumeIgnoringRateLimitsVerboseImpl(long tokensToConsume) {
+        long currentTimeNanos = timeMeter.currentTimeNanos();
+        lock.lock();
+        try {
+            state.refillAllBandwidth(bandwidths, currentTimeNanos);
+            long nanosToCloseDeficit = state.calculateDelayNanosAfterWillBePossibleToConsume(bandwidths, tokensToConsume, currentTimeNanos);
+
+            if (nanosToCloseDeficit == INFINITY_DURATION) {
+                throw BucketExceptions.reservationOverflow();
+            }
+            state.consume(bandwidths, tokensToConsume);
+            return new VerboseResult<>(currentTimeNanos, nanosToCloseDeficit, configuration, state.copy());
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    @Override
     protected void addTokensImpl(long tokensToAdd) {
         long currentTimeNanos = timeMeter.currentTimeNanos();
         lock.lock();
@@ -258,6 +391,54 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket {
             return CompletableFuture.completedFuture(consumeIgnoringRateLimitsImpl(tokensToConsume));
         } catch (RuntimeException e) {
             CompletableFuture<Long> fail = new CompletableFuture<>();
+            fail.completeExceptionally(e);
+            return fail;
+        }
+    }
+
+    @Override
+    protected CompletableFuture<VerboseResult<Long>> tryConsumeAsMuchAsPossibleVerboseAsyncImpl(long limit) {
+        VerboseResult<Long> result = consumeAsMuchAsPossibleVerboseImpl(limit);
+        return CompletableFuture.completedFuture(result);
+    }
+
+    @Override
+    protected CompletableFuture<VerboseResult<Boolean>> tryConsumeVerboseAsyncImpl(long tokensToConsume) {
+        VerboseResult<Boolean> result = tryConsumeVerboseImpl(tokensToConsume);
+        return CompletableFuture.completedFuture(result);
+    }
+
+    @Override
+    protected CompletableFuture<VerboseResult<ConsumptionProbe>> tryConsumeAndReturnRemainingTokensVerboseAsyncImpl(long tokensToConsume) {
+        VerboseResult<ConsumptionProbe> result = tryConsumeAndReturnRemainingTokensVerboseImpl(tokensToConsume);
+        return CompletableFuture.completedFuture(result);
+    }
+
+    @Override
+    protected CompletableFuture<VerboseResult<EstimationProbe>> estimateAbilityToConsumeVerboseAsyncImpl(long tokensToEstimate) {
+        VerboseResult<EstimationProbe> result = estimateAbilityToConsumeVerboseImpl(tokensToEstimate);
+        return CompletableFuture.completedFuture(result);
+    }
+
+    @Override
+    protected CompletableFuture<VerboseResult<Nothing>> addTokensVerboseAsyncImpl(long tokensToAdd) {
+        VerboseResult<Nothing> result = addTokensVerboseImpl(tokensToAdd);
+        return CompletableFuture.completedFuture(result);
+    }
+
+    @Override
+    protected CompletableFuture<VerboseResult<Nothing>> replaceConfigurationVerboseAsyncImpl(BucketConfiguration newConfiguration) {
+        VerboseResult<Nothing> result = replaceConfigurationVerboseImpl(newConfiguration);
+        return CompletableFuture.completedFuture(result);
+    }
+
+    @Override
+    protected CompletableFuture<VerboseResult<Long>> consumeIgnoringRateLimitsVerboseAsyncImpl(long tokensToConsume) {
+        try {
+            VerboseResult<Long> result = consumeIgnoringRateLimitsVerboseImpl(tokensToConsume);
+            return CompletableFuture.completedFuture(result);
+        } catch (RuntimeException e) {
+            CompletableFuture<VerboseResult<Long>> fail = new CompletableFuture<>();
             fail.completeExceptionally(e);
             return fail;
         }

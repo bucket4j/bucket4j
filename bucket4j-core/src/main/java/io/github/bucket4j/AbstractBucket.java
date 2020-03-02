@@ -82,8 +82,6 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket {
 
     protected abstract CompletableFuture<VerboseResult<EstimationProbe>> estimateAbilityToConsumeVerboseAsyncImpl(long tokensToEstimate);
 
-    protected abstract CompletableFuture<VerboseResult<Long>> reserveAndCalculateTimeToSleepVerboseAsyncImpl(long tokensToConsume, long maxWaitTimeNanos);
-
     protected abstract CompletableFuture<VerboseResult<Nothing>> addTokensVerboseAsyncImpl(long tokensToAdd);
 
     protected abstract CompletableFuture<VerboseResult<Nothing>> replaceConfigurationVerboseAsyncImpl(BucketConfiguration newConfiguration);
