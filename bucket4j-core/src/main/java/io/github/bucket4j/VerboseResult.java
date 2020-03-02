@@ -1,6 +1,7 @@
 package io.github.bucket4j;
 
 import java.io.Serializable;
+import java.util.function.Function;
 
 /**
  * TODO write javadocs
@@ -47,6 +48,10 @@ public class VerboseResult<T extends Serializable> implements Serializable {
      */
     public long getOperationTimeNanos() {
         return operationTimeNanos;
+    }
+
+    public <R extends Serializable> VerboseResult<R> map(Function<T, R> mapper) {
+        return new VerboseResult<>(operationTimeNanos, mapper.apply(value), configuration, state);
     }
 
 }

@@ -108,6 +108,60 @@ public class GridBucket<K extends Serializable> extends AbstractBucket {
     }
 
     @Override
+    protected VerboseResult<Long> consumeAsMuchAsPossibleVerboseImpl(long limit) {
+        ConsumeAsMuchAsPossibleCommand command = new ConsumeAsMuchAsPossibleCommand(limit);
+        return execute(command.asVerbose());
+    }
+
+    @Override
+    protected VerboseResult<Boolean> tryConsumeVerboseImpl(long tokensToConsume) {
+        TryConsumeCommand command = new TryConsumeCommand(tokensToConsume);
+        return execute(command.asVerbose());
+    }
+
+    @Override
+    protected VerboseResult<ConsumptionProbe> tryConsumeAndReturnRemainingTokensVerboseImpl(long tokensToConsume) {
+        TryConsumeAndReturnRemainingTokensCommand command = new TryConsumeAndReturnRemainingTokensCommand(tokensToConsume);
+        return execute(command.asVerbose());
+    }
+
+    @Override
+    protected VerboseResult<EstimationProbe> estimateAbilityToConsumeVerboseImpl(long numTokens) {
+        EstimateAbilityToConsumeCommand command = new EstimateAbilityToConsumeCommand(numTokens);
+        return execute(command.asVerbose());
+    }
+
+    @Override
+    protected VerboseResult<Long> getAvailableTokensVerboseImpl() {
+        GetAvailableTokensCommand command = new GetAvailableTokensCommand();
+        return execute(command.asVerbose());
+    }
+
+    @Override
+    protected VerboseResult<Nothing> addTokensVerboseImpl(long tokensToAdd) {
+        AddTokensCommand command = new AddTokensCommand(tokensToAdd);
+        return execute(command.asVerbose());
+    }
+
+    @Override
+    protected VerboseResult<Nothing> replaceConfigurationVerboseImpl(BucketConfiguration newConfiguration) {
+        ReplaceConfigurationOrReturnPreviousCommand replaceConfigCommand = new ReplaceConfigurationOrReturnPreviousCommand(newConfiguration);
+        return execute(replaceConfigCommand.asVerbose()).map(conflictingConfiguration -> {
+            if (conflictingConfiguration != null) {
+                throw new IncompatibleConfigurationException(conflictingConfiguration, newConfiguration);
+            } else {
+                return Nothing.INSTANCE;
+            }
+        });
+    }
+
+    @Override
+    protected VerboseResult<Long> consumeIgnoringRateLimitsVerboseImpl(long tokensToConsume) {
+        ConsumeIgnoringRateLimitsCommand command = new ConsumeIgnoringRateLimitsCommand(tokensToConsume);
+        return execute(command.asVerbose());
+    }
+
+    @Override
     protected CompletableFuture<Long> reserveAndCalculateTimeToSleepAsyncImpl(long tokensToConsume, long maxWaitTimeNanos) {
         ReserveAndCalculateTimeToSleepCommand consumeCommand = new ReserveAndCalculateTimeToSleepCommand(tokensToConsume, maxWaitTimeNanos);
         return executeAsync(consumeCommand);
@@ -156,6 +210,48 @@ public class GridBucket<K extends Serializable> extends AbstractBucket {
             }
             throw BucketExceptions.reservationOverflow();
         });
+    }
+
+    @Override
+    protected CompletableFuture<VerboseResult<Long>> tryConsumeAsMuchAsPossibleVerboseAsyncImpl(long limit) {
+        TODO
+        return null;
+    }
+
+    @Override
+    protected CompletableFuture<VerboseResult<Boolean>> tryConsumeVerboseAsyncImpl(long tokensToConsume) {
+        TODO
+        return null;
+    }
+
+    @Override
+    protected CompletableFuture<VerboseResult<ConsumptionProbe>> tryConsumeAndReturnRemainingTokensVerboseAsyncImpl(long tokensToConsume) {
+        TODO
+        return null;
+    }
+
+    @Override
+    protected CompletableFuture<VerboseResult<EstimationProbe>> estimateAbilityToConsumeVerboseAsyncImpl(long tokensToEstimate) {
+        TODO
+        return null;
+    }
+
+    @Override
+    protected CompletableFuture<VerboseResult<Nothing>> addTokensVerboseAsyncImpl(long tokensToAdd) {
+        TODO
+        return null;
+    }
+
+    @Override
+    protected CompletableFuture<VerboseResult<Nothing>> replaceConfigurationVerboseAsyncImpl(BucketConfiguration newConfiguration) {
+        TODO
+        return null;
+    }
+
+    @Override
+    protected CompletableFuture<VerboseResult<Long>> consumeIgnoringRateLimitsVerboseAsyncImpl(long tokensToConsume) {
+        TODO
+        return null;
     }
 
     @Override

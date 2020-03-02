@@ -1,7 +1,6 @@
 
 package io.github.bucket4j.grid;
 
-import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.serialization.DeserializationAdapter;
 import io.github.bucket4j.serialization.SerializationAdapter;
 import io.github.bucket4j.serialization.SerializationHandle;
