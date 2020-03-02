@@ -9,13 +9,13 @@ public class VerboseResult<T extends Serializable> implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    private final long operationTime;
+    private final long operationTimeNanos;
     private final T value;
     private final BucketConfiguration configuration;
     private final BucketState state;
 
-    public VerboseResult(long operationTime, T value, BucketConfiguration configuration, BucketState state) {
-        this.operationTime = operationTime;
+    public VerboseResult(long operationTimeNanos, T value, BucketConfiguration configuration, BucketState state) {
+        this.operationTimeNanos = operationTimeNanos;
         this.value = value;
         this.configuration = configuration;
         this.state = state;
@@ -45,8 +45,8 @@ public class VerboseResult<T extends Serializable> implements Serializable {
     /**
      * TODO write javadocs
      */
-    public long getOperationTime() {
-        return operationTime;
+    public long getOperationTimeNanos() {
+        return operationTimeNanos;
     }
 
 }

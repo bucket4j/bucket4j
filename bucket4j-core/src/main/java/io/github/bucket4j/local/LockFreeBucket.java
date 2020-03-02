@@ -209,6 +209,162 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket {
     }
 
     @Override
+    protected VerboseResult<Long> consumeAsMuchAsPossibleVerboseImpl(long limit) {
+        StateWithConfiguration previousState = stateRef.get();
+        StateWithConfiguration newState = previousState.copy();
+        long currentTimeNanos = timeMeter.currentTimeNanos();
+
+        while (true) {
+            newState.refillAllBandwidth(currentTimeNanos);
+            long availableToConsume = newState.getAvailableTokens();
+            long toConsume = Math.min(limit, availableToConsume);
+            if (toConsume == 0) {
+                return new VerboseResult<>(currentTimeNanos, 0L, newState.configuration, newState.state);
+            }
+            newState.consume(toConsume);
+            if (stateRef.compareAndSet(previousState, newState)) {
+                return new VerboseResult<>(currentTimeNanos, toConsume, newState.configuration, newState.state.copy());
+            } else {
+                previousState = stateRef.get();
+                newState.copyStateFrom(previousState);
+            }
+        }
+    }
+
+    @Override
+    protected VerboseResult<Boolean> tryConsumeVerboseImpl(long tokensToConsume) {
+        StateWithConfiguration previousState = stateRef.get();
+        StateWithConfiguration newState = previousState.copy();
+        long currentTimeNanos = timeMeter.currentTimeNanos();
+
+        while (true) {
+            newState.refillAllBandwidth(currentTimeNanos);
+            long availableToConsume = newState.getAvailableTokens();
+            if (tokensToConsume > availableToConsume) {
+                return new VerboseResult<>(currentTimeNanos, false, newState.configuration, newState.state);
+            }
+            newState.consume(tokensToConsume);
+            if (stateRef.compareAndSet(previousState, newState)) {
+                return new VerboseResult<>(currentTimeNanos, false, newState.configuration, newState.state.copy());
+            } else {
+                previousState = stateRef.get();
+                newState.copyStateFrom(previousState);
+            }
+        }
+    }
+
+    @Override
+    protected VerboseResult<ConsumptionProbe> tryConsumeAndReturnRemainingTokensVerboseImpl(long tokensToConsume) {
+        StateWithConfiguration previousState = stateRef.get();
+        StateWithConfiguration newState = previousState.copy();
+        long currentTimeNanos = timeMeter.currentTimeNanos();
+
+        while (true) {
+            newState.refillAllBandwidth(currentTimeNanos);
+            long availableToConsume = newState.getAvailableTokens();
+            if (tokensToConsume > availableToConsume) {
+                long nanosToWaitForRefill = newState.delayNanosAfterWillBePossibleToConsume(tokensToConsume, currentTimeNanos);
+                ConsumptionProbe consumptionProbe = ConsumptionProbe.rejected(availableToConsume, nanosToWaitForRefill);
+                return new VerboseResult<>(currentTimeNanos, consumptionProbe, newState.configuration, newState.state);
+            }
+            newState.consume(tokensToConsume);
+            if (stateRef.compareAndSet(previousState, newState)) {
+                ConsumptionProbe consumptionProbe = ConsumptionProbe.consumed(availableToConsume - tokensToConsume);
+                return new VerboseResult<>(currentTimeNanos, consumptionProbe, newState.configuration, newState.state.copy());
+            } else {
+                previousState = stateRef.get();
+                newState.copyStateFrom(previousState);
+            }
+        }
+    }
+
+    @Override
+    protected VerboseResult<EstimationProbe> estimateAbilityToConsumeVerboseImpl(long tokensToEstimate) {
+        StateWithConfiguration previousState = stateRef.get();
+        StateWithConfiguration newState = previousState.copy();
+        long currentTimeNanos = timeMeter.currentTimeNanos();
+
+        newState.refillAllBandwidth(currentTimeNanos);
+        long availableToConsume = newState.getAvailableTokens();
+        if (tokensToEstimate > availableToConsume) {
+            long nanosToWaitForRefill = newState.delayNanosAfterWillBePossibleToConsume(tokensToEstimate, currentTimeNanos);
+            EstimationProbe estimationProbe = EstimationProbe.canNotBeConsumed(availableToConsume, nanosToWaitForRefill);
+            return new VerboseResult<>(currentTimeNanos, estimationProbe, newState.configuration, newState.state);
+        } else {
+            EstimationProbe estimationProbe = EstimationProbe.canBeConsumed(availableToConsume);
+            return new VerboseResult<>(currentTimeNanos, estimationProbe, newState.configuration, newState.state);
+        }
+    }
+
+    @Override
+    protected VerboseResult<Long> getAvailableTokensVerboseImpl() {
+        long currentTimeNanos = timeMeter.currentTimeNanos();
+        StateWithConfiguration snapshot = stateRef.get().copy();
+        snapshot.refillAllBandwidth(currentTimeNanos);
+        return new VerboseResult<>(currentTimeNanos, snapshot.getAvailableTokens(), snapshot.configuration, snapshot.state);
+    }
+
+    @Override
+    protected VerboseResult<Nothing> addTokensVerboseImpl(long tokensToAdd) {
+        StateWithConfiguration previousState = stateRef.get();
+        StateWithConfiguration newState = previousState.copy();
+        long currentTimeNanos = timeMeter.currentTimeNanos();
+
+        while (true) {
+            newState.refillAllBandwidth(currentTimeNanos);
+            newState.state.addTokens(newState.configuration.getBandwidths(), tokensToAdd);
+            if (stateRef.compareAndSet(previousState, newState)) {
+                return new VerboseResult<>(currentTimeNanos, Nothing.INSTANCE, newState.configuration, newState.state.copy());
+            } else {
+                previousState = stateRef.get();
+                newState.copyStateFrom(previousState);
+            }
+        }
+    }
+
+    @Override
+    protected VerboseResult<Nothing> replaceConfigurationVerboseImpl(BucketConfiguration newConfiguration) {
+        StateWithConfiguration previousState = stateRef.get();
+        StateWithConfiguration newState = previousState.copy();
+        long currentTimeNanos = timeMeter.currentTimeNanos();
+
+        while (true) {
+            previousState.configuration.checkCompatibility(newConfiguration);
+            newState.refillAllBandwidth(currentTimeNanos);
+            newState.configuration = newConfiguration;
+            if (stateRef.compareAndSet(previousState, newState)) {
+                return new VerboseResult<>(currentTimeNanos, Nothing.INSTANCE, newState.configuration, newState.state.copy());
+            } else {
+                previousState = stateRef.get();
+                newState.copyStateFrom(previousState);
+            }
+        }
+    }
+
+    @Override
+    protected VerboseResult<Long> consumeIgnoringRateLimitsVerboseImpl(long tokensToConsume) {
+        StateWithConfiguration previousState = stateRef.get();
+        StateWithConfiguration newState = previousState.copy();
+        long currentTimeNanos = timeMeter.currentTimeNanos();
+
+        while (true) {
+            newState.refillAllBandwidth(currentTimeNanos);
+            long nanosToCloseDeficit = newState.delayNanosAfterWillBePossibleToConsume(tokensToConsume, currentTimeNanos);
+
+            if (nanosToCloseDeficit == INFINITY_DURATION) {
+                throw BucketExceptions.reservationOverflow();
+            }
+            newState.consume(tokensToConsume);
+            if (stateRef.compareAndSet(previousState, newState)) {
+                return new VerboseResult<>(currentTimeNanos, nanosToCloseDeficit, newState.configuration, newState.state.copy());
+            } else {
+                previousState = stateRef.get();
+                newState.copyStateFrom(previousState);
+            }
+        }
+    }
+
+    @Override
     public long getAvailableTokens() {
         long currentTimeNanos = timeMeter.currentTimeNanos();
         StateWithConfiguration snapshot = stateRef.get().copy();
@@ -273,6 +429,54 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket {
     protected CompletableFuture<Long> reserveAndCalculateTimeToSleepAsyncImpl(long tokensToConsume, long maxWaitTimeNanos) {
         long result = reserveAndCalculateTimeToSleepImpl(tokensToConsume, maxWaitTimeNanos);
         return CompletableFuture.completedFuture(result);
+    }
+
+    @Override
+    protected CompletableFuture<VerboseResult<Long>> tryConsumeAsMuchAsPossibleVerboseAsyncImpl(long limit) {
+        VerboseResult<Long> result = consumeAsMuchAsPossibleVerboseImpl(limit);
+        return CompletableFuture.completedFuture(result);
+    }
+
+    @Override
+    protected CompletableFuture<VerboseResult<Boolean>> tryConsumeVerboseAsyncImpl(long tokensToConsume) {
+        VerboseResult<Boolean> result = tryConsumeVerboseImpl(tokensToConsume);
+        return CompletableFuture.completedFuture(result);
+    }
+
+    @Override
+    protected CompletableFuture<VerboseResult<ConsumptionProbe>> tryConsumeAndReturnRemainingTokensVerboseAsyncImpl(long tokensToConsume) {
+        VerboseResult<ConsumptionProbe> result = tryConsumeAndReturnRemainingTokensVerboseImpl(tokensToConsume);
+        return CompletableFuture.completedFuture(result);
+    }
+
+    @Override
+    protected CompletableFuture<VerboseResult<EstimationProbe>> estimateAbilityToConsumeVerboseAsyncImpl(long tokensToEstimate) {
+        VerboseResult<EstimationProbe> result = estimateAbilityToConsumeVerboseImpl(tokensToEstimate);
+        return CompletableFuture.completedFuture(result);
+    }
+
+    @Override
+    protected CompletableFuture<VerboseResult<Nothing>> addTokensVerboseAsyncImpl(long tokensToAdd) {
+        VerboseResult<Nothing> result = addTokensVerboseImpl(tokensToAdd);
+        return CompletableFuture.completedFuture(result);
+    }
+
+    @Override
+    protected CompletableFuture<VerboseResult<Nothing>> replaceConfigurationVerboseAsyncImpl(BucketConfiguration newConfiguration) {
+        VerboseResult<Nothing> result = replaceConfigurationVerboseImpl(newConfiguration);
+        return CompletableFuture.completedFuture(result);
+    }
+
+    @Override
+    protected CompletableFuture<VerboseResult<Long>> consumeIgnoringRateLimitsVerboseAsyncImpl(long tokensToConsume) {
+        try {
+            VerboseResult<Long> result = consumeIgnoringRateLimitsVerboseImpl(tokensToConsume);
+            return CompletableFuture.completedFuture(result);
+        } catch (RuntimeException e) {
+            CompletableFuture<VerboseResult<Long>> fail = new CompletableFuture<>();
+            fail.completeExceptionally(e);
+            return fail;
+        }
     }
 
     @Override
