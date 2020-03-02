@@ -40,11 +40,11 @@ public interface AsyncVerboseBucket {
     /**
      * TODO write javadocs
      */
-    CompletableFuture<VerboseResult<Void>> addTokens(long tokensToAdd);
+    CompletableFuture<VerboseResult<Nothing>> addTokens(long tokensToAdd);
 
     /**
      * TODO write javadocs
      */
-    CompletableFuture<VerboseResult<Void>> replaceConfiguration(BucketConfiguration newConfiguration);
+    CompletableFuture<VerboseResult<Nothing>> replaceConfiguration(BucketConfiguration newConfiguration);
 
 }

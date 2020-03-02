@@ -42,6 +42,22 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket {
 
     protected abstract long consumeIgnoringRateLimitsImpl(long tokensToConsume);
 
+    protected abstract VerboseResult<Long> consumeAsMuchAsPossibleVerboseImpl(long limit);
+
+    protected abstract VerboseResult<Boolean> tryConsumeVerboseImpl(long tokensToConsume);
+
+    protected abstract VerboseResult<ConsumptionProbe> tryConsumeAndReturnRemainingTokensVerboseImpl(long tokensToConsume);
+
+    protected abstract VerboseResult<EstimationProbe> estimateAbilityToConsumeVerboseImpl(long numTokens);
+
+    protected abstract VerboseResult<Long> getAvailableTokensVerboseImpl();
+
+    protected abstract VerboseResult<Nothing> addTokensVerboseImpl(long tokensToAdd);
+
+    protected abstract VerboseResult<Nothing> replaceConfigurationVerboseImpl(BucketConfiguration newConfiguration);
+
+    protected abstract VerboseResult<Long> consumeIgnoringRateLimitsVerboseImpl(long tokensToConsume);
+
     protected abstract CompletableFuture<Long> tryConsumeAsMuchAsPossibleAsyncImpl(long limit);
 
     protected abstract CompletableFuture<Boolean> tryConsumeAsyncImpl(long tokensToConsume);
@@ -58,160 +74,352 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket {
 
     protected abstract CompletableFuture<Long> consumeIgnoringRateLimitsAsyncImpl(long tokensToConsume);
 
-    private final AsyncScheduledBucketImpl asyncView;
-    private final BucketListener listener;
+    protected abstract CompletableFuture<VerboseResult<Long>> tryConsumeAsMuchAsPossibleVerboseAsyncImpl(long limit);
+
+    protected abstract CompletableFuture<VerboseResult<Boolean>> tryConsumeVerboseAsyncImpl(long tokensToConsume);
+
+    protected abstract CompletableFuture<VerboseResult<ConsumptionProbe>> tryConsumeAndReturnRemainingTokensVerboseAsyncImpl(long tokensToConsume);
+
+    protected abstract CompletableFuture<VerboseResult<EstimationProbe>> estimateAbilityToConsumeVerboseAsyncImpl(long tokensToEstimate);
+
+    protected abstract CompletableFuture<VerboseResult<Long>> reserveAndCalculateTimeToSleepVerboseAsyncImpl(long tokensToConsume, long maxWaitTimeNanos);
+
+    protected abstract CompletableFuture<VerboseResult<Nothing>> addTokensVerboseAsyncImpl(long tokensToAdd);
+
+    protected abstract CompletableFuture<VerboseResult<Nothing>> replaceConfigurationVerboseAsyncImpl(BucketConfiguration newConfiguration);
+
+    protected abstract CompletableFuture<VerboseResult<Long>> consumeIgnoringRateLimitsVerboseAsyncImpl(long tokensToConsume);
 
     public AbstractBucket(BucketListener listener) {
         if (listener == null) {
             throw BucketExceptions.nullListener();
         }
-
         this.listener = listener;
-        this.asyncView = new AsyncScheduledBucketImpl() {
-            @Override
-            public CompletableFuture<Boolean> tryConsume(long tokensToConsume) {
-                checkTokensToConsume(tokensToConsume);
+    }
 
-                return tryConsumeAsyncImpl(tokensToConsume).thenApply(consumed -> {
-                    if (consumed) {
-                        listener.onConsumed(tokensToConsume);
-                    } else {
-                        listener.onRejected(tokensToConsume);
-                    }
-                    return consumed;
-                });
-            }
+    private final BucketListener listener;
 
-            @Override
-            public CompletableFuture<Long> consumeIgnoringRateLimits(long tokensToConsume) {
-                checkTokensToConsume(tokensToConsume);
-                return consumeIgnoringRateLimitsAsyncImpl(tokensToConsume).thenApply(penaltyNanos -> {
+    private final AsyncScheduledBucketImpl asyncView = new AsyncScheduledBucketImpl() {
+
+        @Override
+        public AsyncVerboseBucket asVerbose() {
+            return asyncVerboseView;
+        }
+
+        @Override
+        public CompletableFuture<Boolean> tryConsume(long tokensToConsume) {
+            checkTokensToConsume(tokensToConsume);
+
+            return tryConsumeAsyncImpl(tokensToConsume).thenApply(consumed -> {
+                if (consumed) {
                     listener.onConsumed(tokensToConsume);
-                    return penaltyNanos;
-                });
+                } else {
+                    listener.onRejected(tokensToConsume);
+                }
+                return consumed;
+            });
+        }
+
+        @Override
+        public CompletableFuture<Long> consumeIgnoringRateLimits(long tokensToConsume) {
+            checkTokensToConsume(tokensToConsume);
+            return consumeIgnoringRateLimitsAsyncImpl(tokensToConsume).thenApply(penaltyNanos -> {
+                listener.onConsumed(tokensToConsume);
+                return penaltyNanos;
+            });
+        }
+
+        @Override
+        public CompletableFuture<ConsumptionProbe> tryConsumeAndReturnRemaining(long tokensToConsume) {
+            checkTokensToConsume(tokensToConsume);
+
+            return tryConsumeAndReturnRemainingTokensAsyncImpl(tokensToConsume).thenApply(probe -> {
+                if (probe.isConsumed()) {
+                    listener.onConsumed(tokensToConsume);
+                } else {
+                    listener.onRejected(tokensToConsume);
+                }
+                return probe;
+            });
+        }
+
+        @Override
+        public CompletableFuture<EstimationProbe> estimateAbilityToConsume(long numTokens) {
+            checkTokensToConsume(numTokens);
+            return estimateAbilityToConsumeAsyncImpl(numTokens);
+        }
+
+        @Override
+        public CompletableFuture<Long> tryConsumeAsMuchAsPossible() {
+            return tryConsumeAsMuchAsPossibleAsyncImpl(UNLIMITED_AMOUNT).thenApply(consumedTokens -> {
+                if (consumedTokens > 0) {
+                    listener.onConsumed(consumedTokens);
+                }
+                return consumedTokens;
+            });
+        }
+
+        @Override
+        public CompletableFuture<Long> tryConsumeAsMuchAsPossible(long limit) {
+            checkTokensToConsume(limit);
+
+            return tryConsumeAsMuchAsPossibleAsyncImpl(limit).thenApply(consumedTokens -> {
+                if (consumedTokens > 0) {
+                    listener.onConsumed(consumedTokens);
+                }
+                return consumedTokens;
+            });
+        }
+
+        @Override
+        public CompletableFuture<Boolean> tryConsume(long tokensToConsume, long maxWaitTimeNanos, ScheduledExecutorService scheduler) {
+            checkMaxWaitTime(maxWaitTimeNanos);
+            checkTokensToConsume(tokensToConsume);
+            checkScheduler(scheduler);
+            CompletableFuture<Boolean> resultFuture = new CompletableFuture<>();
+            CompletableFuture<Long> reservationFuture = reserveAndCalculateTimeToSleepAsyncImpl(tokensToConsume, maxWaitTimeNanos);
+            reservationFuture.whenComplete((nanosToSleep, exception) -> {
+                if (exception != null) {
+                    resultFuture.completeExceptionally(exception);
+                    return;
+                }
+                if (nanosToSleep == INFINITY_DURATION) {
+                    resultFuture.complete(false);
+                    listener.onRejected(tokensToConsume);
+                    return;
+                }
+                if (nanosToSleep == 0L) {
+                    resultFuture.complete(true);
+                    listener.onConsumed(tokensToConsume);
+                    return;
+                }
+                try {
+                    listener.onConsumed(tokensToConsume);
+                    listener.onDelayed(nanosToSleep);
+                    Runnable delayedCompletion = () -> resultFuture.complete(true);
+                    scheduler.schedule(delayedCompletion, nanosToSleep, TimeUnit.NANOSECONDS);
+                } catch (Throwable t) {
+                    resultFuture.completeExceptionally(t);
+                }
+            });
+            return resultFuture;
+        }
+
+        @Override
+        public CompletableFuture<Void> consume(long tokensToConsume, ScheduledExecutorService scheduler) {
+            checkTokensToConsume(tokensToConsume);
+            checkScheduler(scheduler);
+            CompletableFuture<Void> resultFuture = new CompletableFuture<>();
+            CompletableFuture<Long> reservationFuture = reserveAndCalculateTimeToSleepAsyncImpl(tokensToConsume, INFINITY_DURATION);
+            reservationFuture.whenComplete((nanosToSleep, exception) -> {
+                if (exception != null) {
+                    resultFuture.completeExceptionally(exception);
+                    return;
+                }
+                if (nanosToSleep == INFINITY_DURATION) {
+                    resultFuture.completeExceptionally(BucketExceptions.reservationOverflow());
+                    return;
+                }
+                if (nanosToSleep == 0L) {
+                    resultFuture.complete(null);
+                    listener.onConsumed(tokensToConsume);
+                    return;
+                }
+                try {
+                    listener.onConsumed(tokensToConsume);
+                    listener.onDelayed(nanosToSleep);
+                    Runnable delayedCompletion = () -> resultFuture.complete(null);
+                    scheduler.schedule(delayedCompletion, nanosToSleep, TimeUnit.NANOSECONDS);
+                } catch (Throwable t) {
+                    resultFuture.completeExceptionally(t);
+                }
+            });
+            return resultFuture;
+        }
+
+        @Override
+        public CompletableFuture<Void> replaceConfiguration(BucketConfiguration newConfiguration) {
+            checkConfiguration(newConfiguration);
+            return replaceConfigurationAsyncImpl(newConfiguration);
+        }
+
+        @Override
+        public CompletableFuture<Void> addTokens(long tokensToAdd) {
+            checkTokensToAdd(tokensToAdd);
+            return addTokensAsyncImpl(tokensToAdd);
+        }
+
+    };
+
+    private final AsyncVerboseBucket asyncVerboseView = new AsyncVerboseBucket() {
+        @Override
+        public CompletableFuture<VerboseResult<Boolean>> tryConsume(long tokensToConsume) {
+            checkTokensToConsume(tokensToConsume);
+
+            return tryConsumeVerboseAsyncImpl(tokensToConsume).thenApply(consumed -> {
+                if (consumed.getValue()) {
+                    listener.onConsumed(tokensToConsume);
+                } else {
+                    listener.onRejected(tokensToConsume);
+                }
+                return consumed;
+            });
+        }
+
+        @Override
+        public CompletableFuture<VerboseResult<Long>> consumeIgnoringRateLimits(long tokensToConsume) {
+            checkTokensToConsume(tokensToConsume);
+            return consumeIgnoringRateLimitsVerboseAsyncImpl(tokensToConsume).thenApply(penaltyNanos -> {
+                listener.onConsumed(tokensToConsume);
+                return penaltyNanos;
+            });
+        }
+
+        @Override
+        public CompletableFuture<VerboseResult<ConsumptionProbe>> tryConsumeAndReturnRemaining(long tokensToConsume) {
+            checkTokensToConsume(tokensToConsume);
+
+            return tryConsumeAndReturnRemainingTokensVerboseAsyncImpl(tokensToConsume).thenApply(probe -> {
+                if (probe.getValue().isConsumed()) {
+                    listener.onConsumed(tokensToConsume);
+                } else {
+                    listener.onRejected(tokensToConsume);
+                }
+                return probe;
+            });
+        }
+
+        @Override
+        public CompletableFuture<VerboseResult<EstimationProbe>> estimateAbilityToConsume(long numTokens) {
+            checkTokensToConsume(numTokens);
+            return estimateAbilityToConsumeVerboseAsyncImpl(numTokens);
+        }
+
+        @Override
+        public CompletableFuture<VerboseResult<Long>> tryConsumeAsMuchAsPossible() {
+            return tryConsumeAsMuchAsPossibleVerboseAsyncImpl(UNLIMITED_AMOUNT).thenApply(consumedTokens -> {
+                long actuallyConsumedTokens = consumedTokens.getValue();
+                if (actuallyConsumedTokens > 0) {
+                    listener.onConsumed(actuallyConsumedTokens);
+                }
+                return consumedTokens;
+            });
+        }
+
+        @Override
+        public CompletableFuture<VerboseResult<Long>> tryConsumeAsMuchAsPossible(long limit) {
+            checkTokensToConsume(limit);
+
+            return tryConsumeAsMuchAsPossibleVerboseAsyncImpl(limit).thenApply(consumedTokens -> {
+                long actuallyConsumedTokens = consumedTokens.getValue();
+                if (actuallyConsumedTokens > 0) {
+                    listener.onConsumed(actuallyConsumedTokens);
+                }
+                return consumedTokens;
+            });
+        }
+
+        @Override
+        public CompletableFuture<VerboseResult<Nothing>> addTokens(long tokensToAdd) {
+            checkTokensToAdd(tokensToAdd);
+            return addTokensVerboseAsyncImpl(tokensToAdd);
+        }
+
+        @Override
+        public CompletableFuture<VerboseResult<Nothing>> replaceConfiguration(BucketConfiguration newConfiguration) {
+            checkConfiguration(newConfiguration);
+            return replaceConfigurationVerboseAsyncImpl(newConfiguration);
+        }
+
+    };
+
+    private final VerboseBucket verboseView = new VerboseBucket() {
+        @Override
+        public VerboseResult<Boolean> tryConsume(long tokensToConsume) {
+            checkTokensToConsume(tokensToConsume);
+
+            VerboseResult<Boolean> result = tryConsumeVerboseImpl(tokensToConsume);
+            if (result.getValue()) {
+                listener.onConsumed(tokensToConsume);
+                return result;
+            } else {
+                listener.onRejected(tokensToConsume);
+                return result;
+            }
+        }
+
+        @Override
+        public VerboseResult<Long> consumeIgnoringRateLimits(long tokens) {
+            checkTokensToConsume(tokens);
+            VerboseResult<Long> result = consumeIgnoringRateLimitsVerboseImpl(tokens);
+            listener.onConsumed(tokens);
+            return result;
+        }
+
+        @Override
+        public VerboseResult<ConsumptionProbe> tryConsumeAndReturnRemaining(long tokensToConsume) {
+            checkTokensToConsume(tokensToConsume);
+
+            VerboseResult<ConsumptionProbe> result = tryConsumeAndReturnRemainingTokensVerboseImpl(tokensToConsume);
+            ConsumptionProbe probe = result.getValue();
+            if (probe.isConsumed()) {
+                listener.onConsumed(tokensToConsume);
+            } else {
+                listener.onRejected(tokensToConsume);
+            }
+            return result;
+        }
+
+        @Override
+        public VerboseResult<EstimationProbe> estimateAbilityToConsume(long numTokens) {
+            checkTokensToConsume(numTokens);
+            return estimateAbilityToConsumeVerboseImpl(numTokens);
+        }
+
+        @Override
+        public VerboseResult<Long> tryConsumeAsMuchAsPossible() {
+            VerboseResult<Long> result = consumeAsMuchAsPossibleVerboseImpl(UNLIMITED_AMOUNT);
+            long consumed = result.getValue();
+            if (consumed > 0) {
+                listener.onConsumed(consumed);
+            }
+            return result;
+        }
+
+        @Override
+        public VerboseResult<Long> tryConsumeAsMuchAsPossible(long limit) {
+            checkTokensToConsume(limit);
+
+            VerboseResult<Long> result = consumeAsMuchAsPossibleVerboseImpl(limit);
+            long consumed = result.getValue();
+            if (consumed > 0) {
+                listener.onConsumed(consumed);
             }
 
-            @Override
-            public CompletableFuture<ConsumptionProbe> tryConsumeAndReturnRemaining(long tokensToConsume) {
-                checkTokensToConsume(tokensToConsume);
+            return result;
+        }
 
-                return tryConsumeAndReturnRemainingTokensAsyncImpl(tokensToConsume).thenApply(probe -> {
-                    if (probe.isConsumed()) {
-                        listener.onConsumed(tokensToConsume);
-                    } else {
-                        listener.onRejected(tokensToConsume);
-                    }
-                    return probe;
-                });
-            }
+        @Override
+        public VerboseResult<Long> getAvailableTokens() {
+            return getAvailableTokensVerboseImpl();
+        }
 
-            @Override
-            public CompletableFuture<EstimationProbe> estimateAbilityToConsume(long numTokens) {
-                checkTokensToConsume(numTokens);
-                return estimateAbilityToConsumeAsyncImpl(numTokens);
-            }
+        @Override
+        public VerboseResult<Nothing> addTokens(long tokensToAdd) {
+            checkTokensToAdd(tokensToAdd);
+            return addTokensVerboseImpl(tokensToAdd);
+        }
 
-            @Override
-            public CompletableFuture<Long> tryConsumeAsMuchAsPossible() {
-                return tryConsumeAsMuchAsPossibleAsyncImpl(UNLIMITED_AMOUNT).thenApply(consumedTokens -> {
-                    if (consumedTokens > 0) {
-                        listener.onConsumed(consumedTokens);
-                    }
-                    return consumedTokens;
-                });
-            }
+        @Override
+        public VerboseResult<Nothing> replaceConfiguration(BucketConfiguration newConfiguration) {
+            checkConfiguration(newConfiguration);
+            return replaceConfigurationVerboseImpl(newConfiguration);
+        }
+    };
 
-            @Override
-            public CompletableFuture<Long> tryConsumeAsMuchAsPossible(long limit) {
-                checkTokensToConsume(limit);
-
-                return tryConsumeAsMuchAsPossibleAsyncImpl(limit).thenApply(consumedTokens -> {
-                    if (consumedTokens > 0) {
-                        listener.onConsumed(consumedTokens);
-                    }
-                    return consumedTokens;
-                });
-            }
-
-            @Override
-            public CompletableFuture<Boolean> tryConsume(long tokensToConsume, long maxWaitTimeNanos, ScheduledExecutorService scheduler) {
-                checkMaxWaitTime(maxWaitTimeNanos);
-                checkTokensToConsume(tokensToConsume);
-                checkScheduler(scheduler);
-                CompletableFuture<Boolean> resultFuture = new CompletableFuture<>();
-                CompletableFuture<Long> reservationFuture = reserveAndCalculateTimeToSleepAsyncImpl(tokensToConsume, maxWaitTimeNanos);
-                reservationFuture.whenComplete((nanosToSleep, exception) -> {
-                    if (exception != null) {
-                        resultFuture.completeExceptionally(exception);
-                        return;
-                    }
-                    if (nanosToSleep == INFINITY_DURATION) {
-                        resultFuture.complete(false);
-                        listener.onRejected(tokensToConsume);
-                        return;
-                    }
-                    if (nanosToSleep == 0L) {
-                        resultFuture.complete(true);
-                        listener.onConsumed(tokensToConsume);
-                        return;
-                    }
-                    try {
-                        listener.onConsumed(tokensToConsume);
-                        listener.onDelayed(nanosToSleep);
-                        Runnable delayedCompletion = () -> resultFuture.complete(true);
-                        scheduler.schedule(delayedCompletion, nanosToSleep, TimeUnit.NANOSECONDS);
-                    } catch (Throwable t) {
-                        resultFuture.completeExceptionally(t);
-                    }
-                });
-                return resultFuture;
-            }
-
-            @Override
-            public CompletableFuture<Void> consume(long tokensToConsume, ScheduledExecutorService scheduler) {
-                checkTokensToConsume(tokensToConsume);
-                checkScheduler(scheduler);
-                CompletableFuture<Void> resultFuture = new CompletableFuture<>();
-                CompletableFuture<Long> reservationFuture = reserveAndCalculateTimeToSleepAsyncImpl(tokensToConsume, INFINITY_DURATION);
-                reservationFuture.whenComplete((nanosToSleep, exception) -> {
-                    if (exception != null) {
-                        resultFuture.completeExceptionally(exception);
-                        return;
-                    }
-                    if (nanosToSleep == INFINITY_DURATION) {
-                        resultFuture.completeExceptionally(BucketExceptions.reservationOverflow());
-                        return;
-                    }
-                    if (nanosToSleep == 0L) {
-                        resultFuture.complete(null);
-                        listener.onConsumed(tokensToConsume);
-                        return;
-                    }
-                    try {
-                        listener.onConsumed(tokensToConsume);
-                        listener.onDelayed(nanosToSleep);
-                        Runnable delayedCompletion = () -> resultFuture.complete(null);
-                        scheduler.schedule(delayedCompletion, nanosToSleep, TimeUnit.NANOSECONDS);
-                    } catch (Throwable t) {
-                        resultFuture.completeExceptionally(t);
-                    }
-                });
-                return resultFuture;
-            }
-
-            @Override
-            public CompletableFuture<Void> replaceConfiguration(BucketConfiguration newConfiguration) {
-                checkConfiguration(newConfiguration);
-                return replaceConfigurationAsyncImpl(newConfiguration);
-            }
-
-            @Override
-            public CompletableFuture<Void> addTokens(long tokensToAdd) {
-                checkTokensToAdd(tokensToAdd);
-                return addTokensAsyncImpl(tokensToAdd);
-            }
-
-        };
+    @Override
+    public VerboseBucket asVerbose() {
+        return verboseView;
     }
 
     @Override

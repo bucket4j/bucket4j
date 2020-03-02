@@ -5,7 +5,7 @@ import java.io.Serializable;
 /**
  * TODO write javadocs
  */
-public class VerboseResult<T> implements Serializable {
+public class VerboseResult<T extends Serializable> implements Serializable {
 
     private static final long serialVersionUID = 1L;
 

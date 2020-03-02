@@ -38,17 +38,17 @@ public interface VerboseBucket {
     /**
      * TODO write javadocs
      */
-    VerboseResult<Void> addTokens(long tokensToAdd);
-
-    /**
-     * TODO write javadocs
-     */
     VerboseResult<Long> getAvailableTokens();
 
     /**
      * TODO write javadocs
      */
-    VerboseResult<Void> replaceConfiguration(BucketConfiguration newConfiguration);
+    VerboseResult<Nothing> addTokens(long tokensToAdd);
+
+    /**
+     * TODO write javadocs
+     */
+    VerboseResult<Nothing> replaceConfiguration(BucketConfiguration newConfiguration);
 
 
 }
