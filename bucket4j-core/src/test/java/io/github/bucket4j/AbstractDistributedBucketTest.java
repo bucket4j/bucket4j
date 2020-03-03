@@ -133,6 +133,20 @@ public abstract class AbstractDistributedBucketTest<B extends AbstractBucketBuil
     }
 
     @Test
+    public void testUnconditionalConsumeVerbose() throws Exception {
+        BucketConfiguration configuration = Bucket4j.extension(extensionClass).builder()
+                .addLimit(Bandwidth.simple(1_000, Duration.ofMinutes(1)))
+                .buildConfiguration();
+
+        Bucket bucket = newProxyManager().getProxy(key, () -> configuration);
+        VerboseResult<Long> result = bucket.asVerbose().consumeIgnoringRateLimits(121_000);
+        long overdraftNanos = result.getValue();
+
+        assertEquals(overdraftNanos, TimeUnit.MINUTES.toNanos(120));
+        assertEquals(configuration, result.getConfiguration());
+    }
+
+    @Test
     public void testTryConsume() throws Exception {
         Function<Bucket, Long> action = bucket -> bucket.tryConsume(1)? 1L : 0L;
         Supplier<Bucket> bucketSupplier = () -> build(builder, key, THROW_BUCKET_NOT_FOUND_EXCEPTION);

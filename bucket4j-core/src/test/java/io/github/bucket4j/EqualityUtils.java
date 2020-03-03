@@ -63,6 +63,13 @@ public class EqualityUtils {
                     probe1.getRemainingTokens() == probe2.getRemainingTokens();
         });
 
+        registerComparator(VerboseResult.class, (result1, result2) -> {
+            return result1.getOperationTimeNanos() == result2.getOperationTimeNanos() &&
+                    equals(result1.getValue(), result2.getValue()) &&
+                    equals(result1.getConfiguration(), result2.getConfiguration()) &&
+                    equals(result1.getState(), result2.getState());
+        });
+
         registerComparator(ReserveAndCalculateTimeToSleepCommand.class, (cmd1, cmd2) -> {
             return cmd1.getTokensToConsume() == cmd2.getTokensToConsume() &&
                     cmd1.getWaitIfBusyNanosLimit() == cmd2.getWaitIfBusyNanosLimit();
@@ -102,6 +109,10 @@ public class EqualityUtils {
 
         registerComparator(ConsumeIgnoringRateLimitsCommand.class, (cmd1, cmd2) -> {
             return equals(cmd1.getTokensToConsume(), cmd2.getTokensToConsume());
+        });
+
+        registerComparator(VerboseCommand.class, (cmd1, cmd2) -> {
+            return equals(cmd1.getTargetCommand(), cmd2.getTargetCommand());
         });
     }
 

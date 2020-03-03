@@ -175,23 +175,30 @@ public abstract class AbstractSerializationTest {
             simple(10, ofSeconds(42))
         };
         BucketConfiguration bucketConfiguration = new BucketConfiguration(Arrays.asList(bandwidths));
+        BucketState bucketState = new BucketState(bucketConfiguration, System.nanoTime());
 
-        // without payload
-        testSerialization(CommandResult.bucketNotFound());
+//        // without payload
+//        testSerialization(CommandResult.bucketNotFound());
+//
+//        // with integer payload
+//        testSerialization(CommandResult.success(42L));
+//
+//        // with complex payload
+//        testSerialization(CommandResult.success(EstimationProbe.canNotBeConsumed(10, 20)));
+//
+//        // estimation probes
+//        testSerialization(EstimationProbe.canNotBeConsumed(10, 20));
+//        testSerialization(EstimationProbe.canBeConsumed(10));
+//
+//        // consumption probes
+//        testSerialization(ConsumptionProbe.rejected(10, 20));
+//        testSerialization(ConsumptionProbe.consumed(10));
 
-        // with integer payload
-        testSerialization(CommandResult.success(42L));
-
-        // with complex payload
-        testSerialization(CommandResult.success(EstimationProbe.canNotBeConsumed(10, 20)));
-
-        // estimation probes
-        testSerialization(EstimationProbe.canNotBeConsumed(10, 20));
-        testSerialization(EstimationProbe.canBeConsumed(10));
-
-        // consumption probes
-        testSerialization(ConsumptionProbe.rejected(10, 20));
-        testSerialization(ConsumptionProbe.consumed(10));
+        // verbose results
+        testSerialization(new VerboseResult<>(323L, null, bucketConfiguration, bucketState));
+        testSerialization(new VerboseResult<>(323L, true, bucketConfiguration, bucketState));
+        testSerialization(new VerboseResult<>(323L, 6666666L, bucketConfiguration, bucketState));
+        testSerialization(new VerboseResult<>(323L, ConsumptionProbe.consumed(10), bucketConfiguration, bucketState));
     }
 
     @Test
@@ -218,6 +225,10 @@ public abstract class AbstractSerializationTest {
         testSerialization(new ReplaceConfigurationOrReturnPreviousCommand(configuration));
 
         testSerialization(new ConsumeIgnoringRateLimitsCommand(100));
+
+        testSerialization(new VerboseCommand<>(new ConsumeIgnoringRateLimitsCommand(100)));
+        testSerialization(new VerboseCommand<>(new GetAvailableTokensCommand()));
+        testSerialization(new VerboseCommand<>(new ReplaceConfigurationOrReturnPreviousCommand(configuration)));
     }
 
 }

@@ -41,7 +41,9 @@ public class Bucket4j {
                 ConsumeIgnoringRateLimitsCommand.SERIALIZATION_HANDLE,
                 CommandResult.SERIALIZATION_HANDLE,
                 ConsumptionProbe.SERIALIZATION_HANDLE,
-                EstimationProbe.SERIALIZATION_HANDLE
+                EstimationProbe.SERIALIZATION_HANDLE,
+                VerboseResult.SERIALIZATION_HANDLE,
+                VerboseCommand.SERIALIZATION_HANDLE
         );
 
         List<SerializationHandle<?>> allHandles = new ArrayList<>(coreHandles);

@@ -100,11 +100,8 @@ public class GridBucket<K extends Serializable> extends AbstractBucket {
 
     @Override
     protected long consumeIgnoringRateLimitsImpl(long tokensToConsume) {
-        long timeToCloseDeficit = execute(new ConsumeIgnoringRateLimitsCommand(tokensToConsume));
-        if (timeToCloseDeficit == INFINITY_DURATION) {
-            throw BucketExceptions.reservationOverflow();
-        }
-        return timeToCloseDeficit;
+        ConsumeIgnoringRateLimitsCommand command = new ConsumeIgnoringRateLimitsCommand(tokensToConsume);
+        return execute(command);
     }
 
     @Override
@@ -144,15 +141,9 @@ public class GridBucket<K extends Serializable> extends AbstractBucket {
     }
 
     @Override
-    protected VerboseResult<Nothing> replaceConfigurationVerboseImpl(BucketConfiguration newConfiguration) {
+    protected VerboseResult<BucketConfiguration> replaceConfigurationVerboseImpl(BucketConfiguration newConfiguration) {
         ReplaceConfigurationOrReturnPreviousCommand replaceConfigCommand = new ReplaceConfigurationOrReturnPreviousCommand(newConfiguration);
-        return execute(replaceConfigCommand.asVerbose()).map(conflictingConfiguration -> {
-            if (conflictingConfiguration != null) {
-                throw new IncompatibleConfigurationException(conflictingConfiguration, newConfiguration);
-            } else {
-                return Nothing.INSTANCE;
-            }
-        });
+        return execute(replaceConfigCommand.asVerbose());
     }
 
     @Override
@@ -179,79 +170,63 @@ public class GridBucket<K extends Serializable> extends AbstractBucket {
     }
 
     @Override
-    protected void replaceConfigurationImpl(BucketConfiguration newConfiguration) {
+    protected BucketConfiguration replaceConfigurationImpl(BucketConfiguration newConfiguration) {
         ReplaceConfigurationOrReturnPreviousCommand replaceConfigCommand = new ReplaceConfigurationOrReturnPreviousCommand(newConfiguration);
-        BucketConfiguration previousConfiguration = execute(replaceConfigCommand);
-        if (previousConfiguration != null) {
-            throw new IncompatibleConfigurationException(previousConfiguration, newConfiguration);
-        }
+        return execute(replaceConfigCommand);
     }
 
     @Override
-    protected CompletableFuture<Void> replaceConfigurationAsyncImpl(BucketConfiguration newConfiguration) {
+    protected CompletableFuture<BucketConfiguration> replaceConfigurationAsyncImpl(BucketConfiguration newConfiguration) {
         ReplaceConfigurationOrReturnPreviousCommand replaceConfigCommand = new ReplaceConfigurationOrReturnPreviousCommand(newConfiguration);
-        CompletableFuture<BucketConfiguration> result = executeAsync(replaceConfigCommand);
-        return result.thenCompose(previousConfiguration -> {
-            if (previousConfiguration == null) {
-                return CompletableFuture.completedFuture(null);
-            } else {
-                CompletableFuture<Void> future = new CompletableFuture<>();
-                future.completeExceptionally(new IncompatibleConfigurationException(previousConfiguration, newConfiguration));
-                return future;
-            }
-        });
+        return executeAsync(replaceConfigCommand);
     }
 
     @Override
     protected CompletableFuture<Long> consumeIgnoringRateLimitsAsyncImpl(long tokensToConsume) {
-        return executeAsync(new ConsumeIgnoringRateLimitsCommand(tokensToConsume)).thenApply(penaltyNanos -> {
-            if (penaltyNanos != INFINITY_DURATION) {
-                return penaltyNanos;
-            }
-            throw BucketExceptions.reservationOverflow();
-        });
+        ConsumeIgnoringRateLimitsCommand command = new ConsumeIgnoringRateLimitsCommand(tokensToConsume);
+        return executeAsync(command);
     }
 
     @Override
     protected CompletableFuture<VerboseResult<Long>> tryConsumeAsMuchAsPossibleVerboseAsyncImpl(long limit) {
-        TODO
-        return null;
+        ConsumeAsMuchAsPossibleCommand command = new ConsumeAsMuchAsPossibleCommand(limit);
+        return executeAsync(command.asVerbose());
     }
 
     @Override
     protected CompletableFuture<VerboseResult<Boolean>> tryConsumeVerboseAsyncImpl(long tokensToConsume) {
-        TODO
-        return null;
+        TryConsumeCommand command = new TryConsumeCommand(tokensToConsume);
+        return executeAsync(command.asVerbose());
     }
 
     @Override
     protected CompletableFuture<VerboseResult<ConsumptionProbe>> tryConsumeAndReturnRemainingTokensVerboseAsyncImpl(long tokensToConsume) {
-        TODO
-        return null;
+        TryConsumeAndReturnRemainingTokensCommand command = new TryConsumeAndReturnRemainingTokensCommand(tokensToConsume);
+        return executeAsync(command.asVerbose());
     }
 
     @Override
     protected CompletableFuture<VerboseResult<EstimationProbe>> estimateAbilityToConsumeVerboseAsyncImpl(long tokensToEstimate) {
-        TODO
-        return null;
+        EstimateAbilityToConsumeCommand command = new EstimateAbilityToConsumeCommand(tokensToEstimate);
+        return executeAsync(command.asVerbose());
     }
 
     @Override
     protected CompletableFuture<VerboseResult<Nothing>> addTokensVerboseAsyncImpl(long tokensToAdd) {
-        TODO
-        return null;
+        AddTokensCommand addTokensCommand = new AddTokensCommand(tokensToAdd);
+        return executeAsync(addTokensCommand.asVerbose());
     }
 
     @Override
-    protected CompletableFuture<VerboseResult<Nothing>> replaceConfigurationVerboseAsyncImpl(BucketConfiguration newConfiguration) {
-        TODO
-        return null;
+    protected CompletableFuture<VerboseResult<BucketConfiguration>> replaceConfigurationVerboseAsyncImpl(BucketConfiguration newConfiguration) {
+        ReplaceConfigurationOrReturnPreviousCommand replaceConfigCommand = new ReplaceConfigurationOrReturnPreviousCommand(newConfiguration);
+        return executeAsync(replaceConfigCommand.asVerbose());
     }
 
     @Override
     protected CompletableFuture<VerboseResult<Long>> consumeIgnoringRateLimitsVerboseAsyncImpl(long tokensToConsume) {
-        TODO
-        return null;
+        ConsumeIgnoringRateLimitsCommand command = new ConsumeIgnoringRateLimitsCommand(tokensToConsume);
+        return executeAsync(command.asVerbose());
     }
 
     @Override

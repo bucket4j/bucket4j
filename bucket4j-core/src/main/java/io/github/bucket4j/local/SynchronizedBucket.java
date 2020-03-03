@@ -141,7 +141,7 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket {
             long nanosToCloseDeficit = state.calculateDelayNanosAfterWillBePossibleToConsume(bandwidths, tokensToConsume, currentTimeNanos);
 
             if (nanosToCloseDeficit == INFINITY_DURATION) {
-                throw BucketExceptions.reservationOverflow();
+                return nanosToCloseDeficit;
             }
             state.consume(bandwidths, tokensToConsume);
             return nanosToCloseDeficit;
@@ -251,15 +251,17 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket {
     }
 
     @Override
-    protected VerboseResult<Nothing> replaceConfigurationVerboseImpl(BucketConfiguration newConfiguration) {
+    protected VerboseResult<BucketConfiguration> replaceConfigurationVerboseImpl(BucketConfiguration newConfiguration) {
         long currentTimeNanos = timeMeter.currentTimeNanos();
         lock.lock();
         try {
-            configuration.checkCompatibility(newConfiguration);
+            if (!configuration.isCompatible(newConfiguration)) {
+                return new VerboseResult<>(currentTimeNanos, configuration, configuration, state.copy());
+            }
             this.state.refillAllBandwidth(bandwidths, currentTimeNanos);
             this.configuration = newConfiguration;
             this.bandwidths = newConfiguration.getBandwidths();
-            return new VerboseResult<>(currentTimeNanos, Nothing.INSTANCE, configuration, state.copy());
+            return new VerboseResult<>(currentTimeNanos, null, configuration, state.copy());
         } finally {
             lock.unlock();
         }
@@ -274,7 +276,7 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket {
             long nanosToCloseDeficit = state.calculateDelayNanosAfterWillBePossibleToConsume(bandwidths, tokensToConsume, currentTimeNanos);
 
             if (nanosToCloseDeficit == INFINITY_DURATION) {
-                throw BucketExceptions.reservationOverflow();
+                return new VerboseResult<>(currentTimeNanos, nanosToCloseDeficit, configuration, state.copy());
             }
             state.consume(bandwidths, tokensToConsume);
             return new VerboseResult<>(currentTimeNanos, nanosToCloseDeficit, configuration, state.copy());
@@ -308,14 +310,17 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket {
     }
 
     @Override
-    protected void replaceConfigurationImpl(BucketConfiguration newConfiguration) {
+    protected BucketConfiguration replaceConfigurationImpl(BucketConfiguration newConfiguration) {
         long currentTimeNanos = timeMeter.currentTimeNanos();
         lock.lock();
         try {
-            configuration.checkCompatibility(newConfiguration);
+            if (!configuration.isCompatible(newConfiguration)) {
+                return configuration;
+            }
             this.state.refillAllBandwidth(bandwidths, currentTimeNanos);
             this.configuration = newConfiguration;
             this.bandwidths = newConfiguration.getBandwidths();
+            return null;
         } finally {
             lock.unlock();
         }
@@ -358,26 +363,15 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket {
     }
 
     @Override
-    protected CompletableFuture<Void> replaceConfigurationAsyncImpl(BucketConfiguration newConfiguration) {
-        try {
-            replaceConfigurationImpl(newConfiguration);
-            return CompletableFuture.completedFuture(null);
-        } catch (IncompatibleConfigurationException e) {
-            CompletableFuture<Void> fail = new CompletableFuture<>();
-            fail.completeExceptionally(e);
-            return fail;
-        }
+    protected CompletableFuture<BucketConfiguration> replaceConfigurationAsyncImpl(BucketConfiguration newConfiguration) {
+        BucketConfiguration result = replaceConfigurationImpl(newConfiguration);
+        return CompletableFuture.completedFuture(result);
     }
 
     @Override
     protected CompletableFuture<Long> consumeIgnoringRateLimitsAsyncImpl(long tokensToConsume) {
-        try {
-            return CompletableFuture.completedFuture(consumeIgnoringRateLimitsImpl(tokensToConsume));
-        } catch (RuntimeException e) {
-            CompletableFuture<Long> fail = new CompletableFuture<>();
-            fail.completeExceptionally(e);
-            return fail;
-        }
+        long result = consumeIgnoringRateLimitsImpl(tokensToConsume);
+        return CompletableFuture.completedFuture(result);
     }
 
     @Override
@@ -411,21 +405,15 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket {
     }
 
     @Override
-    protected CompletableFuture<VerboseResult<Nothing>> replaceConfigurationVerboseAsyncImpl(BucketConfiguration newConfiguration) {
-        VerboseResult<Nothing> result = replaceConfigurationVerboseImpl(newConfiguration);
+    protected CompletableFuture<VerboseResult<BucketConfiguration>> replaceConfigurationVerboseAsyncImpl(BucketConfiguration newConfiguration) {
+        VerboseResult<BucketConfiguration> result = replaceConfigurationVerboseImpl(newConfiguration);
         return CompletableFuture.completedFuture(result);
     }
 
     @Override
     protected CompletableFuture<VerboseResult<Long>> consumeIgnoringRateLimitsVerboseAsyncImpl(long tokensToConsume) {
-        try {
-            VerboseResult<Long> result = consumeIgnoringRateLimitsVerboseImpl(tokensToConsume);
-            return CompletableFuture.completedFuture(result);
-        } catch (RuntimeException e) {
-            CompletableFuture<VerboseResult<Long>> fail = new CompletableFuture<>();
-            fail.completeExceptionally(e);
-            return fail;
-        }
+        VerboseResult<Long> result = consumeIgnoringRateLimitsVerboseImpl(tokensToConsume);
+        return CompletableFuture.completedFuture(result);
     }
 
     @Override

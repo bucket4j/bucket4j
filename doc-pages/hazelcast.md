@@ -64,7 +64,7 @@ import io.github.bucket4j.grid.hazelcast.serialization.HazelcastSerializer;
     SerializationConfig serializationConfig = config.getSerializationConfig();
 
     // the starting type ID number for Bucket4j classes.
-    // you free to choose any unused ID, but be aware that Bucket4j uses 21 types currently,
+    // you free to choose any unused ID, but be aware that Bucket4j uses 25 types currently,
     // and may use more types in the future, so leave enough empty space after baseTypeIdNumber 
     int baseTypeIdNumber = 10000;
     

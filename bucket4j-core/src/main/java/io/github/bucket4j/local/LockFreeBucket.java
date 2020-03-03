@@ -167,17 +167,19 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket {
     }
 
     @Override
-    protected void replaceConfigurationImpl(BucketConfiguration newConfiguration) {
+    protected BucketConfiguration replaceConfigurationImpl(BucketConfiguration newConfiguration) {
         StateWithConfiguration previousState = stateRef.get();
         StateWithConfiguration newState = previousState.copy();
         long currentTimeNanos = timeMeter.currentTimeNanos();
 
         while (true) {
-            previousState.configuration.checkCompatibility(newConfiguration);
+            if (!previousState.configuration.isCompatible(newConfiguration)) {
+                return previousState.configuration;
+            }
             newState.refillAllBandwidth(currentTimeNanos);
             newState.configuration = newConfiguration;
             if (stateRef.compareAndSet(previousState, newState)) {
-                return;
+                return null;
             } else {
                 previousState = stateRef.get();
                 newState.copyStateFrom(previousState);
@@ -196,7 +198,7 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket {
             long nanosToCloseDeficit = newState.delayNanosAfterWillBePossibleToConsume(tokensToConsume, currentTimeNanos);
 
             if (nanosToCloseDeficit == INFINITY_DURATION) {
-                throw BucketExceptions.reservationOverflow();
+                return nanosToCloseDeficit;
             }
             newState.consume(tokensToConsume);
             if (stateRef.compareAndSet(previousState, newState)) {
@@ -323,17 +325,19 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket {
     }
 
     @Override
-    protected VerboseResult<Nothing> replaceConfigurationVerboseImpl(BucketConfiguration newConfiguration) {
+    protected VerboseResult<BucketConfiguration> replaceConfigurationVerboseImpl(BucketConfiguration newConfiguration) {
         StateWithConfiguration previousState = stateRef.get();
         StateWithConfiguration newState = previousState.copy();
         long currentTimeNanos = timeMeter.currentTimeNanos();
 
         while (true) {
-            previousState.configuration.checkCompatibility(newConfiguration);
+            if (!previousState.configuration.isCompatible(newConfiguration)) {
+                return new VerboseResult<>(currentTimeNanos, null, previousState.configuration, newState.state.copy());
+            }
             newState.refillAllBandwidth(currentTimeNanos);
             newState.configuration = newConfiguration;
             if (stateRef.compareAndSet(previousState, newState)) {
-                return new VerboseResult<>(currentTimeNanos, Nothing.INSTANCE, newState.configuration, newState.state.copy());
+                return new VerboseResult<>(currentTimeNanos, null, newState.configuration, newState.state.copy());
             } else {
                 previousState = stateRef.get();
                 newState.copyStateFrom(previousState);
@@ -352,7 +356,7 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket {
             long nanosToCloseDeficit = newState.delayNanosAfterWillBePossibleToConsume(tokensToConsume, currentTimeNanos);
 
             if (nanosToCloseDeficit == INFINITY_DURATION) {
-                throw BucketExceptions.reservationOverflow();
+                return new VerboseResult<>(currentTimeNanos, nanosToCloseDeficit, newState.configuration, newState.state);
             }
             newState.consume(tokensToConsume);
             if (stateRef.compareAndSet(previousState, newState)) {
@@ -385,26 +389,13 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket {
     }
 
     @Override
-    protected CompletableFuture<Void> replaceConfigurationAsyncImpl(BucketConfiguration newConfiguration) {
-        try {
-            replaceConfigurationImpl(newConfiguration);
-            return CompletableFuture.completedFuture(null);
-        } catch (IncompatibleConfigurationException e) {
-            CompletableFuture<Void> fail = new CompletableFuture<>();
-            fail.completeExceptionally(e);
-            return fail;
-        }
+    protected CompletableFuture<BucketConfiguration> replaceConfigurationAsyncImpl(BucketConfiguration newConfiguration) {
+        return CompletableFuture.completedFuture(replaceConfigurationImpl(newConfiguration));
     }
 
     @Override
     protected CompletableFuture<Long> consumeIgnoringRateLimitsAsyncImpl(long tokensToConsume) {
-        try {
-            return CompletableFuture.completedFuture(consumeIgnoringRateLimitsImpl(tokensToConsume));
-        } catch (RuntimeException e) {
-            CompletableFuture<Long> fail = new CompletableFuture<>();
-            fail.completeExceptionally(e);
-            return fail;
-        }
+        return CompletableFuture.completedFuture(consumeIgnoringRateLimitsImpl(tokensToConsume));
     }
 
     @Override
@@ -462,21 +453,15 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket {
     }
 
     @Override
-    protected CompletableFuture<VerboseResult<Nothing>> replaceConfigurationVerboseAsyncImpl(BucketConfiguration newConfiguration) {
-        VerboseResult<Nothing> result = replaceConfigurationVerboseImpl(newConfiguration);
+    protected CompletableFuture<VerboseResult<BucketConfiguration>> replaceConfigurationVerboseAsyncImpl(BucketConfiguration newConfiguration) {
+        VerboseResult<BucketConfiguration> result = replaceConfigurationVerboseImpl(newConfiguration);
         return CompletableFuture.completedFuture(result);
     }
 
     @Override
     protected CompletableFuture<VerboseResult<Long>> consumeIgnoringRateLimitsVerboseAsyncImpl(long tokensToConsume) {
-        try {
-            VerboseResult<Long> result = consumeIgnoringRateLimitsVerboseImpl(tokensToConsume);
-            return CompletableFuture.completedFuture(result);
-        } catch (RuntimeException e) {
-            CompletableFuture<VerboseResult<Long>> fail = new CompletableFuture<>();
-            fail.completeExceptionally(e);
-            return fail;
-        }
+        VerboseResult<Long> result = consumeIgnoringRateLimitsVerboseImpl(tokensToConsume);
+        return CompletableFuture.completedFuture(result);
     }
 
     @Override
