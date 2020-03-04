@@ -247,7 +247,7 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket {
             }
             newState.consume(tokensToConsume);
             if (stateRef.compareAndSet(previousState, newState)) {
-                return new VerboseResult<>(currentTimeNanos, false, newState.configuration, newState.state.copy());
+                return new VerboseResult<>(currentTimeNanos, true, newState.configuration, newState.state.copy());
             } else {
                 previousState = stateRef.get();
                 newState.copyStateFrom(previousState);

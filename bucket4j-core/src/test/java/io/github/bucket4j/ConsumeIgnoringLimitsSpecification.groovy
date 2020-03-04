@@ -34,15 +34,25 @@ class ConsumeIgnoringLimitsSpecification extends Specification {
         expect:
         for (BucketType type : BucketType.values()) {
             for (boolean sync : [true, false]) {
-                TimeMeterMock timeMeter = new TimeMeterMock(0)
-                Bucket bucket = type.createBucket(builder, timeMeter)
-                timeMeter.addTime(nanosIncrement)
-                if (sync) {
-                    assert bucket.consumeIgnoringRateLimits(tokensToConsume) == 0
-                } else {
-                    bucket.asAsync().consumeIgnoringRateLimits(tokensToConsume).get() == 0
+                for (boolean verbose : [true, false]) {
+                    TimeMeterMock timeMeter = new TimeMeterMock(0)
+                    Bucket bucket = type.createBucket(builder, timeMeter)
+                    timeMeter.addTime(nanosIncrement)
+                    if (sync) {
+                        if (!verbose) {
+                            assert bucket.consumeIgnoringRateLimits(tokensToConsume) == 0
+                        } else {
+                            assert bucket.asVerbose().consumeIgnoringRateLimits(tokensToConsume).value == 0
+                        }
+                    } else {
+                        if (!verbose) {
+                            bucket.asAsync().consumeIgnoringRateLimits(tokensToConsume).get() == 0
+                        } else {
+                            bucket.asAsync().asVerbose().consumeIgnoringRateLimits(tokensToConsume).get().value == 0
+                        }
+                    }
+                    assert bucket.createSnapshot().getAvailableTokens(bucket.configuration.bandwidths) == remainedTokens
                 }
-                assert bucket.createSnapshot().getAvailableTokens(bucket.configuration.bandwidths) == remainedTokens
             }
         }
         where:
@@ -58,15 +68,25 @@ class ConsumeIgnoringLimitsSpecification extends Specification {
         expect:
         for (BucketType type : BucketType.values()) {
             for (boolean sync : [true, false]) {
-                TimeMeterMock timeMeter = new TimeMeterMock(0)
-                Bucket bucket = type.createBucket(builder, timeMeter)
-                timeMeter.addTime(nanosIncrement)
-                if (sync) {
-                    assert bucket.consumeIgnoringRateLimits(tokensToConsume) == overflowNanos
-                } else {
-                    bucket.asAsync().consumeIgnoringRateLimits(tokensToConsume).get() == overflowNanos
+                for (boolean verbose : [true, false]) {
+                    TimeMeterMock timeMeter = new TimeMeterMock(0)
+                    Bucket bucket = type.createBucket(builder, timeMeter)
+                    timeMeter.addTime(nanosIncrement)
+                    if (sync) {
+                        if (!verbose) {
+                            assert bucket.consumeIgnoringRateLimits(tokensToConsume) == overflowNanos
+                        } else {
+                            assert bucket.asVerbose().consumeIgnoringRateLimits(tokensToConsume).value == overflowNanos
+                        }
+                    } else {
+                        if (!verbose) {
+                            assert bucket.asAsync().consumeIgnoringRateLimits(tokensToConsume).get() == overflowNanos
+                        } else {
+                            assert bucket.asAsync().asVerbose().consumeIgnoringRateLimits(tokensToConsume).get().value == overflowNanos
+                        }
+                    }
+                    assert bucket.createSnapshot().getAvailableTokens(bucket.configuration.bandwidths) == remainedTokens
                 }
-                assert bucket.createSnapshot().getAvailableTokens(bucket.configuration.bandwidths) == remainedTokens
             }
         }
         where:

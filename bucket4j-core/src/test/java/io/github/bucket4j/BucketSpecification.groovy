@@ -23,12 +23,22 @@ class BucketSpecification extends Specification {
         expect:
             for (BucketType type : BucketType.values()) {
                 for (boolean sync : [true, false]) {
-                    def timeMeter = new TimeMeterMock(0)
-                    Bucket bucket = type.createBucket(builder, timeMeter)
-                    if (sync) {
-                        assert bucket.tryConsume(1) == requiredResult
-                    } else {
-                        assert bucket.asAsync().tryConsume(1).get() == requiredResult
+                    for (boolean verbose : [true, false]) {
+                        def timeMeter = new TimeMeterMock(0)
+                        Bucket bucket = type.createBucket(builder, timeMeter)
+                        if (sync) {
+                            if (!verbose) {
+                                assert bucket.tryConsume(1) == requiredResult
+                            } else {
+                                assert bucket.asVerbose().tryConsume(1).value == requiredResult
+                            }
+                        } else {
+                            if (!verbose) {
+                                assert bucket.asAsync().tryConsume(1).get() == requiredResult
+                            } else {
+                                assert bucket.asAsync().asVerbose().tryConsume(1).get().value == requiredResult
+                            }
+                        }
                     }
                 }
             }
@@ -44,12 +54,22 @@ class BucketSpecification extends Specification {
         expect:
             for (BucketType type : BucketType.values()) {
                 for (boolean sync : [true, false]) {
-                    def timeMeter = new TimeMeterMock(0)
-                    Bucket bucket = type.createBucket(builder, timeMeter)
-                    if (sync) {
-                        assert bucket.tryConsume(toConsume) == requiredResult
-                    } else {
-                        assert bucket.asAsync().tryConsume(toConsume).get() == requiredResult
+                    for (boolean verbose : [true, false]) {
+                        def timeMeter = new TimeMeterMock(0)
+                        Bucket bucket = type.createBucket(builder, timeMeter)
+                        if (sync) {
+                            if (!verbose) {
+                                assert bucket.tryConsume(toConsume) == requiredResult
+                            } else {
+                                assert bucket.asVerbose().tryConsume(toConsume).value == requiredResult
+                            }
+                        } else {
+                            if (!verbose) {
+                                assert bucket.asAsync().tryConsume(toConsume).get() == requiredResult
+                            } else {
+                                assert bucket.asAsync().asVerbose().tryConsume(toConsume).get().value == requiredResult
+                            }
+                        }
                     }
                 }
             }
@@ -64,17 +84,27 @@ class BucketSpecification extends Specification {
         expect:
             for (BucketType type : BucketType.values()) {
                 for (boolean sync : [true, false]) {
-                    TimeMeterMock timeMeter = new TimeMeterMock(0)
-                    Bucket bucket = type.createBucket(builder, timeMeter)
-                    ConsumptionProbe probe
-                    if (sync) {
-                        probe = bucket.tryConsumeAndReturnRemaining(toConsume)
-                    } else {
-                        probe = bucket.asAsync().tryConsumeAndReturnRemaining(toConsume).get()
+                    for (boolean verbose : [true, false]) {
+                        TimeMeterMock timeMeter = new TimeMeterMock(0)
+                        Bucket bucket = type.createBucket(builder, timeMeter)
+                        ConsumptionProbe probe
+                        if (sync) {
+                            if (!verbose) {
+                                probe = bucket.tryConsumeAndReturnRemaining(toConsume)
+                            } else {
+                                probe = bucket.asVerbose().tryConsumeAndReturnRemaining(toConsume).value
+                            }
+                        } else {
+                            if (!verbose) {
+                                probe = bucket.asAsync().tryConsumeAndReturnRemaining(toConsume).get()
+                            } else {
+                                probe = bucket.asAsync().asVerbose().tryConsumeAndReturnRemaining(toConsume).get().value
+                            }
+                        }
+                        assert probe.consumed == result
+                        assert probe.remainingTokens == expectedRemaining
+                        assert probe.nanosToWaitForRefill == expectedWait
                     }
-                    assert probe.consumed == result
-                    assert probe.remainingTokens == expectedRemaining
-                    assert probe.nanosToWaitForRefill == expectedWait
                 }
             }
         where:
@@ -87,24 +117,34 @@ class BucketSpecification extends Specification {
     }
 
     @Unroll
-    def "#n tryConsumeAndReturnRemaining specification"(int n, long toEstimate, boolean result, long expectedWait, AbstractBucketBuilder builder) {
+    def "#n estimateAbilityToConsume specification"(int n, long toEstimate, boolean result, long expectedWait, AbstractBucketBuilder builder) {
         expect:
             for (BucketType type : BucketType.values()) {
                 for (boolean sync : [true, false]) {
-                    TimeMeterMock timeMeter = new TimeMeterMock(0)
-                    Bucket bucket = type.createBucket(builder, timeMeter)
-                    long availableTokensBeforeEstimation = bucket.getAvailableTokens()
+                    for (boolean verbose : [true, false]) {
+                        TimeMeterMock timeMeter = new TimeMeterMock(0)
+                        Bucket bucket = type.createBucket(builder, timeMeter)
+                        long availableTokensBeforeEstimation = bucket.getAvailableTokens()
 
-                    EstimationProbe probe
-                    if (sync) {
-                        probe = bucket.estimateAbilityToConsume(toEstimate)
-                    } else {
-                        probe = bucket.asAsync().estimateAbilityToConsume(toEstimate).get()
+                        EstimationProbe probe
+                        if (sync) {
+                            if (!verbose) {
+                                probe = bucket.estimateAbilityToConsume(toEstimate)
+                            } else {
+                                probe = bucket.asVerbose().estimateAbilityToConsume(toEstimate).value
+                            }
+                        } else {
+                            if (!verbose) {
+                                probe = bucket.asAsync().estimateAbilityToConsume(toEstimate).get()
+                            } else {
+                                probe = bucket.asAsync().asVerbose().estimateAbilityToConsume(toEstimate).get().value
+                            }
+                        }
+                        assert probe.canBeConsumed() == result
+                        assert probe.remainingTokens == availableTokensBeforeEstimation
+                        assert probe.nanosToWaitForRefill == expectedWait
+                        assert bucket.getAvailableTokens() == availableTokensBeforeEstimation
                     }
-                    assert probe.canBeConsumed() == result
-                    assert probe.remainingTokens == availableTokensBeforeEstimation
-                    assert probe.nanosToWaitForRefill == expectedWait
-                    assert bucket.getAvailableTokens() == availableTokensBeforeEstimation
                 }
             }
         where:
@@ -125,12 +165,22 @@ class BucketSpecification extends Specification {
         expect:
             for (BucketType bucketType : BucketType.values()) {
                 for (boolean sync : [true, false]) {
-                    TimeMeterMock timeMeter = new TimeMeterMock(0)
-                    Bucket bucket = bucketType.createBucket(builder, timeMeter)
-                    if (sync) {
-                        assert bucket.tryConsumeAsMuchAsPossible() == requiredResult
-                    } else {
-                        assert bucket.asAsync().tryConsumeAsMuchAsPossible().get() == requiredResult
+                    for (boolean verbose : [true, false]) {
+                        TimeMeterMock timeMeter = new TimeMeterMock(0)
+                        Bucket bucket = bucketType.createBucket(builder, timeMeter)
+                        if (sync) {
+                            if (!verbose) {
+                                assert bucket.tryConsumeAsMuchAsPossible() == requiredResult
+                            } else {
+                                assert bucket.asVerbose().tryConsumeAsMuchAsPossible().value == requiredResult
+                            }
+                        } else {
+                            if (!verbose) {
+                                assert bucket.asAsync().tryConsumeAsMuchAsPossible().get() == requiredResult
+                            } else {
+                                assert bucket.asAsync().asVerbose().tryConsumeAsMuchAsPossible().get().value == requiredResult
+                            }
+                        }
                     }
                 }
             }
@@ -146,12 +196,22 @@ class BucketSpecification extends Specification {
         expect:
             for (BucketType bucketType : BucketType.values()) {
                 for (boolean sync : [true, false]) {
-                    TimeMeterMock timeMeter = new TimeMeterMock(0)
-                    Bucket bucket = bucketType.createBucket(builder, timeMeter)
-                    if (sync) {
-                        assert bucket.tryConsumeAsMuchAsPossible(limit) == requiredResult
-                    } else {
-                        assert bucket.asAsync().tryConsumeAsMuchAsPossible(limit).get() == requiredResult
+                    for (boolean verbose : [true, false]) {
+                        TimeMeterMock timeMeter = new TimeMeterMock(0)
+                        Bucket bucket = bucketType.createBucket(builder, timeMeter)
+                        if (sync) {
+                            if (!verbose) {
+                                assert bucket.tryConsumeAsMuchAsPossible(limit) == requiredResult
+                            } else {
+                                assert bucket.asVerbose().tryConsumeAsMuchAsPossible(limit).value == requiredResult
+                            }
+                        } else {
+                            if (!verbose) {
+                                assert bucket.asAsync().tryConsumeAsMuchAsPossible(limit).get() == requiredResult
+                            } else {
+                                assert bucket.asAsync().asVerbose().tryConsumeAsMuchAsPossible(limit).get().value == requiredResult
+                            }
+                        }
                     }
                 }
             }
@@ -168,15 +228,25 @@ class BucketSpecification extends Specification {
         expect:
             for (BucketType type : BucketType.values()) {
                 for (boolean sync : [true, false]) {
-                    TimeMeterMock timeMeter = new TimeMeterMock(0)
-                    Bucket bucket = type.createBucket(builder, timeMeter)
-                    timeMeter.addTime(nanosIncrement)
-                    if (sync) {
-                        bucket.addTokens(tokensToAdd)
-                    } else {
-                        bucket.asAsync().addTokens(tokensToAdd).get()
+                    for (boolean verbose : [true, false]) {
+                        TimeMeterMock timeMeter = new TimeMeterMock(0)
+                        Bucket bucket = type.createBucket(builder, timeMeter)
+                        timeMeter.addTime(nanosIncrement)
+                        if (sync) {
+                            if (!verbose) {
+                                bucket.addTokens(tokensToAdd)
+                            } else {
+                                bucket.asVerbose().addTokens(tokensToAdd)
+                            }
+                        } else {
+                            if (!verbose) {
+                                bucket.asAsync().addTokens(tokensToAdd).get()
+                            } else {
+                                bucket.asAsync().asVerbose().addTokens(tokensToAdd).get()
+                            }
+                        }
+                        assert bucket.createSnapshot().getAvailableTokens(bucket.configuration.bandwidths) == requiredResult
                     }
-                    assert bucket.createSnapshot().getAvailableTokens(bucket.configuration.bandwidths) == requiredResult
                 }
             }
         where:
@@ -192,10 +262,16 @@ class BucketSpecification extends Specification {
     def "#n getAvailableTokens specification"(int n, long nanosSinceBucketCreation, long expectedTokens,  AbstractBucketBuilder builder) {
         expect:
             for (BucketType type : BucketType.values()) {
-                TimeMeterMock timeMeter = new TimeMeterMock(0)
-                Bucket bucket = type.createBucket(builder, timeMeter)
-                timeMeter.addTime(nanosSinceBucketCreation)
-                assert bucket.getAvailableTokens() == expectedTokens
+                for (boolean verbose : [true, false]) {
+                    TimeMeterMock timeMeter = new TimeMeterMock(0)
+                    Bucket bucket = type.createBucket(builder, timeMeter)
+                    timeMeter.addTime(nanosSinceBucketCreation)
+                    if (!verbose) {
+                        assert bucket.getAvailableTokens() == expectedTokens
+                    } else {
+                        assert bucket.asVerbose().getAvailableTokens().value == expectedTokens
+                    }
+                }
             }
         where:
             n | nanosSinceBucketCreation | expectedTokens |  builder
