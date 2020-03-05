@@ -25,6 +25,8 @@ import spock.lang.Unroll;
 import java.time.Duration
 import java.util.concurrent.ExecutionException
 
+import static io.github.bucket4j.PackageAcessor.getState
+import static org.junit.Assert.assertNotSame
 import static org.junit.Assert.fail;
 
 class ConsumeIgnoringLimitsSpecification extends Specification {
@@ -42,13 +44,17 @@ class ConsumeIgnoringLimitsSpecification extends Specification {
                         if (!verbose) {
                             assert bucket.consumeIgnoringRateLimits(tokensToConsume) == 0
                         } else {
-                            assert bucket.asVerbose().consumeIgnoringRateLimits(tokensToConsume).value == 0
+                            def verboseResult = bucket.asVerbose().consumeIgnoringRateLimits(tokensToConsume)
+                            assert verboseResult.value == 0
+                            assertNotSame(verboseResult.state, getState(bucket))
                         }
                     } else {
                         if (!verbose) {
                             bucket.asAsync().consumeIgnoringRateLimits(tokensToConsume).get() == 0
                         } else {
-                            bucket.asAsync().asVerbose().consumeIgnoringRateLimits(tokensToConsume).get().value == 0
+                            def verboseResult = bucket.asAsync().asVerbose().consumeIgnoringRateLimits(tokensToConsume).get()
+                            verboseResult.value == 0
+                            assertNotSame(verboseResult.state, getState(bucket))
                         }
                     }
                     assert bucket.createSnapshot().getAvailableTokens(bucket.configuration.bandwidths) == remainedTokens
@@ -76,13 +82,17 @@ class ConsumeIgnoringLimitsSpecification extends Specification {
                         if (!verbose) {
                             assert bucket.consumeIgnoringRateLimits(tokensToConsume) == overflowNanos
                         } else {
-                            assert bucket.asVerbose().consumeIgnoringRateLimits(tokensToConsume).value == overflowNanos
+                            def verboseResult = bucket.asVerbose().consumeIgnoringRateLimits(tokensToConsume)
+                            assert verboseResult.value == overflowNanos
+                            assertNotSame(verboseResult.state, getState(bucket))
                         }
                     } else {
                         if (!verbose) {
                             assert bucket.asAsync().consumeIgnoringRateLimits(tokensToConsume).get() == overflowNanos
                         } else {
-                            assert bucket.asAsync().asVerbose().consumeIgnoringRateLimits(tokensToConsume).get().value == overflowNanos
+                            def verboseResult = bucket.asAsync().asVerbose().consumeIgnoringRateLimits(tokensToConsume).get()
+                            assert verboseResult.value == overflowNanos
+                            assertNotSame(verboseResult.state, getState(bucket))
                         }
                     }
                     assert bucket.createSnapshot().getAvailableTokens(bucket.configuration.bandwidths) == remainedTokens

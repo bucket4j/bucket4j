@@ -4,10 +4,12 @@ package io.github.bucket4j
 import io.github.bucket4j.grid.GridBucket
 import io.github.bucket4j.mock.BucketType
 import io.github.bucket4j.mock.GridProxyMock
-import io.github.bucket4j.mock.SchedulerMock
 import io.github.bucket4j.mock.TimeMeterMock
 import spock.lang.Specification
 import spock.lang.Unroll
+
+import static io.github.bucket4j.PackageAcessor.getState
+import static org.junit.Assert.assertNotSame
 
 import java.time.Duration
 import java.util.concurrent.CompletableFuture
@@ -30,13 +32,17 @@ class BucketSpecification extends Specification {
                             if (!verbose) {
                                 assert bucket.tryConsume(1) == requiredResult
                             } else {
-                                assert bucket.asVerbose().tryConsume(1).value == requiredResult
+                                def verboseResult = bucket.asVerbose().tryConsume(1)
+                                assert verboseResult.value == requiredResult
+                                assertNotSame(verboseResult.state, getState(bucket))
                             }
                         } else {
                             if (!verbose) {
                                 assert bucket.asAsync().tryConsume(1).get() == requiredResult
                             } else {
-                                assert bucket.asAsync().asVerbose().tryConsume(1).get().value == requiredResult
+                                def verboseResult = bucket.asAsync().asVerbose().tryConsume(1).get()
+                                assert verboseResult.value == requiredResult
+                                assertNotSame(verboseResult.state, getState(bucket))
                             }
                         }
                     }
@@ -61,13 +67,17 @@ class BucketSpecification extends Specification {
                             if (!verbose) {
                                 assert bucket.tryConsume(toConsume) == requiredResult
                             } else {
-                                assert bucket.asVerbose().tryConsume(toConsume).value == requiredResult
+                                def verboseResult = bucket.asVerbose().tryConsume(toConsume)
+                                assert verboseResult.value == requiredResult
+                                assertNotSame(verboseResult.state, getState(bucket))
                             }
                         } else {
                             if (!verbose) {
                                 assert bucket.asAsync().tryConsume(toConsume).get() == requiredResult
                             } else {
-                                assert bucket.asAsync().asVerbose().tryConsume(toConsume).get().value == requiredResult
+                                def verboseResult = bucket.asAsync().asVerbose().tryConsume(toConsume).get()
+                                assert verboseResult.value == requiredResult
+                                assertNotSame(verboseResult.state, getState(bucket))
                             }
                         }
                     }
@@ -92,13 +102,17 @@ class BucketSpecification extends Specification {
                             if (!verbose) {
                                 probe = bucket.tryConsumeAndReturnRemaining(toConsume)
                             } else {
-                                probe = bucket.asVerbose().tryConsumeAndReturnRemaining(toConsume).value
+                                def verboseResult = bucket.asVerbose().tryConsumeAndReturnRemaining(toConsume)
+                                probe = verboseResult.value
+                                assertNotSame(verboseResult.state, getState(bucket))
                             }
                         } else {
                             if (!verbose) {
                                 probe = bucket.asAsync().tryConsumeAndReturnRemaining(toConsume).get()
                             } else {
-                                probe = bucket.asAsync().asVerbose().tryConsumeAndReturnRemaining(toConsume).get().value
+                                def verboseResult = bucket.asAsync().asVerbose().tryConsumeAndReturnRemaining(toConsume).get()
+                                probe = verboseResult.value
+                                assertNotSame(verboseResult.state, getState(bucket))
                             }
                         }
                         assert probe.consumed == result
@@ -131,13 +145,17 @@ class BucketSpecification extends Specification {
                             if (!verbose) {
                                 probe = bucket.estimateAbilityToConsume(toEstimate)
                             } else {
-                                probe = bucket.asVerbose().estimateAbilityToConsume(toEstimate).value
+                                def verboseResult = bucket.asVerbose().estimateAbilityToConsume(toEstimate)
+                                probe = verboseResult.value
+                                assertNotSame(verboseResult.state, getState(bucket))
                             }
                         } else {
                             if (!verbose) {
                                 probe = bucket.asAsync().estimateAbilityToConsume(toEstimate).get()
                             } else {
-                                probe = bucket.asAsync().asVerbose().estimateAbilityToConsume(toEstimate).get().value
+                                def verboseResult = bucket.asAsync().asVerbose().estimateAbilityToConsume(toEstimate).get()
+                                probe = verboseResult.value
+                                assertNotSame(verboseResult.state, getState(bucket))
                             }
                         }
                         assert probe.canBeConsumed() == result
@@ -172,13 +190,17 @@ class BucketSpecification extends Specification {
                             if (!verbose) {
                                 assert bucket.tryConsumeAsMuchAsPossible() == requiredResult
                             } else {
-                                assert bucket.asVerbose().tryConsumeAsMuchAsPossible().value == requiredResult
+                                def verboseResult = bucket.asVerbose().tryConsumeAsMuchAsPossible()
+                                assert verboseResult.value == requiredResult
+                                assertNotSame(verboseResult.state, getState(bucket))
                             }
                         } else {
                             if (!verbose) {
                                 assert bucket.asAsync().tryConsumeAsMuchAsPossible().get() == requiredResult
                             } else {
-                                assert bucket.asAsync().asVerbose().tryConsumeAsMuchAsPossible().get().value == requiredResult
+                                def verboseResult = bucket.asAsync().asVerbose().tryConsumeAsMuchAsPossible().get()
+                                assert verboseResult.value == requiredResult
+                                assertNotSame(verboseResult.state, getState(bucket))
                             }
                         }
                     }
@@ -203,13 +225,17 @@ class BucketSpecification extends Specification {
                             if (!verbose) {
                                 assert bucket.tryConsumeAsMuchAsPossible(limit) == requiredResult
                             } else {
-                                assert bucket.asVerbose().tryConsumeAsMuchAsPossible(limit).value == requiredResult
+                                def verboseResult = bucket.asVerbose().tryConsumeAsMuchAsPossible(limit)
+                                assert verboseResult.value == requiredResult
+                                assertNotSame(verboseResult.state, getState(bucket))
                             }
                         } else {
                             if (!verbose) {
                                 assert bucket.asAsync().tryConsumeAsMuchAsPossible(limit).get() == requiredResult
                             } else {
-                                assert bucket.asAsync().asVerbose().tryConsumeAsMuchAsPossible(limit).get().value == requiredResult
+                                def verboseResult = bucket.asAsync().asVerbose().tryConsumeAsMuchAsPossible(limit).get()
+                                assert verboseResult.value == requiredResult
+                                assertNotSame(verboseResult.state, getState(bucket))
                             }
                         }
                     }
@@ -236,13 +262,15 @@ class BucketSpecification extends Specification {
                             if (!verbose) {
                                 bucket.addTokens(tokensToAdd)
                             } else {
-                                bucket.asVerbose().addTokens(tokensToAdd)
+                                def verboseResult = bucket.asVerbose().addTokens(tokensToAdd)
+                                assertNotSame(verboseResult.state, getState(bucket))
                             }
                         } else {
                             if (!verbose) {
                                 bucket.asAsync().addTokens(tokensToAdd).get()
                             } else {
-                                bucket.asAsync().asVerbose().addTokens(tokensToAdd).get()
+                                def verboseResult = bucket.asAsync().asVerbose().addTokens(tokensToAdd).get()
+                                assertNotSame(verboseResult.state, getState(bucket))
                             }
                         }
                         assert bucket.createSnapshot().getAvailableTokens(bucket.configuration.bandwidths) == requiredResult
