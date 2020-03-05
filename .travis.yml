@@ -3,4 +3,4 @@ jdk:
   - openjdk8
 services:
   - docker
-script: clean install -P travis
+script: mvn clean install -P travis
