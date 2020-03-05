@@ -79,4 +79,16 @@
         </dependency>
     </dependencies>
 
+    <profiles>
+        <profile>
+            <id>travis</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <properties>
+                <maven.test.skip>true</maven.test.skip>
+            </properties>
+        </profile>
+    </profiles>
+
 </project>
