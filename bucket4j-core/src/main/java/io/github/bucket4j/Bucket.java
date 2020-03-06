@@ -19,7 +19,7 @@ public interface Bucket {
     BlockingBucket asScheduler();
 
     /**
-     * TODO write javadocs
+     * Returns the verbose view of this bucket.
      */
     VerboseBucket asVerbose();
 

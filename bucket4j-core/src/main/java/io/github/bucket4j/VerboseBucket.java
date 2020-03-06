@@ -1,52 +1,53 @@
 package io.github.bucket4j;
 
 /**
- * TODO write javadocs
+ * Intent of this interface is to provide the verbose version of {@link Bucket} API.
+ * All methods obey the same semantic but its results are more verbose.
  */
 public interface VerboseBucket {
 
     /**
-     * TODO write javadocs
+     * Does the same that {@link Bucket#tryConsume(long)}
      */
     VerboseResult<Boolean> tryConsume(long numTokens);
 
     /**
-     * TODO write javadocs
+     * Does the same that {@link Bucket#consumeIgnoringRateLimits(long)}
      */
     VerboseResult<Long> consumeIgnoringRateLimits(long tokens);
 
     /**
-     * TODO write javadocs
+     * Does the same that {@link Bucket#tryConsumeAndReturnRemaining(long)}
      */
     VerboseResult<ConsumptionProbe> tryConsumeAndReturnRemaining(long numTokens);
 
     /**
-     * TODO write javadocs
+     * Does the same that {@link Bucket#estimateAbilityToConsume(long)}
      */
     VerboseResult<EstimationProbe> estimateAbilityToConsume(long numTokens);
 
     /**
-     * TODO write javadocs
+     * Does the same that {@link Bucket#tryConsumeAsMuchAsPossible()}
      */
     VerboseResult<Long> tryConsumeAsMuchAsPossible();
 
     /**
-     * TODO write javadocs
+     * Does the same that {@link Bucket#tryConsumeAsMuchAsPossible(long)}
      */
     VerboseResult<Long> tryConsumeAsMuchAsPossible(long limit);
 
     /**
-     * TODO write javadocs
+     * Does the same that {@link Bucket#getAvailableTokens()}
      */
     VerboseResult<Long> getAvailableTokens();
 
     /**
-     * TODO write javadocs
+     * Does the same that {@link Bucket#addTokens(long)}
      */
     VerboseResult<Nothing> addTokens(long tokensToAdd);
 
     /**
-     * TODO write javadocs
+     * Does the same that {@link Bucket#replaceConfiguration(BucketConfiguration)}
      */
     VerboseResult<Nothing> replaceConfiguration(BucketConfiguration newConfiguration);
 

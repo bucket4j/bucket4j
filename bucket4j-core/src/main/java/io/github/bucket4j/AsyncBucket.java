@@ -18,7 +18,7 @@ import java.util.function.Function;
 public interface AsyncBucket {
 
     /**
-     * TODO write javadocs
+     * Returns the verbose view of this bucket.
      */
     AsyncVerboseBucket asVerbose();
 

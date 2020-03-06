@@ -9,7 +9,7 @@ import java.io.Serializable;
 import java.util.function.Function;
 
 /**
- * TODO write javadocs
+ * Intention of this class is to provide wrapper around results returned by any method of {@link VerboseBucket} and {@link AsyncVerboseBucket}.
  */
 public class VerboseResult<T extends Serializable> implements Serializable {
 
@@ -28,28 +28,29 @@ public class VerboseResult<T extends Serializable> implements Serializable {
     }
 
     /**
-     * TODO write javadocs
+     * @return result of operation with bucket
      */
     public T getValue() {
         return value;
     }
 
+
     /**
-     * TODO write javadocs
+     * @return snapshot of configuration which was actual at operation time
      */
     public BucketConfiguration getConfiguration() {
         return configuration;
     }
 
     /**
-     * TODO write javadocs
+     * @return snapshot of internal bucket state which was actual at operation time
      */
     public BucketState getState() {
         return state;
     }
 
     /**
-     * TODO write javadocs
+     * @return time which was used by the bucket at the moment of handling a request
      */
     public long getOperationTimeNanos() {
         return operationTimeNanos;

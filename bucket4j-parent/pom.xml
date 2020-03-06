@@ -172,6 +172,11 @@
                         <artifactId>license-maven-plugin</artifactId>
                         <version>2.0.0</version>
                         <configuration>
+<!--                            <licenseName>bucket4_license</licenseName>-->
+<!--                            <licenseResolver>${project.baseUri}/src/license</licenseResolver>-->
+                            <inceptionYear>2015</inceptionYear>
+                            <organizationName>Vladimir Bukhtoyarov</organizationName>
+                            <projectName>Bucket4j</projectName>
                             <addJavaLicenseAfterPackage>false</addJavaLicenseAfterPackage>
                             <processStartTag>========================LICENSE_START=================================</processStartTag>
                             <processEndTag>=========================LICENSE_END==================================</processEndTag>
@@ -183,6 +188,12 @@
                                     <goal>update-file-header</goal>
                                 </goals>
                                 <phase>process-sources</phase>
+                                <configuration>
+                                    <licenseName>apache_v2</licenseName>
+                                    <roots>
+                                        <root>src/main/java</root>
+                                    </roots>
+                                </configuration>
                             </execution>
                         </executions>
                     </plugin>
@@ -210,6 +221,16 @@
                     </plugin>
                 </plugins>
             </build>
+
+            <reporting>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>license-maven-plugin</artifactId>
+                        <version>2.0.0</version>
+                    </plugin>
+                </plugins>
+            </reporting>
         </profile>
         <profile>
             <id>coverage</id>
