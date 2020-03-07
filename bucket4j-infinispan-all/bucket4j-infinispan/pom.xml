@@ -7,9 +7,9 @@
 
     <parent>
         <groupId>com.github.vladimir-bukhtoyarov</groupId>
-        <artifactId>bucket4j-parent</artifactId>
+        <artifactId>bucket4j-infinispan-all</artifactId>
         <version>4.10.0</version>
-        <relativePath>../../bucket4j-parent</relativePath>
+        <relativePath>../../bucket4j-infinispan-all</relativePath>
     </parent>
     <artifactId>bucket4j-infinispan</artifactId>
     <name>bucket4j-infinispan</name>
