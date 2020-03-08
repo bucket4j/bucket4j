@@ -40,7 +40,7 @@ public class ExecuteProcessor<K extends Serializable, T extends Serializable> im
         this.targetCommand = targetCommand;
     }
 
-    public static SerializationHandle<ExecuteProcessor<?, ?>> SERIALIZATION_HANDLE = new SerializationHandle<ExecuteProcessor<?, ?>>() {
+    public static final SerializationHandle<ExecuteProcessor<?, ?>> SERIALIZATION_HANDLE = new SerializationHandle<ExecuteProcessor<?, ?>>() {
         @Override
         public <S> ExecuteProcessor<?, ?> deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             GridCommand<?> targetCommand = (GridCommand<?>) adapter.readObject(input);

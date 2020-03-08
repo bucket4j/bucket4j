@@ -25,20 +25,18 @@ import io.github.bucket4j.serialization.DeserializationAdapter;
 import io.github.bucket4j.serialization.SerializationAdapter;
 import io.github.bucket4j.serialization.SerializationHandle;
 
-import java.io.IOException;
-
 public class CreateSnapshotCommand implements GridCommand<BucketState> {
 
     private static final long serialVersionUID = 1L;
 
-    public static SerializationHandle<CreateSnapshotCommand> SERIALIZATION_HANDLE = new SerializationHandle<CreateSnapshotCommand>() {
+    public static final SerializationHandle<CreateSnapshotCommand> SERIALIZATION_HANDLE = new SerializationHandle<CreateSnapshotCommand>() {
         @Override
-        public <S> CreateSnapshotCommand deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
+        public <S> CreateSnapshotCommand deserialize(DeserializationAdapter<S> adapter, S input) {
             return new CreateSnapshotCommand();
         }
 
         @Override
-        public <O> void serialize(SerializationAdapter<O> adapter, O output, CreateSnapshotCommand command) throws IOException {
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, CreateSnapshotCommand command) {
             // do nothing
         }
 

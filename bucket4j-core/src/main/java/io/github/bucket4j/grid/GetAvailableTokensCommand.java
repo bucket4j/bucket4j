@@ -25,20 +25,18 @@ import io.github.bucket4j.serialization.DeserializationAdapter;
 import io.github.bucket4j.serialization.SerializationAdapter;
 import io.github.bucket4j.serialization.SerializationHandle;
 
-import java.io.IOException;
-
 public class GetAvailableTokensCommand implements GridCommand<Long> {
 
     private static final long serialVersionUID = 1L;
 
-    public static SerializationHandle<GetAvailableTokensCommand> SERIALIZATION_HANDLE = new SerializationHandle<GetAvailableTokensCommand>() {
+    public static final SerializationHandle<GetAvailableTokensCommand> SERIALIZATION_HANDLE = new SerializationHandle<GetAvailableTokensCommand>() {
         @Override
-        public <S> GetAvailableTokensCommand deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
+        public <S> GetAvailableTokensCommand deserialize(DeserializationAdapter<S> adapter, S input) {
             return new GetAvailableTokensCommand();
         }
 
         @Override
-        public <O> void serialize(SerializationAdapter<O> adapter, O output, GetAvailableTokensCommand command) throws IOException {
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, GetAvailableTokensCommand command) {
             // do nothing
         }
 

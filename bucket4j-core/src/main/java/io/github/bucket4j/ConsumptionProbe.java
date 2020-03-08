@@ -40,7 +40,7 @@ public class ConsumptionProbe implements Serializable {
     private final long remainingTokens;
     private final long nanosToWaitForRefill;
 
-    public static SerializationHandle<ConsumptionProbe> SERIALIZATION_HANDLE = new SerializationHandle<ConsumptionProbe>() {
+    public static final SerializationHandle<ConsumptionProbe> SERIALIZATION_HANDLE = new SerializationHandle<ConsumptionProbe>() {
         @Override
         public <S> ConsumptionProbe deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             boolean consumed = adapter.readBoolean(input);

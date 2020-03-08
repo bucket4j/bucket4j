@@ -310,7 +310,7 @@ public class BucketState implements Serializable {
         stateData[bandwidth * BANDWIDTH_SIZE + 2] = roundingError;
     }
 
-    public static SerializationHandle<BucketState> SERIALIZATION_HANDLE = new SerializationHandle<BucketState>() {
+    public static final SerializationHandle<BucketState> SERIALIZATION_HANDLE = new SerializationHandle<BucketState>() {
         @Override
         public <S> BucketState deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             long[] data = adapter.readLongArray(input);

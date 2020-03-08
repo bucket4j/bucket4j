@@ -33,7 +33,7 @@ public class AddTokensCommand implements GridCommand<Nothing> {
 
     private long tokensToAdd;
 
-    public static SerializationHandle<AddTokensCommand> SERIALIZATION_HANDLE = new SerializationHandle<AddTokensCommand>() {
+    public static final SerializationHandle<AddTokensCommand> SERIALIZATION_HANDLE = new SerializationHandle<AddTokensCommand>() {
         @Override
         public <S> AddTokensCommand deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             long tokensToAdd = adapter.readLong(input);

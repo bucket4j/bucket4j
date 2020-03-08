@@ -35,7 +35,7 @@ public class ReplaceConfigurationOrReturnPreviousCommand implements GridCommand<
     private BucketConfiguration newConfiguration;
     private boolean replaced;
 
-    public static SerializationHandle<ReplaceConfigurationOrReturnPreviousCommand> SERIALIZATION_HANDLE = new SerializationHandle<ReplaceConfigurationOrReturnPreviousCommand>() {
+    public static final SerializationHandle<ReplaceConfigurationOrReturnPreviousCommand> SERIALIZATION_HANDLE = new SerializationHandle<ReplaceConfigurationOrReturnPreviousCommand>() {
         @Override
         public <S> ReplaceConfigurationOrReturnPreviousCommand deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             BucketConfiguration newConfiguration = adapter.readObject(input, BucketConfiguration.class);

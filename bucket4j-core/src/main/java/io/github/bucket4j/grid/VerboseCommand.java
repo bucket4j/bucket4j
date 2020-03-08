@@ -38,7 +38,7 @@ public class VerboseCommand<T extends Serializable> implements GridCommand<Verbo
     @Override
     public VerboseResult<T> execute(GridBucketState state, long currentTimeNanos) {
         T result = targetCommand.execute(state, currentTimeNanos);
-        return new VerboseResult<T>(currentTimeNanos, result, state.getConfiguration(), state.getState());
+        return new VerboseResult<>(currentTimeNanos, result, state.getConfiguration(), state.getState());
     }
 
     @Override
@@ -50,7 +50,7 @@ public class VerboseCommand<T extends Serializable> implements GridCommand<Verbo
         return targetCommand;
     }
 
-    public static SerializationHandle<VerboseCommand<?>> SERIALIZATION_HANDLE = new SerializationHandle<VerboseCommand<?>>() {
+    public static final SerializationHandle<VerboseCommand<?>> SERIALIZATION_HANDLE = new SerializationHandle<VerboseCommand<?>>() {
 
         @Override
         public <I> VerboseCommand<?> deserialize(DeserializationAdapter<I> adapter, I input) throws IOException {

@@ -77,7 +77,7 @@ public final class BucketConfiguration implements Serializable {
         return bandwidths.length == newConfiguration.bandwidths.length;
     }
 
-    public static SerializationHandle<BucketConfiguration> SERIALIZATION_HANDLE = new SerializationHandle<BucketConfiguration>() {
+    public static final SerializationHandle<BucketConfiguration> SERIALIZATION_HANDLE = new SerializationHandle<BucketConfiguration>() {
         @Override
         public <S> BucketConfiguration deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             int bandwidthAmount = adapter.readInt(input);

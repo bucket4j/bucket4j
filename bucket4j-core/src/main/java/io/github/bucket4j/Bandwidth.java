@@ -170,7 +170,7 @@ public class Bandwidth implements Serializable {
         return timeOfFirstRefillMillis;
     }
 
-    public static SerializationHandle<Bandwidth> SERIALIZATION_HANDLE = new SerializationHandle<Bandwidth>() {
+    public static final SerializationHandle<Bandwidth> SERIALIZATION_HANDLE = new SerializationHandle<Bandwidth>() {
         @Override
         public <S> Bandwidth deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             long capacity = adapter.readLong(input);

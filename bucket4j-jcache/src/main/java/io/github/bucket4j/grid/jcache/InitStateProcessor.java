@@ -43,10 +43,10 @@ public class InitStateProcessor<K extends Serializable> implements JCacheEntryPr
         this.configuration = configuration;
     }
 
-    public static SerializationHandle<InitStateProcessor<?>> SERIALIZATION_HANDLE = new SerializationHandle<InitStateProcessor<?>>() {
+    public static final SerializationHandle<InitStateProcessor<?>> SERIALIZATION_HANDLE = new SerializationHandle<InitStateProcessor<?>>() {
         @Override
         public <S> InitStateProcessor<?> deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
-            BucketConfiguration configuration = (BucketConfiguration) adapter.readObject(input, BucketConfiguration.class);
+            BucketConfiguration configuration = adapter.readObject(input, BucketConfiguration.class);
             return new InitStateProcessor<>(configuration);
         }
 

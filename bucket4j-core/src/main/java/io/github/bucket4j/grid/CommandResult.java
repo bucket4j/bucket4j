@@ -57,7 +57,7 @@ public class CommandResult<T extends Serializable> implements Serializable {
         return bucketNotFound;
     }
 
-    public static SerializationHandle<CommandResult<?>> SERIALIZATION_HANDLE = new SerializationHandle<CommandResult<?>>() {
+    public static final SerializationHandle<CommandResult<?>> SERIALIZATION_HANDLE = new SerializationHandle<CommandResult<?>>() {
         @Override
         public <S> CommandResult<?> deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             boolean isBucketNotFound = adapter.readBoolean(input);

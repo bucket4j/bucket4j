@@ -34,7 +34,7 @@ public class ReserveAndCalculateTimeToSleepCommand implements GridCommand<Long> 
     private long waitIfBusyNanosLimit;
     private boolean bucketStateModified;
 
-    public static SerializationHandle<ReserveAndCalculateTimeToSleepCommand> SERIALIZATION_HANDLE = new SerializationHandle<ReserveAndCalculateTimeToSleepCommand>() {
+    public static final SerializationHandle<ReserveAndCalculateTimeToSleepCommand> SERIALIZATION_HANDLE = new SerializationHandle<ReserveAndCalculateTimeToSleepCommand>() {
         @Override
         public <S> ReserveAndCalculateTimeToSleepCommand deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             long tokensToConsume = adapter.readLong(input);

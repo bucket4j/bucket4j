@@ -36,7 +36,7 @@ public class GridBucketState implements Serializable {
     private BucketConfiguration configuration;
     private BucketState state;
 
-    public static SerializationHandle<GridBucketState> SERIALIZATION_HANDLE = new SerializationHandle<GridBucketState>() {
+    public static final SerializationHandle<GridBucketState> SERIALIZATION_HANDLE = new SerializationHandle<GridBucketState>() {
         @Override
         public <S> GridBucketState deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             BucketConfiguration bucketConfiguration = adapter.readObject(input, BucketConfiguration.class);

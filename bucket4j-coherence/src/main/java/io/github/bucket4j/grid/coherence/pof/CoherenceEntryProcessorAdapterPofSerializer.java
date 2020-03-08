@@ -38,7 +38,7 @@ package io.github.bucket4j.grid.coherence.pof;
 
 import io.github.bucket4j.grid.coherence.CoherenceEntryProcessorAdapter;
 
-public class CoherenceEntryProcessorAdapterPofSerializer extends AbstractBucket4jPofSerializer<CoherenceEntryProcessorAdapter> {
+public class CoherenceEntryProcessorAdapterPofSerializer extends AbstractBucket4jPofSerializer<CoherenceEntryProcessorAdapter<?, ?>> {
 
     public CoherenceEntryProcessorAdapterPofSerializer() {
         super(CoherenceEntryProcessorAdapter.SERIALIZATION_HANDLE);

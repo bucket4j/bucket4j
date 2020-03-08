@@ -49,7 +49,7 @@ public class ConsumeIgnoringRateLimitsCommand implements GridCommand<Long> {
     private long tokensToConsume;
     private boolean bucketStateModified;
 
-    public static SerializationHandle<ConsumeIgnoringRateLimitsCommand> SERIALIZATION_HANDLE = new SerializationHandle<ConsumeIgnoringRateLimitsCommand>() {
+    public static final SerializationHandle<ConsumeIgnoringRateLimitsCommand> SERIALIZATION_HANDLE = new SerializationHandle<ConsumeIgnoringRateLimitsCommand>() {
         @Override
         public <S> ConsumeIgnoringRateLimitsCommand deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             long tokensToConsume = adapter.readLong(input);

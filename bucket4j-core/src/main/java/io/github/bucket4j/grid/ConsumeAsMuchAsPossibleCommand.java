@@ -34,7 +34,7 @@ public class ConsumeAsMuchAsPossibleCommand implements GridCommand<Long> {
     private long limit;
     private boolean bucketStateModified;
 
-    public static SerializationHandle<ConsumeAsMuchAsPossibleCommand> SERIALIZATION_HANDLE = new SerializationHandle<ConsumeAsMuchAsPossibleCommand>() {
+    public static final SerializationHandle<ConsumeAsMuchAsPossibleCommand> SERIALIZATION_HANDLE = new SerializationHandle<ConsumeAsMuchAsPossibleCommand>() {
         @Override
         public <S> ConsumeAsMuchAsPossibleCommand deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             long limit = adapter.readLong(input);

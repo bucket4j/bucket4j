@@ -37,7 +37,6 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <benchmark.jar.name>benchmarks</benchmark.jar.name>
-        <sonar.jacoco.reportPath>${project.basedir}/../bucket4j-parent/target/jacoco-merged.exec</sonar.jacoco.reportPath>
         <argLine/>
         <jcache.version>1.0.0</jcache.version>
         <ignite.version>2.8.0</ignite.version>
@@ -245,25 +244,18 @@
                         <version>0.8.5</version>
                         <executions>
                             <execution>
-                                <id>agent-for-ut</id>
+                                <id>prepare-agent</id>
                                 <goals>
                                     <goal>prepare-agent</goal>
                                 </goals>
-                                <configuration>
-                                    <append>true</append>
-                                    <destFile>${sonar.jacoco.reportPath}</destFile>
-                                </configuration>
                             </execution>
                             <execution>
-                                <id>jacoco-site</id>
+                                <id>report</id>
                                 <phase>verify</phase>
                                 <goals>
                                     <goal>report</goal>
                                     <goal>report-aggregate</goal>
                                 </goals>
-                                <configuration>
-                                    <dataFile>${sonar.jacoco.reportPath}</dataFile>
-                                </configuration>
                             </execution>
                         </executions>
                     </plugin>

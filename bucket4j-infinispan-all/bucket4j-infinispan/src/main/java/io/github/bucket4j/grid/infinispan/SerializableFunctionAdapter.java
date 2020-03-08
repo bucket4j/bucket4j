@@ -47,16 +47,16 @@ public class SerializableFunctionAdapter<K extends Serializable, R extends Seria
         return entryProcessor;
     }
 
-    public static SerializationHandle<SerializableFunctionAdapter> SERIALIZATION_HANDLE = new SerializationHandle<SerializableFunctionAdapter>() {
+    public static final SerializationHandle<SerializableFunctionAdapter<?, ?>> SERIALIZATION_HANDLE = new SerializationHandle<SerializableFunctionAdapter<?, ?>>() {
 
         @Override
-        public <I> SerializableFunctionAdapter deserialize(DeserializationAdapter<I> adapter, I input) throws IOException {
-            JCacheEntryProcessor entryProcessor = (JCacheEntryProcessor) adapter.readObject(input);
-            return new SerializableFunctionAdapter(entryProcessor);
+        public <I> SerializableFunctionAdapter<?, ?> deserialize(DeserializationAdapter<I> adapter, I input) throws IOException {
+            JCacheEntryProcessor<?, ?> entryProcessor = (JCacheEntryProcessor) adapter.readObject(input);
+            return new SerializableFunctionAdapter<>(entryProcessor);
         }
 
         @Override
-        public <O> void serialize(SerializationAdapter<O> adapter, O output, SerializableFunctionAdapter serializableObject) throws IOException {
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, SerializableFunctionAdapter<?, ?> serializableObject) throws IOException {
             adapter.writeObject(output, serializableObject.entryProcessor);
         }
 
@@ -66,8 +66,8 @@ public class SerializableFunctionAdapter<K extends Serializable, R extends Seria
         }
 
         @Override
-        public Class<SerializableFunctionAdapter> getSerializedType() {
-            return SerializableFunctionAdapter.class;
+        public Class<SerializableFunctionAdapter<?, ?>> getSerializedType() {
+            return (Class) SerializableFunctionAdapter.class;
         }
     };
 

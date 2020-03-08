@@ -46,16 +46,16 @@ public class SimpleBackupProcessor<K extends Serializable> implements EntryBacku
         entry.setValue(state);
     }
 
-    public static SerializationHandle<SimpleBackupProcessor> SERIALIZATION_HANDLE = new SerializationHandle<SimpleBackupProcessor>() {
+    public static final SerializationHandle<SimpleBackupProcessor<?>> SERIALIZATION_HANDLE = new SerializationHandle<SimpleBackupProcessor<?>>() {
 
         @Override
-        public <I> SimpleBackupProcessor deserialize(DeserializationAdapter<I> adapter, I input) throws IOException {
+        public <I> SimpleBackupProcessor<?> deserialize(DeserializationAdapter<I> adapter, I input) throws IOException {
             GridBucketState state = adapter.readObject(input, GridBucketState.class);
-            return new SimpleBackupProcessor(state);
+            return new SimpleBackupProcessor<>(state);
         }
 
         @Override
-        public <O> void serialize(SerializationAdapter<O> adapter, O output, SimpleBackupProcessor processor) throws IOException {
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, SimpleBackupProcessor<?> processor) throws IOException {
             adapter.writeObject(output, processor.state);
         }
 
@@ -65,8 +65,8 @@ public class SimpleBackupProcessor<K extends Serializable> implements EntryBacku
         }
 
         @Override
-        public Class<SimpleBackupProcessor> getSerializedType() {
-            return SimpleBackupProcessor.class;
+        public Class<SimpleBackupProcessor<?>> getSerializedType() {
+            return (Class) SimpleBackupProcessor.class;
         }
     };
 

@@ -32,15 +32,16 @@ import static java.util.Collections.unmodifiableList;
  */
 public class Bucket4j {
 
-    private static final Map<Class, Extension> extensions;
+    private static final Map<Class<?>, Extension<?>> extensions;
     static {
         extensions = new HashMap<>();
-        for (Extension extension : ServiceLoader.load(Extension.class)) {
+        for (Extension<?> extension : ServiceLoader.load(Extension.class)) {
             extensions.put(extension.getClass(), extension);
         }
     }
 
-    private static final List<SerializationHandle<?>> serializationHandles = unmodifiableList(new ArrayList<SerializationHandle<?>>() {{
+    private static final List<SerializationHandle<?>> serializationHandles;
+    static {
         Map<Integer, SerializationHandle<?>> serializersById = new HashMap<>();
 
         List<SerializationHandle<?>> coreHandles = Arrays.asList(
@@ -80,9 +81,8 @@ public class Bucket4j {
             serializersById.put(typeId, coreHandle);
         }
 
-        addAll(allHandles);
-
-    }});
+        serializationHandles = Collections.unmodifiableList(allHandles);
+    }
 
     public static List<SerializationHandle<?>> getSerializationHandles() {
         return serializationHandles;

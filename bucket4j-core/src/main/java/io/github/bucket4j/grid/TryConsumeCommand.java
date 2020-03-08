@@ -33,7 +33,7 @@ public class TryConsumeCommand implements GridCommand<Boolean> {
     private long tokensToConsume;
     private boolean bucketStateModified;
 
-    public static SerializationHandle<TryConsumeCommand> SERIALIZATION_HANDLE = new SerializationHandle<TryConsumeCommand>() {
+    public static final SerializationHandle<TryConsumeCommand> SERIALIZATION_HANDLE = new SerializationHandle<TryConsumeCommand>() {
         @Override
         public <S> TryConsumeCommand deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             long tokensToConsume = adapter.readLong(input);

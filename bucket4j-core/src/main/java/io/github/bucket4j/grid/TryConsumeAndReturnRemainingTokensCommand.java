@@ -35,7 +35,7 @@ public class TryConsumeAndReturnRemainingTokensCommand implements GridCommand<Co
     private long tokensToConsume;
     private boolean bucketStateModified = false;
 
-    public static SerializationHandle<TryConsumeAndReturnRemainingTokensCommand> SERIALIZATION_HANDLE = new SerializationHandle<TryConsumeAndReturnRemainingTokensCommand>() {
+    public static final SerializationHandle<TryConsumeAndReturnRemainingTokensCommand> SERIALIZATION_HANDLE = new SerializationHandle<TryConsumeAndReturnRemainingTokensCommand>() {
         @Override
         public <S> TryConsumeAndReturnRemainingTokensCommand deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             long tokensToConsume = adapter.readLong(input);

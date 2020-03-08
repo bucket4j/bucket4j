@@ -40,7 +40,7 @@ public class InitStateAndExecuteProcessor<K extends Serializable, T extends Seri
     private GridCommand<T> targetCommand;
     private BucketConfiguration configuration;
 
-    public static SerializationHandle<InitStateAndExecuteProcessor<?, ?>> SERIALIZATION_HANDLE = new SerializationHandle<InitStateAndExecuteProcessor<?, ?>>() {
+    public static final SerializationHandle<InitStateAndExecuteProcessor<?, ?>> SERIALIZATION_HANDLE = new SerializationHandle<InitStateAndExecuteProcessor<?, ?>>() {
         @Override
         public <S> InitStateAndExecuteProcessor<?, ?> deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             GridCommand<?> targetCommand = (GridCommand<?>) adapter.readObject(input);

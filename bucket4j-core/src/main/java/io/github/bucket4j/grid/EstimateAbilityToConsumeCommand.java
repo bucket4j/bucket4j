@@ -34,7 +34,7 @@ public class EstimateAbilityToConsumeCommand implements GridCommand<EstimationPr
 
     private long tokensToConsume;
 
-    public static SerializationHandle<EstimateAbilityToConsumeCommand> SERIALIZATION_HANDLE = new SerializationHandle<EstimateAbilityToConsumeCommand>() {
+    public static final SerializationHandle<EstimateAbilityToConsumeCommand> SERIALIZATION_HANDLE = new SerializationHandle<EstimateAbilityToConsumeCommand>() {
         @Override
         public <S> EstimateAbilityToConsumeCommand deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             long tokensToConsume = adapter.readLong(input);

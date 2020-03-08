@@ -79,7 +79,7 @@ public class VerboseResult<T extends Serializable> implements Serializable {
         return new VerboseResult<>(operationTimeNanos, mapper.apply(value), configuration, state);
     }
 
-    public static SerializationHandle<VerboseResult<?>> SERIALIZATION_HANDLE = new SerializationHandle<VerboseResult<?>>() {
+    public static final SerializationHandle<VerboseResult<?>> SERIALIZATION_HANDLE = new SerializationHandle<VerboseResult<?>>() {
 
         @Override
         public <I> VerboseResult<?> deserialize(DeserializationAdapter<I> adapter, I input) throws IOException {

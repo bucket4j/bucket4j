@@ -21,7 +21,6 @@
 package io.github.bucket4j.grid.hazelcast;
 
 import com.hazelcast.map.EntryProcessor;
-import io.github.bucket4j.grid.CommandResult;
 import io.github.bucket4j.grid.GridBucketState;
 import io.github.bucket4j.serialization.DeserializationAdapter;
 import io.github.bucket4j.serialization.SerializationAdapter;
@@ -48,16 +47,16 @@ public class SimpleBackupProcessor<K extends Serializable> implements EntryProce
         return null; // return value from backup processor is ignored, see https://github.com/hazelcast/hazelcast/pull/14995
     }
 
-    public static SerializationHandle<SimpleBackupProcessor> SERIALIZATION_HANDLE = new SerializationHandle<SimpleBackupProcessor>() {
+    public static final SerializationHandle<SimpleBackupProcessor<?>> SERIALIZATION_HANDLE = new SerializationHandle<SimpleBackupProcessor<?>>() {
 
         @Override
-        public <I> SimpleBackupProcessor deserialize(DeserializationAdapter<I> adapter, I input) throws IOException {
+        public <I> SimpleBackupProcessor<?> deserialize(DeserializationAdapter<I> adapter, I input) throws IOException {
             GridBucketState state = adapter.readObject(input, GridBucketState.class);
-            return new SimpleBackupProcessor(state);
+            return new SimpleBackupProcessor<>(state);
         }
 
         @Override
-        public <O> void serialize(SerializationAdapter<O> adapter, O output, SimpleBackupProcessor processor) throws IOException {
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, SimpleBackupProcessor<?> processor) throws IOException {
             adapter.writeObject(output, processor.state);
         }
 
@@ -67,8 +66,8 @@ public class SimpleBackupProcessor<K extends Serializable> implements EntryProce
         }
 
         @Override
-        public Class<SimpleBackupProcessor> getSerializedType() {
-            return SimpleBackupProcessor.class;
+        public Class<SimpleBackupProcessor<?>> getSerializedType() {
+            return (Class) SimpleBackupProcessor.class;
         }
     };
 

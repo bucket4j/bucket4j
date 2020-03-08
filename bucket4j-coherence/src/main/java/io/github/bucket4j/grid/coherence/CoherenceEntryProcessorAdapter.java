@@ -59,16 +59,16 @@ public class CoherenceEntryProcessorAdapter<K extends Serializable, T extends Se
         this.entryProcessor = entryProcessor;
     }
 
-    public static SerializationHandle<CoherenceEntryProcessorAdapter> SERIALIZATION_HANDLE = new SerializationHandle<CoherenceEntryProcessorAdapter>() {
+    public static final SerializationHandle<CoherenceEntryProcessorAdapter<?, ?>> SERIALIZATION_HANDLE = new SerializationHandle<CoherenceEntryProcessorAdapter<?, ?>>() {
 
         @Override
-        public <I> CoherenceEntryProcessorAdapter deserialize(DeserializationAdapter<I> adapter, I input) throws IOException {
-            JCacheEntryProcessor entryProcessor = (JCacheEntryProcessor) adapter.readObject(input);
-            return new CoherenceEntryProcessorAdapter(entryProcessor);
+        public <I> CoherenceEntryProcessorAdapter<?, ?> deserialize(DeserializationAdapter<I> adapter, I input) throws IOException {
+            JCacheEntryProcessor<?, ?> entryProcessor = (JCacheEntryProcessor) adapter.readObject(input);
+            return new CoherenceEntryProcessorAdapter<>(entryProcessor);
         }
 
         @Override
-        public <O> void serialize(SerializationAdapter<O> adapter, O output, CoherenceEntryProcessorAdapter serializableObject) throws IOException {
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, CoherenceEntryProcessorAdapter<?, ?> serializableObject) throws IOException {
             adapter.writeObject(output, serializableObject.entryProcessor);
         }
 
@@ -78,8 +78,8 @@ public class CoherenceEntryProcessorAdapter<K extends Serializable, T extends Se
         }
 
         @Override
-        public Class<CoherenceEntryProcessorAdapter> getSerializedType() {
-            return CoherenceEntryProcessorAdapter.class;
+        public Class<CoherenceEntryProcessorAdapter<?, ?>> getSerializedType() {
+            return (Class) CoherenceEntryProcessorAdapter.class;
         }
     };
 

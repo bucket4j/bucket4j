@@ -40,7 +40,7 @@ public class EstimationProbe implements Serializable {
     private final long remainingTokens;
     private final long nanosToWaitForRefill;
 
-    public static SerializationHandle<EstimationProbe> SERIALIZATION_HANDLE = new SerializationHandle<EstimationProbe>() {
+    public static final SerializationHandle<EstimationProbe> SERIALIZATION_HANDLE = new SerializationHandle<EstimationProbe>() {
         @Override
         public <S> EstimationProbe deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             boolean canBeConsumed = adapter.readBoolean(input);
