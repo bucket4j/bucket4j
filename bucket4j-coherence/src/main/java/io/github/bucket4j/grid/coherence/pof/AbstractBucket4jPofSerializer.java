@@ -70,7 +70,7 @@ public class AbstractBucket4jPofSerializer<T> implements PofSerializer<T> {
 
     @Override
     public T deserialize(PofReader pofReader) throws IOException {
-        byte bytes[] = pofReader.readByteArray(0);
+        byte[] bytes = pofReader.readByteArray(0);
 
         try (DataInputStream inputSteam = new DataInputStream(new ByteArrayInputStream(bytes))) {
             T deserializeObject = serializationHandle.deserialize(ADAPTER, inputSteam);
