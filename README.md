@@ -77,7 +77,7 @@ mvn clean install
 ```
 
 ## License
-Copyright 2015-2019 Vladimir Bukhtoyarov
+Copyright 2015-2020 Vladimir Bukhtoyarov
 Licensed under the Apache Software License, Version 2.0: <http://www.apache.org/licenses/LICENSE-2.0>.
 
 ## Have a question?
