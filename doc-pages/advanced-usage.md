@@ -130,3 +130,17 @@ BucketConfiguration newConfiguration = Bucket4j.configurationBuilder()
                 .build();
 bucket.replaceConfiguration(newConfiguration)
 ```
+
+### Using the VerboseResult API
+
+The `VerboseResult` API can be used to retrieve the current `BucketConfiguration` of a bucket.  This
+can be used to include an HTTP header that describes the current rate limit.
+
+For example:
+
+```java
+VerboseResult<ConsumptionProbe> verboseResult = bucket.asVerbose().tryConsumeAndReturnRemaining(numberOfTokens);
+ConsumptionProbe probe = verboseResult.getValue();
+BucketConfiguration bucketConfiguration = verboseResult.getConfiguration();
+response.addHeader(X_RATE_LIMIT_LIMIT, String.valueOf(computeCapacity(bucketConfiguration)));
+```
