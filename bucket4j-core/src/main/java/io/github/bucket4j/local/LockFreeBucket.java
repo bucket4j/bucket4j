@@ -25,9 +25,57 @@ import io.github.bucket4j.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class LockFreeBucket extends AbstractBucket implements LocalBucket {
+abstract class LockFreeBucketContendedTimeMeter extends AbstractBucket {
 
-    private final TimeMeter timeMeter;
+    final TimeMeter timeMeter;
+
+    public LockFreeBucketContendedTimeMeter(BucketListener listener, TimeMeter timeMeter) {
+        super(listener);
+        this.timeMeter = timeMeter;
+    }
+
+}
+
+abstract class LockFreeBucket_FinalFields_CacheLinePadding extends LockFreeBucketContendedTimeMeter {
+
+    long p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15, p16;
+
+    public LockFreeBucket_FinalFields_CacheLinePadding(BucketListener listener, TimeMeter timeMeter) {
+        super(listener, timeMeter);
+    }
+}
+
+/*
+  io.github.bucket4j.local.LockFreeBucket object internals:
+ OFFSET  SIZE                                                         TYPE DESCRIPTION                                       VALUE
+      0    12                                                              (object header)                                   N/A
+     12     4                            io.github.bucket4j.BucketListener AbstractBucket.listener                           N/A
+     16     4   io.github.bucket4j.AbstractBucket.AsyncScheduledBucketImpl AbstractBucket.asyncView                          N/A
+     20     4                        io.github.bucket4j.AsyncVerboseBucket AbstractBucket.asyncVerboseView                   N/A
+     24     4                             io.github.bucket4j.VerboseBucket AbstractBucket.verboseView                        N/A
+     28     4                                 io.github.bucket4j.TimeMeter LockFreeBucketContendedTimeMeter.timeMeter        N/A
+     32     8                                                         long LockFreeBucket_FinalFields_CacheLinePadding.p1    N/A
+     40     8                                                         long LockFreeBucket_FinalFields_CacheLinePadding.p2    N/A
+     48     8                                                         long LockFreeBucket_FinalFields_CacheLinePadding.p3    N/A
+     56     8                                                         long LockFreeBucket_FinalFields_CacheLinePadding.p4    N/A
+     64     8                                                         long LockFreeBucket_FinalFields_CacheLinePadding.p5    N/A
+     72     8                                                         long LockFreeBucket_FinalFields_CacheLinePadding.p6    N/A
+     80     8                                                         long LockFreeBucket_FinalFields_CacheLinePadding.p7    N/A
+     88     8                                                         long LockFreeBucket_FinalFields_CacheLinePadding.p8    N/A
+     96     8                                                         long LockFreeBucket_FinalFields_CacheLinePadding.p9    N/A
+    104     8                                                         long LockFreeBucket_FinalFields_CacheLinePadding.p10   N/A
+    112     8                                                         long LockFreeBucket_FinalFields_CacheLinePadding.p11   N/A
+    120     8                                                         long LockFreeBucket_FinalFields_CacheLinePadding.p12   N/A
+    128     8                                                         long LockFreeBucket_FinalFields_CacheLinePadding.p13   N/A
+    136     8                                                         long LockFreeBucket_FinalFields_CacheLinePadding.p14   N/A
+    144     8                                                         long LockFreeBucket_FinalFields_CacheLinePadding.p15   N/A
+    152     8                                                         long LockFreeBucket_FinalFields_CacheLinePadding.p16   N/A
+    160     4                  java.util.concurrent.atomic.AtomicReference LockFreeBucket.stateRef                           N/A
+    164     4                                                              (loss due to the next object alignment)
+Instance size: 168 bytes
+Space losses: 0 bytes internal + 4 bytes external = 4 bytes total
+ */
+public class LockFreeBucket extends LockFreeBucket_FinalFields_CacheLinePadding implements LocalBucket {
 
     private final AtomicReference<StateWithConfiguration> stateRef;
 
@@ -36,8 +84,7 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket {
     }
 
     private LockFreeBucket(AtomicReference<StateWithConfiguration> stateRef, TimeMeter timeMeter, BucketListener listener) {
-        super(listener);
-        this.timeMeter = timeMeter;
+        super(listener, timeMeter);
         this.stateRef = stateRef;
     }
 
