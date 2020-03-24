@@ -540,6 +540,10 @@ public class LockFreeBucket extends LockFreeBucket_FinalFields_CacheLinePadding 
         return stateRef.get().configuration;
     }
 
+    TimeMeter getTimeMeter() {
+        return timeMeter;
+    }
+
     private static class StateWithConfiguration {
 
         BucketConfiguration configuration;
