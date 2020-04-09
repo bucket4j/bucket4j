@@ -4,8 +4,8 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <parent>
-        <artifactId>bucket4j</artifactId>
         <groupId>com.github.vladimir-bukhtoyarov</groupId>
+        <artifactId>bucket4j-parent</artifactId>
         <version>5.0.0-alpha-2019-10-18</version>
         <relativePath>../bucket4j-parent</relativePath>
     </parent>
@@ -15,7 +15,7 @@
         <sonar.skip>true</sonar.skip>
         <experimentalCoroutines>enable</experimentalCoroutines>
         <kotlin.version>1.3.61</kotlin.version>
-        <lincheck.version>2.5.3</lincheck.version>
+        <lincheck.version>2.6</lincheck.version>
         <asm.version>7.1</asm.version>
     </properties>
 
