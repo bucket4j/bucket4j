@@ -23,7 +23,7 @@ class BatchingAsyncExecutorLincheckTest : VerifierState() {
     private val mockExecutor = MockAsyncCommandExecutor()
     private val executor = AsyncBatchingExecutor(mockExecutor)
 
-    @Operation
+    @Operation(cancellableOnSuspension = false)
     suspend fun testBatching(@Param(name = "amount") amount: Long): Long {
         val cmd = MockCommand(amount)
         val future: CompletableFuture<CommandResult<Long>> = executor.executeAsync(cmd)
@@ -43,5 +43,4 @@ class BatchingAsyncExecutorLincheckTest : VerifierState() {
     override fun extractState(): Any {
         return mockExecutor.sum
     }
-
 }
