@@ -4,72 +4,55 @@ import com.hazelcast.map.EntryBackupProcessor;
 import com.hazelcast.map.EntryProcessor;
 import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.remote.CommandResult;
-import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
-import io.github.bucket4j.serialization.DeserializationAdapter;
-import io.github.bucket4j.serialization.SerializationAdapter;
-import io.github.bucket4j.serialization.SerializationHandle;
+import io.github.bucket4j.serialization.InternalSerializationHelper;
 import io.github.bucket4j.util.ComparableByContent;
 
-import java.io.IOException;
-import java.io.Serializable;
+import java.util.Arrays;
 import java.util.Map;
 
-public class HazelcastEntryProcessor<K, T> implements EntryProcessor<K, RemoteBucketState>, ComparableByContent<HazelcastEntryProcessor> {
+import static io.github.bucket4j.serialization.InternalSerializationHelper.serializeCommand;
+import static io.github.bucket4j.serialization.InternalSerializationHelper.serializeResult;
+
+public class HazelcastEntryProcessor<K, T> implements EntryProcessor<K, byte[]>, ComparableByContent<HazelcastEntryProcessor> {
 
     private static final long serialVersionUID = 1L;
 
-    private final RemoteCommand<T> command;
-    private EntryBackupProcessor<K, RemoteBucketState> backupProcessor;
-
-    public static SerializationHandle<HazelcastEntryProcessor> SERIALIZATION_HANDLE = new SerializationHandle<HazelcastEntryProcessor>() {
-
-        @Override
-        public <I> HazelcastEntryProcessor deserialize(DeserializationAdapter<I> adapter, I input) throws IOException {
-            RemoteCommand command = RemoteCommand.deserialize(adapter, input);;
-            return new HazelcastEntryProcessor(command);
-        }
-
-        @Override
-        public <O> void serialize(SerializationAdapter<O> adapter, O output, HazelcastEntryProcessor processor) throws IOException {
-            RemoteCommand.serialize(adapter, output, processor.command);
-        }
-
-        @Override
-        public int getTypeId() {
-            return 50;
-        }
-
-        @Override
-        public Class<HazelcastEntryProcessor> getSerializedType() {
-            return HazelcastEntryProcessor.class;
-        }
-
-    };
+    private final byte[] commandBytes;
+    private EntryBackupProcessor<K, byte[]> backupProcessor;
 
     public HazelcastEntryProcessor(RemoteCommand<T> command) {
-        this.command = command;
+        this.commandBytes = serializeCommand(command);
+    }
+
+    public HazelcastEntryProcessor(byte[] commandBytes) {
+        this.commandBytes = commandBytes;
     }
 
     @Override
-    public Object process(Map.Entry<K, RemoteBucketState> entry) {
+    public byte[] process(Map.Entry<K, byte[]> entry) {
         HazelcastMutableEntryAdapter<K> entryAdapter = new HazelcastMutableEntryAdapter<>(entry);
+        RemoteCommand<T> command = InternalSerializationHelper.deserializeCommand(commandBytes);
         CommandResult<T> result = command.execute(entryAdapter, TimeMeter.SYSTEM_MILLISECONDS.currentTimeNanos());
         if (entryAdapter.isModified()) {
-            RemoteBucketState state = entry.getValue();
-            backupProcessor = new SimpleBackupProcessor<>(state);
+            byte[] stateBytes = entry.getValue();
+            backupProcessor = new SimpleBackupProcessor<>(stateBytes);
         }
-        return result;
+        return serializeResult(result);
     }
 
     @Override
-    public EntryBackupProcessor<K, RemoteBucketState> getBackupProcessor() {
+    public EntryBackupProcessor<K, byte[]> getBackupProcessor() {
         return backupProcessor;
+    }
+
+    public byte[] getCommandBytes() {
+        return commandBytes;
     }
 
     @Override
     public boolean equalsByContent(HazelcastEntryProcessor other) {
-        return ComparableByContent.equals(command, other.command);
+        return Arrays.equals(commandBytes, other.commandBytes);
     }
 
 }

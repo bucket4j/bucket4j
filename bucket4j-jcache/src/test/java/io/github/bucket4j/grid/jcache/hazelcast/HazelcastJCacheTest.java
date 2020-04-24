@@ -36,7 +36,7 @@ import java.io.Serializable;
 
 public class HazelcastJCacheTest extends AbstractJCacheTest {
 
-    private static Cache<String, RemoteBucketState> cache;
+    private static Cache<String, byte[]> cache;
     private static Cloud cloud;
     private static ViNode server;
 
@@ -80,7 +80,7 @@ public class HazelcastJCacheTest extends AbstractJCacheTest {
     }
 
     @Override
-    protected Cache<String, RemoteBucketState> getCache() {
+    protected Cache<String, byte[]> getCache() {
         return cache;
     }
 

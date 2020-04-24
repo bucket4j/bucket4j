@@ -4,7 +4,6 @@ import io.github.bucket4j.*;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.MultiResult;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
-import io.github.bucket4j.distributed.remote.RemoteRequest;
 import io.github.bucket4j.distributed.remote.commands.*;
 
 import java.io.IOException;
@@ -36,8 +35,7 @@ public interface SerializationHandle<T> {
             TryConsumeCommand.SERIALIZATION_HANDLE, // 29
             TryConsumeAndReturnRemainingTokensCommand.SERIALIZATION_HANDLE, // 30
             ReplaceConfigurationOrReturnPreviousCommand.SERIALIZATION_HANDLE, // 32
-            GetConfigurationCommand.SERIALIZATION_HANDLE, // 33
-            RemoteRequest.SERIALIZATION_HANDLE //34
+            GetConfigurationCommand.SERIALIZATION_HANDLE // 33
     ));
 
     <I> T deserialize(DeserializationAdapter<I> adapter, I input) throws IOException;

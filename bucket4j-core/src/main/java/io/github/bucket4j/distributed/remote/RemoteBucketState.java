@@ -22,13 +22,12 @@ import io.github.bucket4j.BucketState;
 import io.github.bucket4j.serialization.DeserializationAdapter;
 import io.github.bucket4j.serialization.SerializationHandle;
 import io.github.bucket4j.serialization.SerializationAdapter;
-import io.github.bucket4j.serialization.SerializationRoot;
 import io.github.bucket4j.util.ComparableByContent;
 
 import java.io.IOException;
 
 
-public class RemoteBucketState implements ComparableByContent<RemoteBucketState>, SerializationRoot<RemoteBucketState> {
+public class RemoteBucketState implements ComparableByContent<RemoteBucketState> {
 
     private BucketConfiguration configuration;
     private BucketState state;
@@ -62,10 +61,6 @@ public class RemoteBucketState implements ComparableByContent<RemoteBucketState>
     public RemoteBucketState(BucketConfiguration configuration, BucketState state) {
         this.configuration = configuration;
         this.state = state;
-    }
-
-    public RemoteBucketState deepCopy() {
-        return new RemoteBucketState(configuration, state.copy());
     }
 
     public void refillAllBandwidth(long currentTimeNanos) {
@@ -116,11 +111,6 @@ public class RemoteBucketState implements ComparableByContent<RemoteBucketState>
     public boolean equalsByContent(RemoteBucketState other) {
         return ComparableByContent.equals(state, other.state) &&
                 ComparableByContent.equals(configuration, other.configuration);
-    }
-
-    @Override
-    public <T> SerializationHandle<T> getSerializationHandle() {
-        return null;
     }
 
 }

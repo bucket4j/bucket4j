@@ -17,32 +17,37 @@
 
 package io.github.bucket4j.grid.hazelcast;
 
+import com.hazelcast.config.SerializationConfig;
+import com.hazelcast.config.SerializerConfig;
 import com.hazelcast.core.ExecutionCallback;
 import com.hazelcast.core.IMap;
 import io.github.bucket4j.distributed.proxy.AbstractBackend;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.remote.*;
+import io.github.bucket4j.grid.hazelcast.serialization.HazelcastEntryProcessorSerializer;
+import io.github.bucket4j.grid.hazelcast.serialization.SimpleBackupProcessorSerializer;
 
-import java.io.Serializable;
-import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
+
+import static io.github.bucket4j.serialization.InternalSerializationHelper.deserializeResult;
 
 /**
  * The extension of Bucket4j library addressed to support <a href="https://hazelcast.com//">Hazelcast</a> in-memory data grid.
  */
 public class HazelcastBackend<K> extends AbstractBackend<K> {
 
-    private final IMap<K, RemoteBucketState> cache;
+    private final IMap<K, byte[]> map;
 
-    public HazelcastBackend(IMap<K, RemoteBucketState> cache) {
-        this.cache = Objects.requireNonNull(cache);
+    public HazelcastBackend(IMap<K, byte[]> map) {
+        this.map = Objects.requireNonNull(map);
     }
 
     @Override
     public <T> CommandResult<T> execute(K key, RemoteCommand<T> command) {
         HazelcastEntryProcessor<K, T> entryProcessor = new HazelcastEntryProcessor<>(command);
-        return (CommandResult<T>) cache.executeOnKey(key, entryProcessor);
+        byte[] response = (byte[]) map.executeOnKey(key, entryProcessor);
+        return deserializeResult(response);
     }
 
     @Override
@@ -54,10 +59,15 @@ public class HazelcastBackend<K> extends AbstractBackend<K> {
     public <T> CompletableFuture<CommandResult<T>> executeAsync(K key, RemoteCommand<T> command) {
         HazelcastEntryProcessor<K, T> entryProcessor = new HazelcastEntryProcessor<>(command);
         CompletableFuture<CommandResult<T>> future = new CompletableFuture<>();
-        cache.submitToKey(key, entryProcessor, new ExecutionCallback() {
+        map.submitToKey(key, entryProcessor, new ExecutionCallback<byte[]>() {
             @Override
-            public void onResponse(Object response) {
-                future.complete((CommandResult<T>) response);
+            public void onResponse(byte[] response) {
+                try {
+                    CommandResult<T> result = deserializeResult(response);
+                    future.complete(result);
+                } catch (Throwable t) {
+                    future.completeExceptionally(t);
+                }
             }
 
             @Override
@@ -68,5 +78,29 @@ public class HazelcastBackend<K> extends AbstractBackend<K> {
         return future;
     }
 
+    /**
+     * Registers custom Hazelcast serializers for all classes from Bucket4j library which can be transferred over network.
+     * Each serializer will have different typeId, and this id will not be changed in the feature releases.
+     *
+     * <p>
+     *     <strong>Note:</strong> it would be better to leave an empty space in the Ids in order to handle the extension of Bucket4j library when new classes can be added to library.
+     *     For example if you called {@code getAllSerializers(10000)} then it would be reasonable to avoid registering your custom types in the interval 10000-10100.
+     * </p>
+     *
+     * @param typeIdBase a starting number from for typeId sequence
+     */
+    public static void addCustomSerializers(SerializationConfig serializationConfig, final int typeIdBase) {
+        serializationConfig.addSerializerConfig(
+                new SerializerConfig()
+                        .setImplementation(new HazelcastEntryProcessorSerializer(typeIdBase))
+                        .setTypeClass(HazelcastEntryProcessor.class)
+        );
+
+        serializationConfig.addSerializerConfig(
+                new SerializerConfig()
+                        .setImplementation(new SimpleBackupProcessorSerializer(typeIdBase + 1))
+                        .setTypeClass(SimpleBackupProcessor.class)
+        );
+    }
 
 }

@@ -22,7 +22,6 @@ import com.hazelcast.core.IMap;
 import io.github.bucket4j.AbstractDistributedBucketTest;
 import io.github.bucket4j.grid.hazelcast.HazelcastBackend;
 import io.github.bucket4j.distributed.proxy.Backend;
-import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import org.gridkit.nanocloud.Cloud;
 import org.gridkit.nanocloud.CloudFactory;
 import org.gridkit.nanocloud.VX;
@@ -34,7 +33,7 @@ import java.io.Serializable;
 
 public class HazelcastTest extends AbstractDistributedBucketTest {
 
-    private static IMap<String, RemoteBucketState> map;
+    private static IMap<String, byte[]> map;
     private static Cloud cloud;
     private static ViNode server;
 

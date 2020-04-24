@@ -36,8 +36,8 @@ import java.net.URISyntaxException;
 
 public class InfinispanTest extends AbstractDistributedBucketTest {
 
-    private static ReadWriteMap<String, RemoteBucketState> readWriteMap;
-    private static Cache<String, RemoteBucketState> cache;
+    private static ReadWriteMap<String, byte[]> readWriteMap;
+    private static Cache<String, byte[]> cache;
     private static CacheManager cacheManager1;
     private static CacheManager cacheManager2;
 
@@ -77,9 +77,9 @@ public class InfinispanTest extends AbstractDistributedBucketTest {
         }
     }
 
-    private static ReadWriteMap<String, RemoteBucketState> toMap(Cache<String, RemoteBucketState> cache) {
-        org.infinispan.Cache<String, RemoteBucketState> nativeCache = cache.unwrap(org.infinispan.Cache.class);
-        FunctionalMapImpl<String, RemoteBucketState> functionalMap = FunctionalMapImpl.create(nativeCache.getAdvancedCache());
+    private static ReadWriteMap<String, byte[]> toMap(Cache<String, byte[]> cache) {
+        org.infinispan.Cache<String, byte[]> nativeCache = cache.unwrap(org.infinispan.Cache.class);
+        FunctionalMapImpl<String, byte[]> functionalMap = FunctionalMapImpl.create(nativeCache.getAdvancedCache());
         return ReadWriteMapImpl.create(functionalMap);
     }
 

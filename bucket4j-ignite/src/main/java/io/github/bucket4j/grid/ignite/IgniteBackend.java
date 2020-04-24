@@ -20,8 +20,8 @@ package io.github.bucket4j.grid.ignite;
 import io.github.bucket4j.*;
 import io.github.bucket4j.distributed.proxy.AbstractBackend;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
-import io.github.bucket4j.distributed.proxy.Backend;
 import io.github.bucket4j.distributed.remote.*;
+import io.github.bucket4j.serialization.InternalSerializationHelper;
 import org.apache.ignite.IgniteCache;
 import org.apache.ignite.cache.CacheEntryProcessor;
 import org.apache.ignite.lang.IgniteFuture;
@@ -33,11 +33,13 @@ import java.io.Serializable;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
+import static io.github.bucket4j.serialization.InternalSerializationHelper.*;
+
 
 /**
  * The extension of Bucket4j library addressed to support <a href="https://ignite.apache.org/">Apache ignite</a> in-memory computing platform.
  */
-public class IgniteBackend<K extends Serializable> extends AbstractBackend<K> {
+public class IgniteBackend<K> extends AbstractBackend<K> {
 
     private final IgniteCache<K, RemoteBucketState> cache;
 
@@ -46,9 +48,10 @@ public class IgniteBackend<K extends Serializable> extends AbstractBackend<K> {
     }
 
     @Override
-    public <T extends Serializable> CommandResult<T> execute(K key, RemoteCommand<T> command) {
-        IgniteProcessor<K, T> entryProcessor = new IgniteProcessor<>(command);
-        return cache.invoke(key, entryProcessor);
+    public <T> CommandResult<T> execute(K key, RemoteCommand<T> command) {
+        IgniteProcessor<K> entryProcessor = new IgniteProcessor<>(command);
+        byte[] resultBytes = cache.invoke(key, entryProcessor);
+        return deserializeResult(resultBytes);
     }
 
     @Override
@@ -57,13 +60,15 @@ public class IgniteBackend<K extends Serializable> extends AbstractBackend<K> {
     }
 
     @Override
-    public <T extends Serializable> CompletableFuture<CommandResult<T>> executeAsync(K key, RemoteCommand<T> command) {
-        IgniteProcessor<K, T> entryProcessor = new IgniteProcessor<>(command);
-        IgniteFuture<CommandResult<T>> igniteFuture = cache.invokeAsync(key, entryProcessor);
+    public <T> CompletableFuture<CommandResult<T>> executeAsync(K key, RemoteCommand<T> command) {
+        IgniteProcessor<K> entryProcessor = new IgniteProcessor<>(command);
+        IgniteFuture<byte[]> igniteFuture = cache.invokeAsync(key, entryProcessor);
         CompletableFuture<CommandResult<T>> completableFuture = new CompletableFuture<>();
-        igniteFuture.listen((IgniteInClosure<IgniteFuture<CommandResult<T>>>) completedIgniteFuture -> {
+        igniteFuture.listen((IgniteInClosure<IgniteFuture<byte[]>>) completedIgniteFuture -> {
             try {
-                completableFuture.complete(completedIgniteFuture.get());
+                byte[] resultBytes = completedIgniteFuture.get();
+                CommandResult<T> result = deserializeResult(resultBytes);
+                completableFuture.complete(result);
             } catch (Throwable t) {
                 completableFuture.completeExceptionally(t);
             }
@@ -72,20 +77,21 @@ public class IgniteBackend<K extends Serializable> extends AbstractBackend<K> {
     }
 
 
-    private static class IgniteProcessor<K extends Serializable, T extends Serializable> implements Serializable,
-            CacheEntryProcessor<K, RemoteBucketState, CommandResult<T>> {
+    private static class IgniteProcessor<K> implements Serializable, CacheEntryProcessor<K, RemoteBucketState, byte[]> {
 
         private static final long serialVersionUID = 1;
 
-        private final RemoteCommand<T> command;
+        private final byte[] commandBytes;
 
-        private IgniteProcessor(RemoteCommand<T> command) {
-            this.command = command;
+        private IgniteProcessor(RemoteCommand<?> command) {
+            this.commandBytes = serializeCommand(command);
         }
 
         @Override
-        public CommandResult<T> process(MutableEntry<K, RemoteBucketState> entry, Object... arguments) throws EntryProcessorException {
-            return command.execute(new IgniteEntry(entry), TimeMeter.SYSTEM_MILLISECONDS.currentTimeNanos());
+        public byte[] process(MutableEntry<K, RemoteBucketState> entry, Object... arguments) throws EntryProcessorException {
+            RemoteCommand<?> command = deserializeCommand(commandBytes);
+            CommandResult<?> result = command.execute(new IgniteEntry(entry), TimeMeter.SYSTEM_MILLISECONDS.currentTimeNanos());
+            return serializeResult(result);
         }
 
     }

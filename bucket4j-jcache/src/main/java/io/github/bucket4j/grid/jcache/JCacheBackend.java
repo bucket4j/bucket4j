@@ -32,6 +32,8 @@ import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
+import static io.github.bucket4j.serialization.InternalSerializationHelper.*;
+
 /**
  * The extension of Bucket4j library addressed to support <a href="https://www.jcp.org/en/jsr/detail?id=107">JCache API (JSR 107)</a> specification.
  */
@@ -52,7 +54,8 @@ public class JCacheBackend<K> extends AbstractBackend<K> {
     @Override
     public <T> CommandResult<T> execute(K key, RemoteCommand<T> command) {
         BucketProcessor<K, T> entryProcessor = new BucketProcessor<>(command);
-        return cache.invoke(key, entryProcessor);
+        byte[] resultBytes = cache.invoke(key, entryProcessor);
+        return InternalSerializationHelper.deserializeResult(resultBytes);
     }
 
     @Override
@@ -86,20 +89,25 @@ public class JCacheBackend<K> extends AbstractBackend<K> {
         });
     }
 
-    private static class BucketProcessor<K, T> implements Serializable, EntryProcessor<K, byte[], CommandResult<T>> {
+    private static class BucketProcessor<K, T> implements Serializable, EntryProcessor<K, byte[], byte[]> {
 
-        private static final long serialVersionUID = 1;
+        private static final long serialVersionUID = 911;
+
+        private final byte[] serializedCommand;
+
+        public BucketProcessor(RemoteCommand<T> command) {
+            this.serializedCommand = InternalSerializationHelper.serializeCommand(command);
+        }
 
         @Override
-        public CommandResult<T> process(MutableEntry<K, byte[]> mutableEntry, Object... arguments) {
-            byte[] serializedCommand = (byte[]) arguments[0];
-            RemoteCommand<T> targetCommand;
+        public byte[] process(MutableEntry<K, byte[]> mutableEntry, Object... arguments) {
+            RemoteCommand<T> targetCommand = deserializeCommand(serializedCommand);
             JCacheBucketEntry bucketEntry = new JCacheBucketEntry(mutableEntry);
-            return targetCommand.execute(bucketEntry, TimeMeter.SYSTEM_MILLISECONDS.currentTimeNanos());
+            CommandResult<T> result = targetCommand.execute(bucketEntry, TimeMeter.SYSTEM_MILLISECONDS.currentTimeNanos());
+            return serializeResult(result);
         }
 
     }
-
 
     private static class JCacheBucketEntry implements MutableBucketEntry {
 
@@ -116,13 +124,14 @@ public class JCacheBackend<K> extends AbstractBackend<K> {
 
         @Override
         public void set(RemoteBucketState state) {
-            byte[] bytes = InternalSerializationHelper.serializeState(state);
+            byte[] bytes = serializeState(state);
             targetEntry.setValue(bytes);
         }
 
         @Override
         public RemoteBucketState get() {
-            return targetEntry.getValue();
+            byte[] stateBytes = targetEntry.getValue();
+            return deserializeState(stateBytes);
         }
 
     }

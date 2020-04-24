@@ -12,7 +12,6 @@ import io.github.bucket4j.distributed.AsyncBucket;
 import io.github.bucket4j.distributed.proxy.optimizers.batch.async.AsyncBatchingOptimizer;
 import io.github.bucket4j.distributed.proxy.optimizers.batch.sync.BatchingOptimizer;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
-import io.github.bucket4j.grid.hazelcast.serialization.HazelcastSerializer;
 import org.gridkit.nanocloud.Cloud;
 import org.gridkit.nanocloud.CloudFactory;
 import org.gridkit.nanocloud.VX;
@@ -40,7 +39,7 @@ public class HazelcastWithBatchingPerformanceExample {
 
     private static Logger logger = LoggerFactory.getLogger(HazelcastWithBatchingPerformanceExample.class);
 
-    private static IMap<String, RemoteBucketState> map;
+    private static IMap<String, byte[]> map;
     private static Cloud cloud;
     private static ViNode server;
 
@@ -56,14 +55,14 @@ public class HazelcastWithBatchingPerformanceExample {
         server.exec((Runnable & Serializable) () -> {
             Config config = new Config();
             config.setLiteMember(false);
-            HazelcastSerializer.addCustomSerializers(config.getSerializationConfig(), 100);
+            HazelcastBackend.addCustomSerializers(config.getSerializationConfig(), 100);
             HazelcastInstance hazelcastInstance = Hazelcast.newHazelcastInstance(config);
             hazelcastInstance.getMap("my_buckets");
         });
 
         // start hazelcast client which works inside current JVM and does not hold data
         Config config = new Config();
-        HazelcastSerializer.addCustomSerializers(config.getSerializationConfig(), 100);
+        HazelcastBackend.addCustomSerializers(config.getSerializationConfig(), 100);
         config.setLiteMember(true);
         hazelcastInstance = Hazelcast.newHazelcastInstance(config);
         map = hazelcastInstance.getMap("my_buckets");

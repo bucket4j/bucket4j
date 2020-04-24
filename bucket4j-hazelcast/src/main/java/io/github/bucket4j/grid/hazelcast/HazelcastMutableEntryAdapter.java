@@ -2,15 +2,18 @@ package io.github.bucket4j.grid.hazelcast;
 
 import io.github.bucket4j.distributed.remote.MutableBucketEntry;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
+import io.github.bucket4j.serialization.InternalSerializationHelper;
 
 import java.util.Map;
 
+import static io.github.bucket4j.serialization.InternalSerializationHelper.deserializeState;
+
 class HazelcastMutableEntryAdapter<K> implements MutableBucketEntry {
 
-    private final Map.Entry<K, RemoteBucketState> entry;
+    private final Map.Entry<K, byte[]> entry;
     private boolean modified;
 
-    public HazelcastMutableEntryAdapter(Map.Entry<K, RemoteBucketState> entry) {
+    public HazelcastMutableEntryAdapter(Map.Entry<K, byte[]> entry) {
         this.entry = entry;
     }
 
@@ -21,13 +24,15 @@ class HazelcastMutableEntryAdapter<K> implements MutableBucketEntry {
 
     @Override
     public void set(RemoteBucketState value) {
-        entry.setValue(value);
+        byte[] stateBytes = InternalSerializationHelper.serializeState(value);
+        entry.setValue(stateBytes);
         this.modified = true;
     }
 
     @Override
     public RemoteBucketState get() {
-        return entry.getValue();
+        byte[] stateBytes = entry.getValue();
+        return deserializeState(stateBytes);
     }
 
     public boolean isModified() {

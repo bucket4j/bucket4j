@@ -22,7 +22,6 @@ import io.github.bucket4j.AbstractDistributedBucketTest;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.distributed.proxy.Backend;
-import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import org.junit.Test;
 
 import javax.cache.Cache;
@@ -56,6 +55,6 @@ public abstract class AbstractJCacheTest extends AbstractDistributedBucketTest {
         getCache().remove(key);
     }
 
-    protected abstract Cache<String, RemoteBucketState> getCache();
+    protected abstract Cache<String, byte[]> getCache();
 
 }
