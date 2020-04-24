@@ -88,12 +88,12 @@
         <dependency>
             <groupId>com.github.vladimir-bukhtoyarov</groupId>
             <artifactId>rolling-metrics-core</artifactId>
-            <version>3.0.0-RC2</version>
+            <version>3.0.0-RC5</version>
         </dependency>
         <dependency>
             <groupId>com.github.vladimir-bukhtoyarov</groupId>
             <artifactId>rolling-metrics-dropwizard</artifactId>
-            <version>3.0.0-RC2</version>
+            <version>3.0.0-RC5</version>
         </dependency>
         <dependency>
             <groupId>org.hdrhistogram</groupId>
