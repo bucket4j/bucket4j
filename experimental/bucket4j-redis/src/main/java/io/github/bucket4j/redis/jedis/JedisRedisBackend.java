@@ -19,11 +19,9 @@ package io.github.bucket4j.redis.jedis;
 
 import io.github.bucket4j.redis.AbstractRedisBackend;
 
-import java.io.Serializable;
-
 
 // TODO javadocs
-public class JedisRedisBackend<K extends Serializable> extends AbstractRedisBackend<K> {
+public class JedisRedisBackend<K> extends AbstractRedisBackend<K> {
 
 
 }

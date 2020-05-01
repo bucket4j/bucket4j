@@ -24,7 +24,6 @@ import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.remote.commands.*;
 
-import java.io.Serializable;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ScheduledExecutorService;
@@ -222,7 +221,7 @@ public class AsyncBucketProxy implements AsyncBucket, AsyncScheduledBucket {
         return execute(new GetAvailableTokensCommand());
     }
 
-    private <T extends Serializable> CompletableFuture<T> execute(RemoteCommand<T> command) {
+    private <T> CompletableFuture<T> execute(RemoteCommand<T> command) {
         CompletableFuture<CommandResult<T>> futureResult = commandExecutor.executeAsync(command);
         return futureResult.thenCompose(cmdResult -> {
             if (!cmdResult.isBucketNotFound()) {

@@ -46,7 +46,7 @@ public class InfinispanJCacheTest {
         }
     }
 
-    private static Cache<String, RemoteBucketState> cache;
+    private static Cache<String, byte[]> cache;
     private static CacheManager cacheManager;
 
     @BeforeClass

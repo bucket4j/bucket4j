@@ -7,14 +7,11 @@ import io.github.bucket4j.serialization.SerializationHandle;
 import io.github.bucket4j.util.ComparableByContent;
 
 import java.io.IOException;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class MultiCommand implements RemoteCommand<MultiResult>, Serializable, ComparableByContent<MultiCommand> {
-
-    private static final long serialVersionUID = 42;
+public class MultiCommand implements RemoteCommand<MultiResult>, ComparableByContent<MultiCommand> {
 
     private List<RemoteCommand<?>> commands;
 

@@ -7,16 +7,12 @@ import com.hazelcast.internal.serialization.impl.DefaultSerializationServiceBuil
 import com.hazelcast.nio.BufferObjectDataInput;
 import com.hazelcast.nio.BufferObjectDataOutput;
 import com.hazelcast.nio.serialization.StreamSerializer;
-import io.github.bucket4j.Bucket4j;
-import io.github.bucket4j.BucketConfiguration;
-import io.github.bucket4j.BucketState;
-import io.github.bucket4j.MathType;
-import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.remote.commands.AddTokensCommand;
+import io.github.bucket4j.grid.hazelcast.HazelcastEntryProcessor;
 import io.github.bucket4j.grid.hazelcast.SimpleBackupProcessor;
 import io.github.bucket4j.grid.hazelcast.serialization.*;
-import io.github.bucket4j.serialization.AbstractSerializationTest;
+import io.github.bucket4j.util.ComparableByContent;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -24,34 +20,48 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import static io.github.bucket4j.Bandwidth.simple;
-import static java.time.Duration.ofSeconds;
+import static org.junit.Assert.assertTrue;
 
-public class HazelcastSerializerTest extends AbstractSerializationTest {
+
+public class HazelcastSerializerTest {
 
     private InternalSerializationService serializationService;
-    private Map<Class<?>, HazelcastSerializer<?>> serializerByClass = new HashMap<>();
+    private Map<Class<?>, StreamSerializer<?>> serializerByClass = new HashMap<>();
 
     @Before
     public void setup() {
         SerializationConfig serializationConfig = new SerializationConfig();
-        for (HazelcastSerializer serializer : HazelcastSerializer.getAllSerializers(1000)) {
-            serializationConfig.addSerializerConfig(
-                new SerializerConfig()
-                    .setImplementation(serializer)
-                    .setTypeClass(serializer.getSerializableType())
-            );
 
-            serializerByClass.put(serializer.getSerializableType(), serializer);
-        }
+        HazelcastEntryProcessorSerializer processorSerializer = new HazelcastEntryProcessorSerializer(1000);
+        serializationConfig.addSerializerConfig(
+                new SerializerConfig()
+                        .setImplementation(processorSerializer)
+                        .setTypeClass(processorSerializer.getSerializableType())
+        );
+
+        SimpleBackupProcessorSerializer backupSerializer = new SimpleBackupProcessorSerializer(1001);
+        serializationConfig.addSerializerConfig(
+                new SerializerConfig()
+                        .setImplementation(backupSerializer)
+                        .setTypeClass(backupSerializer.getSerializableType())
+        );
+
+        serializerByClass.put(processorSerializer.getSerializableType(), processorSerializer);
+        serializerByClass.put(backupSerializer.getSerializableType(), backupSerializer);
 
         this.serializationService = new DefaultSerializationServiceBuilder()
                 .setConfig(serializationConfig)
                 .build();
     }
 
-    @Override
-    protected <T> T serializeAndDeserialize(T original) {
+    @Test
+    public void tetsSerializationOfEntryProcessors() {
+        RemoteCommand<?> command = new AddTokensCommand(42);
+        testSerialization(new HazelcastEntryProcessor(command));
+        testSerialization(new SimpleBackupProcessor(new byte[] {1,2,3}));
+    }
+
+    private <T> T serializeAndDeserialize(T original) {
         try {
             StreamSerializer<T> serializer = (StreamSerializer<T>) serializerByClass.get(original.getClass());
 
@@ -65,17 +75,9 @@ public class HazelcastSerializerTest extends AbstractSerializationTest {
         }
     }
 
-    @Test
-    public void tetsSerializationOfEntryProcessors() {
-        BucketConfiguration configuration = Bucket4j.configurationBuilder()
-                .addLimit(simple(10, ofSeconds(1)))
-                .build();
-        RemoteCommand<?> command = new AddTokensCommand(42);
-        BucketState bucketState = BucketState.createInitialState(configuration, MathType.INTEGER_64_BITS, System.nanoTime());
-        RemoteBucketState gridBucketState = new RemoteBucketState(configuration, bucketState);
-
-        //testSerialization(new HazelcastEntryProcessor<>(command));
-        testSerialization(new SimpleBackupProcessor<>(gridBucketState));
+    private void testSerialization(Object object) {
+        Object object2 = serializeAndDeserialize(object);
+        assertTrue(ComparableByContent.equals(object, object2));
     }
 
 }

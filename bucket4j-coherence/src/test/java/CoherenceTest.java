@@ -21,7 +21,6 @@ import com.tangosol.net.NamedCache;
 import io.github.bucket4j.AbstractDistributedBucketTest;
 import io.github.bucket4j.grid.coherence.CoherenceBackend;
 import io.github.bucket4j.distributed.proxy.Backend;
-import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.littlegrid.ClusterMemberGroup;
@@ -31,7 +30,7 @@ import org.littlegrid.ClusterMemberGroupUtils;
 public class CoherenceTest extends AbstractDistributedBucketTest {
 
     private static ClusterMemberGroup memberGroup;
-    private static NamedCache<String, RemoteBucketState> cache;
+    private static NamedCache<String, byte[]> cache;
 
     @BeforeClass
     public static void prepareCache() throws InterruptedException {

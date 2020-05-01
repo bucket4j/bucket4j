@@ -20,11 +20,9 @@ package io.github.bucket4j.grid.infinispan;
 import io.github.bucket4j.distributed.proxy.AbstractBackend;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.remote.*;
+import io.github.bucket4j.serialization.InternalSerializationHelper;
 import org.infinispan.commons.CacheException;
-import org.infinispan.functional.EntryView;
 import org.infinispan.functional.FunctionalMap.ReadWriteMap;
-
-import java.io.Serializable;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -32,20 +30,21 @@ import java.util.concurrent.ExecutionException;
 /**
  * The extension of Bucket4j library addressed to support <a href="https://infinispan.org/">Infinispan</a> in-memory computing platform.
  */
-public class InfinispanBackend<K extends Serializable> extends AbstractBackend<K> {
+public class InfinispanBackend<K> extends AbstractBackend<K> {
 
-    private final ReadWriteMap<K, RemoteBucketState> readWriteMap;
+    private final ReadWriteMap<K, byte[]> readWriteMap;
 
     // TODO javadocs
-    public InfinispanBackend(ReadWriteMap<K, RemoteBucketState> readWriteMap) {
+    public InfinispanBackend(ReadWriteMap<K, byte[]> readWriteMap) {
         this.readWriteMap = Objects.requireNonNull(readWriteMap);
     }
 
     @Override
-    public <T extends Serializable> CommandResult<T> execute(K key, RemoteCommand<T> command) {
+    public <T> CommandResult<T> execute(K key, RemoteCommand<T> command) {
         InfinispanProcessor<K, T> entryProcessor = new InfinispanProcessor<>(command);
         try {
-            return readWriteMap.eval(key, entryProcessor).get();
+            CompletableFuture<byte[]> resultFuture = readWriteMap.eval(key, entryProcessor);
+            return (CommandResult<T>) resultFuture.thenApply(InternalSerializationHelper::deserializeResult).get();
         } catch (InterruptedException | ExecutionException e) {
             throw new CacheException(e);
         }
@@ -57,36 +56,17 @@ public class InfinispanBackend<K extends Serializable> extends AbstractBackend<K
     }
 
     @Override
-    public <T extends Serializable> CompletableFuture<CommandResult<T>> executeAsync(K key, RemoteCommand<T> command) {
-        InfinispanProcessor<K, T> entryProcessor = new InfinispanProcessor<>(command);
-        return readWriteMap.eval(key, entryProcessor);
+    public <T> CompletableFuture<CommandResult<T>> executeAsync(K key, RemoteCommand<T> command) {
+        try {
+            InfinispanProcessor<K, T> entryProcessor = new InfinispanProcessor<>(command);
+            CompletableFuture<byte[]> resultFuture = readWriteMap.eval(key, entryProcessor);
+            return resultFuture.thenApply(InternalSerializationHelper::deserializeResult);
+        } catch (Throwable t) {
+            CompletableFuture<CommandResult<T>> fail = new CompletableFuture<>();
+            fail.completeExceptionally(t);
+            return fail;
+        }
     }
 
-
-    public static class InfinispanEntry<K extends Serializable> implements MutableBucketEntry {
-
-        private final EntryView.ReadWriteEntryView<K, RemoteBucketState> entryView;
-
-        public InfinispanEntry(EntryView.ReadWriteEntryView<K, RemoteBucketState> entryView) {
-            this.entryView = entryView;
-        }
-
-        @Override
-        public RemoteBucketState get() {
-            RemoteBucketState sourceState = entryView.get();
-            return sourceState.deepCopy();
-        }
-
-        @Override
-        public boolean exists() {
-            return entryView.find().isPresent();
-        }
-
-        @Override
-        public void set(RemoteBucketState value) {
-            entryView.set(value);
-        }
-
-    }
 
 }

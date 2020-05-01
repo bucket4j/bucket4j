@@ -16,20 +16,10 @@
  */
 
 package io.github.bucket4j.distributed.proxy;
-
-import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketConfiguration;
-import io.github.bucket4j.BucketExceptions;
-import io.github.bucket4j.BucketListener;
-import io.github.bucket4j.distributed.AsyncBucket;
-import io.github.bucket4j.distributed.remote.CommandResult;
-import io.github.bucket4j.distributed.remote.RemoteCommand;
-import io.github.bucket4j.distributed.remote.commands.GetConfigurationCommand;
 
-import java.io.Serializable;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Supplier;
 
 /**
  * TODO javadocs
@@ -40,7 +30,7 @@ import java.util.function.Supplier;
  *
  * @param <K> type of key
  */
-public interface Backend<K extends Serializable> {
+public interface Backend<K> {
 
     /**
      * TODO fix javadocs

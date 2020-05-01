@@ -21,12 +21,8 @@ import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
 import io.github.bucket4j.AbstractDistributedBucketTest;
-import io.github.bucket4j.Bucket;
-import io.github.bucket4j.Bucket4j;
 import io.github.bucket4j.distributed.proxy.Backend;
-import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.grid.hazelcast.HazelcastBackend;
-import io.github.bucket4j.grid.hazelcast.serialization.HazelcastSerializer;
 import org.gridkit.nanocloud.Cloud;
 import org.gridkit.nanocloud.CloudFactory;
 import org.gridkit.nanocloud.VX;
@@ -38,7 +34,7 @@ import java.io.Serializable;
 
 public class HazelcastWithCustomSerializersTest extends AbstractDistributedBucketTest {
 
-    private static IMap<String, RemoteBucketState> map;
+    private static IMap<String, byte[]> map;
     private static Cloud cloud;
     private static ViNode server;
 
@@ -53,7 +49,7 @@ public class HazelcastWithCustomSerializersTest extends AbstractDistributedBucke
 
         server.exec((Runnable & Serializable) () -> {
             Config config = new Config();
-            HazelcastSerializer.addCustomSerializers(config.getSerializationConfig(), 10_000);
+            HazelcastBackend.addCustomSerializers(config.getSerializationConfig(), 1000);
             config.setLiteMember(false);
             HazelcastInstance hazelcastInstance = Hazelcast.newHazelcastInstance(config);
             hazelcastInstance.getMap("my_buckets");
@@ -61,7 +57,7 @@ public class HazelcastWithCustomSerializersTest extends AbstractDistributedBucke
 
         // start hazelcast client which works inside current JVM and does not hold data
         Config config = new Config();
-        HazelcastSerializer.addCustomSerializers(config.getSerializationConfig(), 10_000);
+        HazelcastBackend.addCustomSerializers(config.getSerializationConfig(), 1000);
         config.setLiteMember(true);
         hazelcastInstance = Hazelcast.newHazelcastInstance(config);
         map = hazelcastInstance.getMap("my_buckets");
@@ -76,7 +72,6 @@ public class HazelcastWithCustomSerializersTest extends AbstractDistributedBucke
             cloud.shutdown();
         }
     }
-
 
     @Override
     protected Backend<String> getBackend() {

@@ -27,8 +27,6 @@ import java.util.Arrays;
 
 public class BucketStateIEEE754 implements BucketState, ComparableByContent<BucketStateIEEE754> {
 
-    private static final long serialVersionUID = 42L;
-
     // holds the current amount of tokens per each bandwidth
     final double[] tokens;
 

@@ -25,11 +25,9 @@ import io.github.bucket4j.serialization.SerializationAdapter;
 import io.github.bucket4j.util.ComparableByContent;
 
 import java.io.IOException;
-import java.io.Serializable;
 
-public class RemoteBucketState implements Serializable, ComparableByContent<RemoteBucketState> {
 
-    private static final long serialVersionUID = 42;
+public class RemoteBucketState implements ComparableByContent<RemoteBucketState> {
 
     private BucketConfiguration configuration;
     private BucketState state;
@@ -63,10 +61,6 @@ public class RemoteBucketState implements Serializable, ComparableByContent<Remo
     public RemoteBucketState(BucketConfiguration configuration, BucketState state) {
         this.configuration = configuration;
         this.state = state;
-    }
-
-    public RemoteBucketState deepCopy() {
-        return new RemoteBucketState(configuration, state.copy());
     }
 
     public void refillAllBandwidth(long currentTimeNanos) {

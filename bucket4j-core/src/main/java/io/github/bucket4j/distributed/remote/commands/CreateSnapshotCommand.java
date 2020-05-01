@@ -31,8 +31,6 @@ import java.io.IOException;
 
 public class CreateSnapshotCommand implements RemoteCommand<BucketState>, ComparableByContent<CreateSnapshotCommand> {
 
-    private static final long serialVersionUID = 42;
-
     public static SerializationHandle<CreateSnapshotCommand> SERIALIZATION_HANDLE = new SerializationHandle<CreateSnapshotCommand>() {
         @Override
         public <S> CreateSnapshotCommand deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {

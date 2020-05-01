@@ -30,11 +30,8 @@ import io.github.bucket4j.serialization.SerializationHandle;
 import io.github.bucket4j.util.ComparableByContent;
 
 import java.io.IOException;
-import java.io.Serializable;
 
-public class CreateInitialStateAndExecuteCommand<T extends Serializable> implements RemoteCommand<T>, ComparableByContent<CreateInitialStateAndExecuteCommand> {
-
-    private static final long serialVersionUID = 1;
+public class CreateInitialStateAndExecuteCommand<T> implements RemoteCommand<T>, ComparableByContent<CreateInitialStateAndExecuteCommand> {
 
     private RemoteCommand<T> targetCommand;
     private BucketConfiguration configuration;

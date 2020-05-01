@@ -6,13 +6,10 @@ import io.github.bucket4j.serialization.SerializationHandle;
 import io.github.bucket4j.util.ComparableByContent;
 
 import java.io.IOException;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MultiResult implements Serializable, ComparableByContent<MultiResult> {
-
-    private static final long serialVersionUID = 42;
+public class MultiResult implements ComparableByContent<MultiResult> {
 
     private List<CommandResult<?>> results;
 

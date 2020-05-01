@@ -19,7 +19,6 @@ package io.github.bucket4j.grid.infinispan;
 
 import io.github.bucket4j.AbstractDistributedBucketTest;
 import io.github.bucket4j.distributed.proxy.Backend;
-import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.grid.infinispan.serialization.Bucket4jProtobufContextInitializer;
 import org.infinispan.Cache;
 import org.infinispan.configuration.cache.CacheMode;
@@ -40,8 +39,8 @@ import java.net.URISyntaxException;
 
 public class InfinispanTest extends AbstractDistributedBucketTest {
 
-    private static ReadWriteMap<String, RemoteBucketState> readWriteMap;
-    private static Cache<String, RemoteBucketState> cache;
+    private static ReadWriteMap<String, byte[]> readWriteMap;
+    private static Cache<String, byte[]> cache;
     private static DefaultCacheManager cacheManager1;
     private static DefaultCacheManager cacheManager2;
 
@@ -92,8 +91,8 @@ public class InfinispanTest extends AbstractDistributedBucketTest {
         cache.remove(key);
     }
 
-    private static ReadWriteMap<String, RemoteBucketState> toMap(Cache<String, RemoteBucketState> cache) {
-        FunctionalMapImpl<String, RemoteBucketState> functionalMap = FunctionalMapImpl.create(cache.getAdvancedCache());
+    private static ReadWriteMap<String, byte[]> toMap(Cache<String, byte[]> cache) {
+        FunctionalMapImpl<String, byte[]> functionalMap = FunctionalMapImpl.create(cache.getAdvancedCache());
         return ReadWriteMapImpl.create(functionalMap);
     }
 

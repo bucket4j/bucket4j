@@ -23,8 +23,6 @@ package io.github.bucket4j.distributed.proxy;
  */
 public class BucketNotFoundException extends IllegalStateException {
 
-    private static final long serialVersionUID = 42;
-
     public BucketNotFoundException() {
         super("Bucket does not exist");
     }

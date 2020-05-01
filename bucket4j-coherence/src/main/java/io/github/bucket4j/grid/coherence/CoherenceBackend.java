@@ -25,12 +25,13 @@ import com.tangosol.util.processor.SingleEntryAsynchronousProcessor;
 import io.github.bucket4j.*;
 import io.github.bucket4j.distributed.proxy.AbstractBackend;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
-import io.github.bucket4j.distributed.proxy.Backend;
 import io.github.bucket4j.distributed.remote.*;
+import io.github.bucket4j.serialization.InternalSerializationHelper;
 
-import java.io.Serializable;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+
+import static io.github.bucket4j.serialization.InternalSerializationHelper.*;
 
 
 /**
@@ -38,18 +39,19 @@ import java.util.concurrent.CompletableFuture;
  *
  * @param <K>
  */
-public class CoherenceBackend<K extends Serializable> extends AbstractBackend<K> {
+public class CoherenceBackend<K> extends AbstractBackend<K> {
 
-    private final NamedCache<K, RemoteBucketState> cache;
+    private final NamedCache<K, byte[]> cache;
 
-    public CoherenceBackend(NamedCache<K, RemoteBucketState> cache) {
+    public CoherenceBackend(NamedCache<K, byte[]> cache) {
         this.cache = cache;
     }
 
     @Override
-    public <T extends Serializable> CommandResult<T> execute(K key, RemoteCommand<T> command) {
+    public <T> CommandResult<T> execute(K key, RemoteCommand<T> command) {
         CoherenceProcessor<K, T> entryProcessor = new CoherenceProcessor<>(command);
-        return cache.invoke(key, entryProcessor);
+        byte[] resultBytes = cache.invoke(key, entryProcessor);
+        return deserializeResult(resultBytes);
     }
 
     @Override
@@ -58,51 +60,54 @@ public class CoherenceBackend<K extends Serializable> extends AbstractBackend<K>
     }
 
     @Override
-    public <T extends Serializable> CompletableFuture<CommandResult<T>> executeAsync(K key, RemoteCommand<T> command) {
+    public <T> CompletableFuture<CommandResult<T>> executeAsync(K key, RemoteCommand<T> command) {
         CoherenceProcessor<K, T> entryProcessor = new CoherenceProcessor<>(command);
         CompletableFuture<CommandResult<T>> future = new CompletableFuture<>();
-        SingleEntryAsynchronousProcessor<K, RemoteBucketState, CommandResult<T>> asyncProcessor =
-                new SingleEntryAsynchronousProcessor<K, RemoteBucketState, CommandResult<T>>(entryProcessor) {
-                    @Override
-                    public void onResult(Map.Entry<K, CommandResult<T>> entry) {
-                        super.onResult(entry);
-                        future.complete(entry.getValue());
-                    }
-                    @Override
-                    public void onException(Throwable error) {
-                        super.onException(error);
-                        future.completeExceptionally(error);
-                    }
-                };
+        SingleEntryAsynchronousProcessor<K, byte[], byte[]> asyncProcessor =
+            new SingleEntryAsynchronousProcessor<K, byte[], byte[]>(entryProcessor) {
+                @Override
+                public void onResult(Map.Entry<K, byte[]> entry) {
+                    super.onResult(entry);
+                    byte[] resultBytes = entry.getValue();
+                    future.complete(deserializeResult(resultBytes));
+                }
+                @Override
+                public void onException(Throwable error) {
+                    super.onException(error);
+                    future.completeExceptionally(error);
+                }
+            };
         cache.invoke(key, asyncProcessor);
         return future;
     }
 
 
-    private static class CoherenceProcessor<K extends Serializable, T extends Serializable> extends AbstractProcessor<K, RemoteBucketState, CommandResult<T>> {
+    private static class CoherenceProcessor<K, T> extends AbstractProcessor<K, byte[], byte[]> {
 
         private static final long serialVersionUID = 1L;
 
-        private final RemoteCommand<T> command;
+        private final byte[] commandBytes;
 
         public CoherenceProcessor(RemoteCommand<T> command) {
-            this.command = command;
+            this.commandBytes = InternalSerializationHelper.serializeCommand(command);
         }
 
         @Override
-        public CommandResult<T> process(InvocableMap.Entry<K, RemoteBucketState> entry) {
+        public byte[] process(InvocableMap.Entry<K, byte[]> entry) {
             CoherenceEntry<K> entryAdapter = new CoherenceEntry<>(entry);
-            return command.execute(entryAdapter, TimeMeter.SYSTEM_MILLISECONDS.currentTimeNanos());
+            RemoteCommand<Object> command = deserializeCommand(commandBytes);
+            CommandResult<?> result = command.execute(entryAdapter, TimeMeter.SYSTEM_MILLISECONDS.currentTimeNanos());
+            return serializeResult(result);
         }
 
     }
 
 
-    private static class CoherenceEntry<K extends Serializable> implements MutableBucketEntry {
+    private static class CoherenceEntry<K> implements MutableBucketEntry {
 
-        private final Map.Entry<K, RemoteBucketState> entry;
+        private final Map.Entry<K, byte[]> entry;
 
-        public CoherenceEntry(InvocableMap.Entry<K, RemoteBucketState> entry) {
+        public CoherenceEntry(InvocableMap.Entry<K, byte[]> entry) {
             this.entry = entry;
         }
 
@@ -113,15 +118,16 @@ public class CoherenceBackend<K extends Serializable> extends AbstractBackend<K>
 
         @Override
         public void set(RemoteBucketState value) {
-            entry.setValue(value);
+            byte[] stateBytes = serializeState(value);
+            entry.setValue(stateBytes);
         }
 
         @Override
         public RemoteBucketState get() {
-            return entry.getValue();
+            byte[] stateBytes = entry.getValue();
+            return deserializeState(stateBytes);
         }
 
     }
-
 
 }

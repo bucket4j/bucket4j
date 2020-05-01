@@ -8,13 +8,12 @@ import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.remote.commands.GetConfigurationCommand;
 
-import java.io.Serializable;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
-public abstract class AbstractBackend<K extends Serializable> implements Backend<K> {
+public abstract class AbstractBackend<K> implements Backend<K> {
 
     private static final RecoveryStrategy DEFAULT_RECOVERY_STRATEGY = RecoveryStrategy.RECONSTRUCT;
     private static final RequestOptimizer DEFAULT_REQUEST_OPTIMIZER = RequestOptimizer.NONE_OPTIMIZED;
@@ -89,7 +88,7 @@ public abstract class AbstractBackend<K extends Serializable> implements Backend
 
             CommandExecutor commandExecutor = new CommandExecutor() {
                 @Override
-                public <T extends Serializable> CommandResult<T> execute(RemoteCommand<T> command) {
+                public <T> CommandResult<T> execute(RemoteCommand<T> command) {
                     return AbstractBackend.this.execute(key, command);
                 }
             };
@@ -118,7 +117,7 @@ public abstract class AbstractBackend<K extends Serializable> implements Backend
 
             AsyncCommandExecutor commandExecutor = new AsyncCommandExecutor() {
                 @Override
-                public <T extends Serializable> CompletableFuture<CommandResult<T>> executeAsync(RemoteCommand<T> command) {
+                public <T> CompletableFuture<CommandResult<T>> executeAsync(RemoteCommand<T> command) {
                     return AbstractBackend.this.executeAsync(key, command);
                 }
             };
@@ -130,9 +129,9 @@ public abstract class AbstractBackend<K extends Serializable> implements Backend
     }
 
     // TODO javadocs
-    abstract protected <T extends Serializable> CommandResult<T> execute(K key, RemoteCommand<T> command);
+    abstract protected <T> CommandResult<T> execute(K key, RemoteCommand<T> command);
 
     // TODO javadocs
-    abstract protected <T extends Serializable> CompletableFuture<CommandResult<T>> executeAsync(K key, RemoteCommand<T> command);
+    abstract protected <T> CompletableFuture<CommandResult<T>> executeAsync(K key, RemoteCommand<T> command);
 
 }

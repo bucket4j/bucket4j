@@ -22,7 +22,6 @@ import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.commands.*;
 
-import java.io.Serializable;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
@@ -114,7 +113,7 @@ public class BucketProxy extends AbstractBucket {
         return bucketConfiguration;
     }
 
-    private <T extends Serializable> T execute(RemoteCommand<T> command) {
+    private <T> T execute(RemoteCommand<T> command) {
         CommandResult<T> result = commandExecutor.execute(command);
         if (!result.isBucketNotFound()) {
             return result.getData();

@@ -30,8 +30,6 @@ import java.io.IOException;
 
 public class TryConsumeCommand implements RemoteCommand<Boolean>, ComparableByContent<TryConsumeCommand> {
 
-    private static final long serialVersionUID = 42;
-
     private long tokensToConsume;
 
     public static SerializationHandle<TryConsumeCommand> SERIALIZATION_HANDLE = new SerializationHandle<TryConsumeCommand>() {

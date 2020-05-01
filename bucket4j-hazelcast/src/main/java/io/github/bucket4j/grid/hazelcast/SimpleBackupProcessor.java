@@ -8,51 +8,31 @@ import io.github.bucket4j.serialization.SerializationHandle;
 import io.github.bucket4j.util.ComparableByContent;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Map;
 
-public class SimpleBackupProcessor<K> implements EntryBackupProcessor<K, RemoteBucketState>, ComparableByContent<SimpleBackupProcessor> {
+public class SimpleBackupProcessor<K> implements EntryBackupProcessor<K, byte[]>, ComparableByContent<SimpleBackupProcessor> {
 
     private static final long serialVersionUID = 1L;
 
-    private final RemoteBucketState state;
+    private final byte[] state;
 
-    public SimpleBackupProcessor(RemoteBucketState state) {
+    public SimpleBackupProcessor(byte[] state) {
         this.state = state;
     }
 
     @Override
-    public void processBackup(Map.Entry<K, RemoteBucketState> entry) {
+    public void processBackup(Map.Entry<K, byte[]> entry) {
         entry.setValue(state);
     }
 
-    public static SerializationHandle<SimpleBackupProcessor> SERIALIZATION_HANDLE = new SerializationHandle<SimpleBackupProcessor>() {
-
-        @Override
-        public <I> SimpleBackupProcessor deserialize(DeserializationAdapter<I> adapter, I input) throws IOException {
-            RemoteBucketState state = RemoteBucketState.SERIALIZATION_HANDLE.deserialize(adapter, input);
-            return new SimpleBackupProcessor(state);
-        }
-
-        @Override
-        public <O> void serialize(SerializationAdapter<O> adapter, O output, SimpleBackupProcessor processor) throws IOException {
-            RemoteBucketState.SERIALIZATION_HANDLE.serialize(adapter, output, processor.state);
-        }
-
-        @Override
-        public int getTypeId() {
-            return 51;
-        }
-
-        @Override
-        public Class<SimpleBackupProcessor> getSerializedType() {
-            return SimpleBackupProcessor.class;
-        }
-
-    };
+    public byte[] getState() {
+        return state;
+    }
 
     @Override
     public boolean equalsByContent(SimpleBackupProcessor other) {
-        return ComparableByContent.equals(state, other.state);
+        return Arrays.equals(state, other.state);
     }
 
 }

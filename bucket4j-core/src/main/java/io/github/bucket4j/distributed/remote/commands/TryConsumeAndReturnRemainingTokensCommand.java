@@ -32,8 +32,6 @@ import io.github.bucket4j.util.ComparableByContent;
 
 public class TryConsumeAndReturnRemainingTokensCommand implements RemoteCommand<ConsumptionProbe>, ComparableByContent<TryConsumeAndReturnRemainingTokensCommand> {
 
-    private static final long serialVersionUID = 42;
-
     private long tokensToConsume;
 
     public static SerializationHandle<TryConsumeAndReturnRemainingTokensCommand> SERIALIZATION_HANDLE = new SerializationHandle<TryConsumeAndReturnRemainingTokensCommand>() {

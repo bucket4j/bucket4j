@@ -25,13 +25,10 @@ import io.github.bucket4j.serialization.SerializationAdapter;
 import io.github.bucket4j.util.ComparableByContent;
 
 import java.io.IOException;
-import java.io.Serializable;
 
 import static io.github.bucket4j.serialization.PrimitiveSerializationHandles.*;
 
-public class CommandResult<T> implements Serializable, ComparableByContent<CommandResult> {
-
-    private static final long serialVersionUID = 42;
+public class CommandResult<T> implements ComparableByContent<CommandResult> {
 
     public static final CommandResult<Nothing> NOTHING = CommandResult.success(Nothing.INSTANCE, NULL_HANDLE);
     public static final CommandResult<Long> ZERO = CommandResult.success(0L, LONG_HANDLE);
@@ -55,7 +52,7 @@ public class CommandResult<T> implements Serializable, ComparableByContent<Comma
             }
             int typeId = adapter.readInt(input);
             SerializationHandle handle = SerializationHandle.CORE_HANDLES.getHandleByTypeId(typeId);
-            Serializable resultData = (Serializable) handle.deserialize(adapter, input);
+            Object resultData = handle.deserialize(adapter, input);
 
             return CommandResult.success(resultData, typeId);
         }

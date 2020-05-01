@@ -33,8 +33,6 @@ import static io.github.bucket4j.serialization.PrimitiveSerializationHandles.LON
 
 public class GetAvailableTokensCommand implements RemoteCommand<Long>, ComparableByContent<GetAvailableTokensCommand> {
 
-    private static final long serialVersionUID = 42;
-
     public static SerializationHandle<GetAvailableTokensCommand> SERIALIZATION_HANDLE = new SerializationHandle<GetAvailableTokensCommand>() {
 
         @Override

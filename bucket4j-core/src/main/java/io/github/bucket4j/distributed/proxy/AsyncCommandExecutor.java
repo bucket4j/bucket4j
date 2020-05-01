@@ -20,7 +20,6 @@ package io.github.bucket4j.distributed.proxy;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 
-import java.io.Serializable;
 import java.util.concurrent.CompletableFuture;
 
 
@@ -28,6 +27,6 @@ import java.util.concurrent.CompletableFuture;
 public interface AsyncCommandExecutor {
 
     // TODO javadocs
-    <T extends Serializable> CompletableFuture<CommandResult<T>> executeAsync(RemoteCommand<T> command);
+    <T> CompletableFuture<CommandResult<T>> executeAsync(RemoteCommand<T> command);
 
 }

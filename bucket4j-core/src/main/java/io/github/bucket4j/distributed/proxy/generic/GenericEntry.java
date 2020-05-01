@@ -19,12 +19,11 @@ package io.github.bucket4j.distributed.proxy.generic;
 
 import io.github.bucket4j.distributed.remote.MutableBucketEntry;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
+import io.github.bucket4j.serialization.InternalSerializationHelper;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.util.Objects;
+
+import static io.github.bucket4j.serialization.InternalSerializationHelper.deserializeState;
 
 public class GenericEntry implements MutableBucketEntry {
 
@@ -32,7 +31,7 @@ public class GenericEntry implements MutableBucketEntry {
     private RemoteBucketState modifiedState;
 
     public GenericEntry(byte[] originalStateBytes) {
-        this.originalState = originalStateBytes == null? null : deserialize(originalStateBytes);
+        this.originalState = originalStateBytes == null? null : deserializeState(originalStateBytes);
     }
 
     @Override
@@ -55,29 +54,11 @@ public class GenericEntry implements MutableBucketEntry {
     }
 
     public byte[] getModifiedStateBytes() {
-        return serialize(modifiedState);
+        return InternalSerializationHelper.serializeState(modifiedState);
     }
 
     public boolean isModified() {
         return modifiedState != null;
-    }
-
-    private static byte[] serialize(RemoteBucketState object) {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        try (ObjectOutputStream oos = new ObjectOutputStream(baos)) {
-            oos.writeObject(object);
-            return baos.toByteArray();
-        } catch (Exception e) {
-            throw new IllegalStateException(e);
-        }
-    }
-
-    private static RemoteBucketState deserialize(byte[] data) {
-        try (ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(data))) {
-            return (RemoteBucketState) ois.readObject();
-        } catch (Exception e) {
-            throw new IllegalStateException(e);
-        }
     }
 
 }

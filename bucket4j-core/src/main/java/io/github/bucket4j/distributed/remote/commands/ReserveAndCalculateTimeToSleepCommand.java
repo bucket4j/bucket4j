@@ -33,8 +33,6 @@ import static io.github.bucket4j.serialization.PrimitiveSerializationHandles.LON
 
 public class ReserveAndCalculateTimeToSleepCommand implements RemoteCommand<Long>, ComparableByContent<ReserveAndCalculateTimeToSleepCommand> {
 
-    private static final long serialVersionUID = 42;
-
     private long tokensToConsume;
     private long waitIfBusyNanosLimit;
 
