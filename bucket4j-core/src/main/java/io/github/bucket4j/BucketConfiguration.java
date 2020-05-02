@@ -1,20 +1,22 @@
-/*
- *
- * Copyright 2015-2018 Vladimir Bukhtoyarov
- *
- *       Licensed under the Apache License, Version 2.0 (the "License");
- *       you may not use this file except in compliance with the License.
- *       You may obtain a copy of the License at
- *
- *             http://www.apache.org/licenses/LICENSE-2.0
- *
- *      Unless required by applicable law or agreed to in writing, software
- *      distributed under the License is distributed on an "AS IS" BASIS,
- *      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *      See the License for the specific language governing permissions and
- *      limitations under the License.
+/*-
+ * ========================LICENSE_START=================================
+ * Bucket4j
+ * %%
+ * Copyright (C) 2015 - 2020 Vladimir Bukhtoyarov
+ * %%
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * =========================LICENSE_END==================================
  */
-
 package io.github.bucket4j;
 
 import io.github.bucket4j.serialization.DeserializationAdapter;
@@ -52,23 +54,32 @@ public final class BucketConfiguration implements ComparableByContent<BucketConf
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) { return true; }
+        if (o == null || getClass() != o.getClass()) { return false; }
+
+        BucketConfiguration that = (BucketConfiguration) o;
+
+        return Arrays.equals(bandwidths, that.bandwidths);
+    }
+
+    @Override
+    public int hashCode() {
+        return Arrays.hashCode(bandwidths);
+    }
+
+    @Override
     public String toString() {
         return "BucketConfiguration{" +
                 "bandwidths=" + Arrays.toString(bandwidths) +
                 '}';
     }
 
-    public void checkCompatibility(BucketConfiguration newConfiguration) {
-        if (!isCompatible(newConfiguration)) {
-            throw new IncompatibleConfigurationException(this, newConfiguration);
-        }
-    }
-
     public boolean isCompatible(BucketConfiguration newConfiguration) {
         return bandwidths.length == newConfiguration.bandwidths.length;
     }
 
-    public static SerializationHandle<BucketConfiguration> SERIALIZATION_HANDLE = new SerializationHandle<BucketConfiguration>() {
+    public static final SerializationHandle<BucketConfiguration> SERIALIZATION_HANDLE = new SerializationHandle<BucketConfiguration>() {
         @Override
         public <S> BucketConfiguration deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             int bandwidthAmount = adapter.readInt(input);

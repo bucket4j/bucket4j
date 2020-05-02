@@ -1,20 +1,3 @@
-/*
- *
- * Copyright 2015-2018 Vladimir Bukhtoyarov
- *
- *       Licensed under the Apache License, Version 2.0 (the "License");
- *       you may not use this file except in compliance with the License.
- *       You may obtain a copy of the License at
- *
- *             http://www.apache.org/licenses/LICENSE-2.0
- *
- *      Unless required by applicable law or agreed to in writing, software
- *      distributed under the License is distributed on an "AS IS" BASIS,
- *      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *      See the License for the specific language governing permissions and
- *      limitations under the License.
- */
-
 package io.github.bucket4j;
 
 import io.github.bucket4j.distributed.AsyncBucket;
@@ -116,12 +99,59 @@ public abstract class AbstractDistributedBucketTest {
     }
 
     @Test
+    public void testLocateBucketThroughProxyManager() {
+        ProxyManager<String> proxyManager = newProxyManager();
+
+        // should return empty optional if bucket is not stored
+        Optional<Bucket> remoteBucket = proxyManager.getProxy(key);
+        assertFalse(remoteBucket.isPresent());
+
+        // should return not empty options if bucket is stored
+        B builder = Bucket4j.extension(extensionClass).builder()
+                .addLimit(Bandwidth.simple(1_000, Duration.ofMinutes(1)))
+                .addLimit(Bandwidth.simple(200, Duration.ofSeconds(10)));
+        build(builder, key, THROW_BUCKET_NOT_FOUND_EXCEPTION);
+        remoteBucket = proxyManager.getProxy(key);
+        assertTrue(remoteBucket.isPresent());
+
+        // should return empty optional if bucket is removed
+        removeBucketFromBackingStorage(key);
+        remoteBucket = proxyManager.getProxy(key);
+        assertFalse(remoteBucket.isPresent());
+    }
+
+    @Test
+    public void testUnconditionalConsume() throws Exception {
+        BucketConfiguration configuration = Bucket4j.extension(extensionClass).builder()
+                .addLimit(Bandwidth.simple(1_000, Duration.ofMinutes(1)))
+                .buildConfiguration();
+
+        Bucket bucket = newProxyManager().getProxy(key, () -> configuration);
+        long overdraftNanos = bucket.consumeIgnoringRateLimits(121_000);
+        assertEquals(overdraftNanos, TimeUnit.MINUTES.toNanos(120));
+    }
+
+    @Test
+    public void testUnconditionalConsumeVerbose() throws Exception {
+        BucketConfiguration configuration = Bucket4j.extension(extensionClass).builder()
+                .addLimit(Bandwidth.simple(1_000, Duration.ofMinutes(1)))
+                .buildConfiguration();
+
+        Bucket bucket = newProxyManager().getProxy(key, () -> configuration);
+        VerboseResult<Long> result = bucket.asVerbose().consumeIgnoringRateLimits(121_000);
+        long overdraftNanos = result.getValue();
+
+        assertEquals(overdraftNanos, TimeUnit.MINUTES.toNanos(120));
+        assertEquals(configuration, result.getConfiguration());
+    }
+
+    @Test
     public void testTryConsume() throws Exception {
         Function<Bucket, Long> action = bucket -> bucket.tryConsume(1)? 1L : 0L;
         Supplier<Bucket> bucketSupplier = () -> backend.builder()
                 .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
                 .buildProxy(key, configurationForLongRunningTests);
-        ConsumptionScenario scenario = new ConsumptionScenario(4, TimeUnit.SECONDS.toNanos(15), bucketSupplier, action, permittedRatePerSecond);
+        ConsumptionScenario scenario = new ConsumptionScenario(4, TimeUnit.SECONDS.toNanos(5), bucketSupplier, action, permittedRatePerSecond);
         scenario.executeAndValidateRate();
     }
 
@@ -131,7 +161,7 @@ public abstract class AbstractDistributedBucketTest {
         Supplier<Bucket> bucketSupplier = () -> backend.builder()
                 .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
                 .buildProxy(key, configurationForLongRunningTests);
-        ConsumptionScenario scenario = new ConsumptionScenario(4, TimeUnit.SECONDS.toNanos(15), bucketSupplier, action, permittedRatePerSecond);
+        ConsumptionScenario scenario = new ConsumptionScenario(4, TimeUnit.SECONDS.toNanos(5), bucketSupplier, action, permittedRatePerSecond);
         scenario.executeAndValidateRate();
     }
 
@@ -151,7 +181,7 @@ public abstract class AbstractDistributedBucketTest {
         Supplier<AsyncBucket> bucketSupplier = () -> backend.builder()
                 .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
                 .buildAsyncProxy(key, configurationForLongRunningTests);
-        AsyncConsumptionScenario scenario = new AsyncConsumptionScenario(4, TimeUnit.SECONDS.toNanos(15), bucketSupplier, action, permittedRatePerSecond);
+        AsyncConsumptionScenario scenario = new AsyncConsumptionScenario(4, TimeUnit.SECONDS.toNanos(5), bucketSupplier, action, permittedRatePerSecond);
         scenario.executeAndValidateRate();
     }
 
@@ -172,7 +202,7 @@ public abstract class AbstractDistributedBucketTest {
         Supplier<AsyncBucket> bucketSupplier = () -> backend.builder()
                 .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
                 .buildAsyncProxy(key, configurationForLongRunningTests);
-        AsyncConsumptionScenario scenario = new AsyncConsumptionScenario(4, TimeUnit.SECONDS.toNanos(15), bucketSupplier, action, permittedRatePerSecond);
+        AsyncConsumptionScenario scenario = new AsyncConsumptionScenario(4, TimeUnit.SECONDS.toNanos(5), bucketSupplier, action, permittedRatePerSecond);
         scenario.executeAndValidateRate();
     }
 

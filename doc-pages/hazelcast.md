@@ -10,7 +10,7 @@ developing the dedicated module ```bucket4j-hazelcast``` was the only way to pro
 **Answer:** No, you should not migrate to ```bucket4j-hazelcast``` in this case.
 
 ## Dependencies
-To use ```bucket4j-hazelcast``` extension you need to add following dependency:
+To use Bucket4j extension for Hazelcast with ```Hazelcast 4.x``` you need to add following dependency:
 ```xml
 <dependency>
     <groupId>com.github.vladimir-bukhtoyarov</groupId>
@@ -18,10 +18,23 @@ To use ```bucket4j-hazelcast``` extension you need to add following dependency:
     <version>${bucket4j.version}</version>
 </dependency>
 ```
+If you are using legacy version of Hazelcast ```3.x``` then you need to add following dependency:
+```xml
+<dependency>
+    <groupId>com.github.vladimir-bukhtoyarov</groupId>
+    <artifactId>bucket4j-hazelcast-3</artifactId>
+    <version>${bucket4j.version}</version>
+</dependency>
+```
+
+## General compatibility matrix principles:
+* Bucket4j authors do not perform continues monitoring of new Hazelcast releases. So, there is can be case when there is no one version of Bucket4j which is compatible with newly released Hazelcast,
+just log issue to [bug tracker](https://github.com/vladimir-bukhtoyarov/bucket4j/issues) in this case, adding support to new version of Hazelcast is usually easy exercise. 
+* Integrations with legacy versions of Hazelcast are not removed without a clear reason. Hence You are in safety, even you are working in a big enterprise company that does not update its infrastructure frequently because You still get new Bucket4j's features even for legacy Hazelcast's releases.
 
 ## Example of Bucket instantiation
 ```java
-com.hazelcast.core.IMap<K, GridBucketState> map = ...;
+IMap<K, GridBucketState> map = ...;
 ...
 
 Bucket bucket = Bucket4j.extension(Hazelcast.class).builder()
@@ -31,7 +44,7 @@ Bucket bucket = Bucket4j.extension(Hazelcast.class).builder()
 
 ## Example of ProxyManager instantiation
 ```java
-com.hazelcast.core.IMap<K, GridBucketState> map = ...;
+IMap<K, GridBucketState> map = ...;
 ...
 
 ProxyManager proxyManager = Bucket4j.extension(Hazelcast.class).proxyManagerForMap(map);
@@ -39,7 +52,7 @@ ProxyManager proxyManager = Bucket4j.extension(Hazelcast.class).proxyManagerForM
 
 ## Configuring Custom Serialization for Bucket4j library classes
 If you configure nothing, then by default Java serialization will be used for serialization Bucket4j library classes. Java serialization can be rather slow and should be avoided in general.
-```Bucket4j``` provides [custom serializers](https://docs.hazelcast.org/docs/3.0/manual/html/ch03s03.html) for all library claasses that could be transferred over network.  
+```Bucket4j``` provides [custom serializers](https://docs.hazelcast.org/docs/3.0/manual/html/ch03s03.html) for all library classes that could be transferred over network.  
 To let Hazelcast know about fast serializers you should register them programmatically in the serialization config:
 ```java
 import com.hazelcast.config.Config;

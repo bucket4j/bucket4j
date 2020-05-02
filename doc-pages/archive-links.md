@@ -1,4 +1,7 @@
 # Documentation links for legacy releases:
+* [4.9](https://github.com/vladimir-bukhtoyarov/bucket4j/tree/4.9) ```Feb 18 2020``` Compatibility with Hazelcast 4.x
+* [4.8](https://github.com/vladimir-bukhtoyarov/bucket4j/tree/4.8) ```Feb 6 2020``` Support POF serialization for Oracle Coherence, New API method consumeIgnoringRateLimits
+* [4.7](https://github.com/vladimir-bukhtoyarov/bucket4j/tree/4.7) ```Jan 2 2020``` Integration with native serialization for Hazelcast and Infinispan
 * [4.6](https://github.com/vladimir-bukhtoyarov/bucket4j/tree/4.6) ```29 November 2019``` Compatibility with JPMS
 * [4.5](https://github.com/vladimir-bukhtoyarov/bucket4j/tree/4.5) ```2 June 2019``` Option to allow interval refill to happen on interval boundary
 * [4.4](https://github.com/vladimir-bukhtoyarov/bucket4j/tree/4.4) ```3 Apr 2019``` Integration with Oracle Coherence

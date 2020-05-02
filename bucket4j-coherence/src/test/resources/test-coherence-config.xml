@@ -31,6 +31,19 @@
     <caching-schemes>
         <distributed-scheme>
             <scheme-name>simple-distributed-scheme</scheme-name>
+
+            <serializer>
+                <instance>
+                    <class-name>com.tangosol.io.pof.ConfigurablePofContext</class-name>
+                    <init-params>
+                        <init-param>
+                            <param-type>String</param-type>
+                            <param-value>/bucket4j-pof-config-example.xml</param-value>
+                        </init-param>
+                    </init-params>
+                </instance>
+            </serializer>
+
             <backing-map-scheme>
                 <local-scheme/>
             </backing-map-scheme>

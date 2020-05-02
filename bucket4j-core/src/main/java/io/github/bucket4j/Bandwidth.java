@@ -1,20 +1,22 @@
-/*
+/*-
+ * ========================LICENSE_START=================================
+ * Bucket4j
+ * %%
+ * Copyright (C) 2015 - 2020 Vladimir Bukhtoyarov
+ * %%
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * Copyright 2015-2018 Vladimir Bukhtoyarov
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
- *       Licensed under the Apache License, Version 2.0 (the "License");
- *       you may not use this file except in compliance with the License.
- *       You may obtain a copy of the License at
- *
- *             http://www.apache.org/licenses/LICENSE-2.0
- *
- *      Unless required by applicable law or agreed to in writing, software
- *      distributed under the License is distributed on an "AS IS" BASIS,
- *      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *      See the License for the specific language governing permissions and
- *      limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * =========================LICENSE_END==================================
  */
-
 package io.github.bucket4j;
 
 import io.github.bucket4j.serialization.DeserializationAdapter;
@@ -162,7 +164,7 @@ public class Bandwidth implements ComparableByContent<Bandwidth> {
         return refillIntervally;
     }
 
-    public static SerializationHandle<Bandwidth> SERIALIZATION_HANDLE = new SerializationHandle<Bandwidth>() {
+    public static final SerializationHandle<Bandwidth> SERIALIZATION_HANDLE = new SerializationHandle<Bandwidth>() {
         @Override
         public <S> Bandwidth deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             long capacity = adapter.readLong(input);
@@ -199,6 +201,34 @@ public class Bandwidth implements ComparableByContent<Bandwidth> {
         }
 
     };
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) { return true; }
+        if (o == null || getClass() != o.getClass()) { return false; }
+
+        Bandwidth bandwidth = (Bandwidth) o;
+
+        if (capacity != bandwidth.capacity) { return false; }
+        if (initialTokens != bandwidth.initialTokens) { return false; }
+        if (refillPeriodNanos != bandwidth.refillPeriodNanos) { return false; }
+        if (refillTokens != bandwidth.refillTokens) { return false; }
+        if (refillIntervally != bandwidth.refillIntervally) { return false; }
+        if (timeOfFirstRefillMillis != bandwidth.timeOfFirstRefillMillis) { return false; }
+        return useAdaptiveInitialTokens == bandwidth.useAdaptiveInitialTokens;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = (int) (capacity ^ (capacity >>> 32));
+        result = 31 * result + (int) (initialTokens ^ (initialTokens >>> 32));
+        result = 31 * result + (int) (refillPeriodNanos ^ (refillPeriodNanos >>> 32));
+        result = 31 * result + (int) (refillTokens ^ (refillTokens >>> 32));
+        result = 31 * result + (refillIntervally ? 1 : 0);
+        result = 31 * result + (int) (timeOfFirstRefillMillis ^ (timeOfFirstRefillMillis >>> 32));
+        result = 31 * result + (useAdaptiveInitialTokens ? 1 : 0);
+        return result;
+    }
 
     @Override
     public String toString() {

@@ -1,20 +1,22 @@
-/*
+/*-
+ * ========================LICENSE_START=================================
+ * Bucket4j
+ * %%
+ * Copyright (C) 2015 - 2020 Vladimir Bukhtoyarov
+ * %%
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * Copyright 2015-2018 Vladimir Bukhtoyarov
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
- *       Licensed under the Apache License, Version 2.0 (the "License");
- *       you may not use this file except in compliance with the License.
- *       You may obtain a copy of the License at
- *
- *             http://www.apache.org/licenses/LICENSE-2.0
- *
- *      Unless required by applicable law or agreed to in writing, software
- *      distributed under the License is distributed on an "AS IS" BASIS,
- *      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *      See the License for the specific language governing permissions and
- *      limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * =========================LICENSE_END==================================
  */
-
 package io.github.bucket4j;
 
 import io.github.bucket4j.local.LocalBucketBuilder;
@@ -47,6 +49,11 @@ public interface Bucket {
     BlockingBucket asBlocking();
 
     /**
+     * Returns the verbose view of this bucket.
+     */
+    VerboseBucket asVerbose();
+
+    /**
      * Creates the new builder of in-memory buckets.
      *
      * @return new instance of {@link LocalBucketBuilder}
@@ -63,6 +70,31 @@ public interface Bucket {
      * @return {@code true} if the tokens were consumed, {@code false} otherwise.
      */
     boolean tryConsume(long numTokens);
+
+    /**
+     * Consumes {@code tokens} from bucket ignoring all limits.
+     * In result of this operation amount of tokens in the bucket could became negative.
+     *
+     * There are two possible reasons to use this method:
+     * <ul>
+     * <li>An operation with high priority should be executed independently of rate limits, but it should take effect to subsequent operation with bucket.</li>
+     * <li>You want to apply custom blocking strategy instead of default which applied on {@code asScheduler().consume(tokens)} </li>
+     * </ul>
+     *
+     * @param tokens amount of tokens that should be consumed from bucket.
+     *
+     * @return
+     * the amount of rate limit violation in nanoseconds calculated in following way:
+     * <ul>
+     *     <li><tt>zero</tt> if rate limit was not violated. For example bucket had 5 tokens before invocation of {@code consumeIgnoringRateLimits(2)},
+     *     after invocation there are 3 tokens remain in the bucket, since limits were not violated <tt>zero</tt> returned as result.</li>
+     *     <li>Positive value which describes the amount of rate limit violation in nanoseconds.
+     *     For example bucket with limit 10 tokens per 1 second, currently has the 2 tokens available, last refill happen 100 milliseconds ago, and {@code consumeIgnoringRateLimits(6)} called.
+     *     <tt>300_000_000</tt> will be returned as result and available tokens in the bucket will became <tt>-3</tt>, and any variation of {@code tryConsume...} will not be successful for 400 milliseconds(time required to refill amount of available tokens until 1).
+     *     </li>
+     * </ul>
+     */
+    long consumeIgnoringRateLimits(long tokens);
 
     /**
      * Tries to consume a specified number of tokens from this bucket.

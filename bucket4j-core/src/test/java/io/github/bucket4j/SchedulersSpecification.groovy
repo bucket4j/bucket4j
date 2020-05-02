@@ -1,19 +1,3 @@
-/*
- *
- * Copyright 2015-2018 Vladimir Bukhtoyarov
- *
- *       Licensed under the Apache License, Version 2.0 (the "License");
- *       you may not use this file except in compliance with the License.
- *       You may obtain a copy of the License at
- *
- *             http://www.apache.org/licenses/LICENSE-2.0
- *
- *      Unless required by applicable law or agreed to in writing, software
- *      distributed under the License is distributed on an "AS IS" BASIS,
- *      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *      See the License for the specific language governing permissions and
- *      limitations under the License.
- */
 
 package io.github.bucket4j
 
@@ -136,6 +120,84 @@ class SchedulersSpecification extends Specification {
     }
 
     @Unroll
+    def "#type test listener for blocking consume"(BucketType type) {
+        setup:
+            TimeMeterMock clock = new TimeMeterMock()
+            BlockingStrategyMock blocker = new BlockingStrategyMock(clock)
+
+            Bucket bucket = type.createBucket(Bucket4j.builder()
+                    .withCustomTimePrecision(clock)
+                    .addLimit(Bandwidth.simple(10, Duration.ofSeconds(1))),
+                clock)
+
+        when:
+            bucket.asScheduler().consume(9, blocker)
+        then:
+            blocker.parkedNanos == 0
+
+        when:
+            bucket.asScheduler().consume(2, blocker)
+        then:
+            blocker.parkedNanos == 100_000_000
+
+        when:
+            Thread.currentThread().interrupt()
+            bucket.asScheduler().consume(1, blocker)
+        then:
+            thrown(InterruptedException)
+            !Thread.interrupted()
+            blocker.parkedNanos == 100_000_000
+            blocker.atemptToParkNanos == 200_000_000
+
+        when:
+            bucket.asScheduler().consume(Long.MAX_VALUE, blocker)
+        then:
+            thrown(IllegalArgumentException)
+            blocker.parkedNanos == 100_000_000
+
+        where:
+            type << BucketType.values()
+    }
+
+    @Unroll
+    def "#type test listener for blocking consumeUninterruptibly"(BucketType type) {
+        setup:
+            TimeMeterMock clock = new TimeMeterMock()
+            BlockingStrategyMock blocker = new BlockingStrategyMock(clock)
+
+            Bucket bucket = type.createBucket(Bucket4j.builder()
+                    .withCustomTimePrecision(clock)
+                    .addLimit(Bandwidth.simple(10, Duration.ofSeconds(1))),
+                clock)
+
+        when:
+            bucket.asScheduler().consumeUninterruptibly(9, blocker)
+        then:
+            blocker.parkedNanos == 0
+
+        when:
+            bucket.asScheduler().consumeUninterruptibly(2, blocker)
+        then:
+            blocker.parkedNanos == 100_000_000
+
+        when:
+            Thread.currentThread().interrupt()
+            bucket.asScheduler().consumeUninterruptibly(1, blocker)
+        then:
+            Thread.interrupted()
+            blocker.parkedNanos == 200_000_000
+
+        when:
+            bucket.asScheduler().consumeUninterruptibly(Long.MAX_VALUE, blocker)
+        then:
+            thrown(IllegalArgumentException)
+            blocker.parkedNanos == 200_000_000
+
+        where:
+            type << BucketType.values()
+    }
+
+    @Unroll
     def "#type test listener for async delayed consume"(BucketType type) {
         setup:
             TimeMeterMock clock = new TimeMeterMock()
@@ -160,7 +222,7 @@ class SchedulersSpecification extends Specification {
             bucket.asScheduler().consume(Long.MAX_VALUE, scheduler).get()
         then:
             ExecutionException ex = thrown(ExecutionException)
-            ex.getCause().class == IllegalStateException
+            ex.getCause().class == IllegalArgumentException
 
         where:
             type << BucketType.withAsyncSupport()

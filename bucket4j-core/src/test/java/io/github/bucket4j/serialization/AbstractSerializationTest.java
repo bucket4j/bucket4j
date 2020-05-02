@@ -1,19 +1,3 @@
-/*
- *
- * Copyright 2015-2019 Vladimir Bukhtoyarov
- *
- *       Licensed under the Apache License, Version 2.0 (the "License");
- *       you may not use this file except in compliance with the License.
- *       You may obtain a copy of the License at
- *
- *             http://www.apache.org/licenses/LICENSE-2.0
- *
- *      Unless required by applicable law or agreed to in writing, software
- *      distributed under the License is distributed on an "AS IS" BASIS,
- *      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *      See the License for the specific language governing permissions and
- *      limitations under the License.
- */
 
 package io.github.bucket4j.serialization;
 
@@ -192,10 +176,31 @@ public abstract class AbstractSerializationTest {
 
         // with long payload
         testSerialization(CommandResult.success(42L, LONG_HANDLE));
+        Bandwidth[] bandwidths = new Bandwidth[] {
+            simple(10, ofSeconds(42))
+        };
+        BucketConfiguration bucketConfiguration = new BucketConfiguration(Arrays.asList(bandwidths));
+        BucketState bucketState = new BucketState(bucketConfiguration, System.nanoTime());
 
         // with complex payload
         EstimationProbe resultWithComplexPayload = EstimationProbe.canNotBeConsumed(10, 20);
         testSerialization(CommandResult.success(resultWithComplexPayload, EstimationProbe.SERIALIZATION_HANDLE));
+//        // without payload
+//        testSerialization(CommandResult.bucketNotFound());
+//
+//        // with integer payload
+//        testSerialization(CommandResult.success(42L));
+//
+//        // with complex payload
+//        testSerialization(CommandResult.success(EstimationProbe.canNotBeConsumed(10, 20)));
+//
+//        // estimation probes
+//        testSerialization(EstimationProbe.canNotBeConsumed(10, 20));
+//        testSerialization(EstimationProbe.canBeConsumed(10));
+//
+//        // consumption probes
+//        testSerialization(ConsumptionProbe.rejected(10, 20));
+//        testSerialization(ConsumptionProbe.consumed(10));
 
         // estimation probes
         testSerialization(EstimationProbe.canNotBeConsumed(10, 20));
@@ -213,6 +218,11 @@ public abstract class AbstractSerializationTest {
                 CommandResult.success(resultWithComplexPayload, EstimationProbe.SERIALIZATION_HANDLE),
                 CommandResult.bucketNotFound()
         )));
+        // verbose results
+        testSerialization(new VerboseResult<>(323L, null, bucketConfiguration, bucketState));
+        testSerialization(new VerboseResult<>(323L, true, bucketConfiguration, bucketState));
+        testSerialization(new VerboseResult<>(323L, 6666666L, bucketConfiguration, bucketState));
+        testSerialization(new VerboseResult<>(323L, ConsumptionProbe.consumed(10), bucketConfiguration, bucketState));
     }
 
     @Test
@@ -254,6 +264,12 @@ public abstract class AbstractSerializationTest {
         testSerialization(new ReplaceConfigurationOrReturnPreviousCommand(configuration));
 
         testSerialization(new GetConfigurationCommand());
+
+        testSerialization(new ConsumeIgnoringRateLimitsCommand(100));
+
+        testSerialization(new VerboseCommand<>(new ConsumeIgnoringRateLimitsCommand(100)));
+        testSerialization(new VerboseCommand<>(new GetAvailableTokensCommand()));
+        testSerialization(new VerboseCommand<>(new ReplaceConfigurationOrReturnPreviousCommand(configuration)));
     }
 
 }

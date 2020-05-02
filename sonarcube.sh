@@ -1,6 +1,5 @@
 mvn clean install -P coverage
 
-mvn org.sonarsource.scanner.maven:sonar-maven-plugin:3.2:sonar \
--Dsonar.host.url=https://sonarqube.com \
--Dsonar.login=$MY_SONAR_LOGIN \
--Dsonar.organization=vladimir-bukhtoyarov-github
+mvn sonar:sonar -Dsonar.projectKey=com.github.vladimir-bukhtoyarov:bucket4j -Dsonar.organization=vladimir-bukhtoyarov-github -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=$MY_SECURITY_TOKEN
+
+# browse results at https://sonarcloud.io/dashboard?id=com.github.vladimir-bukhtoyarov%3Abucket4j

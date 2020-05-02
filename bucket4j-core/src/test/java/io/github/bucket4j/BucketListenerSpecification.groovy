@@ -1,19 +1,3 @@
-/*
- *
- * Copyright 2015-2018 Vladimir Bukhtoyarov
- *
- *       Licensed under the Apache License, Version 2.0 (the "License");
- *       you may not use this file except in compliance with the License.
- *       You may obtain a copy of the License at
- *
- *             http://www.apache.org/licenses/LICENSE-2.0
- *
- *      Unless required by applicable law or agreed to in writing, software
- *      distributed under the License is distributed on an "AS IS" BASIS,
- *      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *      See the License for the specific language governing permissions and
- *      limitations under the License.
- */
 
 package io.github.bucket4j
 
@@ -66,24 +50,32 @@ class BucketListenerSpecification extends Specification {
 
     // =========== Sync cases ================================
     @Unroll
-    def "#type test listener for tryConsume"(BucketType type) {
+    def "#type verbose=#verbose test listener for tryConsume"(BucketType type, boolean verbose) {
         setup:
             Bucket bucket = type.createBucket(configuration, clock).toListenable(listener)
 
         when:
-            bucket.tryConsume(9)
+            if (!verbose) {
+                bucket.tryConsume(9)
+            } else {
+                bucket.asVerbose().tryConsume(9)
+            }
         then:
             listener.getConsumed() == 9
             listener.getRejected() == 0
 
         when:
-            bucket.tryConsume(6)
+            if (!verbose) {
+                bucket.tryConsume(6)
+            } else {
+                bucket.asVerbose().tryConsume(6)
+            }
         then:
             listener.getConsumed() == 9
             listener.getRejected() == 6
 
         where:
-            type << BucketType.values()
+            [type, verbose] << PipeGenerator.сartesianProduct(BucketType.values() as List, [false, true])
     }
 
     @Unroll
@@ -92,7 +84,7 @@ class BucketListenerSpecification extends Specification {
             Bucket bucket = type.createBucket(configuration, clock).toListenable(listener)
 
         when:
-           bucket.asBlocking().tryConsume(9, Duration.ofSeconds(1), blocker)
+            bucket.asBlocking().tryConsume(9, Duration.ofSeconds(1), blocker)
         then:
             listener.getConsumed() == 9
             listener.getRejected() == 0
@@ -243,94 +235,130 @@ class BucketListenerSpecification extends Specification {
     }
 
     @Unroll
-    def "#type test listener for tryConsumeAsMuchAsPossible"(BucketType type) {
+    def "#type verbose=#verbose test listener for tryConsumeAsMuchAsPossible"(BucketType type, boolean verbose) {
         setup:
             Bucket bucket = type.createBucket(configuration, clock).toListenable(listener)
 
         when:
-            bucket.tryConsumeAsMuchAsPossible()
+            if (!verbose) {
+                bucket.tryConsumeAsMuchAsPossible()
+            } else {
+                bucket.asVerbose().tryConsumeAsMuchAsPossible()
+            }
         then:
             listener.getConsumed() == 10
             listener.getRejected() == 0
 
         when:
-            bucket.tryConsumeAsMuchAsPossible()
+            if (!verbose) {
+                bucket.tryConsumeAsMuchAsPossible()
+            } else {
+                bucket.asVerbose().tryConsumeAsMuchAsPossible()
+            }
         then:
             listener.getConsumed() == 10
             listener.getRejected() == 0
 
         where:
-            type << BucketType.values()
+            [type, verbose] << PipeGenerator.сartesianProduct(BucketType.values() as List, [false, true])
     }
 
     @Unroll
-    def "#type test listener for tryConsumeAsMuchAsPossible with limit"(BucketType type) {
+    def "#type verbose=#verbose test listener for tryConsumeAsMuchAsPossible with limit"(BucketType type, boolean verbose) {
         setup:
             Bucket bucket = type.createBucket(configuration, clock).toListenable(listener)
 
         when:
-            bucket.tryConsumeAsMuchAsPossible(8)
+            if (!verbose) {
+                bucket.tryConsumeAsMuchAsPossible(8)
+            } else {
+                bucket.asVerbose().tryConsumeAsMuchAsPossible(8)
+            }
         then:
             listener.getConsumed() == 8
             listener.getRejected() == 0
 
         when:
-            bucket.tryConsumeAsMuchAsPossible(8)
+            if (!verbose) {
+                bucket.tryConsumeAsMuchAsPossible(8)
+            } else {
+                bucket.asVerbose().tryConsumeAsMuchAsPossible(8)
+            }
         then:
             listener.getConsumed() == 10
             listener.getRejected() == 0
 
         when:
-            bucket.tryConsumeAsMuchAsPossible(3)
+            if (!verbose) {
+                bucket.tryConsumeAsMuchAsPossible(3)
+            } else {
+                bucket.asVerbose().tryConsumeAsMuchAsPossible(3)
+            }
         then:
             listener.getConsumed() == 10
             listener.getRejected() == 0
 
         where:
-            type << BucketType.values()
+            [type, verbose] << PipeGenerator.сartesianProduct(BucketType.values() as List, [false, true])
     }
 
     @Unroll
-    def "#type test listener for tryConsumeAndReturnRemaining"(BucketType type) {
+    def "#type verbose=#verbose test listener for tryConsumeAndReturnRemaining"(BucketType type, boolean verbose) {
         setup:
             Bucket bucket = type.createBucket(configuration, clock).toListenable(listener)
 
         when:
-            bucket.tryConsumeAndReturnRemaining(9)
+            if (!verbose) {
+                bucket.tryConsumeAndReturnRemaining(9)
+            } else {
+                bucket.asVerbose().tryConsumeAndReturnRemaining(9)
+            }
         then:
             listener.getConsumed() == 9
             listener.getRejected() == 0
 
         when:
-            bucket.tryConsumeAndReturnRemaining(6)
+            if (!verbose) {
+                bucket.tryConsumeAndReturnRemaining(6)
+            } else {
+                bucket.asVerbose().tryConsumeAndReturnRemaining(6)
+            }
         then:
             listener.getConsumed() == 9
             listener.getRejected() == 6
 
         where:
-            type << BucketType.values()
+            [type, verbose] << PipeGenerator.сartesianProduct(BucketType.values() as List, [false, true])
     }
 
     // =========== Async cases ================================
     @Unroll
-    def "#type test listener for async tryConsume"(BucketType type) {
+    def "#type verbose=#verbose test listener for async tryConsume"(BucketType type, boolean verbose) {
         setup:
             AsyncBucket bucket = type.createAsyncBucket(configuration, clock).toListenable(listener)
 
         when:
-            bucket.tryConsume(9).get()
+            if (!verbose) {
+                bucket.tryConsume(9).get()
+            } else {
+                bucket.asAsync().asVerbose().tryConsume(9).get()
+            }
         then:
             listener.getConsumed() == 9
             listener.getRejected() == 0
 
         when:
-            bucket.tryConsume(6).get()
+            if (!verbose) {
+                bucket.tryConsume(6).get()
+            } else {
+                bucket.asAsync().asVerbose().tryConsume(6).get()
+            }
         then:
             listener.getConsumed() == 9
             listener.getRejected() == 6
 
         where:
-            type << BucketType.withAsyncSupport()
+            [type, verbose] << PipeGenerator.сartesianProduct(BucketType.withAsyncSupport() as List, [false, true])
     }
 
 	@Unroll
@@ -393,72 +421,100 @@ class BucketListenerSpecification extends Specification {
     }
 
     @Unroll
-    def "#type test listener for async tryConsumeAsMuchAsPossible"(BucketType type) {
+    def "#type verbose=#verbose test listener for async tryConsumeAsMuchAsPossible"(BucketType type, boolean verbose) {
         setup:
             AsyncBucket bucket = type.createAsyncBucket(configuration, clock).toListenable(listener)
 
         when:
-            bucket.tryConsumeAsMuchAsPossible().get()
+            if (!verbose) {
+                bucket.asAsync().tryConsumeAsMuchAsPossible().get()
+            } else {
+                bucket.asAsync().asVerbose().tryConsumeAsMuchAsPossible().get()
+            }
         then:
             listener.getConsumed() == 10
             listener.getRejected() == 0
 
         when:
-            bucket.tryConsumeAsMuchAsPossible().get()
+            if (!verbose) {
+                bucket.asAsync().tryConsumeAsMuchAsPossible().get()
+            } else {
+                bucket.asAsync().asVerbose().tryConsumeAsMuchAsPossible().get()
+            }
         then:
             listener.getConsumed() == 10
             listener.getRejected() == 0
 
         where:
-            type << BucketType.withAsyncSupport()
+            [type, verbose] << PipeGenerator.сartesianProduct(BucketType.withAsyncSupport() as List, [false, true])
     }
 
-	  @Unroll
-    def "#type test listener for async tryConsumeAsMuchAsPossible with limit"(BucketType type) {
+    @Unroll
+    def "#type verbose=#verbose test listener for async tryConsumeAsMuchAsPossible with limit"(BucketType type, boolean verbose) {
         setup:
             AsyncBucket bucket = type.createAsyncBucket(configuration, clock).toListenable(listener)
 
         when:
-            bucket.tryConsumeAsMuchAsPossible(8).get()
+            if (!verbose) {
+                bucket.tryConsumeAsMuchAsPossible(8).get()
+            } else {
+                bucket.asAsync().asVerbose().tryConsumeAsMuchAsPossible(8).get()
+            }
         then:
             listener.getConsumed() == 8
             listener.getRejected() == 0
 
         when:
-            bucket.tryConsumeAsMuchAsPossible(8).get()
+            if (!verbose) {
+                bucket.tryConsumeAsMuchAsPossible(8).get()
+            } else {
+                bucket.asAsync().asVerbose().tryConsumeAsMuchAsPossible(8).get()
+            }
         then:
             listener.getConsumed() == 10
             listener.getRejected() == 0
 
         when:
-            bucket.tryConsumeAsMuchAsPossible(3).get()
+            if (!verbose) {
+                bucket.tryConsumeAsMuchAsPossible(3).get()
+            } else {
+                bucket.asAsync().asVerbose().tryConsumeAsMuchAsPossible(3).get()
+            }
         then:
             listener.getConsumed() == 10
             listener.getRejected() == 0
 
         where:
-            type << BucketType.withAsyncSupport()
+            [type, verbose] << PipeGenerator.сartesianProduct(BucketType.withAsyncSupport() as List, [false, true])
     }
 
 	@Unroll
-    def "#type test listener for async tryConsumeAndReturnRemaining"(BucketType type) {
+    def "#type verbose=#verbose test listener for async tryConsumeAndReturnRemaining"(BucketType type, boolean verbose) {
         setup:
             AsyncBucket bucket = type.createAsyncBucket(configuration, clock).toListenable(listener)
 
         when:
-            bucket.tryConsumeAndReturnRemaining(9).get()
+            if (!verbose) {
+                bucket.tryConsumeAndReturnRemaining(9).get()
+            } else {
+                bucket.asAsync().asVerbose().tryConsumeAndReturnRemaining(9).get()
+            }
         then:
             listener.getConsumed() == 9
             listener.getRejected() == 0
 
         when:
-            bucket.tryConsumeAndReturnRemaining(6).get()
+            if (!verbose) {
+                bucket.tryConsumeAndReturnRemaining(6).get()
+            } else {
+                bucket.asAsync().asVerbose().tryConsumeAndReturnRemaining(6).get()
+            }
         then:
             listener.getConsumed() == 9
             listener.getRejected() == 6
 
         where:
-            type << BucketType.withAsyncSupport()
+            [type, verbose] << PipeGenerator.сartesianProduct(BucketType.withAsyncSupport() as List, [false, true])
     }
 
 }

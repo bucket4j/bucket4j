@@ -1,28 +1,16 @@
-/*
- *
- * Copyright 2015-2018 Vladimir Bukhtoyarov
- *
- *       Licensed under the Apache License, Version 2.0 (the "License");
- *       you may not use this file except in compliance with the License.
- *       You may obtain a copy of the License at
- *
- *             http://www.apache.org/licenses/LICENSE-2.0
- *
- *      Unless required by applicable law or agreed to in writing, software
- *      distributed under the License is distributed on an "AS IS" BASIS,
- *      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *      See the License for the specific language governing permissions and
- *      limitations under the License.
- */
 
 package io.github.bucket4j
 
 import io.github.bucket4j.distributed.AsyncBucket
 import io.github.bucket4j.mock.GridBackendMock
 import io.github.bucket4j.mock.BucketType
+import io.github.bucket4j.mock.GridProxyMock
 import io.github.bucket4j.mock.TimeMeterMock
 import spock.lang.Specification
 import spock.lang.Unroll
+
+import static io.github.bucket4j.PackageAcessor.getState
+import static org.junit.Assert.assertNotSame
 
 import java.time.Duration
 import java.util.concurrent.CompletableFuture
@@ -98,7 +86,7 @@ class BucketSpecification extends Specification {
     }
 
     @Unroll
-    def "#n tryConsumeAndReturnRemaining specification"(int n, long toEstimate, boolean result, long expectedWait, BucketConfiguration configuration) {
+    def "#n estimateAbilityToConsume specification"(int n, long toEstimate, boolean result, long expectedWait, BucketConfiguration configuration) {
         expect:
             for (BucketType type : BucketType.values()) {
                     TimeMeterMock timeMeter = new TimeMeterMock(0)
@@ -205,12 +193,18 @@ class BucketSpecification extends Specification {
     def "#n getAvailableTokens specification"(int n, long nanosSinceBucketCreation, long expectedTokens, BucketConfiguration configuration) {
         expect:
             for (BucketType type : BucketType.values()) {
-                TimeMeterMock timeMeter = new TimeMeterMock(0)
-                Bucket bucket = type.createBucket(configuration, timeMeter)
+                for (boolean verbose : [true, false]) {
+                    TimeMeterMock timeMeter = new TimeMeterMock(0)
+                    Bucket bucket = type.createBucket(configuration, timeMeter)
                 bucket.estimateAbilityToConsume(1) // touch the bucket in order to create it
 
-                timeMeter.addTime(nanosSinceBucketCreation)
-                assert bucket.getAvailableTokens() == expectedTokens
+                    timeMeter.addTime(nanosSinceBucketCreation)
+                    if (!verbose) {
+                        assert bucket.getAvailableTokens() == expectedTokens
+                    } else {
+                        assert bucket.asVerbose().getAvailableTokens().value == expectedTokens
+                    }
+                }
             }
         where:
             n | nanosSinceBucketCreation | expectedTokens |  configuration
