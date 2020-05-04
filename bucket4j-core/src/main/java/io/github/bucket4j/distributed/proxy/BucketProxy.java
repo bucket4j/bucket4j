@@ -87,12 +87,53 @@ public class BucketProxy extends AbstractBucket {
     }
 
     @Override
-    protected void replaceConfigurationImpl(BucketConfiguration newConfiguration) {
-        ReplaceConfigurationOrReturnPreviousCommand replaceConfigCommand = new ReplaceConfigurationOrReturnPreviousCommand(newConfiguration);
-        BucketConfiguration previousConfiguration = execute(replaceConfigCommand);
-        if (previousConfiguration != null) {
-            throw new IncompatibleConfigurationException(previousConfiguration, newConfiguration);
-        }
+    protected BucketConfiguration replaceConfigurationImpl(BucketConfiguration newConfiguration) {
+        return execute(new ReplaceConfigurationOrReturnPreviousCommand(newConfiguration));
+    }
+
+    @Override
+    protected long consumeIgnoringRateLimitsImpl(long tokensToConsume) {
+        return 0;
+    }
+
+    @Override
+    protected VerboseResult<Long> consumeAsMuchAsPossibleVerboseImpl(long limit) {
+        return null;
+    }
+
+    @Override
+    protected VerboseResult<Boolean> tryConsumeVerboseImpl(long tokensToConsume) {
+        return null;
+    }
+
+    @Override
+    protected VerboseResult<ConsumptionProbe> tryConsumeAndReturnRemainingTokensVerboseImpl(long tokensToConsume) {
+        return null;
+    }
+
+    @Override
+    protected VerboseResult<EstimationProbe> estimateAbilityToConsumeVerboseImpl(long numTokens) {
+        return null;
+    }
+
+    @Override
+    protected VerboseResult<Long> getAvailableTokensVerboseImpl() {
+        return null;
+    }
+
+    @Override
+    protected VerboseResult<Nothing> addTokensVerboseImpl(long tokensToAdd) {
+        return null;
+    }
+
+    @Override
+    protected VerboseResult<BucketConfiguration> replaceConfigurationVerboseImpl(BucketConfiguration newConfiguration) {
+        return null;
+    }
+
+    @Override
+    protected VerboseResult<Long> consumeIgnoringRateLimitsVerboseImpl(long tokensToConsume) {
+        return null;
     }
 
     @Override

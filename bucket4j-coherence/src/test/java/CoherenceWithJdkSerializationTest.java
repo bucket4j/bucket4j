@@ -1,6 +1,6 @@
 import com.tangosol.net.CacheFactory;
 import com.tangosol.net.NamedCache;
-import io.github.bucket4j.AbstractDistributedBucketTest;
+import io.github.bucket4j.tck.AbstractDistributedBucketTest;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.Bucket4j;
 import io.github.bucket4j.grid.ProxyManager;

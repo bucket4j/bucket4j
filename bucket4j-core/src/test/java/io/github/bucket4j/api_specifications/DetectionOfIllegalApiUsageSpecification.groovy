@@ -1,6 +1,12 @@
 
-package io.github.bucket4j
+package io.github.bucket4j.api_specifications
 
+import io.github.bucket4j.Bandwidth
+import io.github.bucket4j.BlockingStrategy
+import io.github.bucket4j.Bucket
+import io.github.bucket4j.BucketConfiguration
+import io.github.bucket4j.Refill
+import io.github.bucket4j.TimeMeter
 import io.github.bucket4j.distributed.AsyncBucket
 import io.github.bucket4j.mock.GridBackendMock
 import io.github.bucket4j.mock.BucketType

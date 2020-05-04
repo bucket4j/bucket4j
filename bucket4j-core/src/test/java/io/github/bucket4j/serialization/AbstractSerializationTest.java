@@ -19,6 +19,7 @@ import static io.github.bucket4j.Bandwidth.classic;
 import static io.github.bucket4j.Bandwidth.simple;
 import static io.github.bucket4j.Refill.*;
 import static io.github.bucket4j.serialization.PrimitiveSerializationHandles.LONG_HANDLE;
+import static io.github.bucket4j.serialization.PrimitiveSerializationHandles.NULL_HANDLE;
 import static java.time.Duration.*;
 import static org.junit.Assert.assertTrue;
 
@@ -180,7 +181,7 @@ public abstract class AbstractSerializationTest {
             simple(10, ofSeconds(42))
         };
         BucketConfiguration bucketConfiguration = new BucketConfiguration(Arrays.asList(bandwidths));
-        BucketState bucketState = new BucketState(bucketConfiguration, System.nanoTime());
+        BucketState bucketState = BucketState.createInitialState(bucketConfiguration, MathType.INTEGER_64_BITS, System.nanoTime());
 
         // with complex payload
         EstimationProbe resultWithComplexPayload = EstimationProbe.canNotBeConsumed(10, 20);
@@ -219,10 +220,10 @@ public abstract class AbstractSerializationTest {
                 CommandResult.bucketNotFound()
         )));
         // verbose results
-        testSerialization(new VerboseResult<>(323L, null, bucketConfiguration, bucketState));
-        testSerialization(new VerboseResult<>(323L, true, bucketConfiguration, bucketState));
-        testSerialization(new VerboseResult<>(323L, 6666666L, bucketConfiguration, bucketState));
-        testSerialization(new VerboseResult<>(323L, ConsumptionProbe.consumed(10), bucketConfiguration, bucketState));
+        testSerialization(new VerboseResult<>(323L, NULL_HANDLE.getTypeId(), null, bucketConfiguration, bucketState));
+        testSerialization(new VerboseResult<>(323L, NULL_HANDLE.getTypeId(), true, bucketConfiguration, bucketState));
+        testSerialization(new VerboseResult<>(323L, LONG_HANDLE.getTypeId(), 6666666L, bucketConfiguration, bucketState));
+        testSerialization(new VerboseResult<>(323L, ConsumptionProbe.SERIALIZATION_HANDLE.getTypeId(), ConsumptionProbe.consumed(10, 32), bucketConfiguration, bucketState));
     }
 
     @Test

@@ -41,6 +41,7 @@ public interface SerializationHandle<T> {
             ConsumptionProbe.SERIALIZATION_HANDLE, // 11
             EstimationProbe.SERIALIZATION_HANDLE, // 12
             MultiResult.SERIALIZATION_HANDLE, // 13
+            VerboseResult.SERIALIZATION_HANDLE, // 14
 
             CreateInitialStateCommand.SERIALIZATION_HANDLE, // 20
             CreateInitialStateAndExecuteCommand.SERIALIZATION_HANDLE, // 21
@@ -54,7 +55,9 @@ public interface SerializationHandle<T> {
             TryConsumeCommand.SERIALIZATION_HANDLE, // 29
             TryConsumeAndReturnRemainingTokensCommand.SERIALIZATION_HANDLE, // 30
             ReplaceConfigurationOrReturnPreviousCommand.SERIALIZATION_HANDLE, // 32
-            GetConfigurationCommand.SERIALIZATION_HANDLE // 33
+            GetConfigurationCommand.SERIALIZATION_HANDLE, // 33
+            ConsumeIgnoringRateLimitsCommand.SERIALIZATION_HANDLE, // 34
+            VerboseCommand.SERIALIZATION_HANDLE // 35
     ));
 
     <I> T deserialize(DeserializationAdapter<I> adapter, I input) throws IOException;

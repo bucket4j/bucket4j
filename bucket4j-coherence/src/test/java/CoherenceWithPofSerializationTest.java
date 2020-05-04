@@ -1,6 +1,6 @@
 import com.tangosol.net.CacheFactory;
 import com.tangosol.net.NamedCache;
-import io.github.bucket4j.AbstractDistributedBucketTest;
+import io.github.bucket4j.tck.AbstractDistributedBucketTest;
 import io.github.bucket4j.grid.coherence.CoherenceBackend;
 import io.github.bucket4j.distributed.proxy.Backend;
 import org.junit.AfterClass;

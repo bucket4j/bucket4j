@@ -1,6 +1,11 @@
 
-package io.github.bucket4j
+package io.github.bucket4j.core_algorithms
 
+import io.github.bucket4j.Bandwidth
+import io.github.bucket4j.Bucket
+import io.github.bucket4j.BucketConfiguration
+import io.github.bucket4j.ConsumptionProbe
+import io.github.bucket4j.EstimationProbe
 import io.github.bucket4j.mock.BucketType
 import io.github.bucket4j.mock.TimeMeterMock
 import spock.lang.Specification
@@ -14,7 +19,7 @@ class BucketRoundingRulesSpecification extends Specification {
     def "rest of division should not be missed on next consumption"() {
         setup:
             TimeMeterMock meter = new TimeMeterMock(0)
-            Bucket bucket = Bucket.builder()
+        Bucket bucket = Bucket.builder()
                                 .withCustomTimePrecision(meter)
                                 .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(0))
                                 .build()
@@ -65,10 +70,10 @@ class BucketRoundingRulesSpecification extends Specification {
 
             timeMeter.addTime(200_000_000)
 
-            EstimationProbe estimationProbe1 = bucket.estimateAbilityToConsume(1)
+        EstimationProbe estimationProbe1 = bucket.estimateAbilityToConsume(1)
             assert !estimationProbe1.canBeConsumed()
             assert estimationProbe1.nanosToWaitForRefill == 800_000_000
-            ConsumptionProbe consumptionProbe1 = bucket.tryConsumeAndReturnRemaining(1)
+        ConsumptionProbe consumptionProbe1 = bucket.tryConsumeAndReturnRemaining(1)
             assert !consumptionProbe1.consumed
             assert consumptionProbe1.nanosToWaitForRefill == 800_000_000
 

@@ -26,6 +26,8 @@ import io.github.bucket4j.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import static io.github.bucket4j.serialization.PrimitiveSerializationHandles.*;
+
 public class SynchronizedBucket extends AbstractBucket implements LocalBucket {
 
     private BucketConfiguration configuration;
@@ -175,10 +177,10 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket {
             long availableToConsume = state.getAvailableTokens(bandwidths);
             long toConsume = Math.min(limit, availableToConsume);
             if (toConsume == 0) {
-                return new VerboseResult<>(currentTimeNanos, 0L, configuration, state.copy());
+                return new VerboseResult<>(currentTimeNanos, LONG_HANDLE.getTypeId(), 0L, configuration, state.copy());
             }
             state.consume(bandwidths, toConsume);
-            return new VerboseResult<>(currentTimeNanos, toConsume, configuration, state.copy());
+            return new VerboseResult<>(currentTimeNanos, LONG_HANDLE.getTypeId(), toConsume, configuration, state.copy());
         } finally {
             lock.unlock();
         }
@@ -192,10 +194,10 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket {
             state.refillAllBandwidth(bandwidths, currentTimeNanos);
             long availableToConsume = state.getAvailableTokens(bandwidths);
             if (tokensToConsume > availableToConsume) {
-                return new VerboseResult<>(currentTimeNanos, false, configuration, state.copy());
+                return new VerboseResult<>(currentTimeNanos, BOOLEAN_HANDLE.getTypeId(), false, configuration, state.copy());
             }
             state.consume(bandwidths, tokensToConsume);
-            return new VerboseResult<>(currentTimeNanos, true, configuration, state.copy());
+            return new VerboseResult<>(currentTimeNanos, BOOLEAN_HANDLE.getTypeId(), true, configuration, state.copy());
         } finally {
             lock.unlock();
         }
@@ -210,12 +212,14 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket {
             long availableToConsume = state.getAvailableTokens(bandwidths);
             if (tokensToConsume > availableToConsume) {
                 long nanosToWaitForRefill = state.calculateDelayNanosAfterWillBePossibleToConsume(bandwidths, tokensToConsume, currentTimeNanos);
-                ConsumptionProbe probe = ConsumptionProbe.rejected(availableToConsume, nanosToWaitForRefill);
-                return new VerboseResult<>(currentTimeNanos, probe, configuration, state.copy());
+                long nanosToWaitForReset = state.calculateFullRefillingTime(bandwidths, currentTimeNanos);
+                ConsumptionProbe probe = ConsumptionProbe.rejected(availableToConsume, nanosToWaitForRefill, nanosToWaitForReset);
+                return new VerboseResult<>(currentTimeNanos, ConsumptionProbe.SERIALIZATION_HANDLE.getTypeId(), probe, configuration, state.copy());
             }
             state.consume(bandwidths, tokensToConsume);
-            ConsumptionProbe probe = ConsumptionProbe.consumed(availableToConsume - tokensToConsume);
-            return new VerboseResult<>(currentTimeNanos, probe, configuration, state.copy());
+            long nanosToWaitForReset = state.calculateFullRefillingTime(bandwidths, currentTimeNanos);
+            ConsumptionProbe probe = ConsumptionProbe.consumed(availableToConsume - tokensToConsume, nanosToWaitForReset);
+            return new VerboseResult<>(currentTimeNanos, ConsumptionProbe.SERIALIZATION_HANDLE.getTypeId(), probe, configuration, state.copy());
         } finally {
             lock.unlock();
         }
@@ -231,10 +235,10 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket {
             if (tokensToEstimate > availableToConsume) {
                 long nanosToWaitForRefill = state.calculateDelayNanosAfterWillBePossibleToConsume(bandwidths, tokensToEstimate, currentTimeNanos);
                 EstimationProbe estimationProbe = EstimationProbe.canNotBeConsumed(availableToConsume, nanosToWaitForRefill);
-                return new VerboseResult<>(currentTimeNanos, estimationProbe, configuration, state.copy());
+                return new VerboseResult<>(currentTimeNanos, EstimationProbe.SERIALIZATION_HANDLE.getTypeId(), estimationProbe, configuration, state.copy());
             }
             EstimationProbe estimationProbe = EstimationProbe.canBeConsumed(availableToConsume);
-            return new VerboseResult<>(currentTimeNanos, estimationProbe, configuration, state.copy());
+            return new VerboseResult<>(currentTimeNanos, EstimationProbe.SERIALIZATION_HANDLE.getTypeId(), estimationProbe, configuration, state.copy());
         } finally {
             lock.unlock();
         }
@@ -247,7 +251,7 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket {
         try {
             state.refillAllBandwidth(bandwidths, currentTimeNanos);
             long availableTokens = state.getAvailableTokens(bandwidths);
-            return new VerboseResult<>(currentTimeNanos, availableTokens, configuration, state.copy());
+            return new VerboseResult<>(currentTimeNanos, LONG_HANDLE.getTypeId(), availableTokens, configuration, state.copy());
         } finally {
             lock.unlock();
         }
@@ -260,7 +264,7 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket {
         try {
             state.refillAllBandwidth(bandwidths, currentTimeNanos);
             state.addTokens(bandwidths, tokensToAdd);
-            return new VerboseResult<>(currentTimeNanos, Nothing.INSTANCE, configuration, state.copy());
+            return new VerboseResult<>(currentTimeNanos, NULL_HANDLE.getTypeId(), Nothing.INSTANCE, configuration, state.copy());
         } finally {
             lock.unlock();
         }
@@ -272,12 +276,12 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket {
         lock.lock();
         try {
             if (!configuration.isCompatible(newConfiguration)) {
-                return new VerboseResult<>(currentTimeNanos, configuration, configuration, state.copy());
+                return new VerboseResult<>(currentTimeNanos, BucketConfiguration.SERIALIZATION_HANDLE.getTypeId(), configuration, configuration, state.copy());
             }
             this.state.refillAllBandwidth(bandwidths, currentTimeNanos);
             this.configuration = newConfiguration;
             this.bandwidths = newConfiguration.getBandwidths();
-            return new VerboseResult<>(currentTimeNanos, null, configuration, state.copy());
+            return new VerboseResult<>(currentTimeNanos, NULL_HANDLE.getTypeId(), null, configuration, state.copy());
         } finally {
             lock.unlock();
         }
@@ -292,10 +296,10 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket {
             long nanosToCloseDeficit = state.calculateDelayNanosAfterWillBePossibleToConsume(bandwidths, tokensToConsume, currentTimeNanos);
 
             if (nanosToCloseDeficit == INFINITY_DURATION) {
-                return new VerboseResult<>(currentTimeNanos, nanosToCloseDeficit, configuration, state.copy());
+                return new VerboseResult<>(currentTimeNanos, LONG_HANDLE.getTypeId(), nanosToCloseDeficit, configuration, state.copy());
             }
             state.consume(bandwidths, tokensToConsume);
-            return new VerboseResult<>(currentTimeNanos, nanosToCloseDeficit, configuration, state.copy());
+            return new VerboseResult<>(currentTimeNanos, LONG_HANDLE.getTypeId(), nanosToCloseDeficit, configuration, state.copy());
         } finally {
             lock.unlock();
         }
@@ -340,96 +344,6 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket {
         } finally {
             lock.unlock();
         }
-    }
-
-    @Override
-    protected CompletableFuture<Boolean> tryConsumeAsyncImpl(long tokensToConsume) {
-        boolean result = tryConsumeImpl(tokensToConsume);
-        return CompletableFuture.completedFuture(result);
-    }
-
-    @Override
-    protected CompletableFuture<Void> addTokensAsyncImpl(long tokensToAdd) {
-        addTokensImpl(tokensToAdd);
-        return CompletableFuture.completedFuture(null);
-    }
-
-    @Override
-    protected CompletableFuture<ConsumptionProbe> tryConsumeAndReturnRemainingTokensAsyncImpl(long tokensToConsume) {
-        ConsumptionProbe result = tryConsumeAndReturnRemainingTokensImpl(tokensToConsume);
-        return CompletableFuture.completedFuture(result);
-    }
-
-    @Override
-    protected CompletableFuture<EstimationProbe> estimateAbilityToConsumeAsyncImpl(long tokensToEstimate) {
-        EstimationProbe result = estimateAbilityToConsumeImpl(tokensToEstimate);
-        return CompletableFuture.completedFuture(result);
-    }
-
-    @Override
-    protected CompletableFuture<Long> tryConsumeAsMuchAsPossibleAsyncImpl(long limit) {
-        long result = consumeAsMuchAsPossibleImpl(limit);
-        return CompletableFuture.completedFuture(result);
-    }
-
-    @Override
-    protected CompletableFuture<Long> reserveAndCalculateTimeToSleepAsyncImpl(long tokensToConsume, long maxWaitTimeNanos) {
-        long result = reserveAndCalculateTimeToSleepImpl(tokensToConsume, maxWaitTimeNanos);
-        return CompletableFuture.completedFuture(result);
-    }
-
-    @Override
-    protected CompletableFuture<BucketConfiguration> replaceConfigurationAsyncImpl(BucketConfiguration newConfiguration) {
-        BucketConfiguration result = replaceConfigurationImpl(newConfiguration);
-        return CompletableFuture.completedFuture(result);
-    }
-
-    @Override
-    protected CompletableFuture<Long> consumeIgnoringRateLimitsAsyncImpl(long tokensToConsume) {
-        long result = consumeIgnoringRateLimitsImpl(tokensToConsume);
-        return CompletableFuture.completedFuture(result);
-    }
-
-    @Override
-    protected CompletableFuture<VerboseResult<Long>> tryConsumeAsMuchAsPossibleVerboseAsyncImpl(long limit) {
-        VerboseResult<Long> result = consumeAsMuchAsPossibleVerboseImpl(limit);
-        return CompletableFuture.completedFuture(result);
-    }
-
-    @Override
-    protected CompletableFuture<VerboseResult<Boolean>> tryConsumeVerboseAsyncImpl(long tokensToConsume) {
-        VerboseResult<Boolean> result = tryConsumeVerboseImpl(tokensToConsume);
-        return CompletableFuture.completedFuture(result);
-    }
-
-    @Override
-    protected CompletableFuture<VerboseResult<ConsumptionProbe>> tryConsumeAndReturnRemainingTokensVerboseAsyncImpl(long tokensToConsume) {
-        VerboseResult<ConsumptionProbe> result = tryConsumeAndReturnRemainingTokensVerboseImpl(tokensToConsume);
-        return CompletableFuture.completedFuture(result);
-    }
-
-    @Override
-    protected CompletableFuture<VerboseResult<EstimationProbe>> estimateAbilityToConsumeVerboseAsyncImpl(long tokensToEstimate) {
-        VerboseResult<EstimationProbe> result = estimateAbilityToConsumeVerboseImpl(tokensToEstimate);
-        return CompletableFuture.completedFuture(result);
-    }
-
-    @Override
-    protected CompletableFuture<VerboseResult<Nothing>> addTokensVerboseAsyncImpl(long tokensToAdd) {
-        VerboseResult<Nothing> result = addTokensVerboseImpl(tokensToAdd);
-        return CompletableFuture.completedFuture(result);
-    }
-
-    @Override
-    protected CompletableFuture<VerboseResult<BucketConfiguration>> replaceConfigurationVerboseAsyncImpl(BucketConfiguration newConfiguration) {
-        VerboseResult<BucketConfiguration> result = replaceConfigurationVerboseImpl(newConfiguration);
-        return CompletableFuture.completedFuture(result);
-    }
-
-    @Override
-    protected CompletableFuture<VerboseResult<Long>> consumeIgnoringRateLimitsVerboseAsyncImpl(long tokensToConsume) {
-        VerboseResult<Long> result = consumeIgnoringRateLimitsVerboseImpl(tokensToConsume);
-        return CompletableFuture.completedFuture(result);
     }
 
     @Override

@@ -1,4 +1,4 @@
-package io.github.bucket4j;
+package io.github.bucket4j.util;
 
 import java.util.ArrayList;
 import java.util.Arrays;

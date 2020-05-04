@@ -1,6 +1,11 @@
 
-package io.github.bucket4j
+package io.github.bucket4j.api_specifications
 
+import io.github.bucket4j.Bandwidth
+import io.github.bucket4j.Bucket
+import io.github.bucket4j.BucketConfiguration
+import io.github.bucket4j.IncompatibleConfigurationException
+import io.github.bucket4j.Refill
 import io.github.bucket4j.distributed.AsyncBucket
 import io.github.bucket4j.mock.BucketType
 import io.github.bucket4j.mock.TimeMeterMock
@@ -16,10 +21,10 @@ class ConfigurationReplacementSpecification extends Specification {
     @Unroll
     def "#bucketType should prevent increasing count of bandwidths"(BucketType bucketType) {
         setup:
-            BucketConfiguration configuration = BucketConfiguration.builder()
+        BucketConfiguration configuration = BucketConfiguration.builder()
                     .addLimit(Bandwidth.simple(10, Duration.ofMinutes(100)))
                     .build()
-            Bucket bucket = bucketType.createBucket(configuration)
+        Bucket bucket = bucketType.createBucket(configuration)
             BucketConfiguration newConfiguration = BucketConfiguration.builder()
                     .addLimit(Bandwidth.simple(100, Duration.ofMinutes(1)))
                     .addLimit(Bandwidth.simple(1000, Duration.ofHours(1)))
@@ -28,7 +33,7 @@ class ConfigurationReplacementSpecification extends Specification {
         when:
             bucket.replaceConfiguration(newConfiguration)
         then:
-            IncompatibleConfigurationException ex = thrown(IncompatibleConfigurationException)
+        IncompatibleConfigurationException ex = thrown(IncompatibleConfigurationException)
             ComparableByContent.equals(ex.newConfiguration, newConfiguration)
             ComparableByContent.equals(ex.previousConfiguration, bucket.getConfiguration())
 

@@ -17,7 +17,9 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package io.github.bucket4j;
+package io.github.bucket4j.distributed;
+
+import io.github.bucket4j.*;
 
 import java.util.concurrent.CompletableFuture;
 

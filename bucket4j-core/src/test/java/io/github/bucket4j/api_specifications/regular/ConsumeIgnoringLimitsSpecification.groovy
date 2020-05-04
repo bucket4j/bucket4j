@@ -15,8 +15,12 @@
  *      limitations under the License.
  */
 
-package io.github.bucket4j;
+package io.github.bucket4j.api_specifications.regular
 
+import io.github.bucket4j.Bandwidth
+import io.github.bucket4j.Bucket
+import io.github.bucket4j.Bucket4j
+import io.github.bucket4j.BucketExceptions;
 import io.github.bucket4j.mock.BucketType;
 import io.github.bucket4j.mock.TimeMeterMock;
 import spock.lang.Specification;
@@ -25,7 +29,7 @@ import spock.lang.Unroll;
 import java.time.Duration
 import java.util.concurrent.ExecutionException
 
-import static io.github.bucket4j.PackageAcessor.getState
+import static io.github.bucket4j.util.PackageAccessor.getState
 import static org.junit.Assert.assertNotSame
 import static org.junit.Assert.fail;
 

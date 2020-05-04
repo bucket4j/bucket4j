@@ -1,6 +1,6 @@
 package io.github.bucket4j.grid.ignite;
 
-import io.github.bucket4j.AbstractDistributedBucketTest;
+import io.github.bucket4j.tck.AbstractDistributedBucketTest;
 import io.github.bucket4j.distributed.proxy.Backend;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import org.apache.ignite.Ignite;

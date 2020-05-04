@@ -1,7 +1,7 @@
 package io.github.bucket4j.grid.jcache;
 
 
-import io.github.bucket4j.AbstractDistributedBucketTest;
+import io.github.bucket4j.tck.AbstractDistributedBucketTest;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.distributed.proxy.Backend;

@@ -1,11 +1,16 @@
 
-package io.github.bucket4j
+package io.github.bucket4j.api_specifications
 
+import io.github.bucket4j.Bandwidth
+import io.github.bucket4j.Bucket
+import io.github.bucket4j.BucketConfiguration
+import io.github.bucket4j.SimpleBucketListener
 import io.github.bucket4j.distributed.AsyncBucket
 import io.github.bucket4j.mock.BlockingStrategyMock
 import io.github.bucket4j.mock.BucketType
 import io.github.bucket4j.mock.SchedulerMock
 import io.github.bucket4j.mock.TimeMeterMock
+import io.github.bucket4j.util.PipeGenerator
 import spock.lang.Specification
 import spock.lang.Unroll
 
@@ -25,7 +30,7 @@ class BucketListenerSpecification extends Specification {
     @Unroll
     def "#type bucket created by toListenable should share tokens with source bucket"(BucketType type) {
         setup:
-            Bucket sourceBucket = type.createBucket(configuration, clock);
+        Bucket sourceBucket = type.createBucket(configuration, clock);
             Bucket listenableBucket = sourceBucket.toListenable(listener)
 
         when:

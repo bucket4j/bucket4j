@@ -21,8 +21,11 @@
 package io.github.bucket4j.local;
 
 import io.github.bucket4j.*;
+import io.github.bucket4j.serialization.PrimitiveSerializationHandles;
 
 import java.util.concurrent.atomic.AtomicReference;
+
+import static io.github.bucket4j.serialization.PrimitiveSerializationHandles.*;
 
 abstract class LockFreeBucketContendedTimeMeter extends AbstractBucket {
 
@@ -50,7 +53,7 @@ abstract class LockFreeBucket_FinalFields_CacheLinePadding extends LockFreeBucke
       0    12                                                              (object header)                                   N/A
      12     4                            io.github.bucket4j.BucketListener AbstractBucket.listener                           N/A
      16     4   io.github.bucket4j.AbstractBucket.AsyncScheduledBucketImpl AbstractBucket.asyncView                          N/A
-     20     4                        io.github.bucket4j.AsyncVerboseBucket AbstractBucket.asyncVerboseView                   N/A
+     20     4                        io.github.bucket4j.distributed.AsyncVerboseBucket AbstractBucket.asyncVerboseView                   N/A
      24     4                             io.github.bucket4j.VerboseBucket AbstractBucket.verboseView                        N/A
      28     4                                 io.github.bucket4j.TimeMeter LockFreeBucketContendedTimeMeter.timeMeter        N/A
      32     8                                                         long LockFreeBucket_FinalFields_CacheLinePadding.p1    N/A
@@ -284,11 +287,11 @@ public class LockFreeBucket extends LockFreeBucket_FinalFields_CacheLinePadding 
             long availableToConsume = newState.getAvailableTokens();
             long toConsume = Math.min(limit, availableToConsume);
             if (toConsume == 0) {
-                return new VerboseResult<>(currentTimeNanos, 0L, newState.configuration, newState.state);
+                return new VerboseResult<>(currentTimeNanos, LONG_HANDLE.getTypeId(), 0L, newState.configuration, newState.state);
             }
             newState.consume(toConsume);
             if (stateRef.compareAndSet(previousState, newState)) {
-                return new VerboseResult<>(currentTimeNanos, toConsume, newState.configuration, newState.state.copy());
+                return new VerboseResult<>(currentTimeNanos, LONG_HANDLE.getTypeId(), toConsume, newState.configuration, newState.state.copy());
             } else {
                 previousState = stateRef.get();
                 newState.copyStateFrom(previousState);
@@ -306,11 +309,11 @@ public class LockFreeBucket extends LockFreeBucket_FinalFields_CacheLinePadding 
             newState.refillAllBandwidth(currentTimeNanos);
             long availableToConsume = newState.getAvailableTokens();
             if (tokensToConsume > availableToConsume) {
-                return new VerboseResult<>(currentTimeNanos, false, newState.configuration, newState.state);
+                return new VerboseResult<>(currentTimeNanos, BOOLEAN_HANDLE.getTypeId(), false, newState.configuration, newState.state);
             }
             newState.consume(tokensToConsume);
             if (stateRef.compareAndSet(previousState, newState)) {
-                return new VerboseResult<>(currentTimeNanos, true, newState.configuration, newState.state.copy());
+                return new VerboseResult<>(currentTimeNanos, BOOLEAN_HANDLE.getTypeId(), true, newState.configuration, newState.state.copy());
             } else {
                 previousState = stateRef.get();
                 newState.copyStateFrom(previousState);
@@ -329,13 +332,15 @@ public class LockFreeBucket extends LockFreeBucket_FinalFields_CacheLinePadding 
             long availableToConsume = newState.getAvailableTokens();
             if (tokensToConsume > availableToConsume) {
                 long nanosToWaitForRefill = newState.delayNanosAfterWillBePossibleToConsume(tokensToConsume, currentTimeNanos);
-                ConsumptionProbe consumptionProbe = ConsumptionProbe.rejected(availableToConsume, nanosToWaitForRefill);
-                return new VerboseResult<>(currentTimeNanos, consumptionProbe, newState.configuration, newState.state);
+                long nanosToWaitForReset = newState.calculateFullRefillingTime(currentTimeNanos);
+                ConsumptionProbe consumptionProbe = ConsumptionProbe.rejected(availableToConsume, nanosToWaitForRefill, nanosToWaitForReset);
+                return new VerboseResult<>(currentTimeNanos, ConsumptionProbe.SERIALIZATION_HANDLE.getTypeId(), consumptionProbe, newState.configuration, newState.state);
             }
             newState.consume(tokensToConsume);
             if (stateRef.compareAndSet(previousState, newState)) {
-                ConsumptionProbe consumptionProbe = ConsumptionProbe.consumed(availableToConsume - tokensToConsume);
-                return new VerboseResult<>(currentTimeNanos, consumptionProbe, newState.configuration, newState.state.copy());
+                long nanosToWaitForReset = newState.calculateFullRefillingTime(currentTimeNanos);
+                ConsumptionProbe consumptionProbe = ConsumptionProbe.consumed(availableToConsume - tokensToConsume, nanosToWaitForReset);
+                return new VerboseResult<>(currentTimeNanos, ConsumptionProbe.SERIALIZATION_HANDLE.getTypeId(), consumptionProbe, newState.configuration, newState.state.copy());
             } else {
                 previousState = stateRef.get();
                 newState.copyStateFrom(previousState);
@@ -354,10 +359,10 @@ public class LockFreeBucket extends LockFreeBucket_FinalFields_CacheLinePadding 
         if (tokensToEstimate > availableToConsume) {
             long nanosToWaitForRefill = newState.delayNanosAfterWillBePossibleToConsume(tokensToEstimate, currentTimeNanos);
             EstimationProbe estimationProbe = EstimationProbe.canNotBeConsumed(availableToConsume, nanosToWaitForRefill);
-            return new VerboseResult<>(currentTimeNanos, estimationProbe, newState.configuration, newState.state);
+            return new VerboseResult<>(currentTimeNanos, EstimationProbe.SERIALIZATION_HANDLE.getTypeId(), estimationProbe, newState.configuration, newState.state);
         } else {
             EstimationProbe estimationProbe = EstimationProbe.canBeConsumed(availableToConsume);
-            return new VerboseResult<>(currentTimeNanos, estimationProbe, newState.configuration, newState.state);
+            return new VerboseResult<>(currentTimeNanos, EstimationProbe.SERIALIZATION_HANDLE.getTypeId(), estimationProbe, newState.configuration, newState.state);
         }
     }
 
@@ -366,7 +371,7 @@ public class LockFreeBucket extends LockFreeBucket_FinalFields_CacheLinePadding 
         long currentTimeNanos = timeMeter.currentTimeNanos();
         StateWithConfiguration snapshot = stateRef.get().copy();
         snapshot.refillAllBandwidth(currentTimeNanos);
-        return new VerboseResult<>(currentTimeNanos, snapshot.getAvailableTokens(), snapshot.configuration, snapshot.state);
+        return new VerboseResult<>(currentTimeNanos, LONG_HANDLE.getTypeId(), snapshot.getAvailableTokens(), snapshot.configuration, snapshot.state);
     }
 
     @Override
@@ -379,7 +384,7 @@ public class LockFreeBucket extends LockFreeBucket_FinalFields_CacheLinePadding 
             newState.refillAllBandwidth(currentTimeNanos);
             newState.state.addTokens(newState.configuration.getBandwidths(), tokensToAdd);
             if (stateRef.compareAndSet(previousState, newState)) {
-                return new VerboseResult<>(currentTimeNanos, Nothing.INSTANCE, newState.configuration, newState.state.copy());
+                return new VerboseResult<>(currentTimeNanos, NULL_HANDLE.getTypeId(), Nothing.INSTANCE, newState.configuration, newState.state.copy());
             } else {
                 previousState = stateRef.get();
                 newState.copyStateFrom(previousState);
@@ -395,12 +400,12 @@ public class LockFreeBucket extends LockFreeBucket_FinalFields_CacheLinePadding 
 
         while (true) {
             if (!previousState.configuration.isCompatible(newConfiguration)) {
-                return new VerboseResult<>(currentTimeNanos, null, previousState.configuration, newState.state.copy());
+                return new VerboseResult<>(currentTimeNanos, NULL_HANDLE.getTypeId(), null, previousState.configuration, newState.state.copy());
             }
             newState.refillAllBandwidth(currentTimeNanos);
             newState.configuration = newConfiguration;
             if (stateRef.compareAndSet(previousState, newState)) {
-                return new VerboseResult<>(currentTimeNanos, null, newState.configuration, newState.state.copy());
+                return new VerboseResult<>(currentTimeNanos, NULL_HANDLE.getTypeId(), null, newState.configuration, newState.state.copy());
             } else {
                 previousState = stateRef.get();
                 newState.copyStateFrom(previousState);
@@ -419,11 +424,11 @@ public class LockFreeBucket extends LockFreeBucket_FinalFields_CacheLinePadding 
             long nanosToCloseDeficit = newState.delayNanosAfterWillBePossibleToConsume(tokensToConsume, currentTimeNanos);
 
             if (nanosToCloseDeficit == INFINITY_DURATION) {
-                return new VerboseResult<>(currentTimeNanos, nanosToCloseDeficit, newState.configuration, newState.state);
+                return new VerboseResult<>(currentTimeNanos, LONG_HANDLE.getTypeId(), nanosToCloseDeficit, newState.configuration, newState.state);
             }
             newState.consume(tokensToConsume);
             if (stateRef.compareAndSet(previousState, newState)) {
-                return new VerboseResult<>(currentTimeNanos, nanosToCloseDeficit, newState.configuration, newState.state.copy());
+                return new VerboseResult<>(currentTimeNanos, LONG_HANDLE.getTypeId(), nanosToCloseDeficit, newState.configuration, newState.state.copy());
             } else {
                 previousState = stateRef.get();
                 newState.copyStateFrom(previousState);
@@ -440,94 +445,6 @@ public class LockFreeBucket extends LockFreeBucket_FinalFields_CacheLinePadding 
     }
 
     @Override
-    protected CompletableFuture<Boolean> tryConsumeAsyncImpl(long tokensToConsume) {
-        boolean result = tryConsumeImpl(tokensToConsume);
-        return CompletableFuture.completedFuture(result);
-    }
-
-    @Override
-    protected CompletableFuture<Void> addTokensAsyncImpl(long tokensToAdd) {
-        addTokensImpl(tokensToAdd);
-        return CompletableFuture.completedFuture(null);
-    }
-
-    @Override
-    protected CompletableFuture<BucketConfiguration> replaceConfigurationAsyncImpl(BucketConfiguration newConfiguration) {
-        return CompletableFuture.completedFuture(replaceConfigurationImpl(newConfiguration));
-    }
-
-    @Override
-    protected CompletableFuture<Long> consumeIgnoringRateLimitsAsyncImpl(long tokensToConsume) {
-        return CompletableFuture.completedFuture(consumeIgnoringRateLimitsImpl(tokensToConsume));
-    }
-
-    @Override
-    protected CompletableFuture<ConsumptionProbe> tryConsumeAndReturnRemainingTokensAsyncImpl(long tokensToConsume) {
-        ConsumptionProbe result = tryConsumeAndReturnRemainingTokensImpl(tokensToConsume);
-        return CompletableFuture.completedFuture(result);
-    }
-
-    @Override
-    protected CompletableFuture<EstimationProbe> estimateAbilityToConsumeAsyncImpl(long tokensToEstimate) {
-        EstimationProbe result = estimateAbilityToConsumeImpl(tokensToEstimate);
-        return CompletableFuture.completedFuture(result);
-    }
-
-    @Override
-    protected CompletableFuture<Long> tryConsumeAsMuchAsPossibleAsyncImpl(long limit) {
-        long result = consumeAsMuchAsPossibleImpl(limit);
-        return CompletableFuture.completedFuture(result);
-    }
-
-    @Override
-    protected CompletableFuture<Long> reserveAndCalculateTimeToSleepAsyncImpl(long tokensToConsume, long maxWaitTimeNanos) {
-        long result = reserveAndCalculateTimeToSleepImpl(tokensToConsume, maxWaitTimeNanos);
-        return CompletableFuture.completedFuture(result);
-    }
-
-    @Override
-    protected CompletableFuture<VerboseResult<Long>> tryConsumeAsMuchAsPossibleVerboseAsyncImpl(long limit) {
-        VerboseResult<Long> result = consumeAsMuchAsPossibleVerboseImpl(limit);
-        return CompletableFuture.completedFuture(result);
-    }
-
-    @Override
-    protected CompletableFuture<VerboseResult<Boolean>> tryConsumeVerboseAsyncImpl(long tokensToConsume) {
-        VerboseResult<Boolean> result = tryConsumeVerboseImpl(tokensToConsume);
-        return CompletableFuture.completedFuture(result);
-    }
-
-    @Override
-    protected CompletableFuture<VerboseResult<ConsumptionProbe>> tryConsumeAndReturnRemainingTokensVerboseAsyncImpl(long tokensToConsume) {
-        VerboseResult<ConsumptionProbe> result = tryConsumeAndReturnRemainingTokensVerboseImpl(tokensToConsume);
-        return CompletableFuture.completedFuture(result);
-    }
-
-    @Override
-    protected CompletableFuture<VerboseResult<EstimationProbe>> estimateAbilityToConsumeVerboseAsyncImpl(long tokensToEstimate) {
-        VerboseResult<EstimationProbe> result = estimateAbilityToConsumeVerboseImpl(tokensToEstimate);
-        return CompletableFuture.completedFuture(result);
-    }
-
-    @Override
-    protected CompletableFuture<VerboseResult<Nothing>> addTokensVerboseAsyncImpl(long tokensToAdd) {
-        VerboseResult<Nothing> result = addTokensVerboseImpl(tokensToAdd);
-        return CompletableFuture.completedFuture(result);
-    }
-
-    @Override
-    protected CompletableFuture<VerboseResult<BucketConfiguration>> replaceConfigurationVerboseAsyncImpl(BucketConfiguration newConfiguration) {
-        VerboseResult<BucketConfiguration> result = replaceConfigurationVerboseImpl(newConfiguration);
-        return CompletableFuture.completedFuture(result);
-    }
-
-    @Override
-    protected CompletableFuture<VerboseResult<Long>> consumeIgnoringRateLimitsVerboseAsyncImpl(long tokensToConsume) {
-        VerboseResult<Long> result = consumeIgnoringRateLimitsVerboseImpl(tokensToConsume);
-        return CompletableFuture.completedFuture(result);
-    }
-
-    @Override
     public BucketState createSnapshot() {
         return stateRef.get().state.copy();
     }
@@ -539,10 +456,6 @@ public class LockFreeBucket extends LockFreeBucket_FinalFields_CacheLinePadding 
 
     @Override
     public TimeMeter getTimeMeter() {
-        return timeMeter;
-    }
-
-    TimeMeter getTimeMeter() {
         return timeMeter;
     }
 

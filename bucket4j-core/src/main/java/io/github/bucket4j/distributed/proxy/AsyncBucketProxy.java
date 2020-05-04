@@ -20,6 +20,7 @@ package io.github.bucket4j.distributed.proxy;
 import io.github.bucket4j.*;
 import io.github.bucket4j.distributed.AsyncBucket;
 import io.github.bucket4j.distributed.AsyncScheduledBucket;
+import io.github.bucket4j.distributed.AsyncVerboseBucket;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.remote.commands.*;
@@ -42,8 +43,18 @@ public class AsyncBucketProxy implements AsyncBucket, AsyncScheduledBucket {
     private final AtomicBoolean wasInitialized;
 
     @Override
+    public AsyncVerboseBucket asVerbose() {
+        return asyncVerboseView;
+    }
+
+    @Override
     public AsyncBucket toListenable(BucketListener listener) {
         return new AsyncBucketProxy(commandExecutor, recoveryStrategy, configurationSupplier, wasInitialized, listener);
+    }
+
+    @Override
+    public AsyncScheduledBucket asScheduler() {
+        return this;
     }
 
     public AsyncBucketProxy(AsyncCommandExecutor commandExecutor, RecoveryStrategy recoveryStrategy, Supplier<CompletableFuture<BucketConfiguration>> configurationSupplier) {
@@ -63,9 +74,114 @@ public class AsyncBucketProxy implements AsyncBucket, AsyncScheduledBucket {
         this.listener = listener;
     }
 
+    private final AsyncVerboseBucket asyncVerboseView = new AsyncVerboseBucket() {
+        @Override
+        public CompletableFuture<VerboseResult<Boolean>> tryConsume(long tokensToConsume) {
+            checkTokensToConsume(tokensToConsume);
+
+            VerboseCommand<Boolean> command = new VerboseCommand<>(new TryConsumeCommand(tokensToConsume));
+            return execute(command).thenApply(consumed -> {
+                if (consumed.getValue()) {
+                    listener.onConsumed(tokensToConsume);
+                } else {
+                    listener.onRejected(tokensToConsume);
+                }
+                return consumed;
+            });
+        }
+
+        @Override
+        public CompletableFuture<VerboseResult<Long>> consumeIgnoringRateLimits(long tokensToConsume) {
+            checkTokensToConsume(tokensToConsume);
+            VerboseCommand<Long> command = new VerboseCommand<>(new ConsumeIgnoringRateLimitsCommand(tokensToConsume));
+            return execute(command).thenApply(penaltyNanos -> {
+                if (penaltyNanos.getValue() == INFINITY_DURATION) {
+                    throw BucketExceptions.reservationOverflow();
+                }
+                listener.onConsumed(tokensToConsume);
+                return penaltyNanos;
+            });
+        }
+
+        @Override
+        public CompletableFuture<VerboseResult<ConsumptionProbe>> tryConsumeAndReturnRemaining(long tokensToConsume) {
+            checkTokensToConsume(tokensToConsume);
+
+            VerboseCommand<ConsumptionProbe> command = new VerboseCommand<>(new TryConsumeAndReturnRemainingTokensCommand(tokensToConsume));
+            return execute(command).thenApply(probe -> {
+                if (probe.getValue().isConsumed()) {
+                    listener.onConsumed(tokensToConsume);
+                } else {
+                    listener.onRejected(tokensToConsume);
+                }
+                return probe;
+            });
+        }
+
+        @Override
+        public CompletableFuture<VerboseResult<EstimationProbe>> estimateAbilityToConsume(long numTokens) {
+            checkTokensToConsume(numTokens);
+            return execute(new VerboseCommand<>(new EstimateAbilityToConsumeCommand(numTokens)));
+        }
+
+        @Override
+        public CompletableFuture<VerboseResult<Long>> tryConsumeAsMuchAsPossible() {
+            VerboseCommand<Long> command = new VerboseCommand<>(new ConsumeAsMuchAsPossibleCommand (UNLIMITED_AMOUNT));
+
+            return execute(command).thenApply(consumedTokens -> {
+                long actuallyConsumedTokens = consumedTokens.getValue();
+                if (actuallyConsumedTokens > 0) {
+                    listener.onConsumed(actuallyConsumedTokens);
+                }
+                return consumedTokens;
+            });
+        }
+
+        @Override
+        public CompletableFuture<VerboseResult<Long>> tryConsumeAsMuchAsPossible(long limit) {
+            checkTokensToConsume(limit);
+
+            VerboseCommand<Long> verboseCommand = new VerboseCommand<>(new ConsumeAsMuchAsPossibleCommand(limit));
+            return execute(verboseCommand).thenApply(consumedTokens -> {
+                long actuallyConsumedTokens = consumedTokens.getValue();
+                if (actuallyConsumedTokens > 0) {
+                    listener.onConsumed(actuallyConsumedTokens);
+                }
+                return consumedTokens;
+            });
+        }
+
+        @Override
+        public CompletableFuture<VerboseResult<Nothing>> addTokens(long tokensToAdd) {
+            checkTokensToAdd(tokensToAdd);
+            VerboseCommand<Nothing> verboseCommand = new VerboseCommand<>(new AddTokensCommand(tokensToAdd));
+            return execute(verboseCommand);
+        }
+
+        @Override
+        public CompletableFuture<VerboseResult<Nothing>> replaceConfiguration(BucketConfiguration newConfiguration) {
+            checkConfiguration(newConfiguration);
+            VerboseCommand<BucketConfiguration> command = new VerboseCommand<>(new ReplaceConfigurationOrReturnPreviousCommand(newConfiguration));
+            CompletableFuture<VerboseResult<BucketConfiguration>> resultFuture = execute(command);
+            return resultFuture.thenApply(result -> result.map(conflictingConfiguration -> {
+                if (conflictingConfiguration != null) {
+                    throw new IncompatibleConfigurationException(conflictingConfiguration, newConfiguration);
+                }
+                return Nothing.INSTANCE;
+            }));
+        }
+    };
+
     @Override
-    public AsyncScheduledBucket asScheduler() {
-        return this;
+    public CompletableFuture<Long> consumeIgnoringRateLimits(long tokensToConsume) {
+        checkTokensToConsume(tokensToConsume);
+        return execute(new ConsumeIgnoringRateLimitsCommand(tokensToConsume)).thenApply(penaltyNanos -> {
+            if (penaltyNanos == INFINITY_DURATION) {
+                throw BucketExceptions.reservationOverflow();
+            }
+            listener.onConsumed(tokensToConsume);
+            return penaltyNanos;
+        });
     }
 
     @Override

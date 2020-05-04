@@ -19,28 +19,28 @@
  */
 package io.github.bucket4j;
 
+import io.github.bucket4j.distributed.AsyncVerboseBucket;
 import io.github.bucket4j.serialization.DeserializationAdapter;
 import io.github.bucket4j.serialization.SerializationAdapter;
 import io.github.bucket4j.serialization.SerializationHandle;
 
 import java.io.IOException;
-import java.io.Serializable;
 import java.util.function.Function;
 
 /**
  * Intention of this class is to provide wrapper around results returned by any method of {@link VerboseBucket} and {@link AsyncVerboseBucket}.
  */
-public class VerboseResult<T extends Serializable> implements Serializable {
-
-    private static final long serialVersionUID = 1L;
+public class VerboseResult<T> {
 
     private final long operationTimeNanos;
+    private final int resultTypeId;
     private final T value;
     private final BucketConfiguration configuration;
     private final BucketState state;
 
-    public VerboseResult(long operationTimeNanos, T value, BucketConfiguration configuration, BucketState state) {
+    public VerboseResult(long operationTimeNanos, int resultTypeId, T value, BucketConfiguration configuration, BucketState state) {
         this.operationTimeNanos = operationTimeNanos;
+        this.resultTypeId = resultTypeId;
         this.value = value;
         this.configuration = configuration;
         this.state = state;
@@ -52,7 +52,6 @@ public class VerboseResult<T extends Serializable> implements Serializable {
     public T getValue() {
         return value;
     }
-
 
     /**
      * @return snapshot of configuration which was actual at operation time
@@ -75,8 +74,8 @@ public class VerboseResult<T extends Serializable> implements Serializable {
         return operationTimeNanos;
     }
 
-    public <R extends Serializable> VerboseResult<R> map(Function<T, R> mapper) {
-        return new VerboseResult<>(operationTimeNanos, mapper.apply(value), configuration, state);
+    public <R> VerboseResult<R> map(Function<T, R> mapper) {
+        return new VerboseResult<R>(operationTimeNanos, resultTypeId, mapper.apply(value), configuration, state);
     }
 
     public static final SerializationHandle<VerboseResult<?>> SERIALIZATION_HANDLE = new SerializationHandle<VerboseResult<?>>() {
@@ -84,24 +83,30 @@ public class VerboseResult<T extends Serializable> implements Serializable {
         @Override
         public <I> VerboseResult<?> deserialize(DeserializationAdapter<I> adapter, I input) throws IOException {
             long operationTimeNanos = adapter.readLong(input);
-            Serializable result = (Serializable) adapter.readObject(input);
-            BucketConfiguration configuration = adapter.readObject(input, BucketConfiguration.class);
-            BucketState state = adapter.readObject(input, BucketState.class);
 
-            return new VerboseResult<>(operationTimeNanos, result, configuration, state);
+            int typeId = adapter.readInt(input);
+            SerializationHandle handle = SerializationHandle.CORE_HANDLES.getHandleByTypeId(typeId);
+            Object result = handle.deserialize(adapter, input);
+            BucketConfiguration configuration = BucketConfiguration.SERIALIZATION_HANDLE.deserialize(adapter, input);
+            BucketState state = BucketState.deserialize(adapter, input);
+
+            return new VerboseResult(operationTimeNanos, typeId, result, configuration, state);
         }
 
         @Override
         public <O> void serialize(SerializationAdapter<O> adapter, O output, VerboseResult<?> result) throws IOException {
             adapter.writeLong(output, result.operationTimeNanos);
-            adapter.writeObject(output, result.value);
-            adapter.writeObject(output, result.configuration);
-            adapter.writeObject(output, result.state);
+
+            adapter.writeInt(output, result.resultTypeId);
+            SerializationHandle handle = SerializationHandle.CORE_HANDLES.getHandleByTypeId(result.resultTypeId);
+            handle.serialize(adapter, output, result.value);
+            BucketConfiguration.SERIALIZATION_HANDLE.serialize(adapter, output, result.configuration);
+            BucketState.serialize(adapter, output, result.state);
         }
 
         @Override
         public int getTypeId() {
-            return 24;
+            return 14;
         }
 
         @Override

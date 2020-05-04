@@ -1,5 +1,6 @@
-package io.github.bucket4j;
+package io.github.bucket4j.tck;
 
+import io.github.bucket4j.*;
 import io.github.bucket4j.distributed.AsyncBucket;
 import io.github.bucket4j.distributed.proxy.Backend;
 import io.github.bucket4j.distributed.proxy.BucketNotFoundException;
@@ -99,45 +100,23 @@ public abstract class AbstractDistributedBucketTest {
     }
 
     @Test
-    public void testLocateBucketThroughProxyManager() {
-        ProxyManager<String> proxyManager = newProxyManager();
-
-        // should return empty optional if bucket is not stored
-        Optional<Bucket> remoteBucket = proxyManager.getProxy(key);
-        assertFalse(remoteBucket.isPresent());
-
-        // should return not empty options if bucket is stored
-        B builder = Bucket4j.extension(extensionClass).builder()
-                .addLimit(Bandwidth.simple(1_000, Duration.ofMinutes(1)))
-                .addLimit(Bandwidth.simple(200, Duration.ofSeconds(10)));
-        build(builder, key, THROW_BUCKET_NOT_FOUND_EXCEPTION);
-        remoteBucket = proxyManager.getProxy(key);
-        assertTrue(remoteBucket.isPresent());
-
-        // should return empty optional if bucket is removed
-        removeBucketFromBackingStorage(key);
-        remoteBucket = proxyManager.getProxy(key);
-        assertFalse(remoteBucket.isPresent());
-    }
-
-    @Test
     public void testUnconditionalConsume() throws Exception {
-        BucketConfiguration configuration = Bucket4j.extension(extensionClass).builder()
+        BucketConfiguration configuration = BucketConfiguration.builder()
                 .addLimit(Bandwidth.simple(1_000, Duration.ofMinutes(1)))
-                .buildConfiguration();
+                .build();
 
-        Bucket bucket = newProxyManager().getProxy(key, () -> configuration);
+        Bucket bucket = backend.builder().buildProxy(key, () -> configuration);
         long overdraftNanos = bucket.consumeIgnoringRateLimits(121_000);
         assertEquals(overdraftNanos, TimeUnit.MINUTES.toNanos(120));
     }
 
     @Test
     public void testUnconditionalConsumeVerbose() throws Exception {
-        BucketConfiguration configuration = Bucket4j.extension(extensionClass).builder()
+        BucketConfiguration configuration = BucketConfiguration.builder()
                 .addLimit(Bandwidth.simple(1_000, Duration.ofMinutes(1)))
-                .buildConfiguration();
+                .build();
 
-        Bucket bucket = newProxyManager().getProxy(key, () -> configuration);
+        Bucket bucket = backend.builder().buildProxy(key, () -> configuration);
         VerboseResult<Long> result = bucket.asVerbose().consumeIgnoringRateLimits(121_000);
         long overdraftNanos = result.getValue();
 

@@ -34,20 +34,23 @@
  *      limitations under the License.
  */
 
-package io.github.bucket4j.grid;
+package io.github.bucket4j.distributed.remote.commands;
 
+import io.github.bucket4j.distributed.remote.CommandResult;
+import io.github.bucket4j.distributed.remote.MutableBucketEntry;
+import io.github.bucket4j.distributed.remote.RemoteBucketState;
+import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.serialization.DeserializationAdapter;
 import io.github.bucket4j.serialization.SerializationAdapter;
 import io.github.bucket4j.serialization.SerializationHandle;
 
 import java.io.IOException;
 
-public class ConsumeIgnoringRateLimitsCommand implements GridCommand<Long> {
+import static io.github.bucket4j.serialization.PrimitiveSerializationHandles.LONG_HANDLE;
 
-    private static final long serialVersionUID = 1L;
+public class ConsumeIgnoringRateLimitsCommand implements RemoteCommand<Long> {
 
     private long tokensToConsume;
-    private boolean bucketStateModified;
 
     public static final SerializationHandle<ConsumeIgnoringRateLimitsCommand> SERIALIZATION_HANDLE = new SerializationHandle<ConsumeIgnoringRateLimitsCommand>() {
         @Override
@@ -64,7 +67,7 @@ public class ConsumeIgnoringRateLimitsCommand implements GridCommand<Long> {
 
         @Override
         public int getTypeId() {
-            return 22;
+            return 34;
         }
 
         @Override
@@ -78,25 +81,30 @@ public class ConsumeIgnoringRateLimitsCommand implements GridCommand<Long> {
         this.tokensToConsume = limit;
     }
 
+    public long getTokensToConsume() {
+        return tokensToConsume;
+    }
+
     @Override
-    public Long execute(GridBucketState state, long currentTimeNanos) {
+    public CommandResult<Long> execute(MutableBucketEntry mutableEntry, long currentTimeNanos) {
+        if (!mutableEntry.exists()) {
+            return CommandResult.bucketNotFound();
+        }
+
+        RemoteBucketState state = mutableEntry.get();
         state.refillAllBandwidth(currentTimeNanos);
         long nanosToCloseDeficit = state.calculateDelayNanosAfterWillBePossibleToConsume(tokensToConsume, currentTimeNanos);
 
         if (nanosToCloseDeficit == Long.MAX_VALUE) {
-            return Long.MAX_VALUE;
+            return CommandResult.success(Long.MAX_VALUE, LONG_HANDLE);
         }
         state.consume(tokensToConsume);
-        bucketStateModified = true;
-        return nanosToCloseDeficit;
+        return CommandResult.success(nanosToCloseDeficit, LONG_HANDLE);
     }
 
     @Override
-    public boolean isBucketStateModified() {
-        return bucketStateModified;
+    public SerializationHandle<RemoteCommand<?>> getSerializationHandle() {
+        return (SerializationHandle) SERIALIZATION_HANDLE;
     }
 
-    public long getTokensToConsume() {
-        return tokensToConsume;
-    }
 }

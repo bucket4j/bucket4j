@@ -22,8 +22,8 @@ package io.github.bucket4j.distributed.proxy.optimizers.batch.sync;
 
 public class BatchFailedException extends IllegalStateException {
 
-    T execute(GridBucketState state, long currentTimeNanos);
-
-    boolean isBucketStateModified();
+    public BatchFailedException(Throwable e) {
+        super(e);
+    }
 
 }

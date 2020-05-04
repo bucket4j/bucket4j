@@ -1,6 +1,10 @@
 
-package io.github.bucket4j
+package io.github.bucket4j.core_algorithms
 
+import io.github.bucket4j.Bandwidth
+import io.github.bucket4j.Bucket
+import io.github.bucket4j.MathType
+import io.github.bucket4j.Refill
 import io.github.bucket4j.local.LocalBucket
 import io.github.bucket4j.mock.TimeMeterMock
 import spock.lang.Specification
@@ -17,15 +21,15 @@ class IntervallyAlignedRefillSpecification extends Specification {
 
     @Unroll
     def "#n Initial token calculation spec"(int n, long currentTimeMillis, long firstRefillTimeMillis, long capacity,
-            long refillTokens, long refillPeriodMillis, long requiredInitialTokens, MathType mathType) {
+                                            long refillTokens, long refillPeriodMillis, long requiredInitialTokens, MathType mathType) {
         setup:
             Instant firstRefillTime = new Date(firstRefillTimeMillis).toInstant()
             Duration refillPeriod = Duration.ofMillis(refillPeriodMillis)
-            Refill refill = Refill.intervallyAligned(refillTokens, refillPeriod, firstRefillTime, true)
-            Bandwidth bandwidth = Bandwidth.classic(capacity, refill)
+        Refill refill = Refill.intervallyAligned(refillTokens, refillPeriod, firstRefillTime, true)
+        Bandwidth bandwidth = Bandwidth.classic(capacity, refill)
             TimeMeterMock mockTimer = new TimeMeterMock(currentTimeMillis * 1_000_000)
 
-            Bucket bucket = Bucket.builder()
+        Bucket bucket = Bucket.builder()
                     .withCustomTimePrecision(mockTimer)
                     .addLimit(bandwidth)
                     .withMath(mathType)

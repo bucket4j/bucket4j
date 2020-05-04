@@ -1,6 +1,9 @@
 
-package io.github.bucket4j
+package io.github.bucket4j.core_algorithms
 
+import io.github.bucket4j.Bandwidth
+import io.github.bucket4j.Bucket
+import io.github.bucket4j.Refill
 import io.github.bucket4j.mock.TimeMeterMock
 import spock.lang.Specification
 
@@ -11,11 +14,11 @@ class FixedIntervalRefillSpecification extends Specification {
 
     def "Basic test of fixed interval refill"() {
         setup:
-           Refill refill = Refill.intervally(9, Duration.ofNanos(10))
-           Bandwidth bandwidth = Bandwidth.classic(9, refill)
+        Refill refill = Refill.intervally(9, Duration.ofNanos(10))
+        Bandwidth bandwidth = Bandwidth.classic(9, refill)
                 .withInitialTokens(0)
             TimeMeterMock mockTimer = new TimeMeterMock(0)
-            Bucket bucket = Bucket.builder()
+        Bucket bucket = Bucket.builder()
                 .withCustomTimePrecision(mockTimer)
                 .addLimit(bandwidth)
                 .build()

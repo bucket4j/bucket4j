@@ -17,55 +17,64 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package io.github.bucket4j.grid;
+package io.github.bucket4j.distributed.remote.commands;
 
 import io.github.bucket4j.VerboseResult;
+import io.github.bucket4j.distributed.remote.CommandResult;
+import io.github.bucket4j.distributed.remote.MutableBucketEntry;
+import io.github.bucket4j.distributed.remote.RemoteBucketState;
+import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.serialization.DeserializationAdapter;
 import io.github.bucket4j.serialization.SerializationAdapter;
 import io.github.bucket4j.serialization.SerializationHandle;
 
 import java.io.IOException;
-import java.io.Serializable;
 
-public class VerboseCommand<T extends Serializable> implements GridCommand<VerboseResult<T>> {
+public class VerboseCommand<T> implements RemoteCommand<VerboseResult<T>> {
 
-    private final GridCommand<T> targetCommand;
+    private final RemoteCommand<T> targetCommand;
 
-    public VerboseCommand(GridCommand<T> targetCommand) {
+    public VerboseCommand(RemoteCommand<T> targetCommand) {
         this.targetCommand = targetCommand;
     }
 
-    @Override
-    public VerboseResult<T> execute(GridBucketState state, long currentTimeNanos) {
-        T result = targetCommand.execute(state, currentTimeNanos);
-        return new VerboseResult<>(currentTimeNanos, result, state.getConfiguration(), state.getState());
-    }
-
-    @Override
-    public boolean isBucketStateModified() {
-        return targetCommand.isBucketStateModified();
-    }
-
-    public GridCommand<T> getTargetCommand() {
+    public RemoteCommand<T> getTargetCommand() {
         return targetCommand;
+    }
+
+    @Override
+    public CommandResult<VerboseResult<T>> execute(MutableBucketEntry mutableEntry, long currentTimeNanos) {
+        if (!mutableEntry.exists()) {
+            return CommandResult.bucketNotFound();
+        }
+
+        RemoteBucketState state = mutableEntry.get();
+        CommandResult<T> result = targetCommand.execute(mutableEntry, currentTimeNanos);
+        VerboseResult<T> verboseResult = new VerboseResult<>(currentTimeNanos, result.getResultTypeId(), result.getData(), state.getConfiguration(), state.getState());
+        return CommandResult.success(verboseResult, VerboseResult.SERIALIZATION_HANDLE);
+    }
+
+    @Override
+    public SerializationHandle<RemoteCommand<?>> getSerializationHandle() {
+        return (SerializationHandle) SERIALIZATION_HANDLE;
     }
 
     public static final SerializationHandle<VerboseCommand<?>> SERIALIZATION_HANDLE = new SerializationHandle<VerboseCommand<?>>() {
 
         @Override
         public <I> VerboseCommand<?> deserialize(DeserializationAdapter<I> adapter, I input) throws IOException {
-            GridCommand<?> targetCommand  = (GridCommand<?>) adapter.readObject(input);
-            return new VerboseCommand<>(targetCommand);
+            RemoteCommand<?> targetCommand  = RemoteCommand.deserialize(adapter, input);
+            return new VerboseCommand(targetCommand);
         }
 
         @Override
         public <O> void serialize(SerializationAdapter<O> adapter, O output, VerboseCommand<?> command) throws IOException {
-            adapter.writeObject(output, command.targetCommand);
+            RemoteCommand.serialize(adapter, output, command.targetCommand);
         }
 
         @Override
         public int getTypeId() {
-            return 25;
+            return 35;
         }
 
         @Override

@@ -9,7 +9,7 @@
         <groupId>com.github.vladimir-bukhtoyarov</groupId>
         <artifactId>bucket4j-infinispan-all</artifactId>
         <relativePath>../../bucket4j-infinispan-all</relativePath>
-        <version>5.0.0-alpha-2019-10-18</version>
+        <version>5.0.0-SNAPSHOT</version>
     </parent>
     
     <artifactId>bucket4j-infinispan-8</artifactId>

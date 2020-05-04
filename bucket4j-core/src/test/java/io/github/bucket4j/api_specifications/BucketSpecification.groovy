@@ -1,6 +1,13 @@
 
-package io.github.bucket4j
+package io.github.bucket4j.api_specifications
 
+import io.github.bucket4j.Bandwidth
+import io.github.bucket4j.Bucket
+import io.github.bucket4j.BucketConfiguration
+import io.github.bucket4j.ConsumptionProbe
+import io.github.bucket4j.EstimationProbe
+import io.github.bucket4j.Refill
+import io.github.bucket4j.TimeMeter
 import io.github.bucket4j.distributed.AsyncBucket
 import io.github.bucket4j.mock.GridBackendMock
 import io.github.bucket4j.mock.BucketType
@@ -92,7 +99,7 @@ class BucketSpecification extends Specification {
                     TimeMeterMock timeMeter = new TimeMeterMock(0)
                     Bucket bucket = type.createBucket(configuration, timeMeter)
                     long availableTokensBeforeEstimation = bucket.getAvailableTokens()
-                    EstimationProbe probe = bucket.estimateAbilityToConsume(toEstimate)
+                EstimationProbe probe = bucket.estimateAbilityToConsume(toEstimate)
                     assert probe.canBeConsumed() == result
                     assert probe.remainingTokens == availableTokensBeforeEstimation
                     assert probe.nanosToWaitForRefill == expectedWait
