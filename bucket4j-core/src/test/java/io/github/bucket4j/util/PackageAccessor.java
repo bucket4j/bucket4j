@@ -2,6 +2,7 @@ package io.github.bucket4j.util;
 
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketState;
+import io.github.bucket4j.distributed.AsyncBucket;
 import io.github.bucket4j.distributed.proxy.BucketProxy;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.local.LockFreeBucket;

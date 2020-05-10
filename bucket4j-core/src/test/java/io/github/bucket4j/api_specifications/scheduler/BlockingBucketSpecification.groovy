@@ -15,7 +15,7 @@
  *      limitations under the License.
  */
 
-package io.github.bucket4j.api_specifications
+package io.github.bucket4j.api_specifications.scheduler
 
 import io.github.bucket4j.Bandwidth
 import io.github.bucket4j.BlockingStrategy

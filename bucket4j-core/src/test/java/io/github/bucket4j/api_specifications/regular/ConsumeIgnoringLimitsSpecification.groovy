@@ -1,26 +1,11 @@
-/*
- *
- * Copyright 2015-2020 Vladimir Bukhtoyarov
- *
- *       Licensed under the Apache License, Version 2.0 (the "License");
- *       you may not use this file except in compliance with the License.
- *       You may obtain a copy of the License at
- *
- *             http://www.apache.org/licenses/LICENSE-2.0
- *
- *      Unless required by applicable law or agreed to in writing, software
- *      distributed under the License is distributed on an "AS IS" BASIS,
- *      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *      See the License for the specific language governing permissions and
- *      limitations under the License.
- */
 
 package io.github.bucket4j.api_specifications.regular
 
 import io.github.bucket4j.Bandwidth
 import io.github.bucket4j.Bucket
-import io.github.bucket4j.Bucket4j
-import io.github.bucket4j.BucketExceptions;
+import io.github.bucket4j.BucketConfiguration
+import io.github.bucket4j.BucketExceptions
+import io.github.bucket4j.distributed.AsyncBucket;
 import io.github.bucket4j.mock.BucketType;
 import io.github.bucket4j.mock.TimeMeterMock;
 import spock.lang.Specification;
@@ -36,15 +21,15 @@ import static org.junit.Assert.fail;
 class ConsumeIgnoringLimitsSpecification extends Specification {
 
     @Unroll
-    def "#n case when limits are not overflown"(int n, long tokensToConsume, long nanosIncrement, long remainedTokens, AbstractBucketBuilder builder) {
+    def "#n case when limits are not overflown"(int n, long tokensToConsume, long nanosIncrement, long remainedTokens, BucketConfiguration configuration) {
         expect:
         for (BucketType type : BucketType.values()) {
             for (boolean sync : [true, false]) {
                 for (boolean verbose : [true, false]) {
                     TimeMeterMock timeMeter = new TimeMeterMock(0)
-                    Bucket bucket = type.createBucket(builder, timeMeter)
-                    timeMeter.addTime(nanosIncrement)
                     if (sync) {
+                        Bucket bucket = type.createBucket(configuration, timeMeter)
+                        timeMeter.addTime(nanosIncrement)
                         if (!verbose) {
                             assert bucket.consumeIgnoringRateLimits(tokensToConsume) == 0
                         } else {
@@ -52,37 +37,39 @@ class ConsumeIgnoringLimitsSpecification extends Specification {
                             assert verboseResult.value == 0
                             assertNotSame(verboseResult.state, getState(bucket))
                         }
-                    } else {
+                        assert bucket.createSnapshot().getAvailableTokens(bucket.configuration.bandwidths) == remainedTokens
+                    } else if (type.asyncModeSupported) {
+                        AsyncBucket asyncBucket = type.createAsyncBucket(configuration, timeMeter)
                         if (!verbose) {
-                            bucket.asAsync().consumeIgnoringRateLimits(tokensToConsume).get() == 0
+                            asyncBucket.consumeIgnoringRateLimits(tokensToConsume).get() == 0
                         } else {
-                            def verboseResult = bucket.asAsync().asVerbose().consumeIgnoringRateLimits(tokensToConsume).get()
+                            def verboseResult = asyncBucket.asVerbose().consumeIgnoringRateLimits(tokensToConsume).get()
                             verboseResult.value == 0
-                            assertNotSame(verboseResult.state, getState(bucket))
+                            assertNotSame(verboseResult.state, getState(asyncBucket))
                         }
                     }
-                    assert bucket.createSnapshot().getAvailableTokens(bucket.configuration.bandwidths) == remainedTokens
                 }
             }
         }
         where:
-        n | tokensToConsume | nanosIncrement | remainedTokens | builder
-        1 |     49          |     50         |        1       | Bucket4j.builder().addLimit(Bandwidth.simple(100, Duration.ofNanos(100)).withInitialTokens(0))
-        2 |     50          |     50         |        0       | Bucket4j.builder().addLimit(Bandwidth.simple(100, Duration.ofNanos(100)).withInitialTokens(0))
-        3 |     51          |     120        |        49      | Bucket4j.builder().addLimit(Bandwidth.simple(100, Duration.ofNanos(100)).withInitialTokens(0))
-        4 |     100         |     101        |        0       | Bucket4j.builder().addLimit(Bandwidth.simple(100, Duration.ofNanos(100)).withInitialTokens(0))
+        n | tokensToConsume | nanosIncrement | remainedTokens | configuration
+        1 |     49          |     50         |        1       | BucketConfiguration.builder().addLimit(Bandwidth.simple(100, Duration.ofNanos(100)).withInitialTokens(0)).build()
+        2 |     50          |     50         |        0       | BucketConfiguration.builder().addLimit(Bandwidth.simple(100, Duration.ofNanos(100)).withInitialTokens(0)).build()
+        3 |     51          |     120        |        49      | BucketConfiguration.builder().addLimit(Bandwidth.simple(100, Duration.ofNanos(100)).withInitialTokens(0)).build()
+        4 |     100         |     101        |        0       | BucketConfiguration.builder().addLimit(Bandwidth.simple(100, Duration.ofNanos(100)).withInitialTokens(0)).build()
     }
 
     @Unroll
-    def "#n case when limits are overflown"(int n, long tokensToConsume, long nanosIncrement, long remainedTokens, long overflowNanos,  AbstractBucketBuilder builder) {
+    def "#n case when limits are overflown"(int n, long tokensToConsume, long nanosIncrement, long remainedTokens, long overflowNanos, BucketConfiguration configuration) {
         expect:
         for (BucketType type : BucketType.values()) {
             for (boolean sync : [true, false]) {
                 for (boolean verbose : [true, false]) {
                     TimeMeterMock timeMeter = new TimeMeterMock(0)
-                    Bucket bucket = type.createBucket(builder, timeMeter)
-                    timeMeter.addTime(nanosIncrement)
                     if (sync) {
+                        Bucket bucket = type.createBucket(configuration, timeMeter)
+                        timeMeter.addTime(nanosIncrement)
+                        assert bucket.createSnapshot().getAvailableTokens(bucket.configuration.bandwidths) == remainedTokens
                         if (!verbose) {
                             assert bucket.consumeIgnoringRateLimits(tokensToConsume) == overflowNanos
                         } else {
@@ -90,37 +77,39 @@ class ConsumeIgnoringLimitsSpecification extends Specification {
                             assert verboseResult.value == overflowNanos
                             assertNotSame(verboseResult.state, getState(bucket))
                         }
-                    } else {
+                    } else if (type.isAsyncModeSupported()) {
+                        AsyncBucket asyncBucket = type.createAsyncBucket(configuration, timeMeter)
                         if (!verbose) {
-                            assert bucket.asAsync().consumeIgnoringRateLimits(tokensToConsume).get() == overflowNanos
+                            if (type.isAsyncModeSupported()) {
+                                assert asyncBucket.consumeIgnoringRateLimits(tokensToConsume).get() == overflowNanos
+                            }
                         } else {
-                            def verboseResult = bucket.asAsync().asVerbose().consumeIgnoringRateLimits(tokensToConsume).get()
+                            def verboseResult = asyncBucket.asVerbose().consumeIgnoringRateLimits(tokensToConsume).get()
                             assert verboseResult.value == overflowNanos
-                            assertNotSame(verboseResult.state, getState(bucket))
+                            assertNotSame(verboseResult.state, getState(asyncBucket))
                         }
                     }
-                    assert bucket.createSnapshot().getAvailableTokens(bucket.configuration.bandwidths) == remainedTokens
                 }
             }
         }
         where:
-        n | tokensToConsume | nanosIncrement | remainedTokens | overflowNanos   | builder
-        1 |     52          |      50        |       -2       |      2          | Bucket4j.builder().addLimit(Bandwidth.simple(100, Duration.ofNanos(100)).withInitialTokens(0))
-        2 |     50          |      0         |      -50       |      50         | Bucket4j.builder().addLimit(Bandwidth.simple(100, Duration.ofNanos(100)).withInitialTokens(0))
-        3 |    151          |      120       |      -51       |      51         | Bucket4j.builder().addLimit(Bandwidth.simple(100, Duration.ofNanos(100)).withInitialTokens(0))
-        4 |    400          |      201       |      -300      |      300        | Bucket4j.builder().addLimit(Bandwidth.simple(100, Duration.ofNanos(100)).withInitialTokens(0))
+        n | tokensToConsume | nanosIncrement | remainedTokens | overflowNanos   | configuration
+        1 |     52          |      50        |       -2       |      2          | BucketConfiguration.builder().addLimit(Bandwidth.simple(100, Duration.ofNanos(100)).withInitialTokens(0)).build()
+        2 |     50          |      0         |      -50       |      50         | BucketConfiguration.builder().addLimit(Bandwidth.simple(100, Duration.ofNanos(100)).withInitialTokens(0)).build()
+        3 |    151          |      120       |      -51       |      51         | BucketConfiguration.builder().addLimit(Bandwidth.simple(100, Duration.ofNanos(100)).withInitialTokens(0)).build()
+        4 |    400          |      201       |      -300      |      300        | BucketConfiguration.builder().addLimit(Bandwidth.simple(100, Duration.ofNanos(100)).withInitialTokens(0)).build()
     }
 
     def "Reservation overflow case"() {
         setup:
-            AbstractBucketBuilder builder = Bucket4j.builder()
+            BucketConfiguration configuration = BucketConfiguration.builder()
                 .addLimit(Bandwidth.simple(1, Duration.ofMinutes(1)).withInitialTokens(0))
             long veryBigAmountOfTokensWhichCannotBeReserved = Long.MAX_VALUE / 2;
         expect:
         for (BucketType type : BucketType.values()) {
             for (boolean sync : [true, false]) {
                 TimeMeterMock timeMeter = new TimeMeterMock(0)
-                Bucket bucket = type.createBucket(builder, timeMeter)
+                Bucket bucket = type.createBucket(configuration, timeMeter)
                 if (sync) {
                     try {
                         bucket.consumeIgnoringRateLimits(veryBigAmountOfTokensWhichCannotBeReserved)
@@ -128,9 +117,10 @@ class ConsumeIgnoringLimitsSpecification extends Specification {
                     } catch (IllegalArgumentException e) {
                         assert e.message == BucketExceptions.reservationOverflow().message
                     }
-                } else {
+                } else if (type.asyncModeSupported) {
+                    AsyncBucket asyncBucket = type.createAsyncBucket(configuration, timeMeter)
                     try {
-                        bucket.asAsync().consumeIgnoringRateLimits(veryBigAmountOfTokensWhichCannotBeReserved).get()
+                        asyncBucket.consumeIgnoringRateLimits(veryBigAmountOfTokensWhichCannotBeReserved).get()
                         fail()
                     } catch(ExecutionException e) {
                         assert e.getCause().message == BucketExceptions.reservationOverflow().message

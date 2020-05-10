@@ -1,5 +1,5 @@
 
-package io.github.bucket4j.api_specifications
+package io.github.bucket4j.api_specifications.regular
 
 import io.github.bucket4j.Bandwidth
 import io.github.bucket4j.Bucket
@@ -15,6 +15,9 @@ import spock.lang.Unroll
 
 import java.time.Duration
 import java.util.concurrent.ExecutionException
+
+import static io.github.bucket4j.util.PackageAccessor.getState
+import static junit.framework.Assert.assertNotSame
 
 class ConfigurationReplacementSpecification extends Specification {
 
@@ -167,23 +170,39 @@ class ConfigurationReplacementSpecification extends Specification {
     def "#bucketType should apply new configuration"(BucketType bucketType) {
         expect:
         for (boolean sync : [true, false]) {
-            TimeMeterMock clock = new TimeMeterMock(0)
-            def configuration = BucketConfiguration.builder()
-                    .addLimit(Bandwidth.simple(100, Duration.ofNanos(100)).withInitialTokens(0))
-                    .build()
-            BucketConfiguration newConfiguration = BucketConfiguration.builder()
-                    .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)))
-                    .build()
-            if (sync || !bucketType.isAsyncModeSupported()) {
-                Bucket bucket = bucketType.createBucket(configuration, clock)
-                bucket.replaceConfiguration(newConfiguration)
-                clock.addTime(10)
-                bucket.getAvailableTokens() == 1
-            } else {
-                AsyncBucket bucket = bucketType.createAsyncBucket(configuration, clock)
-                bucket.replaceConfiguration(newConfiguration).get()
-                clock.addTime(10)
-                bucket.getAvailableTokens().get() == 1
+            for (boolean verbose : [true, false]) {
+                TimeMeterMock clock = new TimeMeterMock(0)
+                def configuration = BucketConfiguration.builder()
+                        .addLimit(Bandwidth.simple(100, Duration.ofNanos(100)).withInitialTokens(0))
+                        .build()
+                BucketConfiguration newConfiguration = BucketConfiguration.builder()
+                        .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)))
+                        .build()
+                if (sync || !bucketType.isAsyncModeSupported()) {
+                    Bucket bucket = bucketType.createBucket(configuration, clock)
+                    if (!verbose) {
+                        bucket.replaceConfiguration(newConfiguration)
+                    } else {
+                        def verboseResult = bucket.asVerbose().replaceConfiguration(newConfiguration)
+                        if (bucketType.isLocal()) {
+                            assertNotSame(verboseResult.state, getState(bucket))
+                        }
+                    }
+                    clock.addTime(10)
+                    assert bucket.getAvailableTokens() == 1
+                } else {
+                    AsyncBucket bucket = bucketType.createAsyncBucket(configuration, clock)
+                    if (!verbose) {
+                        bucket.replaceConfiguration(newConfiguration).get()
+                    } else {
+                        def verboseResult = bucket.asVerbose().replaceConfiguration(newConfiguration).get()
+                        if (bucketType.isLocal()) {
+                            assertNotSame(verboseResult.state, getState(bucket))
+                        }
+                    }
+                    clock.addTime(10)
+                    assert bucket.getAvailableTokens().get() == 1
+                }
             }
         }
         where:

@@ -17,6 +17,7 @@
 
 package io.github.bucket4j.distributed.remote;
 
+import io.github.bucket4j.distributed.remote.commands.VerboseCommand;
 import io.github.bucket4j.serialization.DeserializationAdapter;
 import io.github.bucket4j.serialization.SerializationAdapter;
 import io.github.bucket4j.serialization.SerializationHandle;
@@ -26,6 +27,10 @@ import java.io.IOException;
 public interface RemoteCommand<T> {
 
     CommandResult<T> execute(MutableBucketEntry mutableEntry, long currentTimeNanos);
+
+    default VerboseCommand<T> asVerbose() {
+        return new VerboseCommand<>(this);
+    }
 
     default boolean isInitializationCommand() {
         return false;

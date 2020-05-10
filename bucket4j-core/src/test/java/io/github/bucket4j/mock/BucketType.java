@@ -111,4 +111,8 @@ public enum BucketType {
         return BucketType.withAsyncSupport().contains(this);
     }
 
+    public boolean isLocal() {
+        return this == LOCAL_LOCK_FREE || this == LOCAL_SYNCHRONIZED || this == LOCAL_UNSAFE;
+    }
+
 }

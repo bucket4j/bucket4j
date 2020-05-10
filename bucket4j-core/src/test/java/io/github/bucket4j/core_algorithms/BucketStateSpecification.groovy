@@ -15,7 +15,7 @@
  *      limitations under the License.
  */
 
-package io.github.bucket4j.core_algorithms.ieee754
+package io.github.bucket4j.core_algorithms
 
 import io.github.bucket4j.*
 import io.github.bucket4j.local.LocalBucket
