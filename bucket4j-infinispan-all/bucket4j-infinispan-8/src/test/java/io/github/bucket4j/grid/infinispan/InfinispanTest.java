@@ -1,8 +1,7 @@
 package io.github.bucket4j.grid.infinispan;
 
-import io.github.bucket4j.AbstractDistributedBucketTest;
 import io.github.bucket4j.distributed.proxy.Backend;
-import io.github.bucket4j.distributed.remote.RemoteBucketState;
+import io.github.bucket4j.tck.AbstractDistributedBucketTest;
 import org.infinispan.commons.api.functional.FunctionalMap.ReadWriteMap;
 import org.infinispan.functional.impl.FunctionalMapImpl;
 import org.infinispan.functional.impl.ReadWriteMapImpl;

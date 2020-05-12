@@ -2,9 +2,9 @@
 
 package io.github.bucket4j.grid.infinispan;
 
-import io.github.bucket4j.AbstractDistributedBucketTest;
 import io.github.bucket4j.distributed.proxy.Backend;
 import io.github.bucket4j.grid.infinispan.serialization.Bucket4jProtobufContextInitializer;
+import io.github.bucket4j.tck.AbstractDistributedBucketTest;
 import org.infinispan.Cache;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
