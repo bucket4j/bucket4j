@@ -4,15 +4,28 @@ import io.github.bucket4j.Bandwidth
 import io.github.bucket4j.Bucket
 import io.github.bucket4j.BucketConfiguration
 import io.github.bucket4j.ConsumptionProbe
+import io.github.bucket4j.SimpleBucketListener
 import io.github.bucket4j.distributed.AsyncBucket
+import io.github.bucket4j.mock.BlockingStrategyMock
 import io.github.bucket4j.mock.BucketType
+import io.github.bucket4j.mock.SchedulerMock
 import io.github.bucket4j.mock.TimeMeterMock
+import io.github.bucket4j.util.PipeGenerator
 import spock.lang.Specification
 import spock.lang.Unroll
 
 import java.time.Duration
 
 class TryConsumeAndReturnRemainingSpecification extends Specification {
+
+    TimeMeterMock clock = new TimeMeterMock()
+    BlockingStrategyMock blocker = new BlockingStrategyMock(clock)
+    SimpleBucketListener listener = new SimpleBucketListener()
+    SchedulerMock scheduler = new SchedulerMock(clock)
+
+    BucketConfiguration configuration = BucketConfiguration.builder()
+            .addLimit(Bandwidth.simple(10, Duration.ofSeconds(1)))
+            .build()
 
     @Unroll
     def "#n tryConsumeAndReturnRemaining specification"(int n, long toConsume, boolean result, long expectedRemaining, long expectedWait, BucketConfiguration configuration) {
@@ -39,6 +52,64 @@ class TryConsumeAndReturnRemainingSpecification extends Specification {
         3 |    80     |   false |           70       |      10      | BucketConfiguration.builder().addLimit(Bandwidth.simple(100, Duration.ofNanos(100)).withInitialTokens(70)).build()
         4 |    10     |   false |            0       |      10      | BucketConfiguration.builder().addLimit(Bandwidth.simple(100, Duration.ofNanos(100)).withInitialTokens(0)).build()
         5 |   120     |   false |           10       |     110      | BucketConfiguration.builder().addLimit(Bandwidth.simple(100, Duration.ofNanos(100)).withInitialTokens(10)).build()
+    }
+
+    @Unroll
+    def "#type verbose=#verbose test listener for tryConsumeAndReturnRemaining"(BucketType type, boolean verbose) {
+        setup:
+            Bucket bucket = type.createBucket(configuration, clock).toListenable(listener)
+
+        when:
+            if (!verbose) {
+                bucket.tryConsumeAndReturnRemaining(9)
+            } else {
+                bucket.asVerbose().tryConsumeAndReturnRemaining(9)
+            }
+        then:
+            listener.getConsumed() == 9
+            listener.getRejected() == 0
+
+        when:
+            if (!verbose) {
+                bucket.tryConsumeAndReturnRemaining(6)
+            } else {
+                bucket.asVerbose().tryConsumeAndReturnRemaining(6)
+            }
+        then:
+            listener.getConsumed() == 9
+            listener.getRejected() == 6
+
+        where:
+            [type, verbose] << PipeGenerator.сartesianProduct(BucketType.values() as List, [false, true])
+    }
+
+    @Unroll
+    def "#type verbose=#verbose test listener for async tryConsumeAndReturnRemaining"(BucketType type, boolean verbose) {
+        setup:
+            AsyncBucket bucket = type.createAsyncBucket(configuration, clock).toListenable(listener)
+
+        when:
+            if (!verbose) {
+                bucket.tryConsumeAndReturnRemaining(9).get()
+            } else {
+                bucket.asAsync().asVerbose().tryConsumeAndReturnRemaining(9).get()
+            }
+        then:
+            listener.getConsumed() == 9
+            listener.getRejected() == 0
+
+        when:
+            if (!verbose) {
+                bucket.tryConsumeAndReturnRemaining(6).get()
+            } else {
+                bucket.asAsync().asVerbose().tryConsumeAndReturnRemaining(6).get()
+            }
+        then:
+            listener.getConsumed() == 9
+            listener.getRejected() == 6
+
+        where:
+            [type, verbose] << PipeGenerator.сartesianProduct(BucketType.withAsyncSupport() as List, [false, true])
     }
 
 }

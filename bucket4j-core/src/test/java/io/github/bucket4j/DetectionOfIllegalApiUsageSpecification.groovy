@@ -1,5 +1,5 @@
 
-package io.github.bucket4j.api_specifications
+package io.github.bucket4j
 
 import io.github.bucket4j.Bandwidth
 import io.github.bucket4j.BlockingStrategy

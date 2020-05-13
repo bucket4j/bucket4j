@@ -35,6 +35,15 @@ import java.time.Duration;
 public interface Bucket {
 
     /**
+     * Creates the new builder of in-memory buckets.
+     *
+     * @return new instance of {@link LocalBucketBuilder}
+     */
+    static LocalBucketBuilder builder() {
+        return new LocalBucketBuilder();
+    }
+
+    /**
      * @deprecated use {@link #asBlocking()}
      */
     default BlockingBucket asScheduler() {
@@ -52,15 +61,6 @@ public interface Bucket {
      * Returns the verbose view of this bucket.
      */
     VerboseBucket asVerbose();
-
-    /**
-     * Creates the new builder of in-memory buckets.
-     *
-     * @return new instance of {@link LocalBucketBuilder}
-     */
-    static LocalBucketBuilder builder() {
-        return new LocalBucketBuilder();
-    }
 
     /**
      * Tries to consume a specified number of tokens from this bucket.

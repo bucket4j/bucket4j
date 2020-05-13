@@ -3,15 +3,28 @@ package io.github.bucket4j.api_specifications.regular
 import io.github.bucket4j.Bandwidth
 import io.github.bucket4j.Bucket
 import io.github.bucket4j.BucketConfiguration
+import io.github.bucket4j.SimpleBucketListener
 import io.github.bucket4j.distributed.AsyncBucket
+import io.github.bucket4j.mock.BlockingStrategyMock
 import io.github.bucket4j.mock.BucketType
+import io.github.bucket4j.mock.SchedulerMock
 import io.github.bucket4j.mock.TimeMeterMock
+import io.github.bucket4j.util.PipeGenerator
 import spock.lang.Specification
 import spock.lang.Unroll
 
 import java.time.Duration
 
 class TryConsumeSpecification extends Specification {
+
+    TimeMeterMock clock = new TimeMeterMock()
+    BlockingStrategyMock blocker = new BlockingStrategyMock(clock)
+    SimpleBucketListener listener = new SimpleBucketListener()
+    SchedulerMock scheduler = new SchedulerMock(clock)
+
+    BucketConfiguration configuration = BucketConfiguration.builder()
+            .addLimit(Bandwidth.simple(10, Duration.ofSeconds(1)))
+            .build()
 
     @Unroll
     def "#n Should return #requiredResult when trying to consume #toConsume tokens from Bucket #builder"(
@@ -30,6 +43,64 @@ class TryConsumeSpecification extends Specification {
         n | requiredResult | toConsume | configuration
         1 |     false      |     1     | BucketConfiguration.builder().addLimit(Bandwidth.simple(10, Duration.ofMinutes(100)).withInitialTokens(0)).build()
         2 |      true      |     1     | BucketConfiguration.builder().addLimit(Bandwidth.simple(10, Duration.ofMinutes(100)).withInitialTokens(1)).build()
+    }
+
+    @Unroll
+    def "#type verbose=#verbose test listener for tryConsume"(BucketType type, boolean verbose) {
+        setup:
+            Bucket bucket = type.createBucket(configuration, clock).toListenable(listener)
+
+        when:
+            if (!verbose) {
+                bucket.tryConsume(9)
+            } else {
+                bucket.asVerbose().tryConsume(9)
+            }
+        then:
+            listener.getConsumed() == 9
+            listener.getRejected() == 0
+
+        when:
+            if (!verbose) {
+                bucket.tryConsume(6)
+            } else {
+                bucket.asVerbose().tryConsume(6)
+            }
+        then:
+            listener.getConsumed() == 9
+            listener.getRejected() == 6
+
+        where:
+            [type, verbose] << PipeGenerator.сartesianProduct(BucketType.values() as List, [false, true])
+    }
+
+    @Unroll
+    def "#type verbose=#verbose test listener for async tryConsume"(BucketType type, boolean verbose) {
+        setup:
+            AsyncBucket bucket = type.createAsyncBucket(configuration, clock).toListenable(listener)
+
+        when:
+            if (!verbose) {
+                bucket.tryConsume(9).get()
+            } else {
+                bucket.asAsync().asVerbose().tryConsume(9).get()
+            }
+        then:
+            listener.getConsumed() == 9
+            listener.getRejected() == 0
+
+        when:
+            if (!verbose) {
+                bucket.tryConsume(6).get()
+            } else {
+                bucket.asAsync().asVerbose().tryConsume(6).get()
+            }
+        then:
+            listener.getConsumed() == 9
+            listener.getRejected() == 6
+
+        where:
+            [type, verbose] << PipeGenerator.сartesianProduct(BucketType.withAsyncSupport() as List, [false, true])
     }
 
 }
