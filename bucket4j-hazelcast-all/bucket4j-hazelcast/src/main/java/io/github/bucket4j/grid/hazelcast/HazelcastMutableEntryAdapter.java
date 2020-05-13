@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,19 +20,20 @@
 
 package io.github.bucket4j.grid.hazelcast;
 
-import io.github.bucket4j.grid.GridBucketState;
+import io.github.bucket4j.distributed.remote.MutableBucketEntry;
+import io.github.bucket4j.distributed.remote.RemoteBucketState;
+import io.github.bucket4j.serialization.InternalSerializationHelper;
 
-import javax.cache.processor.MutableEntry;
-import java.io.Serializable;
 import java.util.Map;
 
+import static io.github.bucket4j.serialization.InternalSerializationHelper.deserializeState;
 
-class HazelcastMutableEntryAdapter<K extends Serializable> implements MutableEntry<K, GridBucketState> {
+class HazelcastMutableEntryAdapter<K> implements MutableBucketEntry {
 
-    private final Map.Entry<K, GridBucketState> entry;
+    private final Map.Entry<K, byte[]> entry;
     private boolean modified;
 
-    public HazelcastMutableEntryAdapter(Map.Entry<K, GridBucketState> entry) {
+    public HazelcastMutableEntryAdapter(Map.Entry<K, byte[]> entry) {
         this.entry = entry;
     }
 
@@ -42,29 +43,16 @@ class HazelcastMutableEntryAdapter<K extends Serializable> implements MutableEnt
     }
 
     @Override
-    public void remove() {
-        entry.setValue(null);
-    }
-
-    @Override
-    public void setValue(GridBucketState value) {
-        entry.setValue(value);
+    public void set(RemoteBucketState value) {
+        byte[] stateBytes = InternalSerializationHelper.serializeState(value);
+        entry.setValue(stateBytes);
         this.modified = true;
     }
 
     @Override
-    public K getKey() {
-        return entry.getKey();
-    }
-
-    @Override
-    public GridBucketState getValue() {
-        return entry.getValue();
-    }
-
-    @Override
-    public <T> T unwrap(Class<T> clazz) {
-        throw new UnsupportedOperationException();
+    public RemoteBucketState get() {
+        byte[] stateBytes = entry.getValue();
+        return deserializeState(stateBytes);
     }
 
     public boolean isModified() {

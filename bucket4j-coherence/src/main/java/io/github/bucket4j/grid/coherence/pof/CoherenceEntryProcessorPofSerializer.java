@@ -20,12 +20,26 @@
 
 package io.github.bucket4j.grid.coherence.pof;
 
-import io.github.bucket4j.grid.coherence.CoherenceEntryProcessorAdapter;
+import com.tangosol.io.pof.PofReader;
+import com.tangosol.io.pof.PofSerializer;
+import com.tangosol.io.pof.PofWriter;
+import io.github.bucket4j.grid.coherence.CoherenceProcessor;
 
-public class CoherenceEntryProcessorAdapterPofSerializer extends AbstractBucket4jPofSerializer<CoherenceEntryProcessorAdapter<?, ?>> {
+import java.io.*;
 
-    public CoherenceEntryProcessorAdapterPofSerializer() {
-        super(CoherenceEntryProcessorAdapter.SERIALIZATION_HANDLE);
+public class CoherenceEntryProcessorPofSerializer implements PofSerializer<CoherenceProcessor<?, ?>> {
+
+    @Override
+    public void serialize(PofWriter pofWriter, CoherenceProcessor<?, ?> processor) throws IOException {
+        pofWriter.writeByteArray(0, processor.getCommandBytes());
+        pofWriter.writeRemainder(null);
+    }
+
+    @Override
+    public CoherenceProcessor<?, ?> deserialize(PofReader pofReader) throws IOException {
+        byte[] commandBytes = pofReader.readByteArray(0);
+        pofReader.readRemainder();
+        return new CoherenceProcessor<>(commandBytes);
     }
 
 }

@@ -1,12 +1,8 @@
 import com.tangosol.net.CacheFactory;
 import com.tangosol.net.NamedCache;
+import io.github.bucket4j.distributed.proxy.Backend;
+import io.github.bucket4j.grid.coherence.CoherenceBackend;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
-import io.github.bucket4j.Bucket;
-import io.github.bucket4j.Bucket4j;
-import io.github.bucket4j.grid.ProxyManager;
-import io.github.bucket4j.grid.RecoveryStrategy;
-import io.github.bucket4j.grid.coherence.Coherence;
-import io.github.bucket4j.grid.coherence.CoherenceBucketBuilder;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -15,7 +11,7 @@ import org.littlegrid.ClusterMemberGroupUtils;
 
 import static junit.framework.TestCase.assertEquals;
 
-public class CoherenceWithJdkSerializationTest extends AbstractDistributedBucketTest<CoherenceBucketBuilder, Coherence> {
+public class CoherenceWithJdkSerializationTest extends AbstractDistributedBucketTest {
 
     private static ClusterMemberGroup memberGroup;
     private static NamedCache cache;
@@ -40,29 +36,13 @@ public class CoherenceWithJdkSerializationTest extends AbstractDistributedBucket
     }
 
     @Override
-    protected Class<Coherence> getExtensionClass() {
-        return Coherence.class;
-    }
-
-    @Override
-    protected Bucket build(CoherenceBucketBuilder builder, String key, RecoveryStrategy recoveryStrategy) {
-        return builder.build(cache, key, recoveryStrategy);
-    }
-
-    @Override
-    protected ProxyManager<String> newProxyManager() {
-        return Bucket4j.extension(getExtensionClass()).proxyManagerForCache(cache);
+    protected Backend<String> getBackend() {
+        return new CoherenceBackend(cache);
     }
 
     @Override
     protected void removeBucketFromBackingStorage(String key) {
         cache.remove(key);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    @Override
-    public void testThatImpossibleToPassNullCacheToProxyManagerConstructor() {
-        Bucket4j.extension(getExtensionClass()).proxyManagerForCache(null);
     }
 
 }

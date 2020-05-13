@@ -20,13 +20,10 @@ package io.github.bucket4j.grid.coherence;
 
 import com.tangosol.net.NamedCache;
 import com.tangosol.util.InvocableMap;
-import com.tangosol.util.processor.AbstractProcessor;
 import com.tangosol.util.processor.SingleEntryAsynchronousProcessor;
-import io.github.bucket4j.*;
 import io.github.bucket4j.distributed.proxy.AbstractBackend;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.remote.*;
-import io.github.bucket4j.serialization.InternalSerializationHelper;
 
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -82,28 +79,7 @@ public class CoherenceBackend<K> extends AbstractBackend<K> {
     }
 
 
-    private static class CoherenceProcessor<K, T> extends AbstractProcessor<K, byte[], byte[]> {
-
-        private static final long serialVersionUID = 1L;
-
-        private final byte[] commandBytes;
-
-        public CoherenceProcessor(RemoteCommand<T> command) {
-            this.commandBytes = InternalSerializationHelper.serializeCommand(command);
-        }
-
-        @Override
-        public byte[] process(InvocableMap.Entry<K, byte[]> entry) {
-            CoherenceEntry<K> entryAdapter = new CoherenceEntry<>(entry);
-            RemoteCommand<Object> command = deserializeCommand(commandBytes);
-            CommandResult<?> result = command.execute(entryAdapter, TimeMeter.SYSTEM_MILLISECONDS.currentTimeNanos());
-            return serializeResult(result);
-        }
-
-    }
-
-
-    private static class CoherenceEntry<K> implements MutableBucketEntry {
+    public static class CoherenceEntry<K> implements MutableBucketEntry {
 
         private final Map.Entry<K, byte[]> entry;
 

@@ -80,7 +80,7 @@
         <dependency>
             <groupId>com.hazelcast</groupId>
             <artifactId>hazelcast</artifactId>
-            <version>${hazelcast.3.version}</version>
+            <version>${hazelcast.latest.version}</version>
             <scope>provided</scope>
         </dependency>
 
