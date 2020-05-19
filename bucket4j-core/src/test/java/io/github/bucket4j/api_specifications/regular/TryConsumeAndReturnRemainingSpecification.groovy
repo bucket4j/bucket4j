@@ -37,13 +37,13 @@ class TryConsumeAndReturnRemainingSpecification extends Specification {
             assert probe.consumed == result
             assert probe.remainingTokens == expectedRemaining
             assert probe.nanosToWaitForRefill == expectedWait
-            if (type.isAsyncModeSupported()) {
-                AsyncBucket asyncBucket = type.createAsyncBucket(configuration, timeMeter)
-                probe = asyncBucket.tryConsumeAndReturnRemaining(toConsume).get()
-                assert probe.consumed == result
-                assert probe.remainingTokens == expectedRemaining
-                assert probe.nanosToWaitForRefill == expectedWait
-            }
+
+            AsyncBucket asyncBucket = type.createAsyncBucket(configuration, timeMeter)
+            probe = asyncBucket.tryConsumeAndReturnRemaining(toConsume).get()
+            assert probe.consumed == result
+            assert probe.remainingTokens == expectedRemaining
+            assert probe.nanosToWaitForRefill == expectedWait
+
         }
         where:
         n | toConsume | result  |  expectedRemaining | expectedWait | configuration
@@ -109,7 +109,7 @@ class TryConsumeAndReturnRemainingSpecification extends Specification {
             listener.getRejected() == 6
 
         where:
-            [type, verbose] << PipeGenerator.сartesianProduct(BucketType.withAsyncSupport() as List, [false, true])
+            [type, verbose] << PipeGenerator.сartesianProduct(BucketType.values() as List, [false, true])
     }
 
 }

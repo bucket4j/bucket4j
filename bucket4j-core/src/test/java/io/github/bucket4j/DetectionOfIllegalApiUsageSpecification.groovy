@@ -234,7 +234,7 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
             ex.message == nonPositiveNanosToWait(0).message
 
         when:
-            bucket.asScheduler().tryConsume(1, -1, BlockingStrategy.PARKING)
+            bucket.asBlocking().tryConsume(1, -1, BlockingStrategy.PARKING)
         then:
             ex = thrown()
             ex.message == nonPositiveNanosToWait(-1).message

@@ -19,10 +19,9 @@ class ToStringSpecification extends Specification {
                             .build()
                     Bucket bucket = type.createBucket(configuration, meter)
                     println bucket.toString()
-                    if (type.isAsyncModeSupported()) {
-                        AsyncBucket asyncBucket = type.createAsyncBucket(configuration, meter)
-                        println asyncBucket.toString()
-                    }
+
+                    AsyncBucket asyncBucket = type.createAsyncBucket(configuration, meter)
+                    println asyncBucket.toString()
                 }
             }
         then:

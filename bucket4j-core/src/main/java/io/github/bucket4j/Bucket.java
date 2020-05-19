@@ -44,18 +44,16 @@ public interface Bucket {
     }
 
     /**
-     * @deprecated use {@link #asBlocking()}
-     */
-    default BlockingBucket asScheduler() {
-        return asBlocking();
-    }
-
-    /**
      * Returns the {@link BlockingBucket} view of this bucket, that provides operations which are able to block caller thread.
      *
      * @return the view to bucket that can be used as scheduler
      */
     BlockingBucket asBlocking();
+
+    /**
+     * TODO
+     */
+    ScheduledBucket asScheduler();
 
     /**
      * Returns the verbose view of this bucket.

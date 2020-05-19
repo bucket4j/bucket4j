@@ -19,9 +19,18 @@
  */
 package io.github.bucket4j;
 
-import static io.github.bucket4j.LimitChecker.*;
+import io.github.bucket4j.distributed.remote.commands.ReserveAndCalculateTimeToSleepCommand;
 
-public abstract class AbstractBucket implements Bucket, BlockingBucket {
+import java.time.Duration;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
+
+import static io.github.bucket4j.LimitChecker.*;
+import static io.github.bucket4j.LimitChecker.INFINITY_DURATION;
+
+public abstract class AbstractBucket implements Bucket, BlockingBucket, ScheduledBucket {
 
     protected static long INFINITY_DURATION = Long.MAX_VALUE;
     protected static long UNLIMITED_AMOUNT = Long.MAX_VALUE;
@@ -161,6 +170,11 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket {
             });
         }
     };
+
+    @Override
+    public ScheduledBucket asScheduler() {
+        return this;
+    }
 
     @Override
     public VerboseBucket asVerbose() {
@@ -333,8 +347,79 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket {
         }
     }
 
+    @Override
+    public CompletableFuture<Boolean> tryConsume(long tokensToConsume, long maxWaitTimeNanos, ScheduledExecutorService scheduler) {
+        checkMaxWaitTime(maxWaitTimeNanos);
+        checkTokensToConsume(tokensToConsume);
+        checkScheduler(scheduler);
+
+        try {
+            long nanosToSleep = reserveAndCalculateTimeToSleepImpl(tokensToConsume, maxWaitTimeNanos);
+            if (nanosToSleep == INFINITY_DURATION) {
+                listener.onRejected(tokensToConsume);
+                return CompletableFuture.completedFuture(false);
+            }
+            if (nanosToSleep == 0L) {
+                listener.onConsumed(tokensToConsume);
+                return CompletableFuture.completedFuture(true);
+            }
+
+            listener.onConsumed(tokensToConsume);
+            listener.onDelayed(nanosToSleep);
+            CompletableFuture<Boolean> resultFuture = new CompletableFuture<>();
+            Runnable delayedCompletion = () -> resultFuture.complete(true);
+            scheduler.schedule(delayedCompletion, nanosToSleep, TimeUnit.NANOSECONDS);
+            return resultFuture;
+        } catch (Throwable t) {
+            return failedFuture(t);
+        }
+    }
+
+    @Override
+    public CompletableFuture<Void> consume(long tokensToConsume, ScheduledExecutorService scheduler) {
+        checkTokensToConsume(tokensToConsume);
+        checkScheduler(scheduler);
+
+        try {
+            long nanosToSleep = reserveAndCalculateTimeToSleepImpl(tokensToConsume, INFINITY_DURATION);
+            if (nanosToSleep == INFINITY_DURATION) {
+                String msg = "Existed hardware is unable to service the reservation of so many tokens";
+                return failedFuture(new IllegalStateException(msg));
+            }
+            if (nanosToSleep == 0L) {
+                listener.onConsumed(tokensToConsume);
+                return CompletableFuture.completedFuture(null);
+            }
+
+            listener.onConsumed(tokensToConsume);
+            listener.onDelayed(nanosToSleep);
+            CompletableFuture<Void> resultFuture = new CompletableFuture<>();
+            Runnable delayedCompletion = () -> resultFuture.complete(null);
+            scheduler.schedule(delayedCompletion, nanosToSleep, TimeUnit.NANOSECONDS);
+            return resultFuture;
+        } catch (Throwable t) {
+            return failedFuture(t);
+        }
+    }
+
     protected BucketListener getListener() {
         return listener;
+    }
+
+    public static <T> CompletableFuture<T> completedFuture(Supplier<T> supplier) {
+        try {
+            return CompletableFuture.completedFuture(supplier.get());
+        } catch (Throwable t) {
+            CompletableFuture<T> fail = new CompletableFuture<>();
+            fail.completeExceptionally(t);
+            return fail;
+        }
+    }
+
+    public static <T> CompletableFuture<T> failedFuture(Throwable t) {
+        CompletableFuture<T> fail = new CompletableFuture<>();
+        fail.completeExceptionally(t);
+        return fail;
     }
 
 }

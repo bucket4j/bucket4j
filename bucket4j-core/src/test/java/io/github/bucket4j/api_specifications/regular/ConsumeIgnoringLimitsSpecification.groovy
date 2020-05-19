@@ -5,11 +5,11 @@ import io.github.bucket4j.Bandwidth
 import io.github.bucket4j.Bucket
 import io.github.bucket4j.BucketConfiguration
 import io.github.bucket4j.BucketExceptions
-import io.github.bucket4j.distributed.AsyncBucket;
-import io.github.bucket4j.mock.BucketType;
-import io.github.bucket4j.mock.TimeMeterMock;
-import spock.lang.Specification;
-import spock.lang.Unroll;
+import io.github.bucket4j.distributed.AsyncBucket
+import io.github.bucket4j.mock.BucketType
+import io.github.bucket4j.mock.TimeMeterMock
+import spock.lang.Specification
+import spock.lang.Unroll
 
 import java.time.Duration
 import java.util.concurrent.ExecutionException
@@ -38,7 +38,7 @@ class ConsumeIgnoringLimitsSpecification extends Specification {
                             assertNotSame(verboseResult.state, getState(bucket))
                         }
                         assert bucket.createSnapshot().getAvailableTokens(bucket.configuration.bandwidths) == remainedTokens
-                    } else if (type.asyncModeSupported) {
+                    } else {
                         AsyncBucket asyncBucket = type.createAsyncBucket(configuration, timeMeter)
                         if (!verbose) {
                             asyncBucket.consumeIgnoringRateLimits(tokensToConsume).get() == 0
@@ -77,12 +77,10 @@ class ConsumeIgnoringLimitsSpecification extends Specification {
                             assert verboseResult.value == overflowNanos
                             assertNotSame(verboseResult.state, getState(bucket))
                         }
-                    } else if (type.isAsyncModeSupported()) {
+                    } else {
                         AsyncBucket asyncBucket = type.createAsyncBucket(configuration, timeMeter)
                         if (!verbose) {
-                            if (type.isAsyncModeSupported()) {
-                                assert asyncBucket.consumeIgnoringRateLimits(tokensToConsume).get() == overflowNanos
-                            }
+                            assert asyncBucket.consumeIgnoringRateLimits(tokensToConsume).get() == overflowNanos
                         } else {
                             def verboseResult = asyncBucket.asVerbose().consumeIgnoringRateLimits(tokensToConsume).get()
                             assert verboseResult.value == overflowNanos
@@ -117,7 +115,7 @@ class ConsumeIgnoringLimitsSpecification extends Specification {
                     } catch (IllegalArgumentException e) {
                         assert e.message == BucketExceptions.reservationOverflow().message
                     }
-                } else if (type.asyncModeSupported) {
+                } else {
                     AsyncBucket asyncBucket = type.createAsyncBucket(configuration, timeMeter)
                     try {
                         asyncBucket.consumeIgnoringRateLimits(veryBigAmountOfTokensWhichCannotBeReserved).get()

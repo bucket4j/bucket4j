@@ -17,7 +17,7 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package io.github.bucket4j.distributed;
+package io.github.bucket4j;
 
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
@@ -27,9 +27,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 /**
- * Provides async API for bucket that allows to use bucket as async scheduler.
+ * Provides TODO async API for bucket that allows to use bucket as async scheduler.
  */
-public interface AsyncScheduledBucket {
+public interface ScheduledBucket {
 
     /**
      * Tries to consume the specified number of tokens from the bucket.

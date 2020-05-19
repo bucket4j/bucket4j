@@ -64,7 +64,7 @@ class ConfigurationReplacementSpecification extends Specification {
             ComparableByContent.equals(asyncException.newConfiguration, newConfiguration)
             ComparableByContent.equals(asyncException.previousConfiguration, configuration)
         where:
-            bucketType << BucketType.withAsyncSupport()
+            bucketType << BucketType.values()
     }
 
     @Unroll
@@ -111,7 +111,7 @@ class ConfigurationReplacementSpecification extends Specification {
             ComparableByContent.equals(asyncException.newConfiguration, newConfiguration)
             ComparableByContent.equals(asyncException.previousConfiguration, configuration)
         where:
-            bucketType << BucketType.withAsyncSupport()
+            bucketType << BucketType.values()
     }
 
     @Unroll
@@ -125,7 +125,7 @@ class ConfigurationReplacementSpecification extends Specification {
                 BucketConfiguration newConfiguration = BucketConfiguration.builder()
                         .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)))
                         .build()
-                if (sync || !bucketType.isAsyncModeSupported()) {
+                if (sync) {
                     Bucket bucket = bucketType.createBucket(configuration, clock)
                     clock.addTime(10)
                     bucket.replaceConfiguration(newConfiguration)
@@ -152,7 +152,7 @@ class ConfigurationReplacementSpecification extends Specification {
             BucketConfiguration newConfiguration = BucketConfiguration.builder()
                     .addLimit(Bandwidth.classic (200, Refill.greedy(100, Duration.ofNanos(100)) ))
                     .build()
-            if (sync || !bucketType.isAsyncModeSupported()) {
+            if (sync) {
                 Bucket bucket = bucketType.createBucket(configuration, clock)
                 bucket.replaceConfiguration(newConfiguration)
                 bucket.getAvailableTokens() == 200
@@ -178,7 +178,7 @@ class ConfigurationReplacementSpecification extends Specification {
                 BucketConfiguration newConfiguration = BucketConfiguration.builder()
                         .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)))
                         .build()
-                if (sync || !bucketType.isAsyncModeSupported()) {
+                if (sync) {
                     Bucket bucket = bucketType.createBucket(configuration, clock)
                     if (!verbose) {
                         bucket.replaceConfiguration(newConfiguration)

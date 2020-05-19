@@ -89,10 +89,6 @@ public enum BucketType {
         }
     };
 
-    public static List<BucketType> withAsyncSupport() {
-        return Arrays.asList(GRID);
-    }
-
     abstract public Bucket createBucket(BucketConfiguration configuration, TimeMeter timeMeter);
 
     public Bucket createBucket(BucketConfiguration configuration) {
@@ -100,15 +96,12 @@ public enum BucketType {
     }
 
     public AsyncBucket createAsyncBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
-        throw new UnsupportedOperationException();
+        Bucket bucket = createBucket(configuration, timeMeter);
+        return AsyncBucket.fromSync(bucket);
     }
 
     public AsyncBucket createAsyncBucket(BucketConfiguration configuration) {
         return createAsyncBucket(configuration, TimeMeter.SYSTEM_MILLISECONDS);
-    }
-
-    public boolean isAsyncModeSupported() {
-        return BucketType.withAsyncSupport().contains(this);
     }
 
     public boolean isLocal() {

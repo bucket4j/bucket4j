@@ -19,8 +19,6 @@
  */
 package io.github.bucket4j;
 
-import io.github.bucket4j.distributed.AsyncScheduledBucket;
-
 /**
  * Interface for listening bucket related events. The typical use-cases of this interface are logging and monitoring.
  * The bucket can be decorated by listener via {@link Bucket#toListenable(BucketListener)} method.
@@ -78,7 +76,7 @@ public interface BucketListener {
 
     /**
      * This method is called each time when delayed task was submit to {@link java.util.concurrent.ScheduledExecutorService} because of wait for tokens refill
-     * in result of interaction with {@link AsyncScheduledBucket}
+     * in result of interaction with {@link ScheduledBucket}
      *
      * @param nanos amount of nanoseconds for which thread was parked
      */

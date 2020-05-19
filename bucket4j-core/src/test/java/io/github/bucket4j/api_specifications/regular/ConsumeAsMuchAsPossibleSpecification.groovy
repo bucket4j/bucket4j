@@ -33,10 +33,9 @@ class ConsumeAsMuchAsPossibleSpecification extends Specification {
             TimeMeterMock timeMeter = new TimeMeterMock(0)
             Bucket bucket = bucketType.createBucket(configuration, timeMeter)
             assert bucket.tryConsumeAsMuchAsPossible() == requiredResult
-            if (bucketType.isAsyncModeSupported()) {
-                AsyncBucket asyncBucket = bucketType.createAsyncBucket(configuration, timeMeter)
-                assert asyncBucket.tryConsumeAsMuchAsPossible().get() == requiredResult
-            }
+
+            AsyncBucket asyncBucket = bucketType.createAsyncBucket(configuration, timeMeter)
+            assert asyncBucket.tryConsumeAsMuchAsPossible().get() == requiredResult
         }
         where:
         n | requiredResult | configuration
@@ -158,7 +157,7 @@ class ConsumeAsMuchAsPossibleSpecification extends Specification {
         listener.getRejected() == 0
 
         where:
-        [type, verbose] << PipeGenerator.сartesianProduct(BucketType.withAsyncSupport() as List, [false, true])
+        [type, verbose] << PipeGenerator.сartesianProduct(BucketType.values() as List, [false, true])
     }
 
     @Unroll
@@ -197,7 +196,7 @@ class ConsumeAsMuchAsPossibleSpecification extends Specification {
             listener.getRejected() == 0
 
         where:
-            [type, verbose] << PipeGenerator.сartesianProduct(BucketType.withAsyncSupport() as List, [false, true])
+            [type, verbose] << PipeGenerator.сartesianProduct(BucketType.values() as List, [false, true])
     }
 
 }

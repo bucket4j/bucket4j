@@ -26,14 +26,12 @@ class AddTokensSpecification extends Specification {
             bucket.addTokens(tokensToAdd)
             assert bucket.getAvailableTokens() == requiredResult
 
-            if (type.isAsyncModeSupported()) {
-                timeMeter = new TimeMeterMock(0)
-                AsyncBucket asyncBucket = type.createAsyncBucket(configuration, timeMeter)
-                asyncBucket.getAvailableTokens().get() // touch the bucket in order to initialize
-                timeMeter.addTime(nanosIncrement)
-                asyncBucket.addTokens(tokensToAdd).get()
-                assert asyncBucket.getAvailableTokens().get() == requiredResult
-            }
+            timeMeter = new TimeMeterMock(0)
+            AsyncBucket asyncBucket = type.createAsyncBucket(configuration, timeMeter)
+            asyncBucket.getAvailableTokens().get() // touch the bucket in order to initialize
+            timeMeter.addTime(nanosIncrement)
+            asyncBucket.addTokens(tokensToAdd).get()
+            assert asyncBucket.getAvailableTokens().get() == requiredResult
         }
         where:
         n | tokensToAdd | nanosIncrement | requiredResult | configuration

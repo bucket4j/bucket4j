@@ -34,10 +34,9 @@ class TryConsumeSpecification extends Specification {
             def timeMeter = new TimeMeterMock(0)
             Bucket bucket = type.createBucket(configuration, timeMeter)
             assert bucket.tryConsume(toConsume) == requiredResult
-            if (type.isAsyncModeSupported()) {
-                AsyncBucket asyncBucket = type.createAsyncBucket(configuration, timeMeter)
-                assert asyncBucket.tryConsume(toConsume).get() == requiredResult
-            }
+
+            AsyncBucket asyncBucket = type.createAsyncBucket(configuration, timeMeter)
+            assert asyncBucket.tryConsume(toConsume).get() == requiredResult
         }
         where:
         n | requiredResult | toConsume | configuration
@@ -100,7 +99,7 @@ class TryConsumeSpecification extends Specification {
             listener.getRejected() == 6
 
         where:
-            [type, verbose] << PipeGenerator.сartesianProduct(BucketType.withAsyncSupport() as List, [false, true])
+            [type, verbose] << PipeGenerator.сartesianProduct(BucketType.values() as List, [false, true])
     }
 
 }

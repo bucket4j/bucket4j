@@ -1,4 +1,4 @@
-package io.github.bucket4j.api_specifications.scheduler
+package io.github.bucket4j.api_specifications.blocking
 
 import io.github.bucket4j.Bandwidth
 import io.github.bucket4j.BlockingStrategy
@@ -139,36 +139,10 @@ class BlockingTryConsumeSpecification extends Specification {
 
     @Timeout(value = 2, unit = TimeUnit.SECONDS)
     @Unroll
-    def "#n Should sleep #requiredSleep when trying to consuming #toConsume tokens from Bucket #configuration"(
-            int n, long requiredSleep, long toConsume, BucketConfiguration configuration) {
-        expect:
-        for (BucketType type : BucketType.withAsyncSupport()) {
-            for (boolean limitAsDuration: [true, false]) {
-                TimeMeterMock meter = new TimeMeterMock(0)
-                AsyncBucket bucket = type.createAsyncBucket(configuration, meter)
-                SchedulerMock scheduler = new SchedulerMock()
-
-                if (limitAsDuration) {
-                    bucket.asScheduler().tryConsume(toConsume, TimeUnit.HOURS.toNanos(1), scheduler).get()
-                } else {
-                    bucket.asScheduler().tryConsume(toConsume, Duration.ofHours(1), scheduler).get()
-                }
-                assert scheduler.acummulatedDelayNanos == requiredSleep
-            }
-        }
-        where:
-        n | requiredSleep | toConsume | configuration
-        1 |      10       |     1     | BucketConfiguration.builder().addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(0)).build()
-        2 |       0       |     1     | BucketConfiguration.builder().addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(1)).build()
-        3 |    9990       |  1000     | BucketConfiguration.builder().addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(1)).build()
-    }
-
-    @Timeout(value = 2, unit = TimeUnit.SECONDS)
-    @Unroll
     def "#n Should sleep #requiredSleep and return #requiredResult when trying to synchronous consume #toConsume tokens with limit #sleepLimit from Bucket #configuration"(
             int n, long requiredSleep, boolean requiredResult, long toConsume, long sleepLimit, BucketConfiguration configuration) {
         expect:
-        for (BucketType type : BucketType.withAsyncSupport()) {
+        for (BucketType type : BucketType.values()) {
             for (boolean limitAsDuration: [true, false]) {
                 TimeMeterMock meter = new TimeMeterMock(0)
                 AsyncBucket bucket = type.createAsyncBucket(configuration, meter)
@@ -190,35 +164,6 @@ class BlockingTryConsumeSpecification extends Specification {
         5 |      40       |     true       |     5     |     40     |  BucketConfiguration.builder().addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(1)).build()
         6 |      40       |     true       |     5     |     41     |  BucketConfiguration.builder().addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(1)).build()
         6 |       0       |     false      |     5     |     39     |  BucketConfiguration.builder().addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(1)).build()
-    }
-
-    @Timeout(value = 2, unit = TimeUnit.SECONDS)
-    def "Should throw InterruptedException when thread interrupted during waiting for token refill"() {
-        expect:
-        for (TimeMeter meter : [SYSTEM_MILLISECONDS, TimeMeter.SYSTEM_NANOTIME]) {
-            Bucket bucket = Bucket.builder()
-                    .withCustomTimePrecision(meter)
-                    .addLimit(Bandwidth.simple(1, Duration.ofMinutes(1)).withInitialTokens(0))
-                    .build()
-
-            Thread.currentThread().interrupt()
-            InterruptedException thrown
-            try {
-                bucket.asBlocking().tryConsume(1, TimeUnit.HOURS.toNanos(1000), BlockingStrategy.PARKING)
-            } catch (InterruptedException e) {
-                thrown = e
-            }
-            assert thrown != null
-
-            thrown = null
-            Thread.currentThread().interrupt()
-            try {
-                bucket.asBlocking().tryConsume(1, TimeUnit.HOURS.toNanos(1), BlockingStrategy.PARKING)
-            } catch (InterruptedException e) {
-                thrown = e
-            }
-            assert thrown != null
-        }
     }
 
     @Timeout(value = 2, unit = TimeUnit.SECONDS)
@@ -355,7 +300,7 @@ class BlockingTryConsumeSpecification extends Specification {
             listener.getInterrupted() == 0
 
         where:
-            type << BucketType.withAsyncSupport()
+            type << BucketType.values()
     }
 
 

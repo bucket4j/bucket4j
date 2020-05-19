@@ -37,12 +37,16 @@ public interface AsyncBucket {
      *
      * @return Asynchronous view of this bucket that allows to use bucket as async scheduler.
      */
-    AsyncScheduledBucket asScheduler();
+    ScheduledBucket asScheduler();
 
     /**
      * Returns the verbose view of this bucket.
      */
     AsyncVerboseBucket asVerbose();
+
+    static AsyncBucket fromSync(Bucket bucket) {
+        return new AsyncBucketAdapter(bucket);
+    }
 
     /**
      * Asynchronous version of {@link Bucket#tryConsume(long)}, follows the same semantic.
