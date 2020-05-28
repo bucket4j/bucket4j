@@ -3,6 +3,7 @@ package io.github.bucket4j.distributed.proxy.optimizers.batch.mock
 import io.github.bucket4j.distributed.proxy.optimizers.batch.async.AsyncBatchingExecutor
 import io.github.bucket4j.distributed.remote.CommandResult
 import kotlinx.coroutines.future.await
+import kotlinx.coroutines.runBlocking
 import org.jetbrains.kotlinx.lincheck.LinChecker
 import org.jetbrains.kotlinx.lincheck.LoggingLevel
 import org.jetbrains.kotlinx.lincheck.Options
@@ -23,11 +24,11 @@ class BatchingAsyncExecutorLincheckTest : VerifierState() {
     private val mockExecutor = MockAsyncCommandExecutor()
     private val executor = AsyncBatchingExecutor(mockExecutor)
 
-    @Operation(cancellableOnSuspension = false)
-    suspend fun testBatching(@Param(name = "amount") amount: Long): Long {
+    @Operation
+    fun testBatching(@Param(name = "amount") amount: Long) :Long {
         val cmd = MockCommand(amount)
         val future: CompletableFuture<CommandResult<Long>> = executor.executeAsync(cmd)
-        return future.await().data
+        return future.get().data
     }
 
     @Test
@@ -43,4 +44,5 @@ class BatchingAsyncExecutorLincheckTest : VerifierState() {
     override fun extractState(): Any {
         return mockExecutor.sum
     }
+
 }

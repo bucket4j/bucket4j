@@ -21,7 +21,7 @@ public class MockCommandExecutor implements CommandExecutor {
     }
 
     @Override
-    public <T extends Serializable> CommandResult<T> execute(RemoteCommand<T> command) {
+    public <T> CommandResult<T> execute(RemoteCommand<T> command) {
         if (command instanceof MultiCommand) {
             MultiCommand multiCommand = (MultiCommand) command;
             List<MockCommand> commands = (List) multiCommand.getCommands();

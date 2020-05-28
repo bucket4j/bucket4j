@@ -19,7 +19,7 @@ public class MockCommand implements RemoteCommand<Long> {
     }
 
     @Override
-    public <T> SerializationHandle<T> getSerializationHandle() {
+    public SerializationHandle<RemoteCommand<?>> getSerializationHandle() {
         return null;
     }
 
