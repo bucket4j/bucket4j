@@ -18,9 +18,7 @@ import java.time.Duration
 class ConsumeAsMuchAsPossibleSpecification extends Specification {
 
     TimeMeterMock clock = new TimeMeterMock()
-    BlockingStrategyMock blocker = new BlockingStrategyMock(clock)
     SimpleBucketListener listener = new SimpleBucketListener()
-    SchedulerMock scheduler = new SchedulerMock(clock)
 
     BucketConfiguration configuration = BucketConfiguration.builder()
             .addLimit(Bandwidth.simple(10, Duration.ofSeconds(1)))
@@ -51,10 +49,9 @@ class ConsumeAsMuchAsPossibleSpecification extends Specification {
             TimeMeterMock timeMeter = new TimeMeterMock(0)
             Bucket bucket = bucketType.createBucket(configuration, timeMeter)
             assert bucket.tryConsumeAsMuchAsPossible(limit) == requiredResult
-            if (bucketType.isAsyncModeSupported()) {
-                AsyncBucket asyncBucket = bucketType.createAsyncBucket(configuration, timeMeter)
-                assert asyncBucket.tryConsumeAsMuchAsPossible(limit).get() == requiredResult
-            }
+
+            AsyncBucket asyncBucket = bucketType.createAsyncBucket(configuration, timeMeter)
+            assert asyncBucket.tryConsumeAsMuchAsPossible(limit).get() == requiredResult
         }
         where:
         n | requiredResult |   limit   | configuration
@@ -138,9 +135,9 @@ class ConsumeAsMuchAsPossibleSpecification extends Specification {
 
         when:
         if (!verbose) {
-            bucket.asAsync().tryConsumeAsMuchAsPossible().get()
+            bucket.tryConsumeAsMuchAsPossible().get()
         } else {
-            bucket.asAsync().asVerbose().tryConsumeAsMuchAsPossible().get()
+            bucket.asVerbose().tryConsumeAsMuchAsPossible().get()
         }
         then:
         listener.getConsumed() == 10
@@ -148,9 +145,9 @@ class ConsumeAsMuchAsPossibleSpecification extends Specification {
 
         when:
         if (!verbose) {
-            bucket.asAsync().tryConsumeAsMuchAsPossible().get()
+            bucket.tryConsumeAsMuchAsPossible().get()
         } else {
-            bucket.asAsync().asVerbose().tryConsumeAsMuchAsPossible().get()
+            bucket.asVerbose().tryConsumeAsMuchAsPossible().get()
         }
         then:
         listener.getConsumed() == 10
@@ -169,7 +166,7 @@ class ConsumeAsMuchAsPossibleSpecification extends Specification {
             if (!verbose) {
                 bucket.tryConsumeAsMuchAsPossible(8).get()
             } else {
-                bucket.asAsync().asVerbose().tryConsumeAsMuchAsPossible(8).get()
+                bucket.asVerbose().tryConsumeAsMuchAsPossible(8).get()
             }
         then:
             listener.getConsumed() == 8
@@ -179,7 +176,7 @@ class ConsumeAsMuchAsPossibleSpecification extends Specification {
             if (!verbose) {
                 bucket.tryConsumeAsMuchAsPossible(8).get()
             } else {
-                bucket.asAsync().asVerbose().tryConsumeAsMuchAsPossible(8).get()
+                bucket.asVerbose().tryConsumeAsMuchAsPossible(8).get()
             }
         then:
             listener.getConsumed() == 10
@@ -189,7 +186,7 @@ class ConsumeAsMuchAsPossibleSpecification extends Specification {
             if (!verbose) {
                 bucket.tryConsumeAsMuchAsPossible(3).get()
             } else {
-                bucket.asAsync().asVerbose().tryConsumeAsMuchAsPossible(3).get()
+                bucket.asVerbose().tryConsumeAsMuchAsPossible(3).get()
             }
         then:
             listener.getConsumed() == 10

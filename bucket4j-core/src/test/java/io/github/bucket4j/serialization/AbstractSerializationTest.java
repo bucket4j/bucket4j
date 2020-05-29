@@ -18,8 +18,7 @@ import java.util.Arrays;
 import static io.github.bucket4j.Bandwidth.classic;
 import static io.github.bucket4j.Bandwidth.simple;
 import static io.github.bucket4j.Refill.*;
-import static io.github.bucket4j.serialization.PrimitiveSerializationHandles.LONG_HANDLE;
-import static io.github.bucket4j.serialization.PrimitiveSerializationHandles.NULL_HANDLE;
+import static io.github.bucket4j.serialization.PrimitiveSerializationHandles.*;
 import static java.time.Duration.*;
 import static org.junit.Assert.assertTrue;
 
@@ -221,7 +220,7 @@ public abstract class AbstractSerializationTest {
         )));
         // verbose results
         testSerialization(new VerboseResult<>(323L, NULL_HANDLE.getTypeId(), null, bucketConfiguration, bucketState));
-        testSerialization(new VerboseResult<>(323L, NULL_HANDLE.getTypeId(), true, bucketConfiguration, bucketState));
+        testSerialization(new VerboseResult<>(323L, BOOLEAN_HANDLE.getTypeId(), true, bucketConfiguration, bucketState));
         testSerialization(new VerboseResult<>(323L, LONG_HANDLE.getTypeId(), 6666666L, bucketConfiguration, bucketState));
         testSerialization(new VerboseResult<>(323L, ConsumptionProbe.SERIALIZATION_HANDLE.getTypeId(), ConsumptionProbe.consumed(10, 32), bucketConfiguration, bucketState));
     }

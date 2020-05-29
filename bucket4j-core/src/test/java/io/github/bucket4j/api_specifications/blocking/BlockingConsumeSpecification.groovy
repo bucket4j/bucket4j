@@ -2,7 +2,6 @@ package io.github.bucket4j.api_specifications.blocking
 
 import io.github.bucket4j.Bandwidth
 import io.github.bucket4j.Bucket
-import io.github.bucket4j.Bucket4j
 import io.github.bucket4j.BucketConfiguration
 import io.github.bucket4j.SimpleBucketListener
 import io.github.bucket4j.mock.BlockingStrategyMock
@@ -24,10 +23,10 @@ class BlockingConsumeSpecification extends Specification {
     @Unroll
     def "#type test for blocking consume"(BucketType type) {
         setup:
-            Bucket bucket = type.createBucket(Bucket4j.builder()
-                .withCustomTimePrecision(clock)
-                .addLimit(Bandwidth.simple(10, Duration.ofSeconds(1))),
-                clock)
+            def configuration = BucketConfiguration.builder()
+                .addLimit(Bandwidth.simple(10, Duration.ofSeconds(1)))
+                .build()
+            Bucket bucket = type.createBucket(configuration, clock)
 
         when:
             bucket.asBlocking().consume(9, blocker)
@@ -124,7 +123,7 @@ class BlockingConsumeSpecification extends Specification {
         when:
             bucket.asBlocking().consumeUninterruptibly(Long.MAX_VALUE, blocker)
         then:
-            thrown(IllegalStateException)
+            thrown(IllegalArgumentException)
             blocker.parkedNanos == 200_000_000
 
         where:

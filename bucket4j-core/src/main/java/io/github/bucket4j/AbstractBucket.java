@@ -383,8 +383,7 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket, Schedule
         try {
             long nanosToSleep = reserveAndCalculateTimeToSleepImpl(tokensToConsume, INFINITY_DURATION);
             if (nanosToSleep == INFINITY_DURATION) {
-                String msg = "Existed hardware is unable to service the reservation of so many tokens";
-                return failedFuture(new IllegalStateException(msg));
+                return failedFuture(BucketExceptions.reservationOverflow());
             }
             if (nanosToSleep == 0L) {
                 listener.onConsumed(tokensToConsume);

@@ -287,8 +287,7 @@ public class AsyncBucketProxy implements AsyncBucket, ScheduledBucket {
                 return;
             }
             if (nanosToSleep == INFINITY_DURATION) {
-                String msg = "Existed hardware is unable to service the reservation of so many tokens";
-                resultFuture.completeExceptionally(new IllegalStateException(msg));
+                resultFuture.completeExceptionally(BucketExceptions.reservationOverflow());
                 return;
             }
             if (nanosToSleep == 0L) {

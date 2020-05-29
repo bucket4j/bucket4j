@@ -27,12 +27,13 @@ import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.serialization.DeserializationAdapter;
 import io.github.bucket4j.serialization.SerializationAdapter;
 import io.github.bucket4j.serialization.SerializationHandle;
+import io.github.bucket4j.util.ComparableByContent;
 
 import java.io.IOException;
 
 import static io.github.bucket4j.serialization.PrimitiveSerializationHandles.LONG_HANDLE;
 
-public class ConsumeIgnoringRateLimitsCommand implements RemoteCommand<Long> {
+public class ConsumeIgnoringRateLimitsCommand implements RemoteCommand<Long>, ComparableByContent<ConsumeIgnoringRateLimitsCommand> {
 
     private long tokensToConsume;
 
@@ -83,12 +84,18 @@ public class ConsumeIgnoringRateLimitsCommand implements RemoteCommand<Long> {
             return CommandResult.success(Long.MAX_VALUE, LONG_HANDLE);
         }
         state.consume(tokensToConsume);
+        mutableEntry.set(state);
         return CommandResult.success(nanosToCloseDeficit, LONG_HANDLE);
     }
 
     @Override
     public SerializationHandle<RemoteCommand<?>> getSerializationHandle() {
         return (SerializationHandle) SERIALIZATION_HANDLE;
+    }
+
+    @Override
+    public boolean equalsByContent(ConsumeIgnoringRateLimitsCommand other) {
+        return tokensToConsume == other.tokensToConsume;
     }
 
 }

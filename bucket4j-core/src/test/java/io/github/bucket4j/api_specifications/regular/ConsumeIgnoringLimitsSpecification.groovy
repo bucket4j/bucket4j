@@ -25,28 +25,34 @@ class ConsumeIgnoringLimitsSpecification extends Specification {
         expect:
         for (BucketType type : BucketType.values()) {
             for (boolean sync : [true, false]) {
-                for (boolean verbose : [true, false]) {
+                for (boolean verbose : [false, true]) {
+                    println("type=$type sync=$sync verbose=$verbose")
                     TimeMeterMock timeMeter = new TimeMeterMock(0)
                     if (sync) {
                         Bucket bucket = type.createBucket(configuration, timeMeter)
+                        bucket.getAvailableTokens()
                         timeMeter.addTime(nanosIncrement)
                         if (!verbose) {
                             assert bucket.consumeIgnoringRateLimits(tokensToConsume) == 0
                         } else {
                             def verboseResult = bucket.asVerbose().consumeIgnoringRateLimits(tokensToConsume)
-                            assert verboseResult.value == 0
-                            assertNotSame(verboseResult.state, getState(bucket))
+                            assert verboseResult.value == 0L
+                            if (type.isLocal()) {
+                                assertNotSame(verboseResult.state, getState(bucket))
+                            }
                         }
-                        assert bucket.createSnapshot().getAvailableTokens(bucket.configuration.bandwidths) == remainedTokens
+                        assert bucket.getAvailableTokens() == remainedTokens
                     } else {
                         AsyncBucket asyncBucket = type.createAsyncBucket(configuration, timeMeter)
+                        asyncBucket.getAvailableTokens().get()
+                        timeMeter.addTime(nanosIncrement)
                         if (!verbose) {
                             asyncBucket.consumeIgnoringRateLimits(tokensToConsume).get() == 0
                         } else {
                             def verboseResult = asyncBucket.asVerbose().consumeIgnoringRateLimits(tokensToConsume).get()
-                            verboseResult.value == 0
-                            assertNotSame(verboseResult.state, getState(asyncBucket))
+                            verboseResult.value == 0L
                         }
+                        assert asyncBucket.getAvailableTokens().get() == remainedTokens
                     }
                 }
             }
@@ -64,28 +70,34 @@ class ConsumeIgnoringLimitsSpecification extends Specification {
         expect:
         for (BucketType type : BucketType.values()) {
             for (boolean sync : [true, false]) {
-                for (boolean verbose : [true, false]) {
+                for (boolean verbose : [false, true]) {
+                    println("type=$type sync=$sync verbose=$verbose")
                     TimeMeterMock timeMeter = new TimeMeterMock(0)
                     if (sync) {
                         Bucket bucket = type.createBucket(configuration, timeMeter)
+                        bucket.getAvailableTokens()
                         timeMeter.addTime(nanosIncrement)
-                        assert bucket.createSnapshot().getAvailableTokens(bucket.configuration.bandwidths) == remainedTokens
                         if (!verbose) {
                             assert bucket.consumeIgnoringRateLimits(tokensToConsume) == overflowNanos
                         } else {
                             def verboseResult = bucket.asVerbose().consumeIgnoringRateLimits(tokensToConsume)
                             assert verboseResult.value == overflowNanos
-                            assertNotSame(verboseResult.state, getState(bucket))
+                            if (type.isLocal()) {
+                                assertNotSame(verboseResult.state, getState(bucket))
+                            }
                         }
+                        assert bucket.getAvailableTokens() == remainedTokens
                     } else {
                         AsyncBucket asyncBucket = type.createAsyncBucket(configuration, timeMeter)
+                        asyncBucket.getAvailableTokens().get()
+                        timeMeter.addTime(nanosIncrement)
                         if (!verbose) {
                             assert asyncBucket.consumeIgnoringRateLimits(tokensToConsume).get() == overflowNanos
                         } else {
                             def verboseResult = asyncBucket.asVerbose().consumeIgnoringRateLimits(tokensToConsume).get()
                             assert verboseResult.value == overflowNanos
-                            assertNotSame(verboseResult.state, getState(asyncBucket))
                         }
+                        assert asyncBucket.getAvailableTokens().get() == remainedTokens
                     }
                 }
             }
@@ -102,7 +114,8 @@ class ConsumeIgnoringLimitsSpecification extends Specification {
         setup:
             BucketConfiguration configuration = BucketConfiguration.builder()
                 .addLimit(Bandwidth.simple(1, Duration.ofMinutes(1)).withInitialTokens(0))
-            long veryBigAmountOfTokensWhichCannotBeReserved = Long.MAX_VALUE / 2;
+                .build()
+            long veryBigAmountOfTokensWhichCannotBeReserved = Long.MAX_VALUE / 2
         expect:
         for (BucketType type : BucketType.values()) {
             for (boolean sync : [true, false]) {

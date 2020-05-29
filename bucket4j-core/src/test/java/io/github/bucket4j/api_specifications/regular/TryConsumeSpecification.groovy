@@ -18,9 +18,7 @@ import java.time.Duration
 class TryConsumeSpecification extends Specification {
 
     TimeMeterMock clock = new TimeMeterMock()
-    BlockingStrategyMock blocker = new BlockingStrategyMock(clock)
     SimpleBucketListener listener = new SimpleBucketListener()
-    SchedulerMock scheduler = new SchedulerMock(clock)
 
     BucketConfiguration configuration = BucketConfiguration.builder()
             .addLimit(Bandwidth.simple(10, Duration.ofSeconds(1)))
@@ -82,7 +80,7 @@ class TryConsumeSpecification extends Specification {
             if (!verbose) {
                 bucket.tryConsume(9).get()
             } else {
-                bucket.asAsync().asVerbose().tryConsume(9).get()
+                bucket.asVerbose().tryConsume(9).get()
             }
         then:
             listener.getConsumed() == 9
@@ -92,7 +90,7 @@ class TryConsumeSpecification extends Specification {
             if (!verbose) {
                 bucket.tryConsume(6).get()
             } else {
-                bucket.asAsync().asVerbose().tryConsume(6).get()
+                bucket.asVerbose().tryConsume(6).get()
             }
         then:
             listener.getConsumed() == 9

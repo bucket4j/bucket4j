@@ -2,7 +2,7 @@ package example.distributed.optimizers.batching;
 
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.Snapshot;
-import com.github.rollingmetrics.dropwizard.adapter.DropwizardAdapters;
+import com.github.rollingmetrics.dropwizard.Dropwizard;
 import com.github.rollingmetrics.histogram.OverflowResolver;
 import com.github.rollingmetrics.histogram.hdr.RollingHdrHistogram;
 import com.hazelcast.map.IMap;
@@ -205,7 +205,7 @@ public class HazelcastWithBatchingPerformanceExample {
                 .resetReservoirPeriodicallyByChunks(Duration.ofSeconds(60), 3)
                 .withHighestTrackableValue(1_000_000_000_000L, OverflowResolver.REDUCE_TO_HIGHEST_TRACKABLE)
                 .build();
-        return DropwizardAdapters.convertToTimer(histogram);
+        return Dropwizard.toTimer(histogram);
     }
 
 }

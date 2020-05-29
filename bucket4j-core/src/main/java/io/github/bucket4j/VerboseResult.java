@@ -23,6 +23,7 @@ import io.github.bucket4j.distributed.AsyncVerboseBucket;
 import io.github.bucket4j.serialization.DeserializationAdapter;
 import io.github.bucket4j.serialization.SerializationAdapter;
 import io.github.bucket4j.serialization.SerializationHandle;
+import io.github.bucket4j.util.ComparableByContent;
 
 import java.io.IOException;
 import java.util.function.Function;
@@ -30,7 +31,7 @@ import java.util.function.Function;
 /**
  * Intention of this class is to provide wrapper around results returned by any method of {@link VerboseBucket} and {@link AsyncVerboseBucket}.
  */
-public class VerboseResult<T> {
+public class VerboseResult<T> implements ComparableByContent<VerboseResult<?>> {
 
     private final long operationTimeNanos;
     private final int resultTypeId;
@@ -114,5 +115,14 @@ public class VerboseResult<T> {
             return (Class) VerboseResult.class;
         }
     };
+
+    @Override
+    public boolean equalsByContent(VerboseResult<?> other) {
+        return operationTimeNanos == other.operationTimeNanos
+                && resultTypeId == other.resultTypeId
+                && ComparableByContent.equals(value, other.value)
+                && configuration.equalsByContent(other.configuration)
+                && ComparableByContent.equals(state, other.state);
+    }
 
 }

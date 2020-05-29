@@ -27,10 +27,11 @@ import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.serialization.DeserializationAdapter;
 import io.github.bucket4j.serialization.SerializationAdapter;
 import io.github.bucket4j.serialization.SerializationHandle;
+import io.github.bucket4j.util.ComparableByContent;
 
 import java.io.IOException;
 
-public class VerboseCommand<T> implements RemoteCommand<VerboseResult<T>> {
+public class VerboseCommand<T> implements RemoteCommand<VerboseResult<T>>, ComparableByContent<VerboseCommand<?>> {
 
     private final RemoteCommand<T> targetCommand;
 
@@ -83,4 +84,8 @@ public class VerboseCommand<T> implements RemoteCommand<VerboseResult<T>> {
         }
     };
 
+    @Override
+    public boolean equalsByContent(VerboseCommand<?> other) {
+        return ComparableByContent.equals(targetCommand, other.targetCommand);
+    }
 }

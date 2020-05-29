@@ -195,10 +195,7 @@ class ConfigurationReplacementSpecification extends Specification {
                     if (!verbose) {
                         bucket.replaceConfiguration(newConfiguration).get()
                     } else {
-                        def verboseResult = bucket.asVerbose().replaceConfiguration(newConfiguration).get()
-                        if (bucketType.isLocal()) {
-                            assertNotSame(verboseResult.state, getState(bucket))
-                        }
+                        bucket.asVerbose().replaceConfiguration(newConfiguration).get()
                     }
                     clock.addTime(10)
                     assert bucket.getAvailableTokens().get() == 1
