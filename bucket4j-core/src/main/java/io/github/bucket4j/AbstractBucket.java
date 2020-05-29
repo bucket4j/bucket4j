@@ -1,25 +1,39 @@
-/*
+/*-
+ * ========================LICENSE_START=================================
+ * Bucket4j
+ * %%
+ * Copyright (C) 2015 - 2020 Vladimir Bukhtoyarov
+ * %%
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * Copyright 2015-2018 Vladimir Bukhtoyarov
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
- *       Licensed under the Apache License, Version 2.0 (the "License");
- *       you may not use this file except in compliance with the License.
- *       You may obtain a copy of the License at
- *
- *             http://www.apache.org/licenses/LICENSE-2.0
- *
- *      Unless required by applicable law or agreed to in writing, software
- *      distributed under the License is distributed on an "AS IS" BASIS,
- *      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *      See the License for the specific language governing permissions and
- *      limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * =========================LICENSE_END==================================
  */
-
 package io.github.bucket4j;
 
-import static io.github.bucket4j.LimitChecker.*;
+import io.github.bucket4j.distributed.remote.commands.ReserveAndCalculateTimeToSleepCommand;
 
-public abstract class AbstractBucket implements Bucket, BlockingBucket {
+import java.time.Duration;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
+
+import static io.github.bucket4j.LimitChecker.*;
+import static io.github.bucket4j.LimitChecker.INFINITY_DURATION;
+
+public abstract class AbstractBucket implements Bucket, BlockingBucket, ScheduledBucket {
+
+    protected static long INFINITY_DURATION = Long.MAX_VALUE;
+    protected static long UNLIMITED_AMOUNT = Long.MAX_VALUE;
 
     protected abstract long consumeAsMuchAsPossibleImpl(long limit);
 
@@ -33,16 +47,138 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket {
 
     protected abstract void addTokensImpl(long tokensToAdd);
 
-    protected abstract void replaceConfigurationImpl(BucketConfiguration newConfiguration);
+    protected abstract BucketConfiguration replaceConfigurationImpl(BucketConfiguration newConfiguration);
 
-    private final BucketListener listener;
+    protected abstract long consumeIgnoringRateLimitsImpl(long tokensToConsume);
+
+    protected abstract VerboseResult<Long> consumeAsMuchAsPossibleVerboseImpl(long limit);
+
+    protected abstract VerboseResult<Boolean> tryConsumeVerboseImpl(long tokensToConsume);
+
+    protected abstract VerboseResult<ConsumptionProbe> tryConsumeAndReturnRemainingTokensVerboseImpl(long tokensToConsume);
+
+    protected abstract VerboseResult<EstimationProbe> estimateAbilityToConsumeVerboseImpl(long numTokens);
+
+    protected abstract VerboseResult<Long> getAvailableTokensVerboseImpl();
+
+    protected abstract VerboseResult<Nothing> addTokensVerboseImpl(long tokensToAdd);
+
+    protected abstract VerboseResult<BucketConfiguration> replaceConfigurationVerboseImpl(BucketConfiguration newConfiguration);
+
+    protected abstract VerboseResult<Long> consumeIgnoringRateLimitsVerboseImpl(long tokensToConsume);
 
     public AbstractBucket(BucketListener listener) {
         if (listener == null) {
             throw BucketExceptions.nullListener();
         }
-
         this.listener = listener;
+    }
+
+    private final BucketListener listener;
+
+    private final VerboseBucket verboseView = new VerboseBucket() {
+        @Override
+        public VerboseResult<Boolean> tryConsume(long tokensToConsume) {
+            checkTokensToConsume(tokensToConsume);
+
+            VerboseResult<Boolean> result = tryConsumeVerboseImpl(tokensToConsume);
+            if (result.getValue()) {
+                listener.onConsumed(tokensToConsume);
+            } else {
+                listener.onRejected(tokensToConsume);
+            }
+
+            return result;
+        }
+
+        @Override
+        public VerboseResult<Long> consumeIgnoringRateLimits(long tokens) {
+            checkTokensToConsume(tokens);
+            VerboseResult<Long> result = consumeIgnoringRateLimitsVerboseImpl(tokens);
+            long penaltyNanos = result.getValue();
+            if (penaltyNanos == INFINITY_DURATION) {
+                throw BucketExceptions.reservationOverflow();
+            }
+            listener.onConsumed(tokens);
+            return result;
+        }
+
+        @Override
+        public VerboseResult<ConsumptionProbe> tryConsumeAndReturnRemaining(long tokensToConsume) {
+            checkTokensToConsume(tokensToConsume);
+
+            VerboseResult<ConsumptionProbe> result = tryConsumeAndReturnRemainingTokensVerboseImpl(tokensToConsume);
+            ConsumptionProbe probe = result.getValue();
+            if (probe.isConsumed()) {
+                listener.onConsumed(tokensToConsume);
+            } else {
+                listener.onRejected(tokensToConsume);
+            }
+            return result;
+        }
+
+        @Override
+        public VerboseResult<EstimationProbe> estimateAbilityToConsume(long numTokens) {
+            checkTokensToConsume(numTokens);
+            return estimateAbilityToConsumeVerboseImpl(numTokens);
+        }
+
+        @Override
+        public VerboseResult<Long> tryConsumeAsMuchAsPossible() {
+            VerboseResult<Long> result = consumeAsMuchAsPossibleVerboseImpl(UNLIMITED_AMOUNT);
+            long consumed = result.getValue();
+            if (consumed > 0) {
+                listener.onConsumed(consumed);
+            }
+            return result;
+        }
+
+        @Override
+        public VerboseResult<Long> tryConsumeAsMuchAsPossible(long limit) {
+            checkTokensToConsume(limit);
+
+            VerboseResult<Long> result = consumeAsMuchAsPossibleVerboseImpl(limit);
+            long consumed = result.getValue();
+            if (consumed > 0) {
+                listener.onConsumed(consumed);
+            }
+
+            return result;
+        }
+
+        @Override
+        public VerboseResult<Long> getAvailableTokens() {
+            return getAvailableTokensVerboseImpl();
+        }
+
+        @Override
+        public VerboseResult<Nothing> addTokens(long tokensToAdd) {
+            checkTokensToAdd(tokensToAdd);
+            return addTokensVerboseImpl(tokensToAdd);
+        }
+
+        @Override
+        public VerboseResult<Nothing> replaceConfiguration(BucketConfiguration newConfiguration) {
+            checkConfiguration(newConfiguration);
+            VerboseResult<BucketConfiguration> result = replaceConfigurationVerboseImpl(newConfiguration);
+
+            return result.map(conflictingConfiguration -> {
+                if (conflictingConfiguration != null) {
+                    throw new IncompatibleConfigurationException(conflictingConfiguration, newConfiguration);
+                }
+                return Nothing.INSTANCE;
+            });
+        }
+    };
+
+    @Override
+    public ScheduledBucket asScheduler() {
+        return this;
+    }
+
+    @Override
+    public VerboseBucket asVerbose() {
+        return verboseView;
     }
 
     @Override
@@ -114,7 +250,7 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket {
 
         long nanosToSleep = reserveAndCalculateTimeToSleepImpl(tokensToConsume, INFINITY_DURATION);
         if (nanosToSleep == INFINITY_DURATION) {
-            throw new IllegalStateException("Existed hardware is unable to service the reservation of so many tokens");
+            throw BucketExceptions.reservationOverflow();
         }
 
         listener.onConsumed(tokensToConsume);
@@ -135,7 +271,7 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket {
 
         long nanosToSleep = reserveAndCalculateTimeToSleepImpl(tokensToConsume, INFINITY_DURATION);
         if (nanosToSleep == INFINITY_DURATION) {
-            throw new IllegalStateException("Existed hardware is unable to service the reservation of so many tokens");
+            throw BucketExceptions.reservationOverflow();
         }
 
         listener.onConsumed(tokensToConsume);
@@ -143,6 +279,17 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket {
             blockingStrategy.parkUninterruptibly(nanosToSleep);
             listener.onParked(nanosToSleep);
         }
+    }
+
+    @Override
+    public long consumeIgnoringRateLimits(long tokens) {
+        checkTokensToConsume(tokens);
+        long penaltyNanos = consumeIgnoringRateLimitsImpl(tokens);
+        if (penaltyNanos == INFINITY_DURATION) {
+            throw BucketExceptions.reservationOverflow();
+        }
+        listener.onConsumed(tokens);
+        return penaltyNanos;
     }
 
     @Override
@@ -194,11 +341,85 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket {
     @Override
     public void replaceConfiguration(BucketConfiguration newConfiguration) {
         checkConfiguration(newConfiguration);
-        replaceConfigurationImpl(newConfiguration);
+        BucketConfiguration conflictingConfiguration = replaceConfigurationImpl(newConfiguration);
+        if (conflictingConfiguration != null) {
+            throw new IncompatibleConfigurationException(conflictingConfiguration, newConfiguration);
+        }
+    }
+
+    @Override
+    public CompletableFuture<Boolean> tryConsume(long tokensToConsume, long maxWaitTimeNanos, ScheduledExecutorService scheduler) {
+        checkMaxWaitTime(maxWaitTimeNanos);
+        checkTokensToConsume(tokensToConsume);
+        checkScheduler(scheduler);
+
+        try {
+            long nanosToSleep = reserveAndCalculateTimeToSleepImpl(tokensToConsume, maxWaitTimeNanos);
+            if (nanosToSleep == INFINITY_DURATION) {
+                listener.onRejected(tokensToConsume);
+                return CompletableFuture.completedFuture(false);
+            }
+            if (nanosToSleep == 0L) {
+                listener.onConsumed(tokensToConsume);
+                return CompletableFuture.completedFuture(true);
+            }
+
+            listener.onConsumed(tokensToConsume);
+            listener.onDelayed(nanosToSleep);
+            CompletableFuture<Boolean> resultFuture = new CompletableFuture<>();
+            Runnable delayedCompletion = () -> resultFuture.complete(true);
+            scheduler.schedule(delayedCompletion, nanosToSleep, TimeUnit.NANOSECONDS);
+            return resultFuture;
+        } catch (Throwable t) {
+            return failedFuture(t);
+        }
+    }
+
+    @Override
+    public CompletableFuture<Void> consume(long tokensToConsume, ScheduledExecutorService scheduler) {
+        checkTokensToConsume(tokensToConsume);
+        checkScheduler(scheduler);
+
+        try {
+            long nanosToSleep = reserveAndCalculateTimeToSleepImpl(tokensToConsume, INFINITY_DURATION);
+            if (nanosToSleep == INFINITY_DURATION) {
+                String msg = "Existed hardware is unable to service the reservation of so many tokens";
+                return failedFuture(new IllegalStateException(msg));
+            }
+            if (nanosToSleep == 0L) {
+                listener.onConsumed(tokensToConsume);
+                return CompletableFuture.completedFuture(null);
+            }
+
+            listener.onConsumed(tokensToConsume);
+            listener.onDelayed(nanosToSleep);
+            CompletableFuture<Void> resultFuture = new CompletableFuture<>();
+            Runnable delayedCompletion = () -> resultFuture.complete(null);
+            scheduler.schedule(delayedCompletion, nanosToSleep, TimeUnit.NANOSECONDS);
+            return resultFuture;
+        } catch (Throwable t) {
+            return failedFuture(t);
+        }
     }
 
     protected BucketListener getListener() {
         return listener;
+    }
+
+    public static <T> CompletableFuture<T> completedFuture(Supplier<T> supplier) {
+        try {
+            return CompletableFuture.completedFuture(supplier.get());
+        } catch (Throwable t) {
+            CompletableFuture<T> fail = new CompletableFuture<>();
+            fail.completeExceptionally(t);
+            return fail;
+        }
+    }
+
+    public static <T> CompletableFuture<T> failedFuture(Throwable t) {
+        CompletableFuture<T> fail = new CompletableFuture<>();
+        fail.completeExceptionally(t);
+        return fail;
     }
 
 }

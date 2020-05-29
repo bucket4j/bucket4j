@@ -25,6 +25,11 @@ If you are using legacy version of Infinispan ```8.x``` then you need to add fol
     <version>${bucket4j.version}</version>
 </dependency>
 ```
+## General compatibility matrix principles::
+* Bucket4j authors do not perform continues monitoring of new Infinispan releases. So, there is can be case when there is no one version of Bucket4j which is compatible with newly released Infinispan,
+just log issue to [bug tracker](https://github.com/vladimir-bukhtoyarov/bucket4j/issues) in this case, adding support to new version of Infinispan is usually easy exercise. 
+* Integrations with legacy versions of Infinispan are not removed without a clear reason. Hence You are in safety, even you are working in a big enterprise company that does not update its infrastructure frequently because You still get new Bucket4j's features even for legacy Infinispan's releases.
+
 
 ## Special notes for Infinispan 10.0+
 As mentioned in the [Infinispan Marshalling documentation](https://infinispan.org/docs/dev/titles/developing/developing.html#marshalling), since release ```10.0.0``` Infinispan does not allow deserialization of custom payloads into Java classes. 

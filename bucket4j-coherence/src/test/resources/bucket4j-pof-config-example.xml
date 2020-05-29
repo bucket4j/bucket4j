@@ -1,0 +1,19 @@
+<pof-config xmlns="http://xmlns.oracle.com/coherence/coherence-pof-config"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:schemaLocation="http://xmlns.oracle.com/coherence/coherence-pof-config coherence-pof-config.xsd">
+
+    <user-type-list>
+        <!-- Include default Coherence types -->
+        <include>coherence-pof-config.xml</include>
+
+        <!-- Define serializers for Bucket4j classes -->
+        <user-type>
+            <type-id>1001</type-id>
+            <class-name>io.github.bucket4j.grid.coherence.CoherenceProcessor</class-name>
+            <serializer>
+                <class-name>io.github.bucket4j.grid.coherence.pof.CoherenceEntryProcessorPofSerializer</class-name>
+            </serializer>
+        </user-type>
+
+    </user-type-list>
+</pof-config>

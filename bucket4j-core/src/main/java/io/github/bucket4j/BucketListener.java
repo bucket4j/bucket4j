@@ -1,23 +1,23 @@
-/*
- *
- * Copyright 2015-2018 Vladimir Bukhtoyarov
- *
- *       Licensed under the Apache License, Version 2.0 (the "License");
- *       you may not use this file except in compliance with the License.
- *       You may obtain a copy of the License at
- *
- *             http://www.apache.org/licenses/LICENSE-2.0
- *
- *      Unless required by applicable law or agreed to in writing, software
- *      distributed under the License is distributed on an "AS IS" BASIS,
- *      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *      See the License for the specific language governing permissions and
- *      limitations under the License.
+/*-
+ * ========================LICENSE_START=================================
+ * Bucket4j
+ * %%
+ * Copyright (C) 2015 - 2020 Vladimir Bukhtoyarov
+ * %%
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * =========================LICENSE_END==================================
  */
-
 package io.github.bucket4j;
-
-import io.github.bucket4j.distributed.AsyncScheduledBucket;
 
 /**
  * Interface for listening bucket related events. The typical use-cases of this interface are logging and monitoring.
@@ -76,7 +76,7 @@ public interface BucketListener {
 
     /**
      * This method is called each time when delayed task was submit to {@link java.util.concurrent.ScheduledExecutorService} because of wait for tokens refill
-     * in result of interaction with {@link AsyncScheduledBucket}
+     * in result of interaction with {@link ScheduledBucket}
      *
      * @param nanos amount of nanoseconds for which thread was parked
      */

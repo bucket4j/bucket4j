@@ -87,12 +87,14 @@ public class BucketProxy extends AbstractBucket {
     }
 
     @Override
-    protected void replaceConfigurationImpl(BucketConfiguration newConfiguration) {
-        ReplaceConfigurationOrReturnPreviousCommand replaceConfigCommand = new ReplaceConfigurationOrReturnPreviousCommand(newConfiguration);
-        BucketConfiguration previousConfiguration = execute(replaceConfigCommand);
-        if (previousConfiguration != null) {
-            throw new IncompatibleConfigurationException(previousConfiguration, newConfiguration);
-        }
+    protected BucketConfiguration replaceConfigurationImpl(BucketConfiguration newConfiguration) {
+        return execute(new ReplaceConfigurationOrReturnPreviousCommand(newConfiguration));
+    }
+
+    @Override
+    protected long consumeIgnoringRateLimitsImpl(long tokensToConsume) {
+        ConsumeIgnoringRateLimitsCommand command = new ConsumeIgnoringRateLimitsCommand(tokensToConsume);
+        return execute(command);
     }
 
     @Override
@@ -103,6 +105,54 @@ public class BucketProxy extends AbstractBucket {
     @Override
     public BucketState createSnapshot() {
         return execute(new CreateSnapshotCommand());
+    }
+
+    @Override
+    protected VerboseResult<Long> consumeAsMuchAsPossibleVerboseImpl(long limit) {
+        ConsumeAsMuchAsPossibleCommand command = new ConsumeAsMuchAsPossibleCommand(limit);
+        return execute(command.asVerbose());
+    }
+
+    @Override
+    protected VerboseResult<Boolean> tryConsumeVerboseImpl(long tokensToConsume) {
+        TryConsumeCommand command = new TryConsumeCommand(tokensToConsume);
+        return execute(command.asVerbose());
+    }
+
+    @Override
+    protected VerboseResult<ConsumptionProbe> tryConsumeAndReturnRemainingTokensVerboseImpl(long tokensToConsume) {
+        TryConsumeAndReturnRemainingTokensCommand command = new TryConsumeAndReturnRemainingTokensCommand(tokensToConsume);
+        return execute(command.asVerbose());
+    }
+
+    @Override
+    protected VerboseResult<EstimationProbe> estimateAbilityToConsumeVerboseImpl(long numTokens) {
+        EstimateAbilityToConsumeCommand command = new EstimateAbilityToConsumeCommand(numTokens);
+        return execute(command.asVerbose());
+    }
+
+    @Override
+    protected VerboseResult<Long> getAvailableTokensVerboseImpl() {
+        GetAvailableTokensCommand command = new GetAvailableTokensCommand();
+        return execute(command.asVerbose());
+    }
+
+    @Override
+    protected VerboseResult<Nothing> addTokensVerboseImpl(long tokensToAdd) {
+        AddTokensCommand command = new AddTokensCommand(tokensToAdd);
+        return execute(command.asVerbose());
+    }
+
+    @Override
+    protected VerboseResult<BucketConfiguration> replaceConfigurationVerboseImpl(BucketConfiguration newConfiguration) {
+        ReplaceConfigurationOrReturnPreviousCommand replaceConfigCommand = new ReplaceConfigurationOrReturnPreviousCommand(newConfiguration);
+        return execute(replaceConfigCommand.asVerbose());
+    }
+
+    @Override
+    protected VerboseResult<Long> consumeIgnoringRateLimitsVerboseImpl(long tokensToConsume) {
+        ConsumeIgnoringRateLimitsCommand command = new ConsumeIgnoringRateLimitsCommand(tokensToConsume);
+        return execute(command.asVerbose());
     }
 
     private BucketConfiguration getConfiguration() {

@@ -1,0 +1,6 @@
+<infinispan>
+    <cache-container default-cache="namedCache">
+        <transport cluster="jcache-cluster" />
+        <replicated-cache name="namedCache" />
+    </cache-container>
+</infinispan>

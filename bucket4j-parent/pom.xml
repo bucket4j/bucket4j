@@ -1,20 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-  ~
-  ~ Copyright 2015-2018 Vladimir Bukhtoyarov
-  ~
-  ~       Licensed under the Apache License, Version 2.0 (the "License");
-  ~       you may not use this file except in compliance with the License.
-  ~       You may obtain a copy of the License at
-  ~
-  ~             http://www.apache.org/licenses/LICENSE-2.0
-  ~
-  ~      Unless required by applicable law or agreed to in writing, software
-  ~      distributed under the License is distributed on an "AS IS" BASIS,
-  ~      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  ~      See the License for the specific language governing permissions and
-  ~      limitations under the License.
-  -->
 
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -23,7 +7,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.github.vladimir-bukhtoyarov</groupId>
-    <version>5.0.0-alpha-2019-10-18</version>
+    <version>5.0.0-SNAPSHOT</version>
     <artifactId>bucket4j-parent</artifactId>
     <packaging>pom</packaging>
     <name>bucket4j-parent</name>
@@ -60,14 +44,17 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <benchmark.jar.name>benchmarks</benchmark.jar.name>
-        <sonar.jacoco.reportPath>${project.basedir}/../bucket4j-parent/target/jacoco-merged.exec</sonar.jacoco.reportPath>
         <argLine/>
         <maven.build.timestamp.format>yyyy-MM-dd HH</maven.build.timestamp.format>
         <jcache.version>1.0.0</jcache.version>
-        <ignite.version>2.1.0</ignite.version>
-        <hazelcast.version>3.8</hazelcast.version>
-<!--        <infinispan.version>10.0.0.Final</infinispan.version>-->
-        <infinispan.version>10.1.0.CR1</infinispan.version>
+        <ignite.version>2.8.0</ignite.version>
+
+        <hazelcast.3.version>3.8</hazelcast.3.version>
+        <hazelcast.latest.version>4.0</hazelcast.latest.version>
+
+        <infinispan-8.version>8.2.0.Final</infinispan-8.version>
+        <infinispan.latest.version>10.1.0.CR1</infinispan.latest.version>
+
         <testcontainers.version>1.12.2</testcontainers.version>
         <lettuce-version>5.0.2.RELEASE</lettuce-version>
         <jedis.version>2.9.0</jedis.version>
@@ -98,6 +85,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
+                <version>3.2.0</version>
                 <configuration>
                     <archive>
                         <manifestEntries>
@@ -189,6 +177,36 @@
             <build>
                 <plugins>
                     <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>license-maven-plugin</artifactId>
+                        <version>2.0.0</version>
+                        <configuration>
+<!--                            <licenseName>bucket4_license</licenseName>-->
+<!--                            <licenseResolver>${project.baseUri}/src/license</licenseResolver>-->
+                            <inceptionYear>2015</inceptionYear>
+                            <organizationName>Vladimir Bukhtoyarov</organizationName>
+                            <projectName>Bucket4j</projectName>
+                            <addJavaLicenseAfterPackage>false</addJavaLicenseAfterPackage>
+                            <processStartTag>========================LICENSE_START=================================</processStartTag>
+                            <processEndTag>=========================LICENSE_END==================================</processEndTag>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>update-file-license-header</id>
+                                <goals>
+                                    <goal>update-file-header</goal>
+                                </goals>
+                                <phase>process-sources</phase>
+                                <configuration>
+                                    <licenseName>apache_v2</licenseName>
+                                    <roots>
+                                        <root>src/main/java</root>
+                                    </roots>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
                         <artifactId>maven-source-plugin</artifactId>
                         <executions>
                             <execution>
@@ -241,6 +259,16 @@
                     </plugin>
                 </plugins>
             </build>
+
+            <reporting>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>license-maven-plugin</artifactId>
+                        <version>2.0.0</version>
+                    </plugin>
+                </plugins>
+            </reporting>
         </profile>
         <profile>
             <id>coverage</id>
@@ -252,27 +280,21 @@
                     <plugin>
                         <groupId>org.jacoco</groupId>
                         <artifactId>jacoco-maven-plugin</artifactId>
+                        <version>0.8.5</version>
                         <executions>
                             <execution>
-                                <id>agent-for-ut</id>
+                                <id>prepare-agent</id>
                                 <goals>
                                     <goal>prepare-agent</goal>
                                 </goals>
-                                <configuration>
-                                    <append>true</append>
-                                    <destFile>${sonar.jacoco.reportPath}</destFile>
-                                </configuration>
                             </execution>
                             <execution>
-                                <id>jacoco-site</id>
+                                <id>report</id>
                                 <phase>verify</phase>
                                 <goals>
                                     <goal>report</goal>
                                     <goal>report-aggregate</goal>
                                 </goals>
-                                <configuration>
-                                    <dataFile>${sonar.jacoco.reportPath}</dataFile>
-                                </configuration>
                             </execution>
                         </executions>
                     </plugin>

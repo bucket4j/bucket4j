@@ -18,7 +18,7 @@
 package io.github.bucket4j.lua.state
 
 import io.github.bucket4j.BucketState
-import io.github.bucket4j.core_algorithms.ieee754.BucketStateSpecification
+import io.github.bucket4j.core_algorithms.BucketStateSpecification
 import io.github.bucket4j.local.LocalBucket
 
 class LuaStateSpecification extends BucketStateSpecification {

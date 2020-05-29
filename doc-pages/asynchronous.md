@@ -10,7 +10,7 @@ Each method of class [AsyncBucket](https://github.com/vladimir-bukhtoyarov/bucke
 
 ### Example - limiting the rate of access to asynchronous servlet
 Imagine that you develop SMS service, which allows send SMS via HTTP interface.
-You want from your architecture to be protected from overloding, clustered and fully asynchronous.
+You want from your architecture to be protected from overloading, clustered and fully asynchronous.
 
 **Overloading protection requirement:**
 to prevent fraud and service overloading you want to introduce following limit for any outbound phone number:
