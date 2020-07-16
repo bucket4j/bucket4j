@@ -22,7 +22,7 @@ Bucket bucket = Bucket4j.jCacheBuilder(RecoveryStrategy.RECONSTRUCT)
     .build(cache, bucketId);
 ```
 
-## Be wary of short-term bursts
+## Be wary of short-timed bursts
 Token bucket is an efficient algorithm with low and fixed memory footprint, independently of the incoming request-rate(it can be millions per second) the bucket consumes no more then 40 bytes(five longs).
 But an efficient memory footprint has its own cost - bandwidth limitation is only satisfied over a long period of time. In other words you cannot avoid short-timed bursts.
 
@@ -32,8 +32,9 @@ Let us describe an example of local burst:
 * At ```T1+1min``` the bucket is full again because tokens fully regenerated and we can immediately consume 100 tokens.
 * This means that between  ```T1``` and ```T1+1min``` we have consumed 200 tokens. Over a long period of time there will be no more than 100 requests per min, but as shown above it is possible to burst at **twice the limit** here at 100 tokens per min.
 
-These bursts are inherent to token bucket algorithms and cannot be avoided. If local bursts are unacceptable you then have two options:
-* Do not use Bucket4j or any other solution implemented on top of token-bucket algorithms.
-* Try to change the bandwidth from ```Tokens per Time``` to ```Tokens/2 per Time/2```,
-for example if you need to strongly satisfy the limit 100tokens/60seconds,
-then you need to define the bandwidth as ```50tokens/30seconds```, and desired original limitation will be satisfied.
+These bursts are inherent to token bucket algorithms and cannot be avoided. If short-timed bursts are unacceptable you then have three options:
+* Do not use Bucket4j or any other solution implemented on top of token-bucket algorithms, because token-bucket is specially designed for network traffic management devices for which short-living traffic spike is a regular case, trying to avoid spike at all contradicts with the nature of token-bucket.
+* Since the value of burst always equals to capacity, try to reduce the capacity and speed of refill. For example if you have ***strong*** requirements ```100tokens/60seconds``` then configure bucket as ```capacity=50tokens  refill=50tokens/60seconds```. It worth to mention that this way leads to following drawbacks:
+** In one time you are not allowed to consume amount of tokens greater than capacity, according to example above - before capacity reducing you was able to consume 100 tokens in single request, after reducing you are able to consume 50 tokens in one request at max.
+** Reducing the speed of refill leads to underconsumptions on long term periods, it is obvious that with refill ```50tokens/60seconds``` you will be able to consume 3050 tokens for 1 hour, instead of 6100(as was prior refill reducing).
+** As a summary of two drawbacks above, we can say that you will pay via **underconsumption** for eliminating the risk of **overconsumption**.
