@@ -21,7 +21,6 @@ import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.distributed.AsyncBucket;
 
-
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
@@ -30,7 +29,7 @@ import java.util.function.Supplier;
  *
  * @param <K>
  */
-public interface RemoteBucketBuilder<K> {
+public interface RemoteAsyncBucketBuilder<K> {
 
     /**
      * TODO
@@ -38,7 +37,7 @@ public interface RemoteBucketBuilder<K> {
      * @param recoveryStrategy
      * @return
      */
-    RemoteBucketBuilder<K> withRecoveryStrategy(RecoveryStrategy recoveryStrategy);
+    RemoteAsyncBucketBuilder<K> withRecoveryStrategy(RecoveryStrategy recoveryStrategy);
 
     /**
      * TODO
@@ -46,7 +45,7 @@ public interface RemoteBucketBuilder<K> {
      * @param requestOptimizer
      * @return
      */
-    RemoteBucketBuilder<K> withRequestOptimizer(RequestOptimizer requestOptimizer);
+    RemoteAsyncBucketBuilder<K> withRequestOptimizer(AsyncRequestOptimizer requestOptimizer);
 
     /**
      * TODO
@@ -55,7 +54,7 @@ public interface RemoteBucketBuilder<K> {
      * @param configuration
      * @return
      */
-    Bucket buildProxy(K key, BucketConfiguration configuration);
+    AsyncBucket buildProxy(K key, BucketConfiguration configuration);
 
     /**
      * TODO
@@ -64,6 +63,6 @@ public interface RemoteBucketBuilder<K> {
      * @param configurationSupplier
      * @return
      */
-    Bucket buildProxy(K key, Supplier<BucketConfiguration> configurationSupplier);
+    AsyncBucket buildProxy(K key, Supplier<CompletableFuture<BucketConfiguration>> configurationSupplier);
 
 }

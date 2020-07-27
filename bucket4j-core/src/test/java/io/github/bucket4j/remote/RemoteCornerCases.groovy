@@ -21,9 +21,9 @@ class RemoteCornerCases extends Specification {
                 .addLimit(Bandwidth.simple(1, Duration.ofNanos(1)))
                 .build()
 
-            AsyncBucket bucket = backendMock.builder()
+            AsyncBucket bucket = backendMock.asAsync().builder()
                 .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
-                .buildAsyncProxy("66", configuration)
+                .buildProxy("66", configuration)
         when:
             backendMock.setException(new RuntimeException())
             CompletableFuture<Boolean> future = bucket.tryConsume(1)

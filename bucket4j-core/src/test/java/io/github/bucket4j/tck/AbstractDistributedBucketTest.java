@@ -157,9 +157,9 @@ public abstract class AbstractDistributedBucketTest {
                 throw new RuntimeException(e);
             }
         };
-        Supplier<AsyncBucket> bucketSupplier = () -> backend.builder()
+        Supplier<AsyncBucket> bucketSupplier = () -> backend.asAsync().builder()
                 .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
-                .buildAsyncProxy(key, configurationForLongRunningTests);
+                .buildProxy(key, configurationForLongRunningTests);
         AsyncConsumptionScenario scenario = new AsyncConsumptionScenario(4, TimeUnit.SECONDS.toNanos(5), bucketSupplier, action, permittedRatePerSecond);
         scenario.executeAndValidateRate();
     }
@@ -178,9 +178,9 @@ public abstract class AbstractDistributedBucketTest {
                 throw new RuntimeException(e);
             }
         };
-        Supplier<AsyncBucket> bucketSupplier = () -> backend.builder()
+        Supplier<AsyncBucket> bucketSupplier = () -> backend.asAsync().builder()
                 .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
-                .buildAsyncProxy(key, configurationForLongRunningTests);
+                .buildProxy(key, configurationForLongRunningTests);
         AsyncConsumptionScenario scenario = new AsyncConsumptionScenario(4, TimeUnit.SECONDS.toNanos(5), bucketSupplier, action, permittedRatePerSecond);
         scenario.executeAndValidateRate();
     }

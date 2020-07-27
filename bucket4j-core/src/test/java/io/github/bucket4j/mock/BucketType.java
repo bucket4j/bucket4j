@@ -6,9 +6,6 @@ import io.github.bucket4j.distributed.AsyncBucket;
 import io.github.bucket4j.local.LocalBucketBuilder;
 import io.github.bucket4j.local.SynchronizationStrategy;
 
-import java.util.Arrays;
-import java.util.List;
-
 import static io.github.bucket4j.distributed.proxy.RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION;
 
 public enum BucketType {
@@ -65,9 +62,9 @@ public enum BucketType {
         @Override
         public AsyncBucket createAsyncBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
             GridBackendMock<Integer> backend = new GridBackendMock<>(timeMeter);
-            return backend.builder()
+            return backend.asAsync().builder()
                     .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
-                    .buildAsyncProxy(42, configuration);
+                    .buildProxy(42, configuration);
         }
     },
     COMPARE_AND_SWAP {

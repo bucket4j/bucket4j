@@ -140,9 +140,9 @@ public class HazelcastWithBatchingPerformanceExample {
                         Bandwidth.simple(10, Duration.ofSeconds(1)).withInitialTokens(0))
                 .build();
 
-        AsyncBucket bucket = backend.builder()
-                .withAsyncRequestOptimizer(new AsyncBatchingOptimizer())
-                .buildAsyncProxy("13", configuration);
+        AsyncBucket bucket = backend.asAsync().builder()
+                .withRequestOptimizer(new AsyncBatchingOptimizer())
+                .buildProxy("13", configuration);
 
         // We need a backpressure for ougoing work because it obviously that OOM can be happen in asycnhrouous bucket mode
         // when tasks incoming rate is greater then Hazelcast can process

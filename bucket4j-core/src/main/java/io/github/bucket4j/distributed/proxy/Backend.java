@@ -47,15 +47,6 @@ public interface Backend<K> {
     RemoteBucketBuilder<K> builder();
 
     /**
-     * TODO
-     *
-     * Describes whether or not this backend supports asynchronous mode.
-     *
-     * @return true if this extension supports asynchronous mode.
-     */
-    boolean isAsyncModeSupported();
-
-    /**
      * Locates configuration of bucket which actually stored outside current JVM.
      *
      * @param key the unique identifier used to point to the bucket in external storage.
@@ -67,12 +58,17 @@ public interface Backend<K> {
     /**
      * TODO
      *
-     * Locates configuration of bucket which actually stored outside current JVM.
+     * Describes whether or not this backend supports asynchronous mode.
      *
-     * @param key the unique identifier used to point to the bucket in external storage.
-     *
-     * @return Optional surround the configuration or empty optional if bucket with specified key are not stored.
+     * @return true if this extension supports asynchronous mode.
      */
-    CompletableFuture<Optional<BucketConfiguration>> getProxyConfigurationAsync(K key);
+    boolean isAsyncModeSupported();
+
+    /**
+     * TODO
+     *
+     * @return
+     */
+    AsyncBackend<K> asAsync();
 
 }

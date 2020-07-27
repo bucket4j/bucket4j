@@ -1,12 +1,7 @@
 
 package io.github.bucket4j
 
-import io.github.bucket4j.Bandwidth
-import io.github.bucket4j.BlockingStrategy
-import io.github.bucket4j.Bucket
-import io.github.bucket4j.BucketConfiguration
-import io.github.bucket4j.Refill
-import io.github.bucket4j.TimeMeter
+
 import io.github.bucket4j.distributed.AsyncBucket
 import io.github.bucket4j.mock.GridBackendMock
 import io.github.bucket4j.mock.BucketType
@@ -298,36 +293,36 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
             ex.message == nullConfigurationSupplier().message
 
         when:
-            mockProxy.builder()
+            mockProxy.asAsync().builder()
                     .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
-                    .buildAsyncProxy("66", (BucketConfiguration) null)
+                    .buildProxy("66", (BucketConfiguration) null)
 
         then:
             ex = thrown()
             ex.message == nullConfiguration().message
 
         when:
-            mockProxy.builder()
+            mockProxy.asAsync().builder()
                     .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
-                    .buildAsyncProxy("66", {null})
+                    .buildProxy("66", {null})
                     .getAvailableTokens().get()
         then:
             ex = thrown()
             ex.cause.message == nullConfigurationFuture().message
 
         when:
-            mockProxy.builder()
+            mockProxy.asAsync().builder()
                     .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
-                    .buildAsyncProxy("66", {CompletableFuture.completedFuture(null)})
+                    .buildProxy("66", {CompletableFuture.completedFuture(null)})
                     .getAvailableTokens().get()
         then:
             ex = thrown()
             ex.cause.message == nullConfiguration().message
 
         when:
-            mockProxy.builder()
+            mockProxy.asAsync().builder()
                     .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
-                    .buildAsyncProxy("66", (Supplier<CompletableFuture<BucketConfiguration>>) null)
+                    .buildProxy("66", (Supplier<CompletableFuture<BucketConfiguration>>) null)
 
         then:
             ex = thrown()

@@ -15,17 +15,7 @@ public abstract class AbstractJCacheTest extends AbstractDistributedBucketTest {
 
     @Test(expected = UnsupportedOperationException.class)
     public void testThatAsyncNotSupported() {
-        BucketConfiguration configuration = BucketConfiguration.builder()
-                .addLimit(Bandwidth.simple(1_000, Duration.ofMinutes(1)))
-                .build();
-
-        getBackend().builder()
-                .buildAsyncProxy(UUID.randomUUID().toString(), configuration);
-    }
-
-    @Test(expected = UnsupportedOperationException.class)
-    public void testThatAsyncNotSupported_2() {
-        getBackend().getProxyConfigurationAsync("42");
+        getBackend().asAsync();
     }
 
     @Override

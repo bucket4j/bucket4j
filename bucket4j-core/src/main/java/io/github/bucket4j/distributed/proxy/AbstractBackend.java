@@ -19,6 +19,32 @@ public abstract class AbstractBackend<K> implements Backend<K> {
     private static final RequestOptimizer DEFAULT_REQUEST_OPTIMIZER = RequestOptimizer.NONE_OPTIMIZED;
     private static final AsyncRequestOptimizer DEFAULT_ASYNC_REQUEST_OPTIMIZER = AsyncRequestOptimizer.NONE_OPTIMIZED;
 
+    private AsyncBackend<K> asyncView = new AsyncBackend<K>() {
+        @Override
+        public CompletableFuture<Optional<BucketConfiguration>> getProxyConfiguration(K key) {
+            GetConfigurationCommand cmd = new GetConfigurationCommand();
+            return executeAsync(key, cmd).thenApply(result -> {
+                if (result.isBucketNotFound()) {
+                    return Optional.empty();
+                }
+                return Optional.of(result.getData());
+            });
+        }
+
+        @Override
+        public RemoteAsyncBucketBuilder<K> builder() {
+            return new DefaultAsyncRemoteBucketBuilder();
+        }
+    };
+
+    @Override
+    public AsyncBackend<K> asAsync() {
+        if (!isAsyncModeSupported()) {
+            throw BucketExceptions.asyncModeIsNotSupported();
+        }
+        return asyncView;
+    }
+
     @Override
     public RemoteBucketBuilder<K> builder() {
         return new DefaultRemoteBucketBuilder();
@@ -34,25 +60,54 @@ public abstract class AbstractBackend<K> implements Backend<K> {
         return Optional.of(result.getData());
     }
 
-    @Override
-    public CompletableFuture<Optional<BucketConfiguration>> getProxyConfigurationAsync(K key) {
-        if (!isAsyncModeSupported()) {
-            throw BucketExceptions.asyncModeIsNotSupported();
+    private class DefaultAsyncRemoteBucketBuilder implements RemoteAsyncBucketBuilder<K> {
+
+        private RecoveryStrategy recoveryStrategy = DEFAULT_RECOVERY_STRATEGY;
+        private AsyncRequestOptimizer asyncRequestOptimizer = DEFAULT_ASYNC_REQUEST_OPTIMIZER;
+
+        @Override
+        public DefaultAsyncRemoteBucketBuilder withRecoveryStrategy(RecoveryStrategy recoveryStrategy) {
+            this.recoveryStrategy = Objects.requireNonNull(recoveryStrategy);
+            return this;
         }
-        GetConfigurationCommand cmd = new GetConfigurationCommand();
-        return this.executeAsync(key, cmd).thenApply(result -> {
-            if (result.isBucketNotFound()) {
-                return Optional.empty();
+
+        @Override
+        public DefaultAsyncRemoteBucketBuilder withRequestOptimizer(AsyncRequestOptimizer requestOptimizer) {
+            this.asyncRequestOptimizer = Objects.requireNonNull(requestOptimizer);
+            return this;
+        }
+
+        @Override
+        public AsyncBucket buildProxy(K key, BucketConfiguration configuration) {
+            if (configuration == null) {
+                throw BucketExceptions.nullConfiguration();
             }
-            return Optional.of(result.getData());
-        });
+            return buildProxy(key, () -> CompletableFuture.completedFuture(configuration));
+        }
+
+        @Override
+        public AsyncBucket buildProxy(K key, Supplier<CompletableFuture<BucketConfiguration>> configurationSupplier) {
+            if (configurationSupplier == null) {
+                throw BucketExceptions.nullConfigurationSupplier();
+            }
+
+            AsyncCommandExecutor commandExecutor = new AsyncCommandExecutor() {
+                @Override
+                public <T> CompletableFuture<CommandResult<T>> executeAsync(RemoteCommand<T> command) {
+                    return AbstractBackend.this.executeAsync(key, command);
+                }
+            };
+            commandExecutor = asyncRequestOptimizer.optimize(commandExecutor);
+
+            return new AsyncBucketProxy(commandExecutor, recoveryStrategy, configurationSupplier);
+        }
+
     }
 
     private class DefaultRemoteBucketBuilder implements RemoteBucketBuilder<K> {
 
         private RecoveryStrategy recoveryStrategy = DEFAULT_RECOVERY_STRATEGY;
         private RequestOptimizer requestOptimizer = DEFAULT_REQUEST_OPTIMIZER;
-        private AsyncRequestOptimizer asyncRequestOptimizer = DEFAULT_ASYNC_REQUEST_OPTIMIZER;
 
         @Override
         public RemoteBucketBuilder<K> withRecoveryStrategy(RecoveryStrategy recoveryStrategy) {
@@ -63,12 +118,6 @@ public abstract class AbstractBackend<K> implements Backend<K> {
         @Override
         public RemoteBucketBuilder<K> withRequestOptimizer(RequestOptimizer requestOptimizer) {
             this.requestOptimizer = Objects.requireNonNull(requestOptimizer);
-            return this;
-        }
-
-        @Override
-        public RemoteBucketBuilder<K> withAsyncRequestOptimizer(AsyncRequestOptimizer requestOptimizer) {
-            this.asyncRequestOptimizer = Objects.requireNonNull(requestOptimizer);
             return this;
         }
 
@@ -95,35 +144,6 @@ public abstract class AbstractBackend<K> implements Backend<K> {
             commandExecutor = requestOptimizer.optimize(commandExecutor);
 
             return new BucketProxy(configurationSupplier, commandExecutor, recoveryStrategy);
-        }
-
-        @Override
-        public AsyncBucket buildAsyncProxy(K key, BucketConfiguration configuration) {
-            if (configuration == null) {
-                throw BucketExceptions.nullConfiguration();
-            }
-            return buildAsyncProxy(key, () -> CompletableFuture.completedFuture(configuration));
-        }
-
-        @Override
-        public AsyncBucket buildAsyncProxy(K key, Supplier<CompletableFuture<BucketConfiguration>> configurationSupplier) {
-            if (!isAsyncModeSupported()) {
-                throw new UnsupportedOperationException();
-            }
-
-            if (configurationSupplier == null) {
-                throw BucketExceptions.nullConfigurationSupplier();
-            }
-
-            AsyncCommandExecutor commandExecutor = new AsyncCommandExecutor() {
-                @Override
-                public <T> CompletableFuture<CommandResult<T>> executeAsync(RemoteCommand<T> command) {
-                    return AbstractBackend.this.executeAsync(key, command);
-                }
-            };
-            commandExecutor = asyncRequestOptimizer.optimize(commandExecutor);
-
-            return new AsyncBucketProxy(commandExecutor, recoveryStrategy, configurationSupplier);
         }
 
     }
