@@ -19,8 +19,19 @@ package io.github.bucket4j.distributed.proxy;
 
 public interface RequestOptimizer {
 
-    RequestOptimizer NONE_OPTIMIZED = originalExecutor -> originalExecutor;
+    RequestOptimizer NONE_OPTIMIZED = new RequestOptimizer() {
+        @Override
+        public CommandExecutor optimize(CommandExecutor originalExecutor) {
+            return originalExecutor;
+        }
+
+        @Override
+        public AsyncCommandExecutor optimize(AsyncCommandExecutor originalExecutor) {
+            return originalExecutor;
+        }
+    };
 
     CommandExecutor optimize(CommandExecutor originalExecutor);
 
+    AsyncCommandExecutor optimize(AsyncCommandExecutor originalExecutor);
 }

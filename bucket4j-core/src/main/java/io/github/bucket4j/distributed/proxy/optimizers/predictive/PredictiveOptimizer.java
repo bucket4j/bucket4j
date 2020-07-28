@@ -17,15 +17,37 @@
 
 package io.github.bucket4j.distributed.proxy.optimizers.predictive;
 
+import io.github.bucket4j.TimeMeter;
+import io.github.bucket4j.distributed.proxy.AsyncCommandExecutor;
 import io.github.bucket4j.distributed.proxy.CommandExecutor;
 import io.github.bucket4j.distributed.proxy.RequestOptimizer;
+import io.github.bucket4j.distributed.proxy.optimizers.batch.AsyncBatchingExecutor;
+import io.github.bucket4j.distributed.proxy.optimizers.batch.BatchingExecutor;
 
 public class PredictiveOptimizer implements RequestOptimizer {
 
+    private final PredictionThresholds thresholds;
+    private final TimeMeter timeMeter;
+
+    public PredictiveOptimizer(PredictionThresholds thresholds) {
+        this(thresholds, TimeMeter.SYSTEM_MILLISECONDS);
+    }
+
+    public PredictiveOptimizer(PredictionThresholds thresholds, TimeMeter timeMeter) {
+        this.thresholds = thresholds;
+        this.timeMeter = timeMeter;
+    }
+
     @Override
     public CommandExecutor optimize(CommandExecutor originalExecutor) {
-        // TODO
-        throw new UnsupportedOperationException();
+        PredictiveCommandExecutor predictiveCommandExecutor = new PredictiveCommandExecutor(originalExecutor, thresholds, timeMeter);
+        return new BatchingExecutor(predictiveCommandExecutor);
+    }
+
+    @Override
+    public AsyncCommandExecutor optimize(AsyncCommandExecutor originalExecutor) {
+        PredictiveCommandExecutor predictiveCommandExecutor = new PredictiveCommandExecutor(originalExecutor, thresholds, timeMeter);
+        return new AsyncBatchingExecutor(predictiveCommandExecutor);
     }
 
 }

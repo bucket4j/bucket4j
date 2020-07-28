@@ -1,5 +1,5 @@
 
-package io.github.bucket4j.distributed.proxy.optimizers.batch.async;
+package io.github.bucket4j.distributed.proxy.optimizers.batch;
 
 import io.github.bucket4j.distributed.proxy.AsyncCommandExecutor;
 import io.github.bucket4j.distributed.proxy.optimizers.batch.TaskQueue;

@@ -17,7 +17,6 @@ public abstract class AbstractBackend<K> implements Backend<K> {
 
     private static final RecoveryStrategy DEFAULT_RECOVERY_STRATEGY = RecoveryStrategy.RECONSTRUCT;
     private static final RequestOptimizer DEFAULT_REQUEST_OPTIMIZER = RequestOptimizer.NONE_OPTIMIZED;
-    private static final AsyncRequestOptimizer DEFAULT_ASYNC_REQUEST_OPTIMIZER = AsyncRequestOptimizer.NONE_OPTIMIZED;
 
     private AsyncBackend<K> asyncView = new AsyncBackend<K>() {
         @Override
@@ -63,7 +62,7 @@ public abstract class AbstractBackend<K> implements Backend<K> {
     private class DefaultAsyncRemoteBucketBuilder implements RemoteAsyncBucketBuilder<K> {
 
         private RecoveryStrategy recoveryStrategy = DEFAULT_RECOVERY_STRATEGY;
-        private AsyncRequestOptimizer asyncRequestOptimizer = DEFAULT_ASYNC_REQUEST_OPTIMIZER;
+        private RequestOptimizer asyncRequestOptimizer = DEFAULT_REQUEST_OPTIMIZER;
 
         @Override
         public DefaultAsyncRemoteBucketBuilder withRecoveryStrategy(RecoveryStrategy recoveryStrategy) {
@@ -72,7 +71,7 @@ public abstract class AbstractBackend<K> implements Backend<K> {
         }
 
         @Override
-        public DefaultAsyncRemoteBucketBuilder withRequestOptimizer(AsyncRequestOptimizer requestOptimizer) {
+        public DefaultAsyncRemoteBucketBuilder withRequestOptimizer(RequestOptimizer requestOptimizer) {
             this.asyncRequestOptimizer = Objects.requireNonNull(requestOptimizer);
             return this;
         }

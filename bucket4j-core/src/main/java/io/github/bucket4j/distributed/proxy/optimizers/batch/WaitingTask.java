@@ -1,7 +1,6 @@
 
 package io.github.bucket4j.distributed.proxy.optimizers.batch;
 
-import io.github.bucket4j.distributed.proxy.optimizers.batch.sync.BatchFailedException;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 

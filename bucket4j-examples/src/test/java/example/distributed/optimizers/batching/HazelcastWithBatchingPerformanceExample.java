@@ -10,8 +10,7 @@ import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.distributed.AsyncBucket;
-import io.github.bucket4j.distributed.proxy.optimizers.batch.async.AsyncBatchingOptimizer;
-import io.github.bucket4j.distributed.proxy.optimizers.batch.sync.BatchingOptimizer;
+import io.github.bucket4j.distributed.proxy.optimizers.batch.BatchingOptimizer;
 import org.gridkit.nanocloud.Cloud;
 import org.gridkit.nanocloud.CloudFactory;
 import org.gridkit.nanocloud.VX;
@@ -141,7 +140,7 @@ public class HazelcastWithBatchingPerformanceExample {
                 .build();
 
         AsyncBucket bucket = backend.asAsync().builder()
-                .withRequestOptimizer(new AsyncBatchingOptimizer())
+                .withRequestOptimizer(new BatchingOptimizer())
                 .buildProxy("13", configuration);
 
         // We need a backpressure for ougoing work because it obviously that OOM can be happen in asycnhrouous bucket mode

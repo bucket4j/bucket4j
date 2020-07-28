@@ -116,4 +116,8 @@ public class RemoteBucketState implements ComparableByContent<RemoteBucketState>
                 ComparableByContent.equals(configuration, other.configuration);
     }
 
+    public RemoteBucketState copy() {
+        return new RemoteBucketState(configuration, state.copy());
+    }
+
 }
