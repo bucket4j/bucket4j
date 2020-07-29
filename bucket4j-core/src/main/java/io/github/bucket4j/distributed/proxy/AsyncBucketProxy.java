@@ -85,7 +85,7 @@ public class AsyncBucketProxy implements AsyncBucket, ScheduledBucket {
                 } else {
                     listener.onRejected(tokensToConsume);
                 }
-                return consumed;
+                return consumed.asLocal();
             });
         }
 
@@ -98,7 +98,7 @@ public class AsyncBucketProxy implements AsyncBucket, ScheduledBucket {
                     throw BucketExceptions.reservationOverflow();
                 }
                 listener.onConsumed(tokensToConsume);
-                return penaltyNanos;
+                return penaltyNanos.asLocal();
             });
         }
 
@@ -113,14 +113,15 @@ public class AsyncBucketProxy implements AsyncBucket, ScheduledBucket {
                 } else {
                     listener.onRejected(tokensToConsume);
                 }
-                return probe;
+                return probe.asLocal();
             });
         }
 
         @Override
         public CompletableFuture<VerboseResult<EstimationProbe>> estimateAbilityToConsume(long numTokens) {
             checkTokensToConsume(numTokens);
-            return execute(new VerboseCommand<>(new EstimateAbilityToConsumeCommand(numTokens)));
+            return execute(new VerboseCommand<>(new EstimateAbilityToConsumeCommand(numTokens)))
+                    .thenApply(RemoteVerboseResult::asLocal);
         }
 
         @Override
@@ -132,7 +133,7 @@ public class AsyncBucketProxy implements AsyncBucket, ScheduledBucket {
                 if (actuallyConsumedTokens > 0) {
                     listener.onConsumed(actuallyConsumedTokens);
                 }
-                return consumedTokens;
+                return consumedTokens.asLocal();
             });
         }
 
@@ -146,7 +147,7 @@ public class AsyncBucketProxy implements AsyncBucket, ScheduledBucket {
                 if (actuallyConsumedTokens > 0) {
                     listener.onConsumed(actuallyConsumedTokens);
                 }
-                return consumedTokens;
+                return consumedTokens.asLocal();
             });
         }
 
@@ -154,14 +155,14 @@ public class AsyncBucketProxy implements AsyncBucket, ScheduledBucket {
         public CompletableFuture<VerboseResult<Nothing>> addTokens(long tokensToAdd) {
             checkTokensToAdd(tokensToAdd);
             VerboseCommand<Nothing> verboseCommand = new VerboseCommand<>(new AddTokensCommand(tokensToAdd));
-            return execute(verboseCommand);
+            return execute(verboseCommand).thenApply(RemoteVerboseResult::asLocal);
         }
 
         @Override
         public CompletableFuture<VerboseResult<Nothing>> replaceConfiguration(BucketConfiguration newConfiguration) {
             checkConfiguration(newConfiguration);
             VerboseCommand<BucketConfiguration> command = new VerboseCommand<>(new ReplaceConfigurationOrReturnPreviousCommand(newConfiguration));
-            CompletableFuture<VerboseResult<BucketConfiguration>> resultFuture = execute(command);
+            CompletableFuture<VerboseResult<BucketConfiguration>> resultFuture = execute(command).thenApply(RemoteVerboseResult::asLocal);
             return resultFuture.thenApply(result -> result.map(conflictingConfiguration -> {
                 if (conflictingConfiguration != null) {
                     throw new IncompatibleConfigurationException(conflictingConfiguration, newConfiguration);
@@ -333,6 +334,13 @@ public class AsyncBucketProxy implements AsyncBucket, ScheduledBucket {
     @Override
     public CompletableFuture<Long> getAvailableTokens() {
         return execute(new GetAvailableTokensCommand());
+    }
+
+    /**
+     * TODO javadocs
+     */
+    public CompletableFuture<Void> flushAsync() {
+        return commandExecutor.flushAsync();
     }
 
     private <T> CompletableFuture<T> execute(RemoteCommand<T> command) {

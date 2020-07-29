@@ -2,10 +2,7 @@
 package io.github.bucket4j.serialization;
 
 import io.github.bucket4j.*;
-import io.github.bucket4j.distributed.remote.CommandResult;
-import io.github.bucket4j.distributed.remote.MultiResult;
-import io.github.bucket4j.distributed.remote.RemoteBucketState;
-import io.github.bucket4j.distributed.remote.RemoteCommand;
+import io.github.bucket4j.distributed.remote.*;
 import io.github.bucket4j.distributed.remote.commands.*;
 import io.github.bucket4j.util.ComparableByContent;
 import org.junit.Test;
@@ -129,7 +126,7 @@ public abstract class AbstractSerializationTest {
             };
             BucketConfiguration bucketConfiguration = new BucketConfiguration(Arrays.asList(bandwidths));
             BucketState bucketState = BucketState.createInitialState(bucketConfiguration, mathType, System.nanoTime());
-            RemoteBucketState gridBucketState = new RemoteBucketState(bucketConfiguration, bucketState);
+            RemoteBucketState gridBucketState = new RemoteBucketState(bucketConfiguration, bucketState, new RemoteStat(14));
 
             testSerialization(gridBucketState);
         }
@@ -145,7 +142,7 @@ public abstract class AbstractSerializationTest {
             BucketState bucketState = BucketState.createInitialState(bucketConfiguration, mathType, System.nanoTime());
 
             bucketState.addTokens(bandwidths, 300);
-            RemoteBucketState gridBucketState = new RemoteBucketState(bucketConfiguration, bucketState);
+            RemoteBucketState gridBucketState = new RemoteBucketState(bucketConfiguration, bucketState, new RemoteStat(666));
 
             testSerialization(gridBucketState);
         }
@@ -163,7 +160,7 @@ public abstract class AbstractSerializationTest {
             BucketState bucketState = BucketState.createInitialState(bucketConfiguration, mathType, System.nanoTime());
 
             bucketState.addTokens(bandwidths, 42);
-            RemoteBucketState gridBucketState = new RemoteBucketState(bucketConfiguration, bucketState);
+            RemoteBucketState gridBucketState = new RemoteBucketState(bucketConfiguration, bucketState, new RemoteStat(66));
 
             testSerialization(gridBucketState);
         }
@@ -219,10 +216,12 @@ public abstract class AbstractSerializationTest {
                 CommandResult.bucketNotFound()
         )));
         // verbose results
-        testSerialization(new VerboseResult<>(323L, NULL_HANDLE.getTypeId(), null, bucketConfiguration, bucketState));
-        testSerialization(new VerboseResult<>(323L, BOOLEAN_HANDLE.getTypeId(), true, bucketConfiguration, bucketState));
-        testSerialization(new VerboseResult<>(323L, LONG_HANDLE.getTypeId(), 6666666L, bucketConfiguration, bucketState));
-        testSerialization(new VerboseResult<>(323L, ConsumptionProbe.SERIALIZATION_HANDLE.getTypeId(), ConsumptionProbe.consumed(10, 32), bucketConfiguration, bucketState));
+        RemoteStat remoteStat = new RemoteStat(42);
+        RemoteBucketState remoteBucketState = new RemoteBucketState(bucketConfiguration, bucketState, remoteStat);
+        testSerialization(new RemoteVerboseResult<>(323L, NULL_HANDLE.getTypeId(), null, remoteBucketState));
+        testSerialization(new RemoteVerboseResult<>(323L, BOOLEAN_HANDLE.getTypeId(), true, remoteBucketState));
+        testSerialization(new RemoteVerboseResult<>(323L, LONG_HANDLE.getTypeId(), 6666666L, remoteBucketState));
+        testSerialization(new RemoteVerboseResult<>(323L, ConsumptionProbe.SERIALIZATION_HANDLE.getTypeId(), ConsumptionProbe.consumed(10, 32), remoteBucketState));
     }
 
     @Test

@@ -164,4 +164,14 @@ class PredictiveCommandExecutor implements CommandExecutor, AsyncCommandExecutor
         return null;
     }
 
+    @Override
+    public void flush() {
+        // TODO
+    }
+
+    @Override
+    public CompletableFuture<Void> flushAsync() {
+        return null;
+    }
+
 }

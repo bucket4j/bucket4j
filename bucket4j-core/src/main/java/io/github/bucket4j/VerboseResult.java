@@ -20,12 +20,7 @@
 package io.github.bucket4j;
 
 import io.github.bucket4j.distributed.AsyncVerboseBucket;
-import io.github.bucket4j.serialization.DeserializationAdapter;
-import io.github.bucket4j.serialization.SerializationAdapter;
-import io.github.bucket4j.serialization.SerializationHandle;
 import io.github.bucket4j.util.ComparableByContent;
-
-import java.io.IOException;
 import java.util.function.Function;
 
 /**
@@ -34,14 +29,12 @@ import java.util.function.Function;
 public class VerboseResult<T> implements ComparableByContent<VerboseResult<?>> {
 
     private final long operationTimeNanos;
-    private final int resultTypeId;
     private final T value;
     private final BucketConfiguration configuration;
     private final BucketState state;
 
-    public VerboseResult(long operationTimeNanos, int resultTypeId, T value, BucketConfiguration configuration, BucketState state) {
+    public VerboseResult(long operationTimeNanos, T value, BucketConfiguration configuration, BucketState state) {
         this.operationTimeNanos = operationTimeNanos;
-        this.resultTypeId = resultTypeId;
         this.value = value;
         this.configuration = configuration;
         this.state = state;
@@ -76,53 +69,15 @@ public class VerboseResult<T> implements ComparableByContent<VerboseResult<?>> {
     }
 
     public <R> VerboseResult<R> map(Function<T, R> mapper) {
-        return new VerboseResult<R>(operationTimeNanos, resultTypeId, mapper.apply(value), configuration, state);
+        return new VerboseResult<R>(operationTimeNanos, mapper.apply(value), configuration, state);
     }
-
-    public static final SerializationHandle<VerboseResult<?>> SERIALIZATION_HANDLE = new SerializationHandle<VerboseResult<?>>() {
-
-        @Override
-        public <I> VerboseResult<?> deserialize(DeserializationAdapter<I> adapter, I input) throws IOException {
-            long operationTimeNanos = adapter.readLong(input);
-
-            int typeId = adapter.readInt(input);
-            SerializationHandle handle = SerializationHandle.CORE_HANDLES.getHandleByTypeId(typeId);
-            Object result = handle.deserialize(adapter, input);
-            BucketConfiguration configuration = BucketConfiguration.SERIALIZATION_HANDLE.deserialize(adapter, input);
-            BucketState state = BucketState.deserialize(adapter, input);
-
-            return new VerboseResult(operationTimeNanos, typeId, result, configuration, state);
-        }
-
-        @Override
-        public <O> void serialize(SerializationAdapter<O> adapter, O output, VerboseResult<?> result) throws IOException {
-            adapter.writeLong(output, result.operationTimeNanos);
-
-            adapter.writeInt(output, result.resultTypeId);
-            SerializationHandle handle = SerializationHandle.CORE_HANDLES.getHandleByTypeId(result.resultTypeId);
-            handle.serialize(adapter, output, result.value);
-            BucketConfiguration.SERIALIZATION_HANDLE.serialize(adapter, output, result.configuration);
-            BucketState.serialize(adapter, output, result.state);
-        }
-
-        @Override
-        public int getTypeId() {
-            return 14;
-        }
-
-        @Override
-        public Class<VerboseResult<?>> getSerializedType() {
-            return (Class) VerboseResult.class;
-        }
-    };
 
     @Override
     public boolean equalsByContent(VerboseResult<?> other) {
         return operationTimeNanos == other.operationTimeNanos
-                && resultTypeId == other.resultTypeId
-                && ComparableByContent.equals(value, other.value)
-                && configuration.equalsByContent(other.configuration)
-                && ComparableByContent.equals(state, other.state);
+            && ComparableByContent.equals(value, other.value)
+            && configuration.equalsByContent(other.configuration)
+            && ComparableByContent.equals(state, other.state);
     }
 
 }

@@ -26,4 +26,9 @@ public interface CommandExecutor {
     // TODO javadocs
     <T> CommandResult<T> execute(RemoteCommand<T> command);
 
+    /**
+     * TODO javadocs
+     */
+    void flush();
+
 }

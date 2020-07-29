@@ -19,7 +19,7 @@
  */
 package io.github.bucket4j.distributed.remote.commands;
 
-import io.github.bucket4j.VerboseResult;
+import io.github.bucket4j.RemoteVerboseResult;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.MutableBucketEntry;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
@@ -31,7 +31,7 @@ import io.github.bucket4j.util.ComparableByContent;
 
 import java.io.IOException;
 
-public class VerboseCommand<T> implements RemoteCommand<VerboseResult<T>>, ComparableByContent<VerboseCommand<?>> {
+public class VerboseCommand<T> implements RemoteCommand<RemoteVerboseResult<T>>, ComparableByContent<VerboseCommand<?>> {
 
     private final RemoteCommand<T> targetCommand;
 
@@ -44,15 +44,15 @@ public class VerboseCommand<T> implements RemoteCommand<VerboseResult<T>>, Compa
     }
 
     @Override
-    public CommandResult<VerboseResult<T>> execute(MutableBucketEntry mutableEntry, long currentTimeNanos) {
+    public CommandResult<RemoteVerboseResult<T>> execute(MutableBucketEntry mutableEntry, long currentTimeNanos) {
         if (!mutableEntry.exists()) {
             return CommandResult.bucketNotFound();
         }
 
         RemoteBucketState state = mutableEntry.get();
         CommandResult<T> result = targetCommand.execute(mutableEntry, currentTimeNanos);
-        VerboseResult<T> verboseResult = new VerboseResult<>(currentTimeNanos, result.getResultTypeId(), result.getData(), state.getConfiguration(), state.getState());
-        return CommandResult.success(verboseResult, VerboseResult.SERIALIZATION_HANDLE);
+        RemoteVerboseResult<T> verboseResult = new RemoteVerboseResult<>(currentTimeNanos, result.getResultTypeId(), result.getData(), state);
+        return CommandResult.success(verboseResult, RemoteVerboseResult.SERIALIZATION_HANDLE);
     }
 
     @Override

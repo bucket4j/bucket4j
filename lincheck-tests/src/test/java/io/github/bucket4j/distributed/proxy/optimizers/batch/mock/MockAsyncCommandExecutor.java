@@ -38,6 +38,11 @@ public class MockAsyncCommandExecutor implements AsyncCommandExecutor {
         return CompletableFuture.supplyAsync(() -> this.executeSync(command), executor);
     }
 
+    @Override
+    public CompletableFuture<Void> flushAsync() {
+        return CompletableFuture.completedFuture(null);
+    }
+
     private <T> CommandResult<T> executeSync(RemoteCommand<T> command) {
         if (command instanceof MultiCommand) {
             MultiCommand multiCommand = (MultiCommand) command;

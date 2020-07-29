@@ -23,6 +23,7 @@ import io.github.bucket4j.*;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.MultiResult;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
+import io.github.bucket4j.distributed.remote.RemoteStat;
 import io.github.bucket4j.distributed.remote.commands.*;
 
 import java.io.IOException;
@@ -36,12 +37,13 @@ public interface SerializationHandle<T> {
             BucketState64BitsInteger.SERIALIZATION_HANDLE, // 3
             BucketStateIEEE754.SERIALIZATION_HANDLE, // 4
             RemoteBucketState.SERIALIZATION_HANDLE, // 5
+            RemoteStat.SERIALIZATION_HANDLE, // 6
 
             CommandResult.SERIALIZATION_HANDLE, // 10
             ConsumptionProbe.SERIALIZATION_HANDLE, // 11
             EstimationProbe.SERIALIZATION_HANDLE, // 12
             MultiResult.SERIALIZATION_HANDLE, // 13
-            VerboseResult.SERIALIZATION_HANDLE, // 14
+            RemoteVerboseResult.SERIALIZATION_HANDLE, // 14
 
             CreateInitialStateCommand.SERIALIZATION_HANDLE, // 20
             CreateInitialStateAndExecuteCommand.SERIALIZATION_HANDLE, // 21

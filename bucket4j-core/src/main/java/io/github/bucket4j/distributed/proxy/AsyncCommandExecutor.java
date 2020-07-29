@@ -26,7 +26,13 @@ import java.util.concurrent.CompletableFuture;
 // TODO javadocs
 public interface AsyncCommandExecutor {
 
-    // TODO javadocs
+    /**
+     * TODO javadocs
+     */
     <T> CompletableFuture<CommandResult<T>> executeAsync(RemoteCommand<T> command);
 
+    /**
+     * TODO javadocs
+     */
+    CompletableFuture<Void> flushAsync();
 }

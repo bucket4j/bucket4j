@@ -162,7 +162,7 @@ public class CommandInsiders {
             }
         });
 
-        register(VerboseCommand.class, cast((CommandInsider) new CommandInsider<VerboseResult<Object>, VerboseCommand<Object>>() {
+        register(VerboseCommand.class, cast(new CommandInsider<RemoteVerboseResult<Object>, VerboseCommand<Object>>() {
             @Override
             public boolean isMutationNotRelatedWithConsumption(VerboseCommand command) {
                 return CommandInsiders.isMutationNotRelatedWithConsumption(command.getTargetCommand());
@@ -174,8 +174,8 @@ public class CommandInsiders {
             }
 
             @Override
-            public long getConsumedTokens(VerboseCommand<Object> command, VerboseResult<Object> result1) {
-                return CommandInsiders.getConsumedTokens((RemoteCommand) command.getTargetCommand(), result1.getValue());
+            public long getConsumedTokens(VerboseCommand<Object> command, RemoteVerboseResult<Object> result1) {
+                return CommandInsiders.getConsumedTokens(command.getTargetCommand(), result1.getValue());
             }
 
         }));

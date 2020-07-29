@@ -49,6 +49,11 @@ public class BatchingExecutor implements CommandExecutor {
         }
     }
 
+    @Override
+    public void flush() {
+        // do nothing
+    }
+
     private <T> CommandResult<T> executeBatch(WaitingTask currentWaitingNode) {
         List<WaitingTask> waitingNodes = taskQueue.takeAllWaitingTasksOrFreeLock();
 

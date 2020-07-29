@@ -34,19 +34,22 @@ public class RemoteBucketState implements ComparableByContent<RemoteBucketState>
 
     private BucketConfiguration configuration;
     private BucketState state;
+    private RemoteStat stat;
 
     public static final SerializationHandle<RemoteBucketState> SERIALIZATION_HANDLE = new SerializationHandle<RemoteBucketState>() {
         @Override
         public <S> RemoteBucketState deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             BucketConfiguration bucketConfiguration = BucketConfiguration.SERIALIZATION_HANDLE.deserialize(adapter, input);
             BucketState bucketState = BucketState.deserialize(adapter, input);
-            return new RemoteBucketState(bucketConfiguration, bucketState);
+            RemoteStat stat = RemoteStat.SERIALIZATION_HANDLE.deserialize(adapter, input);
+            return new RemoteBucketState(bucketConfiguration, bucketState, stat);
         }
 
         @Override
         public <O> void serialize(SerializationAdapter<O> adapter, O output, RemoteBucketState gridState) throws IOException {
             BucketConfiguration.SERIALIZATION_HANDLE.serialize(adapter, output, gridState.configuration);
             BucketState.serialize(adapter, output, gridState.state);
+            RemoteStat.SERIALIZATION_HANDLE.serialize(adapter, output, gridState.stat);
         }
 
         @Override
@@ -61,9 +64,10 @@ public class RemoteBucketState implements ComparableByContent<RemoteBucketState>
 
     };
 
-    public RemoteBucketState(BucketConfiguration configuration, BucketState state) {
+    public RemoteBucketState(BucketConfiguration configuration, BucketState state, RemoteStat stat) {
         this.configuration = configuration;
         this.state = state;
+        this.stat = stat;
     }
 
     public void refillAllBandwidth(long currentTimeNanos) {
@@ -76,6 +80,7 @@ public class RemoteBucketState implements ComparableByContent<RemoteBucketState>
 
     public void consume(long tokensToConsume) {
         state.consume(configuration.getBandwidths(), tokensToConsume);
+        stat.addConsumedTokens(tokensToConsume);
     }
 
     public long calculateFullRefillingTime(long currentTimeNanos) {
@@ -106,6 +111,10 @@ public class RemoteBucketState implements ComparableByContent<RemoteBucketState>
         return configuration;
     }
 
+    public RemoteStat getRemoteStat() {
+        return stat;
+    }
+
     public BucketState getState() {
         return state;
     }
@@ -113,11 +122,13 @@ public class RemoteBucketState implements ComparableByContent<RemoteBucketState>
     @Override
     public boolean equalsByContent(RemoteBucketState other) {
         return ComparableByContent.equals(state, other.state) &&
-                ComparableByContent.equals(configuration, other.configuration);
+                ComparableByContent.equals(configuration, other.configuration) &&
+                ComparableByContent.equals(stat, other.stat)
+                ;
     }
 
     public RemoteBucketState copy() {
-        return new RemoteBucketState(configuration, state.copy());
+        return new RemoteBucketState(configuration, state.copy(), stat.copy());
     }
 
 }

@@ -95,6 +95,11 @@ public abstract class AbstractBackend<K> implements Backend<K> {
                 public <T> CompletableFuture<CommandResult<T>> executeAsync(RemoteCommand<T> command) {
                     return AbstractBackend.this.executeAsync(key, command);
                 }
+
+                @Override
+                public CompletableFuture<Void> flushAsync() {
+                    return CompletableFuture.completedFuture(null);
+                }
             };
             commandExecutor = asyncRequestOptimizer.optimize(commandExecutor);
 
@@ -138,6 +143,11 @@ public abstract class AbstractBackend<K> implements Backend<K> {
                 @Override
                 public <T> CommandResult<T> execute(RemoteCommand<T> command) {
                     return AbstractBackend.this.execute(key, command);
+                }
+
+                @Override
+                public void flush() {
+                    // do nothing
                 }
             };
             commandExecutor = requestOptimizer.optimize(commandExecutor);

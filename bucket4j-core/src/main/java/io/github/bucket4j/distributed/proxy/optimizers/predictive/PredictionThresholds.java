@@ -7,10 +7,10 @@ public class PredictionThresholds {
     private final long maxUnsynchronizedTokens;
     private final long maxUnsynchronizedTimeoutNanos;
 
-    public PredictionThresholds(long maxUnsynchronizedTokens, Duration maxUnsynchronizedTimeout) {
+    private PredictionThresholds(long maxUnsynchronizedTokens, Duration maxTimeoutBetweenRequests) {
         // TODO argument validation
         this.maxUnsynchronizedTokens = maxUnsynchronizedTokens;
-        this.maxUnsynchronizedTimeoutNanos = maxUnsynchronizedTimeout.toNanos();
+        this.maxUnsynchronizedTimeoutNanos = maxTimeoutBetweenRequests.toNanos();
     }
 
     public long getMaxUnsynchronizedTokens() {

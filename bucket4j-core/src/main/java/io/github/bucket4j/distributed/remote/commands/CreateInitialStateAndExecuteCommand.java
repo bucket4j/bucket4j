@@ -20,10 +20,7 @@ package io.github.bucket4j.distributed.remote.commands;
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.BucketState;
 import io.github.bucket4j.MathType;
-import io.github.bucket4j.distributed.remote.CommandResult;
-import io.github.bucket4j.distributed.remote.MutableBucketEntry;
-import io.github.bucket4j.distributed.remote.RemoteBucketState;
-import io.github.bucket4j.distributed.remote.RemoteCommand;
+import io.github.bucket4j.distributed.remote.*;
 import io.github.bucket4j.serialization.DeserializationAdapter;
 import io.github.bucket4j.serialization.SerializationAdapter;
 import io.github.bucket4j.serialization.SerializationHandle;
@@ -75,7 +72,7 @@ public class CreateInitialStateAndExecuteCommand<T> implements RemoteCommand<T>,
             state = mutableEntry.get();
         } else {
             BucketState bucketState = BucketState.createInitialState(configuration, MathType.INTEGER_64_BITS, currentTimeNanos);
-            state = new RemoteBucketState(configuration, bucketState);
+            state = new RemoteBucketState(configuration, bucketState, new RemoteStat(0));
         }
 
         BucketEntryWrapper entryWrapper = new BucketEntryWrapper(state);

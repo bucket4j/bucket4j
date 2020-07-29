@@ -21,10 +21,7 @@ import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.BucketState;
 import io.github.bucket4j.MathType;
 import io.github.bucket4j.Nothing;
-import io.github.bucket4j.distributed.remote.CommandResult;
-import io.github.bucket4j.distributed.remote.MutableBucketEntry;
-import io.github.bucket4j.distributed.remote.RemoteBucketState;
-import io.github.bucket4j.distributed.remote.RemoteCommand;
+import io.github.bucket4j.distributed.remote.*;
 import io.github.bucket4j.serialization.DeserializationAdapter;
 import io.github.bucket4j.serialization.SerializationAdapter;
 import io.github.bucket4j.serialization.SerializationHandle;
@@ -72,7 +69,7 @@ public class CreateInitialStateCommand implements RemoteCommand<Nothing>, Compar
         }
 
         BucketState bucketState = BucketState.createInitialState(configuration, MathType.INTEGER_64_BITS, currentTimeNanos);
-        RemoteBucketState remoteBucketState = new RemoteBucketState(configuration, bucketState);
+        RemoteBucketState remoteBucketState = new RemoteBucketState(configuration, bucketState, new RemoteStat(0L));
         mutableEntry.set(remoteBucketState);
         return CommandResult.NOTHING;
     }

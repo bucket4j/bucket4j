@@ -26,8 +26,6 @@ import io.github.bucket4j.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import static io.github.bucket4j.serialization.PrimitiveSerializationHandles.*;
-
 public class SynchronizedBucket extends AbstractBucket implements LocalBucket {
 
     private BucketConfiguration configuration;
@@ -177,10 +175,10 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket {
             long availableToConsume = state.getAvailableTokens(bandwidths);
             long toConsume = Math.min(limit, availableToConsume);
             if (toConsume == 0) {
-                return new VerboseResult<>(currentTimeNanos, LONG_HANDLE.getTypeId(), 0L, configuration, state.copy());
+                return new VerboseResult<>(currentTimeNanos, 0L, configuration, state.copy());
             }
             state.consume(bandwidths, toConsume);
-            return new VerboseResult<>(currentTimeNanos, LONG_HANDLE.getTypeId(), toConsume, configuration, state.copy());
+            return new VerboseResult<>(currentTimeNanos, toConsume, configuration, state.copy());
         } finally {
             lock.unlock();
         }
@@ -194,10 +192,10 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket {
             state.refillAllBandwidth(bandwidths, currentTimeNanos);
             long availableToConsume = state.getAvailableTokens(bandwidths);
             if (tokensToConsume > availableToConsume) {
-                return new VerboseResult<>(currentTimeNanos, BOOLEAN_HANDLE.getTypeId(), false, configuration, state.copy());
+                return new VerboseResult<>(currentTimeNanos, false, configuration, state.copy());
             }
             state.consume(bandwidths, tokensToConsume);
-            return new VerboseResult<>(currentTimeNanos, BOOLEAN_HANDLE.getTypeId(), true, configuration, state.copy());
+            return new VerboseResult<>(currentTimeNanos, true, configuration, state.copy());
         } finally {
             lock.unlock();
         }
@@ -214,12 +212,12 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket {
                 long nanosToWaitForRefill = state.calculateDelayNanosAfterWillBePossibleToConsume(bandwidths, tokensToConsume, currentTimeNanos);
                 long nanosToWaitForReset = state.calculateFullRefillingTime(bandwidths, currentTimeNanos);
                 ConsumptionProbe probe = ConsumptionProbe.rejected(availableToConsume, nanosToWaitForRefill, nanosToWaitForReset);
-                return new VerboseResult<>(currentTimeNanos, ConsumptionProbe.SERIALIZATION_HANDLE.getTypeId(), probe, configuration, state.copy());
+                return new VerboseResult<>(currentTimeNanos, probe, configuration, state.copy());
             }
             state.consume(bandwidths, tokensToConsume);
             long nanosToWaitForReset = state.calculateFullRefillingTime(bandwidths, currentTimeNanos);
             ConsumptionProbe probe = ConsumptionProbe.consumed(availableToConsume - tokensToConsume, nanosToWaitForReset);
-            return new VerboseResult<>(currentTimeNanos, ConsumptionProbe.SERIALIZATION_HANDLE.getTypeId(), probe, configuration, state.copy());
+            return new VerboseResult<>(currentTimeNanos, probe, configuration, state.copy());
         } finally {
             lock.unlock();
         }
@@ -235,10 +233,10 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket {
             if (tokensToEstimate > availableToConsume) {
                 long nanosToWaitForRefill = state.calculateDelayNanosAfterWillBePossibleToConsume(bandwidths, tokensToEstimate, currentTimeNanos);
                 EstimationProbe estimationProbe = EstimationProbe.canNotBeConsumed(availableToConsume, nanosToWaitForRefill);
-                return new VerboseResult<>(currentTimeNanos, EstimationProbe.SERIALIZATION_HANDLE.getTypeId(), estimationProbe, configuration, state.copy());
+                return new VerboseResult<>(currentTimeNanos, estimationProbe, configuration, state.copy());
             }
             EstimationProbe estimationProbe = EstimationProbe.canBeConsumed(availableToConsume);
-            return new VerboseResult<>(currentTimeNanos, EstimationProbe.SERIALIZATION_HANDLE.getTypeId(), estimationProbe, configuration, state.copy());
+            return new VerboseResult<>(currentTimeNanos, estimationProbe, configuration, state.copy());
         } finally {
             lock.unlock();
         }
@@ -251,7 +249,7 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket {
         try {
             state.refillAllBandwidth(bandwidths, currentTimeNanos);
             long availableTokens = state.getAvailableTokens(bandwidths);
-            return new VerboseResult<>(currentTimeNanos, LONG_HANDLE.getTypeId(), availableTokens, configuration, state.copy());
+            return new VerboseResult<>(currentTimeNanos, availableTokens, configuration, state.copy());
         } finally {
             lock.unlock();
         }
@@ -264,7 +262,7 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket {
         try {
             state.refillAllBandwidth(bandwidths, currentTimeNanos);
             state.addTokens(bandwidths, tokensToAdd);
-            return new VerboseResult<>(currentTimeNanos, NULL_HANDLE.getTypeId(), Nothing.INSTANCE, configuration, state.copy());
+            return new VerboseResult<>(currentTimeNanos, Nothing.INSTANCE, configuration, state.copy());
         } finally {
             lock.unlock();
         }
@@ -276,12 +274,12 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket {
         lock.lock();
         try {
             if (!configuration.isCompatible(newConfiguration)) {
-                return new VerboseResult<>(currentTimeNanos, BucketConfiguration.SERIALIZATION_HANDLE.getTypeId(), configuration, configuration, state.copy());
+                return new VerboseResult<>(currentTimeNanos, configuration, configuration, state.copy());
             }
             this.state.refillAllBandwidth(bandwidths, currentTimeNanos);
             this.configuration = newConfiguration;
             this.bandwidths = newConfiguration.getBandwidths();
-            return new VerboseResult<>(currentTimeNanos, NULL_HANDLE.getTypeId(), null, configuration, state.copy());
+            return new VerboseResult<>(currentTimeNanos, null, configuration, state.copy());
         } finally {
             lock.unlock();
         }
@@ -296,10 +294,10 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket {
             long nanosToCloseDeficit = state.calculateDelayNanosAfterWillBePossibleToConsume(bandwidths, tokensToConsume, currentTimeNanos);
 
             if (nanosToCloseDeficit == INFINITY_DURATION) {
-                return new VerboseResult<>(currentTimeNanos, LONG_HANDLE.getTypeId(), nanosToCloseDeficit, configuration, state.copy());
+                return new VerboseResult<>(currentTimeNanos, nanosToCloseDeficit, configuration, state.copy());
             }
             state.consume(bandwidths, tokensToConsume);
-            return new VerboseResult<>(currentTimeNanos, LONG_HANDLE.getTypeId(), nanosToCloseDeficit, configuration, state.copy());
+            return new VerboseResult<>(currentTimeNanos, nanosToCloseDeficit, configuration, state.copy());
         } finally {
             lock.unlock();
         }
