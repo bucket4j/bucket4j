@@ -5,6 +5,8 @@ import javax.cache.Cache;
 import javax.cache.processor.EntryProcessor;
 import java.io.Serializable;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class CompatibilityTest {
 
@@ -21,13 +23,26 @@ public class CompatibilityTest {
         int iterations = 1000;
         cache.put(key, 0);
         CountDownLatch latch = new CountDownLatch(threads);
+        AtomicLong sum = new AtomicLong();
         for (int i = 0; i < threads; i++) {
             new Thread(() -> {
                 try {
                     for (int j = 0; j < iterations; j++) {
                         EntryProcessor<String, Integer, Void> processor = (EntryProcessor<String, Integer, Void> & Serializable) (mutableEntry, objects) -> {
+                            try {
+                                Thread.sleep(1);
+                            } catch (InterruptedException e1) {
+                                throw new IllegalStateException(e1);
+                            }
                             int value = mutableEntry.getValue();
-                            mutableEntry.setValue(value + 1);
+                            try {
+                                Thread.sleep(1);
+                            } catch (InterruptedException e) {
+                                throw new IllegalStateException(e);
+                            }
+                            int increment = ThreadLocalRandom.current().nextInt(10);
+                            mutableEntry.setValue(value + increment);
+                            sum.addAndGet(increment);
                             return null;
                         };
                         cache.invoke(key, processor);
@@ -39,11 +54,11 @@ public class CompatibilityTest {
         }
         latch.await();
         int value = cache.get(key);
-        if (value == threads * iterations) {
+        if (value == sum.get()) {
             System.out.println("Implementation which you use is compatible with Bucket4j");
         } else {
             String msg = "Implementation which you use is not compatible with Bucket4j";
-            msg += ", " + (threads * iterations - value) + " writes are missed";
+            msg += ", " + (sum.get() - value) + " writes are missed";
             throw new IllegalStateException(msg);
         }
     }
