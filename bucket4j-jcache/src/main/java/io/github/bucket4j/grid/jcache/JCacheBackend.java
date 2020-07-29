@@ -39,21 +39,25 @@ import static io.github.bucket4j.serialization.InternalSerializationHelper.*;
  */
 public class JCacheBackend<K> extends AbstractBackend<K> {
 
-    private static final Map<String, String> incompatibleProviders = new HashMap<>();
+    private static final Map<String, String> incompatibleProviders = Collections.emptyMap();
     static {
-        incompatibleProviders.put("org.infinispan", " use module bucket4j-infinispan directly");
+        // incompatibleProviders.put("org.infinispan", " use module bucket4j-infinispan directly");
     }
 
+    private static final Set<String> preferLambdaStyleProviders = Collections.singleton("org.infinispan");
+
     private final Cache<K, byte[]> cache;
+    private final boolean preferLambdaStyle;
 
     public JCacheBackend(Cache<K, byte[]> cache) {
+        checkCompatibilityWithProvider(cache);
         this.cache = Objects.requireNonNull(cache);
-        checkProviders(cache);
+        this.preferLambdaStyle = preferLambdaStyle(cache);
     }
 
     @Override
     public <T> CommandResult<T> execute(K key, RemoteCommand<T> command) {
-        BucketProcessor<K, T> entryProcessor = new BucketProcessor<>(command);
+        EntryProcessor<K, byte[], byte[]> entryProcessor = preferLambdaStyle? createLambdaProcessor(command) : new BucketProcessor<>(command);
         byte[] resultBytes = cache.invoke(key, entryProcessor);
         return InternalSerializationHelper.deserializeResult(resultBytes);
     }
@@ -69,7 +73,7 @@ public class JCacheBackend<K> extends AbstractBackend<K> {
         throw new UnsupportedOperationException();
     }
 
-    private void checkProviders(Cache<K, byte[]> cache) {
+    private void checkCompatibilityWithProvider(Cache<K, byte[]> cache) {
         CacheManager cacheManager = cache.getCacheManager();
         if (cacheManager == null) {
             return;
@@ -87,6 +91,37 @@ public class JCacheBackend<K> extends AbstractBackend<K> {
                 throw new UnsupportedOperationException(message);
             }
         });
+    }
+
+    private boolean preferLambdaStyle(Cache<K, byte[]> cache) {
+        CacheManager cacheManager = cache.getCacheManager();
+        if (cacheManager == null) {
+            return false;
+        }
+
+        CachingProvider cachingProvider = cacheManager.getCachingProvider();
+        if (cachingProvider == null) {
+            return false;
+        }
+
+        String providerClassName = cachingProvider.getClass().getName();
+        for (String providerPrefix : preferLambdaStyleProviders) {
+            if (providerClassName.startsWith(providerPrefix)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public <T> EntryProcessor<K, byte[], byte[]> createLambdaProcessor(RemoteCommand<T> command) {
+        byte[] serializedCommand = InternalSerializationHelper.serializeCommand(command);
+        return  (Serializable & EntryProcessor<K, byte[], byte[]>) (mutableEntry, objects) -> {
+            RemoteCommand<T> targetCommand = deserializeCommand(serializedCommand);
+            JCacheBucketEntry bucketEntry = new JCacheBucketEntry(mutableEntry);
+            CommandResult<T> result = targetCommand.execute(bucketEntry, TimeMeter.SYSTEM_MILLISECONDS.currentTimeNanos());
+            return serializeResult(result);
+        };
     }
 
     private static class BucketProcessor<K, T> implements Serializable, EntryProcessor<K, byte[], byte[]> {

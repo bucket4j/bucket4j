@@ -14,7 +14,7 @@ public class ConsumerThread extends Thread {
     private final long workTimeNanos;
     private final Function<Bucket, Long> action;
     private long consumed;
-    private Exception exception;
+    private Throwable exception;
 
     public ConsumerThread(CountDownLatch startLatch, CountDownLatch endLatch, Bucket bucket, long workTimeNanos, Function<Bucket, Long> action) {
         this.startLatch = startLatch;
@@ -36,15 +36,15 @@ public class ConsumerThread extends Thread {
                 }
                 consumed += action.apply(bucket);
             }
-        } catch (Exception e) {
-            exception.printStackTrace();
+        } catch (Throwable e) {
             exception = e;
+            e.printStackTrace();
         } finally {
             endLatch.countDown();
         }
     }
 
-    public Exception getException() {
+    public Throwable getException() {
         return exception;
     }
 

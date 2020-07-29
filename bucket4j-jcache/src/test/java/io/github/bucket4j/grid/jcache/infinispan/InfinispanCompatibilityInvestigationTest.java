@@ -1,9 +1,10 @@
-
 package io.github.bucket4j.grid.jcache.infinispan;
 
-import io.github.bucket4j.grid.jcache.AbstractJCacheTest;
+
+import io.github.bucket4j.grid.jcache.CompatibilityTest;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Test;
 
 import javax.cache.Cache;
 import javax.cache.CacheManager;
@@ -11,10 +12,11 @@ import javax.cache.Caching;
 import javax.cache.spi.CachingProvider;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.concurrent.ThreadLocalRandom;
 
-public class InfinispanJCacheTest extends AbstractJCacheTest {
+public class InfinispanCompatibilityInvestigationTest {
 
+    public static final TestClassLoader1 CLASS_LOADER_1 = new TestClassLoader1(InfinispanJCacheTest.class.getClassLoader());
+    public static final TestClassLoader2 CLASS_LOADER_2 = new TestClassLoader2(InfinispanJCacheTest.class.getClassLoader());
     static URI configurationUri = null;
 
     static {
@@ -25,22 +27,18 @@ public class InfinispanJCacheTest extends AbstractJCacheTest {
         }
     }
 
-    private static Cache<String, byte[]> cache1;
+    private static Cache<String, Integer> cache1;
     private static CacheManager cacheManager1;
-
+    private static Cache<String, Integer> cache2;
     private static CacheManager cacheManager2;
-    private static Cache<String, byte[]> cache2;
-    private static TestClassLoader1 classLoader1 = new TestClassLoader1(InfinispanJCacheTest.class.getClassLoader());
-    private static TestClassLoader2 classLoader2 = new TestClassLoader2(InfinispanJCacheTest.class.getClassLoader());
 
     @BeforeClass
     public static void setup() {
         CachingProvider cachingProvider = Caching.getCachingProvider("org.infinispan.jcache.embedded.JCachingProvider");
-
-        cacheManager1 = cachingProvider.getCacheManager(configurationUri, classLoader1);
+        cacheManager1 = cachingProvider.getCacheManager(configurationUri, CLASS_LOADER_1);
         cache1 = cacheManager1.getCache("my_buckets");
 
-        cacheManager2 = cachingProvider.getCacheManager(configurationUri, classLoader2);
+        cacheManager2 = cachingProvider.getCacheManager(configurationUri, CLASS_LOADER_2);
         cache2 = cacheManager2.getCache("my_buckets");
     }
 
@@ -54,9 +52,10 @@ public class InfinispanJCacheTest extends AbstractJCacheTest {
         }
     }
 
-    @Override
-    protected Cache<String, byte[]> getCache() {
-        return ThreadLocalRandom.current().nextBoolean()? cache1 : cache2;
+    @Test
+    public void testCompatibility() throws InterruptedException, URISyntaxException {
+        new CompatibilityTest(cache1).test();
+        new CompatibilityTest(cache2).test();
     }
 
     public static class TestClassLoader1 extends ClassLoader {

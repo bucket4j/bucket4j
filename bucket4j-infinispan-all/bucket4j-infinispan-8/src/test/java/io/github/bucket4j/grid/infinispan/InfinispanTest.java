@@ -11,6 +11,7 @@ import org.junit.BeforeClass;
 import javax.cache.Cache;
 import javax.cache.CacheManager;
 import javax.cache.Caching;
+import javax.cache.spi.CachingProvider;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -28,11 +29,12 @@ public class InfinispanTest extends AbstractDistributedBucketTest {
         URI configurationUri = InfinispanTest.class.getResource("/infinispan-jcache-cluster.xml").toURI();
         ClassLoader tccl = InfinispanTest.class.getClassLoader();
 
-        cacheManager1 = Caching.getCachingProvider().getCacheManager(configurationUri, new TestClassLoader(tccl));
+        CachingProvider cachingProvider = Caching.getCachingProvider("org.infinispan.jcache.embedded.JCachingProvider");
+        cacheManager1 = cachingProvider.getCacheManager(configurationUri, new TestClassLoader(tccl));
         cache = cacheManager1.getCache("namedCache");
         readWriteMap = toMap(cache);
 
-        cacheManager2 = Caching.getCachingProvider().getCacheManager(configurationUri, new TestClassLoader(tccl));
+        cacheManager2 = cachingProvider.getCacheManager(configurationUri, new TestClassLoader(tccl));
         cacheManager2.getCache("namedCache");
     }
 
@@ -41,7 +43,6 @@ public class InfinispanTest extends AbstractDistributedBucketTest {
         cacheManager1.close();
         cacheManager2.close();
     }
-
 
     @Override
     protected Backend<String> getBackend() {

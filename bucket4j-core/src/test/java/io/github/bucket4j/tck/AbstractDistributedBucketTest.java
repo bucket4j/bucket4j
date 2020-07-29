@@ -125,7 +125,7 @@ public abstract class AbstractDistributedBucketTest {
     }
 
     @Test
-    public void testTryConsume() throws Exception {
+    public void testTryConsume() throws Throwable {
         Function<Bucket, Long> action = bucket -> bucket.tryConsume(1)? 1L : 0L;
         Supplier<Bucket> bucketSupplier = () -> backend.builder()
                 .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
@@ -135,7 +135,7 @@ public abstract class AbstractDistributedBucketTest {
     }
 
     @Test
-    public void testTryConsumeWithLimit() throws Exception {
+    public void testTryConsumeWithLimit() throws Throwable {
         Function<Bucket, Long> action = bucket -> bucket.asBlocking().tryConsumeUninterruptibly(1, TimeUnit.MILLISECONDS.toNanos(50), UninterruptibleBlockingStrategy.PARKING) ? 1L : 0L;
         Supplier<Bucket> bucketSupplier = () -> backend.builder()
                 .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)

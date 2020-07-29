@@ -29,7 +29,7 @@ public class ConsumptionScenario {
         }
     }
 
-    public void executeAndValidateRate() throws Exception {
+    public void executeAndValidateRate() throws Throwable {
         for (ConsumerThread consumer : consumers) {
             consumer.start();
         }

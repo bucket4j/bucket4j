@@ -1,7 +1,7 @@
-package io.github.bucket4j.grid.jcache.compatibility_investigation.ecache;
+package io.github.bucket4j.grid.jcache.ecache;
 
 
-import io.github.bucket4j.grid.jcache.compatibility_investigation.CompatibilityTest;
+import io.github.bucket4j.grid.jcache.CompatibilityTest;
 import org.ehcache.jsr107.EhcacheCachingProvider;
 
 

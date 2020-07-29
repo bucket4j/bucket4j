@@ -1,5 +1,5 @@
 
-package io.github.bucket4j.grid.jcache.compatibility_investigation;
+package io.github.bucket4j.grid.jcache;
 
 import javax.cache.Cache;
 import javax.cache.processor.EntryProcessor;
@@ -23,7 +23,6 @@ public class CompatibilityTest {
         int iterations = 1000;
         cache.put(key, 0);
         CountDownLatch latch = new CountDownLatch(threads);
-        AtomicLong sum = new AtomicLong();
         for (int i = 0; i < threads; i++) {
             new Thread(() -> {
                 try {
@@ -40,9 +39,7 @@ public class CompatibilityTest {
                             } catch (InterruptedException e) {
                                 throw new IllegalStateException(e);
                             }
-                            int increment = ThreadLocalRandom.current().nextInt(10);
-                            mutableEntry.setValue(value + increment);
-                            sum.addAndGet(increment);
+                            mutableEntry.setValue(value + 1);
                             return null;
                         };
                         cache.invoke(key, processor);
@@ -54,11 +51,11 @@ public class CompatibilityTest {
         }
         latch.await();
         int value = cache.get(key);
-        if (value == sum.get()) {
+        if (value == threads * iterations) {
             System.out.println("Implementation which you use is compatible with Bucket4j");
         } else {
             String msg = "Implementation which you use is not compatible with Bucket4j";
-            msg += ", " + (sum.get() - value) + " writes are missed";
+            msg += ", " + (threads * iterations - value) + " writes are missed";
             throw new IllegalStateException(msg);
         }
     }

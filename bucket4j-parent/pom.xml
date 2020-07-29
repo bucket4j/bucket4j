@@ -53,7 +53,7 @@
         <hazelcast.latest.version>4.0.2</hazelcast.latest.version>
 
         <infinispan-8.version>8.2.0.Final</infinispan-8.version>
-        <infinispan.latest.version>10.1.0.CR1</infinispan.latest.version>
+        <infinispan.latest.version>11.0.1.Final</infinispan.latest.version>
         <ehcache.version>3.8.1</ehcache.version>
 
         <testcontainers.version>1.12.2</testcontainers.version>
