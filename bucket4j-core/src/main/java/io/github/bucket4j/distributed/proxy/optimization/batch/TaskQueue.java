@@ -1,4 +1,4 @@
-package io.github.bucket4j.distributed.proxy.optimizers.batch;
+package io.github.bucket4j.distributed.proxy.optimization.batch;
 
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 

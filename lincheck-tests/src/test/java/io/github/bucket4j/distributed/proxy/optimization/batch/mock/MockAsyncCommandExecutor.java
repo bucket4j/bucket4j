@@ -1,4 +1,4 @@
-package io.github.bucket4j.distributed.proxy.optimizers.batch.mock;
+package io.github.bucket4j.distributed.proxy.optimization.batch.mock;
 
 import io.github.bucket4j.distributed.proxy.AsyncCommandExecutor;
 import io.github.bucket4j.distributed.remote.CommandResult;

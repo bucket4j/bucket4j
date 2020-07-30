@@ -1,14 +1,14 @@
-package io.github.bucket4j.distributed.proxy.optimizers.predictive;
+package io.github.bucket4j.distributed.proxy.optimization;
 
 import io.github.bucket4j.distributed.remote.MutableBucketEntry;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 
-class PredictiveMutableEntry implements MutableBucketEntry {
+public class InMemoryMutableEntry implements MutableBucketEntry {
 
     private final RemoteBucketState originalState;
     private RemoteBucketState newState;
 
-    PredictiveMutableEntry(RemoteBucketState originalState) {
+    public InMemoryMutableEntry(RemoteBucketState originalState) {
         this.originalState = originalState;
     }
 
@@ -24,7 +24,7 @@ class PredictiveMutableEntry implements MutableBucketEntry {
 
     @Override
     public RemoteBucketState get() {
-        return originalState;
+        return newState != null? newState : originalState;
     }
 
     public RemoteBucketState getNewState() {

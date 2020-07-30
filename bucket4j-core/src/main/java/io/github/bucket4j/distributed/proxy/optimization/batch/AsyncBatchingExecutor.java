@@ -1,9 +1,7 @@
 
-package io.github.bucket4j.distributed.proxy.optimizers.batch;
+package io.github.bucket4j.distributed.proxy.optimization.batch;
 
 import io.github.bucket4j.distributed.proxy.AsyncCommandExecutor;
-import io.github.bucket4j.distributed.proxy.optimizers.batch.TaskQueue;
-import io.github.bucket4j.distributed.proxy.optimizers.batch.WaitingTask;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.remote.commands.MultiCommand;

@@ -1,6 +1,6 @@
-package io.github.bucket4j.distributed.proxy.optimizers.batch.mock
+package io.github.bucket4j.distributed.proxy.optimization.batch.mock
 
-import io.github.bucket4j.distributed.proxy.optimizers.batch.AsyncBatchingExecutor
+import io.github.bucket4j.distributed.proxy.optimization.batch.AsyncBatchingExecutor
 import io.github.bucket4j.distributed.remote.CommandResult
 import org.jetbrains.kotlinx.lincheck.LinChecker
 import org.jetbrains.kotlinx.lincheck.LoggingLevel

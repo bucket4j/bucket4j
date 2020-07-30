@@ -17,7 +17,6 @@
 
 package io.github.bucket4j.distributed.proxy;
 
-import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.distributed.BucketProxy;
 
@@ -45,7 +44,7 @@ public interface RemoteBucketBuilder<K> {
      * @param requestOptimizer
      * @return
      */
-    RemoteBucketBuilder<K> withRequestOptimizer(RequestOptimizer requestOptimizer);
+    RemoteBucketBuilder<K> withRequestOptimizer(Optimization requestOptimizer);
 
     /**
      * TODO

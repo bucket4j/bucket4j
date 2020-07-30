@@ -18,7 +18,7 @@
  * =========================LICENSE_END==================================
  */
 
-package io.github.bucket4j.distributed.proxy.optimizers.batch;
+package io.github.bucket4j.distributed.proxy.optimization.batch;
 
 public class BatchFailedException extends IllegalStateException {
 

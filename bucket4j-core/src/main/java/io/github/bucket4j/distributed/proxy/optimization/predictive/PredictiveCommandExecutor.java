@@ -1,15 +1,20 @@
-package io.github.bucket4j.distributed.proxy.optimizers.predictive;
+package io.github.bucket4j.distributed.proxy.optimization.predictive;
 
 import io.github.bucket4j.RemoteVerboseResult;
 import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.proxy.AsyncCommandExecutor;
 import io.github.bucket4j.distributed.proxy.CommandExecutor;
+import io.github.bucket4j.distributed.proxy.optimization.CommandInsiders;
+import io.github.bucket4j.distributed.proxy.optimization.InMemoryMutableEntry;
+import io.github.bucket4j.distributed.proxy.optimization.PredictionParameters;
+import io.github.bucket4j.distributed.proxy.optimization.DelayParameters;
 import io.github.bucket4j.distributed.remote.*;
 import io.github.bucket4j.distributed.remote.commands.ConsumeIgnoringRateLimitsCommand;
 import io.github.bucket4j.distributed.remote.commands.MultiCommand;
 import io.github.bucket4j.distributed.remote.commands.VerboseCommand;
 
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
@@ -18,29 +23,28 @@ class PredictiveCommandExecutor implements CommandExecutor, AsyncCommandExecutor
     private final CommandExecutor originalExecutor;
     private final AsyncCommandExecutor originalAsyncExecutor;
     private final PredictionParameters predictionParameters;
+    private final DelayParameters delayParameters;
     private final TimeMeter timeMeter;
 
     private RemoteBucketState state;
     private long postponedToConsumeTokens;
-    private long locallyConsumedByPredictionTokens;
+    private long consumedByPredictionTokens;
 
-    private Long lastSyncTimeNanos;
-    private Long lastSyncConsumptionCounter;
-    private Long lastSyncSelfConsumedTokens;
-    private Long previousSyncTimeNanos;
-    private Long previousSyncConsumptionCounter;
+    private LinkedList<Sample> samples = new LinkedList<>();
 
-    PredictiveCommandExecutor(CommandExecutor originalExecutor, PredictionParameters predictionParameters, TimeMeter timeMeter) {
+    PredictiveCommandExecutor(CommandExecutor originalExecutor, DelayParameters delayParameters, PredictionParameters predictionParameters, TimeMeter timeMeter) {
         this.originalExecutor = originalExecutor;
         this.originalAsyncExecutor = null;
         this.predictionParameters = predictionParameters;
+        this.delayParameters = delayParameters;
         this.timeMeter = timeMeter;
     }
 
-    PredictiveCommandExecutor(AsyncCommandExecutor originalAsyncExecutor, PredictionParameters predictionParameters, TimeMeter timeMeter) {
+    PredictiveCommandExecutor(AsyncCommandExecutor originalAsyncExecutor, DelayParameters delayParameters, PredictionParameters predictionParameters, TimeMeter timeMeter) {
         this.originalExecutor = null;
         this.originalAsyncExecutor = originalAsyncExecutor;
         this.predictionParameters = predictionParameters;
+        this.delayParameters = delayParameters;
         this.timeMeter = timeMeter;
     }
 
@@ -101,7 +105,7 @@ class PredictiveCommandExecutor implements CommandExecutor, AsyncCommandExecutor
         MultiCommand multiCommand = new MultiCommand(commands);
 
         // execute local command
-        PredictiveMutableEntry entry = new PredictiveMutableEntry(state.copy());
+        InMemoryMutableEntry entry = new InMemoryMutableEntry(state.copy());
         MultiResult multiResult = multiCommand.execute(entry, currentTimeNanos).getData();
         long consumedTokens = CommandInsiders.getConsumedTokens(multiCommand, multiResult);
         if (consumedTokens == Long.MAX_VALUE) {
@@ -114,24 +118,36 @@ class PredictiveCommandExecutor implements CommandExecutor, AsyncCommandExecutor
         }
 
         postponedToConsumeTokens += locallyConsumedTokens;
-        locallyConsumedByPredictionTokens += predictedConsumptionByOthersSinceLastLocalCall;
+        consumedByPredictionTokens += predictedConsumptionByOthersSinceLastLocalCall;
         state = entry.getNewState();
 
         return (CommandResult<T>) multiResult.getResults().get(1);
     }
 
     private boolean isLocalExecutionResultSatisfiesThreshold(long locallyConsumedTokens) {
-        return locallyConsumedTokens != Long.MAX_VALUE
-                && postponedToConsumeTokens + locallyConsumedTokens >= 0
-                && postponedToConsumeTokens + locallyConsumedTokens <= predictionParameters.getMaxUnsynchronizedTokens();
+        if (locallyConsumedTokens == Long.MAX_VALUE || postponedToConsumeTokens + locallyConsumedTokens < 0) {
+            // math overflow
+            return false;
+        }
+        return postponedToConsumeTokens + locallyConsumedTokens <= delayParameters.maxUnsynchronizedTokens;
     }
 
     private <T> boolean isNeedToExecuteRemoteImmediately(RemoteCommand<T> command, long currentTimeNanos) {
-        if (lastSyncTimeNanos == null || previousSyncTimeNanos == null ||
-                currentTimeNanos - lastSyncTimeNanos > predictionParameters.getMaxUnsynchronizedTimeoutNanos() ||
-                currentTimeNanos - previousSyncTimeNanos > predictionParameters.getMaxUnsynchronizedTimeoutNanos() * 2) {
-            // need to execute immediately because lack of actual information about consumption rate in cluster
+        if (samples.size() < predictionParameters.requiredSamples) {
+            // there is no enough samples to predict rate
             return true;
+        }
+
+        if (currentTimeNanos - samples.getLast().syncTimeNanos  > delayParameters.maxUnsynchronizedTimeoutNanos) {
+            // too long period passed since last sync
+            return true;
+        }
+
+        for (Sample sample : samples) {
+            if (currentTimeNanos - sample.syncTimeNanos > predictionParameters.sampleMaxAgeNanos) {
+                // there is no enough samples to predict rate
+                return true;
+            }
         }
 
         if (CommandInsiders.isImmediateSyncRequired(command)) {
@@ -140,33 +156,44 @@ class PredictiveCommandExecutor implements CommandExecutor, AsyncCommandExecutor
         }
 
         long commandTokens = CommandInsiders.estimateTokensToConsume(command);
-        if (commandTokens + postponedToConsumeTokens < 0) {
+        if (commandTokens == Long.MAX_VALUE || commandTokens + postponedToConsumeTokens < 0) {
             // math overflow
             return true;
         }
 
-        return commandTokens + postponedToConsumeTokens > predictionParameters.getMaxUnsynchronizedTokens();
+        return commandTokens + postponedToConsumeTokens > delayParameters.maxUnsynchronizedTokens;
     }
 
     private long predictedConsumptionByOthers(long currentTimeNanos) {
-        if (!predictionParameters.shouldPredictConsumptionByOtherNodes()) {
-            return 0L;
-        }
+        Sample freshSample = samples.getLast();
+        long lastSyncTimeNanos = freshSample.syncTimeNanos;
         long timeSinceLastSync = currentTimeNanos - lastSyncTimeNanos;
         if (timeSinceLastSync <= 0) {
             return 0L;
         }
 
-        long tokensConsumedByOthers = lastSyncConsumptionCounter - previousSyncConsumptionCounter - lastSyncSelfConsumedTokens;
-        long previousIntervalBetweenSync = lastSyncTimeNanos - previousSyncTimeNanos;
+        long lastObservedConsumptionCounter = freshSample.observedConsumptionCounter;
+        Sample oldestSample = samples.getFirst();
+        long oldestSyncConsumptionCounter = oldestSample.observedConsumptionCounter;
+        long oldestSyncTimeNanos = oldestSample.syncTimeNanos;
 
-        double othersRate = (double) tokensConsumedByOthers / (double) previousIntervalBetweenSync;
+        long tokensSelfConsumedDuringSamplePeriod = 0;
+        for (Sample sample : samples) {
+            if (sample != oldestSample) {
+                tokensSelfConsumedDuringSamplePeriod += sample.selfConsumedTokens;
+            }
+        }
+
+        long tokensConsumedByOthersDuringSamplingPeriod = lastObservedConsumptionCounter - oldestSyncConsumptionCounter - tokensSelfConsumedDuringSamplePeriod;
+        long previousIntervalBetweenSync = lastSyncTimeNanos - oldestSyncTimeNanos;
+
+        double othersRate = (double) tokensConsumedByOthersDuringSamplingPeriod / (double) previousIntervalBetweenSync;
         double predictedConsumptionSinceLastSync = othersRate * (currentTimeNanos - timeSinceLastSync);
         if (predictedConsumptionSinceLastSync >= Long.MAX_VALUE) {
             return Long.MAX_VALUE;
         }
 
-        long predictedComnsumptionSinceLastLocalCall = (long) (predictedConsumptionSinceLastSync - locallyConsumedByPredictionTokens);
+        long predictedComnsumptionSinceLastLocalCall = (long) (predictedConsumptionSinceLastSync - consumedByPredictionTokens);
         if (predictedComnsumptionSinceLastLocalCall < 0) {
             predictedComnsumptionSinceLastLocalCall = 0;
         }
@@ -183,7 +210,31 @@ class PredictiveCommandExecutor implements CommandExecutor, AsyncCommandExecutor
     }
 
     private void rememberRemoteCommandResult(VerboseCommand<MultiResult> remoteCommand, RemoteVerboseResult<MultiResult> remoteResult) {
-        // TODO
+        state = remoteResult.getState();
+        postponedToConsumeTokens = 0;
+        consumedByPredictionTokens = 0;
+        Sample sample = new Sample(
+                timeMeter.currentTimeNanos(),
+                state.getRemoteStat().getConsumedTokens(),
+                CommandInsiders.getConsumedTokens(remoteCommand, remoteResult)
+        );
+        samples.addLast(sample);
+        if (samples.size() > predictionParameters.requiredSamples) {
+            samples.removeFirst();
+        }
     }
+
+    private static class Sample {
+        private long syncTimeNanos;
+        private long observedConsumptionCounter;
+        private long selfConsumedTokens;
+
+        public Sample(long syncTimeNanos, long observedConsumptionCounter, long selfConsumedTokens) {
+            this.syncTimeNanos = syncTimeNanos;
+            this.observedConsumptionCounter = observedConsumptionCounter;
+            this.selfConsumedTokens = selfConsumedTokens;
+        }
+    }
+
 
 }

@@ -1,4 +1,4 @@
-package io.github.bucket4j.distributed.proxy.optimizers.batch.mock;
+package io.github.bucket4j.distributed.proxy.optimization.batch.mock;
 
 import io.github.bucket4j.distributed.proxy.CommandExecutor;
 import io.github.bucket4j.distributed.remote.CommandResult;
@@ -6,7 +6,6 @@ import io.github.bucket4j.distributed.remote.MultiResult;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.remote.commands.MultiCommand;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 

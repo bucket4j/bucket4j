@@ -1,4 +1,4 @@
-package io.github.bucket4j.distributed.proxy.optimizers.predictive;
+package io.github.bucket4j.distributed.proxy.optimization;
 
 import io.github.bucket4j.*;
 import io.github.bucket4j.distributed.remote.CommandResult;
