@@ -342,13 +342,14 @@ public class DefaultAsyncBucketProxy implements AsyncBucketProxy, ScheduledBucke
     }
 
     private <T> CompletableFuture<T> execute(RemoteCommand<T> command) {
+        boolean wasInitializedBeforeExecution = wasInitialized.get();
         CompletableFuture<CommandResult<T>> futureResult = commandExecutor.executeAsync(command);
         return futureResult.thenCompose(cmdResult -> {
             if (!cmdResult.isBucketNotFound()) {
                 T resultDate = cmdResult.getData();
                 return CompletableFuture.completedFuture(resultDate);
             }
-            if (recoveryStrategy == RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION && wasInitialized.compareAndSet(true, true)) {
+            if (recoveryStrategy == RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION && wasInitializedBeforeExecution) {
                 CompletableFuture<T> failedFuture = new CompletableFuture<>();
                 failedFuture.completeExceptionally(new BucketNotFoundException());
                 return failedFuture;
