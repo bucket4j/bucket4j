@@ -4,10 +4,8 @@ import io.github.bucket4j.Bandwidth
 import io.github.bucket4j.Bucket
 import io.github.bucket4j.BucketConfiguration
 import io.github.bucket4j.SimpleBucketListener
-import io.github.bucket4j.distributed.AsyncBucket
-import io.github.bucket4j.mock.BlockingStrategyMock
+import io.github.bucket4j.distributed.AsyncBucketProxy
 import io.github.bucket4j.mock.BucketType
-import io.github.bucket4j.mock.SchedulerMock
 import io.github.bucket4j.mock.TimeMeterMock
 import io.github.bucket4j.util.PipeGenerator
 import spock.lang.Specification
@@ -32,7 +30,7 @@ class ConsumeAsMuchAsPossibleSpecification extends Specification {
             Bucket bucket = bucketType.createBucket(configuration, timeMeter)
             assert bucket.tryConsumeAsMuchAsPossible() == requiredResult
 
-            AsyncBucket asyncBucket = bucketType.createAsyncBucket(configuration, timeMeter)
+            AsyncBucketProxy asyncBucket = bucketType.createAsyncBucket(configuration, timeMeter)
             assert asyncBucket.tryConsumeAsMuchAsPossible().get() == requiredResult
         }
         where:
@@ -50,7 +48,7 @@ class ConsumeAsMuchAsPossibleSpecification extends Specification {
             Bucket bucket = bucketType.createBucket(configuration, timeMeter)
             assert bucket.tryConsumeAsMuchAsPossible(limit) == requiredResult
 
-            AsyncBucket asyncBucket = bucketType.createAsyncBucket(configuration, timeMeter)
+            AsyncBucketProxy asyncBucket = bucketType.createAsyncBucket(configuration, timeMeter)
             assert asyncBucket.tryConsumeAsMuchAsPossible(limit).get() == requiredResult
         }
         where:
@@ -131,7 +129,7 @@ class ConsumeAsMuchAsPossibleSpecification extends Specification {
     @Unroll
     def "#type verbose=#verbose test listener for async tryConsumeAsMuchAsPossible"(BucketType type, boolean verbose) {
         setup:
-        AsyncBucket bucket = type.createAsyncBucket(configuration, clock).toListenable(listener)
+        AsyncBucketProxy bucket = type.createAsyncBucket(configuration, clock).toListenable(listener)
 
         when:
         if (!verbose) {
@@ -160,7 +158,7 @@ class ConsumeAsMuchAsPossibleSpecification extends Specification {
     @Unroll
     def "#type verbose=#verbose test listener for async tryConsumeAsMuchAsPossible with limit"(BucketType type, boolean verbose) {
         setup:
-            AsyncBucket bucket = type.createAsyncBucket(configuration, clock).toListenable(listener)
+            AsyncBucketProxy bucket = type.createAsyncBucket(configuration, clock).toListenable(listener)
 
         when:
             if (!verbose) {

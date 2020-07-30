@@ -7,7 +7,7 @@ import java.util.concurrent.CompletableFuture;
 
 import static io.github.bucket4j.AbstractBucket.completedFuture;
 
-public class AsyncBucketAdapter implements AsyncBucket {
+public class AsyncBucketProxyAdapter implements AsyncBucketProxy {
 
     private final Bucket target;
 
@@ -53,7 +53,7 @@ public class AsyncBucketAdapter implements AsyncBucket {
         }
     };
 
-    public AsyncBucketAdapter(Bucket target) {
+    public AsyncBucketProxyAdapter(Bucket target) {
         this.target = Objects.requireNonNull(target);
     }
 
@@ -119,8 +119,13 @@ public class AsyncBucketAdapter implements AsyncBucket {
     }
 
     @Override
-    public AsyncBucket toListenable(BucketListener listener) {
-        return new AsyncBucketAdapter(target.toListenable(listener));
+    public CompletableFuture<Void> sync() {
+        return CompletableFuture.completedFuture(null);
+    }
+
+    @Override
+    public AsyncBucketProxy toListenable(BucketListener listener) {
+        return new AsyncBucketProxyAdapter(target.toListenable(listener));
     }
 
 }

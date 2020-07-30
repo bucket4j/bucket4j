@@ -1,9 +1,9 @@
 package io.github.bucket4j.distributed.proxy;
 
-import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.BucketExceptions;
-import io.github.bucket4j.distributed.AsyncBucket;
+import io.github.bucket4j.distributed.AsyncBucketProxy;
+import io.github.bucket4j.distributed.BucketProxy;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.remote.commands.GetConfigurationCommand;
@@ -77,7 +77,7 @@ public abstract class AbstractBackend<K> implements Backend<K> {
         }
 
         @Override
-        public AsyncBucket buildProxy(K key, BucketConfiguration configuration) {
+        public AsyncBucketProxy buildProxy(K key, BucketConfiguration configuration) {
             if (configuration == null) {
                 throw BucketExceptions.nullConfiguration();
             }
@@ -85,7 +85,7 @@ public abstract class AbstractBackend<K> implements Backend<K> {
         }
 
         @Override
-        public AsyncBucket buildProxy(K key, Supplier<CompletableFuture<BucketConfiguration>> configurationSupplier) {
+        public AsyncBucketProxy buildProxy(K key, Supplier<CompletableFuture<BucketConfiguration>> configurationSupplier) {
             if (configurationSupplier == null) {
                 throw BucketExceptions.nullConfigurationSupplier();
             }
@@ -95,15 +95,10 @@ public abstract class AbstractBackend<K> implements Backend<K> {
                 public <T> CompletableFuture<CommandResult<T>> executeAsync(RemoteCommand<T> command) {
                     return AbstractBackend.this.executeAsync(key, command);
                 }
-
-                @Override
-                public CompletableFuture<Void> flushAsync() {
-                    return CompletableFuture.completedFuture(null);
-                }
             };
             commandExecutor = asyncRequestOptimizer.optimize(commandExecutor);
 
-            return new AsyncBucketProxy(commandExecutor, recoveryStrategy, configurationSupplier);
+            return new DefaultAsyncBucketProxy(commandExecutor, recoveryStrategy, configurationSupplier);
         }
 
     }
@@ -126,7 +121,7 @@ public abstract class AbstractBackend<K> implements Backend<K> {
         }
 
         @Override
-        public Bucket buildProxy(K key, BucketConfiguration configuration) {
+        public BucketProxy buildProxy(K key, BucketConfiguration configuration) {
             if (configuration == null) {
                 throw BucketExceptions.nullConfiguration();
             }
@@ -134,7 +129,7 @@ public abstract class AbstractBackend<K> implements Backend<K> {
         }
 
         @Override
-        public Bucket buildProxy(K key, Supplier<BucketConfiguration> configurationSupplier) {
+        public BucketProxy buildProxy(K key, Supplier<BucketConfiguration> configurationSupplier) {
             if (configurationSupplier == null) {
                 throw BucketExceptions.nullConfigurationSupplier();
             }
@@ -144,15 +139,10 @@ public abstract class AbstractBackend<K> implements Backend<K> {
                 public <T> CommandResult<T> execute(RemoteCommand<T> command) {
                     return AbstractBackend.this.execute(key, command);
                 }
-
-                @Override
-                public void flush() {
-                    // do nothing
-                }
             };
             commandExecutor = requestOptimizer.optimize(commandExecutor);
 
-            return new BucketProxy(configurationSupplier, commandExecutor, recoveryStrategy);
+            return new DefaultBucketProxy(configurationSupplier, commandExecutor, recoveryStrategy);
         }
 
     }

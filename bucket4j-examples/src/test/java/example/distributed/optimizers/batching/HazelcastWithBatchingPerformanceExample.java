@@ -9,7 +9,7 @@ import com.hazelcast.map.IMap;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketConfiguration;
-import io.github.bucket4j.distributed.AsyncBucket;
+import io.github.bucket4j.distributed.AsyncBucketProxy;
 import io.github.bucket4j.distributed.proxy.optimizers.batch.BatchingOptimizer;
 import org.gridkit.nanocloud.Cloud;
 import org.gridkit.nanocloud.CloudFactory;
@@ -139,7 +139,7 @@ public class HazelcastWithBatchingPerformanceExample {
                         Bandwidth.simple(10, Duration.ofSeconds(1)).withInitialTokens(0))
                 .build();
 
-        AsyncBucket bucket = backend.asAsync().builder()
+        AsyncBucketProxy bucket = backend.asAsync().builder()
                 .withRequestOptimizer(new BatchingOptimizer())
                 .buildProxy("13", configuration);
 

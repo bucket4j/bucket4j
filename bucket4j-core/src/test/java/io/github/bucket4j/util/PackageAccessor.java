@@ -2,8 +2,7 @@ package io.github.bucket4j.util;
 
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketState;
-import io.github.bucket4j.distributed.AsyncBucket;
-import io.github.bucket4j.distributed.proxy.BucketProxy;
+import io.github.bucket4j.distributed.proxy.DefaultBucketProxy;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.local.LockFreeBucket;
 import io.github.bucket4j.local.SynchronizedBucket;
@@ -19,8 +18,8 @@ public class PackageAccessor {
             return getFieldValue(stateRef.get(), "state");
         } else if (bucket instanceof SynchronizedBucket) {
             return getFieldValue(bucket, "state");
-        } else if (bucket instanceof BucketProxy) {
-            BucketProxy proxy = getFieldValue(bucket, "gridProxy");
+        } else if (bucket instanceof DefaultBucketProxy) {
+            DefaultBucketProxy proxy = getFieldValue(bucket, "gridProxy");
             RemoteBucketState gridState = getFieldValue(proxy, "state");
             return gridState.getState();
         } else {

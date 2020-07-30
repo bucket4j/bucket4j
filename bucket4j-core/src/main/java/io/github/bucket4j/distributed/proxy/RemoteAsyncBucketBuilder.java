@@ -17,9 +17,8 @@
 
 package io.github.bucket4j.distributed.proxy;
 
-import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketConfiguration;
-import io.github.bucket4j.distributed.AsyncBucket;
+import io.github.bucket4j.distributed.AsyncBucketProxy;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
@@ -54,7 +53,7 @@ public interface RemoteAsyncBucketBuilder<K> {
      * @param configuration
      * @return
      */
-    AsyncBucket buildProxy(K key, BucketConfiguration configuration);
+    AsyncBucketProxy buildProxy(K key, BucketConfiguration configuration);
 
     /**
      * TODO
@@ -63,6 +62,6 @@ public interface RemoteAsyncBucketBuilder<K> {
      * @param configurationSupplier
      * @return
      */
-    AsyncBucket buildProxy(K key, Supplier<CompletableFuture<BucketConfiguration>> configurationSupplier);
+    AsyncBucketProxy buildProxy(K key, Supplier<CompletableFuture<BucketConfiguration>> configurationSupplier);
 
 }

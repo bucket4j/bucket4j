@@ -5,10 +5,8 @@ import io.github.bucket4j.Bucket
 import io.github.bucket4j.BucketConfiguration
 import io.github.bucket4j.ConsumptionProbe
 import io.github.bucket4j.SimpleBucketListener
-import io.github.bucket4j.distributed.AsyncBucket
-import io.github.bucket4j.mock.BlockingStrategyMock
+import io.github.bucket4j.distributed.AsyncBucketProxy
 import io.github.bucket4j.mock.BucketType
-import io.github.bucket4j.mock.SchedulerMock
 import io.github.bucket4j.mock.TimeMeterMock
 import io.github.bucket4j.util.PipeGenerator
 import spock.lang.Specification
@@ -36,7 +34,7 @@ class TryConsumeAndReturnRemainingSpecification extends Specification {
             assert probe.remainingTokens == expectedRemaining
             assert probe.nanosToWaitForRefill == expectedWait
 
-            AsyncBucket asyncBucket = type.createAsyncBucket(configuration, timeMeter)
+            AsyncBucketProxy asyncBucket = type.createAsyncBucket(configuration, timeMeter)
             probe = asyncBucket.tryConsumeAndReturnRemaining(toConsume).get()
             assert probe.consumed == result
             assert probe.remainingTokens == expectedRemaining
@@ -84,7 +82,7 @@ class TryConsumeAndReturnRemainingSpecification extends Specification {
     @Unroll
     def "#type verbose=#verbose test listener for async tryConsumeAndReturnRemaining"(BucketType type, boolean verbose) {
         setup:
-            AsyncBucket bucket = type.createAsyncBucket(configuration, clock).toListenable(listener)
+            AsyncBucketProxy bucket = type.createAsyncBucket(configuration, clock).toListenable(listener)
 
         when:
             if (!verbose) {

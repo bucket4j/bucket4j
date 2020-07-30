@@ -3,7 +3,7 @@ package io.github.bucket4j.api_specifications.regular
 import io.github.bucket4j.Bandwidth
 import io.github.bucket4j.Bucket
 import io.github.bucket4j.BucketConfiguration
-import io.github.bucket4j.distributed.AsyncBucket
+import io.github.bucket4j.distributed.AsyncBucketProxy
 import io.github.bucket4j.mock.BucketType
 import io.github.bucket4j.mock.TimeMeterMock
 import spock.lang.Specification
@@ -27,7 +27,7 @@ class AddTokensSpecification extends Specification {
             assert bucket.getAvailableTokens() == requiredResult
 
             timeMeter = new TimeMeterMock(0)
-            AsyncBucket asyncBucket = type.createAsyncBucket(configuration, timeMeter)
+            AsyncBucketProxy asyncBucket = type.createAsyncBucket(configuration, timeMeter)
             asyncBucket.getAvailableTokens().get() // touch the bucket in order to initialize
             timeMeter.addTime(nanosIncrement)
             asyncBucket.addTokens(tokensToAdd).get()

@@ -19,7 +19,6 @@ package io.github.bucket4j.distributed.proxy;
 import io.github.bucket4j.BucketConfiguration;
 
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 
 /**
  * TODO javadocs
@@ -35,7 +34,7 @@ public interface Backend<K> {
     /**
      * TODO fix javadocs
      *
-     * Constructs an instance of {@link BucketProxy} which state actually stored inside in-memory data-jvm,
+     * Constructs an instance of {@link DefaultBucketProxy} which state actually stored inside in-memory data-jvm,
      * the bucket stored in the jvm immediately, so one network request will be issued to jvm.
      * Due to this method performs network IO, returned result must not be treated as light-weight entity,
      * it will be a performance anti-pattern to use this method multiple times for same key,

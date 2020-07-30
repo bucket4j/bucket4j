@@ -6,7 +6,7 @@ import io.github.bucket4j.Bucket
 import io.github.bucket4j.BucketConfiguration
 import io.github.bucket4j.SimpleBucketListener
 import io.github.bucket4j.TimeMeter
-import io.github.bucket4j.distributed.AsyncBucket
+import io.github.bucket4j.distributed.AsyncBucketProxy
 import io.github.bucket4j.mock.BlockingStrategyMock
 import io.github.bucket4j.mock.BucketType
 import io.github.bucket4j.mock.GridBackendMock
@@ -145,7 +145,7 @@ class BlockingTryConsumeSpecification extends Specification {
         for (BucketType type : BucketType.values()) {
             for (boolean limitAsDuration: [true, false]) {
                 TimeMeterMock meter = new TimeMeterMock(0)
-                AsyncBucket bucket = type.createAsyncBucket(configuration, meter)
+                AsyncBucketProxy bucket = type.createAsyncBucket(configuration, meter)
                 SchedulerMock scheduler = new SchedulerMock()
                 if (limitAsDuration) {
                     assert bucket.asScheduler().tryConsume(toConsume, Duration.ofNanos(sleepLimit), scheduler).get() == requiredResult
@@ -174,7 +174,7 @@ class BlockingTryConsumeSpecification extends Specification {
                 .build()
             GridBackendMock mockProxy = new GridBackendMock(SYSTEM_MILLISECONDS)
             SchedulerMock schedulerMock = new SchedulerMock()
-            AsyncBucket bucket = mockProxy.asAsync().builder()
+            AsyncBucketProxy bucket = mockProxy.asAsync().builder()
                 .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
                 .buildProxy("66", configuration)
         when:
@@ -273,7 +273,7 @@ class BlockingTryConsumeSpecification extends Specification {
     @Unroll
     def "#type test listener for async scheduled tryConsume"(BucketType type) {
         setup:
-            AsyncBucket bucket = type.createAsyncBucket(configuration, clock).toListenable(listener)
+            AsyncBucketProxy bucket = type.createAsyncBucket(configuration, clock).toListenable(listener)
 
         when:
             bucket.asScheduler().tryConsume(9, Duration.ofSeconds(1).toNanos(), scheduler)

@@ -41,11 +41,6 @@ public class AsyncBatchingExecutor implements AsyncCommandExecutor {
         }
     }
 
-    @Override
-    public CompletableFuture<Void> flushAsync() {
-        return CompletableFuture.completedFuture(null);
-    }
-
     private void scheduleNextBatch() {
         List<WaitingTask> waitingNodes = taskQueue.takeAllWaitingTasksOrFreeLock();
         if (waitingNodes.isEmpty()) {

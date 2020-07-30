@@ -31,8 +31,4 @@ public interface AsyncCommandExecutor {
      */
     <T> CompletableFuture<CommandResult<T>> executeAsync(RemoteCommand<T> command);
 
-    /**
-     * TODO javadocs
-     */
-    CompletableFuture<Void> flushAsync();
 }

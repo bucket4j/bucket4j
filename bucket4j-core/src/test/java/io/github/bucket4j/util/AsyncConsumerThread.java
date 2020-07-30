@@ -17,7 +17,7 @@
 
 package io.github.bucket4j.util;
 
-import io.github.bucket4j.distributed.AsyncBucket;
+import io.github.bucket4j.distributed.AsyncBucketProxy;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.function.Function;
@@ -26,13 +26,13 @@ public class AsyncConsumerThread extends Thread {
 
     private final CountDownLatch startLatch;
     private final CountDownLatch endLatch;
-    private final AsyncBucket bucket;
+    private final AsyncBucketProxy bucket;
     private final long workTimeNanos;
-    private final Function<AsyncBucket, Long> action;
+    private final Function<AsyncBucketProxy, Long> action;
     private long consumed;
     private Exception exception;
 
-    public AsyncConsumerThread(CountDownLatch startLatch, CountDownLatch endLatch, AsyncBucket bucket, long workTimeNanos, Function<AsyncBucket, Long> action) {
+    public AsyncConsumerThread(CountDownLatch startLatch, CountDownLatch endLatch, AsyncBucketProxy bucket, long workTimeNanos, Function<AsyncBucketProxy, Long> action) {
         this.startLatch = startLatch;
         this.endLatch = endLatch;
         this.bucket = bucket;

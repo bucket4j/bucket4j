@@ -2,9 +2,6 @@
 package io.github.bucket4j.distributed.proxy.optimizers.batch;
 
 import io.github.bucket4j.distributed.proxy.CommandExecutor;
-import io.github.bucket4j.distributed.proxy.optimizers.batch.BatchFailedException;
-import io.github.bucket4j.distributed.proxy.optimizers.batch.TaskQueue;
-import io.github.bucket4j.distributed.proxy.optimizers.batch.WaitingTask;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.remote.commands.MultiCommand;
@@ -47,11 +44,6 @@ public class BatchingExecutor implements CommandExecutor {
         } finally {
             taskQueue.wakeupAnyThreadFromNextBatchOrFreeLock();
         }
-    }
-
-    @Override
-    public void flush() {
-        // do nothing
     }
 
     private <T> CommandResult<T> executeBatch(WaitingTask currentWaitingNode) {

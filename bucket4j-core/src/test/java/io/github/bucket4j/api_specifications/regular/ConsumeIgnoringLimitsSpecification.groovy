@@ -5,7 +5,7 @@ import io.github.bucket4j.Bandwidth
 import io.github.bucket4j.Bucket
 import io.github.bucket4j.BucketConfiguration
 import io.github.bucket4j.BucketExceptions
-import io.github.bucket4j.distributed.AsyncBucket
+import io.github.bucket4j.distributed.AsyncBucketProxy
 import io.github.bucket4j.mock.BucketType
 import io.github.bucket4j.mock.TimeMeterMock
 import spock.lang.Specification
@@ -43,7 +43,7 @@ class ConsumeIgnoringLimitsSpecification extends Specification {
                         }
                         assert bucket.getAvailableTokens() == remainedTokens
                     } else {
-                        AsyncBucket asyncBucket = type.createAsyncBucket(configuration, timeMeter)
+                        AsyncBucketProxy asyncBucket = type.createAsyncBucket(configuration, timeMeter)
                         asyncBucket.getAvailableTokens().get()
                         timeMeter.addTime(nanosIncrement)
                         if (!verbose) {
@@ -88,7 +88,7 @@ class ConsumeIgnoringLimitsSpecification extends Specification {
                         }
                         assert bucket.getAvailableTokens() == remainedTokens
                     } else {
-                        AsyncBucket asyncBucket = type.createAsyncBucket(configuration, timeMeter)
+                        AsyncBucketProxy asyncBucket = type.createAsyncBucket(configuration, timeMeter)
                         asyncBucket.getAvailableTokens().get()
                         timeMeter.addTime(nanosIncrement)
                         if (!verbose) {
@@ -129,7 +129,7 @@ class ConsumeIgnoringLimitsSpecification extends Specification {
                         assert e.message == BucketExceptions.reservationOverflow().message
                     }
                 } else {
-                    AsyncBucket asyncBucket = type.createAsyncBucket(configuration, timeMeter)
+                    AsyncBucketProxy asyncBucket = type.createAsyncBucket(configuration, timeMeter)
                     try {
                         asyncBucket.consumeIgnoringRateLimits(veryBigAmountOfTokensWhichCannotBeReserved).get()
                         fail()

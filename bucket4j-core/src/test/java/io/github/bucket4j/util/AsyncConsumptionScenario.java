@@ -17,7 +17,7 @@
 
 package io.github.bucket4j.util;
 
-import io.github.bucket4j.distributed.AsyncBucket;
+import io.github.bucket4j.distributed.AsyncBucketProxy;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.function.Function;
@@ -33,13 +33,13 @@ public class AsyncConsumptionScenario {
     private final long initializationNanotime;
     private final double permittedRatePerSecond;
 
-    public AsyncConsumptionScenario(int threadCount, long workTimeNanos, Supplier<AsyncBucket> bucketSupplier, Function<AsyncBucket, Long> action, double permittedRatePerSecond) {
+    public AsyncConsumptionScenario(int threadCount, long workTimeNanos, Supplier<AsyncBucketProxy> bucketSupplier, Function<AsyncBucketProxy, Long> action, double permittedRatePerSecond) {
         this.startLatch = new CountDownLatch(threadCount);
         this.endLatch = new CountDownLatch(threadCount);
         this.consumers = new AsyncConsumerThread[threadCount];
         this.initializationNanotime = System.nanoTime();
         this.permittedRatePerSecond = permittedRatePerSecond;
-        AsyncBucket bucket = bucketSupplier.get();
+        AsyncBucketProxy bucket = bucketSupplier.get();
         for (int i = 0; i < threadCount; i++) {
             this.consumers[i] = new AsyncConsumerThread(startLatch, endLatch, bucket, workTimeNanos, action);
         }

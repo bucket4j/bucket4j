@@ -18,6 +18,7 @@
 package io.github.bucket4j.distributed.proxy;
 
 import io.github.bucket4j.*;
+import io.github.bucket4j.distributed.BucketProxy;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.commands.*;
@@ -26,7 +27,7 @@ import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
-public class BucketProxy extends AbstractBucket {
+public class DefaultBucketProxy extends AbstractBucket implements BucketProxy {
 
     private final CommandExecutor commandExecutor;
     private final RecoveryStrategy recoveryStrategy;
@@ -34,15 +35,15 @@ public class BucketProxy extends AbstractBucket {
     private final AtomicBoolean wasInitialized;
 
     @Override
-    public Bucket toListenable(BucketListener listener) {
-        return new BucketProxy(configurationSupplier, commandExecutor, recoveryStrategy, wasInitialized, listener);
+    public BucketProxy toListenable(BucketListener listener) {
+        return new DefaultBucketProxy(configurationSupplier, commandExecutor, recoveryStrategy, wasInitialized, listener);
     }
 
-    public BucketProxy(Supplier<BucketConfiguration> configurationSupplier, CommandExecutor commandExecutor, RecoveryStrategy recoveryStrategy) {
+    public DefaultBucketProxy(Supplier<BucketConfiguration> configurationSupplier, CommandExecutor commandExecutor, RecoveryStrategy recoveryStrategy) {
         this(configurationSupplier, commandExecutor, recoveryStrategy, new AtomicBoolean(false), BucketListener.NOPE);
     }
 
-    private BucketProxy(Supplier<BucketConfiguration> configurationSupplier, CommandExecutor commandExecutor, RecoveryStrategy recoveryStrategy, AtomicBoolean wasInitialized, BucketListener listener) {
+    private DefaultBucketProxy(Supplier<BucketConfiguration> configurationSupplier, CommandExecutor commandExecutor, RecoveryStrategy recoveryStrategy, AtomicBoolean wasInitialized, BucketListener listener) {
         super(listener);
 
         this.commandExecutor = Objects.requireNonNull(commandExecutor);
@@ -155,11 +156,9 @@ public class BucketProxy extends AbstractBucket {
         return execute(command.asVerbose()).asLocal();
     }
 
-    /**
-     * TODO javadocs
-     */
-    public void flush() {
-       commandExecutor.flush();
+    @Override
+    public void sync() {
+       commandExecutor.execute(new SyncCommand());
     }
 
     private BucketConfiguration getConfiguration() {

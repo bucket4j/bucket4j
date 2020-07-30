@@ -26,14 +26,14 @@ import io.github.bucket4j.distributed.proxy.optimizers.batch.BatchingExecutor;
 
 public class PredictiveOptimizer implements RequestOptimizer {
 
-    private final PredictionThresholds thresholds;
+    private final PredictionParameters thresholds;
     private final TimeMeter timeMeter;
 
-    public PredictiveOptimizer(PredictionThresholds thresholds) {
+    public PredictiveOptimizer(PredictionParameters thresholds) {
         this(thresholds, TimeMeter.SYSTEM_MILLISECONDS);
     }
 
-    public PredictiveOptimizer(PredictionThresholds thresholds, TimeMeter timeMeter) {
+    public PredictiveOptimizer(PredictionParameters thresholds, TimeMeter timeMeter) {
         this.thresholds = thresholds;
         this.timeMeter = timeMeter;
     }

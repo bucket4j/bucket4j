@@ -3,7 +3,7 @@ package io.github.bucket4j.api_specifications.scheduler
 import io.github.bucket4j.Bandwidth
 import io.github.bucket4j.BucketConfiguration
 import io.github.bucket4j.SimpleBucketListener
-import io.github.bucket4j.distributed.AsyncBucket
+import io.github.bucket4j.distributed.AsyncBucketProxy
 import io.github.bucket4j.mock.BucketType
 import io.github.bucket4j.mock.SchedulerMock
 import io.github.bucket4j.mock.TimeMeterMock
@@ -25,7 +25,7 @@ class BlockingTryConsumeWithSchedulerSpecification extends Specification {
             def configuration = BucketConfiguration.builder()
                 .addLimit(Bandwidth.simple(10, Duration.ofSeconds(1)))
                 .build()
-            AsyncBucket bucket = type.createAsyncBucket(configuration, clock)
+            AsyncBucketProxy bucket = type.createAsyncBucket(configuration, clock)
 
         when:
             bucket.asScheduler().consume(9, scheduler).get()
@@ -53,7 +53,7 @@ class BlockingTryConsumeWithSchedulerSpecification extends Specification {
             BucketConfiguration configuration = BucketConfiguration.builder()
                 .addLimit(Bandwidth.simple(10, Duration.ofSeconds(1)))
                 .build()
-            AsyncBucket bucket = type.createAsyncBucket(configuration, clock).toListenable(listener)
+            AsyncBucketProxy bucket = type.createAsyncBucket(configuration, clock).toListenable(listener)
 
         when:
             bucket.asScheduler().consume(9, scheduler)

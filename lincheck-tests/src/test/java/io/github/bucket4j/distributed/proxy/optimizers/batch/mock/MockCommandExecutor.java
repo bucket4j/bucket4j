@@ -39,9 +39,4 @@ public class MockCommandExecutor implements CommandExecutor {
         }
     }
 
-    @Override
-    public void flush() {
-        // do nothing
-    }
-
 }

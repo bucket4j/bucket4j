@@ -4,10 +4,8 @@ import io.github.bucket4j.Bandwidth
 import io.github.bucket4j.Bucket
 import io.github.bucket4j.BucketConfiguration
 import io.github.bucket4j.SimpleBucketListener
-import io.github.bucket4j.distributed.AsyncBucket
-import io.github.bucket4j.mock.BlockingStrategyMock
+import io.github.bucket4j.distributed.AsyncBucketProxy
 import io.github.bucket4j.mock.BucketType
-import io.github.bucket4j.mock.SchedulerMock
 import io.github.bucket4j.mock.TimeMeterMock
 import io.github.bucket4j.util.PipeGenerator
 import spock.lang.Specification
@@ -33,7 +31,7 @@ class TryConsumeSpecification extends Specification {
             Bucket bucket = type.createBucket(configuration, timeMeter)
             assert bucket.tryConsume(toConsume) == requiredResult
 
-            AsyncBucket asyncBucket = type.createAsyncBucket(configuration, timeMeter)
+            AsyncBucketProxy asyncBucket = type.createAsyncBucket(configuration, timeMeter)
             assert asyncBucket.tryConsume(toConsume).get() == requiredResult
         }
         where:
@@ -74,7 +72,7 @@ class TryConsumeSpecification extends Specification {
     @Unroll
     def "#type verbose=#verbose test listener for async tryConsume"(BucketType type, boolean verbose) {
         setup:
-            AsyncBucket bucket = type.createAsyncBucket(configuration, clock).toListenable(listener)
+            AsyncBucketProxy bucket = type.createAsyncBucket(configuration, clock).toListenable(listener)
 
         when:
             if (!verbose) {

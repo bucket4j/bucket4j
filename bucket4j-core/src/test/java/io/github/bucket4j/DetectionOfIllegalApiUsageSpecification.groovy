@@ -2,7 +2,7 @@
 package io.github.bucket4j
 
 
-import io.github.bucket4j.distributed.AsyncBucket
+import io.github.bucket4j.distributed.AsyncBucketProxy
 import io.github.bucket4j.mock.GridBackendMock
 import io.github.bucket4j.mock.BucketType
 import spock.lang.Specification
@@ -254,7 +254,7 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
             BucketConfiguration configuration = BucketConfiguration.builder()
                     .addLimit(Bandwidth.simple(VALID_CAPACITY, VALID_PERIOD))
                     .build()
-            AsyncBucket asyncBucket = BucketType.GRID.createAsyncBucket(configuration)
+            AsyncBucketProxy asyncBucket = BucketType.GRID.createAsyncBucket(configuration)
         when:
             asyncBucket.asScheduler().tryConsume(32, 1000_000, null)
         then:

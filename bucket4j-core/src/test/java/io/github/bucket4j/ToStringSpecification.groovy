@@ -1,6 +1,6 @@
 package io.github.bucket4j;
 
-import io.github.bucket4j.distributed.AsyncBucket;
+import io.github.bucket4j.distributed.AsyncBucketProxy;
 import io.github.bucket4j.mock.BucketType;
 import spock.lang.Specification;
 
@@ -20,7 +20,7 @@ class ToStringSpecification extends Specification {
                     Bucket bucket = type.createBucket(configuration, meter)
                     println bucket.toString()
 
-                    AsyncBucket asyncBucket = type.createAsyncBucket(configuration, meter)
+                    AsyncBucketProxy asyncBucket = type.createAsyncBucket(configuration, meter)
                     println asyncBucket.toString()
                 }
             }

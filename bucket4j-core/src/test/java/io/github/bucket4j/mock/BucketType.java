@@ -2,7 +2,7 @@
 package io.github.bucket4j.mock;
 
 import io.github.bucket4j.*;
-import io.github.bucket4j.distributed.AsyncBucket;
+import io.github.bucket4j.distributed.AsyncBucketProxy;
 import io.github.bucket4j.local.LocalBucketBuilder;
 import io.github.bucket4j.local.SynchronizationStrategy;
 
@@ -60,7 +60,7 @@ public enum BucketType {
         }
 
         @Override
-        public AsyncBucket createAsyncBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
+        public AsyncBucketProxy createAsyncBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
             GridBackendMock<Integer> backend = new GridBackendMock<>(timeMeter);
             return backend.asAsync().builder()
                     .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
@@ -92,12 +92,12 @@ public enum BucketType {
         return createBucket(configuration, TimeMeter.SYSTEM_MILLISECONDS);
     }
 
-    public AsyncBucket createAsyncBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
+    public AsyncBucketProxy createAsyncBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
         Bucket bucket = createBucket(configuration, timeMeter);
-        return AsyncBucket.fromSync(bucket);
+        return AsyncBucketProxy.fromSync(bucket);
     }
 
-    public AsyncBucket createAsyncBucket(BucketConfiguration configuration) {
+    public AsyncBucketProxy createAsyncBucket(BucketConfiguration configuration) {
         return createAsyncBucket(configuration, TimeMeter.SYSTEM_MILLISECONDS);
     }
 

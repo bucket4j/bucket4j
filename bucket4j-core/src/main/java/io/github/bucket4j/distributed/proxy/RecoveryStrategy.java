@@ -32,7 +32,7 @@ package io.github.bucket4j.distributed.proxy;
  *     <li>Human mistake.</li>
  * </ul>
  *
- * Each time when {@link BucketProxy} detects that bucket state is missed, it applies this strategy to react.
+ * Each time when {@link DefaultBucketProxy} detects that bucket state is missed, it applies this strategy to react.
  */
 public enum RecoveryStrategy {
 

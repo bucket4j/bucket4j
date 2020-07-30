@@ -30,7 +30,7 @@ import java.util.function.Function;
  *
  * TODO fix javadocs
  */
-public interface AsyncBucket {
+public interface AsyncBucketProxy {
 
     /**
      * Returns asynchronous view of this bucket that allows to use bucket as async scheduler.
@@ -44,8 +44,8 @@ public interface AsyncBucket {
      */
     AsyncVerboseBucket asVerbose();
 
-    static AsyncBucket fromSync(Bucket bucket) {
-        return new AsyncBucketAdapter(bucket);
+    static AsyncBucketProxy fromSync(Bucket bucket) {
+        return new AsyncBucketProxyAdapter(bucket);
     }
 
     /**
@@ -296,7 +296,7 @@ public interface AsyncBucket {
      *
      * @return new bucket instance decorated by {@code listener}
      */
-    AsyncBucket toListenable(BucketListener listener);
+    AsyncBucketProxy toListenable(BucketListener listener);
 
     /**
      * Returns amount of available tokens in this bucket.
@@ -307,5 +307,10 @@ public interface AsyncBucket {
      * @return amount of available tokens
      */
     CompletableFuture<Long> getAvailableTokens();
+
+    /**
+     * TODO javadocs
+     */
+    CompletableFuture<Void> sync();
 
 }

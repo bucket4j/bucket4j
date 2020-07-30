@@ -1,7 +1,7 @@
 package io.github.bucket4j.tck;
 
 import io.github.bucket4j.*;
-import io.github.bucket4j.distributed.AsyncBucket;
+import io.github.bucket4j.distributed.AsyncBucketProxy;
 import io.github.bucket4j.distributed.proxy.Backend;
 import io.github.bucket4j.distributed.proxy.BucketNotFoundException;
 import io.github.bucket4j.util.AsyncConsumptionScenario;
@@ -150,14 +150,14 @@ public abstract class AbstractDistributedBucketTest {
             return;
         }
 
-        Function<AsyncBucket, Long> action = bucket -> {
+        Function<AsyncBucketProxy, Long> action = bucket -> {
             try {
                 return bucket.tryConsume(1).get() ? 1L : 0L;
             } catch (InterruptedException | ExecutionException e) {
                 throw new RuntimeException(e);
             }
         };
-        Supplier<AsyncBucket> bucketSupplier = () -> backend.asAsync().builder()
+        Supplier<AsyncBucketProxy> bucketSupplier = () -> backend.asAsync().builder()
                 .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
                 .buildProxy(key, configurationForLongRunningTests);
         AsyncConsumptionScenario scenario = new AsyncConsumptionScenario(4, TimeUnit.SECONDS.toNanos(5), bucketSupplier, action, permittedRatePerSecond);
@@ -171,14 +171,14 @@ public abstract class AbstractDistributedBucketTest {
         }
 
         ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-        Function<AsyncBucket, Long> action = bucket -> {
+        Function<AsyncBucketProxy, Long> action = bucket -> {
             try {
                 return bucket.asScheduler().tryConsume(1, TimeUnit.MILLISECONDS.toNanos(50), scheduler).get() ? 1L :0L;
             } catch (InterruptedException | ExecutionException e) {
                 throw new RuntimeException(e);
             }
         };
-        Supplier<AsyncBucket> bucketSupplier = () -> backend.asAsync().builder()
+        Supplier<AsyncBucketProxy> bucketSupplier = () -> backend.asAsync().builder()
                 .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
                 .buildProxy(key, configurationForLongRunningTests);
         AsyncConsumptionScenario scenario = new AsyncConsumptionScenario(4, TimeUnit.SECONDS.toNanos(5), bucketSupplier, action, permittedRatePerSecond);

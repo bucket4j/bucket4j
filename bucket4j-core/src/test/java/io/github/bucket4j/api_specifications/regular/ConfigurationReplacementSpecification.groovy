@@ -6,7 +6,7 @@ import io.github.bucket4j.Bucket
 import io.github.bucket4j.BucketConfiguration
 import io.github.bucket4j.IncompatibleConfigurationException
 import io.github.bucket4j.Refill
-import io.github.bucket4j.distributed.AsyncBucket
+import io.github.bucket4j.distributed.AsyncBucketProxy
 import io.github.bucket4j.mock.BucketType
 import io.github.bucket4j.mock.TimeMeterMock
 import io.github.bucket4j.util.ComparableByContent
@@ -50,7 +50,7 @@ class ConfigurationReplacementSpecification extends Specification {
             BucketConfiguration configuration = BucketConfiguration.builder()
                     .addLimit(Bandwidth.simple(10, Duration.ofMinutes(100)))
                     .build()
-            AsyncBucket bucket = bucketType.createAsyncBucket(configuration)
+            AsyncBucketProxy bucket = bucketType.createAsyncBucket(configuration)
             BucketConfiguration newConfiguration = BucketConfiguration.builder()
                 .addLimit(Bandwidth.simple(100, Duration.ofMinutes(1)))
                 .addLimit(Bandwidth.simple(1000, Duration.ofHours(1)))
@@ -98,7 +98,7 @@ class ConfigurationReplacementSpecification extends Specification {
                     .addLimit(Bandwidth.simple(100, Duration.ofMinutes(1)))
                     .addLimit(Bandwidth.simple(1000, Duration.ofHours(1)))
                     .build()
-            AsyncBucket bucket = bucketType.createAsyncBucket(configuration)
+            AsyncBucketProxy bucket = bucketType.createAsyncBucket(configuration)
             BucketConfiguration newConfiguration = BucketConfiguration.builder()
                     .addLimit(Bandwidth.simple(10, Duration.ofMinutes(100)))
                     .build()
@@ -131,7 +131,7 @@ class ConfigurationReplacementSpecification extends Specification {
                     bucket.replaceConfiguration(newConfiguration)
                     bucket.getAvailableTokens() == 10
                 } else {
-                    AsyncBucket bucket = bucketType.createAsyncBucket(configuration, clock)
+                    AsyncBucketProxy bucket = bucketType.createAsyncBucket(configuration, clock)
                     clock.addTime(10)
                     bucket.replaceConfiguration(newConfiguration).get()
                     bucket.getAvailableTokens().get() == 10
@@ -157,7 +157,7 @@ class ConfigurationReplacementSpecification extends Specification {
                 bucket.replaceConfiguration(newConfiguration)
                 bucket.getAvailableTokens() == 200
             } else {
-                AsyncBucket bucket = bucketType.createAsyncBucket(configuration, clock)
+                AsyncBucketProxy bucket = bucketType.createAsyncBucket(configuration, clock)
                 bucket.replaceConfiguration(newConfiguration).get()
                 bucket.getAvailableTokens().get() == 200
             }
@@ -191,7 +191,7 @@ class ConfigurationReplacementSpecification extends Specification {
                     clock.addTime(10)
                     assert bucket.getAvailableTokens() == 1
                 } else {
-                    AsyncBucket bucket = bucketType.createAsyncBucket(configuration, clock)
+                    AsyncBucketProxy bucket = bucketType.createAsyncBucket(configuration, clock)
                     if (!verbose) {
                         bucket.replaceConfiguration(newConfiguration).get()
                     } else {

@@ -24,7 +24,7 @@ import io.github.bucket4j.*;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * Intent of this interface is to provide the verbose version of {@link AsyncBucket} API.
+ * Intent of this interface is to provide the verbose version of {@link AsyncBucketProxy} API.
  * All methods obey the same semantic but its results are more verbose.
  */
 public interface AsyncVerboseBucket {

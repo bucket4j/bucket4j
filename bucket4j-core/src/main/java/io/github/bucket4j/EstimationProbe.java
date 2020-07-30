@@ -19,7 +19,7 @@
  */
 package io.github.bucket4j;
 
-import io.github.bucket4j.distributed.proxy.AsyncBucketProxy;
+import io.github.bucket4j.distributed.proxy.DefaultAsyncBucketProxy;
 
 import io.github.bucket4j.serialization.DeserializationAdapter;
 import io.github.bucket4j.serialization.SerializationAdapter;
@@ -32,7 +32,7 @@ import java.io.IOException;
  * Describes the estimation result.
  *
  * @see Bucket#estimateAbilityToConsume(long)
- * @see AsyncBucketProxy#estimateAbilityToConsume(long)
+ * @see DefaultAsyncBucketProxy#estimateAbilityToConsume(long)
  */
 public class EstimationProbe implements ComparableByContent<EstimationProbe> {
 

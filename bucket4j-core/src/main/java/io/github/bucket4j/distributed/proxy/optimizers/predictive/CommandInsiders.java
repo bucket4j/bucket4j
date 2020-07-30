@@ -11,8 +11,8 @@ public class CommandInsiders {
 
     private static final CommandInsider[] insiders;
 
-    public static <C extends RemoteCommand<?>> boolean isMutationNotRelatedWithConsumption(C command) {
-        return insiders[command.getSerializationHandle().getTypeId()].isMutationNotRelatedWithConsumption(command);
+    public static <C extends RemoteCommand<?>> boolean isImmediateSyncRequired(C command) {
+        return insiders[command.getSerializationHandle().getTypeId()].isImmediateSyncRequired(command);
     }
 
     public static <C extends RemoteCommand<?>> long estimateTokensToConsume(C command) {
@@ -28,7 +28,7 @@ public class CommandInsiders {
 
         register(ReserveAndCalculateTimeToSleepCommand.class, new CommandInsider<Long, ReserveAndCalculateTimeToSleepCommand>() {
             @Override
-            public boolean isMutationNotRelatedWithConsumption(ReserveAndCalculateTimeToSleepCommand command) {
+            public boolean isImmediateSyncRequired(ReserveAndCalculateTimeToSleepCommand command) {
                 return false;
             }
 
@@ -45,7 +45,7 @@ public class CommandInsiders {
 
         register(GetAvailableTokensCommand.class, new CommandInsider<Long, GetAvailableTokensCommand>() {
             @Override
-            public boolean isMutationNotRelatedWithConsumption(GetAvailableTokensCommand command) {
+            public boolean isImmediateSyncRequired(GetAvailableTokensCommand command) {
                 return false;
             }
 
@@ -62,7 +62,7 @@ public class CommandInsiders {
 
         register(AddTokensCommand.class, new CommandInsider<Nothing, AddTokensCommand>() {
             @Override
-            public boolean isMutationNotRelatedWithConsumption(AddTokensCommand command) {
+            public boolean isImmediateSyncRequired(AddTokensCommand command) {
                 return true;
             }
 
@@ -79,7 +79,7 @@ public class CommandInsiders {
 
         register(CreateInitialStateCommand.class, new CommandInsider<Nothing, CreateInitialStateCommand>() {
             @Override
-            public boolean isMutationNotRelatedWithConsumption(CreateInitialStateCommand command) {
+            public boolean isImmediateSyncRequired(CreateInitialStateCommand command) {
                 return true;
             }
 
@@ -96,7 +96,7 @@ public class CommandInsiders {
 
         register(ReplaceConfigurationOrReturnPreviousCommand.class, new CommandInsider<BucketConfiguration, ReplaceConfigurationOrReturnPreviousCommand>() {
             @Override
-            public boolean isMutationNotRelatedWithConsumption(ReplaceConfigurationOrReturnPreviousCommand command) {
+            public boolean isImmediateSyncRequired(ReplaceConfigurationOrReturnPreviousCommand command) {
                 return true;
             }
 
@@ -113,7 +113,7 @@ public class CommandInsiders {
 
         register(TryConsumeCommand.class, new CommandInsider<Boolean, TryConsumeCommand>() {
             @Override
-            public boolean isMutationNotRelatedWithConsumption(TryConsumeCommand command) {
+            public boolean isImmediateSyncRequired(TryConsumeCommand command) {
                 return false;
             }
 
@@ -130,7 +130,7 @@ public class CommandInsiders {
 
         register(ConsumeIgnoringRateLimitsCommand.class, new CommandInsider<Long, ConsumeIgnoringRateLimitsCommand>() {
             @Override
-            public boolean isMutationNotRelatedWithConsumption(ConsumeIgnoringRateLimitsCommand command) {
+            public boolean isImmediateSyncRequired(ConsumeIgnoringRateLimitsCommand command) {
                 return false;
             }
 
@@ -147,7 +147,7 @@ public class CommandInsiders {
 
         register(GetConfigurationCommand.class, new CommandInsider<BucketConfiguration, GetConfigurationCommand>() {
             @Override
-            public boolean isMutationNotRelatedWithConsumption(GetConfigurationCommand command) {
+            public boolean isImmediateSyncRequired(GetConfigurationCommand command) {
                 return false;
             }
 
@@ -164,8 +164,8 @@ public class CommandInsiders {
 
         register(VerboseCommand.class, cast(new CommandInsider<RemoteVerboseResult<Object>, VerboseCommand<Object>>() {
             @Override
-            public boolean isMutationNotRelatedWithConsumption(VerboseCommand command) {
-                return CommandInsiders.isMutationNotRelatedWithConsumption(command.getTargetCommand());
+            public boolean isImmediateSyncRequired(VerboseCommand command) {
+                return CommandInsiders.isImmediateSyncRequired(command.getTargetCommand());
             }
 
             @Override
@@ -182,7 +182,7 @@ public class CommandInsiders {
 
         register(CreateSnapshotCommand.class, new CommandInsider<BucketState, CreateSnapshotCommand>() {
             @Override
-            public boolean isMutationNotRelatedWithConsumption(CreateSnapshotCommand command) {
+            public boolean isImmediateSyncRequired(CreateSnapshotCommand command) {
                 return false;
             }
 
@@ -199,9 +199,9 @@ public class CommandInsiders {
 
         register(MultiCommand.class, new CommandInsider<MultiResult, MultiCommand>() {
             @Override
-            public boolean isMutationNotRelatedWithConsumption(MultiCommand multiCommand) {
+            public boolean isImmediateSyncRequired(MultiCommand multiCommand) {
                 for (RemoteCommand<?> command : multiCommand.getCommands()) {
-                    if (CommandInsiders.isMutationNotRelatedWithConsumption(command)) {
+                    if (CommandInsiders.isImmediateSyncRequired(command)) {
                         return true;
                     }
                 }
@@ -240,7 +240,7 @@ public class CommandInsiders {
 
         register(CreateInitialStateAndExecuteCommand.class, cast(new CommandInsider<Object, CreateInitialStateAndExecuteCommand<Object>>() {
             @Override
-            public boolean isMutationNotRelatedWithConsumption(CreateInitialStateAndExecuteCommand command) {
+            public boolean isImmediateSyncRequired(CreateInitialStateAndExecuteCommand command) {
                 return true;
             }
 
@@ -257,7 +257,7 @@ public class CommandInsiders {
 
         register(EstimateAbilityToConsumeCommand.class, new CommandInsider<EstimationProbe, EstimateAbilityToConsumeCommand>() {
             @Override
-            public boolean isMutationNotRelatedWithConsumption(EstimateAbilityToConsumeCommand command) {
+            public boolean isImmediateSyncRequired(EstimateAbilityToConsumeCommand command) {
                 return false;
             }
 
@@ -274,7 +274,7 @@ public class CommandInsiders {
 
         register(TryConsumeAndReturnRemainingTokensCommand.class, new CommandInsider<ConsumptionProbe, TryConsumeAndReturnRemainingTokensCommand>() {
             @Override
-            public boolean isMutationNotRelatedWithConsumption(TryConsumeAndReturnRemainingTokensCommand command) {
+            public boolean isImmediateSyncRequired(TryConsumeAndReturnRemainingTokensCommand command) {
                 return false;
             }
 
@@ -291,7 +291,7 @@ public class CommandInsiders {
 
         register(ConsumeAsMuchAsPossibleCommand.class, new CommandInsider<Long, ConsumeAsMuchAsPossibleCommand>() {
             @Override
-            public boolean isMutationNotRelatedWithConsumption(ConsumeAsMuchAsPossibleCommand command) {
+            public boolean isImmediateSyncRequired(ConsumeAsMuchAsPossibleCommand command) {
                 return false;
             }
 
@@ -303,6 +303,23 @@ public class CommandInsiders {
             @Override
             public long getConsumedTokens(ConsumeAsMuchAsPossibleCommand command, Long result) {
                 return result;
+            }
+        });
+
+        register(SyncCommand.class, new CommandInsider<Nothing, SyncCommand>() {
+            @Override
+            public boolean isImmediateSyncRequired(SyncCommand command) {
+                return true;
+            }
+
+            @Override
+            public long estimateTokensToConsume(SyncCommand command) {
+                return 0L;
+            }
+
+            @Override
+            public long getConsumedTokens(SyncCommand command, Nothing result) {
+                return 0L;
             }
         });
 
@@ -345,7 +362,7 @@ public class CommandInsiders {
 
     private interface CommandInsider<T, C extends RemoteCommand<T>> {
 
-        boolean isMutationNotRelatedWithConsumption(C command);
+        boolean isImmediateSyncRequired(C command);
 
         long estimateTokensToConsume(C command);
 

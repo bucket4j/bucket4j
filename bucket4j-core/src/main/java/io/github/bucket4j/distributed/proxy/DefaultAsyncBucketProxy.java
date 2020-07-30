@@ -18,7 +18,7 @@
 package io.github.bucket4j.distributed.proxy;
 
 import io.github.bucket4j.*;
-import io.github.bucket4j.distributed.AsyncBucket;
+import io.github.bucket4j.distributed.AsyncBucketProxy;
 import io.github.bucket4j.distributed.AsyncVerboseBucket;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
@@ -33,7 +33,7 @@ import java.util.function.Supplier;
 
 import static io.github.bucket4j.LimitChecker.*;
 
-public class AsyncBucketProxy implements AsyncBucket, ScheduledBucket {
+public class DefaultAsyncBucketProxy implements AsyncBucketProxy, ScheduledBucket {
 
     private final AsyncCommandExecutor commandExecutor;
     private final RecoveryStrategy recoveryStrategy;
@@ -47,8 +47,8 @@ public class AsyncBucketProxy implements AsyncBucket, ScheduledBucket {
     }
 
     @Override
-    public AsyncBucket toListenable(BucketListener listener) {
-        return new AsyncBucketProxy(commandExecutor, recoveryStrategy, configurationSupplier, wasInitialized, listener);
+    public AsyncBucketProxy toListenable(BucketListener listener) {
+        return new DefaultAsyncBucketProxy(commandExecutor, recoveryStrategy, configurationSupplier, wasInitialized, listener);
     }
 
     @Override
@@ -56,11 +56,11 @@ public class AsyncBucketProxy implements AsyncBucket, ScheduledBucket {
         return this;
     }
 
-    public AsyncBucketProxy(AsyncCommandExecutor commandExecutor, RecoveryStrategy recoveryStrategy, Supplier<CompletableFuture<BucketConfiguration>> configurationSupplier) {
+    public DefaultAsyncBucketProxy(AsyncCommandExecutor commandExecutor, RecoveryStrategy recoveryStrategy, Supplier<CompletableFuture<BucketConfiguration>> configurationSupplier) {
         this(commandExecutor, recoveryStrategy, configurationSupplier, new AtomicBoolean(false), BucketListener.NOPE);
     }
 
-    private AsyncBucketProxy(AsyncCommandExecutor commandExecutor, RecoveryStrategy recoveryStrategy, Supplier<CompletableFuture<BucketConfiguration>> configurationSupplier, AtomicBoolean wasInitialized, BucketListener listener) {
+    private DefaultAsyncBucketProxy(AsyncCommandExecutor commandExecutor, RecoveryStrategy recoveryStrategy, Supplier<CompletableFuture<BucketConfiguration>> configurationSupplier, AtomicBoolean wasInitialized, BucketListener listener) {
         this.commandExecutor = Objects.requireNonNull(commandExecutor);
         this.recoveryStrategy = recoveryStrategy;
         this.configurationSupplier = configurationSupplier;
@@ -336,11 +336,9 @@ public class AsyncBucketProxy implements AsyncBucket, ScheduledBucket {
         return execute(new GetAvailableTokensCommand());
     }
 
-    /**
-     * TODO javadocs
-     */
-    public CompletableFuture<Void> flushAsync() {
-        return commandExecutor.flushAsync();
+    @Override
+    public CompletableFuture<Void> sync() {
+        return execute(new SyncCommand()).thenApply(result -> null);
     }
 
     private <T> CompletableFuture<T> execute(RemoteCommand<T> command) {

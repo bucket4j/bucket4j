@@ -5,7 +5,7 @@ import io.github.bucket4j.Bucket
 import io.github.bucket4j.BucketConfiguration
 import io.github.bucket4j.EstimationProbe
 import io.github.bucket4j.Refill
-import io.github.bucket4j.distributed.AsyncBucket
+import io.github.bucket4j.distributed.AsyncBucketProxy
 import io.github.bucket4j.mock.BucketType
 import io.github.bucket4j.mock.TimeMeterMock
 import spock.lang.Specification
@@ -29,7 +29,7 @@ class EstimateAbilityToConsumeSpecification extends Specification {
             assert bucket.getAvailableTokens() == availableTokensBeforeEstimation
 
 
-            AsyncBucket asyncBucket = type.createAsyncBucket(configuration, timeMeter)
+            AsyncBucketProxy asyncBucket = type.createAsyncBucket(configuration, timeMeter)
             availableTokensBeforeEstimation = bucket.getAvailableTokens()
             probe = asyncBucket.estimateAbilityToConsume(toEstimate).get()
             assert probe.canBeConsumed() == result

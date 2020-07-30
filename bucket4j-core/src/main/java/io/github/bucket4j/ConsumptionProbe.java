@@ -19,7 +19,7 @@
  */
 package io.github.bucket4j;
 
-import io.github.bucket4j.distributed.proxy.AsyncBucketProxy;
+import io.github.bucket4j.distributed.proxy.DefaultAsyncBucketProxy;
 
 import io.github.bucket4j.serialization.DeserializationAdapter;
 import io.github.bucket4j.serialization.SerializationAdapter;
@@ -33,7 +33,7 @@ import java.io.IOException;
  * the current bucket configuration after consumption.
  *
  * @see Bucket#tryConsumeAndReturnRemaining(long)
- * @see AsyncBucketProxy#tryConsumeAndReturnRemaining(long)
+ * @see DefaultAsyncBucketProxy#tryConsumeAndReturnRemaining(long)
  */
 public class ConsumptionProbe implements ComparableByContent<ConsumptionProbe> {
 

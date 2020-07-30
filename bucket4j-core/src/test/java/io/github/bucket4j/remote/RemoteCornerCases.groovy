@@ -2,7 +2,7 @@ package io.github.bucket4j.remote
 
 import io.github.bucket4j.Bandwidth
 import io.github.bucket4j.BucketConfiguration
-import io.github.bucket4j.distributed.AsyncBucket
+import io.github.bucket4j.distributed.AsyncBucketProxy
 import io.github.bucket4j.mock.GridBackendMock
 import spock.lang.Specification
 
@@ -21,7 +21,7 @@ class RemoteCornerCases extends Specification {
                 .addLimit(Bandwidth.simple(1, Duration.ofNanos(1)))
                 .build()
 
-            AsyncBucket bucket = backendMock.asAsync().builder()
+            AsyncBucketProxy bucket = backendMock.asAsync().builder()
                 .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
                 .buildProxy("66", configuration)
         when:

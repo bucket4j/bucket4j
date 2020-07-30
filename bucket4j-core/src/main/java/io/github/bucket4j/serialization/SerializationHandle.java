@@ -59,7 +59,8 @@ public interface SerializationHandle<T> {
             ReplaceConfigurationOrReturnPreviousCommand.SERIALIZATION_HANDLE, // 32
             GetConfigurationCommand.SERIALIZATION_HANDLE, // 33
             ConsumeIgnoringRateLimitsCommand.SERIALIZATION_HANDLE, // 34
-            VerboseCommand.SERIALIZATION_HANDLE // 35
+            VerboseCommand.SERIALIZATION_HANDLE, // 35
+            SyncCommand.SERIALIZATION_HANDLE // 36
     ));
 
     <I> T deserialize(DeserializationAdapter<I> adapter, I input) throws IOException;
