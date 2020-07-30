@@ -2,6 +2,7 @@
 package io.github.bucket4j.distributed.proxy.optimization.batch;
 
 import io.github.bucket4j.distributed.proxy.CommandExecutor;
+import io.github.bucket4j.distributed.proxy.optimization.OptimizationListener;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.remote.commands.MultiCommand;
@@ -13,11 +14,12 @@ import java.util.List;
 public class BatchingExecutor implements CommandExecutor {
 
     private final CommandExecutor wrappedExecutor;
-
+    private final OptimizationListener listener;
     private final TaskQueue taskQueue = new TaskQueue();
 
-    public BatchingExecutor(CommandExecutor originalExecutor) {
+    public BatchingExecutor(CommandExecutor originalExecutor, OptimizationListener listener) {
         this.wrappedExecutor = originalExecutor;
+        this.listener = listener;
     }
 
     @Override
@@ -53,6 +55,7 @@ public class BatchingExecutor implements CommandExecutor {
             RemoteCommand<?> singleCommand = waitingNodes.get(0).command;
             return (CommandResult<T>) wrappedExecutor.execute(singleCommand);
         }
+        listener.incrementMergeCount(waitingNodes.size() - 1);
 
         try {
             int resultIndex = -1;

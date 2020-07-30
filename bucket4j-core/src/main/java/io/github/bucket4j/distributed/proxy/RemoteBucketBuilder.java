@@ -19,6 +19,7 @@ package io.github.bucket4j.distributed.proxy;
 
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.distributed.BucketProxy;
+import io.github.bucket4j.distributed.proxy.optimization.Optimization;
 
 
 import java.util.function.Supplier;

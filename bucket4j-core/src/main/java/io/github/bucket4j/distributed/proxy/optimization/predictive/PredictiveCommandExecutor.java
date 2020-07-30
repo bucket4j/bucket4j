@@ -4,10 +4,7 @@ import io.github.bucket4j.RemoteVerboseResult;
 import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.proxy.AsyncCommandExecutor;
 import io.github.bucket4j.distributed.proxy.CommandExecutor;
-import io.github.bucket4j.distributed.proxy.optimization.CommandInsiders;
-import io.github.bucket4j.distributed.proxy.optimization.InMemoryMutableEntry;
-import io.github.bucket4j.distributed.proxy.optimization.PredictionParameters;
-import io.github.bucket4j.distributed.proxy.optimization.DelayParameters;
+import io.github.bucket4j.distributed.proxy.optimization.*;
 import io.github.bucket4j.distributed.remote.*;
 import io.github.bucket4j.distributed.remote.commands.ConsumeIgnoringRateLimitsCommand;
 import io.github.bucket4j.distributed.remote.commands.MultiCommand;
@@ -24,7 +21,9 @@ class PredictiveCommandExecutor implements CommandExecutor, AsyncCommandExecutor
     private final AsyncCommandExecutor originalAsyncExecutor;
     private final PredictionParameters predictionParameters;
     private final DelayParameters delayParameters;
+    private final OptimizationListener listener;
     private final TimeMeter timeMeter;
+
 
     private RemoteBucketState state;
     private long postponedToConsumeTokens;
@@ -32,19 +31,25 @@ class PredictiveCommandExecutor implements CommandExecutor, AsyncCommandExecutor
 
     private LinkedList<Sample> samples = new LinkedList<>();
 
-    PredictiveCommandExecutor(CommandExecutor originalExecutor, DelayParameters delayParameters, PredictionParameters predictionParameters, TimeMeter timeMeter) {
+    PredictiveCommandExecutor(CommandExecutor originalExecutor, DelayParameters delayParameters,
+                              PredictionParameters predictionParameters, OptimizationListener listener,
+                              TimeMeter timeMeter) {
         this.originalExecutor = originalExecutor;
         this.originalAsyncExecutor = null;
         this.predictionParameters = predictionParameters;
         this.delayParameters = delayParameters;
+        this.listener = listener;
         this.timeMeter = timeMeter;
     }
 
-    PredictiveCommandExecutor(AsyncCommandExecutor originalAsyncExecutor, DelayParameters delayParameters, PredictionParameters predictionParameters, TimeMeter timeMeter) {
+    PredictiveCommandExecutor(AsyncCommandExecutor originalAsyncExecutor, DelayParameters delayParameters,
+                              PredictionParameters predictionParameters, OptimizationListener listener,
+                              TimeMeter timeMeter) {
         this.originalExecutor = null;
         this.originalAsyncExecutor = originalAsyncExecutor;
         this.predictionParameters = predictionParameters;
         this.delayParameters = delayParameters;
+        this.listener = listener;
         this.timeMeter = timeMeter;
     }
 
@@ -53,6 +58,7 @@ class PredictiveCommandExecutor implements CommandExecutor, AsyncCommandExecutor
         CommandResult<T> result = tryConsumeLocally(command);
         if (result != null) {
             // remote call is not needed
+            listener.incrementSkipCount(1);
             return result;
         }
 

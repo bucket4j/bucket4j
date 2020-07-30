@@ -4,6 +4,7 @@ import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.BucketExceptions;
 import io.github.bucket4j.distributed.AsyncBucketProxy;
 import io.github.bucket4j.distributed.BucketProxy;
+import io.github.bucket4j.distributed.proxy.optimization.Optimization;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.remote.commands.GetConfigurationCommand;

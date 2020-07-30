@@ -4,10 +4,7 @@ import io.github.bucket4j.RemoteVerboseResult;
 import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.proxy.AsyncCommandExecutor;
 import io.github.bucket4j.distributed.proxy.CommandExecutor;
-import io.github.bucket4j.distributed.proxy.optimization.CommandInsiders;
-import io.github.bucket4j.distributed.proxy.optimization.DelayParameters;
-import io.github.bucket4j.distributed.proxy.optimization.InMemoryMutableEntry;
-import io.github.bucket4j.distributed.proxy.optimization.PredictionParameters;
+import io.github.bucket4j.distributed.proxy.optimization.*;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.MultiResult;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
@@ -25,6 +22,7 @@ class DelayedCommandExecutor implements CommandExecutor, AsyncCommandExecutor {
     private final CommandExecutor originalExecutor;
     private final AsyncCommandExecutor originalAsyncExecutor;
     private final DelayParameters delayParameters;
+    private final OptimizationListener listener;
     private final TimeMeter timeMeter;
 
     private RemoteBucketState state;
@@ -32,17 +30,19 @@ class DelayedCommandExecutor implements CommandExecutor, AsyncCommandExecutor {
     private long lastSyncTimeNanos;
     private long postponedToConsumeTokens;
 
-    DelayedCommandExecutor(CommandExecutor originalExecutor, DelayParameters delayParameters, TimeMeter timeMeter) {
+    DelayedCommandExecutor(CommandExecutor originalExecutor, DelayParameters delayParameters, OptimizationListener listener, TimeMeter timeMeter) {
         this.originalExecutor = originalExecutor;
         this.originalAsyncExecutor = null;
         this.delayParameters = delayParameters;
+        this.listener = listener;
         this.timeMeter = timeMeter;
     }
 
-    DelayedCommandExecutor(AsyncCommandExecutor originalAsyncExecutor, DelayParameters delayParameters, TimeMeter timeMeter) {
+    DelayedCommandExecutor(AsyncCommandExecutor originalAsyncExecutor, DelayParameters delayParameters, OptimizationListener listener, TimeMeter timeMeter) {
         this.originalExecutor = null;
         this.originalAsyncExecutor = originalAsyncExecutor;
         this.delayParameters = delayParameters;
+        this.listener = listener;
         this.timeMeter = timeMeter;
     }
 
@@ -71,6 +71,7 @@ class DelayedCommandExecutor implements CommandExecutor, AsyncCommandExecutor {
         CommandResult<T> result = tryConsumeLocally(command);
         if (result != null) {
             // remote call is not needed
+            listener.incrementSkipCount(1);
             return CompletableFuture.completedFuture(result);
         }
 

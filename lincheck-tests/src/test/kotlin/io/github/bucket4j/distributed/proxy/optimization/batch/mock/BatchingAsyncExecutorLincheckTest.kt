@@ -1,5 +1,6 @@
 package io.github.bucket4j.distributed.proxy.optimization.batch.mock
 
+import io.github.bucket4j.distributed.proxy.optimization.NopeOptimizationListener
 import io.github.bucket4j.distributed.proxy.optimization.batch.AsyncBatchingExecutor
 import io.github.bucket4j.distributed.remote.CommandResult
 import org.jetbrains.kotlinx.lincheck.LinChecker
@@ -20,7 +21,7 @@ import java.util.concurrent.CompletableFuture
 class BatchingAsyncExecutorLincheckTest : VerifierState() {
 
     private val mockExecutor = MockAsyncCommandExecutor()
-    private val executor = AsyncBatchingExecutor(mockExecutor)
+    private val executor = AsyncBatchingExecutor(mockExecutor, NopeOptimizationListener.INSTANCE)
 
     @Operation
     fun testBatching(@Param(name = "amount") amount: Long) :Long {

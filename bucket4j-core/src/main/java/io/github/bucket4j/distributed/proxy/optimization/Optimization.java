@@ -15,11 +15,19 @@
  *    limitations under the License.
  */
 
-package io.github.bucket4j.distributed.proxy;
+package io.github.bucket4j.distributed.proxy.optimization;
+
+import io.github.bucket4j.distributed.proxy.AsyncCommandExecutor;
+import io.github.bucket4j.distributed.proxy.CommandExecutor;
 
 public interface Optimization {
 
     Optimization NONE_OPTIMIZED = new Optimization() {
+        @Override
+        public Optimization withListener(OptimizationListener listener) {
+            return this;
+        }
+
         @Override
         public CommandExecutor apply(CommandExecutor originalExecutor) {
             return originalExecutor;
@@ -30,6 +38,8 @@ public interface Optimization {
             return originalExecutor;
         }
     };
+
+    Optimization withListener(OptimizationListener listener);
 
     CommandExecutor apply(CommandExecutor originalExecutor);
 

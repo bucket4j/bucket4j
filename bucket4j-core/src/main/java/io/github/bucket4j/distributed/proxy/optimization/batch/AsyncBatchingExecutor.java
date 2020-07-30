@@ -2,6 +2,7 @@
 package io.github.bucket4j.distributed.proxy.optimization.batch;
 
 import io.github.bucket4j.distributed.proxy.AsyncCommandExecutor;
+import io.github.bucket4j.distributed.proxy.optimization.OptimizationListener;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.remote.commands.MultiCommand;
@@ -14,10 +15,12 @@ import java.util.concurrent.CompletableFuture;
 public class AsyncBatchingExecutor implements AsyncCommandExecutor {
 
     private final AsyncCommandExecutor wrappedExecutor;
+    private final OptimizationListener listener;
     private final TaskQueue taskQueue = new TaskQueue();
 
-    public AsyncBatchingExecutor(AsyncCommandExecutor originalExecutor) {
+    public AsyncBatchingExecutor(AsyncCommandExecutor originalExecutor, OptimizationListener listener) {
         this.wrappedExecutor = originalExecutor;
+        this.listener = listener;
     }
 
     @Override
@@ -46,6 +49,7 @@ public class AsyncBatchingExecutor implements AsyncCommandExecutor {
         }
 
         try {
+            listener.incrementMergeCount(waitingNodes.size() - 1);
             List<RemoteCommand<?>> commandsInBatch = new ArrayList<>(waitingNodes.size());
             for (WaitingTask waitingNode : waitingNodes) {
                 commandsInBatch.add(waitingNode.command);

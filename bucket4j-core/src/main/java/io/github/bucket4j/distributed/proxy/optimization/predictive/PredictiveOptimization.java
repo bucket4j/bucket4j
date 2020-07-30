@@ -20,8 +20,9 @@ package io.github.bucket4j.distributed.proxy.optimization.predictive;
 import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.proxy.AsyncCommandExecutor;
 import io.github.bucket4j.distributed.proxy.CommandExecutor;
-import io.github.bucket4j.distributed.proxy.Optimization;
+import io.github.bucket4j.distributed.proxy.optimization.Optimization;
 import io.github.bucket4j.distributed.proxy.optimization.DelayParameters;
+import io.github.bucket4j.distributed.proxy.optimization.OptimizationListener;
 import io.github.bucket4j.distributed.proxy.optimization.PredictionParameters;
 import io.github.bucket4j.distributed.proxy.optimization.batch.AsyncBatchingExecutor;
 import io.github.bucket4j.distributed.proxy.optimization.batch.BatchingExecutor;
@@ -30,24 +31,31 @@ public class PredictiveOptimization implements Optimization {
 
     private final DelayParameters delayParameters;
     private final PredictionParameters predictionParameters;
+    private final OptimizationListener listener;
     private final TimeMeter timeMeter;
 
-    public PredictiveOptimization(PredictionParameters predictionParameters, DelayParameters delayParameters, TimeMeter timeMeter) {
+    public PredictiveOptimization(PredictionParameters predictionParameters, DelayParameters delayParameters, OptimizationListener listener, TimeMeter timeMeter) {
         this.delayParameters = delayParameters;
         this.predictionParameters = predictionParameters;
+        this.listener = listener;
         this.timeMeter = timeMeter;
     }
 
     @Override
+    public Optimization withListener(OptimizationListener listener) {
+        return new PredictiveOptimization(predictionParameters, delayParameters, listener, timeMeter);
+    }
+
+    @Override
     public CommandExecutor apply(CommandExecutor originalExecutor) {
-        PredictiveCommandExecutor predictiveCommandExecutor = new PredictiveCommandExecutor(originalExecutor, delayParameters, predictionParameters, timeMeter);
-        return new BatchingExecutor(predictiveCommandExecutor);
+        PredictiveCommandExecutor predictiveCommandExecutor = new PredictiveCommandExecutor(originalExecutor, delayParameters, predictionParameters, listener, timeMeter);
+        return new BatchingExecutor(predictiveCommandExecutor, listener);
     }
 
     @Override
     public AsyncCommandExecutor apply(AsyncCommandExecutor originalExecutor) {
-        PredictiveCommandExecutor predictiveCommandExecutor = new PredictiveCommandExecutor(originalExecutor, delayParameters, predictionParameters, timeMeter);
-        return new AsyncBatchingExecutor(predictiveCommandExecutor);
+        PredictiveCommandExecutor predictiveCommandExecutor = new PredictiveCommandExecutor(originalExecutor, delayParameters, predictionParameters, listener, timeMeter);
+        return new AsyncBatchingExecutor(predictiveCommandExecutor, listener);
     }
 
 }

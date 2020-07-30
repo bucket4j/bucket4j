@@ -20,31 +20,39 @@ package io.github.bucket4j.distributed.proxy.optimization.delay;
 import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.proxy.AsyncCommandExecutor;
 import io.github.bucket4j.distributed.proxy.CommandExecutor;
-import io.github.bucket4j.distributed.proxy.Optimization;
+import io.github.bucket4j.distributed.proxy.optimization.Optimization;
 import io.github.bucket4j.distributed.proxy.optimization.DelayParameters;
+import io.github.bucket4j.distributed.proxy.optimization.OptimizationListener;
 import io.github.bucket4j.distributed.proxy.optimization.batch.AsyncBatchingExecutor;
 import io.github.bucket4j.distributed.proxy.optimization.batch.BatchingExecutor;
 
 public class DelayOptimization implements Optimization {
 
     private final DelayParameters delayParameters;
+    private final OptimizationListener listener;
     private final TimeMeter timeMeter;
 
-    public DelayOptimization(DelayParameters delayParameters, TimeMeter timeMeter) {
+    public DelayOptimization(DelayParameters delayParameters, OptimizationListener listener, TimeMeter timeMeter) {
         this.delayParameters = delayParameters;
         this.timeMeter = timeMeter;
+        this.listener = listener;
+    }
+
+    @Override
+    public Optimization withListener(OptimizationListener listener) {
+        return new DelayOptimization(delayParameters, listener, timeMeter);
     }
 
     @Override
     public CommandExecutor apply(CommandExecutor originalExecutor) {
-        DelayedCommandExecutor predictiveCommandExecutor = new DelayedCommandExecutor(originalExecutor, delayParameters, timeMeter);
-        return new BatchingExecutor(predictiveCommandExecutor);
+        DelayedCommandExecutor predictiveCommandExecutor = new DelayedCommandExecutor(originalExecutor, delayParameters, listener, timeMeter);
+        return new BatchingExecutor(predictiveCommandExecutor, listener);
     }
 
     @Override
     public AsyncCommandExecutor apply(AsyncCommandExecutor originalExecutor) {
-        DelayedCommandExecutor predictiveCommandExecutor = new DelayedCommandExecutor(originalExecutor, delayParameters, timeMeter);
-        return new AsyncBatchingExecutor(predictiveCommandExecutor);
+        DelayedCommandExecutor predictiveCommandExecutor = new DelayedCommandExecutor(originalExecutor, delayParameters, listener, timeMeter);
+        return new AsyncBatchingExecutor(predictiveCommandExecutor, listener);
     }
 
 }
