@@ -42,10 +42,10 @@ public interface RemoteBucketBuilder<K> {
     /**
      * TODO
      *
-     * @param requestOptimizer
+     * @param optimization
      * @return
      */
-    RemoteBucketBuilder<K> withRequestOptimizer(Optimization requestOptimizer);
+    RemoteBucketBuilder<K> withOptimization(Optimization optimization);
 
     /**
      * TODO

@@ -9,7 +9,6 @@ import io.github.bucket4j.util.ComparableByContent;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 public class MultiCommand implements RemoteCommand<MultiResult>, ComparableByContent<MultiCommand> {
 
@@ -61,8 +60,8 @@ public class MultiCommand implements RemoteCommand<MultiResult>, ComparableByCon
             singleResults.add(singleCommand.execute(entryWrapper, currentTimeNanos));
         }
 
-        if (entryWrapper.stateModified) {
-            mutableEntry.set(entryWrapper.state);
+        if (entryWrapper.isStateModified()) {
+            mutableEntry.set(entryWrapper.get());
         }
 
         return CommandResult.success(new MultiResult(singleResults), MultiResult.SERIALIZATION_HANDLE);
@@ -100,36 +99,6 @@ public class MultiCommand implements RemoteCommand<MultiResult>, ComparableByCon
             }
         }
         return true;
-    }
-
-    private static class BucketEntryWrapper implements MutableBucketEntry {
-
-        private RemoteBucketState state;
-        private boolean stateModified;
-
-        public BucketEntryWrapper(RemoteBucketState state) {
-            this.state = state;
-        }
-
-        @Override
-        public boolean exists() {
-            return state != null;
-        }
-
-        @Override
-        public void set(RemoteBucketState state) {
-            this.state = Objects.requireNonNull(state);
-            this.stateModified = true;
-        }
-
-        @Override
-        public RemoteBucketState get() {
-            if (state == null) {
-                throw new IllegalStateException("'exists' must be called before 'get'");
-            }
-            return state;
-        }
-
     }
 
 }

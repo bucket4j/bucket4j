@@ -30,7 +30,7 @@ import io.github.bucket4j.serialization.SerializationAdapter;
 import io.github.bucket4j.serialization.SerializationHandle;
 import io.github.bucket4j.util.ComparableByContent;
 
-public class CreateSnapshotCommand implements RemoteCommand<BucketState>, ComparableByContent<CreateSnapshotCommand> {
+public class CreateSnapshotCommand implements RemoteCommand<RemoteBucketState>, ComparableByContent<CreateSnapshotCommand> {
 
     public static final SerializationHandle<CreateSnapshotCommand> SERIALIZATION_HANDLE = new SerializationHandle<CreateSnapshotCommand>() {
         @Override
@@ -56,14 +56,14 @@ public class CreateSnapshotCommand implements RemoteCommand<BucketState>, Compar
     };
 
     @Override
-    public CommandResult<BucketState> execute(MutableBucketEntry mutableEntry, long currentTimeNanos) {
+    public CommandResult<RemoteBucketState> execute(MutableBucketEntry mutableEntry, long currentTimeNanos) {
         if (!mutableEntry.exists()) {
             return CommandResult.bucketNotFound();
         }
 
         RemoteBucketState state = mutableEntry.get();
         state.refillAllBandwidth(currentTimeNanos);
-        return CommandResult.success(state.copyBucketState(), RemoteBucketState.SERIALIZATION_HANDLE);
+        return CommandResult.success(state, RemoteBucketState.SERIALIZATION_HANDLE);
     }
 
     @Override

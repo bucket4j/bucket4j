@@ -1,21 +1,22 @@
 package io.github.bucket4j.distributed.proxy.optimization.predictive;
 
-import io.github.bucket4j.RemoteVerboseResult;
 import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.proxy.AsyncCommandExecutor;
 import io.github.bucket4j.distributed.proxy.CommandExecutor;
 import io.github.bucket4j.distributed.proxy.optimization.*;
 import io.github.bucket4j.distributed.remote.*;
-import io.github.bucket4j.distributed.remote.commands.ConsumeIgnoringRateLimitsCommand;
-import io.github.bucket4j.distributed.remote.commands.MultiCommand;
-import io.github.bucket4j.distributed.remote.commands.VerboseCommand;
+import io.github.bucket4j.distributed.remote.commands.*;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 class PredictiveCommandExecutor implements CommandExecutor, AsyncCommandExecutor {
+
+    private static final int ORIGINAL_COMMAND_INDEX = 1;
+    private static final int GET_SNAPSHOT_COMMAND_INDEX = 2;
 
     private final CommandExecutor originalExecutor;
     private final AsyncCommandExecutor originalAsyncExecutor;
@@ -62,16 +63,14 @@ class PredictiveCommandExecutor implements CommandExecutor, AsyncCommandExecutor
             return result;
         }
 
-        VerboseCommand<MultiResult> remoteCommand = prepareRemoteCommand(command);
-        CommandResult<RemoteVerboseResult<MultiResult>> remoteResult = originalExecutor.execute(remoteCommand);
-
-        if (remoteResult.isBucketNotFound()) {
-            return CommandResult.bucketNotFound();
+        MultiCommand remoteCommand = prepareRemoteCommand(command);
+        MultiResult multiResult = originalExecutor.execute(remoteCommand).getData();
+        List<CommandResult<?>> results = multiResult.getResults();
+        if (results.get(GET_SNAPSHOT_COMMAND_INDEX).isBucketNotFound()) {
+            return (CommandResult<T>) results.get(ORIGINAL_COMMAND_INDEX);
         }
-
-        RemoteVerboseResult<MultiResult> verboseMultiResult = remoteResult.getData();
-        rememberRemoteCommandResult(remoteCommand, verboseMultiResult);
-        return (CommandResult<T>) verboseMultiResult.getValue().getResults().get(1);
+        rememberRemoteCommandResult(remoteCommand, multiResult);
+        return (CommandResult<T>) results.get(ORIGINAL_COMMAND_INDEX);
     }
 
     @Override
@@ -79,18 +78,20 @@ class PredictiveCommandExecutor implements CommandExecutor, AsyncCommandExecutor
         CommandResult<T> result = tryConsumeLocally(command);
         if (result != null) {
             // remote call is not needed
+            listener.incrementSkipCount(1);
             return CompletableFuture.completedFuture(result);
         }
 
-        VerboseCommand<MultiResult> remoteCommand = prepareRemoteCommand(command);
-        CompletableFuture<CommandResult<RemoteVerboseResult<MultiResult>>> resultFuture = originalAsyncExecutor.executeAsync(remoteCommand);
+        MultiCommand remoteCommand = prepareRemoteCommand(command);
+        CompletableFuture<CommandResult<MultiResult>> resultFuture = originalAsyncExecutor.executeAsync(remoteCommand);
         return resultFuture.thenApply(remoteResult -> {
-            if (remoteResult.isBucketNotFound()) {
-                return CommandResult.bucketNotFound();
+            MultiResult multiResult = remoteResult.getData();
+            List<CommandResult<?>> results = multiResult.getResults();
+            if (results.get(GET_SNAPSHOT_COMMAND_INDEX).isBucketNotFound()) {
+                return (CommandResult<T>) results.get(ORIGINAL_COMMAND_INDEX);
             }
-            RemoteVerboseResult<MultiResult> verboseMultiResult = remoteResult.getData();
-            rememberRemoteCommandResult(remoteCommand, verboseMultiResult);
-            return (CommandResult<T>) verboseMultiResult.getValue().getResults().get(1);
+            rememberRemoteCommandResult(remoteCommand, multiResult);
+            return (CommandResult<T>) results.get(ORIGINAL_COMMAND_INDEX);
         });
     }
 
@@ -111,7 +112,7 @@ class PredictiveCommandExecutor implements CommandExecutor, AsyncCommandExecutor
         MultiCommand multiCommand = new MultiCommand(commands);
 
         // execute local command
-        InMemoryMutableEntry entry = new InMemoryMutableEntry(state.copy());
+        BucketEntryWrapper entry = new BucketEntryWrapper(state.copy());
         MultiResult multiResult = multiCommand.execute(entry, currentTimeNanos).getData();
         long consumedTokens = CommandInsiders.getConsumedTokens(multiCommand, multiResult);
         if (consumedTokens == Long.MAX_VALUE) {
@@ -125,7 +126,9 @@ class PredictiveCommandExecutor implements CommandExecutor, AsyncCommandExecutor
 
         postponedToConsumeTokens += locallyConsumedTokens;
         consumedByPredictionTokens += predictedConsumptionByOthersSinceLastLocalCall;
-        state = entry.getNewState();
+        if (entry.isStateModified()) {
+            state = entry.get();
+        }
 
         return (CommandResult<T>) multiResult.getResults().get(1);
     }
@@ -206,17 +209,16 @@ class PredictiveCommandExecutor implements CommandExecutor, AsyncCommandExecutor
         return predictedComnsumptionSinceLastLocalCall;
     }
 
-    private <T> VerboseCommand<MultiResult> prepareRemoteCommand(RemoteCommand<T> command) {
-        List<RemoteCommand<?>> commands = Arrays.asList(
-            new ConsumeIgnoringRateLimitsCommand(this.postponedToConsumeTokens),
-            command
-        );
-        MultiCommand multiCommand = new MultiCommand(commands);
-        return new VerboseCommand<>(multiCommand);
+    private <T> MultiCommand prepareRemoteCommand(RemoteCommand<T> command) {
+        List<RemoteCommand<?>> commands = new ArrayList<>(3);
+        commands.add(new ConsumeIgnoringRateLimitsCommand(this.postponedToConsumeTokens));
+        commands.add(command);
+        commands.add(new CreateSnapshotCommand());
+        return new MultiCommand(commands);
     }
 
-    private void rememberRemoteCommandResult(VerboseCommand<MultiResult> remoteCommand, RemoteVerboseResult<MultiResult> remoteResult) {
-        state = remoteResult.getState();
+    private void rememberRemoteCommandResult(MultiCommand remoteCommand, MultiResult remoteResult) {
+        state = (RemoteBucketState) remoteResult.getResults().get(GET_SNAPSHOT_COMMAND_INDEX).getData();
         postponedToConsumeTokens = 0;
         consumedByPredictionTokens = 0;
         Sample sample = new Sample(

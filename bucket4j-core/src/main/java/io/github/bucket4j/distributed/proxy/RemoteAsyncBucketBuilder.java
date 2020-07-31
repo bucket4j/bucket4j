@@ -45,7 +45,7 @@ public interface RemoteAsyncBucketBuilder<K> {
      * @param requestOptimizer
      * @return
      */
-    RemoteAsyncBucketBuilder<K> withRequestOptimizer(Optimization requestOptimizer);
+    RemoteAsyncBucketBuilder<K> withOptimization(Optimization requestOptimizer);
 
     /**
      * TODO

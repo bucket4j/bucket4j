@@ -1,6 +1,5 @@
 package io.github.bucket4j.distributed.proxy.optimization.delay;
 
-import io.github.bucket4j.RemoteVerboseResult;
 import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.proxy.AsyncCommandExecutor;
 import io.github.bucket4j.distributed.proxy.CommandExecutor;
@@ -9,15 +8,19 @@ import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.MultiResult;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
+import io.github.bucket4j.distributed.remote.commands.BucketEntryWrapper;
 import io.github.bucket4j.distributed.remote.commands.ConsumeIgnoringRateLimitsCommand;
+import io.github.bucket4j.distributed.remote.commands.CreateSnapshotCommand;
 import io.github.bucket4j.distributed.remote.commands.MultiCommand;
-import io.github.bucket4j.distributed.remote.commands.VerboseCommand;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 class DelayedCommandExecutor implements CommandExecutor, AsyncCommandExecutor {
+
+    private static final int ORIGINAL_COMMAND_INDEX = 1;
+    private static final int GET_SNAPSHOT_COMMAND_INDEX = 2;
 
     private final CommandExecutor originalExecutor;
     private final AsyncCommandExecutor originalAsyncExecutor;
@@ -48,22 +51,21 @@ class DelayedCommandExecutor implements CommandExecutor, AsyncCommandExecutor {
 
     @Override
     public <T> CommandResult<T> execute(RemoteCommand<T> command) {
-        CommandResult<T> result = tryConsumeLocally(command);
-        if (result != null) {
+        CommandResult<T> localResult = tryConsumeLocally(command);
+        if (localResult != null) {
             // remote call is not needed
-            return result;
+            listener.incrementSkipCount(1);
+            return localResult;
         }
 
-        VerboseCommand<MultiResult> remoteCommand = prepareRemoteCommand(command);
-        CommandResult<RemoteVerboseResult<MultiResult>> remoteResult = originalExecutor.execute(remoteCommand);
-
-        if (remoteResult.isBucketNotFound()) {
-            return CommandResult.bucketNotFound();
+        MultiCommand remoteCommand = prepareRemoteCommand(command);
+        MultiResult multiResult = originalExecutor.execute(remoteCommand).getData();
+        List<CommandResult<?>> results = multiResult.getResults();
+        if (results.get(GET_SNAPSHOT_COMMAND_INDEX).isBucketNotFound()) {
+            return (CommandResult<T>) results.get(ORIGINAL_COMMAND_INDEX);
         }
-
-        RemoteVerboseResult<MultiResult> verboseMultiResult = remoteResult.getData();
-        rememberRemoteCommandResult(remoteCommand, verboseMultiResult);
-        return (CommandResult<T>) verboseMultiResult.getValue().getResults().get(1);
+        rememberRemoteCommandResult((RemoteBucketState) results.get(GET_SNAPSHOT_COMMAND_INDEX).getData());
+        return (CommandResult<T>) results.get(ORIGINAL_COMMAND_INDEX);
     }
 
     @Override
@@ -75,15 +77,15 @@ class DelayedCommandExecutor implements CommandExecutor, AsyncCommandExecutor {
             return CompletableFuture.completedFuture(result);
         }
 
-        VerboseCommand<MultiResult> remoteCommand = prepareRemoteCommand(command);
-        CompletableFuture<CommandResult<RemoteVerboseResult<MultiResult>>> resultFuture = originalAsyncExecutor.executeAsync(remoteCommand);
+        MultiCommand remoteCommand = prepareRemoteCommand(command);
+        CompletableFuture<CommandResult<MultiResult>> resultFuture = originalAsyncExecutor.executeAsync(remoteCommand);
         return resultFuture.thenApply(remoteResult -> {
-            if (remoteResult.isBucketNotFound()) {
-                return CommandResult.bucketNotFound();
+            List<CommandResult<?>> results = remoteResult.getData().getResults();
+            if (results.get(GET_SNAPSHOT_COMMAND_INDEX).isBucketNotFound()) {
+                return (CommandResult<T>) results.get(ORIGINAL_COMMAND_INDEX);
             }
-            RemoteVerboseResult<MultiResult> verboseMultiResult = remoteResult.getData();
-            rememberRemoteCommandResult(remoteCommand, verboseMultiResult);
-            return (CommandResult<T>) verboseMultiResult.getValue().getResults().get(1);
+            rememberRemoteCommandResult((RemoteBucketState) results.get(GET_SNAPSHOT_COMMAND_INDEX).getData());
+            return (CommandResult<T>) results.get(ORIGINAL_COMMAND_INDEX);
         });
     }
 
@@ -94,7 +96,7 @@ class DelayedCommandExecutor implements CommandExecutor, AsyncCommandExecutor {
         }
 
         // execute local command
-        InMemoryMutableEntry entry = new InMemoryMutableEntry(state.copy());
+        BucketEntryWrapper entry = new BucketEntryWrapper(state.copy());
         CommandResult<T> result = command.execute(entry, currentTimeNanos);
         long locallyConsumedTokens = CommandInsiders.getConsumedTokens(command, result.getData());
         if (locallyConsumedTokens == Long.MAX_VALUE) {
@@ -106,7 +108,9 @@ class DelayedCommandExecutor implements CommandExecutor, AsyncCommandExecutor {
         }
 
         postponedToConsumeTokens += locallyConsumedTokens;
-        state = entry.getNewState();
+        if (entry.isStateModified()) {
+            state = entry.get();
+        }
 
         return result;
     }
@@ -144,17 +148,16 @@ class DelayedCommandExecutor implements CommandExecutor, AsyncCommandExecutor {
         return commandTokens + postponedToConsumeTokens > delayParameters.maxUnsynchronizedTokens;
     }
 
-    private <T> VerboseCommand<MultiResult> prepareRemoteCommand(RemoteCommand<T> command) {
-        List<RemoteCommand<?>> commands = Arrays.asList(
-            new ConsumeIgnoringRateLimitsCommand(this.postponedToConsumeTokens),
-            command
-        );
-        MultiCommand multiCommand = new MultiCommand(commands);
-        return new VerboseCommand<>(multiCommand);
+    private <T> MultiCommand prepareRemoteCommand(RemoteCommand<T> command) {
+        List<RemoteCommand<?>> commands = new ArrayList<>(3);
+        commands.add(new ConsumeIgnoringRateLimitsCommand(this.postponedToConsumeTokens));
+        commands.add(command);
+        commands.add(new CreateSnapshotCommand());
+        return new MultiCommand(commands);
     }
 
-    private void rememberRemoteCommandResult(VerboseCommand<MultiResult> remoteCommand, RemoteVerboseResult<MultiResult> remoteResult) {
-        state = remoteResult.getState();
+    private void rememberRemoteCommandResult(RemoteBucketState state) {
+        this.state = state;
         postponedToConsumeTokens = 0;
         lastSyncTimeNanos = timeMeter.currentTimeNanos();
     }

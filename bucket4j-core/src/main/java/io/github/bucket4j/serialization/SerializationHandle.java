@@ -20,10 +20,7 @@
 package io.github.bucket4j.serialization;
 
 import io.github.bucket4j.*;
-import io.github.bucket4j.distributed.remote.CommandResult;
-import io.github.bucket4j.distributed.remote.MultiResult;
-import io.github.bucket4j.distributed.remote.RemoteBucketState;
-import io.github.bucket4j.distributed.remote.RemoteStat;
+import io.github.bucket4j.distributed.remote.*;
 import io.github.bucket4j.distributed.remote.commands.*;
 
 import java.io.IOException;

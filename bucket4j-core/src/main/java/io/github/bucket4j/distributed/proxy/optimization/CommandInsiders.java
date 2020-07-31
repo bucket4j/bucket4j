@@ -1,9 +1,7 @@
 package io.github.bucket4j.distributed.proxy.optimization;
 
 import io.github.bucket4j.*;
-import io.github.bucket4j.distributed.remote.CommandResult;
-import io.github.bucket4j.distributed.remote.MultiResult;
-import io.github.bucket4j.distributed.remote.RemoteCommand;
+import io.github.bucket4j.distributed.remote.*;
 import io.github.bucket4j.distributed.remote.commands.*;
 import io.github.bucket4j.serialization.SerializationHandle;
 
@@ -180,7 +178,7 @@ public class CommandInsiders {
 
         }));
 
-        register(CreateSnapshotCommand.class, new CommandInsider<BucketState, CreateSnapshotCommand>() {
+        register(CreateSnapshotCommand.class, new CommandInsider<RemoteBucketState, CreateSnapshotCommand>() {
             @Override
             public boolean isImmediateSyncRequired(CreateSnapshotCommand command) {
                 return false;
@@ -192,7 +190,7 @@ public class CommandInsiders {
             }
 
             @Override
-            public long getConsumedTokens(CreateSnapshotCommand command, BucketState result) {
+            public long getConsumedTokens(CreateSnapshotCommand command, RemoteBucketState result) {
                 return 0;
             }
         });
@@ -292,7 +290,7 @@ public class CommandInsiders {
         register(ConsumeAsMuchAsPossibleCommand.class, new CommandInsider<Long, ConsumeAsMuchAsPossibleCommand>() {
             @Override
             public boolean isImmediateSyncRequired(ConsumeAsMuchAsPossibleCommand command) {
-                return false;
+                return command.getLimit() == Long.MAX_VALUE;
             }
 
             @Override

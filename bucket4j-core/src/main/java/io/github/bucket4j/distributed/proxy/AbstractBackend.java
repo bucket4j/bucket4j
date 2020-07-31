@@ -72,7 +72,7 @@ public abstract class AbstractBackend<K> implements Backend<K> {
         }
 
         @Override
-        public DefaultAsyncRemoteBucketBuilder withRequestOptimizer(Optimization requestOptimizer) {
+        public DefaultAsyncRemoteBucketBuilder withOptimization(Optimization requestOptimizer) {
             this.asyncRequestOptimizer = Objects.requireNonNull(requestOptimizer);
             return this;
         }
@@ -116,8 +116,8 @@ public abstract class AbstractBackend<K> implements Backend<K> {
         }
 
         @Override
-        public RemoteBucketBuilder<K> withRequestOptimizer(Optimization requestOptimizer) {
-            this.requestOptimizer = Objects.requireNonNull(requestOptimizer);
+        public RemoteBucketBuilder<K> withOptimization(Optimization optimization) {
+            this.requestOptimizer = Objects.requireNonNull(optimization);
             return this;
         }
 

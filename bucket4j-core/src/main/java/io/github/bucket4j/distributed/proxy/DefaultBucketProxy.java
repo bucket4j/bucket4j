@@ -105,7 +105,7 @@ public class DefaultBucketProxy extends AbstractBucket implements BucketProxy {
 
     @Override
     public BucketState createSnapshot() {
-        return execute(new CreateSnapshotCommand());
+        return execute(new CreateSnapshotCommand()).getState();
     }
 
     @Override

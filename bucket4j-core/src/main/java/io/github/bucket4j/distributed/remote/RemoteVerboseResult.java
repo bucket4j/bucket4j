@@ -17,11 +17,13 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package io.github.bucket4j;
+package io.github.bucket4j.distributed.remote;
 
+import io.github.bucket4j.VerboseBucket;
+import io.github.bucket4j.VerboseResult;
 import io.github.bucket4j.distributed.AsyncVerboseBucket;
-import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.serialization.DeserializationAdapter;
+import io.github.bucket4j.serialization.PrimitiveSerializationHandles;
 import io.github.bucket4j.serialization.SerializationAdapter;
 import io.github.bucket4j.serialization.SerializationHandle;
 import io.github.bucket4j.util.ComparableByContent;

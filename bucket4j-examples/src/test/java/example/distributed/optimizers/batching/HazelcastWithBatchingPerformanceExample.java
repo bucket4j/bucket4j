@@ -89,7 +89,7 @@ public class HazelcastWithBatchingPerformanceExample {
                 .build();
 
         Bucket bucket = backend.builder()
-                .withRequestOptimizer(Optimizations.batching())
+                .withOptimization(Optimizations.batching())
                 .buildProxy("13", configuration);
 
         Timer statLogTimer = new Timer();
@@ -140,7 +140,7 @@ public class HazelcastWithBatchingPerformanceExample {
                 .build();
 
         AsyncBucketProxy bucket = backend.asAsync().builder()
-                .withRequestOptimizer(Optimizations.batching())
+                .withOptimization(Optimizations.batching())
                 .buildProxy("13", configuration);
 
         // We need a backpressure for ougoing work because it obviously that OOM can be happen in asycnhrouous bucket mode

@@ -22,6 +22,7 @@ import io.github.bucket4j.distributed.AsyncBucketProxy;
 import io.github.bucket4j.distributed.AsyncVerboseBucket;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
+import io.github.bucket4j.distributed.remote.RemoteVerboseResult;
 import io.github.bucket4j.distributed.remote.commands.*;
 
 import java.util.Objects;
