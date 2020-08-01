@@ -3,7 +3,7 @@ package io.github.bucket4j.distributed.proxy.optimization.batch.mock;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.MutableBucketEntry;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
-import io.github.bucket4j.serialization.SerializationHandle;
+import io.github.bucket4j.distributed.serialization.SerializationHandle;
 
 public class MockCommand implements RemoteCommand<Long> {
 

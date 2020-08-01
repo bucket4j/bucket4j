@@ -4,8 +4,8 @@ import io.github.bucket4j.distributed.remote.MutableBucketEntry;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import org.infinispan.functional.EntryView;
 
-import static io.github.bucket4j.serialization.InternalSerializationHelper.deserializeState;
-import static io.github.bucket4j.serialization.InternalSerializationHelper.serializeState;
+import static io.github.bucket4j.distributed.serialization.InternalSerializationHelper.deserializeState;
+import static io.github.bucket4j.distributed.serialization.InternalSerializationHelper.serializeState;
 
 public class InfinispanEntry<K> implements MutableBucketEntry {
 

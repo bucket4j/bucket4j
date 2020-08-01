@@ -24,8 +24,6 @@ import io.github.bucket4j.*;
 
 import java.util.concurrent.atomic.AtomicReference;
 
-import static io.github.bucket4j.serialization.PrimitiveSerializationHandles.*;
-
 abstract class LockFreeBucketContendedTimeMeter extends AbstractBucket {
 
     final TimeMeter timeMeter;

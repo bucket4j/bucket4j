@@ -3,7 +3,7 @@ package io.github.bucket4j.distributed.proxy.optimization;
 import io.github.bucket4j.*;
 import io.github.bucket4j.distributed.remote.*;
 import io.github.bucket4j.distributed.remote.commands.*;
-import io.github.bucket4j.serialization.SerializationHandle;
+import io.github.bucket4j.distributed.serialization.SerializationHandle;
 
 public class CommandInsiders {
 

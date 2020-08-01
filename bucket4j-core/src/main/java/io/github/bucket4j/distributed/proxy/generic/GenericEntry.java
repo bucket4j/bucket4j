@@ -19,11 +19,11 @@ package io.github.bucket4j.distributed.proxy.generic;
 
 import io.github.bucket4j.distributed.remote.MutableBucketEntry;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
-import io.github.bucket4j.serialization.InternalSerializationHelper;
+import io.github.bucket4j.distributed.serialization.InternalSerializationHelper;
 
 import java.util.Objects;
 
-import static io.github.bucket4j.serialization.InternalSerializationHelper.deserializeState;
+import static io.github.bucket4j.distributed.serialization.InternalSerializationHelper.deserializeState;
 
 public class GenericEntry implements MutableBucketEntry {
 

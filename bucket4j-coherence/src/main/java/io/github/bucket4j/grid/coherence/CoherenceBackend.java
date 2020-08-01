@@ -28,7 +28,7 @@ import io.github.bucket4j.distributed.remote.*;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
-import static io.github.bucket4j.serialization.InternalSerializationHelper.*;
+import static io.github.bucket4j.distributed.serialization.InternalSerializationHelper.*;
 
 
 /**

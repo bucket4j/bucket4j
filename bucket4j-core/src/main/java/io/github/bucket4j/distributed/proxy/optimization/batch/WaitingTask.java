@@ -7,7 +7,7 @@ import io.github.bucket4j.distributed.remote.RemoteCommand;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
-import static io.github.bucket4j.serialization.PrimitiveSerializationHandles.LONG_HANDLE;
+import static io.github.bucket4j.distributed.serialization.PrimitiveSerializationHandles.LONG_HANDLE;
 
 public class WaitingTask {
 

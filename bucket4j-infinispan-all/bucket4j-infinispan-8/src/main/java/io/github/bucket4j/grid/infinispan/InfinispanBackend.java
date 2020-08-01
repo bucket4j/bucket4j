@@ -21,7 +21,7 @@ import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.proxy.AbstractBackend;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.remote.*;
-import io.github.bucket4j.serialization.InternalSerializationHelper;
+import io.github.bucket4j.distributed.serialization.InternalSerializationHelper;
 import org.infinispan.commons.CacheException;
 import org.infinispan.commons.api.functional.EntryView.ReadWriteEntryView;
 import org.infinispan.commons.api.functional.FunctionalMap.ReadWriteMap;
@@ -31,7 +31,7 @@ import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
-import static io.github.bucket4j.serialization.InternalSerializationHelper.*;
+import static io.github.bucket4j.distributed.serialization.InternalSerializationHelper.*;
 
 /**
  * The extension of Bucket4j library addressed to support <a href="https://infinispan.org/">Infinispan</a> in-memory computing platform.

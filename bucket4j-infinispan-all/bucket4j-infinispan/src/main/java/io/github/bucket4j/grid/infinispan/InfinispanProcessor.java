@@ -3,7 +3,7 @@ package io.github.bucket4j.grid.infinispan;
 import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
-import io.github.bucket4j.serialization.InternalSerializationHelper;
+import io.github.bucket4j.distributed.serialization.InternalSerializationHelper;
 import io.github.bucket4j.util.ComparableByContent;
 import org.infinispan.functional.EntryView;
 import org.infinispan.util.function.SerializableFunction;

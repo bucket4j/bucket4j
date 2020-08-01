@@ -25,14 +25,14 @@ import io.github.bucket4j.distributed.remote.MutableBucketEntry;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 
-import io.github.bucket4j.serialization.DeserializationAdapter;
-import io.github.bucket4j.serialization.SerializationAdapter;
-import io.github.bucket4j.serialization.SerializationHandle;
+import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
+import io.github.bucket4j.distributed.serialization.SerializationAdapter;
+import io.github.bucket4j.distributed.serialization.SerializationHandle;
 import io.github.bucket4j.util.ComparableByContent;
 
 import java.io.IOException;
 
-import static io.github.bucket4j.serialization.PrimitiveSerializationHandles.LONG_HANDLE;
+import static io.github.bucket4j.distributed.serialization.PrimitiveSerializationHandles.LONG_HANDLE;
 
 public class ConsumeAsMuchAsPossibleCommand implements RemoteCommand<Long>, ComparableByContent<ConsumeAsMuchAsPossibleCommand> {
 

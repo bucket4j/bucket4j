@@ -1,8 +1,9 @@
-package io.github.bucket4j.serialization;
+package io.github.bucket4j.distributed.serialization;
 
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
+import io.github.bucket4j.distributed.serialization.DataOutputSerializationAdapter;
 
 import java.io.*;
 

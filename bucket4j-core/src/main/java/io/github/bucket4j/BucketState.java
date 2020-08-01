@@ -19,8 +19,8 @@
  */
 package io.github.bucket4j;
 
-import io.github.bucket4j.serialization.DeserializationAdapter;
-import io.github.bucket4j.serialization.SerializationAdapter;
+import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
+import io.github.bucket4j.distributed.serialization.SerializationAdapter;
 
 import java.io.IOException;
 

@@ -21,7 +21,7 @@ import io.github.bucket4j.*;
 import io.github.bucket4j.distributed.proxy.AbstractBackend;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.remote.*;
-import io.github.bucket4j.serialization.InternalSerializationHelper;
+import io.github.bucket4j.distributed.serialization.InternalSerializationHelper;
 
 import javax.cache.Cache;
 import javax.cache.CacheManager;
@@ -32,7 +32,7 @@ import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
-import static io.github.bucket4j.serialization.InternalSerializationHelper.*;
+import static io.github.bucket4j.distributed.serialization.InternalSerializationHelper.*;
 
 /**
  * The extension of Bucket4j library addressed to support <a href="https://www.jcp.org/en/jsr/detail?id=107">JCache API (JSR 107)</a> specification.

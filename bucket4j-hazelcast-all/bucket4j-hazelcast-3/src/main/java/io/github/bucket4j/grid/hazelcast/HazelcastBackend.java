@@ -30,7 +30,7 @@ import io.github.bucket4j.grid.hazelcast.serialization.SimpleBackupProcessorSeri
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
-import static io.github.bucket4j.serialization.InternalSerializationHelper.deserializeResult;
+import static io.github.bucket4j.distributed.serialization.InternalSerializationHelper.deserializeResult;
 
 /**
  * The extension of Bucket4j library addressed to support <a href="https://hazelcast.com//">Hazelcast</a> in-memory data grid.

@@ -1,4 +1,4 @@
-package io.github.bucket4j.serialization;
+package io.github.bucket4j.distributed.serialization;
 
 import io.github.bucket4j.Nothing;
 
@@ -73,7 +73,7 @@ public class PrimitiveSerializationHandles {
         }
     };
 
-    static final SerializationHandle[] primitiveHandlesById = new SerializationHandle[] {
+    public static final SerializationHandle[] primitiveHandlesById = new SerializationHandle[] {
             NULL_HANDLE,
             LONG_HANDLE,
             BOOLEAN_HANDLE

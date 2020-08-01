@@ -22,11 +22,11 @@ package io.github.bucket4j.grid.hazelcast;
 
 import io.github.bucket4j.distributed.remote.MutableBucketEntry;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
-import io.github.bucket4j.serialization.InternalSerializationHelper;
+import io.github.bucket4j.distributed.serialization.InternalSerializationHelper;
 
 import java.util.Map;
 
-import static io.github.bucket4j.serialization.InternalSerializationHelper.deserializeState;
+import static io.github.bucket4j.distributed.serialization.InternalSerializationHelper.deserializeState;
 
 class HazelcastMutableEntryAdapter<K> implements MutableBucketEntry {
 

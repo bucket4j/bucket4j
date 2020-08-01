@@ -21,7 +21,6 @@ import io.github.bucket4j.*;
 import io.github.bucket4j.distributed.proxy.AbstractBackend;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.remote.*;
-import io.github.bucket4j.serialization.InternalSerializationHelper;
 import org.apache.ignite.IgniteCache;
 import org.apache.ignite.cache.CacheEntryProcessor;
 import org.apache.ignite.lang.IgniteFuture;
@@ -33,7 +32,7 @@ import java.io.Serializable;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
-import static io.github.bucket4j.serialization.InternalSerializationHelper.*;
+import static io.github.bucket4j.distributed.serialization.InternalSerializationHelper.*;
 
 
 /**

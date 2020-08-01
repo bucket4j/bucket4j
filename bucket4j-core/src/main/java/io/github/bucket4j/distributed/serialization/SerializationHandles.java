@@ -1,8 +1,5 @@
-package io.github.bucket4j.serialization;
+package io.github.bucket4j.distributed.serialization;
 
-import io.github.bucket4j.Nothing;
-
-import java.io.IOException;
 import java.util.*;
 
 public class SerializationHandles {
@@ -11,7 +8,7 @@ public class SerializationHandles {
     private final SerializationHandle[] handlesById;
 
 
-    SerializationHandles(Collection<SerializationHandle<?>> allHandles) {
+    public SerializationHandles(Collection<SerializationHandle<?>> allHandles) {
         Map<Integer, SerializationHandle<?>> serializersById = new HashMap<>();
         int maxTypeId = 0;
 

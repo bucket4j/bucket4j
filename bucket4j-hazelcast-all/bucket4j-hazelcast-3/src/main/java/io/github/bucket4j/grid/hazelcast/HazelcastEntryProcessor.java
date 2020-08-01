@@ -5,14 +5,14 @@ import com.hazelcast.map.EntryProcessor;
 import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
-import io.github.bucket4j.serialization.InternalSerializationHelper;
+import io.github.bucket4j.distributed.serialization.InternalSerializationHelper;
 import io.github.bucket4j.util.ComparableByContent;
 
 import java.util.Arrays;
 import java.util.Map;
 
-import static io.github.bucket4j.serialization.InternalSerializationHelper.serializeCommand;
-import static io.github.bucket4j.serialization.InternalSerializationHelper.serializeResult;
+import static io.github.bucket4j.distributed.serialization.InternalSerializationHelper.serializeCommand;
+import static io.github.bucket4j.distributed.serialization.InternalSerializationHelper.serializeResult;
 
 public class HazelcastEntryProcessor<K, T> implements EntryProcessor<K, byte[]>, ComparableByContent<HazelcastEntryProcessor> {
 

@@ -14,7 +14,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 
-import static io.github.bucket4j.serialization.PrimitiveSerializationHandles.LONG_HANDLE;
+import static io.github.bucket4j.distributed.serialization.PrimitiveSerializationHandles.LONG_HANDLE;
 
 public class MockAsyncCommandExecutor implements AsyncCommandExecutor {
 

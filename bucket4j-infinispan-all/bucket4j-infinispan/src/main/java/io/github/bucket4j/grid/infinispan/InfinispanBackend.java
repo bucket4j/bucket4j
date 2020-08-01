@@ -20,7 +20,7 @@ package io.github.bucket4j.grid.infinispan;
 import io.github.bucket4j.distributed.proxy.AbstractBackend;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.remote.*;
-import io.github.bucket4j.serialization.InternalSerializationHelper;
+import io.github.bucket4j.distributed.serialization.InternalSerializationHelper;
 import org.infinispan.commons.CacheException;
 import org.infinispan.functional.FunctionalMap.ReadWriteMap;
 import java.util.Objects;

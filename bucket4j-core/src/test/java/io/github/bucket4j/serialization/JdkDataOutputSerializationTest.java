@@ -1,5 +1,8 @@
 package io.github.bucket4j.serialization;
 
+import io.github.bucket4j.distributed.serialization.DataOutputSerializationAdapter;
+import io.github.bucket4j.distributed.serialization.SerializationHandle;
+
 import java.io.*;
 import java.util.HashMap;
 import java.util.Map;

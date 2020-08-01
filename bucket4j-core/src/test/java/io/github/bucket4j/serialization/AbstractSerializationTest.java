@@ -15,7 +15,7 @@ import java.util.Arrays;
 import static io.github.bucket4j.Bandwidth.classic;
 import static io.github.bucket4j.Bandwidth.simple;
 import static io.github.bucket4j.Refill.*;
-import static io.github.bucket4j.serialization.PrimitiveSerializationHandles.*;
+import static io.github.bucket4j.distributed.serialization.PrimitiveSerializationHandles.*;
 import static java.time.Duration.*;
 import static org.junit.Assert.assertTrue;
 

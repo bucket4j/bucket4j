@@ -24,8 +24,8 @@ import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.MutableBucketEntry;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
-import io.github.bucket4j.serialization.DataOutputSerializationAdapter;
-import io.github.bucket4j.serialization.SerializationHandle;
+import io.github.bucket4j.distributed.serialization.DataOutputSerializationAdapter;
+import io.github.bucket4j.distributed.serialization.SerializationHandle;
 
 import java.io.*;
 import java.util.HashMap;

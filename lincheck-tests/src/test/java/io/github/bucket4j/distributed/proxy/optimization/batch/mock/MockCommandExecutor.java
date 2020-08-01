@@ -9,7 +9,7 @@ import io.github.bucket4j.distributed.remote.commands.MultiCommand;
 import java.util.ArrayList;
 import java.util.List;
 
-import static io.github.bucket4j.serialization.PrimitiveSerializationHandles.*;
+import static io.github.bucket4j.distributed.serialization.PrimitiveSerializationHandles.*;
 
 public class MockCommandExecutor implements CommandExecutor {
 

@@ -5,13 +5,13 @@ import com.tangosol.util.processor.AbstractProcessor;
 import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
-import io.github.bucket4j.serialization.InternalSerializationHelper;
+import io.github.bucket4j.distributed.serialization.InternalSerializationHelper;
 import io.github.bucket4j.util.ComparableByContent;
 
 import java.util.Arrays;
 
-import static io.github.bucket4j.serialization.InternalSerializationHelper.deserializeCommand;
-import static io.github.bucket4j.serialization.InternalSerializationHelper.serializeResult;
+import static io.github.bucket4j.distributed.serialization.InternalSerializationHelper.deserializeCommand;
+import static io.github.bucket4j.distributed.serialization.InternalSerializationHelper.serializeResult;
 
 public class CoherenceProcessor<K, T> extends AbstractProcessor<K, byte[], byte[]> implements ComparableByContent {
 

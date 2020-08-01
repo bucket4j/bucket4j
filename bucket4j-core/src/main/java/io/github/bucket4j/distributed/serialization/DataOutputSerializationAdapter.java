@@ -1,5 +1,5 @@
 
-package io.github.bucket4j.serialization;
+package io.github.bucket4j.distributed.serialization;
 
 import java.io.DataInput;
 import java.io.DataOutput;
