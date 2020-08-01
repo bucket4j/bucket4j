@@ -99,6 +99,12 @@ public final class BucketExceptions {
         return new IllegalArgumentException(msg);
     }
 
+    public static IllegalArgumentException nonPositiveLimitToSync(long unsynchronizedPeriod) {
+        String pattern = "{0} is wrong value for limit to sync, because period should be positive";
+        String msg = MessageFormat.format(pattern, unsynchronizedPeriod);
+        return new IllegalArgumentException(msg);
+    }
+
     public static IllegalArgumentException nonPositiveFixedRefillInterval(Duration fixedRefillInterval) {
         String pattern = "{0} is wrong value for fixed refill interval, because period should be positive";
         String msg = MessageFormat.format(pattern, fixedRefillInterval);
@@ -151,6 +157,12 @@ public final class BucketExceptions {
 
     public static IllegalArgumentException nonPositiveTokensToConsume(long tokens) {
         String pattern = "Unable to consume {0} tokens, due to number of tokens to consume should be positive";
+        String msg = MessageFormat.format(pattern, tokens);
+        return new IllegalArgumentException(msg);
+    }
+
+    public static IllegalArgumentException nonPositiveTokensLimitToSync(long tokens) {
+        String pattern = "Sync threshold tokens should be positive, {0} is wrong waiting period";
         String msg = MessageFormat.format(pattern, tokens);
         return new IllegalArgumentException(msg);
     }

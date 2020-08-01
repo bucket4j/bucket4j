@@ -9,6 +9,7 @@ import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.remote.commands.GetConfigurationCommand;
 
+import java.time.Duration;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -146,6 +147,15 @@ public abstract class AbstractBackend<K> implements Backend<K> {
             return new DefaultBucketProxy(configurationSupplier, commandExecutor, recoveryStrategy);
         }
 
+    }
+
+    public void syncByCondition(long unsynchronizedTokensThreshold, Duration timeSinceLastSync) {
+        // do nothing
+    }
+
+    public CompletableFuture<Void> syncByConditionNonblocking(long unsynchronizedTokensThreshold, Duration timeSinceLastSync) {
+        // do nothing
+        return CompletableFuture.completedFuture(null);
     }
 
     // TODO javadocs

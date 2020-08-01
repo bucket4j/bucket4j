@@ -25,6 +25,7 @@ import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.remote.RemoteVerboseResult;
 import io.github.bucket4j.distributed.remote.commands.*;
 
+import java.time.Duration;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ScheduledExecutorService;
@@ -338,8 +339,8 @@ public class DefaultAsyncBucketProxy implements AsyncBucketProxy, ScheduledBucke
     }
 
     @Override
-    public CompletableFuture<Void> sync() {
-        return execute(new SyncCommand()).thenApply(result -> null);
+    public CompletableFuture<Void> syncByCondition(long unsynchronizedTokens, Duration timeSinceLastSync) {
+        return execute(new SyncCommand(unsynchronizedTokens, timeSinceLastSync.toNanos())).thenApply(nothing -> null);
     }
 
     private <T> CompletableFuture<T> execute(RemoteCommand<T> command) {

@@ -269,6 +269,7 @@ public abstract class AbstractSerializationTest {
         testSerialization(new VerboseCommand<>(new ConsumeIgnoringRateLimitsCommand(100)));
         testSerialization(new VerboseCommand<>(new GetAvailableTokensCommand()));
         testSerialization(new VerboseCommand<>(new ReplaceConfigurationOrReturnPreviousCommand(configuration)));
+        testSerialization(new SyncCommand(20, 10000000));
     }
 
 }

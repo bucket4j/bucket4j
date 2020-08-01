@@ -23,6 +23,7 @@ import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.commands.*;
 
+import java.time.Duration;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
@@ -37,6 +38,11 @@ public class DefaultBucketProxy extends AbstractBucket implements BucketProxy {
     @Override
     public BucketProxy toListenable(BucketListener listener) {
         return new DefaultBucketProxy(configurationSupplier, commandExecutor, recoveryStrategy, wasInitialized, listener);
+    }
+
+    @Override
+    public void syncByCondition(long unsynchronizedTokens, Duration timeSinceLastSync) {
+        execute(new SyncCommand(unsynchronizedTokens, timeSinceLastSync.toNanos()));
     }
 
     public DefaultBucketProxy(Supplier<BucketConfiguration> configurationSupplier, CommandExecutor commandExecutor, RecoveryStrategy recoveryStrategy) {
@@ -154,11 +160,6 @@ public class DefaultBucketProxy extends AbstractBucket implements BucketProxy {
     protected VerboseResult<Long> consumeIgnoringRateLimitsVerboseImpl(long tokensToConsume) {
         ConsumeIgnoringRateLimitsCommand command = new ConsumeIgnoringRateLimitsCommand(tokensToConsume);
         return execute(command.asVerbose()).asLocal();
-    }
-
-    @Override
-    public void sync() {
-       commandExecutor.execute(new SyncCommand());
     }
 
     private BucketConfiguration getConfiguration() {

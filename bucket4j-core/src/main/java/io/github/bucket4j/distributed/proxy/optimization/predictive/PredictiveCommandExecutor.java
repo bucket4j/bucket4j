@@ -159,7 +159,7 @@ class PredictiveCommandExecutor implements CommandExecutor, AsyncCommandExecutor
             }
         }
 
-        if (CommandInsiders.isImmediateSyncRequired(command)) {
+        if (CommandInsiders.isImmediateSyncRequired(command, postponedToConsumeTokens, currentTimeNanos - samples.getLast().syncTimeNanos)) {
             // need to execute immediately because of special command
             return true;
         }

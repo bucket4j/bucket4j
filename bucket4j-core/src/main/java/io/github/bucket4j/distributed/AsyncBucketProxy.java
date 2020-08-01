@@ -21,6 +21,7 @@ package io.github.bucket4j.distributed;
 
 import io.github.bucket4j.*;
 
+import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.function.Function;
@@ -310,7 +311,21 @@ public interface AsyncBucketProxy {
 
     /**
      * TODO javadocs
+     *
+     * @return
      */
-    CompletableFuture<Void> sync();
+    default CompletableFuture<Void> syncImmediately() {
+        return syncByCondition(0L, Duration.ZERO);
+    }
+
+    /**
+     * TODO javadocs
+     *
+     * @param unsynchronizedTokens
+     * @param timeSinceLastSync
+     *
+     * @return
+     */
+    CompletableFuture<Void> syncByCondition(long unsynchronizedTokens, Duration timeSinceLastSync);
 
 }

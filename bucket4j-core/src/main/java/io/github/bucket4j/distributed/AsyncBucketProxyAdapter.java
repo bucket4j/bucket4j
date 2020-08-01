@@ -2,6 +2,7 @@ package io.github.bucket4j.distributed;
 
 import io.github.bucket4j.*;
 
+import java.time.Duration;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
@@ -119,7 +120,7 @@ public class AsyncBucketProxyAdapter implements AsyncBucketProxy {
     }
 
     @Override
-    public CompletableFuture<Void> sync() {
+    public CompletableFuture<Void> syncByCondition(long unsynchronizedTokens, Duration timeSinceLastSync) {
         return CompletableFuture.completedFuture(null);
     }
 

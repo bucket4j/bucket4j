@@ -9,8 +9,8 @@ public class CommandInsiders {
 
     private static final CommandInsider[] insiders;
 
-    public static <C extends RemoteCommand<?>> boolean isImmediateSyncRequired(C command) {
-        return insiders[command.getSerializationHandle().getTypeId()].isImmediateSyncRequired(command);
+    public static <C extends RemoteCommand<?>> boolean isImmediateSyncRequired(C command, long unsynchronizedTokens, long nanosSinceLastSync) {
+        return insiders[command.getSerializationHandle().getTypeId()].isImmediateSyncRequired(command, unsynchronizedTokens, nanosSinceLastSync);
     }
 
     public static <C extends RemoteCommand<?>> long estimateTokensToConsume(C command) {
@@ -26,7 +26,7 @@ public class CommandInsiders {
 
         register(ReserveAndCalculateTimeToSleepCommand.class, new CommandInsider<Long, ReserveAndCalculateTimeToSleepCommand>() {
             @Override
-            public boolean isImmediateSyncRequired(ReserveAndCalculateTimeToSleepCommand command) {
+            public boolean isImmediateSyncRequired(ReserveAndCalculateTimeToSleepCommand command, long unsynchronizedTokens, long nanosSinceLastSync) {
                 return false;
             }
 
@@ -43,7 +43,7 @@ public class CommandInsiders {
 
         register(GetAvailableTokensCommand.class, new CommandInsider<Long, GetAvailableTokensCommand>() {
             @Override
-            public boolean isImmediateSyncRequired(GetAvailableTokensCommand command) {
+            public boolean isImmediateSyncRequired(GetAvailableTokensCommand command, long unsynchronizedTokens, long nanosSinceLastSync) {
                 return false;
             }
 
@@ -60,7 +60,7 @@ public class CommandInsiders {
 
         register(AddTokensCommand.class, new CommandInsider<Nothing, AddTokensCommand>() {
             @Override
-            public boolean isImmediateSyncRequired(AddTokensCommand command) {
+            public boolean isImmediateSyncRequired(AddTokensCommand command, long unsynchronizedTokens, long nanosSinceLastSync) {
                 return true;
             }
 
@@ -77,7 +77,7 @@ public class CommandInsiders {
 
         register(CreateInitialStateCommand.class, new CommandInsider<Nothing, CreateInitialStateCommand>() {
             @Override
-            public boolean isImmediateSyncRequired(CreateInitialStateCommand command) {
+            public boolean isImmediateSyncRequired(CreateInitialStateCommand command, long unsynchronizedTokens, long nanosSinceLastSync) {
                 return true;
             }
 
@@ -94,7 +94,7 @@ public class CommandInsiders {
 
         register(ReplaceConfigurationOrReturnPreviousCommand.class, new CommandInsider<BucketConfiguration, ReplaceConfigurationOrReturnPreviousCommand>() {
             @Override
-            public boolean isImmediateSyncRequired(ReplaceConfigurationOrReturnPreviousCommand command) {
+            public boolean isImmediateSyncRequired(ReplaceConfigurationOrReturnPreviousCommand command, long unsynchronizedTokens, long nanosSinceLastSync) {
                 return true;
             }
 
@@ -111,7 +111,7 @@ public class CommandInsiders {
 
         register(TryConsumeCommand.class, new CommandInsider<Boolean, TryConsumeCommand>() {
             @Override
-            public boolean isImmediateSyncRequired(TryConsumeCommand command) {
+            public boolean isImmediateSyncRequired(TryConsumeCommand command, long unsynchronizedTokens, long nanosSinceLastSync) {
                 return false;
             }
 
@@ -128,7 +128,7 @@ public class CommandInsiders {
 
         register(ConsumeIgnoringRateLimitsCommand.class, new CommandInsider<Long, ConsumeIgnoringRateLimitsCommand>() {
             @Override
-            public boolean isImmediateSyncRequired(ConsumeIgnoringRateLimitsCommand command) {
+            public boolean isImmediateSyncRequired(ConsumeIgnoringRateLimitsCommand command, long unsynchronizedTokens, long nanosSinceLastSync) {
                 return false;
             }
 
@@ -145,7 +145,7 @@ public class CommandInsiders {
 
         register(GetConfigurationCommand.class, new CommandInsider<BucketConfiguration, GetConfigurationCommand>() {
             @Override
-            public boolean isImmediateSyncRequired(GetConfigurationCommand command) {
+            public boolean isImmediateSyncRequired(GetConfigurationCommand command, long unsynchronizedTokens, long nanosSinceLastSync) {
                 return false;
             }
 
@@ -162,8 +162,8 @@ public class CommandInsiders {
 
         register(VerboseCommand.class, cast(new CommandInsider<RemoteVerboseResult<Object>, VerboseCommand<Object>>() {
             @Override
-            public boolean isImmediateSyncRequired(VerboseCommand command) {
-                return CommandInsiders.isImmediateSyncRequired(command.getTargetCommand());
+            public boolean isImmediateSyncRequired(VerboseCommand command, long unsynchronizedTokens, long nanosSinceLastSync) {
+                return CommandInsiders.isImmediateSyncRequired(command.getTargetCommand(), unsynchronizedTokens, nanosSinceLastSync);
             }
 
             @Override
@@ -180,7 +180,7 @@ public class CommandInsiders {
 
         register(CreateSnapshotCommand.class, new CommandInsider<RemoteBucketState, CreateSnapshotCommand>() {
             @Override
-            public boolean isImmediateSyncRequired(CreateSnapshotCommand command) {
+            public boolean isImmediateSyncRequired(CreateSnapshotCommand command, long unsynchronizedTokens, long nanosSinceLastSync) {
                 return false;
             }
 
@@ -197,9 +197,9 @@ public class CommandInsiders {
 
         register(MultiCommand.class, new CommandInsider<MultiResult, MultiCommand>() {
             @Override
-            public boolean isImmediateSyncRequired(MultiCommand multiCommand) {
+            public boolean isImmediateSyncRequired(MultiCommand multiCommand, long unsynchronizedTokens, long nanosSinceLastSync) {
                 for (RemoteCommand<?> command : multiCommand.getCommands()) {
-                    if (CommandInsiders.isImmediateSyncRequired(command)) {
+                    if (CommandInsiders.isImmediateSyncRequired(command, unsynchronizedTokens, nanosSinceLastSync)) {
                         return true;
                     }
                 }
@@ -238,7 +238,7 @@ public class CommandInsiders {
 
         register(CreateInitialStateAndExecuteCommand.class, cast(new CommandInsider<Object, CreateInitialStateAndExecuteCommand<Object>>() {
             @Override
-            public boolean isImmediateSyncRequired(CreateInitialStateAndExecuteCommand command) {
+            public boolean isImmediateSyncRequired(CreateInitialStateAndExecuteCommand command, long unsynchronizedTokens, long nanosSinceLastSync) {
                 return true;
             }
 
@@ -255,7 +255,7 @@ public class CommandInsiders {
 
         register(EstimateAbilityToConsumeCommand.class, new CommandInsider<EstimationProbe, EstimateAbilityToConsumeCommand>() {
             @Override
-            public boolean isImmediateSyncRequired(EstimateAbilityToConsumeCommand command) {
+            public boolean isImmediateSyncRequired(EstimateAbilityToConsumeCommand command, long unsynchronizedTokens, long nanosSinceLastSync) {
                 return false;
             }
 
@@ -272,7 +272,7 @@ public class CommandInsiders {
 
         register(TryConsumeAndReturnRemainingTokensCommand.class, new CommandInsider<ConsumptionProbe, TryConsumeAndReturnRemainingTokensCommand>() {
             @Override
-            public boolean isImmediateSyncRequired(TryConsumeAndReturnRemainingTokensCommand command) {
+            public boolean isImmediateSyncRequired(TryConsumeAndReturnRemainingTokensCommand command, long unsynchronizedTokens, long nanosSinceLastSync) {
                 return false;
             }
 
@@ -289,7 +289,7 @@ public class CommandInsiders {
 
         register(ConsumeAsMuchAsPossibleCommand.class, new CommandInsider<Long, ConsumeAsMuchAsPossibleCommand>() {
             @Override
-            public boolean isImmediateSyncRequired(ConsumeAsMuchAsPossibleCommand command) {
+            public boolean isImmediateSyncRequired(ConsumeAsMuchAsPossibleCommand command, long unsynchronizedTokens, long nanosSinceLastSync) {
                 return command.getLimit() == Long.MAX_VALUE;
             }
 
@@ -306,8 +306,9 @@ public class CommandInsiders {
 
         register(SyncCommand.class, new CommandInsider<Nothing, SyncCommand>() {
             @Override
-            public boolean isImmediateSyncRequired(SyncCommand command) {
-                return true;
+            public boolean isImmediateSyncRequired(SyncCommand command, long unsynchronizedTokens, long nanosSinceLastSync) {
+                return unsynchronizedTokens >= command.getUnsynchronizedTokens()
+                        && nanosSinceLastSync >= command.getNanosSinceLastSync();
             }
 
             @Override
@@ -360,7 +361,7 @@ public class CommandInsiders {
 
     private interface CommandInsider<T, C extends RemoteCommand<T>> {
 
-        boolean isImmediateSyncRequired(C command);
+        boolean isImmediateSyncRequired(C command, long unsynchronizedTokens, long nanosSinceLastSync);
 
         long estimateTokensToConsume(C command);
 

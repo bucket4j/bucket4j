@@ -21,6 +21,7 @@
 package io.github.bucket4j.distributed.remote.commands;
 
 
+import io.github.bucket4j.BucketExceptions;
 import io.github.bucket4j.Nothing;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.MutableBucketEntry;
@@ -31,18 +32,26 @@ import io.github.bucket4j.serialization.SerializationAdapter;
 import io.github.bucket4j.serialization.SerializationHandle;
 import io.github.bucket4j.util.ComparableByContent;
 
+import java.io.IOException;
+
 
 public class SyncCommand implements RemoteCommand<Nothing>, ComparableByContent<SyncCommand> {
 
+    private final long unsynchronizedTokens;
+    private final long nanosSinceLastSync;
+
     public static final SerializationHandle<SyncCommand> SERIALIZATION_HANDLE = new SerializationHandle<SyncCommand>() {
         @Override
-        public <S> SyncCommand deserialize(DeserializationAdapter<S> adapter, S input) {
-            return new SyncCommand();
+        public <S> SyncCommand deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
+            long unsynchronizedTokens = adapter.readLong(input);
+            long nanosSinceLastSync = adapter.readLong(input);
+            return new SyncCommand(unsynchronizedTokens, nanosSinceLastSync);
         }
 
         @Override
-        public <O> void serialize(SerializationAdapter<O> adapter, O output, SyncCommand command) {
-            // do nothing
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, SyncCommand command) throws IOException {
+            adapter.writeLong(output, command.unsynchronizedTokens);
+            adapter.writeLong(output, command.nanosSinceLastSync);
         }
 
         @Override
@@ -56,6 +65,25 @@ public class SyncCommand implements RemoteCommand<Nothing>, ComparableByContent<
         }
 
     };
+
+    public SyncCommand(long unsynchronizedTokens, long nanosSinceLastSync) {
+        if (unsynchronizedTokens < 0) {
+            throw BucketExceptions.nonPositiveTokensLimitToSync(unsynchronizedTokens);
+        }
+        if (nanosSinceLastSync < 0) {
+            throw BucketExceptions.nonPositiveLimitToSync(nanosSinceLastSync);
+        }
+        this.unsynchronizedTokens = unsynchronizedTokens;
+        this.nanosSinceLastSync = nanosSinceLastSync;
+    }
+
+    public long getNanosSinceLastSync() {
+        return nanosSinceLastSync;
+    }
+
+    public long getUnsynchronizedTokens() {
+        return unsynchronizedTokens;
+    }
 
     @Override
     public CommandResult<Nothing> execute(MutableBucketEntry mutableEntry, long currentTimeNanos) {
@@ -75,7 +103,8 @@ public class SyncCommand implements RemoteCommand<Nothing>, ComparableByContent<
 
     @Override
     public boolean equalsByContent(SyncCommand other) {
-        return true;
+        return unsynchronizedTokens == other.unsynchronizedTokens
+                && nanosSinceLastSync == other.nanosSinceLastSync;
     }
 
 }

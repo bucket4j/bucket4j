@@ -134,7 +134,7 @@ class DelayedCommandExecutor implements CommandExecutor, AsyncCommandExecutor {
             return true;
         }
 
-        if (CommandInsiders.isImmediateSyncRequired(command)) {
+        if (CommandInsiders.isImmediateSyncRequired(command, postponedToConsumeTokens, currentTimeNanos - lastSyncTimeNanos)) {
             // need to execute immediately because of special command
             return true;
         }
