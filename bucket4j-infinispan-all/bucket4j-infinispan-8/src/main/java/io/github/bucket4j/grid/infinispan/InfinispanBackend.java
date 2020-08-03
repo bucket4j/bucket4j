@@ -19,9 +19,11 @@ package io.github.bucket4j.grid.infinispan;
 
 import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.proxy.AbstractBackend;
+import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.remote.*;
 import io.github.bucket4j.distributed.serialization.InternalSerializationHelper;
+import io.github.bucket4j.distributed.versioning.Version;
 import org.infinispan.commons.CacheException;
 import org.infinispan.commons.api.functional.EntryView.ReadWriteEntryView;
 import org.infinispan.commons.api.functional.FunctionalMap.ReadWriteMap;
@@ -41,17 +43,19 @@ public class InfinispanBackend<K> extends AbstractBackend<K> {
     private final ReadWriteMap<K, byte[]> readWriteMap;
 
     // TODO javadocs
-    public InfinispanBackend(ReadWriteMap<K, byte[]> readWriteMap) {
+    public InfinispanBackend(ReadWriteMap<K, byte[]> readWriteMap, ClientSideConfig clientSideConfig) {
+        super(clientSideConfig);
         this.readWriteMap = Objects.requireNonNull(readWriteMap);
     }
 
     @Override
-    public <T> CommandResult<T> execute(K key, RemoteCommand<T> command) {
-        InfinispanProcessor<K> entryProcessor = new InfinispanProcessor<>(command);
+    public <T> CommandResult<T> execute(K key, Request<T> request) {
+        InfinispanProcessor<K> entryProcessor = new InfinispanProcessor<>(request);
+        Version backwardCompatibilityVersion = request.getBackwardCompatibilityVersion();
         try {
             CompletableFuture<byte[]> future = readWriteMap.eval(key, entryProcessor);
             byte[] result = future.get();
-            return deserializeResult(result);
+            return deserializeResult(result, backwardCompatibilityVersion);
         } catch (InterruptedException | ExecutionException e) {
             throw new CacheException(e);
         }
@@ -63,55 +67,41 @@ public class InfinispanBackend<K> extends AbstractBackend<K> {
     }
 
     @Override
-    public <T> CompletableFuture<CommandResult<T>> executeAsync(K key, RemoteCommand<T> command) {
-        InfinispanProcessor<K> entryProcessor = new InfinispanProcessor<>(command);
+    public <T> CompletableFuture<CommandResult<T>> executeAsync(K key, Request<T> request) {
+        InfinispanProcessor<K> entryProcessor = new InfinispanProcessor<>(request);
         CompletableFuture<byte[]> resultFuture = readWriteMap.eval(key, entryProcessor);
-        return resultFuture.thenApply(InternalSerializationHelper::deserializeResult);
+        Version backwardCompatibilityVersion = request.getBackwardCompatibilityVersion();
+        return resultFuture.thenApply(resultBytes -> deserializeResult(resultBytes, backwardCompatibilityVersion));
     }
 
     private static class InfinispanProcessor<K> implements SerializableFunction<ReadWriteEntryView<K, byte[]>, byte[]> {
 
         private static final long serialVersionUID = 42L;
 
-        private final byte[] commandBytes;
+        private final byte[] requestBytes;
 
-        public InfinispanProcessor(RemoteCommand<?> command) {
-            this.commandBytes = InternalSerializationHelper.serializeCommand(command);
+        public InfinispanProcessor(Request<?> request) {
+            this.requestBytes = InternalSerializationHelper.serializeRequest(request);
         }
 
         @Override
         public byte[] apply(ReadWriteEntryView<K, byte[]> entryView) {
-            InfinispanEntry<K> mutableEntry = new InfinispanEntry<>(entryView);
-            RemoteCommand<?> command = deserializeCommand(commandBytes);
-            CommandResult<?> result = command.execute(mutableEntry, TimeMeter.SYSTEM_MILLISECONDS.currentTimeNanos());
-            return serializeResult(result);
-        }
+            return new AbstractBinaryTransaction(requestBytes) {
+                @Override
+                public boolean exists() {
+                    return entryView.find().isPresent();
+                }
 
-    }
+                @Override
+                protected byte[] getRawState() {
+                    return entryView.get();
+                }
 
-    private static class InfinispanEntry<K> implements MutableBucketEntry {
-
-        private final ReadWriteEntryView<K, byte[]> entryView;
-
-        public InfinispanEntry(ReadWriteEntryView<K, byte[]> entryView) {
-            this.entryView = entryView;
-        }
-
-        @Override
-        public RemoteBucketState get() {
-            byte[] stateBytes = entryView.get();
-            return deserializeState(stateBytes);
-        }
-
-        @Override
-        public boolean exists() {
-            return entryView.find().isPresent();
-        }
-
-        @Override
-        public void set(RemoteBucketState value) {
-            byte[] stateBytes = serializeState(value);
-            entryView.set(stateBytes);
+                @Override
+                protected void setRawState(byte[] stateBytes) {
+                    entryView.set(stateBytes);
+                }
+            }.execute();
         }
 
     }

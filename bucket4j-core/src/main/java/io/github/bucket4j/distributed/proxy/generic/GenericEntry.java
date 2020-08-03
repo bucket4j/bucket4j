@@ -20,6 +20,7 @@ package io.github.bucket4j.distributed.proxy.generic;
 import io.github.bucket4j.distributed.remote.MutableBucketEntry;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.distributed.serialization.InternalSerializationHelper;
+import io.github.bucket4j.distributed.versioning.Version;
 
 import java.util.Objects;
 
@@ -27,10 +28,12 @@ import static io.github.bucket4j.distributed.serialization.InternalSerialization
 
 public class GenericEntry implements MutableBucketEntry {
 
+    private final Version backwardCompatibilityVersion;
     private RemoteBucketState originalState;
     private RemoteBucketState modifiedState;
 
-    public GenericEntry(byte[] originalStateBytes) {
+    public GenericEntry(byte[] originalStateBytes, Version backwardCompatibilityVersion) {
+        this.backwardCompatibilityVersion = backwardCompatibilityVersion;
         this.originalState = originalStateBytes == null? null : deserializeState(originalStateBytes);
     }
 
@@ -54,7 +57,7 @@ public class GenericEntry implements MutableBucketEntry {
     }
 
     public byte[] getModifiedStateBytes() {
-        return InternalSerializationHelper.serializeState(modifiedState);
+        return InternalSerializationHelper.serializeState(modifiedState, backwardCompatibilityVersion);
     }
 
     public boolean isModified() {

@@ -17,9 +17,8 @@
 
 package io.github.bucket4j.grid.jcache;
 
-import io.github.bucket4j.*;
 import io.github.bucket4j.distributed.proxy.AbstractBackend;
-import io.github.bucket4j.distributed.remote.RemoteCommand;
+import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.remote.*;
 import io.github.bucket4j.distributed.serialization.InternalSerializationHelper;
 
@@ -31,8 +30,6 @@ import javax.cache.spi.CachingProvider;
 import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-
-import static io.github.bucket4j.distributed.serialization.InternalSerializationHelper.*;
 
 /**
  * The extension of Bucket4j library addressed to support <a href="https://www.jcp.org/en/jsr/detail?id=107">JCache API (JSR 107)</a> specification.
@@ -49,17 +46,18 @@ public class JCacheBackend<K> extends AbstractBackend<K> {
     private final Cache<K, byte[]> cache;
     private final boolean preferLambdaStyle;
 
-    public JCacheBackend(Cache<K, byte[]> cache) {
+    public JCacheBackend(Cache<K, byte[]> cache, ClientSideConfig clientSideConfig) {
+        super(clientSideConfig);
         checkCompatibilityWithProvider(cache);
         this.cache = Objects.requireNonNull(cache);
         this.preferLambdaStyle = preferLambdaStyle(cache);
     }
 
     @Override
-    public <T> CommandResult<T> execute(K key, RemoteCommand<T> command) {
-        EntryProcessor<K, byte[], byte[]> entryProcessor = preferLambdaStyle? createLambdaProcessor(command) : new BucketProcessor<>(command);
+    public <T> CommandResult<T> execute(K key, Request<T> request) {
+        EntryProcessor<K, byte[], byte[]> entryProcessor = preferLambdaStyle? createLambdaProcessor(request) : new BucketProcessor<>(request);
         byte[] resultBytes = cache.invoke(key, entryProcessor);
-        return InternalSerializationHelper.deserializeResult(resultBytes);
+        return InternalSerializationHelper.deserializeResult(resultBytes, request.getBackwardCompatibilityVersion());
     }
 
     @Override
@@ -68,7 +66,7 @@ public class JCacheBackend<K> extends AbstractBackend<K> {
     }
 
     @Override
-    public <T> CompletableFuture<CommandResult<T>> executeAsync(K key, RemoteCommand<T> command) {
+    public <T> CompletableFuture<CommandResult<T>> executeAsync(K key, Request<T> request) {
         // because JCache does not specify async API
         throw new UnsupportedOperationException();
     }
@@ -114,41 +112,35 @@ public class JCacheBackend<K> extends AbstractBackend<K> {
         return false;
     }
 
-    public <T> EntryProcessor<K, byte[], byte[]> createLambdaProcessor(RemoteCommand<T> command) {
-        byte[] serializedCommand = InternalSerializationHelper.serializeCommand(command);
-        return  (Serializable & EntryProcessor<K, byte[], byte[]>) (mutableEntry, objects) -> {
-            RemoteCommand<T> targetCommand = deserializeCommand(serializedCommand);
-            JCacheBucketEntry bucketEntry = new JCacheBucketEntry(mutableEntry);
-            CommandResult<T> result = targetCommand.execute(bucketEntry, TimeMeter.SYSTEM_MILLISECONDS.currentTimeNanos());
-            return serializeResult(result);
-        };
+    public <T> EntryProcessor<K, byte[], byte[]> createLambdaProcessor(Request<T> request) {
+        byte[] serializedRequest = InternalSerializationHelper.serializeRequest(request);
+        return  (Serializable & EntryProcessor<K, byte[], byte[]>) (mutableEntry, objects)
+                -> new JCacheTransaction(mutableEntry, serializedRequest).execute();
     }
 
     private static class BucketProcessor<K, T> implements Serializable, EntryProcessor<K, byte[], byte[]> {
 
         private static final long serialVersionUID = 911;
 
-        private final byte[] serializedCommand;
+        private final byte[] serializedRequest;
 
-        public BucketProcessor(RemoteCommand<T> command) {
-            this.serializedCommand = InternalSerializationHelper.serializeCommand(command);
+        public BucketProcessor(Request<T> request) {
+            this.serializedRequest = InternalSerializationHelper.serializeRequest(request);
         }
 
         @Override
         public byte[] process(MutableEntry<K, byte[]> mutableEntry, Object... arguments) {
-            RemoteCommand<T> targetCommand = deserializeCommand(serializedCommand);
-            JCacheBucketEntry bucketEntry = new JCacheBucketEntry(mutableEntry);
-            CommandResult<T> result = targetCommand.execute(bucketEntry, TimeMeter.SYSTEM_MILLISECONDS.currentTimeNanos());
-            return serializeResult(result);
+            return new JCacheTransaction(mutableEntry, serializedRequest).execute();
         }
 
     }
 
-    private static class JCacheBucketEntry implements MutableBucketEntry {
+    private static class JCacheTransaction extends AbstractBinaryTransaction {
 
         private final MutableEntry<?, byte[]> targetEntry;
 
-        private JCacheBucketEntry(MutableEntry<?, byte[]> targetEntry) {
+        private JCacheTransaction(MutableEntry<?, byte[]> targetEntry, byte[] requestBustes) {
+            super(requestBustes);
             this.targetEntry = targetEntry;
         }
 
@@ -158,15 +150,13 @@ public class JCacheBackend<K> extends AbstractBackend<K> {
         }
 
         @Override
-        public void set(RemoteBucketState state) {
-            byte[] bytes = serializeState(state);
-            targetEntry.setValue(bytes);
+        protected byte[] getRawState() {
+            return targetEntry.getValue();
         }
 
         @Override
-        public RemoteBucketState get() {
-            byte[] stateBytes = targetEntry.getValue();
-            return deserializeState(stateBytes);
+        protected void setRawState(byte[] stateBytes) {
+            targetEntry.setValue(stateBytes);
         }
 
     }

@@ -3,6 +3,7 @@ package io.github.bucket4j.mock;
 
 import io.github.bucket4j.*;
 import io.github.bucket4j.distributed.AsyncBucketProxy;
+import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.local.LocalBucketBuilder;
 import io.github.bucket4j.local.SynchronizationStrategy;
 
@@ -70,7 +71,7 @@ public enum BucketType {
     COMPARE_AND_SWAP {
         @Override
         public Bucket createBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
-            CompareAndSwapBasedBackendMock<Integer> backend = new CompareAndSwapBasedBackendMock<>(timeMeter);
+            CompareAndSwapBasedBackendMock<Integer> backend = new CompareAndSwapBasedBackendMock<>(ClientSideConfig.withClientClock(timeMeter));
             return backend.builder()
                     .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
                     .buildProxy(42, configuration);
@@ -79,7 +80,7 @@ public enum BucketType {
     SELECT_FOR_UPDATE {
         @Override
         public Bucket createBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
-            LockBasedBackendMock<Integer> backend = new LockBasedBackendMock<>(timeMeter);
+            LockBasedBackendMock<Integer> backend = new LockBasedBackendMock<>(ClientSideConfig.withClientClock(timeMeter));
             return backend.builder()
                     .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
                     .buildProxy(42, configuration);

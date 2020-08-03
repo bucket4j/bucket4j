@@ -1,5 +1,10 @@
 package io.github.bucket4j.distributed.serialization;
 
+import io.github.bucket4j.distributed.versioning.UnsupportedTypeException;
+import io.github.bucket4j.distributed.versioning.UsageOfUnsupportedApiException;
+import io.github.bucket4j.distributed.versioning.Version;
+import io.github.bucket4j.distributed.versioning.Versions;
+
 import java.util.*;
 
 public class SerializationHandles {
@@ -45,9 +50,16 @@ public class SerializationHandles {
 
     public <T> SerializationHandle<T> getHandleByTypeId(int typeId) {
         if (typeId > 0) {
+            if (typeId >= handlesById.length) {
+                throw new UnsupportedTypeException(typeId);
+            }
             return handlesById[typeId];
         } else {
-            return PrimitiveSerializationHandles.primitiveHandlesById[-typeId];
+            typeId = -typeId;
+            if (typeId >= PrimitiveSerializationHandles.primitiveHandlesById.length) {
+                throw new UnsupportedTypeException(typeId);
+            }
+            return PrimitiveSerializationHandles.primitiveHandlesById[typeId];
         }
     }
 

@@ -20,6 +20,7 @@ package example.distributed.generic.redisson.rmap_cas;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketConfiguration;
+import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import org.jetbrains.annotations.NotNull;
 import org.redisson.Redisson;
 import org.redisson.api.RMap;
@@ -40,7 +41,7 @@ public class RMAP_Redisson_Example {
 
         RMap<Long, byte[]> buckets = redisson.getMap("buckets");
 
-        RMapBasedRedissonBackend backend = new RMapBasedRedissonBackend(buckets);
+        RMapBasedRedissonBackend backend = new RMapBasedRedissonBackend(buckets, ClientSideConfig.getDefault());
 
         BucketConfiguration configuration = BucketConfiguration.builder()
                 .addLimit(Bandwidth.simple(10, Duration.ofSeconds(1)))

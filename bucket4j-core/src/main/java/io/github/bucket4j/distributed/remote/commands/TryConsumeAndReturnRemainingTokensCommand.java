@@ -30,7 +30,11 @@ import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.MutableBucketEntry;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
+import io.github.bucket4j.distributed.versioning.Version;
+import io.github.bucket4j.distributed.versioning.Versions;
 import io.github.bucket4j.util.ComparableByContent;
+
+import static io.github.bucket4j.distributed.versioning.Versions.v_5_0_0;
 
 
 public class TryConsumeAndReturnRemainingTokensCommand implements RemoteCommand<ConsumptionProbe>, ComparableByContent<TryConsumeAndReturnRemainingTokensCommand> {
@@ -39,14 +43,19 @@ public class TryConsumeAndReturnRemainingTokensCommand implements RemoteCommand<
 
     public static final SerializationHandle<TryConsumeAndReturnRemainingTokensCommand> SERIALIZATION_HANDLE = new SerializationHandle<TryConsumeAndReturnRemainingTokensCommand>() {
         @Override
-        public <S> TryConsumeAndReturnRemainingTokensCommand deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
+        public <S> TryConsumeAndReturnRemainingTokensCommand deserialize(DeserializationAdapter<S> adapter, S input, Version backwardCompatibilityVersion) throws IOException {
+            int formatNumber = adapter.readInt(input);
+            Versions.check(formatNumber, v_5_0_0, v_5_0_0);
+
             long tokensToConsume = adapter.readLong(input);
 
             return new TryConsumeAndReturnRemainingTokensCommand(tokensToConsume);
         }
 
         @Override
-        public <O> void serialize(SerializationAdapter<O> adapter, O output, TryConsumeAndReturnRemainingTokensCommand command) throws IOException {
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, TryConsumeAndReturnRemainingTokensCommand command, Version backwardCompatibilityVersion) throws IOException {
+            adapter.writeInt(output, v_5_0_0.getNumber());
+
             adapter.writeLong(output, command.tokensToConsume);
         }
 

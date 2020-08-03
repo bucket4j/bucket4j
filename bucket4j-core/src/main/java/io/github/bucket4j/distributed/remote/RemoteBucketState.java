@@ -25,9 +25,13 @@ import io.github.bucket4j.BucketState;
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
 import io.github.bucket4j.distributed.serialization.SerializationAdapter;
+import io.github.bucket4j.distributed.versioning.Version;
+import io.github.bucket4j.distributed.versioning.Versions;
 import io.github.bucket4j.util.ComparableByContent;
 
 import java.io.IOException;
+
+import static io.github.bucket4j.distributed.versioning.Versions.v_5_0_0;
 
 
 public class RemoteBucketState implements ComparableByContent<RemoteBucketState> {
@@ -38,18 +42,23 @@ public class RemoteBucketState implements ComparableByContent<RemoteBucketState>
 
     public static final SerializationHandle<RemoteBucketState> SERIALIZATION_HANDLE = new SerializationHandle<RemoteBucketState>() {
         @Override
-        public <S> RemoteBucketState deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
-            BucketConfiguration bucketConfiguration = BucketConfiguration.SERIALIZATION_HANDLE.deserialize(adapter, input);
-            BucketState bucketState = BucketState.deserialize(adapter, input);
-            RemoteStat stat = RemoteStat.SERIALIZATION_HANDLE.deserialize(adapter, input);
+        public <S> RemoteBucketState deserialize(DeserializationAdapter<S> adapter, S input, Version backwardCompatibilityVersion) throws IOException {
+            int formatNumber = adapter.readInt(input);
+            Versions.check(formatNumber, v_5_0_0, v_5_0_0);
+
+            BucketConfiguration bucketConfiguration = BucketConfiguration.SERIALIZATION_HANDLE.deserialize(adapter, input, backwardCompatibilityVersion);
+            BucketState bucketState = BucketState.deserialize(adapter, input, backwardCompatibilityVersion);
+            RemoteStat stat = RemoteStat.SERIALIZATION_HANDLE.deserialize(adapter, input, backwardCompatibilityVersion);
             return new RemoteBucketState(bucketConfiguration, bucketState, stat);
         }
 
         @Override
-        public <O> void serialize(SerializationAdapter<O> adapter, O output, RemoteBucketState gridState) throws IOException {
-            BucketConfiguration.SERIALIZATION_HANDLE.serialize(adapter, output, gridState.configuration);
-            BucketState.serialize(adapter, output, gridState.state);
-            RemoteStat.SERIALIZATION_HANDLE.serialize(adapter, output, gridState.stat);
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, RemoteBucketState gridState, Version backwardCompatibilityVersion) throws IOException {
+            adapter.writeInt(output, v_5_0_0.getNumber());
+
+            BucketConfiguration.SERIALIZATION_HANDLE.serialize(adapter, output, gridState.configuration, backwardCompatibilityVersion);
+            BucketState.serialize(adapter, output, gridState.state, backwardCompatibilityVersion);
+            RemoteStat.SERIALIZATION_HANDLE.serialize(adapter, output, gridState.stat, backwardCompatibilityVersion);
         }
 
         @Override
@@ -123,8 +132,7 @@ public class RemoteBucketState implements ComparableByContent<RemoteBucketState>
     public boolean equalsByContent(RemoteBucketState other) {
         return ComparableByContent.equals(state, other.state) &&
                 ComparableByContent.equals(configuration, other.configuration) &&
-                ComparableByContent.equals(stat, other.stat)
-                ;
+                ComparableByContent.equals(stat, other.stat);
     }
 
     public RemoteBucketState copy() {

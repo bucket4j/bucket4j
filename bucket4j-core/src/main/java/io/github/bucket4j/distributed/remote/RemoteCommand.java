@@ -21,6 +21,7 @@ import io.github.bucket4j.distributed.remote.commands.VerboseCommand;
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
+import io.github.bucket4j.distributed.versioning.Version;
 
 import java.io.IOException;
 
@@ -38,16 +39,16 @@ public interface RemoteCommand<T> {
 
     SerializationHandle<RemoteCommand<?>> getSerializationHandle();
 
-    static <O> void serialize(SerializationAdapter<O> adapter, O output, RemoteCommand<?> command) throws IOException {
+    static <O> void serialize(SerializationAdapter<O> adapter, O output, RemoteCommand<?> command, Version backwardCompatibilityVersion) throws IOException {
         SerializationHandle<RemoteCommand<?>> serializer = command.getSerializationHandle();
         adapter.writeInt(output, serializer.getTypeId());
-        serializer.serialize(adapter, output, command);
+        serializer.serialize(adapter, output, command, backwardCompatibilityVersion);
     }
 
-    static <I> RemoteCommand<?> deserialize(DeserializationAdapter<I> adapter, I input) throws IOException {
+    static <I> RemoteCommand<?> deserialize(DeserializationAdapter<I> adapter, I input, Version backwardCompatibilityVersion) throws IOException {
         int typeId = adapter.readInt(input);
         SerializationHandle<?> serializer = SerializationHandle.CORE_HANDLES.getHandleByTypeId(typeId);
-        return (RemoteCommand<?>) serializer.deserialize(adapter, input);
+        return (RemoteCommand<?>) serializer.deserialize(adapter, input, backwardCompatibilityVersion);
     }
 
 }

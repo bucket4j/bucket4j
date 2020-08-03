@@ -1,6 +1,7 @@
 package io.github.bucket4j.distributed.serialization;
 
 import io.github.bucket4j.Nothing;
+import io.github.bucket4j.distributed.versioning.Version;
 
 import java.io.IOException;
 
@@ -9,12 +10,12 @@ public class PrimitiveSerializationHandles {
     public static SerializationHandle<Nothing> NULL_HANDLE = new SerializationHandle<Nothing>() {
 
         @Override
-        public <I> Nothing deserialize(DeserializationAdapter<I> adapter, I input) throws IOException {
+        public <I> Nothing deserialize(DeserializationAdapter<I> adapter, I input, Version backwardCompatibilityVersion) throws IOException {
             return null;
         }
 
         @Override
-        public <O> void serialize(SerializationAdapter<O> adapter, O output, Nothing serializableObject) throws IOException {
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, Nothing serializableObject, Version backwardCompatibilityVersion) throws IOException {
 
         }
 
@@ -31,12 +32,12 @@ public class PrimitiveSerializationHandles {
 
     public static SerializationHandle<Long> LONG_HANDLE = new SerializationHandle<Long>() {
         @Override
-        public <I> Long deserialize(DeserializationAdapter<I> adapter, I input) throws IOException {
+        public <I> Long deserialize(DeserializationAdapter<I> adapter, I input, Version backwardCompatibilityVersion) throws IOException {
             return adapter.readLong(input);
         }
 
         @Override
-        public <O> void serialize(SerializationAdapter<O> adapter, O output, Long value) throws IOException {
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, Long value, Version backwardCompatibilityVersion) throws IOException {
             adapter.writeLong(output, value);
         }
 
@@ -53,12 +54,12 @@ public class PrimitiveSerializationHandles {
 
     public static SerializationHandle<Boolean> BOOLEAN_HANDLE = new SerializationHandle<Boolean>() {
         @Override
-        public <I> Boolean deserialize(DeserializationAdapter<I> adapter, I input) throws IOException {
+        public <I> Boolean deserialize(DeserializationAdapter<I> adapter, I input, Version backwardCompatibilityVersion) throws IOException {
             return adapter.readBoolean(input);
         }
 
         @Override
-        public <O> void serialize(SerializationAdapter<O> adapter, O output, Boolean value) throws IOException {
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, Boolean value, Version backwardCompatibilityVersion) throws IOException {
             adapter.writeBoolean(output, value);
         }
 

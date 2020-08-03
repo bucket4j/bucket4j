@@ -2,6 +2,8 @@ package io.github.bucket4j.serialization;
 
 import io.github.bucket4j.distributed.serialization.DataOutputSerializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
+import io.github.bucket4j.distributed.versioning.Version;
+import io.github.bucket4j.distributed.versioning.Versions;
 
 import java.io.*;
 import java.util.HashMap;
@@ -25,12 +27,12 @@ public class JdkDataOutputSerializationTest extends AbstractSerializationTest {
         try {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             DataOutputStream dos = new DataOutputStream(baos);
-            serializationHandle.serialize(DataOutputSerializationAdapter.INSTANCE, dos, object);
+            serializationHandle.serialize(DataOutputSerializationAdapter.INSTANCE, dos, object, Versions.getLatest());
             byte[] bytes = baos.toByteArray();
 
             ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
             DataInputStream dis = new DataInputStream(bais);
-            return (T) serializationHandle.deserialize(DataOutputSerializationAdapter.INSTANCE, dis);
+            return (T) serializationHandle.deserialize(DataOutputSerializationAdapter.INSTANCE, dis, Versions.getLatest());
         } catch (Exception e) {
             throw new IllegalStateException(e);
         }

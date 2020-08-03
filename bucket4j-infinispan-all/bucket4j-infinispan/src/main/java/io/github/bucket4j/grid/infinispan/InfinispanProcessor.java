@@ -1,8 +1,8 @@
 package io.github.bucket4j.grid.infinispan;
 
-import io.github.bucket4j.TimeMeter;
-import io.github.bucket4j.distributed.remote.CommandResult;
+import io.github.bucket4j.distributed.remote.AbstractBinaryTransaction;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
+import io.github.bucket4j.distributed.remote.Request;
 import io.github.bucket4j.distributed.serialization.InternalSerializationHelper;
 import io.github.bucket4j.util.ComparableByContent;
 import org.infinispan.functional.EntryView;
@@ -14,31 +14,43 @@ public class InfinispanProcessor<K, R> implements
 
     private static final long serialVersionUID = 911L;
 
-    private final byte[] commandBytes;
+    private final byte[] requestBytes;
 
-    public InfinispanProcessor(RemoteCommand<R> command) {
-        this.commandBytes = InternalSerializationHelper.serializeCommand(command);
+    public InfinispanProcessor(Request<R> request) {
+        this.requestBytes = InternalSerializationHelper.serializeRequest(request);
     }
 
-    public InfinispanProcessor(byte[] commandBytes) {
-        this.commandBytes = commandBytes;
+    public InfinispanProcessor(byte[] requestBytes) {
+        this.requestBytes = requestBytes;
     }
 
     @Override
-    public byte[] apply(EntryView.ReadWriteEntryView<K, byte[]> entryView) {
-        InfinispanEntry<K> mutableEntry = new InfinispanEntry<>(entryView);
-        RemoteCommand<R> command = InternalSerializationHelper.deserializeCommand(commandBytes);
-        CommandResult<R> result = command.execute(mutableEntry, TimeMeter.SYSTEM_MILLISECONDS.currentTimeNanos());
-        return InternalSerializationHelper.serializeResult(result);
+    public byte[] apply(EntryView.ReadWriteEntryView<K, byte[]> entry) {
+        return new AbstractBinaryTransaction(requestBytes) {
+            @Override
+            public boolean exists() {
+                return entry.find().isPresent();
+            }
+
+            @Override
+            protected byte[] getRawState() {
+                return entry.get();
+            }
+
+            @Override
+            protected void setRawState(byte[] stateBytes) {
+                entry.set(stateBytes);
+            }
+        }.execute();
     }
 
     @Override
     public boolean equalsByContent(InfinispanProcessor other) {
-        return ComparableByContent.equals(commandBytes, other.commandBytes);
+        return ComparableByContent.equals(requestBytes, other.requestBytes);
     }
 
-    public byte[] getCommandBytes() {
-        return commandBytes;
+    public byte[] getRequestBytes() {
+        return requestBytes;
     }
 
 }

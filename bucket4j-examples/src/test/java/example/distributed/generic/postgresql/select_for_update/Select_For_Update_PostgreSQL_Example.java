@@ -22,6 +22,7 @@ import com.zaxxer.hikari.HikariDataSource;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketConfiguration;
+import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import org.jetbrains.annotations.NotNull;
 import org.testcontainers.containers.PostgreSQLContainer;
 
@@ -37,7 +38,7 @@ public class Select_For_Update_PostgreSQL_Example {
     public static void main(String[] args) throws SQLException, InterruptedException {
         PostgreSQLContainer container = startPostgreSQLContainer();
         final DataSource dataSource = createJdbcDataSource(container);
-        SelectForUpdateBasedPostgreSQLBackend backend = new SelectForUpdateBasedPostgreSQLBackend(dataSource);
+        SelectForUpdateBasedPostgreSQLBackend backend = new SelectForUpdateBasedPostgreSQLBackend(dataSource, ClientSideConfig.getDefault());
 
         BucketConfiguration configuration = BucketConfiguration.builder()
                 .addLimit(Bandwidth.simple(10, Duration.ofSeconds(1)))

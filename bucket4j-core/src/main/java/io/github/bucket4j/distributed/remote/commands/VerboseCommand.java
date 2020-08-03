@@ -23,9 +23,13 @@ import io.github.bucket4j.distributed.remote.*;
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
+import io.github.bucket4j.distributed.versioning.Version;
+import io.github.bucket4j.distributed.versioning.Versions;
 import io.github.bucket4j.util.ComparableByContent;
 
 import java.io.IOException;
+
+import static io.github.bucket4j.distributed.versioning.Versions.v_5_0_0;
 
 public class VerboseCommand<T> implements RemoteCommand<RemoteVerboseResult<T>>, ComparableByContent<VerboseCommand<?>> {
 
@@ -59,14 +63,19 @@ public class VerboseCommand<T> implements RemoteCommand<RemoteVerboseResult<T>>,
     public static final SerializationHandle<VerboseCommand<?>> SERIALIZATION_HANDLE = new SerializationHandle<VerboseCommand<?>>() {
 
         @Override
-        public <I> VerboseCommand<?> deserialize(DeserializationAdapter<I> adapter, I input) throws IOException {
-            RemoteCommand<?> targetCommand  = RemoteCommand.deserialize(adapter, input);
+        public <I> VerboseCommand<?> deserialize(DeserializationAdapter<I> adapter, I input, Version backwardCompatibilityVersion) throws IOException {
+            int formatNumber = adapter.readInt(input);
+            Versions.check(formatNumber, v_5_0_0, v_5_0_0);
+
+            RemoteCommand<?> targetCommand  = RemoteCommand.deserialize(adapter, input, backwardCompatibilityVersion);
             return new VerboseCommand(targetCommand);
         }
 
         @Override
-        public <O> void serialize(SerializationAdapter<O> adapter, O output, VerboseCommand<?> command) throws IOException {
-            RemoteCommand.serialize(adapter, output, command.targetCommand);
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, VerboseCommand<?> command, Version backwardCompatibilityVersion) throws IOException {
+            adapter.writeInt(output, v_5_0_0.getNumber());
+
+            RemoteCommand.serialize(adapter, output, command.targetCommand, backwardCompatibilityVersion);
         }
 
         @Override

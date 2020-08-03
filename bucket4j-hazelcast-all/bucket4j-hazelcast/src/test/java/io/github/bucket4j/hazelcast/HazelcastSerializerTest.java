@@ -8,7 +8,9 @@ import com.hazelcast.internal.serialization.InternalSerializationService;
 import com.hazelcast.internal.serialization.impl.DefaultSerializationServiceBuilder;
 import com.hazelcast.nio.serialization.StreamSerializer;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
+import io.github.bucket4j.distributed.remote.Request;
 import io.github.bucket4j.distributed.remote.commands.AddTokensCommand;
+import io.github.bucket4j.distributed.versioning.Versions;
 import io.github.bucket4j.grid.hazelcast.HazelcastEntryProcessor;
 import io.github.bucket4j.grid.hazelcast.SimpleBackupProcessor;
 import io.github.bucket4j.grid.hazelcast.serialization.HazelcastEntryProcessorSerializer;
@@ -58,7 +60,8 @@ public class HazelcastSerializerTest {
     @Test
     public void tetsSerializationOfEntryProcessors() {
         RemoteCommand<?> command = new AddTokensCommand(42);
-        testSerialization(new HazelcastEntryProcessor(command));
+        Request request = new Request(command, Versions.getLatest(), null);
+        testSerialization(new HazelcastEntryProcessor(request));
         testSerialization(new SimpleBackupProcessor(new byte[] {1,2,3}));
     }
 

@@ -19,11 +19,11 @@ package io.github.bucket4j.grid.coherence;
 
 
 import com.tangosol.net.NamedCache;
-import com.tangosol.util.InvocableMap;
 import com.tangosol.util.processor.SingleEntryAsynchronousProcessor;
 import io.github.bucket4j.distributed.proxy.AbstractBackend;
-import io.github.bucket4j.distributed.remote.RemoteCommand;
+import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.remote.*;
+import io.github.bucket4j.distributed.versioning.Version;
 
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -40,15 +40,17 @@ public class CoherenceBackend<K> extends AbstractBackend<K> {
 
     private final NamedCache<K, byte[]> cache;
 
-    public CoherenceBackend(NamedCache<K, byte[]> cache) {
+    public CoherenceBackend(NamedCache<K, byte[]> cache, ClientSideConfig clientSideConfig) {
+        super(clientSideConfig);
         this.cache = cache;
     }
 
     @Override
-    public <T> CommandResult<T> execute(K key, RemoteCommand<T> command) {
-        CoherenceProcessor<K, T> entryProcessor = new CoherenceProcessor<>(command);
+    public <T> CommandResult<T> execute(K key, Request<T> request) {
+        CoherenceProcessor<K, T> entryProcessor = new CoherenceProcessor<>(request);
         byte[] resultBytes = cache.invoke(key, entryProcessor);
-        return deserializeResult(resultBytes);
+        Version backwardCompatibilityVersion = request.getBackwardCompatibilityVersion();
+        return deserializeResult(resultBytes, backwardCompatibilityVersion);
     }
 
     @Override
@@ -57,16 +59,17 @@ public class CoherenceBackend<K> extends AbstractBackend<K> {
     }
 
     @Override
-    public <T> CompletableFuture<CommandResult<T>> executeAsync(K key, RemoteCommand<T> command) {
-        CoherenceProcessor<K, T> entryProcessor = new CoherenceProcessor<>(command);
+    public <T> CompletableFuture<CommandResult<T>> executeAsync(K key, Request<T> request) {
+        CoherenceProcessor<K, T> entryProcessor = new CoherenceProcessor<>(request);
         CompletableFuture<CommandResult<T>> future = new CompletableFuture<>();
+        Version backwardCompatibilityVersion = request.getBackwardCompatibilityVersion();
         SingleEntryAsynchronousProcessor<K, byte[], byte[]> asyncProcessor =
             new SingleEntryAsynchronousProcessor<K, byte[], byte[]>(entryProcessor) {
                 @Override
                 public void onResult(Map.Entry<K, byte[]> entry) {
                     super.onResult(entry);
                     byte[] resultBytes = entry.getValue();
-                    future.complete(deserializeResult(resultBytes));
+                    future.complete(deserializeResult(resultBytes, backwardCompatibilityVersion));
                 }
                 @Override
                 public void onException(Throwable error) {
@@ -76,34 +79,6 @@ public class CoherenceBackend<K> extends AbstractBackend<K> {
             };
         cache.invoke(key, asyncProcessor);
         return future;
-    }
-
-
-    public static class CoherenceEntry<K> implements MutableBucketEntry {
-
-        private final Map.Entry<K, byte[]> entry;
-
-        public CoherenceEntry(InvocableMap.Entry<K, byte[]> entry) {
-            this.entry = entry;
-        }
-
-        @Override
-        public boolean exists() {
-            return entry.getValue() != null;
-        }
-
-        @Override
-        public void set(RemoteBucketState value) {
-            byte[] stateBytes = serializeState(value);
-            entry.setValue(stateBytes);
-        }
-
-        @Override
-        public RemoteBucketState get() {
-            byte[] stateBytes = entry.getValue();
-            return deserializeState(stateBytes);
-        }
-
     }
 
 }

@@ -21,7 +21,7 @@ public class InfinispanProcessorMarshaller implements MessageMarshaller<Infinisp
 
     @Override
     public void writeTo(ProtoStreamWriter writer, InfinispanProcessor processor) throws IOException {
-        writer.writeBytes("data", processor.getCommandBytes());
+        writer.writeBytes("data", processor.getRequestBytes());
     }
 
     @Override

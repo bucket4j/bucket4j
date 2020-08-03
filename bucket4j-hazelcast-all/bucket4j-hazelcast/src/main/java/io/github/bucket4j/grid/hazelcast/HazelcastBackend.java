@@ -21,8 +21,10 @@ import com.hazelcast.config.SerializationConfig;
 import com.hazelcast.config.SerializerConfig;
 import com.hazelcast.map.IMap;
 import io.github.bucket4j.distributed.proxy.AbstractBackend;
+import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.remote.CommandResult;
-import io.github.bucket4j.distributed.remote.RemoteCommand;
+import io.github.bucket4j.distributed.remote.Request;
+import io.github.bucket4j.distributed.versioning.Version;
 import io.github.bucket4j.grid.hazelcast.serialization.HazelcastEntryProcessorSerializer;
 import io.github.bucket4j.grid.hazelcast.serialization.SimpleBackupProcessorSerializer;
 import io.github.bucket4j.distributed.serialization.InternalSerializationHelper;
@@ -40,15 +42,17 @@ public class HazelcastBackend<K> extends AbstractBackend<K> {
 
     private final IMap<K, byte[]> map;
 
-    public HazelcastBackend(IMap<K, byte[]> map) {
+    public HazelcastBackend(IMap<K, byte[]> map, ClientSideConfig clientSideConfig) {
+        super(clientSideConfig);
         this.map = Objects.requireNonNull(map);
     }
 
     @Override
-    public <T> CommandResult<T> execute(K key, RemoteCommand<T> command) {
-        HazelcastEntryProcessor<K, T> entryProcessor = new HazelcastEntryProcessor<>(command);
+    public <T> CommandResult<T> execute(K key, Request<T> request) {
+        HazelcastEntryProcessor<K, T> entryProcessor = new HazelcastEntryProcessor<>(request);
         byte[] response = map.executeOnKey(key, entryProcessor);
-        return deserializeResult(response);
+        Version backwardCompatibilityVersion = request.getBackwardCompatibilityVersion();
+        return deserializeResult(response, backwardCompatibilityVersion);
     }
 
     @Override
@@ -57,10 +61,11 @@ public class HazelcastBackend<K> extends AbstractBackend<K> {
     }
 
     @Override
-    public <T> CompletableFuture<CommandResult<T>> executeAsync(K key, RemoteCommand<T> command) {
-        HazelcastEntryProcessor<K, T> entryProcessor = new HazelcastEntryProcessor<>(command);
+    public <T> CompletableFuture<CommandResult<T>> executeAsync(K key, Request<T> request) {
+        HazelcastEntryProcessor<K, T> entryProcessor = new HazelcastEntryProcessor<>(request);
         CompletionStage<byte[]> future = map.submitToKey(key, entryProcessor);
-        return (CompletableFuture) future.thenApply(InternalSerializationHelper::deserializeResult);
+        Version backwardCompatibilityVersion = request.getBackwardCompatibilityVersion();
+        return (CompletableFuture) future.thenApply((byte[] bytes) -> InternalSerializationHelper.deserializeResult(bytes, backwardCompatibilityVersion));
     }
 
     /**

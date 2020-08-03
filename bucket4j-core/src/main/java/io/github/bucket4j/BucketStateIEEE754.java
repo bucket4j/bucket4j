@@ -20,10 +20,14 @@ package io.github.bucket4j;
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
+import io.github.bucket4j.distributed.versioning.Version;
+import io.github.bucket4j.distributed.versioning.Versions;
 import io.github.bucket4j.util.ComparableByContent;
 
 import java.io.IOException;
 import java.util.Arrays;
+
+import static io.github.bucket4j.distributed.versioning.Versions.v_5_0_0;
 
 public class BucketStateIEEE754 implements BucketState, ComparableByContent<BucketStateIEEE754> {
 
@@ -36,14 +40,19 @@ public class BucketStateIEEE754 implements BucketState, ComparableByContent<Buck
     public static SerializationHandle<BucketStateIEEE754> SERIALIZATION_HANDLE = new SerializationHandle<BucketStateIEEE754>() {
 
         @Override
-        public <S> BucketStateIEEE754 deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
+        public <S> BucketStateIEEE754 deserialize(DeserializationAdapter<S> adapter, S input, Version backwardCompatibilityVersion) throws IOException {
+            int formatNumber = adapter.readInt(input);
+            Versions.check(formatNumber, v_5_0_0, v_5_0_0);
+
             double[] tokens = adapter.readDoubleArray(input);
             long[] lastRefillTime = adapter.readLongArray(input);
             return new BucketStateIEEE754(tokens, lastRefillTime);
         }
 
         @Override
-        public <O> void serialize(SerializationAdapter<O> adapter, O output, BucketStateIEEE754 state) throws IOException {
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, BucketStateIEEE754 state, Version backwardCompatibilityVersion) throws IOException {
+            adapter.writeInt(output, v_5_0_0.getNumber());
+
             adapter.writeDoubleArray(output, state.tokens);
             adapter.writeLongArray(output, state.lastRefillTime);
         }

@@ -25,10 +25,14 @@ import io.github.bucket4j.distributed.AsyncVerboseBucket;
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
+import io.github.bucket4j.distributed.versioning.Version;
+import io.github.bucket4j.distributed.versioning.Versions;
 import io.github.bucket4j.util.ComparableByContent;
 
 import java.io.IOException;
 import java.util.function.Function;
+
+import static io.github.bucket4j.distributed.versioning.Versions.v_5_0_0;
 
 /**
  * Intention of this class is to provide wrapper around results returned by any method of {@link VerboseBucket} and {@link AsyncVerboseBucket}.
@@ -79,24 +83,29 @@ public class RemoteVerboseResult<T> implements ComparableByContent<RemoteVerbose
     public static final SerializationHandle<RemoteVerboseResult<?>> SERIALIZATION_HANDLE = new SerializationHandle<RemoteVerboseResult<?>>() {
 
         @Override
-        public <I> RemoteVerboseResult<?> deserialize(DeserializationAdapter<I> adapter, I input) throws IOException {
+        public <I> RemoteVerboseResult<?> deserialize(DeserializationAdapter<I> adapter, I input, Version backwardCompatibilityVersion) throws IOException {
+            int formatNumber = adapter.readInt(input);
+            Versions.check(formatNumber, v_5_0_0, v_5_0_0);
+
             long operationTimeNanos = adapter.readLong(input);
 
             int typeId = adapter.readInt(input);
             SerializationHandle handle = SerializationHandle.CORE_HANDLES.getHandleByTypeId(typeId);
-            Object result = handle.deserialize(adapter, input);
-            RemoteBucketState state = RemoteBucketState.SERIALIZATION_HANDLE.deserialize(adapter, input);
+            Object result = handle.deserialize(adapter, input, backwardCompatibilityVersion);
+            RemoteBucketState state = RemoteBucketState.SERIALIZATION_HANDLE.deserialize(adapter, input, backwardCompatibilityVersion);
             return new RemoteVerboseResult(operationTimeNanos, typeId, result, state);
         }
 
         @Override
-        public <O> void serialize(SerializationAdapter<O> adapter, O output, RemoteVerboseResult<?> result) throws IOException {
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, RemoteVerboseResult<?> result, Version backwardCompatibilityVersion) throws IOException {
+            adapter.writeInt(output, v_5_0_0.getNumber());
+
             adapter.writeLong(output, result.operationTimeNanos);
 
             adapter.writeInt(output, result.resultTypeId);
             SerializationHandle handle = SerializationHandle.CORE_HANDLES.getHandleByTypeId(result.resultTypeId);
-            handle.serialize(adapter, output, result.value);
-            RemoteBucketState.SERIALIZATION_HANDLE.serialize(adapter, output, result.state);
+            handle.serialize(adapter, output, result.value, backwardCompatibilityVersion);
+            RemoteBucketState.SERIALIZATION_HANDLE.serialize(adapter, output, result.state, backwardCompatibilityVersion);
         }
 
         @Override

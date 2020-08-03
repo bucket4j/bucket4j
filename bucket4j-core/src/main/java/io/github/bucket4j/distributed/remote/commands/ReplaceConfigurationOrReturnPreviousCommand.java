@@ -28,9 +28,13 @@ import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
+import io.github.bucket4j.distributed.versioning.Version;
+import io.github.bucket4j.distributed.versioning.Versions;
 import io.github.bucket4j.util.ComparableByContent;
 
 import java.io.IOException;
+
+import static io.github.bucket4j.distributed.versioning.Versions.v_5_0_0;
 
 
 public class ReplaceConfigurationOrReturnPreviousCommand implements RemoteCommand<BucketConfiguration>, ComparableByContent<ReplaceConfigurationOrReturnPreviousCommand> {
@@ -39,14 +43,19 @@ public class ReplaceConfigurationOrReturnPreviousCommand implements RemoteComman
 
     public static final SerializationHandle<ReplaceConfigurationOrReturnPreviousCommand> SERIALIZATION_HANDLE = new SerializationHandle<ReplaceConfigurationOrReturnPreviousCommand>() {
         @Override
-        public <S> ReplaceConfigurationOrReturnPreviousCommand deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
-            BucketConfiguration newConfiguration = BucketConfiguration.SERIALIZATION_HANDLE.deserialize(adapter, input);
+        public <S> ReplaceConfigurationOrReturnPreviousCommand deserialize(DeserializationAdapter<S> adapter, S input, Version backwardCompatibilityVersion) throws IOException {
+            int formatNumber = adapter.readInt(input);
+            Versions.check(formatNumber, v_5_0_0, v_5_0_0);
+
+            BucketConfiguration newConfiguration = BucketConfiguration.SERIALIZATION_HANDLE.deserialize(adapter, input, backwardCompatibilityVersion);
             return new ReplaceConfigurationOrReturnPreviousCommand(newConfiguration);
         }
 
         @Override
-        public <O> void serialize(SerializationAdapter<O> adapter, O output, ReplaceConfigurationOrReturnPreviousCommand command) throws IOException {
-            BucketConfiguration.SERIALIZATION_HANDLE.serialize(adapter, output, command.newConfiguration);
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, ReplaceConfigurationOrReturnPreviousCommand command, Version backwardCompatibilityVersion) throws IOException {
+            adapter.writeInt(output, v_5_0_0.getNumber());
+
+            BucketConfiguration.SERIALIZATION_HANDLE.serialize(adapter, output, command.newConfiguration, backwardCompatibilityVersion);
         }
 
         @Override

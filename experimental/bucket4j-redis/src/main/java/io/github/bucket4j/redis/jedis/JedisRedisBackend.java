@@ -17,11 +17,15 @@
 
 package io.github.bucket4j.redis.jedis;
 
+import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.redis.AbstractRedisBackend;
 
 
 // TODO javadocs
 public class JedisRedisBackend<K> extends AbstractRedisBackend<K> {
 
+    public JedisRedisBackend(ClientSideConfig clientSideConfig) {
+        super(clientSideConfig);
+    }
 
 }

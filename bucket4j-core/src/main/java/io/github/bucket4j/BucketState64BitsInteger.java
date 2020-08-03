@@ -20,10 +20,14 @@ package io.github.bucket4j;
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
+import io.github.bucket4j.distributed.versioning.Version;
+import io.github.bucket4j.distributed.versioning.Versions;
 import io.github.bucket4j.util.ComparableByContent;
 
 import java.io.IOException;
 import java.util.Arrays;
+
+import static io.github.bucket4j.distributed.versioning.Versions.v_5_0_0;
 
 public class BucketState64BitsInteger implements BucketState, ComparableByContent<BucketState64BitsInteger> {
 
@@ -33,13 +37,18 @@ public class BucketState64BitsInteger implements BucketState, ComparableByConten
 
     public static SerializationHandle<BucketState64BitsInteger> SERIALIZATION_HANDLE = new SerializationHandle<BucketState64BitsInteger>() {
         @Override
-        public <S> BucketState64BitsInteger deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
+        public <S> BucketState64BitsInteger deserialize(DeserializationAdapter<S> adapter, S input, Version backwardCompatibilityVersion) throws IOException {
+            int formatNumber = adapter.readInt(input);
+            Versions.check(formatNumber, v_5_0_0, v_5_0_0);
+
             long[] data = adapter.readLongArray(input);
             return new BucketState64BitsInteger(data);
         }
 
         @Override
-        public <O> void serialize(SerializationAdapter<O> adapter, O output, BucketState64BitsInteger state) throws IOException {
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, BucketState64BitsInteger state, Version backwardCompatibilityVersion) throws IOException {
+            adapter.writeInt(output, v_5_0_0.getNumber());
+
             adapter.writeLongArray(output, state.stateData);
         }
 

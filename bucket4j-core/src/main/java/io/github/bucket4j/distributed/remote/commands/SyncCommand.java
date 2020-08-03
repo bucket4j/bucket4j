@@ -30,9 +30,13 @@ import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
+import io.github.bucket4j.distributed.versioning.Version;
+import io.github.bucket4j.distributed.versioning.Versions;
 import io.github.bucket4j.util.ComparableByContent;
 
 import java.io.IOException;
+
+import static io.github.bucket4j.distributed.versioning.Versions.v_5_0_0;
 
 
 public class SyncCommand implements RemoteCommand<Nothing>, ComparableByContent<SyncCommand> {
@@ -42,14 +46,19 @@ public class SyncCommand implements RemoteCommand<Nothing>, ComparableByContent<
 
     public static final SerializationHandle<SyncCommand> SERIALIZATION_HANDLE = new SerializationHandle<SyncCommand>() {
         @Override
-        public <S> SyncCommand deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
+        public <S> SyncCommand deserialize(DeserializationAdapter<S> adapter, S input, Version backwardCompatibilityVersion) throws IOException {
+            int formatNumber = adapter.readInt(input);
+            Versions.check(formatNumber, v_5_0_0, v_5_0_0);
+
             long unsynchronizedTokens = adapter.readLong(input);
             long nanosSinceLastSync = adapter.readLong(input);
             return new SyncCommand(unsynchronizedTokens, nanosSinceLastSync);
         }
 
         @Override
-        public <O> void serialize(SerializationAdapter<O> adapter, O output, SyncCommand command) throws IOException {
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, SyncCommand command, Version backwardCompatibilityVersion) throws IOException {
+            adapter.writeInt(output, v_5_0_0.getNumber());
+
             adapter.writeLong(output, command.unsynchronizedTokens);
             adapter.writeLong(output, command.nanosSinceLastSync);
         }

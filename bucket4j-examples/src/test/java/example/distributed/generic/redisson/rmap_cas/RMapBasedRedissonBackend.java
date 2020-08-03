@@ -17,6 +17,7 @@
 
 package example.distributed.generic.redisson.rmap_cas;
 
+import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AbstractCompareAndSwapBasedBackend;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.CompareAndSwapBasedTransaction;
 import org.redisson.api.RMap;
@@ -28,7 +29,8 @@ public class RMapBasedRedissonBackend extends AbstractCompareAndSwapBasedBackend
 
     private final RMap<Long, byte[]> buckets;
 
-    public RMapBasedRedissonBackend(RMap<Long, byte[]> buckets) throws SQLException {
+    public RMapBasedRedissonBackend(RMap<Long, byte[]> buckets, ClientSideConfig clientSideConfig) throws SQLException {
+        super(clientSideConfig);
         this.buckets = buckets;
     }
 

@@ -10,6 +10,7 @@ import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.distributed.AsyncBucketProxy;
+import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.optimization.Optimizations;
 import org.gridkit.nanocloud.Cloud;
 import org.gridkit.nanocloud.CloudFactory;
@@ -82,7 +83,7 @@ public class HazelcastWithBatchingPerformanceExample {
         Meter consumptionRate = new Meter();
         com.codahale.metrics.Timer latencyTimer = buildLatencyTimer();
 
-        HazelcastBackend<String> backend = new HazelcastBackend<>(map);
+        HazelcastBackend<String> backend = new HazelcastBackend<>(map, ClientSideConfig.getDefault());
         BucketConfiguration configuration = BucketConfiguration.builder()
                 .addLimit(
                     Bandwidth.simple(10, Duration.ofSeconds(1)).withInitialTokens(0))
@@ -133,7 +134,7 @@ public class HazelcastWithBatchingPerformanceExample {
         Meter consumptionRate = new Meter();
         com.codahale.metrics.Timer latencyTimer = buildLatencyTimer();
 
-        HazelcastBackend<String> backend = new HazelcastBackend<>(map);
+        HazelcastBackend<String> backend = new HazelcastBackend<>(map, ClientSideConfig.getDefault());
         BucketConfiguration configuration = BucketConfiguration.builder()
                 .addLimit(
                         Bandwidth.simple(10, Duration.ofSeconds(1)).withInitialTokens(0))

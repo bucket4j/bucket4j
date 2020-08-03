@@ -4,6 +4,8 @@ import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.MutableBucketEntry;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
+import io.github.bucket4j.distributed.versioning.Version;
+import io.github.bucket4j.distributed.versioning.Versions;
 
 public class MockCommand implements RemoteCommand<Long> {
 

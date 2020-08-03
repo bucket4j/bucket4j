@@ -22,6 +22,7 @@ package io.github.bucket4j.distributed.serialization;
 import io.github.bucket4j.*;
 import io.github.bucket4j.distributed.remote.*;
 import io.github.bucket4j.distributed.remote.commands.*;
+import io.github.bucket4j.distributed.versioning.Version;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -57,12 +58,13 @@ public interface SerializationHandle<T> {
             GetConfigurationCommand.SERIALIZATION_HANDLE, // 33
             ConsumeIgnoringRateLimitsCommand.SERIALIZATION_HANDLE, // 34
             VerboseCommand.SERIALIZATION_HANDLE, // 35
-            SyncCommand.SERIALIZATION_HANDLE // 36
+            SyncCommand.SERIALIZATION_HANDLE, // 36
+            Request.SERIALIZATION_HANDLE // 37
     ));
 
-    <I> T deserialize(DeserializationAdapter<I> adapter, I input) throws IOException;
+    <I> T deserialize(DeserializationAdapter<I> adapter, I input, Version backwardCompatibilityVersion) throws IOException;
 
-    <O> void serialize(SerializationAdapter<O> adapter, O output, T serializableObject) throws IOException;
+    <O> void serialize(SerializationAdapter<O> adapter, O output, T serializableObject, Version backwardCompatibilityVersion) throws IOException;
 
     /**
      * @return the type identifier that is unique across all Bucket4j classes

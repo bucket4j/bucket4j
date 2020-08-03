@@ -19,30 +19,27 @@ package io.github.bucket4j.distributed.proxy.generic.compare_and_swap;
 
 import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.proxy.AbstractBackend;
+import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.generic.GenericEntry;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
+import io.github.bucket4j.distributed.remote.Request;
+import io.github.bucket4j.distributed.versioning.Version;
 
 import java.util.concurrent.CompletableFuture;
 
 public abstract class AbstractCompareAndSwapBasedBackend<K> extends AbstractBackend<K> {
 
-    private final TimeMeter timeMeter;
-
-    protected AbstractCompareAndSwapBasedBackend(TimeMeter timeMeter) {
-        this.timeMeter = timeMeter;
-    }
-
-    protected AbstractCompareAndSwapBasedBackend() {
-        timeMeter = TimeMeter.SYSTEM_MILLISECONDS;
+    protected AbstractCompareAndSwapBasedBackend(ClientSideConfig clientSideConfig) {
+        super(injectTimeClock(clientSideConfig));
     }
 
     @Override
-    public <T> CommandResult<T> execute(K key, RemoteCommand<T> command) {
+    public <T> CommandResult<T> execute(K key, Request<T> request) {
         while (true) {
             CompareAndSwapBasedTransaction transaction = allocateTransaction(key);
             try {
-                CommandResult<T> result = execute(command, transaction);
+                CommandResult<T> result = execute(request, transaction);
                 if (result != null) {
                     return result;
                 }
@@ -58,7 +55,7 @@ public abstract class AbstractCompareAndSwapBasedBackend<K> extends AbstractBack
     }
 
     @Override
-    public <T> CompletableFuture<CommandResult<T>> executeAsync(K key, RemoteCommand<T> command) {
+    public <T> CompletableFuture<CommandResult<T>> executeAsync(K key, Request<T> request) {
         throw new UnsupportedOperationException();
     }
 
@@ -66,10 +63,11 @@ public abstract class AbstractCompareAndSwapBasedBackend<K> extends AbstractBack
 
     protected abstract void releaseTransaction(CompareAndSwapBasedTransaction transaction);
 
-    private <T> CommandResult<T> execute(RemoteCommand<T> command, CompareAndSwapBasedTransaction transaction) {
+    private <T> CommandResult<T> execute(Request<T> request, CompareAndSwapBasedTransaction transaction) {
+        RemoteCommand<T> command = request.getCommand();
         byte[] originalStateBytes = transaction.get().orElse(null);
-        GenericEntry entry = new GenericEntry(originalStateBytes);
-        CommandResult<T> result = command.execute(entry, timeMeter.currentTimeNanos());
+        GenericEntry entry = new GenericEntry(originalStateBytes, request.getBackwardCompatibilityVersion());
+        CommandResult<T> result = command.execute(entry, getClientSideTime());
         if (!entry.isModified()) {
             return result;
         }
@@ -80,6 +78,13 @@ public abstract class AbstractCompareAndSwapBasedBackend<K> extends AbstractBack
         } else {
             return null;
         }
+    }
+
+    private static ClientSideConfig injectTimeClock(ClientSideConfig clientSideConfig) {
+        if (clientSideConfig.getClientSideClock().isPresent()) {
+            return clientSideConfig;
+        }
+        return ClientSideConfig.withClientClockAndCompatibility(TimeMeter.SYSTEM_MILLISECONDS, clientSideConfig.getBackwardCompatibilityVersion());
     }
 
 }

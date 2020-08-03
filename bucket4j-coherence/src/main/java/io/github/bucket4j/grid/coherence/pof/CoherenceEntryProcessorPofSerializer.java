@@ -31,7 +31,7 @@ public class CoherenceEntryProcessorPofSerializer implements PofSerializer<Coher
 
     @Override
     public void serialize(PofWriter pofWriter, CoherenceProcessor<?, ?> processor) throws IOException {
-        pofWriter.writeByteArray(0, processor.getCommandBytes());
+        pofWriter.writeByteArray(0, processor.getRequestBytes());
         pofWriter.writeRemainder(null);
     }
 

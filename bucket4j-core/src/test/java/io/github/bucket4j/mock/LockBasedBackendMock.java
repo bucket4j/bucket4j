@@ -18,6 +18,7 @@
 package io.github.bucket4j.mock;
 
 import io.github.bucket4j.TimeMeter;
+import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.generic.select_for_update.AbstractLockBasedBackend;
 import io.github.bucket4j.distributed.proxy.generic.select_for_update.LockBasedTransaction;
 import io.github.bucket4j.distributed.proxy.generic.select_for_update.LockResult;
@@ -29,8 +30,8 @@ public class LockBasedBackendMock<K> extends AbstractLockBasedBackend<K> {
 
     private final Map<K, byte[]> stateMap = new HashMap<>();
 
-    public LockBasedBackendMock(TimeMeter timeMeter) {
-        super(timeMeter);
+    public LockBasedBackendMock(ClientSideConfig clientSideConfig) {
+        super(clientSideConfig);
     }
 
     @Override

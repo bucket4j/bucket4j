@@ -20,12 +20,11 @@ package io.github.bucket4j.mock;
 
 import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.proxy.AbstractBackend;
-import io.github.bucket4j.distributed.remote.CommandResult;
-import io.github.bucket4j.distributed.remote.MutableBucketEntry;
-import io.github.bucket4j.distributed.remote.RemoteBucketState;
-import io.github.bucket4j.distributed.remote.RemoteCommand;
+import io.github.bucket4j.distributed.proxy.ClientSideConfig;
+import io.github.bucket4j.distributed.remote.*;
 import io.github.bucket4j.distributed.serialization.DataOutputSerializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
+import io.github.bucket4j.distributed.versioning.Version;
 
 import java.io.*;
 import java.util.HashMap;
@@ -42,12 +41,11 @@ public class GridBackendMock<K> extends AbstractBackend<K> {
         }
     }};
 
-    private final TimeMeter timeMeter;
     private Map<K, RemoteBucketState> stateMap = new HashMap<>();
     private RuntimeException exception;
 
     public GridBackendMock(TimeMeter timeMeter) {
-        this.timeMeter = Objects.requireNonNull(timeMeter);
+        super(ClientSideConfig.withClientClock(timeMeter));
     }
 
     public void setException(RuntimeException exception) {
@@ -55,11 +53,12 @@ public class GridBackendMock<K> extends AbstractBackend<K> {
     }
 
     @Override
-    public <T> CommandResult<T> execute(K key, RemoteCommand<T> command) {
+    public <T> CommandResult<T> execute(K key, Request<T> request) {
         if (exception != null) {
             throw new RuntimeException();
         }
-        command = emulateDataSerialization(command);
+        RemoteCommand<T> command = request.getCommand();
+        command = emulateDataSerialization(command, request.getBackwardCompatibilityVersion());
 
         MutableBucketEntry entry = new MutableBucketEntry() {
             @Override
@@ -68,18 +67,18 @@ public class GridBackendMock<K> extends AbstractBackend<K> {
             }
             @Override
             public void set(RemoteBucketState state) {
-                GridBackendMock.this.stateMap.put(key, emulateDataSerialization(state));
+                GridBackendMock.this.stateMap.put(key, emulateDataSerialization(state, request.getBackwardCompatibilityVersion()));
             }
             @Override
             public RemoteBucketState get() {
                 RemoteBucketState state = stateMap.get(key);
                 Objects.requireNonNull(state);
-                return emulateDataSerialization(state);
+                return emulateDataSerialization(state, request.getBackwardCompatibilityVersion());
             }
         };
 
-        CommandResult<T> result = command.execute(entry, timeMeter.currentTimeNanos());
-        return emulateDataSerialization(result);
+        CommandResult<T> result = command.execute(entry, getClientSideTime());
+        return emulateDataSerialization(result, request.getBackwardCompatibilityVersion());
     }
 
     @Override
@@ -88,16 +87,16 @@ public class GridBackendMock<K> extends AbstractBackend<K> {
     }
 
     @Override
-    public <T> CompletableFuture<CommandResult<T>> executeAsync(K key, RemoteCommand<T> command) {
+    public <T> CompletableFuture<CommandResult<T>> executeAsync(K key, Request<T> request) {
         if (exception != null) {
             CompletableFuture future = new CompletableFuture();
             future.completeExceptionally(new RuntimeException());
             return future;
         }
-        return CompletableFuture.completedFuture(execute(key, command));
+        return CompletableFuture.completedFuture(execute(key, request));
     }
 
-    protected <T> T emulateDataSerialization(T object) {
+    protected <T> T emulateDataSerialization(T object, Version version) {
         SerializationHandle serializationHandle = allHandles.get(object.getClass());
         if (serializationHandle == null) {
             throw new IllegalArgumentException("Serializer for class " + serializationHandle + " is not specified");
@@ -105,12 +104,12 @@ public class GridBackendMock<K> extends AbstractBackend<K> {
         try {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             DataOutputStream dos = new DataOutputStream(baos);
-            serializationHandle.serialize(DataOutputSerializationAdapter.INSTANCE, dos, object);
+            serializationHandle.serialize(DataOutputSerializationAdapter.INSTANCE, dos, object, version);
             byte[] bytes = baos.toByteArray();
 
             ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
             DataInputStream dis = new DataInputStream(bais);
-            return (T) serializationHandle.deserialize(DataOutputSerializationAdapter.INSTANCE, dis);
+            return (T) serializationHandle.deserialize(DataOutputSerializationAdapter.INSTANCE, dis, version);
         } catch (Exception e) {
             throw new IllegalStateException(e);
         }

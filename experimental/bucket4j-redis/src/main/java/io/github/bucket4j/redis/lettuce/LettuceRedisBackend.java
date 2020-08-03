@@ -17,6 +17,7 @@
 
 package io.github.bucket4j.redis.lettuce;
 
+import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.redis.AbstractRedisBackend;
 
 
@@ -26,5 +27,8 @@ import java.io.Serializable;
 public class LettuceRedisBackend<K extends Serializable> extends AbstractRedisBackend<K> {
 
 
+    public LettuceRedisBackend(ClientSideConfig clientSideConfig) {
+        super(clientSideConfig);
+    }
 
 }

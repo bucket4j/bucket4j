@@ -33,7 +33,7 @@ public class HazelcastEntryProcessorSerializer implements StreamSerializer<Hazel
 
     @Override
     public void write(ObjectDataOutput out, HazelcastEntryProcessor serializable) throws IOException {
-        out.writeByteArray(serializable.getCommandBytes());
+        out.writeByteArray(serializable.getRequestBytes());
     }
 
     @Override

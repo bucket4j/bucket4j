@@ -1,8 +1,8 @@
 package io.github.bucket4j.grid.ignite;
 
+import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
 import io.github.bucket4j.distributed.proxy.Backend;
-import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.IgniteCache;
 import org.apache.ignite.Ignition;
@@ -23,7 +23,7 @@ import java.util.Collections;
 
 public class IgniteTest extends AbstractDistributedBucketTest {
 
-    private static IgniteCache<String, RemoteBucketState> cache;
+    private static IgniteCache<String, byte[]> cache;
     private static Cloud cloud;
     private static ViNode server;
 
@@ -83,7 +83,7 @@ public class IgniteTest extends AbstractDistributedBucketTest {
 
     @Override
     protected Backend<String> getBackend() {
-        return new IgniteBackend<>(cache);
+        return new IgniteBackend<>(cache, ClientSideConfig.getDefault());
     }
 
     @Override

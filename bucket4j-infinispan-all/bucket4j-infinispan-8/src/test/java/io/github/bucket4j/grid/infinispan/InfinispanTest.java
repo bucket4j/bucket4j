@@ -1,6 +1,7 @@
 package io.github.bucket4j.grid.infinispan;
 
 import io.github.bucket4j.distributed.proxy.Backend;
+import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
 import org.infinispan.commons.api.functional.FunctionalMap.ReadWriteMap;
 import org.infinispan.functional.impl.FunctionalMapImpl;
@@ -46,7 +47,7 @@ public class InfinispanTest extends AbstractDistributedBucketTest {
 
     @Override
     protected Backend<String> getBackend() {
-        return new InfinispanBackend<>(readWriteMap);
+        return new InfinispanBackend<>(readWriteMap, ClientSideConfig.getDefault());
     }
 
     @Override

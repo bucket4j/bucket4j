@@ -4,7 +4,9 @@ import com.tangosol.io.pof.ConfigurablePofContext;
 import com.tangosol.util.Binary;
 import com.tangosol.util.ExternalizableHelper;
 import io.github.bucket4j.*;
+import io.github.bucket4j.distributed.remote.Request;
 import io.github.bucket4j.distributed.remote.commands.AddTokensCommand;
+import io.github.bucket4j.distributed.versioning.Versions;
 import io.github.bucket4j.grid.coherence.CoherenceProcessor;
 import io.github.bucket4j.util.ComparableByContent;
 import org.junit.BeforeClass;
@@ -30,7 +32,8 @@ public class CoherencePofSerializerTest {
                 .build();
         AddTokensCommand command = new AddTokensCommand(42);
 
-        testSerialization(new CoherenceProcessor(command));
+        Request request = new Request(command, Versions.getLatest(), null);
+        testSerialization(new CoherenceProcessor(request));
     }
 
     private void testSerialization(Object object) {

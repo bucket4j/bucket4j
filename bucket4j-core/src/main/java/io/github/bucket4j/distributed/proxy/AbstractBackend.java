@@ -2,14 +2,16 @@ package io.github.bucket4j.distributed.proxy;
 
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.BucketExceptions;
+import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.AsyncBucketProxy;
 import io.github.bucket4j.distributed.BucketProxy;
 import io.github.bucket4j.distributed.proxy.optimization.Optimization;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
+import io.github.bucket4j.distributed.remote.Request;
 import io.github.bucket4j.distributed.remote.commands.GetConfigurationCommand;
+import io.github.bucket4j.distributed.versioning.Version;
 
-import java.time.Duration;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -20,11 +22,19 @@ public abstract class AbstractBackend<K> implements Backend<K> {
     private static final RecoveryStrategy DEFAULT_RECOVERY_STRATEGY = RecoveryStrategy.RECONSTRUCT;
     private static final Optimization DEFAULT_REQUEST_OPTIMIZER = Optimization.NONE_OPTIMIZED;
 
+    private final ClientSideConfig clientSideConfig;
+
+    protected AbstractBackend(ClientSideConfig clientSideConfig) {
+        this.clientSideConfig = Objects.requireNonNull(clientSideConfig);
+    }
+
     private AsyncBackend<K> asyncView = new AsyncBackend<K>() {
         @Override
         public CompletableFuture<Optional<BucketConfiguration>> getProxyConfiguration(K key) {
             GetConfigurationCommand cmd = new GetConfigurationCommand();
-            return executeAsync(key, cmd).thenApply(result -> {
+            getClientSideTime();
+            Request<BucketConfiguration> request = new Request<>(cmd, getBackwardCompatibilityVersion(), getClientSideTime());
+            return executeAsync(key, request).thenApply(result -> {
                 if (result.isBucketNotFound()) {
                     return Optional.empty();
                 }
@@ -54,7 +64,9 @@ public abstract class AbstractBackend<K> implements Backend<K> {
     @Override
     public Optional<BucketConfiguration> getProxyConfiguration(K key) {
         GetConfigurationCommand cmd = new GetConfigurationCommand();
-        CommandResult<BucketConfiguration> result = this.execute(key, cmd);
+
+        Request<BucketConfiguration> request = new Request<>(cmd, getBackwardCompatibilityVersion(), getClientSideTime());
+        CommandResult<BucketConfiguration> result = this.execute(key, request);
         if (result.isBucketNotFound()) {
             return Optional.empty();
         }
@@ -95,7 +107,8 @@ public abstract class AbstractBackend<K> implements Backend<K> {
             AsyncCommandExecutor commandExecutor = new AsyncCommandExecutor() {
                 @Override
                 public <T> CompletableFuture<CommandResult<T>> executeAsync(RemoteCommand<T> command) {
-                    return AbstractBackend.this.executeAsync(key, command);
+                    Request<T> request = new Request<>(command, getBackwardCompatibilityVersion(), getClientSideTime());
+                    return AbstractBackend.this.executeAsync(key, request);
                 }
             };
             commandExecutor = asyncRequestOptimizer.apply(commandExecutor);
@@ -139,7 +152,8 @@ public abstract class AbstractBackend<K> implements Backend<K> {
             CommandExecutor commandExecutor = new CommandExecutor() {
                 @Override
                 public <T> CommandResult<T> execute(RemoteCommand<T> command) {
-                    return AbstractBackend.this.execute(key, command);
+                    Request<T> request = new Request<>(command, getBackwardCompatibilityVersion(), getClientSideTime());
+                    return AbstractBackend.this.execute(key, request);
                 }
             };
             commandExecutor = requestOptimizer.apply(commandExecutor);
@@ -149,19 +163,26 @@ public abstract class AbstractBackend<K> implements Backend<K> {
 
     }
 
-    public void syncByCondition(long unsynchronizedTokensThreshold, Duration timeSinceLastSync) {
-        // do nothing
-    }
-
-    public CompletableFuture<Void> syncByConditionNonblocking(long unsynchronizedTokensThreshold, Duration timeSinceLastSync) {
-        // do nothing
-        return CompletableFuture.completedFuture(null);
-    }
+    // TODO javadocs
+    abstract protected <T> CommandResult<T> execute(K key, Request<T> request);
 
     // TODO javadocs
-    abstract protected <T> CommandResult<T> execute(K key, RemoteCommand<T> command);
+    abstract protected <T> CompletableFuture<CommandResult<T>> executeAsync(K key, Request<T> request);
 
-    // TODO javadocs
-    abstract protected <T> CompletableFuture<CommandResult<T>> executeAsync(K key, RemoteCommand<T> command);
+    protected ClientSideConfig getClientSideConfig() {
+        return clientSideConfig;
+    }
+
+    protected Version getBackwardCompatibilityVersion() {
+        return clientSideConfig.getBackwardCompatibilityVersion();
+    }
+
+    protected Long getClientSideTime() {
+        Optional<TimeMeter> clientClock = clientSideConfig.getClientSideClock();
+        if (!clientClock.isPresent()) {
+            return null;
+        }
+        return clientClock.get().currentTimeNanos();
+    }
 
 }

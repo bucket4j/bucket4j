@@ -23,10 +23,11 @@ class TryConsumeSpecification extends Specification {
             .build()
 
     @Unroll
-    def "#n Should return #requiredResult when trying to consume #toConsume tokens from Bucket #builder"(
+    def "#n Should return #requiredResult when trying to consume #toConsume tokens from Bucket #configuration"(
             int n, boolean requiredResult, long toConsume, BucketConfiguration configuration) {
         expect:
         for (BucketType type : BucketType.values()) {
+            println type
             def timeMeter = new TimeMeterMock(0)
             Bucket bucket = type.createBucket(configuration, timeMeter)
             assert bucket.tryConsume(toConsume) == requiredResult
@@ -45,13 +46,15 @@ class TryConsumeSpecification extends Specification {
         setup:
             Bucket bucket = type.createBucket(configuration, clock).toListenable(listener)
 
+        boolean consumed
         when:
             if (!verbose) {
-                bucket.tryConsume(9)
+                consumed = bucket.tryConsume(9)
             } else {
-                bucket.asVerbose().tryConsume(9)
+                consumed = bucket.asVerbose().tryConsume(9)
             }
         then:
+            consumed
             listener.getConsumed() == 9
             listener.getRejected() == 0
 

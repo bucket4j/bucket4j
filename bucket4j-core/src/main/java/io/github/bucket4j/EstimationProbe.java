@@ -24,9 +24,13 @@ import io.github.bucket4j.distributed.proxy.DefaultAsyncBucketProxy;
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
+import io.github.bucket4j.distributed.versioning.Version;
+import io.github.bucket4j.distributed.versioning.Versions;
 import io.github.bucket4j.util.ComparableByContent;
 
 import java.io.IOException;
+
+import static io.github.bucket4j.distributed.versioning.Versions.v_5_0_0;
 
 /**
  * Describes the estimation result.
@@ -42,7 +46,10 @@ public class EstimationProbe implements ComparableByContent<EstimationProbe> {
 
     public static final SerializationHandle<EstimationProbe> SERIALIZATION_HANDLE = new SerializationHandle<EstimationProbe>() {
         @Override
-        public <S> EstimationProbe deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
+        public <S> EstimationProbe deserialize(DeserializationAdapter<S> adapter, S input, Version backwardCompatibilityVersion) throws IOException {
+            int formatNumber = adapter.readInt(input);
+            Versions.check(formatNumber, v_5_0_0, v_5_0_0);
+
             boolean canBeConsumed = adapter.readBoolean(input);
             long remainingTokens = adapter.readLong(input);
             long nanosToWaitForRefill = adapter.readLong(input);
@@ -51,7 +58,9 @@ public class EstimationProbe implements ComparableByContent<EstimationProbe> {
         }
 
         @Override
-        public <O> void serialize(SerializationAdapter<O> adapter, O output, EstimationProbe probe) throws IOException {
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, EstimationProbe probe, Version backwardCompatibilityVersion) throws IOException {
+            adapter.writeInt(output, v_5_0_0.getNumber());
+
             adapter.writeBoolean(output, probe.canBeConsumed);
             adapter.writeLong(output, probe.remainingTokens);
             adapter.writeLong(output, probe.nanosToWaitForRefill);

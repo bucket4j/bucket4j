@@ -1,6 +1,7 @@
 package io.github.bucket4j.grid.jcache;
 
 
+import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.BucketConfiguration;
@@ -20,7 +21,7 @@ public abstract class AbstractJCacheTest extends AbstractDistributedBucketTest {
 
     @Override
     protected Backend<String> getBackend() {
-        return new JCacheBackend<>(getCache());
+        return new JCacheBackend<>(getCache(), ClientSideConfig.getDefault());
     }
 
     @Override

@@ -19,8 +19,10 @@ package io.github.bucket4j.grid.ignite;
 
 import io.github.bucket4j.*;
 import io.github.bucket4j.distributed.proxy.AbstractBackend;
+import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.remote.*;
+import io.github.bucket4j.distributed.versioning.Version;
 import org.apache.ignite.IgniteCache;
 import org.apache.ignite.cache.CacheEntryProcessor;
 import org.apache.ignite.lang.IgniteFuture;
@@ -40,17 +42,18 @@ import static io.github.bucket4j.distributed.serialization.InternalSerialization
  */
 public class IgniteBackend<K> extends AbstractBackend<K> {
 
-    private final IgniteCache<K, RemoteBucketState> cache;
+    private final IgniteCache<K, byte[]> cache;
 
-    public IgniteBackend(IgniteCache<K, RemoteBucketState> cache) {
+    public IgniteBackend(IgniteCache<K, byte[]> cache, ClientSideConfig clientSideConfig) {
+        super(clientSideConfig);
         this.cache = Objects.requireNonNull(cache);
     }
 
     @Override
-    public <T> CommandResult<T> execute(K key, RemoteCommand<T> command) {
-        IgniteProcessor<K> entryProcessor = new IgniteProcessor<>(command);
+    public <T> CommandResult<T> execute(K key, Request<T> request) {
+        IgniteProcessor<K> entryProcessor = new IgniteProcessor<>(request);
         byte[] resultBytes = cache.invoke(key, entryProcessor);
-        return deserializeResult(resultBytes);
+        return deserializeResult(resultBytes, request.getBackwardCompatibilityVersion());
     }
 
     @Override
@@ -59,14 +62,15 @@ public class IgniteBackend<K> extends AbstractBackend<K> {
     }
 
     @Override
-    public <T> CompletableFuture<CommandResult<T>> executeAsync(K key, RemoteCommand<T> command) {
-        IgniteProcessor<K> entryProcessor = new IgniteProcessor<>(command);
+    public <T> CompletableFuture<CommandResult<T>> executeAsync(K key, Request<T> request) {
+        IgniteProcessor<K> entryProcessor = new IgniteProcessor<>(request);
         IgniteFuture<byte[]> igniteFuture = cache.invokeAsync(key, entryProcessor);
         CompletableFuture<CommandResult<T>> completableFuture = new CompletableFuture<>();
+        Version backwardCompatibilityVersion = request.getBackwardCompatibilityVersion();
         igniteFuture.listen((IgniteInClosure<IgniteFuture<byte[]>>) completedIgniteFuture -> {
             try {
                 byte[] resultBytes = completedIgniteFuture.get();
-                CommandResult<T> result = deserializeResult(resultBytes);
+                CommandResult<T> result = deserializeResult(resultBytes, backwardCompatibilityVersion);
                 completableFuture.complete(result);
             } catch (Throwable t) {
                 completableFuture.completeExceptionally(t);
@@ -76,46 +80,34 @@ public class IgniteBackend<K> extends AbstractBackend<K> {
     }
 
 
-    private static class IgniteProcessor<K> implements Serializable, CacheEntryProcessor<K, RemoteBucketState, byte[]> {
+    private static class IgniteProcessor<K> implements Serializable, CacheEntryProcessor<K, byte[], byte[]> {
 
         private static final long serialVersionUID = 1;
 
-        private final byte[] commandBytes;
+        private final byte[] requestBytes;
 
-        private IgniteProcessor(RemoteCommand<?> command) {
-            this.commandBytes = serializeCommand(command);
+        private IgniteProcessor(Request<?> request) {
+            this.requestBytes = serializeRequest(request);
         }
 
         @Override
-        public byte[] process(MutableEntry<K, RemoteBucketState> entry, Object... arguments) throws EntryProcessorException {
-            RemoteCommand<?> command = deserializeCommand(commandBytes);
-            CommandResult<?> result = command.execute(new IgniteEntry(entry), TimeMeter.SYSTEM_MILLISECONDS.currentTimeNanos());
-            return serializeResult(result);
-        }
+        public byte[] process(MutableEntry<K, byte[]> entry, Object... arguments) throws EntryProcessorException {
+            return new AbstractBinaryTransaction(requestBytes) {
+                @Override
+                public boolean exists() {
+                    return entry.exists();
+                }
 
-    }
+                @Override
+                protected byte[] getRawState() {
+                    return entry.getValue();
+                }
 
-    private static class IgniteEntry implements MutableBucketEntry {
-
-        private final MutableEntry<?, RemoteBucketState> entry;
-
-        private IgniteEntry(MutableEntry<?, RemoteBucketState> entry) {
-            this.entry = entry;
-        }
-
-        @Override
-        public boolean exists() {
-            return entry.exists();
-        }
-
-        @Override
-        public void set(RemoteBucketState state) {
-            entry.setValue(state);
-        }
-
-        @Override
-        public RemoteBucketState get() {
-            return entry.getValue();
+                @Override
+                protected void setRawState(byte[] stateBytes) {
+                    entry.setValue(stateBytes);
+                }
+            }.execute();
         }
 
     }

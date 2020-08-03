@@ -1,43 +1,49 @@
 package io.github.bucket4j.grid.hazelcast;
 
 import com.hazelcast.map.EntryProcessor;
-import io.github.bucket4j.TimeMeter;
-import io.github.bucket4j.distributed.remote.CommandResult;
-import io.github.bucket4j.distributed.remote.RemoteCommand;
-import io.github.bucket4j.distributed.serialization.InternalSerializationHelper;
+import io.github.bucket4j.distributed.remote.AbstractBinaryTransaction;
+import io.github.bucket4j.distributed.remote.Request;
 import io.github.bucket4j.util.ComparableByContent;
 
 import java.util.Arrays;
 import java.util.Map;
 
-import static io.github.bucket4j.distributed.serialization.InternalSerializationHelper.serializeCommand;
-import static io.github.bucket4j.distributed.serialization.InternalSerializationHelper.serializeResult;
+import static io.github.bucket4j.distributed.serialization.InternalSerializationHelper.serializeRequest;
 
 public class HazelcastEntryProcessor<K, T> implements EntryProcessor<K, byte[], byte[]>, ComparableByContent<HazelcastEntryProcessor> {
 
     private static final long serialVersionUID = 1L;
 
-    private final byte[] commandBytes;
+    private final byte[] requestBytes;
     private EntryProcessor<K, byte[], byte[]> backupProcessor;
 
-    public HazelcastEntryProcessor(RemoteCommand<T> command) {
-        this.commandBytes = serializeCommand(command);
+    public HazelcastEntryProcessor(Request<T> request) {
+        this.requestBytes = serializeRequest(request);
     }
 
-    public HazelcastEntryProcessor(byte[] commandBytes) {
-        this.commandBytes = commandBytes;
+    public HazelcastEntryProcessor(byte[] requestBytes) {
+        this.requestBytes = requestBytes;
     }
 
     @Override
     public byte[] process(Map.Entry<K, byte[]> entry) {
-        HazelcastMutableEntryAdapter<K> entryAdapter = new HazelcastMutableEntryAdapter<>(entry);
-        RemoteCommand<T> command = InternalSerializationHelper.deserializeCommand(commandBytes);
-        CommandResult<T> result = command.execute(entryAdapter, TimeMeter.SYSTEM_MILLISECONDS.currentTimeNanos());
-        if (entryAdapter.isModified()) {
-            byte[] stateBytes = entry.getValue();
-            backupProcessor = new SimpleBackupProcessor<>(stateBytes);
-        }
-        return serializeResult(result);
+        return new AbstractBinaryTransaction(requestBytes) {
+            @Override
+            public boolean exists() {
+                return entry.getValue() != null;
+            }
+
+            @Override
+            protected byte[] getRawState() {
+                return entry.getValue();
+            }
+
+            @Override
+            protected void setRawState(byte[] stateBytes) {
+                entry.setValue(stateBytes);
+                backupProcessor = new SimpleBackupProcessor<>(stateBytes);
+            }
+        }.execute();
     }
 
     @Override
@@ -45,13 +51,13 @@ public class HazelcastEntryProcessor<K, T> implements EntryProcessor<K, byte[], 
         return backupProcessor;
     }
 
-    public byte[] getCommandBytes() {
-        return commandBytes;
+    public byte[] getRequestBytes() {
+        return requestBytes;
     }
 
     @Override
     public boolean equalsByContent(HazelcastEntryProcessor other) {
-        return Arrays.equals(commandBytes, other.commandBytes);
+        return Arrays.equals(requestBytes, other.requestBytes);
     }
 
 }

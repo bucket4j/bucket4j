@@ -18,13 +18,20 @@
 package io.github.bucket4j.redis;
 
 import io.github.bucket4j.distributed.proxy.AbstractBackend;
+import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
+import io.github.bucket4j.distributed.remote.Request;
+import io.github.bucket4j.distributed.versioning.Version;
 
 import java.util.concurrent.CompletableFuture;
 
 // TODO javadocs
 public abstract class AbstractRedisBackend<K> extends AbstractBackend<K> {
+
+    public AbstractRedisBackend(ClientSideConfig clientSideConfig) {
+        super(clientSideConfig);
+    }
 
     @Override
     public boolean isAsyncModeSupported() {
@@ -32,12 +39,12 @@ public abstract class AbstractRedisBackend<K> extends AbstractBackend<K> {
     }
 
     @Override
-    public <T> CommandResult<T> execute(K key, RemoteCommand<T> command) {
+    public <T> CommandResult<T> execute(K key, Request<T> request) {
         return null;
     }
 
     @Override
-    public <T> CompletableFuture<CommandResult<T>> executeAsync(K key, RemoteCommand<T> command) {
+    public <T> CompletableFuture<CommandResult<T>> executeAsync(K key, Request<T> request) {
         return null;
     }
 

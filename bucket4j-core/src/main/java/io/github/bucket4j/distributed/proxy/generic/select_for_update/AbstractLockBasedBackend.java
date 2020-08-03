@@ -19,29 +19,25 @@ package io.github.bucket4j.distributed.proxy.generic.select_for_update;
 
 import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.proxy.AbstractBackend;
+import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.generic.GenericEntry;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
+import io.github.bucket4j.distributed.remote.Request;
 
 import java.util.concurrent.CompletableFuture;
 
 public abstract class AbstractLockBasedBackend<K> extends AbstractBackend<K> {
 
-    private final TimeMeter timeMeter;
-
-    protected AbstractLockBasedBackend(TimeMeter timeMeter) {
-        this.timeMeter = timeMeter;
-    }
-
-    protected AbstractLockBasedBackend() {
-        timeMeter = TimeMeter.SYSTEM_MILLISECONDS;
+    protected AbstractLockBasedBackend(ClientSideConfig clientSideConfig) {
+        super(injectTimeClock(clientSideConfig));
     }
 
     @Override
-    public <T> CommandResult<T> execute(K key, RemoteCommand<T> command) {
+    public <T> CommandResult<T> execute(K key, Request<T> request) {
         LockBasedTransaction transaction = allocateTransaction(key);
         try {
-            return execute(command, transaction);
+            return execute(request, transaction);
         } finally {
             releaseTransaction(transaction);
         }
@@ -53,7 +49,7 @@ public abstract class AbstractLockBasedBackend<K> extends AbstractBackend<K> {
     }
 
     @Override
-    public <T> CompletableFuture<CommandResult<T>> executeAsync(K key, RemoteCommand<T> command) {
+    public <T> CompletableFuture<CommandResult<T>> executeAsync(K key, Request<T> request) {
         throw new UnsupportedOperationException();
     }
 
@@ -61,7 +57,8 @@ public abstract class AbstractLockBasedBackend<K> extends AbstractBackend<K> {
 
     protected abstract void releaseTransaction(LockBasedTransaction transaction);
 
-    private <T> CommandResult<T> execute(RemoteCommand<T> command, LockBasedTransaction transaction) {
+    private <T> CommandResult<T> execute(Request<T> request, LockBasedTransaction transaction) {
+        RemoteCommand<T> command = request.getCommand();
         transaction.begin();
         try {
             try {
@@ -74,8 +71,8 @@ public abstract class AbstractLockBasedBackend<K> extends AbstractBackend<K> {
                 } else {
                     return CommandResult.bucketNotFound();
                 }
-                GenericEntry entry = new GenericEntry(persistedDataOnBeginOfTransaction);
-                CommandResult<T> result = command.execute(entry, timeMeter.currentTimeNanos());
+                GenericEntry entry = new GenericEntry(persistedDataOnBeginOfTransaction, request.getBackwardCompatibilityVersion());
+                CommandResult<T> result = command.execute(entry, super.getClientSideTime());
                 if (entry.isModified()) {
                     byte[] bytes = entry.getModifiedStateBytes();
                     if (persistedDataOnBeginOfTransaction == null) {
@@ -93,6 +90,13 @@ public abstract class AbstractLockBasedBackend<K> extends AbstractBackend<K> {
             transaction.rollback();
             throw e;
         }
+    }
+
+    private static ClientSideConfig injectTimeClock(ClientSideConfig clientSideConfig) {
+        if (clientSideConfig.getClientSideClock().isPresent()) {
+            return clientSideConfig;
+        }
+        return ClientSideConfig.withClientClockAndCompatibility(TimeMeter.SYSTEM_MILLISECONDS, clientSideConfig.getBackwardCompatibilityVersion());
     }
 
 }

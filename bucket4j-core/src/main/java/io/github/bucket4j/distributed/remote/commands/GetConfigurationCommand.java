@@ -25,9 +25,13 @@ import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
+import io.github.bucket4j.distributed.versioning.Version;
+import io.github.bucket4j.distributed.versioning.Versions;
 import io.github.bucket4j.util.ComparableByContent;
 
 import java.io.IOException;
+
+import static io.github.bucket4j.distributed.versioning.Versions.v_5_0_0;
 
 public class GetConfigurationCommand implements RemoteCommand<BucketConfiguration>, ComparableByContent<GetConfigurationCommand> {
 
@@ -44,12 +48,17 @@ public class GetConfigurationCommand implements RemoteCommand<BucketConfiguratio
     public static SerializationHandle<GetConfigurationCommand> SERIALIZATION_HANDLE = new SerializationHandle<GetConfigurationCommand>() {
 
         @Override
-        public <S> GetConfigurationCommand deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
+        public <S> GetConfigurationCommand deserialize(DeserializationAdapter<S> adapter, S input, Version backwardCompatibilityVersion) throws IOException {
+            int formatNumber = adapter.readInt(input);
+            Versions.check(formatNumber, v_5_0_0, v_5_0_0);
+
             return new GetConfigurationCommand();
         }
 
         @Override
-        public <O> void serialize(SerializationAdapter<O> adapter, O output, GetConfigurationCommand command) throws IOException {
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, GetConfigurationCommand command, Version backwardCompatibilityVersion) throws IOException {
+            adapter.writeInt(output, v_5_0_0.getNumber());
+
             // do nothing
         }
 

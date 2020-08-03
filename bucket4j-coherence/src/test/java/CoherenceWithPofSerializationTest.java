@@ -1,5 +1,6 @@
 import com.tangosol.net.CacheFactory;
 import com.tangosol.net.NamedCache;
+import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
 import io.github.bucket4j.grid.coherence.CoherenceBackend;
 import io.github.bucket4j.distributed.proxy.Backend;
@@ -29,7 +30,7 @@ public class CoherenceWithPofSerializationTest extends AbstractDistributedBucket
 
     @Override
     protected Backend<String> getBackend() {
-        return new CoherenceBackend<>(cache);
+        return new CoherenceBackend<>(cache, ClientSideConfig.getDefault());
     }
 
     @Override

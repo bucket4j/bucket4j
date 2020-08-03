@@ -18,6 +18,7 @@
 package io.github.bucket4j.mock;
 
 import io.github.bucket4j.TimeMeter;
+import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AbstractCompareAndSwapBasedBackend;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.CompareAndSwapBasedTransaction;
 
@@ -29,8 +30,8 @@ public class CompareAndSwapBasedBackendMock<K> extends AbstractCompareAndSwapBas
 
     private final Map<K, byte[]> stateMap = new HashMap<>();
 
-    public CompareAndSwapBasedBackendMock(TimeMeter timeMeter) {
-        super(timeMeter);
+    public CompareAndSwapBasedBackendMock(ClientSideConfig clientSideConfig) {
+        super(clientSideConfig);
     }
 
     @Override

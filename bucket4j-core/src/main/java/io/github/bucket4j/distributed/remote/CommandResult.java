@@ -22,11 +22,14 @@ import io.github.bucket4j.Nothing;
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
 import io.github.bucket4j.distributed.serialization.SerializationAdapter;
+import io.github.bucket4j.distributed.versioning.Version;
+import io.github.bucket4j.distributed.versioning.Versions;
 import io.github.bucket4j.util.ComparableByContent;
 
 import java.io.IOException;
 
 import static io.github.bucket4j.distributed.serialization.PrimitiveSerializationHandles.*;
+import static io.github.bucket4j.distributed.versioning.Versions.v_5_0_0;
 
 public class CommandResult<T> implements ComparableByContent<CommandResult> {
 
@@ -45,25 +48,30 @@ public class CommandResult<T> implements ComparableByContent<CommandResult> {
 
     public static SerializationHandle<CommandResult<?>> SERIALIZATION_HANDLE = new SerializationHandle<CommandResult<?>>() {
         @Override
-        public <S> CommandResult<?> deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
+        public <S> CommandResult<?> deserialize(DeserializationAdapter<S> adapter, S input, Version backwardCompatibilityVersion) throws IOException {
+            int formatNumber = adapter.readInt(input);
+            Versions.check(formatNumber, v_5_0_0, v_5_0_0);
+
             boolean isBucketNotFound = adapter.readBoolean(input);
             if (isBucketNotFound) {
                 return CommandResult.bucketNotFound();
             }
             int typeId = adapter.readInt(input);
             SerializationHandle handle = SerializationHandle.CORE_HANDLES.getHandleByTypeId(typeId);
-            Object resultData = handle.deserialize(adapter, input);
+            Object resultData = handle.deserialize(adapter, input, backwardCompatibilityVersion);
 
             return CommandResult.success(resultData, typeId);
         }
 
         @Override
-        public <O> void serialize(SerializationAdapter<O> adapter, O output, CommandResult<?> result) throws IOException {
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, CommandResult<?> result, Version backwardCompatibilityVersion) throws IOException {
+            adapter.writeInt(output, v_5_0_0.getNumber());
+
             adapter.writeBoolean(output, result.bucketNotFound);
             if (!result.bucketNotFound) {
                 adapter.writeInt(output, result.resultTypeId);
                 SerializationHandle handle = SerializationHandle.CORE_HANDLES.getHandleByTypeId(result.resultTypeId);
-                handle.serialize(adapter, output, result.data);
+                handle.serialize(adapter, output, result.data, backwardCompatibilityVersion);
             }
         }
 

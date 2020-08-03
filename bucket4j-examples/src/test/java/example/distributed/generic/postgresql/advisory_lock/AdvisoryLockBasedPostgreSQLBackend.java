@@ -17,13 +17,14 @@
 
 package example.distributed.generic.postgresql.advisory_lock;
 
+import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.generic.select_for_update.AbstractLockBasedBackend;
 import io.github.bucket4j.distributed.proxy.generic.select_for_update.LockBasedTransaction;
 import io.github.bucket4j.distributed.proxy.generic.select_for_update.LockResult;
 
 import javax.sql.DataSource;
 import java.sql.*;
-import java.util.Optional;
+import java.util.Objects;
 
 public class AdvisoryLockBasedPostgreSQLBackend extends AbstractLockBasedBackend<Long> {
 
@@ -35,8 +36,9 @@ public class AdvisoryLockBasedPostgreSQLBackend extends AbstractLockBasedBackend
 
     private final DataSource dataSource;
 
-    public AdvisoryLockBasedPostgreSQLBackend(DataSource dataSource) throws SQLException {
-        this.dataSource = dataSource;
+    public AdvisoryLockBasedPostgreSQLBackend(DataSource dataSource, ClientSideConfig clientSideConfig) throws SQLException {
+        super(clientSideConfig);
+        this.dataSource = Objects.requireNonNull(dataSource);
 
         // TODO for real application table initialization should be moved to the right place
         try (Connection connection = dataSource.getConnection()) {

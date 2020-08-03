@@ -6,6 +6,7 @@ import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
 import io.github.bucket4j.distributed.proxy.Backend;
+import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.grid.hazelcast.HazelcastBackend;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
 import org.gridkit.nanocloud.Cloud;
@@ -60,7 +61,7 @@ public class HazelcastWithCustomSerializersTest extends AbstractDistributedBucke
 
     @Override
     protected Backend<String> getBackend() {
-        return new HazelcastBackend<>(map);
+        return new HazelcastBackend<>(map, ClientSideConfig.getDefault());
     }
 
     @Override
