@@ -33,7 +33,7 @@ import java.io.Serializable;
 /**
  * {@inheritDoc}
  *
- * This builder creates the buckets backed by <a href="https://ignite.apache.org/">Apache ignite</a> in-memory computing platform.
+ * This builder creates the buckets backed by <a href="https://www.hazelcast.org/">Hazelcast</a> in-memory computing platform.
  *
  * @see io.github.bucket4j.grid.jcache.JCacheBucketBuilder
  *
