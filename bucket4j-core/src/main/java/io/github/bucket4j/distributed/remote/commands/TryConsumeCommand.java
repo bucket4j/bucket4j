@@ -104,4 +104,19 @@ public class TryConsumeCommand implements RemoteCommand<Boolean>, ComparableByCo
         return tokensToConsume == other.tokensToConsume;
     }
 
+    @Override
+    public boolean isImmediateSyncRequired(long unsynchronizedTokens, long nanosSinceLastSync) {
+        return false;
+    }
+
+    @Override
+    public long estimateTokensToConsume() {
+        return tokensToConsume;
+    }
+
+    @Override
+    public long getConsumedTokens(Boolean result) {
+        return result ? tokensToConsume : 0;
+    }
+
 }

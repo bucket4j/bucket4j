@@ -104,4 +104,19 @@ public class ReplaceConfigurationOrReturnPreviousCommand implements RemoteComman
         return ComparableByContent.equals(newConfiguration, other.newConfiguration);
     }
 
+    @Override
+    public boolean isImmediateSyncRequired(long unsynchronizedTokens, long nanosSinceLastSync) {
+        return true;
+    }
+
+    @Override
+    public long estimateTokensToConsume() {
+        return 0;
+    }
+
+    @Override
+    public long getConsumedTokens(BucketConfiguration result) {
+        return 0;
+    }
+
 }

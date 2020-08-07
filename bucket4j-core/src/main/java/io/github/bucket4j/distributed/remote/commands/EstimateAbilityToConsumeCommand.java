@@ -107,4 +107,19 @@ public class EstimateAbilityToConsumeCommand implements RemoteCommand<Estimation
         return tokensToConsume == other.tokensToConsume;
     }
 
+    @Override
+    public boolean isImmediateSyncRequired(long unsynchronizedTokens, long nanosSinceLastSync) {
+        return false;
+    }
+
+    @Override
+    public long estimateTokensToConsume() {
+        return 0;
+    }
+
+    @Override
+    public long getConsumedTokens(EstimationProbe result) {
+        return 0;
+    }
+
 }

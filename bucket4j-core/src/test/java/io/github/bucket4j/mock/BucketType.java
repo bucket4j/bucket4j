@@ -4,6 +4,7 @@ package io.github.bucket4j.mock;
 import io.github.bucket4j.*;
 import io.github.bucket4j.distributed.AsyncBucketProxy;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
+import io.github.bucket4j.distributed.proxy.optimization.Optimizations;
 import io.github.bucket4j.local.LocalBucketBuilder;
 import io.github.bucket4j.local.SynchronizationStrategy;
 
@@ -65,6 +66,25 @@ public enum BucketType {
             GridBackendMock<Integer> backend = new GridBackendMock<>(timeMeter);
             return backend.asAsync().builder()
                     .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
+                    .buildProxy(42, configuration);
+        }
+    },
+    GRID_WITH_BATCHING_OPTIMIZATION {
+        @Override
+        public Bucket createBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
+            GridBackendMock<Integer> backend = new GridBackendMock<>(timeMeter);
+            return backend.builder()
+                    .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
+                    .withOptimization(Optimizations.batching())
+                    .buildProxy(42, configuration);
+        }
+
+        @Override
+        public AsyncBucketProxy createAsyncBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
+            GridBackendMock<Integer> backend = new GridBackendMock<>(timeMeter);
+            return backend.asAsync().builder()
+                    .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
+                    .withOptimization(Optimizations.batching())
                     .buildProxy(42, configuration);
         }
     },

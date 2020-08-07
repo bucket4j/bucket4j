@@ -4,8 +4,6 @@ import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.MutableBucketEntry;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
-import io.github.bucket4j.distributed.versioning.Version;
-import io.github.bucket4j.distributed.versioning.Versions;
 
 public class MockCommand implements RemoteCommand<Long> {
 
@@ -23,6 +21,21 @@ public class MockCommand implements RemoteCommand<Long> {
     @Override
     public SerializationHandle<RemoteCommand<?>> getSerializationHandle() {
         return null;
+    }
+
+    @Override
+    public boolean isImmediateSyncRequired(long unsynchronizedTokens, long nanosSinceLastSync) {
+        return false;
+    }
+
+    @Override
+    public long estimateTokensToConsume() {
+        return 0;
+    }
+
+    @Override
+    public long getConsumedTokens(Long result) {
+        return 0;
     }
 
     public long getAmount() {

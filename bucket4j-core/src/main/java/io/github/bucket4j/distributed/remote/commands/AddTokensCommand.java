@@ -100,4 +100,19 @@ public class AddTokensCommand implements RemoteCommand<Nothing>, ComparableByCon
         return tokensToAdd == other.tokensToAdd;
     }
 
+    @Override
+    public boolean isImmediateSyncRequired(long unsynchronizedTokens, long nanosSinceLastSync) {
+        return true;
+    }
+
+    @Override
+    public long estimateTokensToConsume() {
+        return 0;
+    }
+
+    @Override
+    public long getConsumedTokens(Nothing result) {
+        return 0;
+    }
+
 }

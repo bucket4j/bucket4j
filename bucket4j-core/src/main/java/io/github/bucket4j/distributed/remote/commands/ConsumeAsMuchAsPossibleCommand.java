@@ -107,4 +107,19 @@ public class ConsumeAsMuchAsPossibleCommand implements RemoteCommand<Long>, Comp
         return limit == other.limit;
     }
 
+    @Override
+    public boolean isImmediateSyncRequired(long unsynchronizedTokens, long nanosSinceLastSync) {
+        return limit == Long.MAX_VALUE;
+    }
+
+    @Override
+    public long estimateTokensToConsume() {
+        return limit;
+    }
+
+    @Override
+    public long getConsumedTokens(Long result) {
+        return result;
+    }
+
 }

@@ -110,4 +110,43 @@ public class MultiCommand implements RemoteCommand<MultiResult>, ComparableByCon
         return true;
     }
 
+    @Override
+    public boolean isImmediateSyncRequired(long unsynchronizedTokens, long nanosSinceLastSync) {
+        for (RemoteCommand<?> command : commands) {
+            if (command.isImmediateSyncRequired(unsynchronizedTokens, nanosSinceLastSync)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public long estimateTokensToConsume() {
+        long sum = 0;
+        for (RemoteCommand<?> command : commands) {
+            sum += command.estimateTokensToConsume();
+            if (sum < 0l) {
+                // math overflow
+                return Long.MAX_VALUE;
+            }
+        }
+        return sum;
+    }
+
+    @Override
+    public long getConsumedTokens(MultiResult multiResult) {
+        long sum = 0;
+        int count = commands.size();
+        for (int i = 0; i < count; i++) {
+            RemoteCommand command = commands.get(i);
+            CommandResult result = multiResult.getResults().get(i);
+            sum += result.isBucketNotFound()? 0: command.getConsumedTokens(result.getData());
+            if (sum < 0l) {
+                // math overflow
+                return Long.MAX_VALUE;
+            }
+        }
+        return sum;
+    }
+
 }

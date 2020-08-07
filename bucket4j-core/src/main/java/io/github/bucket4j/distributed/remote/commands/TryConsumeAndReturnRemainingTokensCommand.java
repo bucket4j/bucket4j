@@ -113,4 +113,19 @@ public class TryConsumeAndReturnRemainingTokensCommand implements RemoteCommand<
         return tokensToConsume == other.tokensToConsume;
     }
 
+    @Override
+    public boolean isImmediateSyncRequired(long unsynchronizedTokens, long nanosSinceLastSync) {
+        return false;
+    }
+
+    @Override
+    public long estimateTokensToConsume() {
+        return tokensToConsume;
+    }
+
+    @Override
+    public long getConsumedTokens(ConsumptionProbe result) {
+        return result.isConsumed() ? tokensToConsume : 0L;
+    }
+
 }

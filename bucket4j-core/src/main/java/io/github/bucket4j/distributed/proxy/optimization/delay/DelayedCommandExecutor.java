@@ -60,12 +60,8 @@ class DelayedCommandExecutor implements CommandExecutor, AsyncCommandExecutor {
 
         MultiCommand remoteCommand = prepareRemoteCommand(command);
         MultiResult multiResult = originalExecutor.execute(remoteCommand).getData();
-        List<CommandResult<?>> results = multiResult.getResults();
-        if (results.get(GET_SNAPSHOT_COMMAND_INDEX).isBucketNotFound()) {
-            return (CommandResult<T>) results.get(ORIGINAL_COMMAND_INDEX);
-        }
-        rememberRemoteCommandResult((RemoteBucketState) results.get(GET_SNAPSHOT_COMMAND_INDEX).getData());
-        return (CommandResult<T>) results.get(ORIGINAL_COMMAND_INDEX);
+        rememberRemoteCommandResult(multiResult);
+        return (CommandResult<T>) multiResult.getResults().get(ORIGINAL_COMMAND_INDEX);
     }
 
     @Override
@@ -80,12 +76,9 @@ class DelayedCommandExecutor implements CommandExecutor, AsyncCommandExecutor {
         MultiCommand remoteCommand = prepareRemoteCommand(command);
         CompletableFuture<CommandResult<MultiResult>> resultFuture = originalAsyncExecutor.executeAsync(remoteCommand);
         return resultFuture.thenApply(remoteResult -> {
-            List<CommandResult<?>> results = remoteResult.getData().getResults();
-            if (results.get(GET_SNAPSHOT_COMMAND_INDEX).isBucketNotFound()) {
-                return (CommandResult<T>) results.get(ORIGINAL_COMMAND_INDEX);
-            }
-            rememberRemoteCommandResult((RemoteBucketState) results.get(GET_SNAPSHOT_COMMAND_INDEX).getData());
-            return (CommandResult<T>) results.get(ORIGINAL_COMMAND_INDEX);
+            MultiResult multiResult = remoteResult.getData();
+            rememberRemoteCommandResult(multiResult);
+            return (CommandResult<T>) multiResult.getResults().get(ORIGINAL_COMMAND_INDEX);
         });
     }
 
@@ -98,7 +91,7 @@ class DelayedCommandExecutor implements CommandExecutor, AsyncCommandExecutor {
         // execute local command
         BucketEntryWrapper entry = new BucketEntryWrapper(state.copy());
         CommandResult<T> result = command.execute(entry, currentTimeNanos);
-        long locallyConsumedTokens = CommandInsiders.getConsumedTokens(command, result.getData());
+        long locallyConsumedTokens = command.getConsumedTokens(result.getData());
         if (locallyConsumedTokens == Long.MAX_VALUE) {
             return null;
         }
@@ -134,12 +127,12 @@ class DelayedCommandExecutor implements CommandExecutor, AsyncCommandExecutor {
             return true;
         }
 
-        if (CommandInsiders.isImmediateSyncRequired(command, postponedToConsumeTokens, currentTimeNanos - lastSyncTimeNanos)) {
+        if (command.isImmediateSyncRequired(postponedToConsumeTokens, currentTimeNanos - lastSyncTimeNanos)) {
             // need to execute immediately because of special command
             return true;
         }
 
-        long commandTokens = CommandInsiders.estimateTokensToConsume(command);
+        long commandTokens = command.estimateTokensToConsume();
         if (commandTokens == Long.MAX_VALUE || commandTokens + postponedToConsumeTokens < 0) {
             // math overflow
             return true;
@@ -156,10 +149,15 @@ class DelayedCommandExecutor implements CommandExecutor, AsyncCommandExecutor {
         return new MultiCommand(commands);
     }
 
-    private void rememberRemoteCommandResult(RemoteBucketState state) {
-        this.state = state;
+    private void rememberRemoteCommandResult(MultiResult multiResult) {
         postponedToConsumeTokens = 0;
         lastSyncTimeNanos = timeMeter.currentTimeNanos();
+        CommandResult<?> snapshotResult = multiResult.getResults().get(GET_SNAPSHOT_COMMAND_INDEX);
+        if (snapshotResult.isBucketNotFound()) {
+            state = null;
+            return;
+        }
+        this.state = (RemoteBucketState) snapshotResult.getData();
     }
 
 

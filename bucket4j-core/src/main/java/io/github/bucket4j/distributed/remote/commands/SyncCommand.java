@@ -116,4 +116,20 @@ public class SyncCommand implements RemoteCommand<Nothing>, ComparableByContent<
                 && nanosSinceLastSync == other.nanosSinceLastSync;
     }
 
+    @Override
+    public boolean isImmediateSyncRequired(long unsynchronizedTokens, long nanosSinceLastSync) {
+        return this.unsynchronizedTokens <= unsynchronizedTokens
+                && this.nanosSinceLastSync <= nanosSinceLastSync;
+    }
+
+    @Override
+    public long estimateTokensToConsume() {
+        return 0L;
+    }
+
+    @Override
+    public long getConsumedTokens(Nothing result) {
+        return 0L;
+    }
+
 }

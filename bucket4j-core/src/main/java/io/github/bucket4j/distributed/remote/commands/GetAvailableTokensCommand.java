@@ -88,4 +88,19 @@ public class GetAvailableTokensCommand implements RemoteCommand<Long>, Comparabl
         return true;
     }
 
+    @Override
+    public boolean isImmediateSyncRequired(long unsynchronizedTokens, long nanosSinceLastSync) {
+        return false;
+    }
+
+    @Override
+    public long estimateTokensToConsume() {
+        return 0;
+    }
+
+    @Override
+    public long getConsumedTokens(Long result) {
+        return 0;
+    }
+
 }

@@ -106,4 +106,19 @@ public class ConsumeIgnoringRateLimitsCommand implements RemoteCommand<Long>, Co
         return tokensToConsume == other.tokensToConsume;
     }
 
+    @Override
+    public boolean isImmediateSyncRequired(long unsynchronizedTokens, long nanosSinceLastSync) {
+        return false;
+    }
+
+    @Override
+    public long estimateTokensToConsume() {
+        return tokensToConsume;
+    }
+
+    @Override
+    public long getConsumedTokens(Long result) {
+        return result == Long.MAX_VALUE? 0l: tokensToConsume;
+    }
+
 }

@@ -93,4 +93,20 @@ public class VerboseCommand<T> implements RemoteCommand<RemoteVerboseResult<T>>,
     public boolean equalsByContent(VerboseCommand<?> other) {
         return ComparableByContent.equals(targetCommand, other.targetCommand);
     }
+
+    @Override
+    public boolean isImmediateSyncRequired(long unsynchronizedTokens, long nanosSinceLastSync) {
+        return targetCommand.isImmediateSyncRequired(unsynchronizedTokens, nanosSinceLastSync);
+    }
+
+    @Override
+    public long estimateTokensToConsume() {
+        return targetCommand.estimateTokensToConsume();
+    }
+
+    @Override
+    public long getConsumedTokens(RemoteVerboseResult<T> result) {
+        return targetCommand.getConsumedTokens(result.getValue());
+    }
+
 }

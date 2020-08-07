@@ -114,6 +114,21 @@ public class CreateInitialStateAndExecuteCommand<T> implements RemoteCommand<T>,
                 ComparableByContent.equals(targetCommand, other.targetCommand);
     }
 
+    @Override
+    public boolean isImmediateSyncRequired(long unsynchronizedTokens, long nanosSinceLastSync) {
+        return true;
+    }
+
+    @Override
+    public long estimateTokensToConsume() {
+        return targetCommand.estimateTokensToConsume();
+    }
+
+    @Override
+    public long getConsumedTokens(T result) {
+        return targetCommand.getConsumedTokens(result);
+    }
+
     private static class BucketEntryWrapper implements MutableBucketEntry {
 
         private RemoteBucketState state;

@@ -102,4 +102,19 @@ public class CreateInitialStateCommand implements RemoteCommand<Nothing>, Compar
         return ComparableByContent.equals(configuration, other.configuration);
     }
 
+    @Override
+    public boolean isImmediateSyncRequired(long unsynchronizedTokens, long nanosSinceLastSync) {
+        return true;
+    }
+
+    @Override
+    public long estimateTokensToConsume() {
+        return 0;
+    }
+
+    @Override
+    public long getConsumedTokens(Nothing result) {
+        return 0;
+    }
+
 }

@@ -1,19 +1,19 @@
-package io.github.bucket4j.distributed.proxy.optimization.delay
+package io.github.bucket4j.distributed.proxy.optimization.predictive
 
 import io.github.bucket4j.Bandwidth
 import io.github.bucket4j.Bucket
 import io.github.bucket4j.BucketConfiguration
-import io.github.bucket4j.distributed.AsyncBucketProxy
 import io.github.bucket4j.distributed.proxy.optimization.DefaultOptimizationListener
 import io.github.bucket4j.distributed.proxy.optimization.DelayParameters
 import io.github.bucket4j.distributed.proxy.optimization.Optimization
+import io.github.bucket4j.distributed.proxy.optimization.PredictionParameters
 import io.github.bucket4j.mock.GridBackendMock
 import io.github.bucket4j.mock.TimeMeterMock
 import spock.lang.Specification
 
 import java.time.Duration
 
-class DelayedCommandExecutorSpecification extends Specification {
+class PredictiveCommandExecutorSpecification extends Specification {
 
     private TimeMeterMock clock = new TimeMeterMock()
     private GridBackendMock backend = new GridBackendMock(clock)
@@ -21,8 +21,9 @@ class DelayedCommandExecutorSpecification extends Specification {
     private BucketConfiguration configuration = BucketConfiguration.builder()
         .addLimit(Bandwidth.simple(100, Duration.ofMillis(1000)))
         .build()
-    private DelayParameters parameters = new DelayParameters(20, Duration.ofMillis(500))
-    private Optimization optimization = new DelayOptimization(parameters, listener, clock)
+    private DelayParameters delay = new DelayParameters(20, Duration.ofMillis(500))
+    private PredictionParameters prediction = PredictionParameters.createDefault(delay)
+    private Optimization optimization = new PredictiveOptimization(prediction, delay, listener, clock)
     private Bucket optimizedBucket = backend.builder()
         .withOptimization(optimization)
         .buildProxy(1L, configuration)
@@ -39,7 +40,7 @@ class DelayedCommandExecutorSpecification extends Specification {
             notOptimizedBucket.getAvailableTokens() == 99
         and: "metrics correctly counted"
             listener.getMergeCount() == 0
-            listener.getSkipCount() == 1 // getAvailableTokens increments this counter
+            listener.getSkipCount() == 0 // getAvailableTokens creates second sample
 
         when: "next tryAcquire(1) happened after 9 millis"
             clock.addMillis(9) // 9
@@ -51,7 +52,7 @@ class DelayedCommandExecutorSpecification extends Specification {
             notOptimizedBucket.getAvailableTokens() == 99
         and: "metrics correctly counted"
             listener.getMergeCount() == 0
-            listener.getSkipCount() == 3
+            listener.getSkipCount() == 2
 
         when: "next tryAcquire(1) happened after 1 millis"
             clock.addMillis(1) // 10
@@ -63,7 +64,7 @@ class DelayedCommandExecutorSpecification extends Specification {
             notOptimizedBucket.getAvailableTokens() == 100 // one token was refilled
         and: "metrics correctly counted"
             listener.getMergeCount() == 0
-            listener.getSkipCount() == 5
+            listener.getSkipCount() == 4
 
         when: "next tryAcquire(19) happened after 10 millis"
             clock.addMillis(10) // 20
@@ -75,46 +76,91 @@ class DelayedCommandExecutorSpecification extends Specification {
             notOptimizedBucket.getAvailableTokens() == 79 // one token was refilled
         and: "metrics correctly counted"
             listener.getMergeCount() == 0
-            listener.getSkipCount() == 6
+            listener.getSkipCount() == 5
 
-        when: "all tokens consumed from remote bucket"
-            notOptimizedBucket.tryConsumeAsMuchAsPossible()
+        when: "50 tokens consumed from remote bucket"
+            notOptimizedBucket.tryConsume(75)
         then: "it is possible to consume from local bucket because sync timeout is not exceeded"
             optimizedBucket.tryConsume(1) == true
             optimizedBucket.getAvailableTokens() == 78
             optimizedBucket.tryConsumeAsMuchAsPossible(15) == 15
             optimizedBucket.getAvailableTokens() == 63
+            notOptimizedBucket.getAvailableTokens() == 4
 
         when: "500 millis passed"
             clock.addMillis(500) // 500
         then: "request not propogated to backend"
             optimizedBucket.getAvailableTokens() == 100
-            notOptimizedBucket.getAvailableTokens() == 50
+            notOptimizedBucket.getAvailableTokens() == 54
 
         when: "1 millis passed"
             clock.addMillis(1) // 501
         then: "request propogated to backend"
-            optimizedBucket.getAvailableTokens() == 34
-            notOptimizedBucket.getAvailableTokens() == 34
+            optimizedBucket.getAvailableTokens() == 38
+            notOptimizedBucket.getAvailableTokens() == 38
 
-        when: "too many optimized bucket overconsumed the bucket"
-            List<Bucket> buckets = new ArrayList<>();
-            for (int i = 0; i < 10; i++) {
-                buckets.add(backend.builder().withOptimization(optimization).buildProxy(1L, configuration))
-            }
-            for (int i = 0; i < 10; i++) {
-                buckets.get(i).getAvailableTokens() // just request needed to sync bucket with backend
-                buckets.get(i).tryConsume(20);
-            }
-        then: "amount of token in the backend become negative"
-            for (int i = 0; i < 10; i++) {
-                buckets.get(i).tryConsume(1) == false;
-            }
-            notOptimizedBucket.getAvailableTokens() == -167
+        when: "250 millis passed"
+            clock.addMillis(250)
+        then: "optimized bucket takes care about other nodes consumption rate"
+            notOptimizedBucket.getAvailableTokens() == 63
+            optimizedBucket.getAvailableTokens() == 28
+
+        when: "125 millis passed"
+            clock.addMillis(125)
+        then: "optimized bucket takes care about other nodes consumption rate"
+            notOptimizedBucket.getAvailableTokens() == 75
+            optimizedBucket.getAvailableTokens() == 22
+
+        when:
+            notOptimizedBucket.tryConsumeAsMuchAsPossible()
+            optimizedBucket.tryConsume(19)
+
+        then: "amount of token in the backend become negative after sync"
+            optimizedBucket.getAvailableTokens() == 3
+            notOptimizedBucket.getAvailableTokens() == 0
+
+        when:
+            clock.addMillis(40)
+            optimizedBucket.syncImmediately()
+        then:
+            optimizedBucket.getAvailableTokens() == -15
+            notOptimizedBucket.getAvailableTokens() == -15
+
+        when:
+            clock.addMillis(100)
+        then:
+            optimizedBucket.getAvailableTokens() == -5
+            notOptimizedBucket.getAvailableTokens() == -5
+
+        when:
+            clock.addMillis(50)
+        then:
+            optimizedBucket.getAvailableTokens() == 0
+            notOptimizedBucket.getAvailableTokens() == 0
+
+        when:
+            clock.addMillis(80)
+        then:
+            optimizedBucket.getAvailableTokens() == 0
+            notOptimizedBucket.getAvailableTokens() == 8
+
+        when:
+            clock.addMillis(20)
+        then:
+            optimizedBucket.getAvailableTokens() == 0
+            notOptimizedBucket.getAvailableTokens() == 10
+
+        when:
+            clock.addMillis(400)
+        then:
+            optimizedBucket.getAvailableTokens() == 50
+            notOptimizedBucket.getAvailableTokens() == 50
     }
 
     def "test synchronization by requirement"() {
         when: "one token consumed without synchronization"
+            optimizedBucket.getAvailableTokens()
+            clock.addMillis(1);
             optimizedBucket.getAvailableTokens()
             optimizedBucket.tryConsume(1)
         then:
@@ -130,6 +176,8 @@ class DelayedCommandExecutorSpecification extends Specification {
 
     def "test synchronization by conditional requirement"() {
         when: "10 tokens consumed without synchronization"
+            optimizedBucket.getAvailableTokens()
+            clock.addTime(1)
             optimizedBucket.getAvailableTokens()
             optimizedBucket.tryConsume(10)
         then:

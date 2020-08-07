@@ -86,4 +86,19 @@ public class CreateSnapshotCommand implements RemoteCommand<RemoteBucketState>, 
         return true;
     }
 
+    @Override
+    public boolean isImmediateSyncRequired(long unsynchronizedTokens, long nanosSinceLastSync) {
+        return false;
+    }
+
+    @Override
+    public long estimateTokensToConsume() {
+        return 0;
+    }
+
+    @Override
+    public long getConsumedTokens(RemoteBucketState result) {
+        return 0;
+    }
+
 }

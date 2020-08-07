@@ -116,4 +116,20 @@ public class ReserveAndCalculateTimeToSleepCommand implements RemoteCommand<Long
         return tokensToConsume == other.tokensToConsume &&
                 waitIfBusyNanosLimit == other.waitIfBusyNanosLimit;
     }
+
+    @Override
+    public boolean isImmediateSyncRequired(long unsynchronizedTokens, long nanosSinceLastSync) {
+        return false;
+    }
+
+    @Override
+    public long estimateTokensToConsume() {
+        return tokensToConsume;
+    }
+
+    @Override
+    public long getConsumedTokens(Long result) {
+        return result;
+    }
+
 }

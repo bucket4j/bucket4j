@@ -1,8 +1,7 @@
-package io.github.bucket4j.remote
+package io.github.bucket4j.distributed
 
 import io.github.bucket4j.Bandwidth
 import io.github.bucket4j.BucketConfiguration
-import io.github.bucket4j.distributed.AsyncBucketProxy
 import io.github.bucket4j.mock.GridBackendMock
 import spock.lang.Specification
 

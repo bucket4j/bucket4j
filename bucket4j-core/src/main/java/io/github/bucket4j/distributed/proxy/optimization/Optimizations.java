@@ -16,14 +16,12 @@ public class Optimizations {
     }
 
     public static Optimization predicting(DelayParameters delayParameters) {
-        int requiredSamples = 2;
-        long sampleMaxAge = delayParameters.maxUnsynchronizedTimeoutNanos * 2;
-        PredictionParameters defaultPrediction = new PredictionParameters(requiredSamples, sampleMaxAge);
-        return new PredictiveOptimization(defaultPrediction, delayParameters, NopeOptimizationListener.INSTANCE, TimeMeter.SYSTEM_MILLISECONDS);
+        PredictionParameters defaultPrediction = PredictionParameters.createDefault(delayParameters);
+        return new PredictiveOptimization(defaultPrediction, delayParameters, NopeOptimizationListener.INSTANCE, TimeMeter.SYSTEM_NANOTIME);
     }
 
     public static Optimization predicting(DelayParameters delayParameters, PredictionParameters predictionParameters) {
-        return new PredictiveOptimization(predictionParameters, delayParameters, NopeOptimizationListener.INSTANCE, TimeMeter.SYSTEM_MILLISECONDS);
+        return new PredictiveOptimization(predictionParameters, delayParameters, NopeOptimizationListener.INSTANCE, TimeMeter.SYSTEM_NANOTIME);
     }
 
 }

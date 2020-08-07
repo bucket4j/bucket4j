@@ -39,6 +39,12 @@ public interface RemoteCommand<T> {
 
     SerializationHandle<RemoteCommand<?>> getSerializationHandle();
 
+    boolean isImmediateSyncRequired(long unsynchronizedTokens, long nanosSinceLastSync);
+
+    long estimateTokensToConsume();
+
+    long getConsumedTokens(T result);
+
     static <O> void serialize(SerializationAdapter<O> adapter, O output, RemoteCommand<?> command, Version backwardCompatibilityVersion) throws IOException {
         SerializationHandle<RemoteCommand<?>> serializer = command.getSerializationHandle();
         adapter.writeInt(output, serializer.getTypeId());

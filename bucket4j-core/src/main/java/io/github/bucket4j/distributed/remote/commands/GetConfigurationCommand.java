@@ -84,4 +84,20 @@ public class GetConfigurationCommand implements RemoteCommand<BucketConfiguratio
         return true;
     }
 
+    @Override
+    public boolean isImmediateSyncRequired(long unsynchronizedTokens, long nanosSinceLastSync) {
+        return false;
+    }
+
+    @Override
+    public long estimateTokensToConsume() {
+        return 0;
+    }
+
+    @Override
+    public long getConsumedTokens(BucketConfiguration result) {
+        return 0;
+    }
+
+
 }
