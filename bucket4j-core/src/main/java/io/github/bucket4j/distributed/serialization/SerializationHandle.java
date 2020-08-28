@@ -42,6 +42,10 @@ public interface SerializationHandle<T> {
             EstimationProbe.SERIALIZATION_HANDLE, // 12
             MultiResult.SERIALIZATION_HANDLE, // 13
             RemoteVerboseResult.SERIALIZATION_HANDLE, // 14
+            BucketNotFoundError.SERIALIZATION_HANDLE, // 15
+            UnsupportedTypeError.SERIALIZATION_HANDLE, // 16
+            UsageOfObsoleteApiError.SERIALIZATION_HANDLE, // 17
+            UsageOfUnsupportedApiError.SERIALIZATION_HANDLE, // 18
 
             CreateInitialStateCommand.SERIALIZATION_HANDLE, // 20
             CreateInitialStateAndExecuteCommand.SERIALIZATION_HANDLE, // 21
@@ -60,6 +64,8 @@ public interface SerializationHandle<T> {
             VerboseCommand.SERIALIZATION_HANDLE, // 35
             SyncCommand.SERIALIZATION_HANDLE, // 36
             Request.SERIALIZATION_HANDLE // 37
+
+
     ));
 
     <I> T deserialize(DeserializationAdapter<I> adapter, I input, Version backwardCompatibilityVersion) throws IOException;

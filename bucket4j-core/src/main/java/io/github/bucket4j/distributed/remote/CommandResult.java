@@ -39,12 +39,11 @@ public class CommandResult<T> implements ComparableByContent<CommandResult> {
     public static final CommandResult<Boolean> TRUE = CommandResult.success(true, BOOLEAN_HANDLE);
     public static final CommandResult<Boolean> FALSE = CommandResult.success(false, BOOLEAN_HANDLE);
 
-    private static final CommandResult<?> NOT_FOUND = new CommandResult<>(null, NULL_HANDLE.getTypeId(), true);
-    private static final CommandResult<?> NULL = new CommandResult<>(null, NULL_HANDLE.getTypeId(), false);
+    private static final CommandResult<?> NOT_FOUND = new CommandResult<>(new BucketNotFoundError(), BucketNotFoundError.SERIALIZATION_HANDLE.getTypeId());
+    private static final CommandResult<?> NULL = new CommandResult<>(null, NULL_HANDLE.getTypeId());
 
     private T data;
     private int resultTypeId;
-    private boolean bucketNotFound;
 
     public static SerializationHandle<CommandResult<?>> SERIALIZATION_HANDLE = new SerializationHandle<CommandResult<?>>() {
         @Override
@@ -52,10 +51,6 @@ public class CommandResult<T> implements ComparableByContent<CommandResult> {
             int formatNumber = adapter.readInt(input);
             Versions.check(formatNumber, v_5_0_0, v_5_0_0);
 
-            boolean isBucketNotFound = adapter.readBoolean(input);
-            if (isBucketNotFound) {
-                return CommandResult.bucketNotFound();
-            }
             int typeId = adapter.readInt(input);
             SerializationHandle handle = SerializationHandle.CORE_HANDLES.getHandleByTypeId(typeId);
             Object resultData = handle.deserialize(adapter, input, backwardCompatibilityVersion);
@@ -67,12 +62,9 @@ public class CommandResult<T> implements ComparableByContent<CommandResult> {
         public <O> void serialize(SerializationAdapter<O> adapter, O output, CommandResult<?> result, Version backwardCompatibilityVersion) throws IOException {
             adapter.writeInt(output, v_5_0_0.getNumber());
 
-            adapter.writeBoolean(output, result.bucketNotFound);
-            if (!result.bucketNotFound) {
-                adapter.writeInt(output, result.resultTypeId);
-                SerializationHandle handle = SerializationHandle.CORE_HANDLES.getHandleByTypeId(result.resultTypeId);
-                handle.serialize(adapter, output, result.data, backwardCompatibilityVersion);
-            }
+            adapter.writeInt(output, result.resultTypeId);
+            SerializationHandle handle = SerializationHandle.CORE_HANDLES.getHandleByTypeId(result.resultTypeId);
+            handle.serialize(adapter, output, result.data, backwardCompatibilityVersion);
         }
 
         @Override
@@ -87,18 +79,17 @@ public class CommandResult<T> implements ComparableByContent<CommandResult> {
 
     };
 
-    public CommandResult(T data, int resultTypeId, boolean bucketNotFound) {
+    public CommandResult(T data, int resultTypeId) {
         this.data = data;
         this.resultTypeId = resultTypeId;
-        this.bucketNotFound = bucketNotFound;
     }
 
     public static <R> CommandResult<R> success(R data, SerializationHandle dataSerializer) {
-        return new CommandResult<>(data, dataSerializer.getTypeId(), false);
+        return new CommandResult<>(data, dataSerializer.getTypeId());
     }
 
     public static <R> CommandResult<R> success(R data, int resultTypeId) {
-        return new CommandResult<>(data, resultTypeId, false);
+        return new CommandResult<>(data, resultTypeId);
     }
 
     public static <R> CommandResult<R> bucketNotFound() {
@@ -109,15 +100,31 @@ public class CommandResult<T> implements ComparableByContent<CommandResult> {
         return (CommandResult<R>) NULL;
     }
 
+    public static CommandResult<?> unsupportedType(int typeId) {
+        UnsupportedTypeError error = new UnsupportedTypeError(typeId);
+        return new CommandResult<>(error, UnsupportedTypeError.SERIALIZATION_HANDLE.getTypeId());
+    }
+
+    public static CommandResult<?> usageOfUnsupportedApiException(int requestedFormatNumber, int maxSupportedFormatNumber) {
+        UsageOfUnsupportedApiError error = new UsageOfUnsupportedApiError(requestedFormatNumber, maxSupportedFormatNumber);
+        return new CommandResult<>(error, UsageOfUnsupportedApiError.SERIALIZATION_HANDLE.getTypeId());
+    }
+
+    public static CommandResult<?> usageOfObsoleteApiException(int requestedFormatNumber, int minSupportedFormatNumber) {
+        UsageOfObsoleteApiError error = new UsageOfObsoleteApiError(requestedFormatNumber, minSupportedFormatNumber);
+        return new CommandResult<>(error, UsageOfObsoleteApiError.SERIALIZATION_HANDLE.getTypeId());
+    }
+
     public T getData() {
-        if (bucketNotFound) {
-            throw new IllegalStateException("getData must not be called when bucket not exists");
+        if (data instanceof CommandError) {
+            CommandError error = (CommandError) data;
+            throw error.asException();
         }
         return data;
     }
 
     public boolean isBucketNotFound() {
-        return bucketNotFound;
+        return data instanceof BucketNotFoundError;
     }
 
     public int getResultTypeId() {
@@ -126,8 +133,8 @@ public class CommandResult<T> implements ComparableByContent<CommandResult> {
 
     @Override
     public boolean equalsByContent(CommandResult other) {
-        return bucketNotFound == other.bucketNotFound &&
-                resultTypeId == other.resultTypeId &&
+        return resultTypeId == other.resultTypeId &&
                 ComparableByContent.equals(data, other.data);
     }
+
 }

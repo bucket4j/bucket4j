@@ -4,21 +4,21 @@ import java.text.MessageFormat;
 
 public class UsageOfUnsupportedApiException extends BackwardCompatibilityException {
 
-    private final int formatNumber;
-    private final int maxFormatNumber;
+    private final int requestedFormatNumber;
+    private final int maxSupportedFormatNumber;
 
-    public UsageOfUnsupportedApiException(int formatNumber, int maxFormatNumber) {
-        super(formatMessage(formatNumber, maxFormatNumber));
-        this.formatNumber = formatNumber;
-        this.maxFormatNumber = maxFormatNumber;
+    public UsageOfUnsupportedApiException(int requestedFormatNumber, int maxSupportedFormatNumber) {
+        super(formatMessage(requestedFormatNumber, maxSupportedFormatNumber));
+        this.requestedFormatNumber = requestedFormatNumber;
+        this.maxSupportedFormatNumber = maxSupportedFormatNumber;
     }
 
-    public int getFormatNumber() {
-        return formatNumber;
+    public int getRequestedFormatNumber() {
+        return requestedFormatNumber;
     }
 
-    public int getMaxFormatNumber() {
-        return maxFormatNumber;
+    public int getMaxSupportedFormatNumber() {
+        return maxSupportedFormatNumber;
     }
 
     private static String formatMessage(int formatNumber, int maxFormatNumber) {

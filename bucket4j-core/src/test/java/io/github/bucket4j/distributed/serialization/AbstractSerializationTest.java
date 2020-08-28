@@ -170,6 +170,10 @@ public abstract class AbstractSerializationTest {
     public void serializationOfCommandResults() throws IOException {
         // without payload
         testSerialization(CommandResult.bucketNotFound());
+        testSerialization(CommandResult.unsupportedType(1000));
+        testSerialization(CommandResult.usageOfUnsupportedApiException(10, 9));
+        testSerialization(CommandResult.usageOfObsoleteApiException(1, 9));
+
 
         // with long payload
         testSerialization(CommandResult.success(42L, LONG_HANDLE));
