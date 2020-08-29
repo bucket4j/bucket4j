@@ -243,6 +243,7 @@
                                 <toc>left</toc>
                                 <linkcss>false</linkcss>
                                 <sectnums>true</sectnums>
+                                <toclevels>4</toclevels>
                                 <revnumber>${project.version}</revnumber>
                                 <revdate>${maven.build.timestamp}</revdate>
                                 <organization>${project.organization.name}</organization>
