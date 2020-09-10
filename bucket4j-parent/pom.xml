@@ -166,6 +166,18 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <version>3.0.0-M3</version>
+                <configuration>
+                    <rules>
+                        <banDuplicatePomDependencyVersions/>
+                        <dependencyConvergence/>
+                    </rules>
+                    <fail>false</fail>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 
@@ -345,6 +357,18 @@
             <groupId>org.gridkit.lab</groupId>
             <artifactId>nanocloud</artifactId>
             <version>0.8.16</version>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-api</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>1.2.3</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
