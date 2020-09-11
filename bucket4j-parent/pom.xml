@@ -7,7 +7,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.github.vladimir-bukhtoyarov</groupId>
-    <version>5.0.0-beta.01-09-2020</version>
+    <version>5.0.0-SNAPSHOT</version>
     <artifactId>bucket4j-parent</artifactId>
     <packaging>pom</packaging>
     <name>bucket4j-parent</name>
@@ -43,6 +43,8 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
+        <VERSION-FOR-REVAPI-COMPARISION>4.10.0</VERSION-FOR-REVAPI-COMPARISION>
+
         <benchmark.jar.name>benchmarks</benchmark.jar.name>
         <argLine/>
         <maven.build.timestamp.format>yyyy-MM-dd HH</maven.build.timestamp.format>
@@ -177,6 +179,37 @@
                     </rules>
                     <fail>false</fail>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.revapi</groupId>
+                <artifactId>revapi-maven-plugin</artifactId>
+                <version>0.12.1</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.revapi</groupId>
+                        <artifactId>revapi-java</artifactId>
+                        <version>0.22.0</version>
+                    </dependency>
+                </dependencies>
+                <configuration>
+                    <alwaysCheckForReleaseVersion>false</alwaysCheckForReleaseVersion>
+                    <oldArtifacts>
+                        <artifact>${project.groupId}:${project.artifactId}:${VERSION-FOR-REVAPI-COMPARISION}</artifact>
+                    </oldArtifacts>
+                    <newArtifacts>
+                        <artifact>${project.groupId}:${project.artifactId}:${project.version}</artifact>
+                    </newArtifacts>
+                    <analysisConfiguration>
+                    </analysisConfiguration>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>verify-compatibility</id>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
