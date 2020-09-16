@@ -78,6 +78,10 @@ public class LockFreeBucket extends LockFreeBucket_FinalFields_CacheLinePadding 
 
     private final AtomicReference<StateWithConfiguration> stateRef;
 
+    public LockFreeBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
+        this(new AtomicReference<>(createStateWithConfiguration(configuration, MathType.INTEGER_64_BITS, timeMeter)), timeMeter, BucketListener.NOPE);
+    }
+
     public LockFreeBucket(BucketConfiguration configuration, MathType mathType, TimeMeter timeMeter) {
         this(new AtomicReference<>(createStateWithConfiguration(configuration, mathType, timeMeter)), timeMeter, BucketListener.NOPE);
     }
