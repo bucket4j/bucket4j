@@ -193,6 +193,7 @@
                 </dependencies>
                 <configuration>
                     <alwaysCheckForReleaseVersion>false</alwaysCheckForReleaseVersion>
+                    <checkDependencies>false</checkDependencies>
                     <oldArtifacts>
                         <artifact>${project.groupId}:${project.artifactId}:${VERSION-FOR-REVAPI-COMPARISION}</artifact>
                     </oldArtifacts>
