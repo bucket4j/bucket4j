@@ -16,7 +16,7 @@ Just use your favorite grid including [Hazelcast](http://hazelcast.com/products/
 * Ability to specify multiple bandwidths per bucket. For example you can limit 1000 events per hours but not often then 100 events per minute.
 * Both synchronous and asynchronous API.
 * Pluggable listener API that allows to implement monitoring and logging.
-* Ability to use bucket as as scheduler, [see examples](https://github.com/vladimir-bukhtoyarov/bucket4j/blob/4.0/doc-pages/basic-usage.md#example-2---using-bucket-as-scheduler).
+* Ability to use bucket as a scheduler, [see examples](https://github.com/vladimir-bukhtoyarov/bucket4j/blob/4.0/doc-pages/basic-usage.md#example-2---using-bucket-as-scheduler).
 
 ## Supported back-ends
 As mentioned above in addition to local in-memory buckets, the Bucket4j supports clustered usage scenario on top of following back-ends:
