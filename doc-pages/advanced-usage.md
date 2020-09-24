@@ -142,5 +142,8 @@ For example:
 VerboseResult<ConsumptionProbe> verboseResult = bucket.asVerbose().tryConsumeAndReturnRemaining(numberOfTokens);
 ConsumptionProbe probe = verboseResult.getValue();
 BucketConfiguration bucketConfiguration = verboseResult.getConfiguration();
-response.addHeader(X_RATE_LIMIT_LIMIT, String.valueOf(computeCapacity(bucketConfiguration)));
+long capacity = Arrays.stream(bucketConfiguration.getBandwidths())
+                .mapToLong(Bandwidth::getCapacity)
+                .max().getAsLong();
+response.addHeader(X_RATE_LIMIT_LIMIT, "" + capacity));
 ```
