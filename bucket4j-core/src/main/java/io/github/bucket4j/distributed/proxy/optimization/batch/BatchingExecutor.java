@@ -26,82 +26,55 @@ import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.remote.commands.MultiCommand;
 import io.github.bucket4j.distributed.remote.MultiResult;
+import io.github.bucket4j.util.concurrent.BatchHelper;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 
 public class BatchingExecutor implements CommandExecutor {
 
+    private final BatchHelper<RemoteCommand<?>, CommandResult<?>, MultiCommand, CommandResult<MultiResult>> batchingHelper;
     private final CommandExecutor wrappedExecutor;
     private final OptimizationListener listener;
-    private final TaskQueue taskQueue = new TaskQueue();
+
+    private final Function<List<RemoteCommand<?>>, MultiCommand> taskCombiner = new Function<List<RemoteCommand<?>>, MultiCommand>() {
+        @Override
+        public MultiCommand apply(List<RemoteCommand<?>> commands) {
+            listener.incrementMergeCount(commands.size() - 1);
+            return new MultiCommand(commands);
+        }
+    };
+
+    private final Function<MultiCommand, CommandResult<MultiResult>> combinedTaskExecutor = new Function<MultiCommand, CommandResult<MultiResult>>() {
+        @Override
+        public CommandResult<MultiResult> apply(MultiCommand multiCommand) {
+            return wrappedExecutor.execute(multiCommand);
+        }
+    };
+
+    private final Function<RemoteCommand<?>, CommandResult<?>> taskExecutor = new Function<RemoteCommand<?>, CommandResult<?>>() {
+        @Override
+        public CommandResult<?> apply(RemoteCommand<?> remoteCommand) {
+            return wrappedExecutor.execute(remoteCommand);
+        }
+    };
+
+    private final Function<CommandResult<MultiResult>, List<CommandResult<?>>> combinedResultSplitter = new Function<CommandResult<MultiResult>, List<CommandResult<?>>>() {
+        @Override
+        public List<CommandResult<?>> apply(CommandResult<MultiResult> multiResult) {
+            return multiResult.getData().getResults();
+        }
+    };
 
     public BatchingExecutor(CommandExecutor originalExecutor, OptimizationListener listener) {
         this.wrappedExecutor = originalExecutor;
         this.listener = listener;
+        this.batchingHelper = BatchHelper.sync(taskCombiner, combinedTaskExecutor, taskExecutor, combinedResultSplitter);
     }
 
     @Override
     public <T> CommandResult<T> execute(RemoteCommand<T> command) {
-        WaitingTask waitingNode = taskQueue.lockExclusivelyOrEnqueue(command);
-
-        if (waitingNode == null) {
-            try {
-                return wrappedExecutor.execute(command);
-            } finally {
-                taskQueue.wakeupAnyThreadFromNextBatchOrFreeLock();
-            }
-        }
-
-        CommandResult<?> result = waitingNode.waitUninterruptedly();
-        if (result != WaitingTask.NEED_TO_EXECUTE_NEXT_BATCH) {
-            // our future completed by another thread from current batch
-            return (CommandResult<T>) result;
-        }
-
-        // current thread is responsible to execute the batch of commands
-        try {
-            return executeBatch(waitingNode);
-        } finally {
-            taskQueue.wakeupAnyThreadFromNextBatchOrFreeLock();
-        }
-    }
-
-    private <T> CommandResult<T> executeBatch(WaitingTask currentWaitingNode) {
-        List<WaitingTask> waitingNodes = taskQueue.takeAllWaitingTasksOrFreeLock();
-
-        if (waitingNodes.size() == 1) {
-            RemoteCommand<?> singleCommand = waitingNodes.get(0).command;
-            return (CommandResult<T>) wrappedExecutor.execute(singleCommand);
-        }
-        listener.incrementMergeCount(waitingNodes.size() - 1);
-
-        try {
-            int resultIndex = -1;
-            List<RemoteCommand<?>> commandsInBatch = new ArrayList<>(waitingNodes.size());
-            for (int i = 0; i < waitingNodes.size(); i++) {
-                WaitingTask waitingNode = waitingNodes.get(i);
-                commandsInBatch.add(waitingNode.command);
-                if (waitingNode == currentWaitingNode) {
-                    resultIndex = i;
-                }
-            }
-            MultiCommand multiCommand = new MultiCommand(commandsInBatch);
-
-            CommandResult<MultiResult> multiResult = wrappedExecutor.execute(multiCommand);
-            List<CommandResult<?>> singleResults = multiResult.getData().getResults();
-            for (int i = 0; i < waitingNodes.size(); i++) {
-                CommandResult<?> singleResult = singleResults.get(i);
-                waitingNodes.get(i).future.complete(singleResult);
-            }
-
-            return (CommandResult<T>) singleResults.get(resultIndex);
-        } catch (Throwable e) {
-            for (WaitingTask waitingNode : waitingNodes) {
-                waitingNode.future.completeExceptionally(e);
-            }
-            throw new BatchFailedException(e);
-        }
+        return (CommandResult<T>) batchingHelper.execute(command);
     }
 
 }

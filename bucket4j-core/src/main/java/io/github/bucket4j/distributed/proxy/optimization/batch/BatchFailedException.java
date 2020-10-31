@@ -20,10 +20,4 @@
 
 package io.github.bucket4j.distributed.proxy.optimization.batch;
 
-public class BatchFailedException extends IllegalStateException {
 
-    public BatchFailedException(Throwable e) {
-        super(e);
-    }
-
-}

@@ -26,88 +26,60 @@ import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.remote.commands.MultiCommand;
 import io.github.bucket4j.distributed.remote.MultiResult;
+import io.github.bucket4j.util.concurrent.BatchHelper;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
 
 public class AsyncBatchingExecutor implements AsyncCommandExecutor {
 
+    private final BatchHelper<RemoteCommand<?>, CommandResult<?>, MultiCommand, CommandResult<MultiResult>> batchingHelper;
     private final AsyncCommandExecutor wrappedExecutor;
     private final OptimizationListener listener;
-    private final TaskQueue taskQueue = new TaskQueue();
+
+    private final Function<List<RemoteCommand<?>>, MultiCommand> taskCombiner = new Function<List<RemoteCommand<?>>, MultiCommand>() {
+        @Override
+        public MultiCommand apply(List<RemoteCommand<?>> commands) {
+            listener.incrementMergeCount(commands.size() - 1);
+            return new MultiCommand(commands);
+        }
+    };
+
+    private final Function<MultiCommand, CompletableFuture<CommandResult<MultiResult>>> combinedTaskExecutor = new Function<MultiCommand, CompletableFuture<CommandResult<MultiResult>>>() {
+        @Override
+        public CompletableFuture<CommandResult<MultiResult>> apply(MultiCommand multiCommand) {
+            return wrappedExecutor.executeAsync(multiCommand);
+        }
+    };
+
+    private final Function<RemoteCommand<?>, CompletableFuture<CommandResult<?>>> taskExecutor = new Function<RemoteCommand<?>, CompletableFuture<CommandResult<?>>>() {
+        @Override
+        public CompletableFuture<CommandResult<?>> apply(RemoteCommand<?> remoteCommand) {
+            CompletableFuture<? extends CommandResult<?>> future = wrappedExecutor.executeAsync(remoteCommand);
+            return (CompletableFuture<CommandResult<?>>) future;
+        }
+    };
+
+    private final Function<CommandResult<MultiResult>, List<CommandResult<?>>> combinedResultSplitter = new Function<CommandResult<MultiResult>, List<CommandResult<?>>>() {
+        @Override
+        public List<CommandResult<?>> apply(CommandResult<MultiResult> multiResult) {
+            return multiResult.getData().getResults();
+        }
+    };
+
 
     public AsyncBatchingExecutor(AsyncCommandExecutor originalExecutor, OptimizationListener listener) {
         this.wrappedExecutor = originalExecutor;
         this.listener = listener;
+        this.batchingHelper = BatchHelper.async(taskCombiner, combinedTaskExecutor, taskExecutor, combinedResultSplitter);
     }
+
 
     @Override
     public <T> CompletableFuture<CommandResult<T>> executeAsync(RemoteCommand<T> command) {
-        WaitingTask waitingTask = taskQueue.lockExclusivelyOrEnqueue(command);
-
-        if (waitingTask != null) {
-            // there is another request is in progress, our request will be scheduled later
-            return (CompletableFuture) waitingTask.future;
-        }
-
-        try {
-            return wrappedExecutor.executeAsync(command)
-                .whenComplete((result, error) -> scheduleNextBatch());
-        } catch (Throwable error) {
-            CompletableFuture<CommandResult<T>> failedFuture = new CompletableFuture<>();
-            failedFuture.completeExceptionally(error);
-            return failedFuture;
-        }
-    }
-
-    private void scheduleNextBatch() {
-        List<WaitingTask> waitingNodes = taskQueue.takeAllWaitingTasksOrFreeLock();
-        if (waitingNodes.isEmpty()) {
-            return;
-        }
-
-        try {
-            listener.incrementMergeCount(waitingNodes.size() - 1);
-            List<RemoteCommand<?>> commandsInBatch = new ArrayList<>(waitingNodes.size());
-            for (WaitingTask waitingNode : waitingNodes) {
-                commandsInBatch.add(waitingNode.command);
-            }
-            MultiCommand multiCommand = new MultiCommand(commandsInBatch);
-
-            wrappedExecutor.executeAsync(multiCommand)
-                .whenComplete((multiResult, error) -> completeWaitingFutures(waitingNodes, multiResult, error))
-                .whenComplete((multiResult, error) -> scheduleNextBatch());
-        } catch (Throwable e) {
-            try {
-                for (WaitingTask waitingNode : waitingNodes) {
-                    waitingNode.future.completeExceptionally(e);
-                }
-            } finally {
-                scheduleNextBatch();
-            }
-        }
-    }
-
-    private void completeWaitingFutures(List<WaitingTask> waitingNodes, CommandResult<MultiResult> multiResult, Throwable error) {
-        if (error != null) {
-            for (WaitingTask waitingNode : waitingNodes) {
-                try {
-                    waitingNode.future.completeExceptionally(error);
-                } catch (Throwable t) {
-                    waitingNode.future.completeExceptionally(t);
-                }
-            }
-        } else {
-            List<CommandResult<?>> singleResults = multiResult.getData().getResults();
-            for (int i = 0; i < waitingNodes.size(); i++) {
-                try {
-                    waitingNodes.get(i).future.complete(singleResults.get(i));
-                } catch (Throwable t) {
-                    waitingNodes.get(i).future.completeExceptionally(t);
-                }
-            }
-        }
+        CompletableFuture<T> future = (CompletableFuture<T>) batchingHelper.executeAsync(command);
+        return (CompletableFuture<CommandResult<T>>) future;
     }
 
 }
