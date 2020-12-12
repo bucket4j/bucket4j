@@ -329,17 +329,14 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket {
     }
 
     @Override
-    protected BucketConfiguration replaceConfigurationImpl(BucketConfiguration newConfiguration) {
+    protected void replaceConfigurationImpl(BucketConfiguration newConfiguration) {
         long currentTimeNanos = timeMeter.currentTimeNanos();
         lock.lock();
         try {
-            if (!configuration.isCompatible(newConfiguration)) {
-                return configuration;
-            }
             this.state.refillAllBandwidth(bandwidths, currentTimeNanos);
             this.configuration = newConfiguration;
             this.bandwidths = newConfiguration.getBandwidths();
-            return null;
+            this.state.replaceConfiguration(this.bandwidths);
         } finally {
             lock.unlock();
         }

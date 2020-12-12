@@ -73,10 +73,6 @@ public final class BucketConfiguration implements Serializable {
                 '}';
     }
 
-    public boolean isCompatible(BucketConfiguration newConfiguration) {
-        return bandwidths.length == newConfiguration.bandwidths.length;
-    }
-
     public static final SerializationHandle<BucketConfiguration> SERIALIZATION_HANDLE = new SerializationHandle<BucketConfiguration>() {
         @Override
         public <S> BucketConfiguration deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {

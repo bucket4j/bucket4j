@@ -40,7 +40,7 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket {
 
     protected abstract void addTokensImpl(long tokensToAdd);
 
-    protected abstract BucketConfiguration replaceConfigurationImpl(BucketConfiguration newConfiguration);
+    protected abstract void replaceConfigurationImpl(BucketConfiguration newConfiguration);
 
     protected abstract long consumeIgnoringRateLimitsImpl(long tokensToConsume);
 
@@ -56,7 +56,7 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket {
 
     protected abstract VerboseResult<Nothing> addTokensVerboseImpl(long tokensToAdd);
 
-    protected abstract VerboseResult<BucketConfiguration> replaceConfigurationVerboseImpl(BucketConfiguration newConfiguration);
+    protected abstract VerboseResult<Nothing> replaceConfigurationVerboseImpl(BucketConfiguration newConfiguration);
 
     protected abstract VerboseResult<Long> consumeIgnoringRateLimitsVerboseImpl(long tokensToConsume);
 
@@ -72,7 +72,7 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket {
 
     protected abstract CompletableFuture<Void> addTokensAsyncImpl(long tokensToAdd);
 
-    protected abstract CompletableFuture<BucketConfiguration> replaceConfigurationAsyncImpl(BucketConfiguration newConfiguration);
+    protected abstract CompletableFuture<Nothing> replaceConfigurationAsyncImpl(BucketConfiguration newConfiguration);
 
     protected abstract CompletableFuture<Long> consumeIgnoringRateLimitsAsyncImpl(long tokensToConsume);
 
@@ -86,7 +86,7 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket {
 
     protected abstract CompletableFuture<VerboseResult<Nothing>> addTokensVerboseAsyncImpl(long tokensToAdd);
 
-    protected abstract CompletableFuture<VerboseResult<BucketConfiguration>> replaceConfigurationVerboseAsyncImpl(BucketConfiguration newConfiguration);
+    protected abstract CompletableFuture<VerboseResult<Nothing>> replaceConfigurationVerboseAsyncImpl(BucketConfiguration newConfiguration);
 
     protected abstract CompletableFuture<VerboseResult<Long>> consumeIgnoringRateLimitsVerboseAsyncImpl(long tokensToConsume);
 
@@ -243,12 +243,7 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket {
         @Override
         public CompletableFuture<Void> replaceConfiguration(BucketConfiguration newConfiguration) {
             checkConfiguration(newConfiguration);
-            return replaceConfigurationAsyncImpl(newConfiguration).thenApply(conflictingConfiguration -> {
-                if (conflictingConfiguration != null) {
-                    throw new IncompatibleConfigurationException(conflictingConfiguration, newConfiguration);
-                }
-                return null;
-            });
+            return replaceConfigurationAsyncImpl(newConfiguration).thenApply(conflictingConfiguration -> null);
         }
 
         @Override
@@ -339,13 +334,8 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket {
         @Override
         public CompletableFuture<VerboseResult<Nothing>> replaceConfiguration(BucketConfiguration newConfiguration) {
             checkConfiguration(newConfiguration);
-            CompletableFuture<VerboseResult<BucketConfiguration>> resultFuture = replaceConfigurationVerboseAsyncImpl(newConfiguration);
-            return resultFuture.thenApply(result -> result.map(conflictingConfiguration -> {
-                if (conflictingConfiguration != null) {
-                    throw new IncompatibleConfigurationException(conflictingConfiguration, newConfiguration);
-                }
-                return Nothing.INSTANCE;
-            }));
+            CompletableFuture<VerboseResult<Nothing>> resultFuture = replaceConfigurationVerboseAsyncImpl(newConfiguration);
+            return resultFuture.thenApply(result -> result.map(conflictingConfiguration -> Nothing.INSTANCE));
         }
     };
 
@@ -433,13 +423,7 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket {
         @Override
         public VerboseResult<Nothing> replaceConfiguration(BucketConfiguration newConfiguration) {
             checkConfiguration(newConfiguration);
-            VerboseResult<BucketConfiguration> result = replaceConfigurationVerboseImpl(newConfiguration);
-            return result.map(conflictingConfiguration -> {
-                if (conflictingConfiguration != null) {
-                    throw new IncompatibleConfigurationException(conflictingConfiguration, newConfiguration);
-                }
-                return Nothing.INSTANCE;
-            });
+            return replaceConfigurationVerboseImpl(newConfiguration);
         }
     };
 
@@ -624,10 +608,7 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket {
     @Override
     public void replaceConfiguration(BucketConfiguration newConfiguration) {
         checkConfiguration(newConfiguration);
-        BucketConfiguration conflictingConfiguration = replaceConfigurationImpl(newConfiguration);
-        if (conflictingConfiguration != null) {
-            throw new IncompatibleConfigurationException(conflictingConfiguration, newConfiguration);
-        }
+        replaceConfigurationImpl(newConfiguration);
     }
 
     private static void checkTokensToAdd(long tokensToAdd) {

@@ -95,10 +95,7 @@ public class GridBucketState implements Serializable {
         return state.copy();
     }
 
-    public BucketConfiguration replaceConfigurationOrReturnPrevious(BucketConfiguration newConfiguration) {
-        if (!configuration.isCompatible(newConfiguration)) {
-            return configuration;
-        }
+    public void replaceConfigurationOrReturnPrevious(BucketConfiguration newConfiguration) {
         configuration = newConfiguration;
         return null;
     }

@@ -61,6 +61,10 @@ public class BucketState implements Serializable {
         return new BucketState(configuration, currentTimeNanos);
     }
 
+    public void replaceConfiguration(Bandwidth[] bandwidths) {
+        // TODO
+    }
+
     public long getAvailableTokens(Bandwidth[] bandwidths) {
         long availableTokens = getCurrentSize(0);
         for (int i = 1; i < bandwidths.length; i++) {
@@ -369,4 +373,5 @@ public class BucketState implements Serializable {
         }
         return r;
     }
+
 }
