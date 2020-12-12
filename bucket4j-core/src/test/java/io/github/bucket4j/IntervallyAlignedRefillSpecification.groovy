@@ -29,7 +29,7 @@ class IntervallyAlignedRefillSpecification extends Specification {
                     .build()
 
         expect:
-            bucket.getAvailableTokens() == requiredInitialTokens
+            assert bucket.getAvailableTokens() == requiredInitialTokens
 
         where:
             n | currentTimeMillis | firstRefillTimeMillis | capacity  |  refillTokens | refillPeriodMillis | requiredInitialTokens
@@ -64,7 +64,7 @@ class IntervallyAlignedRefillSpecification extends Specification {
                 .build()
 
         expect: "initialTokens == capacity because useAdaptiveInitialTokens == false"
-            bucket.getAvailableTokens() == 400
+            assert bucket.getAvailableTokens() == 400
 
         when: "when all tokens consumed and 10 seconds elapsed"
             bucket.tryConsumeAsMuchAsPossible()
@@ -119,7 +119,7 @@ class IntervallyAlignedRefillSpecification extends Specification {
                     .build()
 
         expect: "initialTokens == capacity because useAdaptiveInitialTokens == false"
-            bucket.getAvailableTokens() == 333
+            assert bucket.getAvailableTokens() == 333
 
         when: "when all tokens consumed and 10 seconds elapsed"
             bucket.tryConsumeAsMuchAsPossible()

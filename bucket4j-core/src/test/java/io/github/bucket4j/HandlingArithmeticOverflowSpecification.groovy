@@ -134,7 +134,7 @@ class HandlingArithmeticOverflowSpecification extends Specification {
             Bandwidth[] limits = bucket.configuration.bandwidths
 
         expect:
-            state.calculateDelayNanosAfterWillBePossibleToConsume(limits, 10, meter.currentTimeNanos()) == 10
+            assert state.calculateDelayNanosAfterWillBePossibleToConsume(limits, 10, meter.currentTimeNanos()) == 10
 
         when:
             state.consume(limits, 1)
@@ -160,7 +160,7 @@ class HandlingArithmeticOverflowSpecification extends Specification {
             Bandwidth[] limits = bucket.configuration.bandwidths
 
         expect:
-            state.calculateDelayNanosAfterWillBePossibleToConsume(limits, 10, meter.currentTimeNanos()) == bandwidthPeriodNanos
+            assert state.calculateDelayNanosAfterWillBePossibleToConsume(limits, 10, meter.currentTimeNanos()) == bandwidthPeriodNanos
 
         when:
             state.consume(limits, 1)
@@ -197,7 +197,7 @@ class HandlingArithmeticOverflowSpecification extends Specification {
             Bandwidth[] limits = bucket.configuration.bandwidths
 
         expect:
-            state.getAvailableTokens(limits) == 4611686018427387903
+            assert state.getAvailableTokens(limits) == 4611686018427387903
     }
 
 }

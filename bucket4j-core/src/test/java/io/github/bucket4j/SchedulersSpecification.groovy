@@ -36,15 +36,15 @@ class SchedulersSpecification extends Specification {
                             BlockingStrategyMock sleepStrategy = new BlockingStrategyMock(meter)
                             if (uniterruptible) {
                                 if (limitAsDuration) {
-                                    bucket.asScheduler().tryConsumeUninterruptibly(toConsume, Duration.ofHours(1), sleepStrategy)
+                                    assert bucket.asScheduler().tryConsumeUninterruptibly(toConsume, Duration.ofHours(1), sleepStrategy)
                                 } else {
-                                    bucket.asScheduler().tryConsumeUninterruptibly(toConsume, TimeUnit.HOURS.toNanos(1), sleepStrategy)
+                                    assert bucket.asScheduler().tryConsumeUninterruptibly(toConsume, TimeUnit.HOURS.toNanos(1), sleepStrategy)
                                 }
                             } else {
                                 if (limitAsDuration) {
-                                    bucket.asScheduler().tryConsume(toConsume, Duration.ofHours(1), sleepStrategy)
+                                    assert bucket.asScheduler().tryConsume(toConsume, Duration.ofHours(1), sleepStrategy)
                                 } else {
-                                    bucket.asScheduler().tryConsume(toConsume, TimeUnit.HOURS.toNanos(1), sleepStrategy)
+                                    assert bucket.asScheduler().tryConsume(toConsume, TimeUnit.HOURS.toNanos(1), sleepStrategy)
                                 }
                             }
                             assert sleepStrategy.parkedNanos == requiredSleep

@@ -15,7 +15,8 @@ class ConfigurationReplacementSpecification extends Specification {
     def "#bucketType should prevent increasing count of bandwidths"(BucketType bucketType) {
         setup:
             Bucket bucket = bucketType.createBucket(Bucket4j.builder()
-                    .addLimit(Bandwidth.simple(10, Duration.ofMinutes(100)))
+                    .addLimit(Bandwidth.simple(10, Duration.ofMinutes(100))),
+                    TimeMeter.SYSTEM_MILLISECONDS
             )
             BucketConfiguration newConfiguration = Bucket4j.configurationBuilder()
                     .addLimit(Bandwidth.simple(100, Duration.ofMinutes(1)))
@@ -45,7 +46,8 @@ class ConfigurationReplacementSpecification extends Specification {
         setup:
             Bucket bucket = bucketType.createBucket(Bucket4j.builder()
                     .addLimit(Bandwidth.simple(100, Duration.ofMinutes(1)))
-                    .addLimit(Bandwidth.simple(1000, Duration.ofHours(1)))
+                    .addLimit(Bandwidth.simple(1000, Duration.ofHours(1))),
+                    TimeMeter.SYSTEM_MILLISECONDS
             )
             BucketConfiguration newConfiguration = Bucket4j.configurationBuilder()
                     .addLimit(Bandwidth.simple(10, Duration.ofMinutes(100)))
@@ -75,8 +77,8 @@ class ConfigurationReplacementSpecification extends Specification {
             for (boolean sync : [true, false]) {
                 TimeMeterMock clock = new TimeMeterMock(0)
                 Bucket bucket = bucketType.createBucket(Bucket4j.builder()
-                        .addLimit(Bandwidth.simple(100, Duration.ofNanos(100)).withInitialTokens(0))
-                        .withCustomTimePrecision(clock)
+                        .addLimit(Bandwidth.simple(100, Duration.ofNanos(100)).withInitialTokens(0)),
+                        clock
                 )
                 clock.addTime(10)
                 BucketConfiguration newConfiguration = Bucket4j.configurationBuilder()
@@ -87,7 +89,7 @@ class ConfigurationReplacementSpecification extends Specification {
                 } else {
                     bucket.asAsync().replaceConfiguration(newConfiguration).get()
                 }
-                bucket.getAvailableTokens() == 10
+                assert bucket.getAvailableTokens() == 10
             }
         where:
             bucketType << BucketType.values()
@@ -99,8 +101,8 @@ class ConfigurationReplacementSpecification extends Specification {
         for (boolean sync : [true, false]) {
             TimeMeterMock clock = new TimeMeterMock(0)
             Bucket bucket = bucketType.createBucket(Bucket4j.builder()
-                    .addLimit(Bandwidth.classic (500, Refill.greedy(100, Duration.ofNanos(100)) ))
-                    .withCustomTimePrecision(clock)
+                    .addLimit(Bandwidth.classic(500, Refill.greedy(100, Duration.ofNanos(100)))),
+                    clock
             )
             BucketConfiguration newConfiguration = Bucket4j.configurationBuilder()
                     .addLimit(Bandwidth.classic (200, Refill.greedy(100, Duration.ofNanos(100)) ))
@@ -110,7 +112,7 @@ class ConfigurationReplacementSpecification extends Specification {
             } else {
                 bucket.asAsync().replaceConfiguration(newConfiguration).get()
             }
-            bucket.getAvailableTokens() == 200
+            assert bucket.getAvailableTokens() == 200
         }
         where:
             bucketType << BucketType.values()
@@ -122,8 +124,8 @@ class ConfigurationReplacementSpecification extends Specification {
         for (boolean sync : [true, false]) {
             TimeMeterMock clock = new TimeMeterMock(0)
             Bucket bucket = bucketType.createBucket(Bucket4j.builder()
-                    .addLimit(Bandwidth.simple(100, Duration.ofNanos(100)).withInitialTokens(0))
-                    .withCustomTimePrecision(clock)
+                    .addLimit(Bandwidth.simple(100, Duration.ofNanos(100)).withInitialTokens(0)),
+                    clock
             )
             BucketConfiguration newConfiguration = Bucket4j.configurationBuilder()
                     .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)))
@@ -134,7 +136,7 @@ class ConfigurationReplacementSpecification extends Specification {
                 bucket.asAsync().replaceConfiguration(newConfiguration).get()
             }
             clock.addTime(10)
-            bucket.getAvailableTokens() == 1
+            assert bucket.getAvailableTokens() == 1
         }
         where:
             bucketType << BucketType.values()

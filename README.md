@@ -67,7 +67,7 @@ use any of them:
 <dependency>
     <groupId>com.github.vladimir-bukhtoyarov</groupId>
     <artifactId>bucket4j-core</artifactId>
-    <version>4.10.0</version>
+    <version>4.11.0</version>
 </dependency>
 ``` 
 #### You can build Bucket4j from sources

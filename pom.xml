@@ -5,7 +5,7 @@
 
     <groupId>com.github.vladimir-bukhtoyarov</groupId>
     <artifactId>bucket4j</artifactId>
-    <version>4.10.0</version>
+    <version>4.11.0</version>
     <packaging>pom</packaging>
 
     <name>bucket4j</name>
