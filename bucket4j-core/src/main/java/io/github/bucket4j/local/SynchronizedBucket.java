@@ -32,7 +32,7 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket {
     private BucketConfiguration configuration;
     private Bandwidth[] bandwidths;
     private final TimeMeter timeMeter;
-    private final BucketState state;
+    private BucketState state;
     private final Lock lock;
 
     public SynchronizedBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
@@ -270,16 +270,14 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket {
     }
 
     @Override
-    protected VerboseResult<BucketConfiguration> replaceConfigurationVerboseImpl(BucketConfiguration newConfiguration) {
+    protected VerboseResult<Nothing> replaceConfigurationVerboseImpl(BucketConfiguration newConfiguration, TokensMigrationMode tokensMigrationMode) {
         long currentTimeNanos = timeMeter.currentTimeNanos();
         lock.lock();
         try {
-            if (!configuration.isCompatible(newConfiguration)) {
-                return new VerboseResult<>(currentTimeNanos, configuration, configuration, state.copy());
-            }
             this.state.refillAllBandwidth(bandwidths, currentTimeNanos);
-            this.configuration = newConfiguration;
+            this.state = this.state.replaceConfiguration(this.configuration, newConfiguration, tokensMigrationMode, currentTimeNanos);
             this.bandwidths = newConfiguration.getBandwidths();
+            this.configuration = newConfiguration;
             return new VerboseResult<>(currentTimeNanos, null, configuration, state.copy());
         } finally {
             lock.unlock();
@@ -329,14 +327,14 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket {
     }
 
     @Override
-    protected void replaceConfigurationImpl(BucketConfiguration newConfiguration) {
+    protected void replaceConfigurationImpl(BucketConfiguration newConfiguration, TokensMigrationMode tokensMigrationMode) {
         long currentTimeNanos = timeMeter.currentTimeNanos();
         lock.lock();
         try {
             this.state.refillAllBandwidth(bandwidths, currentTimeNanos);
+            this.state = this.state.replaceConfiguration(this.configuration, newConfiguration, tokensMigrationMode, currentTimeNanos);
             this.configuration = newConfiguration;
             this.bandwidths = newConfiguration.getBandwidths();
-            this.state.replaceConfiguration(this.bandwidths);
         } finally {
             lock.unlock();
         }
@@ -379,9 +377,9 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket {
     }
 
     @Override
-    protected CompletableFuture<BucketConfiguration> replaceConfigurationAsyncImpl(BucketConfiguration newConfiguration) {
-        BucketConfiguration result = replaceConfigurationImpl(newConfiguration);
-        return CompletableFuture.completedFuture(result);
+    protected CompletableFuture<Nothing> replaceConfigurationAsyncImpl(BucketConfiguration newConfiguration, TokensMigrationMode tokensMigrationMode) {
+        replaceConfigurationImpl(newConfiguration, tokensMigrationMode);
+        return CompletableFuture.completedFuture(Nothing.INSTANCE);
     }
 
     @Override
@@ -421,8 +419,8 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket {
     }
 
     @Override
-    protected CompletableFuture<VerboseResult<BucketConfiguration>> replaceConfigurationVerboseAsyncImpl(BucketConfiguration newConfiguration) {
-        VerboseResult<BucketConfiguration> result = replaceConfigurationVerboseImpl(newConfiguration);
+    protected CompletableFuture<VerboseResult<Nothing>> replaceConfigurationVerboseAsyncImpl(BucketConfiguration newConfiguration, TokensMigrationMode tokensMigrationMode) {
+        VerboseResult<Nothing> result = replaceConfigurationVerboseImpl(newConfiguration, tokensMigrationMode);
         return CompletableFuture.completedFuture(result);
     }
 

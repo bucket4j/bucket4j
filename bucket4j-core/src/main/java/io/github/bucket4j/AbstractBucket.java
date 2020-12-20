@@ -40,7 +40,7 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket {
 
     protected abstract void addTokensImpl(long tokensToAdd);
 
-    protected abstract void replaceConfigurationImpl(BucketConfiguration newConfiguration);
+    protected abstract void replaceConfigurationImpl(BucketConfiguration newConfiguration, TokensMigrationMode tokensMigrationMode);
 
     protected abstract long consumeIgnoringRateLimitsImpl(long tokensToConsume);
 
@@ -56,7 +56,7 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket {
 
     protected abstract VerboseResult<Nothing> addTokensVerboseImpl(long tokensToAdd);
 
-    protected abstract VerboseResult<Nothing> replaceConfigurationVerboseImpl(BucketConfiguration newConfiguration);
+    protected abstract VerboseResult<Nothing> replaceConfigurationVerboseImpl(BucketConfiguration newConfiguration, TokensMigrationMode tokensMigrationMode);
 
     protected abstract VerboseResult<Long> consumeIgnoringRateLimitsVerboseImpl(long tokensToConsume);
 
@@ -72,7 +72,7 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket {
 
     protected abstract CompletableFuture<Void> addTokensAsyncImpl(long tokensToAdd);
 
-    protected abstract CompletableFuture<Nothing> replaceConfigurationAsyncImpl(BucketConfiguration newConfiguration);
+    protected abstract CompletableFuture<Nothing> replaceConfigurationAsyncImpl(BucketConfiguration newConfiguration, TokensMigrationMode tokensMigrationMode);
 
     protected abstract CompletableFuture<Long> consumeIgnoringRateLimitsAsyncImpl(long tokensToConsume);
 
@@ -86,7 +86,7 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket {
 
     protected abstract CompletableFuture<VerboseResult<Nothing>> addTokensVerboseAsyncImpl(long tokensToAdd);
 
-    protected abstract CompletableFuture<VerboseResult<Nothing>> replaceConfigurationVerboseAsyncImpl(BucketConfiguration newConfiguration);
+    protected abstract CompletableFuture<VerboseResult<Nothing>> replaceConfigurationVerboseAsyncImpl(BucketConfiguration newConfiguration, TokensMigrationMode tokensMigrationMode);
 
     protected abstract CompletableFuture<VerboseResult<Long>> consumeIgnoringRateLimitsVerboseAsyncImpl(long tokensToConsume);
 
@@ -241,9 +241,10 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket {
         }
 
         @Override
-        public CompletableFuture<Void> replaceConfiguration(BucketConfiguration newConfiguration) {
+        public CompletableFuture<Void> replaceConfiguration(BucketConfiguration newConfiguration, TokensMigrationMode tokensMigrationMode) {
             checkConfiguration(newConfiguration);
-            return replaceConfigurationAsyncImpl(newConfiguration).thenApply(conflictingConfiguration -> null);
+            checkMigrationMode(tokensMigrationMode);
+            return replaceConfigurationAsyncImpl(newConfiguration, tokensMigrationMode).thenApply(conflictingConfiguration -> null);
         }
 
         @Override
@@ -332,9 +333,10 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket {
         }
 
         @Override
-        public CompletableFuture<VerboseResult<Nothing>> replaceConfiguration(BucketConfiguration newConfiguration) {
+        public CompletableFuture<VerboseResult<Nothing>> replaceConfiguration(BucketConfiguration newConfiguration, TokensMigrationMode tokensMigrationMode) {
             checkConfiguration(newConfiguration);
-            CompletableFuture<VerboseResult<Nothing>> resultFuture = replaceConfigurationVerboseAsyncImpl(newConfiguration);
+            checkMigrationMode(tokensMigrationMode);
+            CompletableFuture<VerboseResult<Nothing>> resultFuture = replaceConfigurationVerboseAsyncImpl(newConfiguration, tokensMigrationMode);
             return resultFuture.thenApply(result -> result.map(conflictingConfiguration -> Nothing.INSTANCE));
         }
     };
@@ -421,9 +423,10 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket {
         }
 
         @Override
-        public VerboseResult<Nothing> replaceConfiguration(BucketConfiguration newConfiguration) {
+        public VerboseResult<Nothing> replaceConfiguration(BucketConfiguration newConfiguration, TokensMigrationMode tokensMigrationMode) {
             checkConfiguration(newConfiguration);
-            return replaceConfigurationVerboseImpl(newConfiguration);
+            checkMigrationMode(tokensMigrationMode);
+            return replaceConfigurationVerboseImpl(newConfiguration, tokensMigrationMode);
         }
     };
 
@@ -606,9 +609,10 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket {
     }
 
     @Override
-    public void replaceConfiguration(BucketConfiguration newConfiguration) {
+    public void replaceConfiguration(BucketConfiguration newConfiguration, TokensMigrationMode tokensMigrationMode) {
         checkConfiguration(newConfiguration);
-        replaceConfigurationImpl(newConfiguration);
+        checkMigrationMode(tokensMigrationMode);
+        replaceConfigurationImpl(newConfiguration, tokensMigrationMode);
     }
 
     private static void checkTokensToAdd(long tokensToAdd) {
@@ -638,6 +642,12 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket {
     private static void checkConfiguration(BucketConfiguration newConfiguration) {
         if (newConfiguration == null) {
             throw BucketExceptions.nullConfiguration();
+        }
+    }
+
+    private void checkMigrationMode(TokensMigrationMode tokensMigrationMode) {
+        if (tokensMigrationMode == null) {
+            throw BucketExceptions.nullTokensMigrationMode();
         }
     }
 

@@ -35,4 +35,6 @@ public interface SerializationAdapter<T> {
 
     void writeObject(T target, Object value) throws IOException;
 
+    void writeString(T target, String value) throws IOException;
+
 }

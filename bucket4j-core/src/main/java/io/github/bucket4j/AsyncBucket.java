@@ -269,12 +269,13 @@ public interface AsyncBucket {
      * </ul>
      *
      * @param newConfiguration new configuration
+     * @param tokensMigrationMode TODO
      *
      * @return Future which completed normally when reconfiguration done normally.
      * Future will be completed with {@link IncompatibleConfigurationException} if new configuration is incompatible with previous.
      *
      * @see Bucket#replaceConfiguration(BucketConfiguration)
      */
-    CompletableFuture<Void> replaceConfiguration(BucketConfiguration newConfiguration);
+    CompletableFuture<Void> replaceConfiguration(BucketConfiguration newConfiguration, TokensMigrationMode tokensMigrationMode);
 
 }

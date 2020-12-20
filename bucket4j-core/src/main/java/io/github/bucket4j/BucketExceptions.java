@@ -135,6 +135,12 @@ public final class BucketExceptions {
         return new IllegalArgumentException(msg);
     }
 
+    public static IllegalArgumentException foundTwoBandwidthsWithSameId(int firstIndex, int secondIndex, String id) {
+        String pattern = "All identifiers must unique. Id: {0}, first index: {1}, second index: {2}";
+        String msg = MessageFormat.format(pattern, firstIndex, secondIndex, id);
+        return new IllegalArgumentException(msg);
+    }
+
     // ------------------- end of construction time exceptions --------------------------------
 
     // ------------------- usage time exceptions  ---------------------------------------------
@@ -152,6 +158,11 @@ public final class BucketExceptions {
 
     public static IllegalArgumentException reservationOverflow() {
         String msg = "Existed hardware is unable to service the reservation of so many tokens";
+        return new IllegalArgumentException(msg);
+    }
+
+    public static IllegalArgumentException nullTokensMigrationMode() {
+        String msg = "Tokens migration mode must not be null";
         return new IllegalArgumentException(msg);
     }
 

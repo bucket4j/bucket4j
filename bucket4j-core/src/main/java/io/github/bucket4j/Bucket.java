@@ -180,6 +180,8 @@ public interface Bucket {
     long getAvailableTokens();
 
     /**
+     * // TODO
+     *
      * Replaces configuration of this bucket instance.
      *
      * <p>Rules of reconfiguration:
@@ -203,11 +205,12 @@ public interface Bucket {
      * </ul>
      *
      * @param newConfiguration the new configuration for this bucket
+     * @param tokensMigrationMode TODO
      *
      * @throws IncompatibleConfigurationException if {@code newConfiguration} incompatible with previous configuration
      *
      */
-     void replaceConfiguration(BucketConfiguration newConfiguration);
+     void replaceConfiguration(BucketConfiguration newConfiguration, TokensMigrationMode tokensMigrationMode);
 
     /**
      * Creates the copy of internal state.

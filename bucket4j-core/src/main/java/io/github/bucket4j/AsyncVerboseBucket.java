@@ -63,8 +63,8 @@ public interface AsyncVerboseBucket {
     CompletableFuture<VerboseResult<Nothing>> addTokens(long tokensToAdd);
 
     /**
-     * Does the same that {@link Bucket#replaceConfiguration(BucketConfiguration)}
+     * Does the same that {@link Bucket#replaceConfiguration(BucketConfiguration, TokensMigrationMode)}
      */
-    CompletableFuture<VerboseResult<Nothing>> replaceConfiguration(BucketConfiguration newConfiguration);
+    CompletableFuture<VerboseResult<Nothing>> replaceConfiguration(BucketConfiguration newConfiguration, TokensMigrationMode tokensMigrationMode);
 
 }

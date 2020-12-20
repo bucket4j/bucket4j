@@ -4,6 +4,7 @@ import io.github.bucket4j.grid.*;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiFunction;
 
 
@@ -18,7 +19,8 @@ public class EqualityUtils {
                 bandwidth1.refillTokens == bandwidth2.refillTokens &&
                 bandwidth1.refillIntervally == bandwidth2.refillIntervally &&
                 bandwidth1.timeOfFirstRefillMillis == bandwidth2.timeOfFirstRefillMillis &&
-                bandwidth1.useAdaptiveInitialTokens == bandwidth2.useAdaptiveInitialTokens
+                bandwidth1.useAdaptiveInitialTokens == bandwidth2.useAdaptiveInitialTokens &&
+                Objects.equals(bandwidth1.id, bandwidth2.id)
         );
 
         registerComparator(BucketConfiguration.class, (config1, config2) -> {
@@ -103,8 +105,9 @@ public class EqualityUtils {
             return cmd1.getTokensToConsume() == cmd2.getTokensToConsume();
         });
 
-        registerComparator(ReplaceConfigurationOrReturnPreviousCommand.class, (cmd1, cmd2) -> {
-            return equals(cmd1.getNewConfiguration(), cmd2.getNewConfiguration());
+        registerComparator(ReplaceConfigurationCommand.class, (cmd1, cmd2) -> {
+            return equals(cmd1.getNewConfiguration(), cmd2.getNewConfiguration()) &&
+                    Objects.equals(cmd1.getTokensMigrationMode(), cmd2.getTokensMigrationMode());
         });
 
         registerComparator(ConsumeIgnoringRateLimitsCommand.class, (cmd1, cmd2) -> {

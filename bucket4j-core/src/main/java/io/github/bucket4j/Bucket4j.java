@@ -25,8 +25,6 @@ import io.github.bucket4j.serialization.SerializationHandle;
 
 import java.util.*;
 
-import static java.util.Collections.unmodifiableList;
-
 /**
  * This is entry point for functionality provided bucket4j library.
  */
@@ -57,7 +55,7 @@ public class Bucket4j {
                 EstimateAbilityToConsumeCommand.SERIALIZATION_HANDLE,
                 TryConsumeCommand.SERIALIZATION_HANDLE,
                 TryConsumeAndReturnRemainingTokensCommand.SERIALIZATION_HANDLE,
-                ReplaceConfigurationOrReturnPreviousCommand.SERIALIZATION_HANDLE,
+                ReplaceConfigurationCommand.SERIALIZATION_HANDLE,
                 ConsumeIgnoringRateLimitsCommand.SERIALIZATION_HANDLE,
                 CommandResult.SERIALIZATION_HANDLE,
                 ConsumptionProbe.SERIALIZATION_HANDLE,

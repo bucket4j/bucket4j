@@ -149,12 +149,6 @@ public class Bandwidth implements Serializable {
      * @return the copy of this bandwidth with new value ofof initial tokens.
      */
     public Bandwidth withId(String id) {
-        if (initialTokens < 0) {
-            throw BucketExceptions.nonPositiveInitialTokens(initialTokens);
-        }
-        if (isIntervallyAligned() && useAdaptiveInitialTokens) {
-            throw BucketExceptions.intervallyAlignedRefillWithAdaptiveInitialTokensIncompatipleWithManualSpecifiedInitialTokens();
-        }
         return new Bandwidth(capacity, refillPeriodNanos, refillTokens, initialTokens, refillIntervally,
                 timeOfFirstRefillMillis, useAdaptiveInitialTokens, id);
     }
@@ -195,6 +189,10 @@ public class Bandwidth implements Serializable {
         return timeOfFirstRefillMillis;
     }
 
+    public boolean isGready() {
+        return !refillIntervally;
+    }
+
     public String getId() {
         return id;
     }
@@ -210,7 +208,7 @@ public class Bandwidth implements Serializable {
             long timeOfFirstRefillMillis = adapter.readLong(input);
             boolean useAdaptiveInitialTokens = adapter.readBoolean(input);
             boolean hasId = adapter.readBoolean(input);
-            String id = hasId? adapter.readObject(input, String.class) : UNDEFINED_ID;
+            String id = hasId? adapter.readString(input) : UNDEFINED_ID;
 
             return new Bandwidth(capacity, refillPeriodNanos, refillTokens, initialTokens, refillIntervally,
                     timeOfFirstRefillMillis, useAdaptiveInitialTokens, id);
@@ -226,8 +224,8 @@ public class Bandwidth implements Serializable {
             adapter.writeLong(output, bandwidth.timeOfFirstRefillMillis);
             adapter.writeBoolean(output, bandwidth.useAdaptiveInitialTokens);
             adapter.writeBoolean(output, bandwidth.id != null);
-            if (bandwidth.id != null) {
-                adapter.writeObject(output, bandwidth.id);
+            if (bandwidth.hasId()) {
+                adapter.writeString(output, bandwidth.id);
             }
         }
 
@@ -242,6 +240,10 @@ public class Bandwidth implements Serializable {
         }
 
     };
+
+    public boolean hasId() {
+        return id != null;
+    }
 
     @Override
     public boolean equals(Object o) {

@@ -45,6 +45,16 @@ public final class BucketConfiguration implements Serializable {
         for (int i = 0; i < bandwidths.size() ; i++) {
             this.bandwidths[i] = Objects.requireNonNull(bandwidths.get(i));
         }
+        for (int i = 0; i < this.bandwidths.length; i++) {
+            if (this.bandwidths[i].getId() != Bandwidth.UNDEFINED_ID) {
+                for (int j = i + 1; j < this.bandwidths.length; j++) {
+                    if (Objects.equals(this.bandwidths[i].getId(), this.bandwidths[j].getId())) {
+                        // TODO add unit test
+                        throw BucketExceptions.foundTwoBandwidthsWithSameId(i, j, this.bandwidths[i].getId());
+                    }
+                }
+            }
+        }
     }
 
     public Bandwidth[] getBandwidths() {
