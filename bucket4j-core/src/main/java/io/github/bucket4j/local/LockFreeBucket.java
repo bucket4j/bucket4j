@@ -452,6 +452,7 @@ public class LockFreeBucket extends LockFreeBucket_FinalFields_CacheLinePadding 
 
     @Override
     protected CompletableFuture<Nothing> replaceConfigurationAsyncImpl(BucketConfiguration newConfiguration, TokensMigrationMode tokensMigrationMode) {
+        replaceConfigurationImpl(newConfiguration, tokensMigrationMode);
         return CompletableFuture.completedFuture(Nothing.INSTANCE);
     }
 

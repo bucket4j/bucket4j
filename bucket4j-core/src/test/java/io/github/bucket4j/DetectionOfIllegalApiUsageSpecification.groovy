@@ -210,6 +210,20 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
             ex.message == intervallyAlignedRefillCompatibleOnlyWithWallClock().message
     }
 
+    @Unroll
+    def "#type should detect that all bandwidth has unique id"(BucketType type) {
+        when:
+            Bucket4j.builder()
+                .addLimit(Bandwidth.simple(1, Duration.ofSeconds(10)).withId("xyz"))
+                .addLimit(Bandwidth.simple(100, Duration.ofSeconds(3600)).withId("xyz"))
+                .build()
+        then:
+            IllegalArgumentException ex = thrown()
+            ex.message == "All identifiers must unique. Id: xyz, first index: 0, second index: 1"
+        where:
+            type << BucketType.values()
+    }
+
     def "Should check that time units to wait should be positive"() {
         setup:
             def bucket = Bucket4j.builder().addLimit(
@@ -284,6 +298,74 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
         then:
             ex = thrown()
             ex.message == nullConfigurationSupplier().message
+    }
+
+    @Unroll
+    def "#type should detect that configuration is null during configuration replacement"(BucketType type) {
+        setup:
+            def builder = Bucket4j.builder().addLimit(Bandwidth.simple(1, Duration.ofSeconds(10)))
+            def bucket = type.createBucket(builder, TimeMeter.SYSTEM_MILLISECONDS)
+
+        when:
+            bucket.replaceConfiguration(null, TokensMigrationMode.AS_IS)
+        then:
+            IllegalArgumentException ex = thrown()
+            ex.message == nullConfiguration().message
+
+        when:
+            bucket.asVerbose().replaceConfiguration(null, TokensMigrationMode.AS_IS)
+        then:
+            ex = thrown()
+            ex.message == nullConfiguration().message
+
+        when:
+            bucket.asAsync().replaceConfiguration(null, TokensMigrationMode.AS_IS)
+        then:
+            ex = thrown()
+            ex.message == nullConfiguration().message
+
+        when:
+            bucket.asAsync().asVerbose().replaceConfiguration(null, TokensMigrationMode.AS_IS)
+        then:
+            ex = thrown()
+            ex.message == nullConfiguration().message
+
+        where:
+            type << BucketType.values()
+    }
+
+    @Unroll
+    def "#type should detect that tokenMigrationMode is null during configuration replacement"(BucketType type) {
+        setup:
+            def builder = Bucket4j.builder().addLimit(Bandwidth.simple(1, Duration.ofSeconds(10)))
+            def bucket = type.createBucket(builder, TimeMeter.SYSTEM_MILLISECONDS)
+            def newConfiguration = builder.build().getConfiguration()
+        when:
+            bucket.replaceConfiguration(newConfiguration, null)
+        then:
+            IllegalArgumentException ex = thrown()
+            ex.message == nullTokensMigrationMode().message
+
+        when:
+            bucket.asVerbose().replaceConfiguration(newConfiguration, null)
+        then:
+            ex = thrown()
+            ex.message == nullTokensMigrationMode().message
+
+        when:
+            bucket.asAsync().replaceConfiguration(newConfiguration, null)
+        then:
+            ex = thrown()
+            ex.message == nullTokensMigrationMode().message
+
+        when:
+            bucket.asAsync().asVerbose().replaceConfiguration(newConfiguration, null)
+        then:
+            ex = thrown()
+            ex.message == nullTokensMigrationMode().message
+
+        where:
+            type << BucketType.values()
     }
 
     private static class FakeExtension implements Extension {

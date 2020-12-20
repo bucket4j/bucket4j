@@ -137,7 +137,7 @@ public final class BucketExceptions {
 
     public static IllegalArgumentException foundTwoBandwidthsWithSameId(int firstIndex, int secondIndex, String id) {
         String pattern = "All identifiers must unique. Id: {0}, first index: {1}, second index: {2}";
-        String msg = MessageFormat.format(pattern, firstIndex, secondIndex, id);
+        String msg = MessageFormat.format(pattern, id, firstIndex, secondIndex);
         return new IllegalArgumentException(msg);
     }
 

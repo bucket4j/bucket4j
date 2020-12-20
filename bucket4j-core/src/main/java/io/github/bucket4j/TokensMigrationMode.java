@@ -8,7 +8,7 @@ public enum TokensMigrationMode {
     /**
      * TODO
      */
-    PROPORTIONAL((byte) 0),
+    PROPORTIONALLY((byte) 0),
 
     /**
      * TODO
@@ -27,7 +27,7 @@ public enum TokensMigrationMode {
     }
 
     private static final TokensMigrationMode[] modes = new TokensMigrationMode[] {
-            PROPORTIONAL, AS_IS, RESET
+            PROPORTIONALLY, AS_IS, RESET
     };
 
     public static TokensMigrationMode getById(byte id) {

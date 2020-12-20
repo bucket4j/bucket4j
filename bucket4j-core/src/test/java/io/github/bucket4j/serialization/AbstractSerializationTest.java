@@ -219,7 +219,7 @@ public abstract class AbstractSerializationTest {
 
         testSerialization(new VerboseCommand<>(new ConsumeIgnoringRateLimitsCommand(100)));
         testSerialization(new VerboseCommand<>(new GetAvailableTokensCommand()));
-        testSerialization(new VerboseCommand<>(new ReplaceConfigurationCommand(configuration, TokensMigrationMode.PROPORTIONAL)));
+        testSerialization(new VerboseCommand<>(new ReplaceConfigurationCommand(configuration, TokensMigrationMode.PROPORTIONALLY)));
     }
 
 }
