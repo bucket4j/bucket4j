@@ -164,11 +164,6 @@ public class BucketState implements Serializable {
         }
     }
 
-    public static void main(String[] args) {
-        System.out.println((long) -3.9d);
-        System.out.println(-3.9 % 1);
-    }
-
     private int countOfBandwidthsWithNullIdentifiers(BucketConfiguration configuration) {
         Bandwidth[] bandwidths = configuration.getBandwidths();
         int count = 0;
