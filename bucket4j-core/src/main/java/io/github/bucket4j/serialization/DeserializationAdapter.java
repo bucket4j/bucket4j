@@ -33,6 +33,8 @@ public interface DeserializationAdapter<S> {
 
     long[] readLongArray(S source) throws IOException;
 
+    String readString(S source) throws IOException;
+
     <T> T readObject(S source, Class<T> type) throws IOException;
 
     Object readObject(S source) throws IOException;

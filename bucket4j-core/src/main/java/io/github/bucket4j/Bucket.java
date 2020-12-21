@@ -180,34 +180,71 @@ public interface Bucket {
     long getAvailableTokens();
 
     /**
-     * Replaces configuration of this bucket instance.
+     * Replaces configuration of this bucket.
      *
-     * <p>Rules of reconfiguration:
+     * <p>
+     * The first hard problem of configuration replacement is making decision how to propagate available tokens from bucket with previous configuration to bucket with new configuration.
+     * If you don't care about previous bucket state then use {@link TokensInheritanceStrategy#RESET}.
+     * But it becomes to a tricky problem when we expect that previous consumption(that has not been compensated by refill yet) should take effect to the bucket with new configuration.
+     * In this case you need to make a choice between {@link TokensInheritanceStrategy#PROPORTIONALLY} and {@link TokensInheritanceStrategy#AS_IS}, read documentation about both with strong attention.
+     *
+     * <p> There is another problem when you are choosing {@link TokensInheritanceStrategy#PROPORTIONALLY} and {@link TokensInheritanceStrategy#AS_IS} and bucket has more then one bandwidth.
+     * For example how does replaceConfiguration implementation should bind bandwidths to each other in the following example?
+     * <pre>
+     * <code>
+     *     Bucket bucket = Bucket4j.builder()
+     *                       .addLimit(Bandwidth.simple(10, Duration.ofSeconds(1)))
+     *                       .addLimit(Bandwidth.simple(10000, Duration.ofHours(1)))
+     *                       .build();
+     *     ...
+     *     BucketConfiguration newConfiguration = Bucket4j.configurationBuilder()
+     *                                               .addLimit(Bandwidth.simple(5000, Duration.ofHours(1)))
+     *                                               .addLimit(Bandwidth.simple(100, Duration.ofSeconds(10)))
+     *                                               .build();
+     *     bucket.replaceConfiguration(newConfiguration, TokensInheritanceStrategy.AS_IS);
+     * </code>
+     * </pre>
+     * It is obviously that simple strategy - copying tokens by bandwidth index will not work well in this case, because of it highly depends from order.
+     * Instead of inventing the backward maggic Bucket4j provides to you ability to deap controll of this process by specifying identifiers for bandwidth,
+     * so in case of multiple bandwidth configuratoin replacement code can copy available tokens by bandwidth ID. So it is better to rewrite code above as following:
+     * <pre>
+     * <code>
+     * Bucket bucket = Bucket4j.builder()
+     *                            .addLimit(Bandwidth.simple(10, Duration.ofSeconds(1)).withId("technical-limit"))
+     *                            .addLimit(Bandwidth.simple(10000, Duration.ofHours(1)).withId("business-limit"))
+     *                            .build();
+     * ...
+     * BucketConfiguration newConfiguration = Bucket4j.configurationBuilder()
+     *                            .addLimit(Bandwidth.simple(5000, Duration.ofHours(1)).withId("business-limit"))
+     *                            .addLimit(Bandwidth.simple(100, Duration.ofSeconds(10)).withId("technical-limit"))
+     *                            .build();
+     * bucket.replaceConfiguration(newConfiguration, TokensInheritanceStrategy.AS_IS);
+     * </code>
+     * </pre>
+     *
+     *
+     * <p>
+ *     There are following rules for bandwidth identifiers:
      * <ul>
-     *    <li>
-     *      New configuration can be applied if and only if it describes same count of bandwidths which already configured,
-     *      else {@link IncompatibleConfigurationException} will be thrown.
-     *      In other words you must not try to reduce or increase count of bandwidths,
-     *      it is impossible to create bucket with one bandwidth and reconfigure to use two bandwidths and vice-versa.
-     *    </li>
-     *    <li>
-     *        If new configuration defines capacity which greater than current available tokens,
-     *        then current available tokens stay unchanged.
-     *    </li>
-     *    <li>
-     *        If new configuration defines capacity which lesser than current available tokens,
-     *        then current available tokens will be reduced to capacity.
-     *        For example: if bandwidth at moment of reconfiguration has 90 tokens,
-     *        and new capacity is 70 tokens then available tokens will be reduced from 90 to 70 according to new rules.
-     *    </li>
+     *     <li>
+     *          By default bandwidth has <b>null</b> identifier.
+     *     </li>
+     *     <li>
+     *         null value of identifier equals to another null value if and only if there is only one bandwidth with null identifier.
+     *     </li>
+     *     <li>
+     *         If identifier for bandwidth is specified then it must has unique in the bucket. Bucket does not allow to create several bandwidth with same ID.
+     *     </li>
+     *     <li>
+     *         {@link TokensInheritanceStrategy#RESET} strategy will be applied for tokens migration during config replacement for bandwidth which has no bound bandwidth with same ID in previous configuration,
+     *         idependently of strategy that was requested.
+     *     </li>
      * </ul>
      *
-     * @param newConfiguration the new configuration for this bucket
-     *
-     * @throws IncompatibleConfigurationException if {@code newConfiguration} incompatible with previous configuration
-     *
+     * @param newConfiguration the new configuration
+     * @param tokensInheritanceStrategy specifies the rules for inheritance of available tokens
      */
-     void replaceConfiguration(BucketConfiguration newConfiguration);
+     void replaceConfiguration(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy);
 
     /**
      * Creates the copy of internal state.

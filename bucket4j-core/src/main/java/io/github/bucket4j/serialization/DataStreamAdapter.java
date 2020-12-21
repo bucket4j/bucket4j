@@ -95,6 +95,16 @@ public class DataStreamAdapter implements SerializationAdapter<DataOutput>, Dese
     }
 
     @Override
+    public String readString(DataInput source) throws IOException {
+        return source.readUTF();
+    }
+
+    @Override
+    public void writeString(DataOutput target, String value) throws IOException {
+        target.writeUTF(value);
+    }
+
+    @Override
     public <T> T readObject(DataInput source, Class<T> type) throws IOException {
         return (T) readObject(source);
     }
@@ -166,4 +176,5 @@ public class DataStreamAdapter implements SerializationAdapter<DataOutput>, Dese
             throw new IllegalArgumentException("Unknown value class " + value.getClass());
         }
     }
+
 }

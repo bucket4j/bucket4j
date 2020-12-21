@@ -54,6 +54,11 @@ public class HazelcastSerializationAdapter implements SerializationAdapter<Objec
     }
 
     @Override
+    public String readString(ObjectDataInput source) throws IOException {
+        return source.readUTF();
+    }
+
+    @Override
     public <T> T readObject(ObjectDataInput source, Class<T> type) throws IOException {
         return source.readObject(type);
     }
@@ -91,6 +96,11 @@ public class HazelcastSerializationAdapter implements SerializationAdapter<Objec
     @Override
     public void writeObject(ObjectDataOutput target, Object value) throws IOException {
         target.writeObject(value);
+    }
+
+    @Override
+    public void writeString(ObjectDataOutput target, String value) throws IOException {
+        target.writeUTF(value);
     }
 
 }
