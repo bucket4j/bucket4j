@@ -161,7 +161,7 @@ public final class BucketExceptions {
         return new IllegalArgumentException(msg);
     }
 
-    public static IllegalArgumentException nullTokensMigrationMode() {
+    public static IllegalArgumentException nullTokensInheritanceStrategy() {
         String msg = "Tokens migration mode must not be null";
         return new IllegalArgumentException(msg);
     }

@@ -107,7 +107,7 @@ public class EqualityUtils {
 
         registerComparator(ReplaceConfigurationCommand.class, (cmd1, cmd2) -> {
             return equals(cmd1.getNewConfiguration(), cmd2.getNewConfiguration()) &&
-                    Objects.equals(cmd1.getTokensMigrationMode(), cmd2.getTokensMigrationMode());
+                    Objects.equals(cmd1.getTokensInheritanceStrategy(), cmd2.getTokensInheritanceStrategy());
         });
 
         registerComparator(ConsumeIgnoringRateLimitsCommand.class, (cmd1, cmd2) -> {

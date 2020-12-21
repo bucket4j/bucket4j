@@ -307,25 +307,25 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
             def bucket = type.createBucket(builder, TimeMeter.SYSTEM_MILLISECONDS)
 
         when:
-            bucket.replaceConfiguration(null, TokensMigrationMode.AS_IS)
+            bucket.replaceConfiguration(null, TokensInheritanceStrategy.AS_IS)
         then:
             IllegalArgumentException ex = thrown()
             ex.message == nullConfiguration().message
 
         when:
-            bucket.asVerbose().replaceConfiguration(null, TokensMigrationMode.AS_IS)
+            bucket.asVerbose().replaceConfiguration(null, TokensInheritanceStrategy.AS_IS)
         then:
             ex = thrown()
             ex.message == nullConfiguration().message
 
         when:
-            bucket.asAsync().replaceConfiguration(null, TokensMigrationMode.AS_IS)
+            bucket.asAsync().replaceConfiguration(null, TokensInheritanceStrategy.AS_IS)
         then:
             ex = thrown()
             ex.message == nullConfiguration().message
 
         when:
-            bucket.asAsync().asVerbose().replaceConfiguration(null, TokensMigrationMode.AS_IS)
+            bucket.asAsync().asVerbose().replaceConfiguration(null, TokensInheritanceStrategy.AS_IS)
         then:
             ex = thrown()
             ex.message == nullConfiguration().message
@@ -344,25 +344,25 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
             bucket.replaceConfiguration(newConfiguration, null)
         then:
             IllegalArgumentException ex = thrown()
-            ex.message == nullTokensMigrationMode().message
+            ex.message == nullTokensInheritanceStrategy().message
 
         when:
             bucket.asVerbose().replaceConfiguration(newConfiguration, null)
         then:
             ex = thrown()
-            ex.message == nullTokensMigrationMode().message
+            ex.message == nullTokensInheritanceStrategy().message
 
         when:
             bucket.asAsync().replaceConfiguration(newConfiguration, null)
         then:
             ex = thrown()
-            ex.message == nullTokensMigrationMode().message
+            ex.message == nullTokensInheritanceStrategy().message
 
         when:
             bucket.asAsync().asVerbose().replaceConfiguration(newConfiguration, null)
         then:
             ex = thrown()
-            ex.message == nullTokensMigrationMode().message
+            ex.message == nullTokensInheritanceStrategy().message
 
         where:
             type << BucketType.values()

@@ -128,8 +128,8 @@ Bandwidth newLimit = Bandwidth.simple(newCapacity, Duration.ofMinutes(1));
 BucketConfiguration newConfiguration = Bucket4j.configurationBuilder()
                 .addLimit(newLimit)
                 .build();
-bucket.replaceConfiguration(newConfiguration, TokensMigrationMode.PROPORTIONALLY)
-// or bucket.replaceConfiguration(newConfiguration, TokensMigrationMode.AS_IS)
+bucket.replaceConfiguration(newConfiguration, TokensInheritanceStrategy.PROPORTIONALLY)
+// or bucket.replaceConfiguration(newConfiguration, TokensInheritanceStrategy.AS_IS)
 ```
 Read javadocs for more information. 
 

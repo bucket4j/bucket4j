@@ -27,15 +27,15 @@ class ConfigurationReplacementSpecification extends Specification {
                         .build()
                 if (sync) {
                     if (!verbose) {
-                        bucket.replaceConfiguration(newConfiguration, TokensMigrationMode.RESET)
+                        bucket.replaceConfiguration(newConfiguration, TokensInheritanceStrategy.RESET)
                     } else {
-                        bucket.asVerbose().replaceConfiguration(newConfiguration, TokensMigrationMode.RESET)
+                        bucket.asVerbose().replaceConfiguration(newConfiguration, TokensInheritanceStrategy.RESET)
                     }
                 } else {
                     if (!verbose) {
-                        bucket.asAsync().replaceConfiguration(newConfiguration, TokensMigrationMode.RESET).get()
+                        bucket.asAsync().replaceConfiguration(newConfiguration, TokensInheritanceStrategy.RESET).get()
                     } else {
-                        bucket.asAsync().asVerbose().replaceConfiguration(newConfiguration, TokensMigrationMode.RESET).get()
+                        bucket.asAsync().asVerbose().replaceConfiguration(newConfiguration, TokensInheritanceStrategy.RESET).get()
                     }
                 }
                 assert bucket.getAvailableTokens() == 60
@@ -62,15 +62,15 @@ class ConfigurationReplacementSpecification extends Specification {
                             .build()
                     if (sync) {
                         if (!verbose) {
-                            bucket.replaceConfiguration(newConfiguration, TokensMigrationMode.AS_IS)
+                            bucket.replaceConfiguration(newConfiguration, TokensInheritanceStrategy.AS_IS)
                         } else {
-                            bucket.asVerbose().replaceConfiguration(newConfiguration, TokensMigrationMode.AS_IS)
+                            bucket.asVerbose().replaceConfiguration(newConfiguration, TokensInheritanceStrategy.AS_IS)
                         }
                     } else {
                         if (!verbose) {
-                            bucket.asAsync().replaceConfiguration(newConfiguration, TokensMigrationMode.RESET).get()
+                            bucket.asAsync().replaceConfiguration(newConfiguration, TokensInheritanceStrategy.RESET).get()
                         } else {
-                            bucket.asAsync().asVerbose().replaceConfiguration(newConfiguration, TokensMigrationMode.RESET).get()
+                            bucket.asAsync().asVerbose().replaceConfiguration(newConfiguration, TokensInheritanceStrategy.RESET).get()
                         }
                     }
                     assert bucket.getAvailableTokens() == 60
@@ -98,15 +98,15 @@ class ConfigurationReplacementSpecification extends Specification {
                             .build()
                     if (sync) {
                         if (!verbose) {
-                            bucket.replaceConfiguration(newConfiguration, TokensMigrationMode.AS_IS)
+                            bucket.replaceConfiguration(newConfiguration, TokensInheritanceStrategy.AS_IS)
                         } else {
-                            bucket.asVerbose().replaceConfiguration(newConfiguration, TokensMigrationMode.AS_IS)
+                            bucket.asVerbose().replaceConfiguration(newConfiguration, TokensInheritanceStrategy.AS_IS)
                         }
                     } else {
                         if (!verbose) {
-                            bucket.asAsync().replaceConfiguration(newConfiguration, TokensMigrationMode.AS_IS).get()
+                            bucket.asAsync().replaceConfiguration(newConfiguration, TokensInheritanceStrategy.AS_IS).get()
                         } else {
-                            bucket.asAsync().asVerbose().replaceConfiguration(newConfiguration, TokensMigrationMode.AS_IS).get()
+                            bucket.asAsync().asVerbose().replaceConfiguration(newConfiguration, TokensInheritanceStrategy.AS_IS).get()
                         }
                     }
                     assert bucket.getAvailableTokens() == 1
@@ -136,15 +136,15 @@ class ConfigurationReplacementSpecification extends Specification {
                             .build()
                     if (sync) {
                         if (!verbose) {
-                            bucket.replaceConfiguration(newConfiguration, TokensMigrationMode.AS_IS)
+                            bucket.replaceConfiguration(newConfiguration, TokensInheritanceStrategy.AS_IS)
                         } else {
-                            bucket.asVerbose().replaceConfiguration(newConfiguration, TokensMigrationMode.AS_IS)
+                            bucket.asVerbose().replaceConfiguration(newConfiguration, TokensInheritanceStrategy.AS_IS)
                         }
                     } else {
                         if (!verbose) {
-                            bucket.asAsync().replaceConfiguration(newConfiguration, TokensMigrationMode.AS_IS).get()
+                            bucket.asAsync().replaceConfiguration(newConfiguration, TokensInheritanceStrategy.AS_IS).get()
                         } else {
-                            bucket.asAsync().asVerbose().replaceConfiguration(newConfiguration, TokensMigrationMode.AS_IS).get()
+                            bucket.asAsync().asVerbose().replaceConfiguration(newConfiguration, TokensInheritanceStrategy.AS_IS).get()
                         }
                     }
                     assert bucket.getAvailableTokens() == 1
@@ -175,15 +175,15 @@ class ConfigurationReplacementSpecification extends Specification {
                             .build()
                     if (sync) {
                         if (!verbose) {
-                            bucket.replaceConfiguration(newConfiguration, TokensMigrationMode.AS_IS)
+                            bucket.replaceConfiguration(newConfiguration, TokensInheritanceStrategy.AS_IS)
                         } else {
-                            bucket.asVerbose().replaceConfiguration(newConfiguration, TokensMigrationMode.AS_IS)
+                            bucket.asVerbose().replaceConfiguration(newConfiguration, TokensInheritanceStrategy.AS_IS)
                         }
                     } else {
                         if (!verbose) {
-                            bucket.asAsync().replaceConfiguration(newConfiguration, TokensMigrationMode.AS_IS).get()
+                            bucket.asAsync().replaceConfiguration(newConfiguration, TokensInheritanceStrategy.AS_IS).get()
                         } else {
-                            bucket.asAsync().asVerbose().replaceConfiguration(newConfiguration, TokensMigrationMode.AS_IS).get()
+                            bucket.asAsync().asVerbose().replaceConfiguration(newConfiguration, TokensInheritanceStrategy.AS_IS).get()
                         }
                     }
                     assert bucket.getAvailableTokens() == 1
@@ -212,9 +212,9 @@ class ConfigurationReplacementSpecification extends Specification {
                     .addLimit(Bandwidth.classic (200, Refill.greedy(100, Duration.ofNanos(100)) ))
                     .build()
             if (sync) {
-                bucket.replaceConfiguration(newConfiguration, TokensMigrationMode.AS_IS)
+                bucket.replaceConfiguration(newConfiguration, TokensInheritanceStrategy.AS_IS)
             } else {
-                bucket.asAsync().replaceConfiguration(newConfiguration, TokensMigrationMode.AS_IS).get()
+                bucket.asAsync().replaceConfiguration(newConfiguration, TokensInheritanceStrategy.AS_IS).get()
             }
             assert bucket.getAvailableTokens() == 200
         }
@@ -235,9 +235,9 @@ class ConfigurationReplacementSpecification extends Specification {
                         .addLimit(Bandwidth.classic (200, Refill.greedy(100, Duration.ofNanos(100)) ))
                         .build()
                 if (sync) {
-                    bucket.replaceConfiguration(newConfiguration, TokensMigrationMode.PROPORTIONALLY)
+                    bucket.replaceConfiguration(newConfiguration, TokensInheritanceStrategy.PROPORTIONALLY)
                 } else {
-                    bucket.asAsync().replaceConfiguration(newConfiguration, TokensMigrationMode.PROPORTIONALLY).get()
+                    bucket.asAsync().replaceConfiguration(newConfiguration, TokensInheritanceStrategy.PROPORTIONALLY).get()
                 }
                 assert bucket.getAvailableTokens() == 200
             }
@@ -262,15 +262,15 @@ class ConfigurationReplacementSpecification extends Specification {
                         .build()
                 if (sync) {
                     if (!verbose) {
-                        bucket.replaceConfiguration(newConfiguration, TokensMigrationMode.PROPORTIONALLY)
+                        bucket.replaceConfiguration(newConfiguration, TokensInheritanceStrategy.PROPORTIONALLY)
                     } else {
-                        bucket.asVerbose().replaceConfiguration(newConfiguration, TokensMigrationMode.PROPORTIONALLY)
+                        bucket.asVerbose().replaceConfiguration(newConfiguration, TokensInheritanceStrategy.PROPORTIONALLY)
                     }
                 } else {
                     if (!verbose) {
-                        bucket.asAsync().replaceConfiguration(newConfiguration, TokensMigrationMode.PROPORTIONALLY).get()
+                        bucket.asAsync().replaceConfiguration(newConfiguration, TokensInheritanceStrategy.PROPORTIONALLY).get()
                     } else {
-                        bucket.asAsync().asVerbose().replaceConfiguration(newConfiguration, TokensMigrationMode.PROPORTIONALLY).get()
+                        bucket.asAsync().asVerbose().replaceConfiguration(newConfiguration, TokensInheritanceStrategy.PROPORTIONALLY).get()
                     }
                 }
                 assert bucket.getAvailableTokens() == 36
@@ -306,15 +306,15 @@ class ConfigurationReplacementSpecification extends Specification {
                         .build()
                 if (sync) {
                     if (!verbose) {
-                        bucket.replaceConfiguration(newConfiguration, TokensMigrationMode.PROPORTIONALLY)
+                        bucket.replaceConfiguration(newConfiguration, TokensInheritanceStrategy.PROPORTIONALLY)
                     } else {
-                        bucket.asVerbose().replaceConfiguration(newConfiguration, TokensMigrationMode.PROPORTIONALLY)
+                        bucket.asVerbose().replaceConfiguration(newConfiguration, TokensInheritanceStrategy.PROPORTIONALLY)
                     }
                 } else {
                     if (!verbose) {
-                        bucket.asAsync().replaceConfiguration(newConfiguration, TokensMigrationMode.PROPORTIONALLY).get()
+                        bucket.asAsync().replaceConfiguration(newConfiguration, TokensInheritanceStrategy.PROPORTIONALLY).get()
                     } else {
-                        bucket.asAsync().asVerbose().replaceConfiguration(newConfiguration, TokensMigrationMode.PROPORTIONALLY).get()
+                        bucket.asAsync().asVerbose().replaceConfiguration(newConfiguration, TokensInheritanceStrategy.PROPORTIONALLY).get()
                     }
                 }
                 assert bucket.getAvailableTokens() == 1 // 1.125 after replacement
@@ -343,15 +343,15 @@ class ConfigurationReplacementSpecification extends Specification {
                             .build()
                     if (sync) {
                         if (!verbose) {
-                            bucket.replaceConfiguration(newConfiguration, TokensMigrationMode.PROPORTIONALLY)
+                            bucket.replaceConfiguration(newConfiguration, TokensInheritanceStrategy.PROPORTIONALLY)
                         } else {
-                            bucket.asVerbose().replaceConfiguration(newConfiguration, TokensMigrationMode.PROPORTIONALLY)
+                            bucket.asVerbose().replaceConfiguration(newConfiguration, TokensInheritanceStrategy.PROPORTIONALLY)
                         }
                     } else {
                         if (!verbose) {
-                            bucket.asAsync().replaceConfiguration(newConfiguration, TokensMigrationMode.PROPORTIONALLY).get()
+                            bucket.asAsync().replaceConfiguration(newConfiguration, TokensInheritanceStrategy.PROPORTIONALLY).get()
                         } else {
-                            bucket.asAsync().asVerbose().replaceConfiguration(newConfiguration, TokensMigrationMode.PROPORTIONALLY).get()
+                            bucket.asAsync().asVerbose().replaceConfiguration(newConfiguration, TokensInheritanceStrategy.PROPORTIONALLY).get()
                         }
                     }
                     assert bucket.getAvailableTokens() == -2 // -1.375 after replacement

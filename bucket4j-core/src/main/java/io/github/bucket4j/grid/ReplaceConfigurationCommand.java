@@ -22,7 +22,7 @@ package io.github.bucket4j.grid;
 
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.Nothing;
-import io.github.bucket4j.TokensMigrationMode;
+import io.github.bucket4j.TokensInheritanceStrategy;
 import io.github.bucket4j.serialization.DeserializationAdapter;
 import io.github.bucket4j.serialization.SerializationAdapter;
 import io.github.bucket4j.serialization.SerializationHandle;
@@ -35,21 +35,21 @@ public class ReplaceConfigurationCommand implements GridCommand<Nothing> {
     private static final long serialVersionUID = 8183759647555953907L;
 
     private BucketConfiguration newConfiguration;
-    private TokensMigrationMode tokensMigrationMode;
+    private TokensInheritanceStrategy tokensInheritanceStrategy;
 
     public static final SerializationHandle<ReplaceConfigurationCommand> SERIALIZATION_HANDLE = new SerializationHandle<ReplaceConfigurationCommand>() {
         @Override
         public <S> ReplaceConfigurationCommand deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             BucketConfiguration newConfiguration = adapter.readObject(input, BucketConfiguration.class);
-            TokensMigrationMode tokensMigrationMode = TokensMigrationMode.getById(adapter.readByte(input));
+            TokensInheritanceStrategy tokensInheritanceStrategy = TokensInheritanceStrategy.getById(adapter.readByte(input));
 
-            return new ReplaceConfigurationCommand(newConfiguration, tokensMigrationMode);
+            return new ReplaceConfigurationCommand(newConfiguration, tokensInheritanceStrategy);
         }
 
         @Override
         public <O> void serialize(SerializationAdapter<O> adapter, O output, ReplaceConfigurationCommand command) throws IOException {
             adapter.writeObject(output, command.newConfiguration);
-            adapter.writeByte(output, command.tokensMigrationMode.getId());
+            adapter.writeByte(output, command.tokensInheritanceStrategy.getId());
         }
 
         @Override
@@ -64,15 +64,15 @@ public class ReplaceConfigurationCommand implements GridCommand<Nothing> {
 
     };
 
-    public ReplaceConfigurationCommand(BucketConfiguration newConfiguration, TokensMigrationMode tokensMigrationMode) {
+    public ReplaceConfigurationCommand(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy) {
         this.newConfiguration = newConfiguration;
-        this.tokensMigrationMode = tokensMigrationMode;
+        this.tokensInheritanceStrategy = tokensInheritanceStrategy;
     }
 
     @Override
     public Nothing execute(GridBucketState state, long currentTimeNanos) {
         state.refillAllBandwidth(currentTimeNanos);
-        state.replaceConfiguration(newConfiguration, tokensMigrationMode, currentTimeNanos);
+        state.replaceConfiguration(newConfiguration, tokensInheritanceStrategy, currentTimeNanos);
         return Nothing.INSTANCE;
     }
 
@@ -85,8 +85,8 @@ public class ReplaceConfigurationCommand implements GridCommand<Nothing> {
         return newConfiguration;
     }
 
-    public TokensMigrationMode getTokensMigrationMode() {
-        return tokensMigrationMode;
+    public TokensInheritanceStrategy getTokensInheritanceStrategy() {
+        return tokensInheritanceStrategy;
     }
 
 }

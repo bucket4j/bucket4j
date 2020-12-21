@@ -66,8 +66,8 @@ public interface VerboseBucket {
     VerboseResult<Nothing> addTokens(long tokensToAdd);
 
     /**
-     * Does the same that {@link Bucket#replaceConfiguration(BucketConfiguration, TokensMigrationMode)}
+     * Does the same that {@link Bucket#replaceConfiguration(BucketConfiguration, TokensInheritanceStrategy)}
      */
-    VerboseResult<Nothing> replaceConfiguration(BucketConfiguration newConfiguration, TokensMigrationMode tokensMigrationMode);
+    VerboseResult<Nothing> replaceConfiguration(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy);
 
 }

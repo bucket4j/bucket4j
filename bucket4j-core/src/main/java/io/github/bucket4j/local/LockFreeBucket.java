@@ -233,7 +233,7 @@ public class LockFreeBucket extends LockFreeBucket_FinalFields_CacheLinePadding 
     }
 
     @Override
-    protected void replaceConfigurationImpl(BucketConfiguration newConfiguration, TokensMigrationMode tokensMigrationMode) {
+    protected void replaceConfigurationImpl(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy) {
         StateWithConfiguration previousState = stateRef.get();
         StateWithConfiguration newState = previousState.copy();
         long currentTimeNanos = timeMeter.currentTimeNanos();
@@ -241,7 +241,7 @@ public class LockFreeBucket extends LockFreeBucket_FinalFields_CacheLinePadding 
         while (true) {
             newState.refillAllBandwidth(currentTimeNanos);
             newState.configuration = newConfiguration;
-            newState.state = newState.state.replaceConfiguration(previousState.configuration, newConfiguration, tokensMigrationMode, currentTimeNanos);
+            newState.state = newState.state.replaceConfiguration(previousState.configuration, newConfiguration, tokensInheritanceStrategy, currentTimeNanos);
             if (stateRef.compareAndSet(previousState, newState)) {
                 return;
             } else {
@@ -389,7 +389,7 @@ public class LockFreeBucket extends LockFreeBucket_FinalFields_CacheLinePadding 
     }
 
     @Override
-    protected VerboseResult<Nothing> replaceConfigurationVerboseImpl(BucketConfiguration newConfiguration, TokensMigrationMode tokensMigrationMode) {
+    protected VerboseResult<Nothing> replaceConfigurationVerboseImpl(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy) {
         StateWithConfiguration previousState = stateRef.get();
         StateWithConfiguration newState = previousState.copy();
         long currentTimeNanos = timeMeter.currentTimeNanos();
@@ -397,7 +397,7 @@ public class LockFreeBucket extends LockFreeBucket_FinalFields_CacheLinePadding 
         while (true) {
             newState.refillAllBandwidth(currentTimeNanos);
             newState.configuration = newConfiguration;
-            newState.state = newState.state.replaceConfiguration(previousState.configuration, newConfiguration, tokensMigrationMode, currentTimeNanos);
+            newState.state = newState.state.replaceConfiguration(previousState.configuration, newConfiguration, tokensInheritanceStrategy, currentTimeNanos);
             if (stateRef.compareAndSet(previousState, newState)) {
                 return new VerboseResult<>(currentTimeNanos, null, newState.configuration, newState.state.copy());
             } else {
@@ -451,8 +451,8 @@ public class LockFreeBucket extends LockFreeBucket_FinalFields_CacheLinePadding 
     }
 
     @Override
-    protected CompletableFuture<Nothing> replaceConfigurationAsyncImpl(BucketConfiguration newConfiguration, TokensMigrationMode tokensMigrationMode) {
-        replaceConfigurationImpl(newConfiguration, tokensMigrationMode);
+    protected CompletableFuture<Nothing> replaceConfigurationAsyncImpl(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy) {
+        replaceConfigurationImpl(newConfiguration, tokensInheritanceStrategy);
         return CompletableFuture.completedFuture(Nothing.INSTANCE);
     }
 
@@ -516,8 +516,8 @@ public class LockFreeBucket extends LockFreeBucket_FinalFields_CacheLinePadding 
     }
 
     @Override
-    protected CompletableFuture<VerboseResult<Nothing>> replaceConfigurationVerboseAsyncImpl(BucketConfiguration newConfiguration, TokensMigrationMode tokensMigrationMode) {
-        VerboseResult<Nothing> result = replaceConfigurationVerboseImpl(newConfiguration, tokensMigrationMode);
+    protected CompletableFuture<VerboseResult<Nothing>> replaceConfigurationVerboseAsyncImpl(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy) {
+        VerboseResult<Nothing> result = replaceConfigurationVerboseImpl(newConfiguration, tokensInheritanceStrategy);
         return CompletableFuture.completedFuture(result);
     }
 

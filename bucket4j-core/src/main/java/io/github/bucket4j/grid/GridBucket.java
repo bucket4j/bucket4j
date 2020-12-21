@@ -160,8 +160,8 @@ public class GridBucket<K extends Serializable> extends AbstractBucket {
     }
 
     @Override
-    protected VerboseResult<Nothing> replaceConfigurationVerboseImpl(BucketConfiguration newConfiguration, TokensMigrationMode tokensMigrationMode) {
-        ReplaceConfigurationCommand replaceConfigCommand = new ReplaceConfigurationCommand(newConfiguration, tokensMigrationMode);
+    protected VerboseResult<Nothing> replaceConfigurationVerboseImpl(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy) {
+        ReplaceConfigurationCommand replaceConfigCommand = new ReplaceConfigurationCommand(newConfiguration, tokensInheritanceStrategy);
         return execute(replaceConfigCommand.asVerbose());
     }
 
@@ -189,14 +189,14 @@ public class GridBucket<K extends Serializable> extends AbstractBucket {
     }
 
     @Override
-    protected void replaceConfigurationImpl(BucketConfiguration newConfiguration, TokensMigrationMode tokensMigrationMode) {
-        ReplaceConfigurationCommand replaceConfigCommand = new ReplaceConfigurationCommand(newConfiguration, tokensMigrationMode);
+    protected void replaceConfigurationImpl(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy) {
+        ReplaceConfigurationCommand replaceConfigCommand = new ReplaceConfigurationCommand(newConfiguration, tokensInheritanceStrategy);
         execute(replaceConfigCommand);
     }
 
     @Override
-    protected CompletableFuture<Nothing> replaceConfigurationAsyncImpl(BucketConfiguration newConfiguration, TokensMigrationMode tokensMigrationMode) {
-        ReplaceConfigurationCommand replaceConfigCommand = new ReplaceConfigurationCommand(newConfiguration, tokensMigrationMode);
+    protected CompletableFuture<Nothing> replaceConfigurationAsyncImpl(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy) {
+        ReplaceConfigurationCommand replaceConfigCommand = new ReplaceConfigurationCommand(newConfiguration, tokensInheritanceStrategy);
         return executeAsync(replaceConfigCommand);
     }
 
@@ -237,8 +237,8 @@ public class GridBucket<K extends Serializable> extends AbstractBucket {
     }
 
     @Override
-    protected CompletableFuture<VerboseResult<Nothing>> replaceConfigurationVerboseAsyncImpl(BucketConfiguration newConfiguration, TokensMigrationMode tokensMigrationMode) {
-        ReplaceConfigurationCommand replaceConfigCommand = new ReplaceConfigurationCommand(newConfiguration, tokensMigrationMode);
+    protected CompletableFuture<VerboseResult<Nothing>> replaceConfigurationVerboseAsyncImpl(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy) {
+        ReplaceConfigurationCommand replaceConfigCommand = new ReplaceConfigurationCommand(newConfiguration, tokensInheritanceStrategy);
         return executeAsync(replaceConfigCommand.asVerbose());
     }
 

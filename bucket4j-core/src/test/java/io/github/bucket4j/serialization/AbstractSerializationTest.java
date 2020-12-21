@@ -213,13 +213,13 @@ public abstract class AbstractSerializationTest {
         BucketConfiguration configuration = Bucket4j.configurationBuilder()
                 .addLimit(simple(10, ofSeconds(1)))
                 .build();
-        testSerialization(new ReplaceConfigurationCommand(configuration, TokensMigrationMode.AS_IS));
+        testSerialization(new ReplaceConfigurationCommand(configuration, TokensInheritanceStrategy.AS_IS));
 
         testSerialization(new ConsumeIgnoringRateLimitsCommand(100));
 
         testSerialization(new VerboseCommand<>(new ConsumeIgnoringRateLimitsCommand(100)));
         testSerialization(new VerboseCommand<>(new GetAvailableTokensCommand()));
-        testSerialization(new VerboseCommand<>(new ReplaceConfigurationCommand(configuration, TokensMigrationMode.PROPORTIONALLY)));
+        testSerialization(new VerboseCommand<>(new ReplaceConfigurationCommand(configuration, TokensInheritanceStrategy.PROPORTIONALLY)));
     }
 
 }

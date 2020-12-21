@@ -63,8 +63,8 @@ public class BucketState implements Serializable {
     }
 
     public BucketState replaceConfiguration(BucketConfiguration previousConfiguration, BucketConfiguration newConfiguration,
-            TokensMigrationMode tokensMigrationMode, long currentTimeNanos) {
-        if (tokensMigrationMode == TokensMigrationMode.RESET) {
+                                            TokensInheritanceStrategy tokensInheritanceStrategy, long currentTimeNanos) {
+        if (tokensInheritanceStrategy == TokensInheritanceStrategy.RESET) {
             return new BucketState(newConfiguration, currentTimeNanos);
         }
 
@@ -94,9 +94,9 @@ public class BucketState implements Serializable {
                 continue;
             }
 
-            if (tokensMigrationMode == TokensMigrationMode.AS_IS) {
+            if (tokensInheritanceStrategy == TokensInheritanceStrategy.AS_IS) {
                 replaceBandwidthAsIs(newState, newBandwidthIndex, newBandwidth, previousBandwidthIndex, previousBandwidth, currentTimeNanos);
-            } else if (tokensMigrationMode == TokensMigrationMode.PROPORTIONALLY) {
+            } else if (tokensInheritanceStrategy == TokensInheritanceStrategy.PROPORTIONALLY) {
                 replaceBandwidthProportional(newState, newBandwidthIndex, newBandwidth, previousBandwidthIndex, previousBandwidth, currentTimeNanos);
             } else {
                 throw new IllegalStateException("Should never reach there");

@@ -270,12 +270,12 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket {
     }
 
     @Override
-    protected VerboseResult<Nothing> replaceConfigurationVerboseImpl(BucketConfiguration newConfiguration, TokensMigrationMode tokensMigrationMode) {
+    protected VerboseResult<Nothing> replaceConfigurationVerboseImpl(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy) {
         long currentTimeNanos = timeMeter.currentTimeNanos();
         lock.lock();
         try {
             this.state.refillAllBandwidth(bandwidths, currentTimeNanos);
-            this.state = this.state.replaceConfiguration(this.configuration, newConfiguration, tokensMigrationMode, currentTimeNanos);
+            this.state = this.state.replaceConfiguration(this.configuration, newConfiguration, tokensInheritanceStrategy, currentTimeNanos);
             this.bandwidths = newConfiguration.getBandwidths();
             this.configuration = newConfiguration;
             return new VerboseResult<>(currentTimeNanos, null, configuration, state.copy());
@@ -327,12 +327,12 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket {
     }
 
     @Override
-    protected void replaceConfigurationImpl(BucketConfiguration newConfiguration, TokensMigrationMode tokensMigrationMode) {
+    protected void replaceConfigurationImpl(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy) {
         long currentTimeNanos = timeMeter.currentTimeNanos();
         lock.lock();
         try {
             this.state.refillAllBandwidth(bandwidths, currentTimeNanos);
-            this.state = this.state.replaceConfiguration(this.configuration, newConfiguration, tokensMigrationMode, currentTimeNanos);
+            this.state = this.state.replaceConfiguration(this.configuration, newConfiguration, tokensInheritanceStrategy, currentTimeNanos);
             this.configuration = newConfiguration;
             this.bandwidths = newConfiguration.getBandwidths();
         } finally {
@@ -377,8 +377,8 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket {
     }
 
     @Override
-    protected CompletableFuture<Nothing> replaceConfigurationAsyncImpl(BucketConfiguration newConfiguration, TokensMigrationMode tokensMigrationMode) {
-        replaceConfigurationImpl(newConfiguration, tokensMigrationMode);
+    protected CompletableFuture<Nothing> replaceConfigurationAsyncImpl(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy) {
+        replaceConfigurationImpl(newConfiguration, tokensInheritanceStrategy);
         return CompletableFuture.completedFuture(Nothing.INSTANCE);
     }
 
@@ -419,8 +419,8 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket {
     }
 
     @Override
-    protected CompletableFuture<VerboseResult<Nothing>> replaceConfigurationVerboseAsyncImpl(BucketConfiguration newConfiguration, TokensMigrationMode tokensMigrationMode) {
-        VerboseResult<Nothing> result = replaceConfigurationVerboseImpl(newConfiguration, tokensMigrationMode);
+    protected CompletableFuture<VerboseResult<Nothing>> replaceConfigurationVerboseAsyncImpl(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy) {
+        VerboseResult<Nothing> result = replaceConfigurationVerboseImpl(newConfiguration, tokensInheritanceStrategy);
         return CompletableFuture.completedFuture(result);
     }
 
