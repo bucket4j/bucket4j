@@ -142,9 +142,9 @@ public class Bandwidth implements Serializable {
 
     /**
      * By default new created bandwidth has no ID.
-     * This method allows to specify unique identifier of bandwidth that can be used for bandwidth comparision during configuration replacement {@link Bucket#replaceConfiguration(BucketConfiguration)}
+     * This method allows to specify unique identifier of bandwidth that can be used for bandwidth comparision during configuration replacement {@link Bucket#replaceConfiguration(BucketConfiguration, TokensInheritanceStrategy)}
      *
-     * @param id unique identifier of bandwidth that can be used for bandwidth comparision during configuration replacement {@link Bucket#replaceConfiguration(BucketConfiguration)}
+     * @param id unique identifier of bandwidth that can be used for bandwidth comparision during configuration replacement {@link Bucket#replaceConfiguration(BucketConfiguration, TokensInheritanceStrategy)}
      *
      * @return the copy of this bandwidth with new value ofof initial tokens.
      */
