@@ -47,7 +47,7 @@
         <infinispan-8.version>8.2.0.Final</infinispan-8.version>
         <infinispan.latest.version>10.1.0.CR1</infinispan.latest.version>
 
-        <testcontainers.version>1.9.0</testcontainers.version>
+        <testcontainers.version>1.15.1</testcontainers.version>
         <lettuce-version>5.0.2.RELEASE</lettuce-version>
     </properties>
 
