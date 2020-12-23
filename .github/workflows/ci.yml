@@ -12,7 +12,8 @@ jobs:
   build:
     strategy:
       matrix:
-        java: [ '8', '11', '15' ]
+        # java: [ '8', '11', '15' ]
+        java: [ '8']
         os: [ 'ubuntu-latest' ]
     runs-on: ${{ matrix.os }}
     steps:
