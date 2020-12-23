@@ -1,0 +1,6 @@
+language: java
+jdk:
+  - openjdk8
+services:
+  - docker
+script: mvn clean install -P travis
