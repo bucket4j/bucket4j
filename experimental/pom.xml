@@ -24,6 +24,7 @@
         <module>bucket4j-postgresql</module>
         <module>bucket4j-lua</module>
         <module>bucket4j-redis</module>
+        <module>bucket4j-dynamodb-sdk-v1</module>
     </modules>
 
 
