@@ -61,8 +61,7 @@ As mentioned above in addition to local in-memory buckets, the Bucket4j supports
 
 ## Get Bucket4j library
 #### You can add Bucket4j to your project as maven dependency
-The Bucket4j is distributed through both [JCenter](https://bintray.com/bintray/jcenter) and [Maven Central](http://search.maven.org/),
-use any of them:
+The Bucket4j is distributed through [Maven Central](http://search.maven.org/):
 ```xml
 <dependency>
     <groupId>com.github.vladimir-bukhtoyarov</groupId>
