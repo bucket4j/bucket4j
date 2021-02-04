@@ -9,7 +9,7 @@ import java.util.LinkedList;
 /**
  * The naive solution for rate limiter which potentially leads to crash JVM with out of memory error.
  */
-public class MinimalisticTokenBucket {
+public class NoneEffectiveRateLimiter {
 
     private long availableTokens;
     private final long periodMillis;
@@ -19,7 +19,7 @@ public class MinimalisticTokenBucket {
     /**
      * Creates instance of rate limiter which provides guarantee that consumption rate will be >= tokens/periodMillis
      */
-    public MinimalisticTokenBucket(long tokens, long periodMillis) {
+    public NoneEffectiveRateLimiter(long tokens, long periodMillis) {
         this.availableTokens = tokens;
         this.periodMillis = periodMillis;
     }

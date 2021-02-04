@@ -18,8 +18,4 @@
         <module>bucket4j-infinispan-8</module>
     </modules>
 
-    <properties>
-        <maven.deploy.skip>true</maven.deploy.skip>
-    </properties>
-
 </project>

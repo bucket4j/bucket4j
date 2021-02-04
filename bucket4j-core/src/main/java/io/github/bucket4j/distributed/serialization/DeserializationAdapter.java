@@ -35,4 +35,6 @@ public interface DeserializationAdapter<S> {
 
     double[] readDoubleArray(S source) throws IOException;
 
+    String readString(S source) throws IOException;
+
 }

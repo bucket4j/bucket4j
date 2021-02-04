@@ -89,6 +89,12 @@ public class BucketStateIEEE754 implements BucketState, ComparableByContent<Buck
     }
 
     @Override
+    public BucketState replaceConfiguration(BucketConfiguration previousConfiguration, BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy, long currentTimeNanos) {
+        // TODO
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public BucketStateIEEE754 copy() {
         return new BucketStateIEEE754(tokens.clone(), lastRefillTime.clone());
     }

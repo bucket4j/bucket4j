@@ -71,6 +71,11 @@ public class DataOutputSerializationAdapter implements SerializationAdapter<Data
     }
 
     @Override
+    public String readString(DataInput source) throws IOException {
+        return source.readUTF();
+    }
+
+    @Override
     public void writeBoolean(DataOutput target, boolean value) throws IOException {
         target.writeBoolean(value);
     }
@@ -104,6 +109,11 @@ public class DataOutputSerializationAdapter implements SerializationAdapter<Data
         for (int i = 0; i < value.length; i++) {
             target.writeDouble(value[i]);
         }
+    }
+
+    @Override
+    public void writeString(DataOutput target, String value) throws IOException {
+        target.writeUTF(value);
     }
 
 }

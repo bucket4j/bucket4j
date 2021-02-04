@@ -22,6 +22,7 @@ package io.github.bucket4j.distributed.remote;
 
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.BucketState;
+import io.github.bucket4j.TokensInheritanceStrategy;
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
 import io.github.bucket4j.distributed.serialization.SerializationAdapter;
@@ -108,12 +109,9 @@ public class RemoteBucketState implements ComparableByContent<RemoteBucketState>
         return state.copy();
     }
 
-    public BucketConfiguration replaceConfigurationOrReturnPrevious(BucketConfiguration newConfiguration) {
-        if (!configuration.isCompatible(newConfiguration)) {
-            return configuration;
-        }
+    public void replaceConfiguration(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy, long currentTimeNanos) {
+        state = state.replaceConfiguration(configuration, newConfiguration, tokensInheritanceStrategy, currentTimeNanos);
         configuration = newConfiguration;
-        return null;
     }
 
     public BucketConfiguration getConfiguration() {

@@ -68,6 +68,8 @@ import static io.github.bucket4j.distributed.versioning.Versions.v_5_0_0;
  */
 public class Bandwidth implements ComparableByContent<Bandwidth> {
 
+    public static final String UNDEFINED_ID = null;
+
     final long capacity;
     final long initialTokens;
     final long refillPeriodNanos;
@@ -75,9 +77,10 @@ public class Bandwidth implements ComparableByContent<Bandwidth> {
     final boolean refillIntervally;
     final long timeOfFirstRefillMillis;
     final boolean useAdaptiveInitialTokens;
+    final String id;
 
     private Bandwidth(long capacity, long refillPeriodNanos, long refillTokens, long initialTokens, boolean refillIntervally,
-              long timeOfFirstRefillMillis, boolean useAdaptiveInitialTokens) {
+              long timeOfFirstRefillMillis, boolean useAdaptiveInitialTokens, String id) {
         this.capacity = capacity;
         this.initialTokens = initialTokens;
         this.refillPeriodNanos = refillPeriodNanos;
@@ -85,6 +88,7 @@ public class Bandwidth implements ComparableByContent<Bandwidth> {
         this.refillIntervally = refillIntervally;
         this.timeOfFirstRefillMillis = timeOfFirstRefillMillis;
         this.useAdaptiveInitialTokens = useAdaptiveInitialTokens;
+        this.id = id;
     }
 
     /**
@@ -115,7 +119,8 @@ public class Bandwidth implements ComparableByContent<Bandwidth> {
         if (refill == null) {
             throw BucketExceptions.nullBandwidthRefill();
         }
-        return new Bandwidth(capacity, refill.periodNanos, refill.tokens, capacity, refill.refillIntervally, refill.timeOfFirstRefillMillis, refill.useAdaptiveInitialTokens);
+        return new Bandwidth(capacity, refill.periodNanos, refill.tokens, capacity, refill.refillIntervally,
+                refill.timeOfFirstRefillMillis, refill.useAdaptiveInitialTokens, UNDEFINED_ID);
     }
 
     /**
@@ -133,7 +138,21 @@ public class Bandwidth implements ComparableByContent<Bandwidth> {
         if (isIntervallyAligned() && useAdaptiveInitialTokens) {
             throw BucketExceptions.intervallyAlignedRefillWithAdaptiveInitialTokensIncompatipleWithManualSpecifiedInitialTokens();
         }
-        return new Bandwidth(capacity, refillPeriodNanos, refillTokens, initialTokens, refillIntervally, timeOfFirstRefillMillis, useAdaptiveInitialTokens);
+        return new Bandwidth(capacity, refillPeriodNanos, refillTokens, initialTokens, refillIntervally,
+                timeOfFirstRefillMillis, useAdaptiveInitialTokens, UNDEFINED_ID);
+    }
+
+    /**
+     * By default new created bandwidth has no ID.
+     * This method allows to specify unique identifier of bandwidth that can be used for bandwidth comparision during configuration replacement {@link Bucket#replaceConfiguration(BucketConfiguration, TokensInheritanceStrategy)}
+     *
+     * @param id unique identifier of bandwidth that can be used for bandwidth comparision during configuration replacement {@link Bucket#replaceConfiguration(BucketConfiguration, TokensInheritanceStrategy)}
+     *
+     * @return the copy of this bandwidth with new value ofof initial tokens.
+     */
+    public Bandwidth withId(String id) {
+        return new Bandwidth(capacity, refillPeriodNanos, refillTokens, initialTokens, refillIntervally,
+                timeOfFirstRefillMillis, useAdaptiveInitialTokens, id);
     }
 
     public boolean isIntervallyAligned() {
@@ -168,6 +187,14 @@ public class Bandwidth implements ComparableByContent<Bandwidth> {
         return refillIntervally;
     }
 
+    public boolean isGready() {
+        return !refillIntervally;
+    }
+
+    public String getId() {
+        return id;
+    }
+
     public static final SerializationHandle<Bandwidth> SERIALIZATION_HANDLE = new SerializationHandle<Bandwidth>() {
         @Override
         public <S> Bandwidth deserialize(DeserializationAdapter<S> adapter, S input, Version backwardCompatibilityVersion) throws IOException {
@@ -181,9 +208,11 @@ public class Bandwidth implements ComparableByContent<Bandwidth> {
             boolean refillIntervally = adapter.readBoolean(input);
             long timeOfFirstRefillMillis = adapter.readLong(input);
             boolean useAdaptiveInitialTokens = adapter.readBoolean(input);
+            boolean hasId = adapter.readBoolean(input);
+            String id = hasId? adapter.readString(input) : UNDEFINED_ID;
 
             return new Bandwidth(capacity, refillPeriodNanos, refillTokens, initialTokens, refillIntervally,
-                    timeOfFirstRefillMillis, useAdaptiveInitialTokens);
+                    timeOfFirstRefillMillis, useAdaptiveInitialTokens, id);
         }
 
         @Override
@@ -197,6 +226,10 @@ public class Bandwidth implements ComparableByContent<Bandwidth> {
             adapter.writeBoolean(output, bandwidth.refillIntervally);
             adapter.writeLong(output, bandwidth.timeOfFirstRefillMillis);
             adapter.writeBoolean(output, bandwidth.useAdaptiveInitialTokens);
+            adapter.writeBoolean(output, bandwidth.id != null);
+            if (bandwidth.hasId()) {
+                adapter.writeString(output, bandwidth.id);
+            }
         }
 
         @Override
@@ -210,6 +243,10 @@ public class Bandwidth implements ComparableByContent<Bandwidth> {
         }
 
     };
+
+    public boolean hasId() {
+        return id != null;
+    }
 
     @Override
     public boolean equals(Object o) {

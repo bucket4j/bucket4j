@@ -29,6 +29,7 @@ import io.github.bucket4j.util.ComparableByContent;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Objects;
 
 import static io.github.bucket4j.distributed.versioning.Versions.v_5_0_0;
 
@@ -83,6 +84,124 @@ public class BucketState64BitsInteger implements BucketState, ComparableByConten
     @Override
     public BucketState copy() {
         return new BucketState64BitsInteger(stateData.clone());
+    }
+
+    @Override
+    public BucketState replaceConfiguration(BucketConfiguration previousConfiguration, BucketConfiguration newConfiguration,
+                                            TokensInheritanceStrategy tokensInheritanceStrategy, long currentTimeNanos) {
+        if (tokensInheritanceStrategy == TokensInheritanceStrategy.RESET) {
+            return new BucketState64BitsInteger(newConfiguration, currentTimeNanos);
+        }
+
+        boolean nullIdComparisonCanBeApplied = countOfBandwidthsWithNullIdentifiers(previousConfiguration) < 2
+                && countOfBandwidthsWithNullIdentifiers(newConfiguration) < 2;
+
+        Bandwidth[] previousBandwidths = previousConfiguration.getBandwidths();
+        Bandwidth[] newBandwidths = newConfiguration.getBandwidths();
+
+        BucketState64BitsInteger newState = new BucketState64BitsInteger(new long[newBandwidths.length * 3]);
+        for (int newBandwidthIndex = 0; newBandwidthIndex < newBandwidths.length; newBandwidthIndex++) {
+            Bandwidth newBandwidth = newBandwidths[newBandwidthIndex];
+            Bandwidth previousBandwidth = null;
+            int previousBandwidthIndex = -1;
+            if (newBandwidth.getId() != null || nullIdComparisonCanBeApplied) {
+                for (int j = 0; j < previousBandwidths.length; j++) {
+                    if (Objects.equals(newBandwidth.getId(), previousBandwidths[j].getId()) ) {
+                        previousBandwidth = previousBandwidths[j];
+                        previousBandwidthIndex = j;
+                        break;
+                    }
+                }
+            }
+            if (previousBandwidth == null) {
+                newState.setCurrentSize(newBandwidthIndex, calculateInitialTokens(newBandwidth, currentTimeNanos));
+                newState.setLastRefillTimeNanos(newBandwidthIndex, calculateLastRefillTimeNanos(newBandwidth, currentTimeNanos));
+                continue;
+            }
+
+            if (tokensInheritanceStrategy == TokensInheritanceStrategy.AS_IS) {
+                replaceBandwidthAsIs(newState, newBandwidthIndex, newBandwidth, previousBandwidthIndex, previousBandwidth, currentTimeNanos);
+            } else if (tokensInheritanceStrategy == TokensInheritanceStrategy.PROPORTIONALLY) {
+                replaceBandwidthProportional(newState, newBandwidthIndex, newBandwidth, previousBandwidthIndex, previousBandwidth, currentTimeNanos);
+            } else {
+                throw new IllegalStateException("Should never reach there");
+            }
+        }
+        return newState;
+    }
+
+    private void replaceBandwidthAsIs(BucketState64BitsInteger newState, int newBandwidthIndex, Bandwidth newBandwidth,
+                                      int previousBandwidthIndex, Bandwidth previousBandwidth, long currentTimeNanos) {
+        long lastRefillTimeNanos = getLastRefillTimeNanos(previousBandwidthIndex);
+        newState.setLastRefillTimeNanos(newBandwidthIndex, lastRefillTimeNanos);
+
+        if (newBandwidth.isGready() && previousBandwidth.isGready()) {
+            long currentSize = getCurrentSize(previousBandwidthIndex);
+            long newSize = Math.min(newBandwidth.capacity, currentSize);
+            newState.setCurrentSize(newBandwidthIndex, newSize);
+
+            long roundingError = getRoundingError(previousBandwidthIndex);
+            double roundingScale = (double) newBandwidth.refillPeriodNanos / (double) previousBandwidth.refillPeriodNanos;
+            long newRoundingError = (long) roundingScale * roundingError;
+            if (newRoundingError >= newBandwidth.refillPeriodNanos) {
+                newRoundingError = newBandwidth.refillPeriodNanos - 1;
+            }
+            newState.setRoundingError(newBandwidthIndex, newRoundingError);
+            return;
+        }
+
+        long currentSize = getCurrentSize(previousBandwidthIndex);
+        long newSize = Math.min(newBandwidth.capacity, currentSize);
+        newState.setCurrentSize(newBandwidthIndex, newSize);
+    }
+
+    private void replaceBandwidthProportional(BucketState64BitsInteger newState, int newBandwidthIndex, Bandwidth newBandwidth, int previousBandwidthIndex, Bandwidth previousBandwidth, long currentTimeNanos) {
+        newState.setLastRefillTimeNanos(newBandwidthIndex, getLastRefillTimeNanos(previousBandwidthIndex));
+        long currentSize = getCurrentSize(previousBandwidthIndex);
+        long roundingError = getRoundingError(previousBandwidthIndex);
+        double realRoundedError = (double) roundingError / (double) previousBandwidth.refillPeriodNanos;
+        double scale = (double) newBandwidth.capacity / (double) previousBandwidth.capacity;
+        double realNewSize = ((double) currentSize + realRoundedError) * scale;
+        long newSize = (long) realNewSize;
+
+        if (newSize >= newBandwidth.capacity) {
+            newState.setCurrentSize(newBandwidthIndex, newBandwidth.capacity);
+            return;
+        }
+        if (newSize == Long.MIN_VALUE) {
+            newState.setCurrentSize(newBandwidthIndex, Long.MIN_VALUE);
+            return;
+        }
+
+        double restOfDivision = realNewSize - newSize;
+        if (restOfDivision > 1.0d || restOfDivision < - 1.0d) {
+            restOfDivision = realNewSize % 1;
+        }
+        if (restOfDivision == 0.0d) {
+            newState.setCurrentSize(newBandwidthIndex, newSize);
+            return;
+        }
+
+        if (realNewSize < 0) {
+            newSize--;
+            restOfDivision = restOfDivision + 1;
+        }
+        newState.setCurrentSize(newBandwidthIndex, newSize);
+        if (newBandwidth.isGready()) {
+            long newRoundingError = (long) (restOfDivision * newBandwidth.refillPeriodNanos);
+            newState.setRoundingError(newBandwidthIndex, newRoundingError);
+        }
+    }
+
+    private int countOfBandwidthsWithNullIdentifiers(BucketConfiguration configuration) {
+        Bandwidth[] bandwidths = configuration.getBandwidths();
+        int count = 0;
+        for (int i = 0; i < bandwidths.length; i++) {
+            if (bandwidths[i].getId() == null) {
+                count++;
+            }
+        }
+        return count;
     }
 
     @Override

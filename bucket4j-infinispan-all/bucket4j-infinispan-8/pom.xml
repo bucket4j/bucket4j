@@ -8,8 +8,8 @@
     <parent>
         <groupId>com.github.vladimir-bukhtoyarov</groupId>
         <artifactId>bucket4j-infinispan-all</artifactId>
-        <relativePath>../../bucket4j-infinispan-all</relativePath>
         <version>7.0.0-beta-2020-01-19</version>
+        <relativePath>../../bucket4j-infinispan-all</relativePath>
     </parent>
     
     <artifactId>bucket4j-infinispan-8</artifactId>

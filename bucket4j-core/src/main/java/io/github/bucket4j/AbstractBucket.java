@@ -19,16 +19,12 @@
  */
 package io.github.bucket4j;
 
-import io.github.bucket4j.distributed.remote.commands.ReserveAndCalculateTimeToSleepCommand;
-
-import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 import static io.github.bucket4j.LimitChecker.*;
-import static io.github.bucket4j.LimitChecker.INFINITY_DURATION;
 
 public abstract class AbstractBucket implements Bucket, BlockingBucket, ScheduledBucket {
 
@@ -47,7 +43,7 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket, Schedule
 
     protected abstract void addTokensImpl(long tokensToAdd);
 
-    protected abstract BucketConfiguration replaceConfigurationImpl(BucketConfiguration newConfiguration);
+    protected abstract void replaceConfigurationImpl(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy);
 
     protected abstract long consumeIgnoringRateLimitsImpl(long tokensToConsume);
 
@@ -63,7 +59,7 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket, Schedule
 
     protected abstract VerboseResult<Nothing> addTokensVerboseImpl(long tokensToAdd);
 
-    protected abstract VerboseResult<BucketConfiguration> replaceConfigurationVerboseImpl(BucketConfiguration newConfiguration);
+    protected abstract VerboseResult<Nothing> replaceConfigurationVerboseImpl(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy);
 
     protected abstract VerboseResult<Long> consumeIgnoringRateLimitsVerboseImpl(long tokensToConsume);
 
@@ -158,16 +154,11 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket, Schedule
         }
 
         @Override
-        public VerboseResult<Nothing> replaceConfiguration(BucketConfiguration newConfiguration) {
+        public VerboseResult<Nothing> replaceConfiguration(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy) {
             checkConfiguration(newConfiguration);
-            VerboseResult<BucketConfiguration> result = replaceConfigurationVerboseImpl(newConfiguration);
+            checkMigrationMode(tokensInheritanceStrategy);
 
-            return result.map(conflictingConfiguration -> {
-                if (conflictingConfiguration != null) {
-                    throw new IncompatibleConfigurationException(conflictingConfiguration, newConfiguration);
-                }
-                return Nothing.INSTANCE;
-            });
+            return replaceConfigurationVerboseImpl(newConfiguration, tokensInheritanceStrategy);
         }
     };
 
@@ -339,12 +330,10 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket, Schedule
     }
 
     @Override
-    public void replaceConfiguration(BucketConfiguration newConfiguration) {
+    public void replaceConfiguration(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy) {
         checkConfiguration(newConfiguration);
-        BucketConfiguration conflictingConfiguration = replaceConfigurationImpl(newConfiguration);
-        if (conflictingConfiguration != null) {
-            throw new IncompatibleConfigurationException(conflictingConfiguration, newConfiguration);
-        }
+        checkMigrationMode(tokensInheritanceStrategy);
+        replaceConfigurationImpl(newConfiguration, tokensInheritanceStrategy);
     }
 
     @Override
@@ -419,6 +408,11 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket, Schedule
         CompletableFuture<T> fail = new CompletableFuture<>();
         fail.completeExceptionally(t);
         return fail;
+    }
+    private void checkMigrationMode(TokensInheritanceStrategy tokensInheritanceStrategy) {
+        if (tokensInheritanceStrategy == null) {
+            throw BucketExceptions.nullTokensInheritanceStrategy();
+        }
     }
 
 }

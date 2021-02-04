@@ -29,6 +29,9 @@ public interface BucketState {
 
     BucketState copy();
 
+    BucketState replaceConfiguration(BucketConfiguration previousConfiguration, BucketConfiguration newConfiguration,
+                                     TokensInheritanceStrategy tokensInheritanceStrategy, long currentTimeNanos);
+
     void copyStateFrom(BucketState sourceState);
 
     long getAvailableTokens(Bandwidth[] bandwidths);
@@ -82,6 +85,5 @@ public interface BucketState {
                 throw new IOException("Unknown mathType=" + state.getMathType());
         }
     }
-
 
 }

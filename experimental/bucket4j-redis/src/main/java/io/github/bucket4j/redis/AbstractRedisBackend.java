@@ -39,9 +39,7 @@ package io.github.bucket4j.redis;
 import io.github.bucket4j.distributed.proxy.AbstractBackend;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.remote.CommandResult;
-import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.remote.Request;
-import io.github.bucket4j.distributed.versioning.Version;
 
 import java.util.concurrent.CompletableFuture;
 

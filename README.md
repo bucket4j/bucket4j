@@ -16,7 +16,7 @@ Just use your favorite grid including [Hazelcast](http://hazelcast.com/products/
 * Ability to specify multiple bandwidths per bucket. For example you can limit 1000 events per hours but not often then 100 events per minute.
 * Both synchronous and asynchronous API.
 * Pluggable listener API that allows to implement monitoring and logging.
-* Ability to use bucket as as scheduler, [see examples](https://github.com/vladimir-bukhtoyarov/bucket4j/blob/4.0/doc-pages/basic-usage.md#example-2---using-bucket-as-scheduler).
+* Ability to use bucket as a scheduler, [see examples](https://github.com/vladimir-bukhtoyarov/bucket4j/blob/4.0/doc-pages/basic-usage.md#example-2---using-bucket-as-scheduler).
 
 ## Supported back-ends
 As mentioned above in addition to local in-memory buckets, the Bucket4j supports clustered usage scenario on top of following back-ends:
@@ -61,13 +61,12 @@ As mentioned above in addition to local in-memory buckets, the Bucket4j supports
 
 ## Get Bucket4j library
 #### You can add Bucket4j to your project as maven dependency
-The Bucket4j is distributed through both [JCenter](https://bintray.com/bintray/jcenter) and [Maven Central](http://search.maven.org/),
-use any of them:
+The Bucket4j is distributed through [Maven Central](http://search.maven.org/):
 ```xml
 <dependency>
     <groupId>com.github.vladimir-bukhtoyarov</groupId>
     <artifactId>bucket4j-core</artifactId>
-    <version>5.0.0</version>
+    <version>7.0.0</version>
 </dependency>
 ``` 
 #### You can build Bucket4j from sources
@@ -77,22 +76,12 @@ cd bucket4j
 mvn clean install
 ```
 
+## Have a question?
+Feel free to ask via:
+* [Bucket4j discussions](https://github.com/vladimir-bukhtoyarov/bucket4j/discussions) for questions, feature proposals, sharing of experience.
+* [Bucket4j issue tracker](https://github.com/vladimir-bukhtoyarov/bucket4j/issues/new) to report a bug.
+* [Vladimir Bukhtoyarov - Upwork Profile](https://www.upwork.com/freelancers/~013d8e02a32ffdd5f5) if you want to get one time paid support. 
+
 ## License
 Copyright 2015-2020 Vladimir Bukhtoyarov
 Licensed under the Apache Software License, Version 2.0: <http://www.apache.org/licenses/LICENSE-2.0>.
-
-## Have a question?
-Feel free to ask in:
-* Gitter chat [https://gitter.im/vladimir-bukhtoyarov/bucket4j](https://gitter.im/vladimir-bukhtoyarov/bucket4j) 
-* Github issue tracker [https://github.com/vladimir-bukhtoyarov/bucket4j/issues/new](https://github.com/vladimir-bukhtoyarov/bucket4j/issues/new)
-
-## Have a sensitive question?
-If any information in the question should not be made publicly available, then try to contact with author via:
-* Twitter private message [https://twitter.com/monitoring_king](https://twitter.com/monitoring_king)
-* Linkedin private message [https://www.linkedin.com/in/vladimir-bukhtoyarov-a2385224](https://www.linkedin.com/in/vladimir-bukhtoyarov-a2385224)
-
-## Who use Bucket4j?
-![Ringcentral](/doc-pages/images/ringcentral.png "Ringcentral")
-![JHipster](/doc-pages/images/jhipster.png "JHipster")
-![Opentable](/doc-pages/images/opentable.png "Opentable")
-![Apereo CAS](/doc-pages/images/apereo_cas.jpg "Apereo CAS")

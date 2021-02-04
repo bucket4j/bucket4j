@@ -35,4 +35,6 @@ public interface SerializationAdapter<T> {
 
     void writeDoubleArray(T target, double[] value) throws IOException;
 
+    void writeString(T target, String value) throws IOException;
+
 }

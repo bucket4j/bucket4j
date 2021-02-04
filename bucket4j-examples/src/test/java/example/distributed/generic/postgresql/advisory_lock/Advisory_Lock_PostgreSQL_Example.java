@@ -23,7 +23,6 @@ import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
-import org.jetbrains.annotations.NotNull;
 import org.testcontainers.containers.PostgreSQLContainer;
 
 import javax.sql.DataSource;
@@ -77,7 +76,6 @@ public class Advisory_Lock_PostgreSQL_Example {
         }
     }
 
-    @NotNull
     private static DataSource createJdbcDataSource(PostgreSQLContainer container) {
         HikariConfig hikariConfig = new HikariConfig();
         hikariConfig.setJdbcUrl(container.getJdbcUrl());
@@ -88,7 +86,6 @@ public class Advisory_Lock_PostgreSQL_Example {
         return new HikariDataSource(hikariConfig);
     }
 
-    @NotNull
     private static PostgreSQLContainer startPostgreSQLContainer() {
         PostgreSQLContainer container = new PostgreSQLContainer();
         container.start();

@@ -85,6 +85,11 @@ public class LuaStateProxy implements BucketState {
     }
 
     @Override
+    public BucketState replaceConfiguration(BucketConfiguration previousConfiguration, BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy, long currentTimeNanos) {
+        return null;
+    }
+
+    @Override
     public void copyStateFrom(BucketState sourceState) {
         throw new UnsupportedOperationException("is not needed for testing");
     }

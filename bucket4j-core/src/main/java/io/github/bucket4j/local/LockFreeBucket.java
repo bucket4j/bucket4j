@@ -230,19 +230,17 @@ public class LockFreeBucket extends LockFreeBucket_FinalFields_CacheLinePadding 
     }
 
     @Override
-    protected BucketConfiguration replaceConfigurationImpl(BucketConfiguration newConfiguration) {
+    protected void replaceConfigurationImpl(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy) {
         StateWithConfiguration previousState = stateRef.get();
         StateWithConfiguration newState = previousState.copy();
         long currentTimeNanos = timeMeter.currentTimeNanos();
 
         while (true) {
-            if (!previousState.configuration.isCompatible(newConfiguration)) {
-                return previousState.configuration;
-            }
             newState.refillAllBandwidth(currentTimeNanos);
             newState.configuration = newConfiguration;
+            newState.state = newState.state.replaceConfiguration(previousState.configuration, newConfiguration, tokensInheritanceStrategy, currentTimeNanos);
             if (stateRef.compareAndSet(previousState, newState)) {
-                return null;
+                return;
             } else {
                 previousState = stateRef.get();
                 newState.copyStateFrom(previousState);
@@ -390,17 +388,15 @@ public class LockFreeBucket extends LockFreeBucket_FinalFields_CacheLinePadding 
     }
 
     @Override
-    protected VerboseResult<BucketConfiguration> replaceConfigurationVerboseImpl(BucketConfiguration newConfiguration) {
+    protected VerboseResult<Nothing> replaceConfigurationVerboseImpl(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy) {
         StateWithConfiguration previousState = stateRef.get();
         StateWithConfiguration newState = previousState.copy();
         long currentTimeNanos = timeMeter.currentTimeNanos();
 
         while (true) {
-            if (!previousState.configuration.isCompatible(newConfiguration)) {
-                return new VerboseResult<>(currentTimeNanos, null, previousState.configuration, newState.state.copy());
-            }
             newState.refillAllBandwidth(currentTimeNanos);
             newState.configuration = newConfiguration;
+            newState.state = newState.state.replaceConfiguration(previousState.configuration, newConfiguration, tokensInheritanceStrategy, currentTimeNanos);
             if (stateRef.compareAndSet(previousState, newState)) {
                 return new VerboseResult<>(currentTimeNanos, null, newState.configuration, newState.state.copy());
             } else {
@@ -494,6 +490,7 @@ public class LockFreeBucket extends LockFreeBucket_FinalFields_CacheLinePadding 
         long delayNanosAfterWillBePossibleToConsume(long tokensToConsume, long currentTimeNanos) {
             return state.calculateDelayNanosAfterWillBePossibleToConsume(configuration.getBandwidths(), tokensToConsume, currentTimeNanos);
         }
+
     }
 
     private static StateWithConfiguration createStateWithConfiguration(BucketConfiguration configuration, MathType mathType, TimeMeter timeMeter) {

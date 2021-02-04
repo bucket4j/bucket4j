@@ -97,8 +97,8 @@ public class DefaultBucketProxy extends AbstractBucket implements BucketProxy {
     }
 
     @Override
-    protected BucketConfiguration replaceConfigurationImpl(BucketConfiguration newConfiguration) {
-        return execute(new ReplaceConfigurationOrReturnPreviousCommand(newConfiguration));
+    protected void replaceConfigurationImpl(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy) {
+        execute(new ReplaceConfigurationCommand(newConfiguration, tokensInheritanceStrategy));
     }
 
     @Override
@@ -154,8 +154,8 @@ public class DefaultBucketProxy extends AbstractBucket implements BucketProxy {
     }
 
     @Override
-    protected VerboseResult<BucketConfiguration> replaceConfigurationVerboseImpl(BucketConfiguration newConfiguration) {
-        ReplaceConfigurationOrReturnPreviousCommand replaceConfigCommand = new ReplaceConfigurationOrReturnPreviousCommand(newConfiguration);
+    protected VerboseResult<Nothing> replaceConfigurationVerboseImpl(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy) {
+        ReplaceConfigurationCommand replaceConfigCommand = new ReplaceConfigurationCommand(newConfiguration, tokensInheritanceStrategy);
         return execute(replaceConfigCommand.asVerbose()).asLocal();
     }
 

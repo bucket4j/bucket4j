@@ -21,6 +21,8 @@
 package io.github.bucket4j.distributed.remote.commands;
 
 import io.github.bucket4j.BucketConfiguration;
+import io.github.bucket4j.Nothing;
+import io.github.bucket4j.TokensInheritanceStrategy;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.MutableBucketEntry;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
@@ -37,25 +39,28 @@ import java.io.IOException;
 import static io.github.bucket4j.distributed.versioning.Versions.v_5_0_0;
 
 
-public class ReplaceConfigurationOrReturnPreviousCommand implements RemoteCommand<BucketConfiguration>, ComparableByContent<ReplaceConfigurationOrReturnPreviousCommand> {
+public class ReplaceConfigurationCommand implements RemoteCommand<Nothing>, ComparableByContent<ReplaceConfigurationCommand> {
 
-    private BucketConfiguration newConfiguration;
+    private final TokensInheritanceStrategy tokensInheritanceStrategy;
+    private final BucketConfiguration newConfiguration;
 
-    public static final SerializationHandle<ReplaceConfigurationOrReturnPreviousCommand> SERIALIZATION_HANDLE = new SerializationHandle<ReplaceConfigurationOrReturnPreviousCommand>() {
+    public static final SerializationHandle<ReplaceConfigurationCommand> SERIALIZATION_HANDLE = new SerializationHandle<ReplaceConfigurationCommand>() {
         @Override
-        public <S> ReplaceConfigurationOrReturnPreviousCommand deserialize(DeserializationAdapter<S> adapter, S input, Version backwardCompatibilityVersion) throws IOException {
+        public <S> ReplaceConfigurationCommand deserialize(DeserializationAdapter<S> adapter, S input, Version backwardCompatibilityVersion) throws IOException {
             int formatNumber = adapter.readInt(input);
             Versions.check(formatNumber, v_5_0_0, v_5_0_0);
 
             BucketConfiguration newConfiguration = BucketConfiguration.SERIALIZATION_HANDLE.deserialize(adapter, input, backwardCompatibilityVersion);
-            return new ReplaceConfigurationOrReturnPreviousCommand(newConfiguration);
+            TokensInheritanceStrategy tokensInheritanceStrategy = TokensInheritanceStrategy.getById(adapter.readByte(input));
+            return new ReplaceConfigurationCommand(newConfiguration, tokensInheritanceStrategy);
         }
 
         @Override
-        public <O> void serialize(SerializationAdapter<O> adapter, O output, ReplaceConfigurationOrReturnPreviousCommand command, Version backwardCompatibilityVersion) throws IOException {
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, ReplaceConfigurationCommand command, Version backwardCompatibilityVersion) throws IOException {
             adapter.writeInt(output, v_5_0_0.getNumber());
 
             BucketConfiguration.SERIALIZATION_HANDLE.serialize(adapter, output, command.newConfiguration, backwardCompatibilityVersion);
+            adapter.writeByte(output, command.tokensInheritanceStrategy.getId());
         }
 
         @Override
@@ -64,28 +69,26 @@ public class ReplaceConfigurationOrReturnPreviousCommand implements RemoteComman
         }
 
         @Override
-        public Class<ReplaceConfigurationOrReturnPreviousCommand> getSerializedType() {
-            return ReplaceConfigurationOrReturnPreviousCommand.class;
+        public Class<ReplaceConfigurationCommand> getSerializedType() {
+            return ReplaceConfigurationCommand.class;
         }
 
     };
 
-    public ReplaceConfigurationOrReturnPreviousCommand(BucketConfiguration newConfiguration) {
+    public ReplaceConfigurationCommand(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy) {
         this.newConfiguration = newConfiguration;
+        this.tokensInheritanceStrategy = tokensInheritanceStrategy;
     }
 
     @Override
-    public CommandResult<BucketConfiguration> execute(MutableBucketEntry mutableEntry, long currentTimeNanos) {
+    public CommandResult<Nothing> execute(MutableBucketEntry mutableEntry, long currentTimeNanos) {
         if (!mutableEntry.exists()) {
             return CommandResult.bucketNotFound();
         }
 
         RemoteBucketState state = mutableEntry.get();
         state.refillAllBandwidth(currentTimeNanos);
-        BucketConfiguration previousConfiguration = state.replaceConfigurationOrReturnPrevious(newConfiguration);
-        if (previousConfiguration != null) {
-            return CommandResult.success(previousConfiguration, BucketConfiguration.SERIALIZATION_HANDLE);
-        }
+        state.replaceConfiguration(newConfiguration, tokensInheritanceStrategy, currentTimeNanos);
         mutableEntry.set(state);
         return CommandResult.empty();
     }
@@ -94,14 +97,19 @@ public class ReplaceConfigurationOrReturnPreviousCommand implements RemoteComman
         return newConfiguration;
     }
 
+    public TokensInheritanceStrategy getTokensInheritanceStrategy() {
+        return tokensInheritanceStrategy;
+    }
+
     @Override
     public SerializationHandle getSerializationHandle() {
         return SERIALIZATION_HANDLE;
     }
 
     @Override
-    public boolean equalsByContent(ReplaceConfigurationOrReturnPreviousCommand other) {
-        return ComparableByContent.equals(newConfiguration, other.newConfiguration);
+    public boolean equalsByContent(ReplaceConfigurationCommand other) {
+        return ComparableByContent.equals(newConfiguration, other.newConfiguration) &&
+                tokensInheritanceStrategy == other.tokensInheritanceStrategy;
     }
 
     @Override
@@ -115,7 +123,7 @@ public class ReplaceConfigurationOrReturnPreviousCommand implements RemoteComman
     }
 
     @Override
-    public long getConsumedTokens(BucketConfiguration result) {
+    public long getConsumedTokens(Nothing result) {
         return 0;
     }
 

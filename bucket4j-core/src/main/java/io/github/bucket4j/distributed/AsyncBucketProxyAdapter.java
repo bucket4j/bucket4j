@@ -68,8 +68,8 @@ public class AsyncBucketProxyAdapter implements AsyncBucketProxy {
         }
 
         @Override
-        public CompletableFuture<VerboseResult<Nothing>> replaceConfiguration(BucketConfiguration newConfiguration) {
-            return completedFuture(() -> target.asVerbose().replaceConfiguration(newConfiguration));
+        public CompletableFuture<VerboseResult<Nothing>> replaceConfiguration(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy) {
+            return completedFuture(() -> target.asVerbose().replaceConfiguration(newConfiguration, tokensInheritanceStrategy));
         }
     };
 
@@ -126,9 +126,9 @@ public class AsyncBucketProxyAdapter implements AsyncBucketProxy {
     }
 
     @Override
-    public CompletableFuture<Void> replaceConfiguration(BucketConfiguration newConfiguration) {
+    public CompletableFuture<Void> replaceConfiguration(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy) {
         return completedFuture(() -> {
-            target.replaceConfiguration(newConfiguration);
+            target.replaceConfiguration(newConfiguration, tokensInheritanceStrategy);
             return null;
         });
     }

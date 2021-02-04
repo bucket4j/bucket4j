@@ -58,7 +58,7 @@ public interface SerializationHandle<T> {
             EstimateAbilityToConsumeCommand.SERIALIZATION_HANDLE, // 28
             TryConsumeCommand.SERIALIZATION_HANDLE, // 29
             TryConsumeAndReturnRemainingTokensCommand.SERIALIZATION_HANDLE, // 30
-            ReplaceConfigurationOrReturnPreviousCommand.SERIALIZATION_HANDLE, // 32
+            ReplaceConfigurationCommand.SERIALIZATION_HANDLE, // 32
             GetConfigurationCommand.SERIALIZATION_HANDLE, // 33
             ConsumeIgnoringRateLimitsCommand.SERIALIZATION_HANDLE, // 34
             VerboseCommand.SERIALIZATION_HANDLE, // 35

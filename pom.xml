@@ -25,14 +25,15 @@
         <module>bucket4j-infinispan-all</module>
         <module>bucket4j-hazelcast-all</module>
         <module>bucket4j-coherence</module>
-        <module>bucket4j-dynamodb-sdk-v1</module>
         <module>experimental</module>
         <module>bucket4j-benchmarks</module>
         <module>bucket4j-examples</module>
         <module>lincheck-tests</module>
+        <module>bucket4j-dynamodb-sdk-v1</module>
     </modules>
 
     <properties>
+        <skipNexusStagingDeployMojo>true</skipNexusStagingDeployMojo>
         <maven.deploy.skip>true</maven.deploy.skip>
         <enforcer.skip>true</enforcer.skip>
     </properties>

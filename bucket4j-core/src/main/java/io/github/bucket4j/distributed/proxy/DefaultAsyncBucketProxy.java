@@ -164,16 +164,10 @@ public class DefaultAsyncBucketProxy implements AsyncBucketProxy, ScheduledBucke
         }
 
         @Override
-        public CompletableFuture<VerboseResult<Nothing>> replaceConfiguration(BucketConfiguration newConfiguration) {
+        public CompletableFuture<VerboseResult<Nothing>> replaceConfiguration(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy) {
             checkConfiguration(newConfiguration);
-            VerboseCommand<BucketConfiguration> command = new VerboseCommand<>(new ReplaceConfigurationOrReturnPreviousCommand(newConfiguration));
-            CompletableFuture<VerboseResult<BucketConfiguration>> resultFuture = execute(command).thenApply(RemoteVerboseResult::asLocal);
-            return resultFuture.thenApply(result -> result.map(conflictingConfiguration -> {
-                if (conflictingConfiguration != null) {
-                    throw new IncompatibleConfigurationException(conflictingConfiguration, newConfiguration);
-                }
-                return Nothing.INSTANCE;
-            }));
+            VerboseCommand<Nothing> command = new VerboseCommand<>(new ReplaceConfigurationCommand(newConfiguration, tokensInheritanceStrategy));
+            return execute(command).thenApply(RemoteVerboseResult::asLocal);
         }
     };
 
@@ -314,19 +308,11 @@ public class DefaultAsyncBucketProxy implements AsyncBucketProxy, ScheduledBucke
     }
 
     @Override
-    public CompletableFuture<Void> replaceConfiguration(BucketConfiguration newConfiguration) {
+    public CompletableFuture<Void> replaceConfiguration(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy) {
         checkConfiguration(newConfiguration);
-        ReplaceConfigurationOrReturnPreviousCommand replaceConfigCommand = new ReplaceConfigurationOrReturnPreviousCommand(newConfiguration);
-        CompletableFuture<BucketConfiguration> result = execute(replaceConfigCommand);
-        return result.thenCompose(previousConfiguration -> {
-            if (previousConfiguration == null) {
-                return CompletableFuture.completedFuture(null);
-            } else {
-                CompletableFuture<Void> future = new CompletableFuture<>();
-                future.completeExceptionally(new IncompatibleConfigurationException(previousConfiguration, newConfiguration));
-                return future;
-            }
-        });
+        ReplaceConfigurationCommand replaceConfigCommand = new ReplaceConfigurationCommand(newConfiguration, tokensInheritanceStrategy);
+        CompletableFuture<Nothing> result = execute(replaceConfigCommand);
+        return result.thenApply(nothing -> null);
     }
 
     @Override

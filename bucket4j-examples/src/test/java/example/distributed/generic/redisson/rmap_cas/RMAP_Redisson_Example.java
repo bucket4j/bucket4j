@@ -21,7 +21,6 @@ import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
-import org.jetbrains.annotations.NotNull;
 import org.redisson.Redisson;
 import org.redisson.api.RMap;
 import org.redisson.api.RedissonClient;
@@ -80,7 +79,6 @@ public class RMAP_Redisson_Example {
         }
     }
 
-    @NotNull
     private static RedissonClient createRedissonClient(GenericContainer container) {
         String redisAddress = container.getContainerIpAddress();
         Integer redisPort = container.getMappedPort(6379);
@@ -93,7 +91,6 @@ public class RMAP_Redisson_Example {
         return Redisson.create(config);
     }
 
-    @NotNull
     private static GenericContainer startRedisContainer() {
         GenericContainer genericContainer = new GenericContainer("redis:4.0.11")
                 .withExposedPorts(6379);

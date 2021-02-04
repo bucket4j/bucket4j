@@ -53,6 +53,12 @@ public abstract class AbstractSerializationTest {
         testSerialization(bandwidth);
     }
 
+    @Test
+    public void serializeBandwidthWithId() throws IOException {
+        Bandwidth bandwidth = classic(40, intervallyAligned(300, Duration.ofSeconds(4200), Instant.now(), true))
+                .withId("123");
+        testSerialization(bandwidth);
+    }
 
     @Test
     public void serializeBucketConfiguration_withSingleBandwidth() throws IOException {
@@ -264,7 +270,8 @@ public abstract class AbstractSerializationTest {
 
         testSerialization(new TryConsumeAndReturnRemainingTokensCommand(11));
 
-        testSerialization(new ReplaceConfigurationOrReturnPreviousCommand(configuration));
+        testSerialization(new ReplaceConfigurationCommand(configuration, TokensInheritanceStrategy.PROPORTIONALLY));
+        testSerialization(new ReplaceConfigurationCommand(configuration, TokensInheritanceStrategy.RESET));
 
         testSerialization(new GetConfigurationCommand());
 
@@ -272,7 +279,7 @@ public abstract class AbstractSerializationTest {
 
         testSerialization(new VerboseCommand<>(new ConsumeIgnoringRateLimitsCommand(100)));
         testSerialization(new VerboseCommand<>(new GetAvailableTokensCommand()));
-        testSerialization(new VerboseCommand<>(new ReplaceConfigurationOrReturnPreviousCommand(configuration)));
+        testSerialization(new VerboseCommand<>(new ReplaceConfigurationCommand(configuration, TokensInheritanceStrategy.AS_IS)));
         testSerialization(new SyncCommand(20, 10000000));
     }
 

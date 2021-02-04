@@ -18,8 +18,4 @@
         <module>bucket4j-hazelcast-3</module>
     </modules>
 
-    <properties>
-        <maven.deploy.skip>true</maven.deploy.skip>
-    </properties>
-
 </project>
