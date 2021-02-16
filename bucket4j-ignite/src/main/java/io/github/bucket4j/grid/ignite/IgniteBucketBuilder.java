@@ -26,6 +26,7 @@ import io.github.bucket4j.grid.GridBucket;
 import io.github.bucket4j.grid.GridBucketState;
 import io.github.bucket4j.grid.RecoveryStrategy;
 import org.apache.ignite.IgniteCache;
+import org.apache.ignite.client.ClientCache;
 
 import javax.cache.Cache;
 import java.io.Serializable;
@@ -48,7 +49,7 @@ public class IgniteBucketBuilder extends AbstractBucketBuilder<IgniteBucketBuild
     }
 
     /**
-     * Constructs an instance of {@link GridBucket} which state actually stored inside in-memory data-grid,
+     * Constructs an instance of {@link GridBucket} which state actually stored inside in-memory data-grid using Apache Ignite node,
      * semantic of this method is fully equals to {@link io.github.bucket4j.grid.jcache.JCacheBucketBuilder#build(Cache, Serializable, RecoveryStrategy)}
      *
      * @return new distributed bucket
@@ -56,6 +57,18 @@ public class IgniteBucketBuilder extends AbstractBucketBuilder<IgniteBucketBuild
     public <K extends Serializable> Bucket build(IgniteCache<K, GridBucketState> cache, K key, RecoveryStrategy recoveryStrategy) {
         BucketConfiguration configuration = buildConfiguration();
         IgniteProxy<K> gridProxy = new IgniteProxy<>(cache);
+        return GridBucket.createInitializedBucket(key, configuration, gridProxy, recoveryStrategy);
+    }
+
+    /**
+     * Constructs an instance of {@link GridBucket} which state actually stored inside in-memory data-grid using Apache Ignite thin client,
+     * semantic of this method is fully equals to {@link io.github.bucket4j.grid.jcache.JCacheBucketBuilder#build(Cache, Serializable, RecoveryStrategy)}
+     *
+     * @return new distributed bucket
+     */
+    public <K extends Serializable> Bucket build(ClientCache<K, GridBucketState> cache, K key, RecoveryStrategy recoveryStrategy) {
+        BucketConfiguration configuration = buildConfiguration();
+        IgniteClientProxy<K> gridProxy = new IgniteClientProxy<>(cache);
         return GridBucket.createInitializedBucket(key, configuration, gridProxy, recoveryStrategy);
     }
 
