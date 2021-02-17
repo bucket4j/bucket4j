@@ -84,6 +84,7 @@ public class ConsumeIgnoringRateLimitsCommand implements GridCommand<Long> {
         long nanosToCloseDeficit = state.calculateDelayNanosAfterWillBePossibleToConsume(tokensToConsume, currentTimeNanos);
 
         if (nanosToCloseDeficit == Long.MAX_VALUE) {
+            bucketStateModified = false;
             return Long.MAX_VALUE;
         }
         state.consume(tokensToConsume);
