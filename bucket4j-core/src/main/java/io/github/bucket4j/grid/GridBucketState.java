@@ -108,5 +108,14 @@ public class GridBucketState implements Serializable {
     public BucketState getState() {
         return state;
     }
+    
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("GridBucketState{");
+        sb.append("configuration=").append(configuration);
+        sb.append(", state=").append(state);
+        sb.append('}');
+        return sb.toString();
+    }
 
 }
