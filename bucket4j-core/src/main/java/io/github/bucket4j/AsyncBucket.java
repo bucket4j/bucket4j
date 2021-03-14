@@ -245,6 +245,39 @@ public interface AsyncBucket {
     CompletableFuture<Void> addTokens(long tokensToAdd);
 
     /**
+     * Asynchronous version of {@link Bucket#forceAddTokens(long)}, follows the same semantic.
+     *
+     * <p>
+     * <strong>The algorithm for distribute buckets is following:</strong>
+     * <ul>
+     *     <li>Implementation issues asynchronous request to back-end behind the bucket in way which specific for each particular back-end.</li>
+     *     <li>Then uncompleted future returned to the caller.</li>
+     *     <li>When back-end provides signal(through callback) that request is done, then future completed.</li>
+     *     <li>If back-end provides signal(through callback) that asynchronous request failed, then future completed exceptionally.</li>
+     * </ul>
+     * It is strongly not recommended to do any heavy work in thread which completes the future,
+     * because typically this will be a back-end thread which handles NIO selectors,
+     * blocking this thread will take negative performance effect to back-end throughput,
+     * so you always should resume control flow in another executor via methods like {@link CompletableFuture#thenApplyAsync(Function, Executor)}.
+     *
+     * <p>
+     * <strong>The algorithm for local buckets is following:</strong>
+     * <ul>
+     *     <li>Implementation just redirects request to synchronous version {@link Bucket#addTokens(long)}</li>
+     *     <li>Then returns feature immediately completed by results from previous step. So using this method for local buckets is useless,
+     *     because there are no differences with synchronous version.</li>
+     * </ul>
+     *
+     * @param tokensToAdd number of tokens to add
+     *
+     * @return the future which eventually will be completed by <tt>null</tt> if operation successfully completed without exception,
+     * otherwise(if any exception happen in asynchronous flow) the future will be completed exceptionally.
+     *
+     * @see Bucket#addTokens(long)
+     */
+    CompletableFuture<Void> forceAddTokens(long tokensToAdd);
+
+    /**
      * Has the same semantic with {@link Bucket#replaceConfiguration(BucketConfiguration, TokensInheritanceStrategy)}
      */
     CompletableFuture<Void> replaceConfiguration(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy);
