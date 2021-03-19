@@ -256,6 +256,20 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
             tokens << [0, -1, -10]
     }
 
+    @Unroll
+    def "Should check that #tokens tokens is not positive to force add"(long tokens) {
+        setup:
+            def bucket = Bucket4j.builder().addLimit(
+                    Bandwidth.simple(VALID_CAPACITY, VALID_PERIOD)
+            ).build()
+        when:
+            bucket.forceAddTokens(tokens)
+        then:
+            thrown(IllegalArgumentException)
+        where:
+            tokens << [0, -1, -10]
+    }
+
     def "Should that scheduler passed to tryConsume is not null"() {
         setup:
             def bucket = Bucket4j.builder().addLimit(

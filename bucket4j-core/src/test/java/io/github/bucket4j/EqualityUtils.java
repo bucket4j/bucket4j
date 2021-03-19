@@ -117,6 +117,10 @@ public class EqualityUtils {
         registerComparator(VerboseCommand.class, (cmd1, cmd2) -> {
             return equals(cmd1.getTargetCommand(), cmd2.getTargetCommand());
         });
+
+        registerComparator(ForceAddTokensCommand.class, (cmd1, cmd2) -> {
+            return equals(cmd1.getTokensToAdd(), cmd2.getTokensToAdd());
+        });
     }
 
     public static <T> void registerComparator(Class<T> clazz, BiFunction<T, T, Boolean> comparator) {

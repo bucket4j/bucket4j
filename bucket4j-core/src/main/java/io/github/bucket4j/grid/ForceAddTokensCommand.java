@@ -48,7 +48,7 @@ public class ForceAddTokensCommand implements GridCommand<Nothing> {
 
         @Override
         public int getTypeId() {
-            return 25;
+            return 26;
         }
 
         @Override
@@ -65,7 +65,7 @@ public class ForceAddTokensCommand implements GridCommand<Nothing> {
     @Override
     public Nothing execute(GridBucketState state, long currentTimeNanos) {
         state.refillAllBandwidth(currentTimeNanos);
-        state.addTokens(tokensToAdd);
+        state.forceAddTokens(tokensToAdd);
         return Nothing.INSTANCE;
     }
 

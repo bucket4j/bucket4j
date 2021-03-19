@@ -290,6 +290,43 @@ class ConfigurationReplacementSpecification extends Specification {
     }
 
     @Unroll
+    def "#bucketType test replace configuration proportionally when capacity overflown"(BucketType bucketType) {
+        expect:
+        for (boolean sync : [true, false]) {
+            for (boolean verbose: [true, false]) {
+                // System.err.println("sync: $sync verbose: $verbose")
+                TimeMeterMock clock = new TimeMeterMock(0)
+                Bucket bucket = bucketType.createBucket(Bucket4j.builder()
+                        .addLimit(Bandwidth.simple(3, Duration.ofNanos(5)).withInitialTokens(0)),
+                        clock
+                )
+                bucket.forceAddTokens(10000000)
+                assert bucket.getAvailableTokens() == 10000000
+
+                BucketConfiguration newConfiguration = Bucket4j.configurationBuilder()
+                        .addLimit(Bandwidth.simple(60, Duration.ofNanos(1000)))
+                        .build()
+                if (sync) {
+                    if (!verbose) {
+                        bucket.replaceConfiguration(newConfiguration, TokensInheritanceStrategy.PROPORTIONALLY)
+                    } else {
+                        bucket.asVerbose().replaceConfiguration(newConfiguration, TokensInheritanceStrategy.PROPORTIONALLY)
+                    }
+                } else {
+                    if (!verbose) {
+                        bucket.asAsync().replaceConfiguration(newConfiguration, TokensInheritanceStrategy.PROPORTIONALLY).get()
+                    } else {
+                        bucket.asAsync().asVerbose().replaceConfiguration(newConfiguration, TokensInheritanceStrategy.PROPORTIONALLY).get()
+                    }
+                }
+                assert bucket.getAvailableTokens() == 60 // because should be just reduced to maximum
+            }
+        }
+        where:
+        bucketType << BucketType.values()
+    }
+
+    @Unroll
     def "#bucketType test replace configuration proportionally from gready refill to gready refill. Case for roundingError propogation"(BucketType bucketType) {
         expect:
         for (boolean sync : [true, false]) {
