@@ -61,7 +61,8 @@ public class Bucket4j {
                 ConsumptionProbe.SERIALIZATION_HANDLE,
                 EstimationProbe.SERIALIZATION_HANDLE,
                 VerboseResult.SERIALIZATION_HANDLE,
-                VerboseCommand.SERIALIZATION_HANDLE
+                VerboseCommand.SERIALIZATION_HANDLE,
+                ForceAddTokensCommand.SERIALIZATION_HANDLE
         );
 
         List<SerializationHandle<?>> allHandles = new ArrayList<>(coreHandles);

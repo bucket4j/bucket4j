@@ -233,6 +233,24 @@ public class LockFreeBucket extends LockFreeBucket_FinalFields_CacheLinePadding 
     }
 
     @Override
+    protected void forceAddTokensImpl(long tokensToAdd) {
+        StateWithConfiguration previousState = stateRef.get();
+        StateWithConfiguration newState = previousState.copy();
+        long currentTimeNanos = timeMeter.currentTimeNanos();
+
+        while (true) {
+            newState.refillAllBandwidth(currentTimeNanos);
+            newState.state.forceAddTokens(newState.configuration.getBandwidths(), tokensToAdd);
+            if (stateRef.compareAndSet(previousState, newState)) {
+                return;
+            } else {
+                previousState = stateRef.get();
+                newState.copyStateFrom(previousState);
+            }
+        }
+    }
+
+    @Override
     protected void replaceConfigurationImpl(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy) {
         StateWithConfiguration previousState = stateRef.get();
         StateWithConfiguration newState = previousState.copy();
@@ -389,6 +407,24 @@ public class LockFreeBucket extends LockFreeBucket_FinalFields_CacheLinePadding 
     }
 
     @Override
+    protected VerboseResult<Nothing> forceAddTokensVerboseImpl(long tokensToAdd) {
+        StateWithConfiguration previousState = stateRef.get();
+        StateWithConfiguration newState = previousState.copy();
+        long currentTimeNanos = timeMeter.currentTimeNanos();
+
+        while (true) {
+            newState.refillAllBandwidth(currentTimeNanos);
+            newState.state.forceAddTokens(newState.configuration.getBandwidths(), tokensToAdd);
+            if (stateRef.compareAndSet(previousState, newState)) {
+                return new VerboseResult<>(currentTimeNanos, Nothing.INSTANCE, newState.configuration, newState.state.copy());
+            } else {
+                previousState = stateRef.get();
+                newState.copyStateFrom(previousState);
+            }
+        }
+    }
+
+    @Override
     protected VerboseResult<Nothing> replaceConfigurationVerboseImpl(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy) {
         StateWithConfiguration previousState = stateRef.get();
         StateWithConfiguration newState = previousState.copy();
@@ -447,6 +483,12 @@ public class LockFreeBucket extends LockFreeBucket_FinalFields_CacheLinePadding 
     @Override
     protected CompletableFuture<Void> addTokensAsyncImpl(long tokensToAdd) {
         addTokensImpl(tokensToAdd);
+        return CompletableFuture.completedFuture(null);
+    }
+
+    @Override
+    protected CompletableFuture<Void> forceAddTokensAsyncImpl(long tokensToAdd) {
+        forceAddTokensImpl(tokensToAdd);
         return CompletableFuture.completedFuture(null);
     }
 
@@ -512,6 +554,12 @@ public class LockFreeBucket extends LockFreeBucket_FinalFields_CacheLinePadding 
     @Override
     protected CompletableFuture<VerboseResult<Nothing>> addTokensVerboseAsyncImpl(long tokensToAdd) {
         VerboseResult<Nothing> result = addTokensVerboseImpl(tokensToAdd);
+        return CompletableFuture.completedFuture(result);
+    }
+
+    @Override
+    protected CompletableFuture<VerboseResult<Nothing>> forceAddTokensVerboseAsyncImpl(long tokensToAdd) {
+        VerboseResult<Nothing> result = forceAddTokensVerboseImpl(tokensToAdd);
         return CompletableFuture.completedFuture(result);
     }
 

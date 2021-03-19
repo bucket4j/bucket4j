@@ -217,6 +217,8 @@ public abstract class AbstractSerializationTest {
 
         testSerialization(new ConsumeIgnoringRateLimitsCommand(100));
 
+        testSerialization(new ForceAddTokensCommand(100));
+
         testSerialization(new VerboseCommand<>(new ConsumeIgnoringRateLimitsCommand(100)));
         testSerialization(new VerboseCommand<>(new GetAvailableTokensCommand()));
         testSerialization(new VerboseCommand<>(new ReplaceConfigurationCommand(configuration, TokensInheritanceStrategy.PROPORTIONALLY)));

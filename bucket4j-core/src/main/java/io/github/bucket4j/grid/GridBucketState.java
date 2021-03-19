@@ -92,6 +92,10 @@ public class GridBucketState implements Serializable {
         state.addTokens(configuration.getBandwidths(), tokensToAdd);
     }
 
+    public void forceAddTokens(long tokensToAdd) {
+        state.forceAddTokens(configuration.getBandwidths(), tokensToAdd);
+    }
+
     public BucketState copyBucketState() {
         return state.copy();
     }

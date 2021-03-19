@@ -40,6 +40,8 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket {
 
     protected abstract void addTokensImpl(long tokensToAdd);
 
+    protected abstract void forceAddTokensImpl(long tokensToAdd);
+
     protected abstract void replaceConfigurationImpl(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy);
 
     protected abstract long consumeIgnoringRateLimitsImpl(long tokensToConsume);
@@ -55,6 +57,8 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket {
     protected abstract VerboseResult<Long> getAvailableTokensVerboseImpl();
 
     protected abstract VerboseResult<Nothing> addTokensVerboseImpl(long tokensToAdd);
+
+    protected abstract VerboseResult<Nothing> forceAddTokensVerboseImpl(long tokensToAdd);
 
     protected abstract VerboseResult<Nothing> replaceConfigurationVerboseImpl(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy);
 
@@ -72,6 +76,8 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket {
 
     protected abstract CompletableFuture<Void> addTokensAsyncImpl(long tokensToAdd);
 
+    protected abstract CompletableFuture<Void> forceAddTokensAsyncImpl(long tokensToAdd);
+
     protected abstract CompletableFuture<Nothing> replaceConfigurationAsyncImpl(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy);
 
     protected abstract CompletableFuture<Long> consumeIgnoringRateLimitsAsyncImpl(long tokensToConsume);
@@ -85,6 +91,8 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket {
     protected abstract CompletableFuture<VerboseResult<EstimationProbe>> estimateAbilityToConsumeVerboseAsyncImpl(long tokensToEstimate);
 
     protected abstract CompletableFuture<VerboseResult<Nothing>> addTokensVerboseAsyncImpl(long tokensToAdd);
+
+    protected abstract CompletableFuture<VerboseResult<Nothing>> forceAddTokensVerboseAsyncImpl(long tokensToAdd);
 
     protected abstract CompletableFuture<VerboseResult<Nothing>> replaceConfigurationVerboseAsyncImpl(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy);
 
@@ -253,6 +261,12 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket {
             return addTokensAsyncImpl(tokensToAdd);
         }
 
+        @Override
+        public CompletableFuture<Void> forceAddTokens(long tokensToAdd) {
+            checkTokensToAdd(tokensToAdd);
+            return forceAddTokensAsyncImpl(tokensToAdd);
+        }
+
     };
 
     private final AsyncVerboseBucket asyncVerboseView = new AsyncVerboseBucket() {
@@ -330,6 +344,12 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket {
         public CompletableFuture<VerboseResult<Nothing>> addTokens(long tokensToAdd) {
             checkTokensToAdd(tokensToAdd);
             return addTokensVerboseAsyncImpl(tokensToAdd);
+        }
+
+        @Override
+        public CompletableFuture<VerboseResult<Nothing>> forceAddTokens(long tokensToAdd) {
+            checkTokensToAdd(tokensToAdd);
+            return forceAddTokensVerboseAsyncImpl(tokensToAdd);
         }
 
         @Override
@@ -420,6 +440,12 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket {
         public VerboseResult<Nothing> addTokens(long tokensToAdd) {
             checkTokensToAdd(tokensToAdd);
             return addTokensVerboseImpl(tokensToAdd);
+        }
+
+        @Override
+        public VerboseResult<Nothing> forceAddTokens(long tokensToAdd) {
+            checkTokensToAdd(tokensToAdd);
+            return forceAddTokensVerboseImpl(tokensToAdd);
         }
 
         @Override
@@ -606,6 +632,12 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket {
     public void addTokens(long tokensToAdd) {
         checkTokensToAdd(tokensToAdd);
         addTokensImpl(tokensToAdd);
+    }
+
+    @Override
+    public void forceAddTokens(long tokensToAdd) {
+        checkTokensToAdd(tokensToAdd);
+        forceAddTokensImpl(tokensToAdd);
     }
 
     @Override

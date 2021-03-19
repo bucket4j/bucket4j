@@ -270,6 +270,19 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket {
     }
 
     @Override
+    protected VerboseResult<Nothing> forceAddTokensVerboseImpl(long tokensToAdd) {
+        long currentTimeNanos = timeMeter.currentTimeNanos();
+        lock.lock();
+        try {
+            state.refillAllBandwidth(bandwidths, currentTimeNanos);
+            state.forceAddTokens(bandwidths, tokensToAdd);
+            return new VerboseResult<>(currentTimeNanos, Nothing.INSTANCE, configuration, state.copy());
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    @Override
     protected VerboseResult<Nothing> replaceConfigurationVerboseImpl(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy) {
         long currentTimeNanos = timeMeter.currentTimeNanos();
         lock.lock();
@@ -315,6 +328,18 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket {
     }
 
     @Override
+    protected void forceAddTokensImpl(long tokensToAdd) {
+        long currentTimeNanos = timeMeter.currentTimeNanos();
+        lock.lock();
+        try {
+            state.refillAllBandwidth(bandwidths, currentTimeNanos);
+            state.forceAddTokens(bandwidths, tokensToAdd);
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    @Override
     public long getAvailableTokens() {
         long currentTimeNanos = timeMeter.currentTimeNanos();
         lock.lock();
@@ -349,6 +374,12 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket {
     @Override
     protected CompletableFuture<Void> addTokensAsyncImpl(long tokensToAdd) {
         addTokensImpl(tokensToAdd);
+        return CompletableFuture.completedFuture(null);
+    }
+
+    @Override
+    protected CompletableFuture<Void> forceAddTokensAsyncImpl(long tokensToAdd) {
+        forceAddTokensImpl(tokensToAdd);
         return CompletableFuture.completedFuture(null);
     }
 
@@ -415,6 +446,12 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket {
     @Override
     protected CompletableFuture<VerboseResult<Nothing>> addTokensVerboseAsyncImpl(long tokensToAdd) {
         VerboseResult<Nothing> result = addTokensVerboseImpl(tokensToAdd);
+        return CompletableFuture.completedFuture(result);
+    }
+
+    @Override
+    protected CompletableFuture<VerboseResult<Nothing>> forceAddTokensVerboseAsyncImpl(long tokensToAdd) {
+        VerboseResult<Nothing> result = forceAddTokensVerboseImpl(tokensToAdd);
         return CompletableFuture.completedFuture(result);
     }
 

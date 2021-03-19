@@ -219,6 +219,12 @@ public class BucketState implements Serializable {
         }
     }
 
+    public void forceAddTokens(Bandwidth[] limits, long tokensToAdd) {
+        for (int i = 0; i < limits.length; i++) {
+            forceAddTokens(i, limits[i], tokensToAdd);
+        }
+    }
+
     private long calculateLastRefillTimeNanos(Bandwidth bandwidth, long currentTimeNanos) {
         if (!bandwidth.isIntervallyAligned()) {
             return currentTimeNanos;
@@ -259,6 +265,11 @@ public class BucketState implements Serializable {
         } else {
             setCurrentSize(bandwidthIndex, newSize);
         }
+    }
+
+    private void forceAddTokens(int i, Bandwidth limit, long tokensToAdd) {
+        // TODO
+        throw new UnsupportedOperationException();
     }
 
     private void refill(int bandwidthIndex, Bandwidth bandwidth, long currentTimeNanos) {

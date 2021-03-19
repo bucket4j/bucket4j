@@ -160,6 +160,12 @@ public class GridBucket<K extends Serializable> extends AbstractBucket {
     }
 
     @Override
+    protected VerboseResult<Nothing> forceAddTokensVerboseImpl(long tokensToAdd) {
+        ForceAddTokensCommand command = new ForceAddTokensCommand(tokensToAdd);
+        return execute(command.asVerbose());
+    }
+
+    @Override
     protected VerboseResult<Nothing> replaceConfigurationVerboseImpl(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy) {
         ReplaceConfigurationCommand replaceConfigCommand = new ReplaceConfigurationCommand(newConfiguration, tokensInheritanceStrategy);
         return execute(replaceConfigCommand.asVerbose());
@@ -183,8 +189,19 @@ public class GridBucket<K extends Serializable> extends AbstractBucket {
     }
 
     @Override
+    protected void forceAddTokensImpl(long tokensToAdd) {
+        execute(new ForceAddTokensCommand(tokensToAdd));
+    }
+
+    @Override
     protected CompletableFuture<Void> addTokensAsyncImpl(long tokensToAdd) {
         CompletableFuture<Nothing> future = executeAsync(new AddTokensCommand(tokensToAdd));
+        return future.thenApply(nothing -> null);
+    }
+
+    @Override
+    protected CompletableFuture<Void> forceAddTokensAsyncImpl(long tokensToAdd) {
+        CompletableFuture<Nothing> future = executeAsync(new ForceAddTokensCommand(tokensToAdd));
         return future.thenApply(nothing -> null);
     }
 
@@ -233,6 +250,12 @@ public class GridBucket<K extends Serializable> extends AbstractBucket {
     @Override
     protected CompletableFuture<VerboseResult<Nothing>> addTokensVerboseAsyncImpl(long tokensToAdd) {
         AddTokensCommand addTokensCommand = new AddTokensCommand(tokensToAdd);
+        return executeAsync(addTokensCommand.asVerbose());
+    }
+
+    @Override
+    protected CompletableFuture<VerboseResult<Nothing>> forceAddTokensVerboseAsyncImpl(long tokensToAdd) {
+        ForceAddTokensCommand addTokensCommand = new ForceAddTokensCommand(tokensToAdd);
         return executeAsync(addTokensCommand.asVerbose());
     }
 
