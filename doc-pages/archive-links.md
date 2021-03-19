@@ -1,5 +1,6 @@
 # Documentation links for legacy releases:
 ## 2020
+* [6.0](https://github.com/vladimir-bukhtoyarov/bucket4j/tree/6.0) ```Dec 21 2020``` Eliminate undefined behavior for configuration replacement
 * [4.10](https://github.com/vladimir-bukhtoyarov/bucket4j/tree/4.10) ```Mar 7 2020``` Verbose API
 * [4.9](https://github.com/vladimir-bukhtoyarov/bucket4j/tree/4.9) ```Feb 18 2020``` Compatibility with Hazelcast 4.x
 * [4.8](https://github.com/vladimir-bukhtoyarov/bucket4j/tree/4.8) ```Feb 6 2020``` Support POF serialization for Oracle Coherence, New API method consumeIgnoringRateLimits
