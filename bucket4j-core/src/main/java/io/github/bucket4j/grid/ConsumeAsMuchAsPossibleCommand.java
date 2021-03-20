@@ -69,6 +69,7 @@ public class ConsumeAsMuchAsPossibleCommand implements GridCommand<Long> {
         long availableToConsume = state.getAvailableTokens();
         long toConsume = Math.min(limit, availableToConsume);
         if (toConsume <= 0) {
+            bucketStateModified = false;
             return 0L;
         }
         state.consume(toConsume);

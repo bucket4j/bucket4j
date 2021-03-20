@@ -72,6 +72,7 @@ public class ReserveAndCalculateTimeToSleepCommand implements GridCommand<Long> 
 
         long nanosToCloseDeficit = state.calculateDelayNanosAfterWillBePossibleToConsume(tokensToConsume, currentTimeNanos);
         if (nanosToCloseDeficit == Long.MAX_VALUE || nanosToCloseDeficit > waitIfBusyNanosLimit) {
+            bucketStateModified = false;
             return Long.MAX_VALUE;
         } else {
             state.consume(tokensToConsume);

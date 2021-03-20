@@ -1,5 +1,8 @@
 package io.github.bucket4j.grid.ignite;
 
+import java.io.Serializable;
+import java.net.UnknownHostException;
+import java.util.Collections;
 import io.github.bucket4j.AbstractDistributedBucketTest;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.Bucket4j;
@@ -7,9 +10,12 @@ import io.github.bucket4j.grid.GridBucketState;
 import io.github.bucket4j.grid.ProxyManager;
 import io.github.bucket4j.grid.RecoveryStrategy;
 import org.apache.ignite.Ignite;
-import org.apache.ignite.IgniteCache;
 import org.apache.ignite.Ignition;
+import org.apache.ignite.client.ClientCache;
+import org.apache.ignite.client.IgniteClient;
 import org.apache.ignite.configuration.CacheConfiguration;
+import org.apache.ignite.configuration.ClientConfiguration;
+import org.apache.ignite.configuration.ClientConnectorConfiguration;
 import org.apache.ignite.configuration.IgniteConfiguration;
 import org.apache.ignite.spi.discovery.tcp.TcpDiscoverySpi;
 import org.apache.ignite.spi.discovery.tcp.ipfinder.vm.TcpDiscoveryVmIpFinder;
@@ -21,18 +27,13 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.io.Serializable;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.Collections;
+public class IgniteClientTest extends AbstractDistributedBucketTest<IgniteBucketBuilder, io.github.bucket4j.grid.ignite.Ignite> {
 
-public class IgniteTest extends AbstractDistributedBucketTest<IgniteBucketBuilder, io.github.bucket4j.grid.ignite.Ignite> {
-
-    private static IgniteCache<String, GridBucketState> cache;
+    private static ClientCache<String, GridBucketState> cache;
     private static Cloud cloud;
     private static ViNode server;
 
-    private static Ignite ignite;
+    private static IgniteClient igniteClient;
 
     @BeforeClass
     public static void setup() throws UnknownHostException {
@@ -44,6 +45,7 @@ public class IgniteTest extends AbstractDistributedBucketTest<IgniteBucketBuilde
         int serverDiscoveryPort = 47500;
         //        String serverNodeAdress = InetAddress.getLocalHost().getHostAddress() + ":" + serverDiscoveryPort;
         String serverNodeAdress = "localhost:" + serverDiscoveryPort;
+        String cacheName = "my_buckets";
 
         server.exec((Runnable & Serializable) () -> {
             TcpDiscoveryVmIpFinder neverFindOthers = new TcpDiscoveryVmIpFinder();
@@ -57,29 +59,23 @@ public class IgniteTest extends AbstractDistributedBucketTest<IgniteBucketBuilde
             igniteConfiguration.setClientMode(false);
             igniteConfiguration.setDiscoverySpi(tcpDiscoverySpi);
 
-            CacheConfiguration cacheConfiguration = new CacheConfiguration("my_buckets");
+            CacheConfiguration cacheConfiguration = new CacheConfiguration(cacheName);
             Ignite ignite = Ignition.start(igniteConfiguration);
             ignite.getOrCreateCache(cacheConfiguration);
         });
 
-        // start ignite client which works inside current JVM and does not hold data
-        TcpDiscoveryVmIpFinder ipFinder = new TcpDiscoveryVmIpFinder();
-        ipFinder.setAddresses(Collections.singleton(serverNodeAdress));
-        TcpDiscoverySpi tcpDiscoverySpi = new TcpDiscoverySpi();
-        tcpDiscoverySpi.setIpFinder(ipFinder);
+        // start ignite thin client which works inside current JVM and does not hold data
+        ClientConfiguration clientConfiguration = new ClientConfiguration();
+        clientConfiguration.setAddresses("localhost:" + ClientConnectorConfiguration.DFLT_PORT);
 
-        IgniteConfiguration igniteConfiguration = new IgniteConfiguration();
-        igniteConfiguration.setDiscoverySpi(tcpDiscoverySpi);
-        igniteConfiguration.setClientMode(true);
-        ignite = Ignition.start(igniteConfiguration);
-        CacheConfiguration cacheConfiguration = new CacheConfiguration("my_buckets");
-        cache = ignite.getOrCreateCache(cacheConfiguration);
+        igniteClient = Ignition.startClient(clientConfiguration);
+        cache = igniteClient.cache(cacheName);
     }
 
     @AfterClass
-    public static void shutdown() {
-        if (ignite != null) {
-            ignite.close();
+    public static void shutdown() throws Exception {
+        if (igniteClient != null) {
+            igniteClient.close();
         }
         if (cloud != null) {
             cloud.shutdown();
@@ -89,7 +85,7 @@ public class IgniteTest extends AbstractDistributedBucketTest<IgniteBucketBuilde
     @Test(expected = IllegalArgumentException.class)
     @Override
     public void testThatImpossibleToPassNullCacheToProxyManagerConstructor() {
-        Bucket4j.extension(getExtensionClass()).proxyManagerForCache((IgniteCache<String, GridBucketState>)null);
+        Bucket4j.extension(getExtensionClass()).proxyManagerForCache((ClientCache<String, GridBucketState>)null);
     }
 
     @Override

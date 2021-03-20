@@ -71,6 +71,7 @@ public class TryConsumeCommand implements GridCommand<Boolean> {
             bucketStateModified = true;
             return true;
         } else {
+            bucketStateModified = false;
             return false;
         }
     }
