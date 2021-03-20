@@ -13,10 +13,7 @@ import org.apache.ignite.Ignite;
 import org.apache.ignite.Ignition;
 import org.apache.ignite.client.ClientCache;
 import org.apache.ignite.client.IgniteClient;
-import org.apache.ignite.configuration.CacheConfiguration;
-import org.apache.ignite.configuration.ClientConfiguration;
-import org.apache.ignite.configuration.ClientConnectorConfiguration;
-import org.apache.ignite.configuration.IgniteConfiguration;
+import org.apache.ignite.configuration.*;
 import org.apache.ignite.spi.discovery.tcp.TcpDiscoverySpi;
 import org.apache.ignite.spi.discovery.tcp.ipfinder.vm.TcpDiscoveryVmIpFinder;
 import org.gridkit.nanocloud.Cloud;
@@ -28,6 +25,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class IgniteClientTest extends AbstractDistributedBucketTest<IgniteBucketBuilder, io.github.bucket4j.grid.ignite.Ignite> {
+
+    private static final String CACHE_NAME = "my_buckets";
 
     private static ClientCache<String, GridBucketState> cache;
     private static Cloud cloud;
@@ -45,7 +44,6 @@ public class IgniteClientTest extends AbstractDistributedBucketTest<IgniteBucket
         int serverDiscoveryPort = 47500;
         //        String serverNodeAdress = InetAddress.getLocalHost().getHostAddress() + ":" + serverDiscoveryPort;
         String serverNodeAdress = "localhost:" + serverDiscoveryPort;
-        String cacheName = "my_buckets";
 
         server.exec((Runnable & Serializable) () -> {
             TcpDiscoveryVmIpFinder neverFindOthers = new TcpDiscoveryVmIpFinder();
@@ -55,12 +53,19 @@ public class IgniteClientTest extends AbstractDistributedBucketTest<IgniteBucket
             tcpDiscoverySpi.setIpFinder(neverFindOthers);
             tcpDiscoverySpi.setLocalPort(serverDiscoveryPort);
 
+            ThinClientConfiguration thinClientCfg = new ThinClientConfiguration()
+                    .setMaxActiveComputeTasksPerConnection(100);
+            ClientConnectorConfiguration clientConnectorCfg = new ClientConnectorConfiguration()
+                    .setThinClientConfiguration(thinClientCfg);
+
             IgniteConfiguration igniteConfiguration = new IgniteConfiguration();
             igniteConfiguration.setClientMode(false);
             igniteConfiguration.setDiscoverySpi(tcpDiscoverySpi);
+            igniteConfiguration.setClientConnectorConfiguration(clientConnectorCfg);
 
-            CacheConfiguration cacheConfiguration = new CacheConfiguration(cacheName);
             Ignite ignite = Ignition.start(igniteConfiguration);
+
+            CacheConfiguration cacheConfiguration = new CacheConfiguration(CACHE_NAME);
             ignite.getOrCreateCache(cacheConfiguration);
         });
 
@@ -69,7 +74,8 @@ public class IgniteClientTest extends AbstractDistributedBucketTest<IgniteBucket
         clientConfiguration.setAddresses("localhost:" + ClientConnectorConfiguration.DFLT_PORT);
 
         igniteClient = Ignition.startClient(clientConfiguration);
-        cache = igniteClient.cache(cacheName);
+
+        cache = igniteClient.cache(CACHE_NAME);
     }
 
     @AfterClass

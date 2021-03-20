@@ -43,7 +43,7 @@
         <benchmark.jar.name>benchmarks</benchmark.jar.name>
         <argLine/>
         <jcache.version>1.0.0</jcache.version>
-        <ignite.version>2.9.1</ignite.version>
+        <ignite.version>2.10.0</ignite.version>
 
         <hazelcast.3.version>3.8</hazelcast.3.version>
         <hazelcast.latest.version>4.0.2</hazelcast.latest.version>
