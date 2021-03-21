@@ -1,4 +1,6 @@
 # Documentation links for legacy releases:
+## 2021
+* [6.1](https://github.com/vladimir-bukhtoyarov/bucket4j/tree/6.1) ```Mar 03 2021``` Support for refilling buckets over maximum
 ## 2020
 * [6.0](https://github.com/vladimir-bukhtoyarov/bucket4j/tree/6.0) ```Dec 21 2020``` Eliminate undefined behavior for configuration replacement
 * [4.10](https://github.com/vladimir-bukhtoyarov/bucket4j/tree/4.10) ```Mar 7 2020``` Verbose API
