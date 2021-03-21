@@ -25,6 +25,7 @@ import io.github.bucket4j.grid.GridBucketState;
 import io.github.bucket4j.grid.ProxyManager;
 import org.apache.ignite.IgniteCache;
 import org.apache.ignite.client.ClientCache;
+import org.apache.ignite.client.ClientCompute;
 
 import java.io.Serializable;
 
@@ -59,12 +60,13 @@ public class Ignite implements Extension<IgniteBucketBuilder> {
     /**
      * Creates {@link IgniteProxyManager} for specified Ignite thin client cache.
      *
+     * @param clientCompute Thin client compute facade
      * @param cache cache for storing state of buckets
      * @param <T> type of keys in the cache
      * @return {@link ProxyManager} for specified cache.
      */
-    public <T extends Serializable> ProxyManager<T> proxyManagerForCache(ClientCache<T, GridBucketState> cache) {
-        return new IgniteProxyManager<>(cache);
+    public <T extends Serializable> ProxyManager<T> proxyManagerForCache(ClientCompute clientCompute, ClientCache<T, GridBucketState> cache) {
+        return new IgniteProxyManager<>(clientCompute, cache);
     }
 
 }

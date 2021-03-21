@@ -91,7 +91,7 @@ public class IgniteClientTest extends AbstractDistributedBucketTest<IgniteBucket
     @Test(expected = IllegalArgumentException.class)
     @Override
     public void testThatImpossibleToPassNullCacheToProxyManagerConstructor() {
-        Bucket4j.extension(getExtensionClass()).proxyManagerForCache((ClientCache<String, GridBucketState>)null);
+        Bucket4j.extension(getExtensionClass()).proxyManagerForCache(igniteClient.compute(), (ClientCache<String, GridBucketState>)null);
     }
 
     @Override
@@ -101,12 +101,12 @@ public class IgniteClientTest extends AbstractDistributedBucketTest<IgniteBucket
 
     @Override
     protected Bucket build(IgniteBucketBuilder builder, String key, RecoveryStrategy recoveryStrategy) {
-        return builder.build(cache, key, recoveryStrategy);
+        return builder.build(igniteClient.compute(), cache, key, recoveryStrategy);
     }
 
     @Override
     protected ProxyManager<String> newProxyManager() {
-        return Bucket4j.extension(getExtensionClass()).proxyManagerForCache(cache);
+        return Bucket4j.extension(getExtensionClass()).proxyManagerForCache(igniteClient.compute(), cache);
     }
 
     @Override

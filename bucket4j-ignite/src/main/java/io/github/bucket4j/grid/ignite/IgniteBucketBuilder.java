@@ -25,8 +25,10 @@ import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.grid.GridBucket;
 import io.github.bucket4j.grid.GridBucketState;
 import io.github.bucket4j.grid.RecoveryStrategy;
+import io.github.bucket4j.grid.ignite.thin.IgniteClientProxy;
 import org.apache.ignite.IgniteCache;
 import org.apache.ignite.client.ClientCache;
+import org.apache.ignite.client.ClientCompute;
 
 import javax.cache.Cache;
 import java.io.Serializable;
@@ -66,9 +68,9 @@ public class IgniteBucketBuilder extends AbstractBucketBuilder<IgniteBucketBuild
      *
      * @return new distributed bucket
      */
-    public <K extends Serializable> Bucket build(ClientCache<K, GridBucketState> cache, K key, RecoveryStrategy recoveryStrategy) {
+    public <K extends Serializable> Bucket build(ClientCompute clientCompute, ClientCache<K, GridBucketState> cache, K key, RecoveryStrategy recoveryStrategy) {
         BucketConfiguration configuration = buildConfiguration();
-        IgniteClientProxy<K> gridProxy = new IgniteClientProxy<>(cache);
+        IgniteClientProxy<K> gridProxy = new IgniteClientProxy<>(clientCompute, cache);
         return GridBucket.createInitializedBucket(key, configuration, gridProxy, recoveryStrategy);
     }
 

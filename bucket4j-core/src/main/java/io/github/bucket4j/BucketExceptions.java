@@ -166,8 +166,18 @@ public final class BucketExceptions {
         return new IllegalArgumentException(msg);
     }
 
+    public static BucketExecutionException executionException(Throwable cause) {
+        return new BucketExecutionException(cause);
+    }
+
     private BucketExceptions() {
         // private constructor for utility class
+    }
+
+    public static class BucketExecutionException extends RuntimeException {
+        public BucketExecutionException(Throwable cause) {
+            super(cause);
+        }
     }
 
 }

@@ -25,8 +25,10 @@ import io.github.bucket4j.grid.GridBucket;
 import io.github.bucket4j.grid.GridBucketState;
 import io.github.bucket4j.grid.GridProxy;
 import io.github.bucket4j.grid.ProxyManager;
+import io.github.bucket4j.grid.ignite.thin.IgniteClientProxy;
 import org.apache.ignite.IgniteCache;
 import org.apache.ignite.client.ClientCache;
+import org.apache.ignite.client.ClientCompute;
 
 import java.io.Serializable;
 import java.util.Optional;
@@ -48,11 +50,11 @@ public class IgniteProxyManager<K extends Serializable> implements ProxyManager<
         this.gridProxy = new IgniteProxy<>(cache);
     }
 
-    IgniteProxyManager(ClientCache<K, GridBucketState> cache) {
+    IgniteProxyManager(ClientCompute clientCompute, ClientCache<K, GridBucketState> cache) {
         if (cache == null) {
             throw new IllegalArgumentException("cache must not be null");
         }
-        this.gridProxy = new IgniteClientProxy<>(cache);
+        this.gridProxy = new IgniteClientProxy<>(clientCompute, cache);
     }
 
     @Override
