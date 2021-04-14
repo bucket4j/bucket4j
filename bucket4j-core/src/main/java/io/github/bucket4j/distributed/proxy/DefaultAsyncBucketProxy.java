@@ -164,9 +164,23 @@ public class DefaultAsyncBucketProxy implements AsyncBucketProxy, ScheduledBucke
         }
 
         @Override
+        public CompletableFuture<VerboseResult<Nothing>> forceAddTokens(long tokensToAdd) {
+            checkTokensToAdd(tokensToAdd);
+            VerboseCommand<Nothing> verboseCommand = new VerboseCommand<>(new ForceAddTokensCommand(tokensToAdd));
+            return execute(verboseCommand).thenApply(RemoteVerboseResult::asLocal);
+        }
+
+        @Override
         public CompletableFuture<VerboseResult<Nothing>> replaceConfiguration(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy) {
             checkConfiguration(newConfiguration);
+            checkMigrationMode(tokensInheritanceStrategy);
             VerboseCommand<Nothing> command = new VerboseCommand<>(new ReplaceConfigurationCommand(newConfiguration, tokensInheritanceStrategy));
+            return execute(command).thenApply(RemoteVerboseResult::asLocal);
+        }
+
+        @Override
+        public CompletableFuture<VerboseResult<Long>> getAvailableTokens() {
+            VerboseCommand<Long> command = new VerboseCommand<>(new GetAvailableTokensCommand());
             return execute(command).thenApply(RemoteVerboseResult::asLocal);
         }
     };
@@ -310,6 +324,7 @@ public class DefaultAsyncBucketProxy implements AsyncBucketProxy, ScheduledBucke
     @Override
     public CompletableFuture<Void> replaceConfiguration(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy) {
         checkConfiguration(newConfiguration);
+        checkMigrationMode(tokensInheritanceStrategy);
         ReplaceConfigurationCommand replaceConfigCommand = new ReplaceConfigurationCommand(newConfiguration, tokensInheritanceStrategy);
         CompletableFuture<Nothing> result = execute(replaceConfigCommand);
         return result.thenApply(nothing -> null);
@@ -319,6 +334,13 @@ public class DefaultAsyncBucketProxy implements AsyncBucketProxy, ScheduledBucke
     public CompletableFuture<Void> addTokens(long tokensToAdd) {
         checkTokensToAdd(tokensToAdd);
         CompletableFuture<Nothing> future = execute(new AddTokensCommand(tokensToAdd));
+        return future.thenApply(nothing -> null);
+    }
+
+    @Override
+    public CompletableFuture<Void> forceAddTokens(long tokensToAdd) {
+        checkTokensToAdd(tokensToAdd);
+        CompletableFuture<Nothing> future = execute(new ForceAddTokensCommand(tokensToAdd));
         return future.thenApply(nothing -> null);
     }
 

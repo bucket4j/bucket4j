@@ -155,6 +155,28 @@ public interface Bucket {
     void addTokens(long tokensToAdd);
 
     /**
+     * Add <tt>tokensToAdd</tt> to bucket. In opposite to {@link #addTokens(long)} usage of this method can lead to overflow bucket capacity.
+     *
+     * <h3>Example of usage</h3>
+     * The "compensating transaction" is one of obvious use case, when any piece of code consumed tokens from bucket, tried to do something and failed, the "addTokens" will be helpful to return tokens back to bucket:
+     * <pre>{@code
+     *      Bucket wallet;
+     *      ...
+     *      if(wallet.tryConsume(50)) {// get 50 cents from wallet
+     *         try {
+     *             buyCocaCola();
+     *         } catch(NoCocaColaException e) {
+     *             // return money to wallet
+     *             wallet.addTokens(50);
+     *         }
+     *      };
+     * }</pre>
+     *
+     * @param tokensToAdd number of tokens to add
+     */
+    void forceAddTokens(long tokensToAdd);
+
+    /**
      * Returns amount of available tokens in this bucket.
 
      * <p> This method designed to be used only for monitoring and testing, you should never use this method for business cases,
@@ -237,6 +259,8 @@ public interface Bucket {
      * <p> This method is designed to be used only for monitoring and testing, you should never use this method for business cases.
      *
      * @return snapshot of internal state
+     *
+     * // TODO remove this method
      */
     BucketState createSnapshot();
 

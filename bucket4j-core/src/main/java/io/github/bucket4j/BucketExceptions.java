@@ -183,13 +183,23 @@ public final class BucketExceptions {
         return new IllegalArgumentException(msg);
     }
 
-    private BucketExceptions() {
-        // private constructor for utility class
+    public static BucketExecutionException executionException(Throwable cause) {
+        return new BucketExecutionException(cause);
     }
 
     public static UnsupportedOperationException asyncModeIsNotSupported() {
         String msg = "Asynchronous mode is not supported";
         return new UnsupportedOperationException(msg);
+    }
+
+    public static class BucketExecutionException extends RuntimeException {
+        public BucketExecutionException(Throwable cause) {
+            super(cause);
+        }
+    }
+
+    private BucketExceptions() {
+        // private constructor for utility class
     }
 
 }

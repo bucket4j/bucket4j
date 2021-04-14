@@ -21,7 +21,6 @@
 package io.github.bucket4j.local;
 
 import io.github.bucket4j.*;
-
 import java.util.concurrent.atomic.AtomicReference;
 
 abstract class LockFreeBucketContendedTimeMeter extends AbstractBucket {
@@ -230,6 +229,24 @@ public class LockFreeBucket extends LockFreeBucket_FinalFields_CacheLinePadding 
     }
 
     @Override
+    protected void forceAddTokensImpl(long tokensToAdd) {
+        StateWithConfiguration previousState = stateRef.get();
+        StateWithConfiguration newState = previousState.copy();
+        long currentTimeNanos = timeMeter.currentTimeNanos();
+
+        while (true) {
+            newState.refillAllBandwidth(currentTimeNanos);
+            newState.state.forceAddTokens(newState.configuration.getBandwidths(), tokensToAdd);
+            if (stateRef.compareAndSet(previousState, newState)) {
+                return;
+            } else {
+                previousState = stateRef.get();
+                newState.copyStateFrom(previousState);
+            }
+        }
+    }
+
+    @Override
     protected void replaceConfigurationImpl(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy) {
         StateWithConfiguration previousState = stateRef.get();
         StateWithConfiguration newState = previousState.copy();
@@ -378,6 +395,24 @@ public class LockFreeBucket extends LockFreeBucket_FinalFields_CacheLinePadding 
         while (true) {
             newState.refillAllBandwidth(currentTimeNanos);
             newState.state.addTokens(newState.configuration.getBandwidths(), tokensToAdd);
+            if (stateRef.compareAndSet(previousState, newState)) {
+                return new VerboseResult<>(currentTimeNanos, Nothing.INSTANCE, newState.configuration, newState.state.copy());
+            } else {
+                previousState = stateRef.get();
+                newState.copyStateFrom(previousState);
+            }
+        }
+    }
+
+    @Override
+    protected VerboseResult<Nothing> forceAddTokensVerboseImpl(long tokensToAdd) {
+        StateWithConfiguration previousState = stateRef.get();
+        StateWithConfiguration newState = previousState.copy();
+        long currentTimeNanos = timeMeter.currentTimeNanos();
+
+        while (true) {
+            newState.refillAllBandwidth(currentTimeNanos);
+            newState.state.forceAddTokens(newState.configuration.getBandwidths(), tokensToAdd);
             if (stateRef.compareAndSet(previousState, newState)) {
                 return new VerboseResult<>(currentTimeNanos, Nothing.INSTANCE, newState.configuration, newState.state.copy());
             } else {

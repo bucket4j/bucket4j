@@ -6,7 +6,7 @@ Bucket bucket = ...;
 AsyncBucket asyncBucket = bucket.asAsync();
 ```
 Each method of class [AsyncBucket](https://github.com/vladimir-bukhtoyarov/bucket4j/blob/3.1/bucket4j-core/src/main/java/io/github/bucket4j/AsyncBucket.java)
- has full equvalence with same semantic in synchronous version in the [Bucket](https://github.com/vladimir-bukhtoyarov/bucket4j/blob/3.0/bucket4j-core/src/main/java/io/github/bucket4j/Bucket.java) class.
+ has full equivalence with same semantic in synchronous version in the [Bucket](https://github.com/vladimir-bukhtoyarov/bucket4j/blob/3.0/bucket4j-core/src/main/java/io/github/bucket4j/Bucket.java) class.
 
 ### Example - limiting the rate of access to asynchronous servlet
 Imagine that you develop SMS service, which allows send SMS via HTTP interface.

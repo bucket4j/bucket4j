@@ -43,6 +43,8 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket, Schedule
 
     protected abstract void addTokensImpl(long tokensToAdd);
 
+    protected abstract void forceAddTokensImpl(long tokensToAdd);
+
     protected abstract void replaceConfigurationImpl(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy);
 
     protected abstract long consumeIgnoringRateLimitsImpl(long tokensToConsume);
@@ -58,6 +60,8 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket, Schedule
     protected abstract VerboseResult<Long> getAvailableTokensVerboseImpl();
 
     protected abstract VerboseResult<Nothing> addTokensVerboseImpl(long tokensToAdd);
+
+    protected abstract VerboseResult<Nothing> forceAddTokensVerboseImpl(long tokensToAdd);
 
     protected abstract VerboseResult<Nothing> replaceConfigurationVerboseImpl(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy);
 
@@ -151,6 +155,12 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket, Schedule
         public VerboseResult<Nothing> addTokens(long tokensToAdd) {
             checkTokensToAdd(tokensToAdd);
             return addTokensVerboseImpl(tokensToAdd);
+        }
+
+        @Override
+        public VerboseResult<Nothing> forceAddTokens(long tokensToAdd) {
+            checkTokensToAdd(tokensToAdd);
+            return forceAddTokensVerboseImpl(tokensToAdd);
         }
 
         @Override
@@ -330,6 +340,12 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket, Schedule
     }
 
     @Override
+    public void forceAddTokens(long tokensToAdd) {
+        checkTokensToAdd(tokensToAdd);
+        forceAddTokensImpl(tokensToAdd);
+    }
+
+    @Override
     public void replaceConfiguration(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy) {
         checkConfiguration(newConfiguration);
         checkMigrationMode(tokensInheritanceStrategy);
@@ -408,11 +424,6 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket, Schedule
         CompletableFuture<T> fail = new CompletableFuture<>();
         fail.completeExceptionally(t);
         return fail;
-    }
-    private void checkMigrationMode(TokensInheritanceStrategy tokensInheritanceStrategy) {
-        if (tokensInheritanceStrategy == null) {
-            throw BucketExceptions.nullTokensInheritanceStrategy();
-        }
     }
 
 }

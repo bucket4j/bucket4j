@@ -269,6 +269,19 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket {
     }
 
     @Override
+    protected VerboseResult<Nothing> forceAddTokensVerboseImpl(long tokensToAdd) {
+        long currentTimeNanos = timeMeter.currentTimeNanos();
+        lock.lock();
+        try {
+            state.refillAllBandwidth(bandwidths, currentTimeNanos);
+            state.forceAddTokens(bandwidths, tokensToAdd);
+            return new VerboseResult<>(currentTimeNanos, Nothing.INSTANCE, configuration, state.copy());
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    @Override
     protected VerboseResult<Nothing> replaceConfigurationVerboseImpl(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy) {
         long currentTimeNanos = timeMeter.currentTimeNanos();
         lock.lock();
@@ -308,6 +321,18 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket {
         try {
             state.refillAllBandwidth(bandwidths, currentTimeNanos);
             state.addTokens(bandwidths, tokensToAdd);
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    @Override
+    protected void forceAddTokensImpl(long tokensToAdd) {
+        long currentTimeNanos = timeMeter.currentTimeNanos();
+        lock.lock();
+        try {
+            state.refillAllBandwidth(bandwidths, currentTimeNanos);
+            state.forceAddTokens(bandwidths, tokensToAdd);
         } finally {
             lock.unlock();
         }

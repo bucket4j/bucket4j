@@ -63,7 +63,8 @@ public interface SerializationHandle<T> {
             ConsumeIgnoringRateLimitsCommand.SERIALIZATION_HANDLE, // 34
             VerboseCommand.SERIALIZATION_HANDLE, // 35
             SyncCommand.SERIALIZATION_HANDLE, // 36
-            Request.SERIALIZATION_HANDLE // 37
+            Request.SERIALIZATION_HANDLE, // 37
+            ForceAddTokensCommand.SERIALIZATION_HANDLE // 38
 
 
     ));

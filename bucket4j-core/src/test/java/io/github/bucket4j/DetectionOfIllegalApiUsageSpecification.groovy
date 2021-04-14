@@ -262,6 +262,20 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
             tokens << [0, -1, -10]
     }
 
+    @Unroll
+    def "Should check that #tokens tokens is not positive to force add"(long tokens) {
+        setup:
+            def bucket = Bucket4j.builder().addLimit(
+                    Bandwidth.simple(VALID_CAPACITY, VALID_PERIOD)
+            ).build()
+        when:
+            bucket.forceAddTokens(tokens)
+        then:
+            thrown(IllegalArgumentException)
+        where:
+            tokens << [0, -1, -10]
+    }
+
     def "Should that scheduler passed to tryConsume is not null"() {
         setup:
             BucketConfiguration configuration = BucketConfiguration.builder()
@@ -345,8 +359,9 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
     @Unroll
     def "#type should detect that configuration is null during configuration replacement"(BucketType type) {
         setup:
-            def builder = Bucket4j.builder().addLimit(Bandwidth.simple(1, Duration.ofSeconds(10)))
-            def bucket = type.createBucket(builder, TimeMeter.SYSTEM_MILLISECONDS)
+            def configuration = BucketConfiguration.builder().addLimit(Bandwidth.simple(1, Duration.ofSeconds(10))).build()
+            def bucket = type.createBucket(configuration, TimeMeter.SYSTEM_MILLISECONDS)
+            def asyncBucket = type.createAsyncBucket(configuration, TimeMeter.SYSTEM_MILLISECONDS)
 
         when:
             bucket.replaceConfiguration(null, TokensInheritanceStrategy.AS_IS)
@@ -361,13 +376,13 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
             ex.message == nullConfiguration().message
 
         when:
-            bucket.asAsync().replaceConfiguration(null, TokensInheritanceStrategy.AS_IS)
+            asyncBucket.replaceConfiguration(null, TokensInheritanceStrategy.AS_IS)
         then:
             ex = thrown()
             ex.message == nullConfiguration().message
 
         when:
-            bucket.asAsync().asVerbose().replaceConfiguration(null, TokensInheritanceStrategy.AS_IS)
+            asyncBucket.asVerbose().replaceConfiguration(null, TokensInheritanceStrategy.AS_IS)
         then:
             ex = thrown()
             ex.message == nullConfiguration().message
@@ -379,9 +394,10 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
     @Unroll
     def "#type should detect that tokenMigrationMode is null during configuration replacement"(BucketType type) {
         setup:
-            def builder = Bucket4j.configurationBuilder().addLimit(Bandwidth.simple(1, Duration.ofSeconds(10)))
-            def bucket = type.createBucket(builder.buildConfiguration(), TimeMeter.SYSTEM_MILLISECONDS)
-            def newConfiguration = builder.build().getConfiguration()
+            def builder = BucketConfiguration.builder().addLimit(Bandwidth.simple(1, Duration.ofSeconds(10)))
+            def bucket = type.createBucket(builder.build(), TimeMeter.SYSTEM_MILLISECONDS)
+            def asyncBucket = type.createAsyncBucket(builder.build(), TimeMeter.SYSTEM_MILLISECONDS)
+            def newConfiguration = builder.build()
         when:
             bucket.replaceConfiguration(newConfiguration, null)
         then:
@@ -395,13 +411,13 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
             ex.message == nullTokensInheritanceStrategy().message
 
         when:
-            bucket.asAsync().replaceConfiguration(newConfiguration, null)
+            asyncBucket.replaceConfiguration(newConfiguration, null)
         then:
             ex = thrown()
             ex.message == nullTokensInheritanceStrategy().message
 
         when:
-            bucket.asAsync().asVerbose().replaceConfiguration(newConfiguration, null)
+            asyncBucket.asVerbose().replaceConfiguration(newConfiguration, null)
         then:
             ex = thrown()
             ex.message == nullTokensInheritanceStrategy().message

@@ -2,6 +2,7 @@
 package io.github.bucket4j.distributed.serialization;
 
 import io.github.bucket4j.*;
+import io.github.bucket4j.distributed.remote.commands.ForceAddTokensCommand;
 import io.github.bucket4j.distributed.remote.*;
 import io.github.bucket4j.distributed.remote.commands.*;
 import io.github.bucket4j.util.ComparableByContent;
@@ -257,6 +258,7 @@ public abstract class AbstractSerializationTest {
         testSerialization(new ReserveAndCalculateTimeToSleepCommand(10, 20));
 
         testSerialization(new AddTokensCommand(3));
+        testSerialization(new ForceAddTokensCommand(666));
 
         testSerialization(new ConsumeAsMuchAsPossibleCommand(13));
 

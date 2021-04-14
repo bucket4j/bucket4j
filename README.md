@@ -21,13 +21,13 @@ Just use your favorite grid including [Hazelcast](http://hazelcast.com/products/
 ## Supported back-ends
 As mentioned above in addition to local in-memory buckets, the Bucket4j supports clustered usage scenario on top of following back-ends:
  
-| Back-end                   | Documentation page                                  | Async supported | Optimized serialization |
-| -------------------------- | --------------------------------------------------- | :-------------: | :-------------:         |
-| ```JCache API (JSR 107)``` | [bucket4j-jcache](doc-pages/jcache-usage.md)        | No              | No                      |
-| ```Hazelcast```            | [bucket4j-hazelcast](doc-pages/hazelcast.md)        | Yes             | Yes                     |
-| ```Apache Ignite```        | [bucket4j-ignite](doc-pages/ignite.md)              | Yes             | n/a                     |
-| ```Inifinispan```          | [bucket4j-infinspan](doc-pages/infinispan.md)       | Yes             | Yes                     |
-| ```Oracle Coherence```     | [bucket4j-coherence](doc-pages/coherence.md)        | Yes             | Yes                     |
+| Back-end                   | Documentation page                                  | Async supported | Optimized serialization | Thin-client support |
+| -------------------------- | --------------------------------------------------- | :-------------: | :-------------:         | :-------------:     |
+| ```JCache API (JSR 107)``` | [bucket4j-jcache](doc-pages/jcache-usage.md)        | No              | No                      | No                  |
+| ```Hazelcast```            | [bucket4j-hazelcast](doc-pages/hazelcast.md)        | Yes             | Yes                     | Planned             |
+| ```Apache Ignite```        | [bucket4j-ignite](doc-pages/ignite.md)              | Yes             | n/a                     | Yes                 |
+| ```Inifinispan```          | [bucket4j-infinspan](doc-pages/infinispan.md)       | Yes             | Yes                     | No                  |
+| ```Oracle Coherence```     | [bucket4j-coherence](doc-pages/coherence.md)        | Yes             | Yes                     | No                  |
 
 ## General documentation
 #### Basics:

@@ -97,6 +97,11 @@ public class DefaultBucketProxy extends AbstractBucket implements BucketProxy {
     }
 
     @Override
+    protected void forceAddTokensImpl(long tokensToAdd) {
+        execute(new ForceAddTokensCommand(tokensToAdd));
+    }
+
+    @Override
     protected void replaceConfigurationImpl(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy) {
         execute(new ReplaceConfigurationCommand(newConfiguration, tokensInheritanceStrategy));
     }
@@ -150,6 +155,12 @@ public class DefaultBucketProxy extends AbstractBucket implements BucketProxy {
     @Override
     protected VerboseResult<Nothing> addTokensVerboseImpl(long tokensToAdd) {
         AddTokensCommand command = new AddTokensCommand(tokensToAdd);
+        return execute(command.asVerbose()).asLocal();
+    }
+
+    @Override
+    protected VerboseResult<Nothing> forceAddTokensVerboseImpl(long tokensToAdd) {
+        ForceAddTokensCommand command = new ForceAddTokensCommand(tokensToAdd);
         return execute(command.asVerbose()).asLocal();
     }
 

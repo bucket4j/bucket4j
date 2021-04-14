@@ -135,8 +135,12 @@ public class BucketState64BitsInteger implements BucketState, ComparableByConten
         long lastRefillTimeNanos = getLastRefillTimeNanos(previousBandwidthIndex);
         newState.setLastRefillTimeNanos(newBandwidthIndex, lastRefillTimeNanos);
 
+        long currentSize = getCurrentSize(previousBandwidthIndex);
+        if (currentSize >= newBandwidth.capacity) {
+            newState.setCurrentSize(newBandwidthIndex, newBandwidth.capacity);
+            return;
+        }
         if (newBandwidth.isGready() && previousBandwidth.isGready()) {
-            long currentSize = getCurrentSize(previousBandwidthIndex);
             long newSize = Math.min(newBandwidth.capacity, currentSize);
             newState.setCurrentSize(newBandwidthIndex, newSize);
 
@@ -148,16 +152,21 @@ public class BucketState64BitsInteger implements BucketState, ComparableByConten
             }
             newState.setRoundingError(newBandwidthIndex, newRoundingError);
             return;
+        } else {
+            long newSize = Math.min(newBandwidth.capacity, currentSize);
+            newState.setCurrentSize(newBandwidthIndex, newSize);
         }
-
-        long currentSize = getCurrentSize(previousBandwidthIndex);
-        long newSize = Math.min(newBandwidth.capacity, currentSize);
-        newState.setCurrentSize(newBandwidthIndex, newSize);
     }
 
     private void replaceBandwidthProportional(BucketState64BitsInteger newState, int newBandwidthIndex, Bandwidth newBandwidth, int previousBandwidthIndex, Bandwidth previousBandwidth, long currentTimeNanos) {
         newState.setLastRefillTimeNanos(newBandwidthIndex, getLastRefillTimeNanos(previousBandwidthIndex));
         long currentSize = getCurrentSize(previousBandwidthIndex);
+        if (currentSize >= previousBandwidth.capacity) {
+            // can come here if forceAddTokens has been used
+            newState.setCurrentSize(newBandwidthIndex, newBandwidth.capacity);
+            return;
+        }
+
         long roundingError = getRoundingError(previousBandwidthIndex);
         double realRoundedError = (double) roundingError / (double) previousBandwidth.refillPeriodNanos;
         double scale = (double) newBandwidth.capacity / (double) previousBandwidth.capacity;
@@ -254,6 +263,12 @@ public class BucketState64BitsInteger implements BucketState, ComparableByConten
         }
     }
 
+    public void forceAddTokens(Bandwidth[] limits, long tokensToAdd) {
+        for (int i = 0; i < limits.length; i++) {
+            forceAddTokens(i, limits[i], tokensToAdd);
+        }
+    }
+
     private long calculateLastRefillTimeNanos(Bandwidth bandwidth, long currentTimeNanos) {
         if (!bandwidth.isIntervallyAligned()) {
             return currentTimeNanos;
@@ -319,6 +334,19 @@ public class BucketState64BitsInteger implements BucketState, ComparableByConten
         }
     }
 
+    private void forceAddTokens(int bandwidthIndex, Bandwidth bandwidth, long tokensToAdd) {
+        long currentSize = getCurrentSize(bandwidthIndex);
+        long newSize = currentSize + tokensToAdd;
+        if (newSize < currentSize) {
+            // arithmetic overflow happens. This mean that bucket reached Long.MAX_VALUE tokens.
+            // just set MAX_VALUE tokens
+            setCurrentSize(bandwidthIndex, Long.MAX_VALUE);
+            setRoundingError(bandwidthIndex, 0);
+        } else {
+            setCurrentSize(bandwidthIndex, newSize);
+        }
+    }
+
     private void refill(int bandwidthIndex, Bandwidth bandwidth, long currentTimeNanos) {
         long previousRefillNanos = getLastRefillTimeNanos(bandwidthIndex);
         if (currentTimeNanos <= previousRefillNanos) {
@@ -339,6 +367,11 @@ public class BucketState64BitsInteger implements BucketState, ComparableByConten
         final long refillPeriodNanos = bandwidth.getRefillPeriodNanos();
         final long refillTokens = bandwidth.getRefillTokens();
         final long currentSize = getCurrentSize(bandwidthIndex);
+
+        if (currentSize >= capacity) {
+            // can come here if forceAddTokens has been used
+            return;
+        }
 
         long durationSinceLastRefillNanos = currentTimeNanos - previousRefillNanos;
         long newSize = currentSize;

@@ -57,4 +57,10 @@ public class LimitChecker {
         }
     }
 
+    public static void checkMigrationMode(TokensInheritanceStrategy tokensInheritanceStrategy) {
+        if (tokensInheritanceStrategy == null) {
+            throw BucketExceptions.nullTokensInheritanceStrategy();
+        }
+    }
+
 }

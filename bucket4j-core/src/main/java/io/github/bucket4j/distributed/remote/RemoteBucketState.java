@@ -105,6 +105,10 @@ public class RemoteBucketState implements ComparableByContent<RemoteBucketState>
         state.addTokens(configuration.getBandwidths(), tokensToAdd);
     }
 
+    public void forceAddTokens(long tokensToAdd) {
+        state.forceAddTokens(configuration.getBandwidths(), tokensToAdd);
+    }
+
     public BucketState copyBucketState() {
         return state.copy();
     }

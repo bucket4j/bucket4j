@@ -46,6 +46,8 @@ public interface BucketState {
 
     void addTokens(Bandwidth[] bandwidths, long tokensToAdd);
 
+    void forceAddTokens(Bandwidth[] bandwidths, long tokensToAdd);
+
     long getCurrentSize(int bandwidth);
 
     long getRoundingError(int bandwidth);

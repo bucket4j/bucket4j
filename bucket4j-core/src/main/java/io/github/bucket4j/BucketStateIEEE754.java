@@ -95,6 +95,12 @@ public class BucketStateIEEE754 implements BucketState, ComparableByContent<Buck
     }
 
     @Override
+    public void forceAddTokens(Bandwidth[] bandwidths, long tokensToAdd) {
+        // TODO
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public BucketStateIEEE754 copy() {
         return new BucketStateIEEE754(tokens.clone(), lastRefillTime.clone());
     }
