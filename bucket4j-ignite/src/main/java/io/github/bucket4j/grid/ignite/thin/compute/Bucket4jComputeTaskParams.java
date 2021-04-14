@@ -17,25 +17,23 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package io.github.bucket4j.grid.ignite.thin;
-
-import io.github.bucket4j.grid.jcache.JCacheEntryProcessor;
+package io.github.bucket4j.grid.ignite.thin.compute;
 
 import java.io.Serializable;
 
-public class Bucket4jComputeTaskParams<K extends Serializable, T extends Serializable> implements Serializable {
+public class Bucket4jComputeTaskParams<K> implements Serializable {
 
     private final String cacheName;
     private final K key;
-    private final JCacheEntryProcessor<K, T> processor;
+    private final IgniteEntryProcessor<K> processor;
 
-    public Bucket4jComputeTaskParams(String cacheName, K key, JCacheEntryProcessor<K, T> processor) {
+    public Bucket4jComputeTaskParams(String cacheName, K key, IgniteEntryProcessor<K> processor) {
         this.cacheName = cacheName;
         this.key = key;
         this.processor = processor;
     }
 
-    public JCacheEntryProcessor<K, T> getProcessor() {
+    public IgniteEntryProcessor<K> getProcessor() {
         return processor;
     }
 

@@ -17,7 +17,7 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package io.github.bucket4j.grid.ignite.thin;
+package io.github.bucket4j.grid.ignite.thin.compute;
 
 import org.apache.ignite.Ignite;
 import org.apache.ignite.IgniteException;
@@ -26,15 +26,13 @@ import org.apache.ignite.compute.ComputeJob;
 import org.apache.ignite.compute.ComputeJobResult;
 import org.apache.ignite.compute.ComputeTaskAdapter;
 import org.apache.ignite.resources.IgniteInstanceResource;
-import org.jetbrains.annotations.Nullable;
 
-import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
-public class Bucket4jComputeTask <K extends Serializable, T extends Serializable> extends ComputeTaskAdapter<Bucket4jComputeTaskParams<K, T>, T> {
+public class Bucket4jComputeTask <K> extends ComputeTaskAdapter<Bucket4jComputeTaskParams<K>, byte[]> {
 
     public static final String JOB_NAME = Bucket4jComputeTask.class.getName();
 
@@ -42,8 +40,8 @@ public class Bucket4jComputeTask <K extends Serializable, T extends Serializable
     private Ignite ignite;
 
     @Override
-    public Map<? extends ComputeJob, ClusterNode> map(List<ClusterNode> subgrid, Bucket4jComputeTaskParams<K, T> params) throws IgniteException {
-        Bucket4jComputeJob<K, T> job = new Bucket4jComputeJob(params);
+    public Map<? extends ComputeJob, ClusterNode> map(List<ClusterNode> subgrid, Bucket4jComputeTaskParams<K> params) throws IgniteException {
+        Bucket4jComputeJob<K> job = new Bucket4jComputeJob<>(params);
 
         ClusterNode primaryNodeForKey = ignite.affinity(params.getCacheName()).mapKeyToNode(params.getKey());
         for (ClusterNode clusterNode : subgrid) {
@@ -58,7 +56,7 @@ public class Bucket4jComputeTask <K extends Serializable, T extends Serializable
     }
 
     @Override
-    public @Nullable T reduce(List<ComputeJobResult> results) throws IgniteException {
+    public byte[] reduce(List<ComputeJobResult> results) throws IgniteException {
         return results.get(0).getData();
     }
 

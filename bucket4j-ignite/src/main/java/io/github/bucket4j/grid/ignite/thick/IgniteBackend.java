@@ -34,7 +34,7 @@
  *      limitations under the License.
  */
 
-package io.github.bucket4j.grid.ignite;
+package io.github.bucket4j.grid.ignite.thick;
 
 import io.github.bucket4j.distributed.proxy.AbstractBackend;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;

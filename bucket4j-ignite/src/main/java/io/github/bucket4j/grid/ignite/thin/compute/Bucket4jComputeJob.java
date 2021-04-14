@@ -17,31 +17,28 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package io.github.bucket4j.grid.ignite.thin;
+package io.github.bucket4j.grid.ignite.thin.compute;
 
-import io.github.bucket4j.grid.GridBucketState;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.IgniteCache;
 import org.apache.ignite.IgniteException;
 import org.apache.ignite.compute.ComputeJob;
 import org.apache.ignite.resources.IgniteInstanceResource;
 
-import java.io.Serializable;
+public class Bucket4jComputeJob<K> implements ComputeJob {
 
-public class Bucket4jComputeJob<K extends Serializable, T extends Serializable> implements ComputeJob {
-
-    private final Bucket4jComputeTaskParams<K, T> params;
+    private final Bucket4jComputeTaskParams<K> params;
 
     @IgniteInstanceResource
     private Ignite ignite;
 
-    public Bucket4jComputeJob(Bucket4jComputeTaskParams<K, T> params) {
+    public Bucket4jComputeJob(Bucket4jComputeTaskParams<K> params) {
         this.params = params;
     }
 
     @Override
     public Object execute() throws IgniteException {
-        IgniteCache<K, GridBucketState> cache = ignite.cache(params.getCacheName());
+        IgniteCache<K, byte[]> cache = ignite.cache(params.getCacheName());
         return cache.invoke(params.getKey(), params.getProcessor());
     }
 

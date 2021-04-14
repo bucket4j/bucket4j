@@ -1,6 +1,7 @@
 package io.github.bucket4j.grid.ignite;
 
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
+import io.github.bucket4j.grid.ignite.thick.IgniteBackend;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
 import io.github.bucket4j.distributed.proxy.Backend;
 import org.apache.ignite.Ignite;

@@ -3,12 +3,10 @@ package io.github.bucket4j.grid.ignite;
 import java.io.Serializable;
 import java.net.UnknownHostException;
 import java.util.Collections;
-import io.github.bucket4j.AbstractDistributedBucketTest;
-import io.github.bucket4j.Bucket;
-import io.github.bucket4j.Bucket4j;
-import io.github.bucket4j.grid.GridBucketState;
-import io.github.bucket4j.grid.ProxyManager;
-import io.github.bucket4j.grid.RecoveryStrategy;
+import io.github.bucket4j.distributed.proxy.Backend;
+import io.github.bucket4j.distributed.proxy.ClientSideConfig;
+import io.github.bucket4j.grid.ignite.thin.compute.IgniteThickClientBackend;
+import io.github.bucket4j.tck.AbstractDistributedBucketTest;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.Ignition;
 import org.apache.ignite.client.ClientCache;
@@ -22,13 +20,13 @@ import org.gridkit.nanocloud.VX;
 import org.gridkit.vicluster.ViNode;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Test;
 
-public class IgniteClientTest extends AbstractDistributedBucketTest<IgniteBucketBuilder, io.github.bucket4j.grid.ignite.Ignite> {
+
+public class IgniteClientTest extends AbstractDistributedBucketTest {
 
     private static final String CACHE_NAME = "my_buckets";
 
-    private static ClientCache<String, GridBucketState> cache;
+    private static ClientCache<String, byte[]> cache;
     private static Cloud cloud;
     private static ViNode server;
 
@@ -88,25 +86,9 @@ public class IgniteClientTest extends AbstractDistributedBucketTest<IgniteBucket
         }
     }
 
-    @Test(expected = IllegalArgumentException.class)
     @Override
-    public void testThatImpossibleToPassNullCacheToProxyManagerConstructor() {
-        Bucket4j.extension(getExtensionClass()).proxyManagerForCache(igniteClient.compute(), (ClientCache<String, GridBucketState>)null);
-    }
-
-    @Override
-    protected Class<io.github.bucket4j.grid.ignite.Ignite> getExtensionClass() {
-        return io.github.bucket4j.grid.ignite.Ignite.class;
-    }
-
-    @Override
-    protected Bucket build(IgniteBucketBuilder builder, String key, RecoveryStrategy recoveryStrategy) {
-        return builder.build(igniteClient.compute(), cache, key, recoveryStrategy);
-    }
-
-    @Override
-    protected ProxyManager<String> newProxyManager() {
-        return Bucket4j.extension(getExtensionClass()).proxyManagerForCache(igniteClient.compute(), cache);
+    protected Backend<String> getBackend() {
+        return new IgniteThickClientBackend<>(cache, igniteClient.compute(), ClientSideConfig.getDefault());
     }
 
     @Override
