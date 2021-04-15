@@ -19,34 +19,26 @@ package example.distributed.generic.redisson.rmap_cas;
 
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AbstractCompareAndSwapBasedBackend;
-import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.CompareAndSwapBasedTransaction;
+import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.CompareAndSwapOperation;
 import org.redisson.api.RMap;
 
-import java.sql.*;
 import java.util.Optional;
 
 public class RMapBasedRedissonBackend extends AbstractCompareAndSwapBasedBackend<Long> {
 
     private final RMap<Long, byte[]> buckets;
 
-    public RMapBasedRedissonBackend(RMap<Long, byte[]> buckets, ClientSideConfig clientSideConfig) throws SQLException {
+    public RMapBasedRedissonBackend(RMap<Long, byte[]> buckets, ClientSideConfig clientSideConfig) {
         super(clientSideConfig);
         this.buckets = buckets;
     }
 
     @Override
-    protected CompareAndSwapBasedTransaction allocateTransaction(Long key) {
+    protected CompareAndSwapOperation beginCompareAndSwapOperation(Long key) {
         return new RedissonCompareAndSwapTransaction(key);
     }
 
-    @Override
-    protected void releaseTransaction(CompareAndSwapBasedTransaction transaction) {
-        // do nothing
-    }
-
-
-
-    private class RedissonCompareAndSwapTransaction implements CompareAndSwapBasedTransaction {
+    private class RedissonCompareAndSwapTransaction implements CompareAndSwapOperation {
 
         private final long key;
 
@@ -56,7 +48,7 @@ public class RMapBasedRedissonBackend extends AbstractCompareAndSwapBasedBackend
 
 
         @Override
-        public Optional<byte[]> get() {
+        public Optional<byte[]> getStateData() {
             byte[] persistedState = buckets.get(key);
             return Optional.ofNullable(persistedState);
         }

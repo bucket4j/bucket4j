@@ -66,7 +66,7 @@ public abstract class BaseDynamoDBTransactionTest<K> {
     public void getReturnsEmptyIfNoRecordExists() {
         BaseDynamoDBTransaction transaction = transaction(key());
 
-        Optional<byte[]> state = transaction.get();
+        Optional<byte[]> state = transaction.getStateData();
         assertFalse(state.isPresent());
     }
 
@@ -80,7 +80,7 @@ public abstract class BaseDynamoDBTransactionTest<K> {
         BaseDynamoDBTransaction transaction = transaction(key);
 
         // when
-        Optional<byte[]> state = transaction.get();
+        Optional<byte[]> state = transaction.getStateData();
 
         // then
         assertFalse(state.isPresent());
@@ -105,7 +105,7 @@ public abstract class BaseDynamoDBTransactionTest<K> {
                 "Current state value is " + ItemUtils.toAttributeValue(state)
         );
 
-        transaction.get();
+        transaction.getStateData();
     }
 
     @Test
@@ -119,7 +119,7 @@ public abstract class BaseDynamoDBTransactionTest<K> {
         BaseDynamoDBTransaction transaction = transaction(key);
 
         // when
-        Optional<byte[]> actual = transaction.get();
+        Optional<byte[]> actual = transaction.getStateData();
 
         // then
         assertTrue(actual.isPresent());

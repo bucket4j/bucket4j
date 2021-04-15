@@ -141,4 +141,13 @@ public class RemoteBucketState implements ComparableByContent<RemoteBucketState>
         return new RemoteBucketState(configuration, state.copy(), stat.copy());
     }
 
+    @Override
+    public String toString() {
+        return "RemoteBucketState{" +
+                "configuration=" + configuration +
+                ", state=" + state +
+                ", stat=" + stat +
+                '}';
+    }
+
 }

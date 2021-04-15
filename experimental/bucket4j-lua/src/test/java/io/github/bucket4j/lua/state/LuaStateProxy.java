@@ -65,6 +65,11 @@ public class LuaStateProxy implements BucketState {
     }
 
     @Override
+    public void forceAddTokens(Bandwidth[] bandwidths, long tokensToAdd) {
+
+    }
+
+    @Override
     public long getCurrentSize(int bandwidth) {
         return 0;
     }

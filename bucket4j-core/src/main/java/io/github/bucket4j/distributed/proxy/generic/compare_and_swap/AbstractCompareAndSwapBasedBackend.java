@@ -27,11 +27,13 @@ import io.github.bucket4j.distributed.proxy.generic.GenericEntry;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.remote.Request;
-import io.github.bucket4j.distributed.versioning.Version;
 
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 public abstract class AbstractCompareAndSwapBasedBackend<K> extends AbstractBackend<K> {
+
+    private static final CommandResult<?> UNSUCCESSFUL_CAS_RESULT = null;
 
     protected AbstractCompareAndSwapBasedBackend(ClientSideConfig clientSideConfig) {
         super(injectTimeClock(clientSideConfig));
@@ -39,36 +41,39 @@ public abstract class AbstractCompareAndSwapBasedBackend<K> extends AbstractBack
 
     @Override
     public <T> CommandResult<T> execute(K key, Request<T> request) {
+        CompareAndSwapOperation operation = beginCompareAndSwapOperation(key);
         while (true) {
-            CompareAndSwapBasedTransaction transaction = allocateTransaction(key);
-            try {
-                CommandResult<T> result = execute(request, transaction);
-                if (result != null) {
-                    return result;
-                }
-            } finally {
-                releaseTransaction(transaction);
+            CommandResult<T> result = execute(request, operation);
+            if (result != UNSUCCESSFUL_CAS_RESULT) {
+                return result;
             }
         }
     }
 
     @Override
-    public boolean isAsyncModeSupported() {
-        return false;
-    }
-
-    @Override
     public <T> CompletableFuture<CommandResult<T>> executeAsync(K key, Request<T> request) {
-        throw new UnsupportedOperationException();
+        AsyncCompareAndSwapOperation operation = beginAsyncCompareAndSwapOperation(key);
+        CompletableFuture<CommandResult<T>> result = executeAsync(request, operation);
+        return result.thenCompose((CommandResult<T> response) -> retryIfCasWasUnsuccessful(operation, request, response));
     }
 
-    protected abstract CompareAndSwapBasedTransaction allocateTransaction(K key);
+    /**
+     * TODO
+     * @param key
+     * @return
+     */
+    protected abstract CompareAndSwapOperation beginCompareAndSwapOperation(K key);
 
-    protected abstract void releaseTransaction(CompareAndSwapBasedTransaction transaction);
+    /**
+     * TODO
+     * @param key
+     * @return
+     */
+    protected abstract AsyncCompareAndSwapOperation beginAsyncCompareAndSwapOperation(K key);
 
-    private <T> CommandResult<T> execute(Request<T> request, CompareAndSwapBasedTransaction transaction) {
+    private <T> CommandResult<T> execute(Request<T> request, CompareAndSwapOperation operation) {
         RemoteCommand<T> command = request.getCommand();
-        byte[] originalStateBytes = transaction.get().orElse(null);
+        byte[] originalStateBytes = operation.getStateData().orElse(null);
         GenericEntry entry = new GenericEntry(originalStateBytes, request.getBackwardCompatibilityVersion());
         CommandResult<T> result = command.execute(entry, getClientSideTime());
         if (!entry.isModified()) {
@@ -76,11 +81,36 @@ public abstract class AbstractCompareAndSwapBasedBackend<K> extends AbstractBack
         }
 
         byte[] newStateBytes = entry.getModifiedStateBytes();
-        if (transaction.compareAndSwap(originalStateBytes, newStateBytes)) {
+        if (operation.compareAndSwap(originalStateBytes, newStateBytes)) {
             return result;
         } else {
             return null;
         }
+    }
+
+    private <T> CompletableFuture<CommandResult<T>> retryIfCasWasUnsuccessful(AsyncCompareAndSwapOperation operation, Request<T> request, CommandResult<T> casResponse) {
+        if (casResponse != UNSUCCESSFUL_CAS_RESULT) {
+            return CompletableFuture.completedFuture(casResponse);
+        } else {
+            return executeAsync(request, operation).thenCompose((CommandResult<T> response) -> retryIfCasWasUnsuccessful(operation, request, response));
+        }
+    }
+
+
+    private <T> CompletableFuture<CommandResult<T>> executeAsync(Request<T> request, AsyncCompareAndSwapOperation operation) {
+        return operation.getStateData()
+            .thenApply((Optional<byte[]> originalStateBytes) -> originalStateBytes.orElse(null))
+            .thenCompose((byte[] originalStateBytes) -> {
+                RemoteCommand<T> command = request.getCommand();
+                GenericEntry entry = new GenericEntry(originalStateBytes, request.getBackwardCompatibilityVersion());
+                CommandResult<T> result = command.execute(entry, getClientSideTime());
+                if (!entry.isModified()) {
+                    return CompletableFuture.completedFuture(result);
+                }
+
+                byte[] newStateBytes = entry.getModifiedStateBytes();
+                return operation.compareAndSwap(originalStateBytes, newStateBytes).thenApply((casWasSuccessful) -> casWasSuccessful? result : null);
+            });
     }
 
     private static ClientSideConfig injectTimeClock(ClientSideConfig clientSideConfig) {

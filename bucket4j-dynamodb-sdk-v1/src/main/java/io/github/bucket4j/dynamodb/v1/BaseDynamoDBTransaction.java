@@ -6,7 +6,7 @@ import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException;
 import com.amazonaws.services.dynamodbv2.model.GetItemRequest;
 import com.amazonaws.services.dynamodbv2.model.PutItemRequest;
-import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.CompareAndSwapBasedTransaction;
+import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.CompareAndSwapOperation;
 
 import java.nio.ByteBuffer;
 import java.util.Collections;
@@ -15,7 +15,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
-abstract class BaseDynamoDBTransaction implements CompareAndSwapBasedTransaction {
+abstract class BaseDynamoDBTransaction implements CompareAndSwapOperation {
     private final AmazonDynamoDB db;
     private final String table;
     // NOTE: hardcode for now. Allow customization?
@@ -28,7 +28,7 @@ abstract class BaseDynamoDBTransaction implements CompareAndSwapBasedTransaction
     }
 
     @Override
-    public final Optional<byte[]> get() {
+    public final Optional<byte[]> getStateData() {
         Map<String, AttributeValue> attrs = new HashMap<>();
         attrs.put(keyAttr, getKeyAttributeValue());
 

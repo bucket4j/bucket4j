@@ -34,7 +34,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public class RMAP_Redisson_Example {
 
-    public static void main(String[] args) throws SQLException, InterruptedException {
+    public static void main(String[] args) throws InterruptedException {
         GenericContainer container = startRedisContainer();
         RedissonClient redisson = createRedissonClient(container);
 

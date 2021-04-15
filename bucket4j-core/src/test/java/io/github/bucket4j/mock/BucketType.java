@@ -96,6 +96,14 @@ public enum BucketType {
                     .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
                     .buildProxy(42, configuration);
         }
+
+        @Override
+        public AsyncBucketProxy createAsyncBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
+            CompareAndSwapBasedBackendMock<Integer> backend = new CompareAndSwapBasedBackendMock<>(ClientSideConfig.withClientClock(timeMeter));
+            return backend.asAsync().builder()
+                .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
+                .buildProxy(42, configuration);
+        }
     },
     SELECT_FOR_UPDATE {
         @Override

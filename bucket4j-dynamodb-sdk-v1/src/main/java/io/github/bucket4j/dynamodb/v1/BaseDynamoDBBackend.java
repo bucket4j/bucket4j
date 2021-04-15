@@ -3,7 +3,7 @@ package io.github.bucket4j.dynamodb.v1;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AbstractCompareAndSwapBasedBackend;
-import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.CompareAndSwapBasedTransaction;
+import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.CompareAndSwapOperation;
 
 import java.util.Objects;
 
@@ -25,10 +25,6 @@ abstract class BaseDynamoDBBackend<K> extends AbstractCompareAndSwapBasedBackend
 
     // NOTE: override exists only to expose method to tests.
     @Override
-    protected abstract CompareAndSwapBasedTransaction allocateTransaction(K key);
+    protected abstract CompareAndSwapOperation beginCompareAndSwapOperation(K key);
 
-    @Override
-    protected final void releaseTransaction(CompareAndSwapBasedTransaction transaction) {
-        // no-op
-    }
 }

@@ -5,7 +5,7 @@ import java.net.UnknownHostException;
 import java.util.Collections;
 import io.github.bucket4j.distributed.proxy.Backend;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
-import io.github.bucket4j.grid.ignite.thin.compute.IgniteThickClientBackend;
+import io.github.bucket4j.grid.ignite.thin.compute.IgniteThinClientBackend;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.Ignition;
@@ -88,7 +88,7 @@ public class IgniteClientTest extends AbstractDistributedBucketTest {
 
     @Override
     protected Backend<String> getBackend() {
-        return new IgniteThickClientBackend<>(cache, igniteClient.compute(), ClientSideConfig.getDefault());
+        return new IgniteThinClientBackend<>(cache, igniteClient.compute(), ClientSideConfig.getDefault());
     }
 
     @Override

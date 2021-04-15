@@ -42,6 +42,7 @@ import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.Request;
 import io.github.bucket4j.distributed.versioning.Version;
+import io.github.bucket4j.grid.ignite.thin.ThinClientUtils;
 import org.apache.ignite.client.ClientCache;
 import org.apache.ignite.client.ClientCompute;
 import org.apache.ignite.client.IgniteClientFuture;
@@ -54,12 +55,12 @@ import static io.github.bucket4j.distributed.serialization.InternalSerialization
 /**
  * The extension of Bucket4j library addressed to support <a href="https://ignite.apache.org/">Apache ignite</a> in-memory computing platform.
  */
-public class IgniteThickClientBackend<K> extends AbstractBackend<K> {
+public class IgniteThinClientBackend<K> extends AbstractBackend<K> {
 
     private final ClientCache<K, byte[]> cache;
     private final ClientCompute clientCompute;
 
-    public IgniteThickClientBackend(ClientCache<K, byte[]> cache, ClientCompute clientCompute, ClientSideConfig clientSideConfig) {
+    public IgniteThinClientBackend(ClientCache<K, byte[]> cache, ClientCompute clientCompute, ClientSideConfig clientSideConfig) {
         super(clientSideConfig);
         this.cache = Objects.requireNonNull(cache);
         this.clientCompute = Objects.requireNonNull(clientCompute);
@@ -88,21 +89,9 @@ public class IgniteThickClientBackend<K> extends AbstractBackend<K> {
         Bucket4jComputeTaskParams<K> taskParams = new Bucket4jComputeTaskParams<>(cache.getName(), key, entryProcessor);
 
         IgniteClientFuture<byte[]> igniteFuture = clientCompute.executeAsync2(Bucket4jComputeTask.JOB_NAME, taskParams);
-        CompletableFuture<byte[]> completableFuture = convertFuture(igniteFuture);
+        CompletableFuture<byte[]> completableFuture = ThinClientUtils.convertFuture(igniteFuture);
         Version backwardCompatibilityVersion = request.getBackwardCompatibilityVersion();
         return completableFuture.thenApply((byte[] resultBytes) -> deserializeResult(resultBytes, backwardCompatibilityVersion));
-    }
-
-    private static <T> CompletableFuture<T> convertFuture(IgniteClientFuture<T> igniteFuture) {
-        CompletableFuture<T> completableFuture = new CompletableFuture<>();
-        igniteFuture.whenComplete((T result, Throwable error) -> {
-            if (error != null) {
-                completableFuture.completeExceptionally(error);
-            } else {
-                completableFuture.complete(result);
-            }
-        });
-        return completableFuture;
     }
 
 }

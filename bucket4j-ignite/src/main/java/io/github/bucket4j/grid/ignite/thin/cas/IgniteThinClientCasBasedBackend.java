@@ -19,53 +19,82 @@ package io.github.bucket4j.grid.ignite.thin.cas;
 
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AbstractCompareAndSwapBasedBackend;
-import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.CompareAndSwapBasedTransaction;
+import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AsyncCompareAndSwapOperation;
+import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.CompareAndSwapOperation;
+import io.github.bucket4j.grid.ignite.thin.ThinClientUtils;
 import org.apache.ignite.client.ClientCache;
+import org.apache.ignite.client.IgniteClientFuture;
 
+import java.nio.ByteBuffer;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 public class IgniteThinClientCasBasedBackend<K> extends AbstractCompareAndSwapBasedBackend<K> {
 
-    private final ClientCache<K, byte[]> cache;
+    private final ClientCache<K, ByteBuffer> cache;
 
-    public IgniteThinClientCasBasedBackend(ClientCache<K, byte[]> cache, ClientSideConfig clientSideConfig) {
+    public IgniteThinClientCasBasedBackend(ClientCache<K, ByteBuffer> cache, ClientSideConfig clientSideConfig) {
         super(clientSideConfig);
         this.cache = Objects.requireNonNull(cache);
     }
 
     @Override
-    protected CompareAndSwapBasedTransaction allocateTransaction(K key) {
-        return new IgniteCompareAndSwapTransaction(key);
+    protected CompareAndSwapOperation beginCompareAndSwapOperation(K key) {
+        return new CompareAndSwapOperation() {
+            @Override
+            public Optional<byte[]> getStateData() {
+                ByteBuffer persistedState = cache.get(key);
+                if (persistedState == null) {
+                    return Optional.empty();
+                }
+                byte[] persistedStateBytes = persistedState.array();
+                return Optional.of(persistedStateBytes);
+            }
+            @Override
+            public boolean compareAndSwap(byte[] originalDataBytes, byte[] newDataBytes) {
+                ByteBuffer newData = ByteBuffer.wrap(newDataBytes);
+                if (originalDataBytes == null) {
+                    return cache.putIfAbsent(key, newData);
+                }
+                ByteBuffer originalData = ByteBuffer.wrap(originalDataBytes);
+                return cache.replace(key, originalData, newData);
+            }
+        };
     }
 
     @Override
-    protected void releaseTransaction(CompareAndSwapBasedTransaction transaction) {
-        // do nothing
+    protected AsyncCompareAndSwapOperation beginAsyncCompareAndSwapOperation(K key) {
+        return new AsyncCompareAndSwapOperation() {
+            @Override
+            public CompletableFuture<Optional<byte[]>> getStateData() {
+                IgniteClientFuture<ByteBuffer> igniteFuture = cache.getAsync(key);
+                CompletableFuture<ByteBuffer> resultFuture = ThinClientUtils.convertFuture(igniteFuture);
+                return resultFuture.thenApply((ByteBuffer persistedState) -> {
+                    if (persistedState == null) {
+                        return Optional.empty();
+                    }
+                    byte[] persistedStateBytes = persistedState.array();
+                    return Optional.of(persistedStateBytes);
+                });
+            }
+            @Override
+            public CompletableFuture<Boolean> compareAndSwap(byte[] originalDataBytes, byte[] newDataBytes) {
+                ByteBuffer newData = ByteBuffer.wrap(newDataBytes);
+                if (originalDataBytes == null) {
+                    IgniteClientFuture<Boolean> igniteFuture = cache.putIfAbsentAsync(key, newData);
+                    return ThinClientUtils.convertFuture(igniteFuture);
+                }
+                ByteBuffer originalData = ByteBuffer.wrap(originalDataBytes);
+                IgniteClientFuture<Boolean> igniteFuture = cache.replaceAsync(key, originalData, newData);
+                return ThinClientUtils.convertFuture(igniteFuture);
+            }
+        };
     }
 
-    private class IgniteCompareAndSwapTransaction implements CompareAndSwapBasedTransaction {
-
-        private final K key;
-
-        private IgniteCompareAndSwapTransaction(K key) {
-            this.key = key;
-        }
-
-        @Override
-        public Optional<byte[]> get() {
-            byte[] persistedState = cache.get(key);
-            return Optional.ofNullable(persistedState);
-        }
-
-        @Override
-        public boolean compareAndSwap(byte[] originalData, byte[] newData) {
-            if (originalData == null) {
-                return cache.putIfAbsent(key, newData);
-            }
-            return cache.replace(key, originalData, newData);
-        }
-
+    @Override
+    public boolean isAsyncModeSupported() {
+        return true;
     }
 
 }

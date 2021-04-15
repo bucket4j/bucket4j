@@ -17,14 +17,15 @@
 
 package io.github.bucket4j.mock;
 
-import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AbstractCompareAndSwapBasedBackend;
-import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.CompareAndSwapBasedTransaction;
+import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AsyncCompareAndSwapOperation;
+import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.CompareAndSwapOperation;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 public class CompareAndSwapBasedBackendMock<K> extends AbstractCompareAndSwapBasedBackend<K> {
 
@@ -35,14 +36,13 @@ public class CompareAndSwapBasedBackendMock<K> extends AbstractCompareAndSwapBas
     }
 
     @Override
-    protected CompareAndSwapBasedTransaction allocateTransaction(K key) {
+    protected CompareAndSwapOperation beginCompareAndSwapOperation(K key) {
         byte[] backup = stateMap.get(key);
-        return new CompareAndSwapBasedTransaction() {
+        return new CompareAndSwapOperation() {
             @Override
-            public Optional<byte[]> get() {
+            public Optional<byte[]> getStateData() {
                 return Optional.ofNullable(backup);
             }
-
             @Override
             public boolean compareAndSwap(byte[] originalData, byte[] newData) {
                 stateMap.put(key, newData);
@@ -52,8 +52,24 @@ public class CompareAndSwapBasedBackendMock<K> extends AbstractCompareAndSwapBas
     }
 
     @Override
-    protected void releaseTransaction(CompareAndSwapBasedTransaction transaction) {
-        // do nothing
+    protected AsyncCompareAndSwapOperation beginAsyncCompareAndSwapOperation(K key) {
+        byte[] backup = stateMap.get(key);
+        return new AsyncCompareAndSwapOperation() {
+            @Override
+            public CompletableFuture<Optional<byte[]>> getStateData() {
+                return CompletableFuture.completedFuture(Optional.ofNullable(backup));
+            }
+            @Override
+            public CompletableFuture<Boolean> compareAndSwap(byte[] originalData, byte[] newData) {
+                stateMap.put(key, newData);
+                return CompletableFuture.completedFuture(true);
+            }
+        };
+    }
+
+    @Override
+    public boolean isAsyncModeSupported() {
+        return true;
     }
 
 }

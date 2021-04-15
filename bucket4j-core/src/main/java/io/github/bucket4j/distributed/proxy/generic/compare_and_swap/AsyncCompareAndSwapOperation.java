@@ -21,15 +21,16 @@
 package io.github.bucket4j.distributed.proxy.generic.compare_and_swap;
 
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
-public interface CompareAndSwapBasedTransaction {
+public interface AsyncCompareAndSwapOperation {
 
     /**
      * Reads data if it exists
      *
      * @return persisted data or empty optional if data not exists
      */
-    Optional<byte[]> get();
+    CompletableFuture<Optional<byte[]>> getStateData();
 
     /**
      * Compares and swap data associated with key
@@ -39,6 +40,6 @@ public interface CompareAndSwapBasedTransaction {
      *
      * @return {@code true} if data changed, {@code false} if another parallel transaction achieved success instead of current transaction
      */
-    boolean compareAndSwap(byte[] originalData, byte[] newData);
+    CompletableFuture<Boolean> compareAndSwap(byte[] originalData, byte[] newData);
 
 }

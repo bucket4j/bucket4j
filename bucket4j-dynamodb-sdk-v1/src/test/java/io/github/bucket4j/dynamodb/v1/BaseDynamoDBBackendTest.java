@@ -44,7 +44,7 @@ public abstract class BaseDynamoDBBackendTest<K> {
     public void allocateTransactionReturnsNonNullTransaction() {
         BaseDynamoDBBackend<K> backend = create(db, table, ClientSideConfig.getDefault());
 
-        assertNotNull(backend.allocateTransaction(key()));
+        assertNotNull(backend.beginCompareAndSwapOperation(key()));
     }
 
     /**
