@@ -75,13 +75,6 @@
             <version>42.0.0</version>
         </dependency>
 
-        <!-- For Redis examples -->
-        <dependency>
-            <groupId>org.redisson</groupId>
-            <artifactId>redisson</artifactId>
-            <version>3.11.5</version>
-        </dependency>
-
         <!-- For Hazelcast examples -->
         <dependency>
             <groupId>javax.cache</groupId>

@@ -30,6 +30,7 @@
         <module>bucket4j-examples</module>
         <module>lincheck-tests</module>
         <module>bucket4j-dynamodb-sdk-v1</module>
+        <module>bucket4j-redis</module>
     </modules>
 
     <properties>

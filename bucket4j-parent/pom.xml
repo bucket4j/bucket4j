@@ -65,6 +65,7 @@
         <testcontainers.version>1.15.1</testcontainers.version>
         <lettuce-version>5.0.2.RELEASE</lettuce-version>
         <jedis.version>2.9.0</jedis.version>
+        <redisson.version>3.11.5</redisson.version>
     </properties>
 
     <scm>
