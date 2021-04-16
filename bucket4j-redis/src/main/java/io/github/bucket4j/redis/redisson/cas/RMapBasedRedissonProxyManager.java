@@ -18,7 +18,7 @@
 package io.github.bucket4j.redis.redisson.cas;
 
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
-import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AbstractCompareAndSwapBasedBackend;
+import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AbstractCompareAndSwapBasedProxyManager;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AsyncCompareAndSwapOperation;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.CompareAndSwapOperation;
 import org.redisson.api.RFuture;
@@ -28,11 +28,11 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-public class RMapBasedRedissonBackend<K> extends AbstractCompareAndSwapBasedBackend<K> {
+public class RMapBasedRedissonProxyManager<K> extends AbstractCompareAndSwapBasedProxyManager<K> {
 
     private final RMap<K, byte[]> buckets;
 
-    public RMapBasedRedissonBackend(RMap<K, byte[]> buckets, ClientSideConfig clientSideConfig) {
+    public RMapBasedRedissonProxyManager(RMap<K, byte[]> buckets, ClientSideConfig clientSideConfig) {
         super(clientSideConfig);
         this.buckets = buckets;
     }
@@ -78,6 +78,17 @@ public class RMapBasedRedissonBackend<K> extends AbstractCompareAndSwapBasedBack
                 }
             }
         };
+    }
+
+    @Override
+    public void removeProxy(K key) {
+        buckets.remove(key);
+    }
+
+    @Override
+    protected CompletableFuture<Void> removeAsync(K key) {
+        RFuture<byte[]> redissonFuture = buckets.removeAsync(key);
+        return convertFuture(redissonFuture).thenApply(bytes -> null);
     }
 
     @Override

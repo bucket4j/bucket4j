@@ -7,7 +7,7 @@ import io.github.bucket4j.distributed.proxy.optimization.DefaultOptimizationList
 import io.github.bucket4j.distributed.proxy.optimization.DelayParameters
 import io.github.bucket4j.distributed.proxy.optimization.Optimization
 import io.github.bucket4j.distributed.proxy.optimization.PredictionParameters
-import io.github.bucket4j.mock.GridBackendMock
+import io.github.bucket4j.mock.ProxyManagerMock
 import io.github.bucket4j.mock.TimeMeterMock
 import spock.lang.Specification
 
@@ -16,7 +16,7 @@ import java.time.Duration
 class PredictiveCommandExecutorSpecification extends Specification {
 
     private TimeMeterMock clock = new TimeMeterMock()
-    private GridBackendMock backend = new GridBackendMock(clock)
+    private ProxyManagerMock proxyManager = new ProxyManagerMock(clock)
     private DefaultOptimizationListener listener = new DefaultOptimizationListener();
     private BucketConfiguration configuration = BucketConfiguration.builder()
         .addLimit(Bandwidth.simple(100, Duration.ofMillis(1000)))
@@ -24,10 +24,10 @@ class PredictiveCommandExecutorSpecification extends Specification {
     private DelayParameters delay = new DelayParameters(20, Duration.ofMillis(500))
     private PredictionParameters prediction = PredictionParameters.createDefault(delay)
     private Optimization optimization = new PredictiveOptimization(prediction, delay, listener, clock)
-    private Bucket optimizedBucket = backend.builder()
+    private Bucket optimizedBucket = proxyManager.builder()
         .withOptimization(optimization)
         .buildProxy(1L, configuration)
-    private Bucket notOptimizedBucket = backend.builder()
+    private Bucket notOptimizedBucket = proxyManager.builder()
         .buildProxy(1L, configuration)
 
     def "Should delay sync consumption"() {
@@ -36,7 +36,7 @@ class PredictiveCommandExecutorSpecification extends Specification {
         then: "token was consumed"
             consumed == true
             optimizedBucket.getAvailableTokens() == 99
-        and: "request propagated to backend"
+        and: "request propagated to proxyManager"
             notOptimizedBucket.getAvailableTokens() == 99
         and: "metrics correctly counted"
             listener.getMergeCount() == 0
@@ -48,7 +48,7 @@ class PredictiveCommandExecutorSpecification extends Specification {
         then: "token was consumed"
             consumed == true
             optimizedBucket.getAvailableTokens() == 98
-        and: "request not propagated to backend because"
+        and: "request not propagated to proxyManager because"
             notOptimizedBucket.getAvailableTokens() == 99
         and: "metrics correctly counted"
             listener.getMergeCount() == 0
@@ -60,7 +60,7 @@ class PredictiveCommandExecutorSpecification extends Specification {
         then: "token was consumed"
             consumed == true
             optimizedBucket.getAvailableTokens() == 98 // one token was refilled
-        and: "request not propagated to backend"
+        and: "request not propagated to proxyManager"
             notOptimizedBucket.getAvailableTokens() == 100 // one token was refilled
         and: "metrics correctly counted"
             listener.getMergeCount() == 0
@@ -72,7 +72,7 @@ class PredictiveCommandExecutorSpecification extends Specification {
         then: "token was consumed"
             consumed == true
             optimizedBucket.getAvailableTokens() == 79
-        and: "request propagated to backend because of overflow of delay threshold"
+        and: "request propagated to proxyManager because of overflow of delay threshold"
             notOptimizedBucket.getAvailableTokens() == 79 // one token was refilled
         and: "metrics correctly counted"
             listener.getMergeCount() == 0
@@ -89,13 +89,13 @@ class PredictiveCommandExecutorSpecification extends Specification {
 
         when: "500 millis passed"
             clock.addMillis(500) // 500
-        then: "request not propogated to backend"
+        then: "request not propogated to proxyManager"
             optimizedBucket.getAvailableTokens() == 100
             notOptimizedBucket.getAvailableTokens() == 54
 
         when: "1 millis passed"
             clock.addMillis(1) // 501
-        then: "request propogated to backend"
+        then: "request propogated to proxyManager"
             optimizedBucket.getAvailableTokens() == 38
             notOptimizedBucket.getAvailableTokens() == 38
 
@@ -115,7 +115,7 @@ class PredictiveCommandExecutorSpecification extends Specification {
             notOptimizedBucket.tryConsumeAsMuchAsPossible()
             optimizedBucket.tryConsume(19)
 
-        then: "amount of token in the backend become negative after sync"
+        then: "amount of token in the proxyManager become negative after sync"
             optimizedBucket.getAvailableTokens() == 3
             notOptimizedBucket.getAvailableTokens() == 0
 

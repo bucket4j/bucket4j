@@ -36,7 +36,7 @@
 
 package io.github.bucket4j.grid.ignite.thick;
 
-import io.github.bucket4j.distributed.proxy.AbstractBackend;
+import io.github.bucket4j.distributed.proxy.AbstractProxyManager;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.remote.*;
 import io.github.bucket4j.distributed.versioning.Version;
@@ -57,11 +57,11 @@ import static io.github.bucket4j.distributed.serialization.InternalSerialization
 /**
  * The extension of Bucket4j library addressed to support <a href="https://ignite.apache.org/">Apache ignite</a> in-memory computing platform.
  */
-public class IgniteBackend<K> extends AbstractBackend<K> {
+public class IgniteProxyManager<K> extends AbstractProxyManager<K> {
 
     private final IgniteCache<K, byte[]> cache;
 
-    public IgniteBackend(IgniteCache<K, byte[]> cache, ClientSideConfig clientSideConfig) {
+    public IgniteProxyManager(IgniteCache<K, byte[]> cache, ClientSideConfig clientSideConfig) {
         super(clientSideConfig);
         this.cache = Objects.requireNonNull(cache);
     }
@@ -74,6 +74,11 @@ public class IgniteBackend<K> extends AbstractBackend<K> {
     }
 
     @Override
+    public void removeProxy(K key) {
+        cache.remove(key);
+    }
+
+    @Override
     public boolean isAsyncModeSupported() {
         return true;
     }
@@ -82,8 +87,8 @@ public class IgniteBackend<K> extends AbstractBackend<K> {
     public <T> CompletableFuture<CommandResult<T>> executeAsync(K key, Request<T> request) {
         IgniteProcessor<K> entryProcessor = new IgniteProcessor<>(request);
         IgniteFuture<byte[]> igniteFuture = cache.invokeAsync(key, entryProcessor);
-        CompletableFuture<CommandResult<T>> completableFuture = new CompletableFuture<>();
         Version backwardCompatibilityVersion = request.getBackwardCompatibilityVersion();
+        CompletableFuture<CommandResult<T>> completableFuture = new CompletableFuture<>();
         igniteFuture.listen((IgniteInClosure<IgniteFuture<byte[]>>) completedIgniteFuture -> {
             try {
                 byte[] resultBytes = completedIgniteFuture.get();
@@ -96,6 +101,20 @@ public class IgniteBackend<K> extends AbstractBackend<K> {
         return completableFuture;
     }
 
+    @Override
+    protected CompletableFuture<Void> removeAsync(K key) {
+        IgniteFuture<Boolean> igniteFuture = cache.removeAsync(key);
+        CompletableFuture<Void> completableFuture = new CompletableFuture<>();
+        igniteFuture.listen((IgniteInClosure<IgniteFuture<Boolean>>) completedIgniteFuture -> {
+            try {
+                completedIgniteFuture.get();
+                completableFuture.complete(null);
+            } catch (Throwable t) {
+                completableFuture.completeExceptionally(t);
+            }
+        });
+        return completableFuture;
+    }
 
     private static class IgniteProcessor<K> implements Serializable, CacheEntryProcessor<K, byte[], byte[]> {
 

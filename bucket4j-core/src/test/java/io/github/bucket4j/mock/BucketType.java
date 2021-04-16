@@ -55,16 +55,16 @@ public enum BucketType {
     GRID {
         @Override
         public Bucket createBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
-            GridBackendMock<Integer> backend = new GridBackendMock<>(timeMeter);
-            return backend.builder()
+            ProxyManagerMock<Integer> proxyManager = new ProxyManagerMock<>(timeMeter);
+            return proxyManager.builder()
                     .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
                     .buildProxy(42, configuration);
         }
 
         @Override
         public AsyncBucketProxy createAsyncBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
-            GridBackendMock<Integer> backend = new GridBackendMock<>(timeMeter);
-            return backend.asAsync().builder()
+            ProxyManagerMock<Integer> proxyManager = new ProxyManagerMock<>(timeMeter);
+            return proxyManager.asAsync().builder()
                     .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
                     .buildProxy(42, configuration);
         }
@@ -72,8 +72,8 @@ public enum BucketType {
     GRID_WITH_BATCHING_OPTIMIZATION {
         @Override
         public Bucket createBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
-            GridBackendMock<Integer> backend = new GridBackendMock<>(timeMeter);
-            return backend.builder()
+            ProxyManagerMock<Integer> proxyManager = new ProxyManagerMock<>(timeMeter);
+            return proxyManager.builder()
                     .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
                     .withOptimization(Optimizations.batching())
                     .buildProxy(42, configuration);
@@ -81,8 +81,8 @@ public enum BucketType {
 
         @Override
         public AsyncBucketProxy createAsyncBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
-            GridBackendMock<Integer> backend = new GridBackendMock<>(timeMeter);
-            return backend.asAsync().builder()
+            ProxyManagerMock<Integer> proxyManager = new ProxyManagerMock<>(timeMeter);
+            return proxyManager.asAsync().builder()
                     .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
                     .withOptimization(Optimizations.batching())
                     .buildProxy(42, configuration);
@@ -91,16 +91,16 @@ public enum BucketType {
     COMPARE_AND_SWAP {
         @Override
         public Bucket createBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
-            CompareAndSwapBasedBackendMock<Integer> backend = new CompareAndSwapBasedBackendMock<>(ClientSideConfig.withClientClock(timeMeter));
-            return backend.builder()
+            CompareAndSwapBasedProxyManagerMock<Integer> proxyManager = new CompareAndSwapBasedProxyManagerMock<>(ClientSideConfig.withClientClock(timeMeter));
+            return proxyManager.builder()
                     .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
                     .buildProxy(42, configuration);
         }
 
         @Override
         public AsyncBucketProxy createAsyncBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
-            CompareAndSwapBasedBackendMock<Integer> backend = new CompareAndSwapBasedBackendMock<>(ClientSideConfig.withClientClock(timeMeter));
-            return backend.asAsync().builder()
+            CompareAndSwapBasedProxyManagerMock<Integer> proxyManager = new CompareAndSwapBasedProxyManagerMock<>(ClientSideConfig.withClientClock(timeMeter));
+            return proxyManager.asAsync().builder()
                 .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
                 .buildProxy(42, configuration);
         }
@@ -108,8 +108,8 @@ public enum BucketType {
     SELECT_FOR_UPDATE {
         @Override
         public Bucket createBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
-            LockBasedBackendMock<Integer> backend = new LockBasedBackendMock<>(ClientSideConfig.withClientClock(timeMeter));
-            return backend.builder()
+            LockBasedProxyManagerMock<Integer> proxyManager = new LockBasedProxyManagerMock<>(ClientSideConfig.withClientClock(timeMeter));
+            return proxyManager.builder()
                     .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
                     .buildProxy(42, configuration);
         }

@@ -1,8 +1,8 @@
 package io.github.bucket4j.grid.ignite;
 
-import io.github.bucket4j.distributed.proxy.Backend;
+import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
-import io.github.bucket4j.grid.ignite.thin.cas.IgniteThinClientCasBasedBackend;
+import io.github.bucket4j.grid.ignite.thin.cas.IgniteThinClientCasBasedProxyManager;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.Ignition;
@@ -22,9 +22,10 @@ import java.io.Serializable;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.util.Collections;
+import java.util.UUID;
 
 
-public class IgniteCasBasedClientTest extends AbstractDistributedBucketTest {
+public class IgniteCasBasedClientTest extends AbstractDistributedBucketTest<String> {
 
     private static final String CACHE_NAME = "my_buckets";
 
@@ -89,13 +90,13 @@ public class IgniteCasBasedClientTest extends AbstractDistributedBucketTest {
     }
 
     @Override
-    protected Backend<String> getBackend() {
-        return new IgniteThinClientCasBasedBackend<>(cache, ClientSideConfig.getDefault());
+    protected ProxyManager<String> getProxyManager() {
+        return new IgniteThinClientCasBasedProxyManager<>(cache, ClientSideConfig.getDefault());
     }
 
     @Override
-    protected void removeBucketFromBackingStorage(String key) {
-        cache.remove(key);
+    protected String generateRandomKey() {
+        return UUID.randomUUID().toString();
     }
 
 }

@@ -15,18 +15,19 @@
  *      limitations under the License.
  */
 
-package example.distributed.generic.postgresql.select_for_update;
+package example.distributed.generic.postgresql.advisory_lock;
 
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
-import io.github.bucket4j.distributed.proxy.generic.select_for_update.AbstractLockBasedBackend;
+import io.github.bucket4j.distributed.proxy.generic.select_for_update.AbstractLockBasedProxyManager;
 import io.github.bucket4j.distributed.proxy.generic.select_for_update.LockBasedTransaction;
 import io.github.bucket4j.distributed.proxy.generic.select_for_update.LockResult;
 
 import javax.sql.DataSource;
 import java.sql.*;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 
-public class SelectForUpdateBasedPostgreSQLBackend extends AbstractLockBasedBackend<Long> {
+public class AdvisoryLockBasedPostgreSQLProxyManager extends AbstractLockBasedProxyManager<Long> {
 
     private static final String INIT_TABLE_SCRIPT =
             "CREATE TABLE IF NOT EXISTS buckets(" +
@@ -36,7 +37,7 @@ public class SelectForUpdateBasedPostgreSQLBackend extends AbstractLockBasedBack
 
     private final DataSource dataSource;
 
-    public SelectForUpdateBasedPostgreSQLBackend(DataSource dataSource, ClientSideConfig clientSideConfig) throws SQLException {
+    public AdvisoryLockBasedPostgreSQLProxyManager(DataSource dataSource, ClientSideConfig clientSideConfig) throws SQLException {
         super(clientSideConfig);
         this.dataSource = Objects.requireNonNull(dataSource);
 
@@ -52,7 +53,7 @@ public class SelectForUpdateBasedPostgreSQLBackend extends AbstractLockBasedBack
     @Override
     protected LockBasedTransaction allocateTransaction(Long key) {
         try {
-            return new PostgreLockBasedTransaction(key, dataSource.getConnection());
+            return new PostgreAdvisoryLockBasedTransaction(key, dataSource.getConnection());
         } catch (SQLException e) {
             // TODO implement logging here
             e.printStackTrace();
@@ -66,7 +67,7 @@ public class SelectForUpdateBasedPostgreSQLBackend extends AbstractLockBasedBack
     protected void releaseTransaction(LockBasedTransaction transaction) {
         try {
             // return connection to pool
-            ((PostgreLockBasedTransaction) transaction).connection.close();
+            ((PostgreAdvisoryLockBasedTransaction) transaction).connection.close();
         } catch (SQLException e) {
             // TODO implement logging here
             e.printStackTrace();
@@ -76,14 +77,25 @@ public class SelectForUpdateBasedPostgreSQLBackend extends AbstractLockBasedBack
         }
     }
 
-    private class PostgreLockBasedTransaction implements LockBasedTransaction {
+    @Override
+    protected CompletableFuture<Void> removeAsync(Long key) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void removeProxy(Long key) {
+        // TODO implement removal
+        throw new UnsupportedOperationException();
+    }
+
+    private class PostgreAdvisoryLockBasedTransaction implements LockBasedTransaction {
 
         private final long key;
         private final Connection connection;
 
         private byte[] bucketStateBeforeTransaction;
 
-        private PostgreLockBasedTransaction(long key, Connection connection) {
+        private PostgreAdvisoryLockBasedTransaction(long key, Connection connection) {
             this.key = key;
             this.connection = connection;
         }
@@ -104,45 +116,24 @@ public class SelectForUpdateBasedPostgreSQLBackend extends AbstractLockBasedBack
         @Override
         public LockResult lock() {
             try {
-                String selectForUpdateSQL = "SELECT state FROM buckets WHERE id = ? FOR UPDATE";
-                try (PreparedStatement selectStatement = connection.prepareStatement(selectForUpdateSQL)) {
+                // acquire pessimistic lock
+                String lockSQL = "SELECT pg_advisory_xact_lock(?)";
+                try (PreparedStatement lockStatement = connection.prepareStatement(lockSQL)) {
+                    lockStatement.setLong(1, key);
+                    try (ResultSet rs = lockStatement.executeQuery()) {}
+                }
+
+                // select data if exists
+                String selectSQL = "SELECT state FROM buckets WHERE id = ?";
+                try (PreparedStatement selectStatement = connection.prepareStatement(selectSQL)) {
                     selectStatement.setLong(1, key);
                     try (ResultSet rs = selectStatement.executeQuery()) {
                         if (rs.next()) {
                             bucketStateBeforeTransaction = rs.getBytes("state");
-                            if (bucketStateBeforeTransaction != null) {
-                                return LockResult.DATA_EXISTS_AND_LOCKED;
-                            } else {
-                                // we detected fake data that inserted by previous transaction
-                                return LockResult.DATA_NOT_EXISTS_AND_LOCKED;
-                            }
+                            return LockResult.DATA_EXISTS_AND_LOCKED;
+                        } else {
+                            return LockResult.DATA_NOT_EXISTS_AND_LOCKED;
                         }
-                    }
-                }
-
-                // there are not persisted data for this bucket, so there is no raw which can act as lock.
-                // lets insert the raw with fake state which will acts as lock
-                String insertSQL = "INSERT INTO buckets(id, state) VALUES(?, null) ON CONFLICT(id) DO NOTHING";
-                try (PreparedStatement insertStatement = connection.prepareStatement(insertSQL)) {
-                    insertStatement.setLong(1, key);
-                    int rowsModified = insertStatement.executeUpdate();
-                    if (rowsModified > 0) {
-                        System.out.println(Thread.currentThread().getName() + " created new bucket key=" + key);
-                    } else {
-                        System.out.println(Thread.currentThread().getName() + " did not create new bucket key=" + key + " because it already created by other parallel thread");
-                    }
-                }
-
-                // it is need to execute select for update again in order to obtain the lock
-                try (PreparedStatement selectStatement = connection.prepareStatement(selectForUpdateSQL)) {
-                    selectStatement.setLong(1, key);
-                    try (ResultSet rs = selectStatement.executeQuery()) {
-                        if (!rs.next()) {
-                            // query does not see the record which inserted on step above
-                            throw new IllegalStateException("Something unexpected happen, it needs to read PostgreSQL manual");
-                        }
-                        // we need to return epmty Optional because bucket is not initialized yet
-                        return LockResult.DATA_NOT_EXISTS_AND_LOCKED;
                     }
                 }
             } catch (SQLException e) {
@@ -174,8 +165,20 @@ public class SelectForUpdateBasedPostgreSQLBackend extends AbstractLockBasedBack
 
         @Override
         public void create(byte[] data) {
-            // just do update because row always exists either with real or fake data.
-            update(data);
+            try {
+                String insertSQL = "INSERT INTO buckets(id, state) VALUES(?, ?)";
+                try (PreparedStatement insertStatement = connection.prepareStatement(insertSQL)) {
+                    insertStatement.setLong(1, key);
+                    insertStatement.setBytes(2, data);
+                    insertStatement.executeUpdate();
+                }
+            } catch (SQLException e) {
+                // TODO implement logging here
+                e.printStackTrace();
+
+                // TODO use appropriate type of exception
+                throw new IllegalStateException(e);
+            }
         }
 
         @Override
@@ -206,7 +209,7 @@ public class SelectForUpdateBasedPostgreSQLBackend extends AbstractLockBasedBack
 
         @Override
         public void unlock() {
-            // do nothing, because locked rows will be auto unlocked when transaction finishes
+            // do nothing, because advisory lock will be auto unlocked when transaction finishes
         }
 
         @Override

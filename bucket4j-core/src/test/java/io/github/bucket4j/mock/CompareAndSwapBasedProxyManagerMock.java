@@ -18,7 +18,7 @@
 package io.github.bucket4j.mock;
 
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
-import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AbstractCompareAndSwapBasedBackend;
+import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AbstractCompareAndSwapBasedProxyManager;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AsyncCompareAndSwapOperation;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.CompareAndSwapOperation;
 
@@ -27,12 +27,18 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-public class CompareAndSwapBasedBackendMock<K> extends AbstractCompareAndSwapBasedBackend<K> {
+public class CompareAndSwapBasedProxyManagerMock<K> extends AbstractCompareAndSwapBasedProxyManager<K> {
 
     private final Map<K, byte[]> stateMap = new HashMap<>();
 
-    public CompareAndSwapBasedBackendMock(ClientSideConfig clientSideConfig) {
+    public CompareAndSwapBasedProxyManagerMock(ClientSideConfig clientSideConfig) {
         super(clientSideConfig);
+    }
+
+    @Override
+    protected CompletableFuture<Void> removeAsync(K key) {
+        stateMap.remove(key);
+        return CompletableFuture.completedFuture(null);
     }
 
     @Override
@@ -65,6 +71,11 @@ public class CompareAndSwapBasedBackendMock<K> extends AbstractCompareAndSwapBas
                 return CompletableFuture.completedFuture(true);
             }
         };
+    }
+
+    @Override
+    public void removeProxy(K key) {
+        stateMap.remove(key);
     }
 
     @Override

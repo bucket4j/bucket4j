@@ -1,8 +1,8 @@
 import com.tangosol.net.CacheFactory;
 import com.tangosol.net.NamedCache;
-import io.github.bucket4j.distributed.proxy.Backend;
+import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
-import io.github.bucket4j.grid.coherence.CoherenceBackend;
+import io.github.bucket4j.grid.coherence.CoherenceProxyManager;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -10,9 +10,11 @@ import org.junit.Test;
 import org.littlegrid.ClusterMemberGroup;
 import org.littlegrid.ClusterMemberGroupUtils;
 
+import java.util.UUID;
+
 import static junit.framework.TestCase.assertEquals;
 
-public class CoherenceWithJdkSerializationTest extends AbstractDistributedBucketTest {
+public class CoherenceWithJdkSerializationTest extends AbstractDistributedBucketTest<String> {
 
     private static ClusterMemberGroup memberGroup;
     private static NamedCache cache;
@@ -37,13 +39,13 @@ public class CoherenceWithJdkSerializationTest extends AbstractDistributedBucket
     }
 
     @Override
-    protected Backend<String> getBackend() {
-        return new CoherenceBackend(cache, ClientSideConfig.getDefault());
+    protected ProxyManager<String> getProxyManager() {
+        return new CoherenceProxyManager(cache, ClientSideConfig.getDefault());
     }
 
     @Override
-    protected void removeBucketFromBackingStorage(String key) {
-        cache.remove(key);
+    protected String generateRandomKey() {
+        return UUID.randomUUID().toString();
     }
 
 }

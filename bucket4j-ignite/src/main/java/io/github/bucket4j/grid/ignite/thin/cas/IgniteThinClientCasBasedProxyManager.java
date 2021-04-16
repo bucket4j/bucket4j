@@ -18,7 +18,7 @@
 package io.github.bucket4j.grid.ignite.thin.cas;
 
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
-import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AbstractCompareAndSwapBasedBackend;
+import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AbstractCompareAndSwapBasedProxyManager;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AsyncCompareAndSwapOperation;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.CompareAndSwapOperation;
 import io.github.bucket4j.grid.ignite.thin.ThinClientUtils;
@@ -30,11 +30,11 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-public class IgniteThinClientCasBasedBackend<K> extends AbstractCompareAndSwapBasedBackend<K> {
+public class IgniteThinClientCasBasedProxyManager<K> extends AbstractCompareAndSwapBasedProxyManager<K> {
 
     private final ClientCache<K, ByteBuffer> cache;
 
-    public IgniteThinClientCasBasedBackend(ClientCache<K, ByteBuffer> cache, ClientSideConfig clientSideConfig) {
+    public IgniteThinClientCasBasedProxyManager(ClientCache<K, ByteBuffer> cache, ClientSideConfig clientSideConfig) {
         super(clientSideConfig);
         this.cache = Objects.requireNonNull(cache);
     }
@@ -95,6 +95,17 @@ public class IgniteThinClientCasBasedBackend<K> extends AbstractCompareAndSwapBa
     @Override
     public boolean isAsyncModeSupported() {
         return true;
+    }
+
+    @Override
+    public void removeProxy(K key) {
+        cache.remove(key);
+    }
+
+    @Override
+    protected CompletableFuture<Void> removeAsync(K key) {
+        IgniteClientFuture<Boolean> igniteFuture = cache.removeAsync(key);
+        return ThinClientUtils.convertFuture(igniteFuture).thenApply(result -> null);
     }
 
 }

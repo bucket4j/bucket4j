@@ -1,15 +1,20 @@
 package io.github.bucket4j.dynamodb.v1;
 
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
+import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AsyncCompareAndSwapOperation;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.CompareAndSwapOperation;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+
 /**
- * {@link BaseDynamoDBBackend} implementation that uses {@link Long} as key.
+ * {@link BaseDynamoDBProxyManager} implementation that uses {@link Long} as key.
  */
-final class LongDynamoDBBackend extends BaseDynamoDBBackend<Long> {
-    LongDynamoDBBackend(AmazonDynamoDB db, String table, ClientSideConfig config) {
+final class LongDynamoDBProxyManager extends BaseDynamoDBProxyManager<Long> {
+    LongDynamoDBProxyManager(AmazonDynamoDB db, String table, ClientSideConfig config) {
         super(db, table, config);
     }
 
@@ -24,7 +29,20 @@ final class LongDynamoDBBackend extends BaseDynamoDBBackend<Long> {
     }
 
     @Override
+    public void removeProxy(Long key) {
+        Map<String, AttributeValue> attrs = new HashMap<>();
+        attrs.put(Constants.Attrs.DEFAULT_KEY_NAME, new AttributeValue().withN(key.toString()));
+
+        db.deleteItem(table, attrs);
+    }
+
+    @Override
     public boolean isAsyncModeSupported() {
         return false;
+    }
+
+    @Override
+    protected CompletableFuture<Void> removeAsync(Long key) {
+        throw new UnsupportedOperationException();
     }
 }

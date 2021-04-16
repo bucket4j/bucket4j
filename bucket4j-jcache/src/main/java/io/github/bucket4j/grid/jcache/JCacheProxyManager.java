@@ -36,7 +36,7 @@
 
 package io.github.bucket4j.grid.jcache;
 
-import io.github.bucket4j.distributed.proxy.AbstractBackend;
+import io.github.bucket4j.distributed.proxy.AbstractProxyManager;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.remote.*;
 import io.github.bucket4j.distributed.serialization.InternalSerializationHelper;
@@ -53,7 +53,7 @@ import java.util.concurrent.CompletableFuture;
 /**
  * The extension of Bucket4j library addressed to support <a href="https://www.jcp.org/en/jsr/detail?id=107">JCache API (JSR 107)</a> specification.
  */
-public class JCacheBackend<K> extends AbstractBackend<K> {
+public class JCacheProxyManager<K> extends AbstractProxyManager<K> {
 
     private static final Map<String, String> incompatibleProviders = Collections.emptyMap();
     static {
@@ -65,7 +65,7 @@ public class JCacheBackend<K> extends AbstractBackend<K> {
     private final Cache<K, byte[]> cache;
     private final boolean preferLambdaStyle;
 
-    public JCacheBackend(Cache<K, byte[]> cache, ClientSideConfig clientSideConfig) {
+    public JCacheProxyManager(Cache<K, byte[]> cache, ClientSideConfig clientSideConfig) {
         super(clientSideConfig);
         checkCompatibilityWithProvider(cache);
         this.cache = Objects.requireNonNull(cache);
@@ -80,12 +80,23 @@ public class JCacheBackend<K> extends AbstractBackend<K> {
     }
 
     @Override
+    public void removeProxy(K key) {
+        cache.remove(key);
+    }
+
+    @Override
     public boolean isAsyncModeSupported() {
         return false;
     }
 
     @Override
     public <T> CompletableFuture<CommandResult<T>> executeAsync(K key, Request<T> request) {
+        // because JCache does not specify async API
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    protected CompletableFuture<Void> removeAsync(K key) {
         // because JCache does not specify async API
         throw new UnsupportedOperationException();
     }

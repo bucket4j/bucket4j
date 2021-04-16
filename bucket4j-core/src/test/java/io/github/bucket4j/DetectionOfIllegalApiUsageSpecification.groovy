@@ -3,7 +3,7 @@ package io.github.bucket4j
 
 
 import io.github.bucket4j.distributed.AsyncBucketProxy
-import io.github.bucket4j.mock.GridBackendMock
+import io.github.bucket4j.mock.ProxyManagerMock
 import io.github.bucket4j.mock.BucketType
 import spock.lang.Specification
 import spock.lang.Unroll
@@ -291,7 +291,7 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
 
     def "GridBucket should check that configuration is not null"() {
         setup:
-            GridBackendMock mockProxy = new GridBackendMock(TimeMeter.SYSTEM_MILLISECONDS)
+            ProxyManagerMock mockProxy = new ProxyManagerMock(TimeMeter.SYSTEM_MILLISECONDS)
         when:
             mockProxy.builder()
                 .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)

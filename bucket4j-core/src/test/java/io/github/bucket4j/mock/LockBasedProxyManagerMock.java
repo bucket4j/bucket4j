@@ -17,21 +17,27 @@
 
 package io.github.bucket4j.mock;
 
-import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
-import io.github.bucket4j.distributed.proxy.generic.select_for_update.AbstractLockBasedBackend;
+import io.github.bucket4j.distributed.proxy.generic.select_for_update.AbstractLockBasedProxyManager;
 import io.github.bucket4j.distributed.proxy.generic.select_for_update.LockBasedTransaction;
 import io.github.bucket4j.distributed.proxy.generic.select_for_update.LockResult;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
-public class LockBasedBackendMock<K> extends AbstractLockBasedBackend<K> {
+public class LockBasedProxyManagerMock<K> extends AbstractLockBasedProxyManager<K> {
 
     private final Map<K, byte[]> stateMap = new HashMap<>();
 
-    public LockBasedBackendMock(ClientSideConfig clientSideConfig) {
+    public LockBasedProxyManagerMock(ClientSideConfig clientSideConfig) {
         super(clientSideConfig);
+    }
+
+    @Override
+    protected CompletableFuture<Void> removeAsync(K key) {
+        stateMap.remove(key);
+        return CompletableFuture.completedFuture(null);
     }
 
     @Override
@@ -94,6 +100,11 @@ public class LockBasedBackendMock<K> extends AbstractLockBasedBackend<K> {
     @Override
     protected void releaseTransaction(LockBasedTransaction transaction) {
         // do nothing
+    }
+
+    @Override
+    public void removeProxy(K key) {
+        stateMap.remove(key);
     }
 
 }

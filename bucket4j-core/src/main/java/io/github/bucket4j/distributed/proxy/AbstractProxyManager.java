@@ -36,18 +36,18 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
-public abstract class AbstractBackend<K> implements Backend<K> {
+public abstract class AbstractProxyManager<K> implements ProxyManager<K> {
 
     private static final RecoveryStrategy DEFAULT_RECOVERY_STRATEGY = RecoveryStrategy.RECONSTRUCT;
     private static final Optimization DEFAULT_REQUEST_OPTIMIZER = Optimization.NONE_OPTIMIZED;
 
     private final ClientSideConfig clientSideConfig;
 
-    protected AbstractBackend(ClientSideConfig clientSideConfig) {
+    protected AbstractProxyManager(ClientSideConfig clientSideConfig) {
         this.clientSideConfig = Objects.requireNonNull(clientSideConfig);
     }
 
-    private AsyncBackend<K> asyncView = new AsyncBackend<K>() {
+    private AsyncProxyManager<K> asyncView = new AsyncProxyManager<K>() {
         @Override
         public CompletableFuture<Optional<BucketConfiguration>> getProxyConfiguration(K key) {
             GetConfigurationCommand cmd = new GetConfigurationCommand();
@@ -65,10 +65,15 @@ public abstract class AbstractBackend<K> implements Backend<K> {
         public RemoteAsyncBucketBuilder<K> builder() {
             return new DefaultAsyncRemoteBucketBuilder();
         }
+
+        @Override
+        public CompletableFuture<Void> removeProxy(K key) {
+            return removeAsync(key);
+        }
     };
 
     @Override
-    public AsyncBackend<K> asAsync() {
+    public AsyncProxyManager<K> asAsync() {
         if (!isAsyncModeSupported()) {
             throw BucketExceptions.asyncModeIsNotSupported();
         }
@@ -127,7 +132,7 @@ public abstract class AbstractBackend<K> implements Backend<K> {
                 @Override
                 public <T> CompletableFuture<CommandResult<T>> executeAsync(RemoteCommand<T> command) {
                     Request<T> request = new Request<>(command, getBackwardCompatibilityVersion(), getClientSideTime());
-                    return AbstractBackend.this.executeAsync(key, request);
+                    return AbstractProxyManager.this.executeAsync(key, request);
                 }
             };
             commandExecutor = asyncRequestOptimizer.apply(commandExecutor);
@@ -172,7 +177,7 @@ public abstract class AbstractBackend<K> implements Backend<K> {
                 @Override
                 public <T> CommandResult<T> execute(RemoteCommand<T> command) {
                     Request<T> request = new Request<>(command, getBackwardCompatibilityVersion(), getClientSideTime());
-                    return AbstractBackend.this.execute(key, request);
+                    return AbstractProxyManager.this.execute(key, request);
                 }
             };
             commandExecutor = requestOptimizer.apply(commandExecutor);
@@ -187,6 +192,8 @@ public abstract class AbstractBackend<K> implements Backend<K> {
 
     // TODO javadocs
     abstract protected <T> CompletableFuture<CommandResult<T>> executeAsync(K key, Request<T> request);
+
+    abstract protected CompletableFuture<Void> removeAsync(K key);
 
     protected ClientSideConfig getClientSideConfig() {
         return clientSideConfig;

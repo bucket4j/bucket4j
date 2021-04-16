@@ -24,6 +24,9 @@ import io.github.bucket4j.BucketListener;
 
 import java.time.Duration;
 
+/**
+ * Provides an light-weight proxy to bucket which state actually stored in any external storage outside current JVM, like in-memory jvm or relational database.
+ */
 public interface BucketProxy extends Bucket {
 
     @Override

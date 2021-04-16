@@ -39,7 +39,7 @@ package io.github.bucket4j.grid.coherence;
 
 import com.tangosol.net.NamedCache;
 import com.tangosol.util.processor.SingleEntryAsynchronousProcessor;
-import io.github.bucket4j.distributed.proxy.AbstractBackend;
+import io.github.bucket4j.distributed.proxy.AbstractProxyManager;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.remote.*;
 import io.github.bucket4j.distributed.versioning.Version;
@@ -55,11 +55,11 @@ import static io.github.bucket4j.distributed.serialization.InternalSerialization
  *
  * @param <K>
  */
-public class CoherenceBackend<K> extends AbstractBackend<K> {
+public class CoherenceProxyManager<K> extends AbstractProxyManager<K> {
 
     private final NamedCache<K, byte[]> cache;
 
-    public CoherenceBackend(NamedCache<K, byte[]> cache, ClientSideConfig clientSideConfig) {
+    public CoherenceProxyManager(NamedCache<K, byte[]> cache, ClientSideConfig clientSideConfig) {
         super(clientSideConfig);
         this.cache = cache;
     }
@@ -70,6 +70,11 @@ public class CoherenceBackend<K> extends AbstractBackend<K> {
         byte[] resultBytes = cache.invoke(key, entryProcessor);
         Version backwardCompatibilityVersion = request.getBackwardCompatibilityVersion();
         return deserializeResult(resultBytes, backwardCompatibilityVersion);
+    }
+
+    @Override
+    public void removeProxy(K key) {
+        cache.remove(key);
     }
 
     @Override
@@ -98,6 +103,11 @@ public class CoherenceBackend<K> extends AbstractBackend<K> {
             };
         cache.invoke(key, asyncProcessor);
         return future;
+    }
+
+    @Override
+    protected CompletableFuture<Void> removeAsync(K key) {
+        return cache.async().remove(key).thenApply(oldState -> null);
     }
 
 }

@@ -37,7 +37,7 @@
 package io.github.bucket4j.grid.ignite.thin.compute;
 
 import io.github.bucket4j.BucketExceptions;
-import io.github.bucket4j.distributed.proxy.AbstractBackend;
+import io.github.bucket4j.distributed.proxy.AbstractProxyManager;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.Request;
@@ -55,12 +55,12 @@ import static io.github.bucket4j.distributed.serialization.InternalSerialization
 /**
  * The extension of Bucket4j library addressed to support <a href="https://ignite.apache.org/">Apache ignite</a> in-memory computing platform.
  */
-public class IgniteThinClientBackend<K> extends AbstractBackend<K> {
+public class IgniteThinClientProxyManager<K> extends AbstractProxyManager<K> {
 
     private final ClientCache<K, byte[]> cache;
     private final ClientCompute clientCompute;
 
-    public IgniteThinClientBackend(ClientCache<K, byte[]> cache, ClientCompute clientCompute, ClientSideConfig clientSideConfig) {
+    public IgniteThinClientProxyManager(ClientCache<K, byte[]> cache, ClientCompute clientCompute, ClientSideConfig clientSideConfig) {
         super(clientSideConfig);
         this.cache = Objects.requireNonNull(cache);
         this.clientCompute = Objects.requireNonNull(clientCompute);
@@ -92,6 +92,17 @@ public class IgniteThinClientBackend<K> extends AbstractBackend<K> {
         CompletableFuture<byte[]> completableFuture = ThinClientUtils.convertFuture(igniteFuture);
         Version backwardCompatibilityVersion = request.getBackwardCompatibilityVersion();
         return completableFuture.thenApply((byte[] resultBytes) -> deserializeResult(resultBytes, backwardCompatibilityVersion));
+    }
+
+    @Override
+    public void removeProxy(K key) {
+        cache.remove(key);
+    }
+
+    @Override
+    protected CompletableFuture<Void> removeAsync(K key) {
+        IgniteClientFuture<Boolean> igniteFuture = cache.removeAsync(key);
+        return ThinClientUtils.convertFuture(igniteFuture).thenApply(result -> null);
     }
 
 }

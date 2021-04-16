@@ -21,7 +21,7 @@
 package io.github.bucket4j.distributed.proxy.generic.compare_and_swap;
 
 import io.github.bucket4j.TimeMeter;
-import io.github.bucket4j.distributed.proxy.AbstractBackend;
+import io.github.bucket4j.distributed.proxy.AbstractProxyManager;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.generic.GenericEntry;
 import io.github.bucket4j.distributed.remote.CommandResult;
@@ -31,11 +31,11 @@ import io.github.bucket4j.distributed.remote.Request;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-public abstract class AbstractCompareAndSwapBasedBackend<K> extends AbstractBackend<K> {
+public abstract class AbstractCompareAndSwapBasedProxyManager<K> extends AbstractProxyManager<K> {
 
     private static final CommandResult<?> UNSUCCESSFUL_CAS_RESULT = null;
 
-    protected AbstractCompareAndSwapBasedBackend(ClientSideConfig clientSideConfig) {
+    protected AbstractCompareAndSwapBasedProxyManager(ClientSideConfig clientSideConfig) {
         super(injectTimeClock(clientSideConfig));
     }
 

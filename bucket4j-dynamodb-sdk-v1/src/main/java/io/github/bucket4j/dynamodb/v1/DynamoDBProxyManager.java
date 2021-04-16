@@ -41,7 +41,7 @@ import java.nio.charset.StandardCharsets;
  * </pre>
  * Table that is on-demand and can be used with {@link #stringKey(AmazonDynamoDB, String, ClientSideConfig)}.
  */
-public final class DynamoDBBackend {
+public final class DynamoDBProxyManager {
     /**
      * Returns implementation that uses {@link String} (DynamoDB String) for keys.
      *
@@ -52,8 +52,8 @@ public final class DynamoDBBackend {
      * @param table  name of DynamoDB table.
      * @param config {@link ClientSideConfig} configuration.
      */
-    public static BaseDynamoDBBackend<String> stringKey(AmazonDynamoDB db, String table, ClientSideConfig config) {
-        return new StringDynamoDBBackend(db, table, config);
+    public static BaseDynamoDBProxyManager<String> stringKey(AmazonDynamoDB db, String table, ClientSideConfig config) {
+        return new StringDynamoDBProxyManager(db, table, config);
     }
 
     /**
@@ -63,9 +63,9 @@ public final class DynamoDBBackend {
      * @param table  name of DynamoDB table.
      * @param config {@link ClientSideConfig} configuration.
      */
-    public static BaseDynamoDBBackend<Long> longKey(AmazonDynamoDB db, String table, ClientSideConfig config) {
-        return new LongDynamoDBBackend(db, table, config);
+    public static BaseDynamoDBProxyManager<Long> longKey(AmazonDynamoDB db, String table, ClientSideConfig config) {
+        return new LongDynamoDBProxyManager(db, table, config);
     }
 
-    private DynamoDBBackend() {}
+    private DynamoDBProxyManager() {}
 }

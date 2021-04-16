@@ -1,6 +1,6 @@
 package io.github.bucket4j.redis.redisson.cas;
 
-import io.github.bucket4j.distributed.proxy.Backend;
+import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
 import org.junit.AfterClass;
@@ -11,7 +11,9 @@ import org.redisson.api.RedissonClient;
 import org.redisson.config.Config;
 import org.testcontainers.containers.GenericContainer;
 
-public class RMapBasedRedissonBackendTest extends AbstractDistributedBucketTest {
+import java.util.UUID;
+
+public class RMapBasedRedissonProxyManagerTest extends AbstractDistributedBucketTest<String> {
 
     private static String MAP_NAME = "buckets";
 
@@ -55,13 +57,13 @@ public class RMapBasedRedissonBackendTest extends AbstractDistributedBucketTest 
     }
 
     @Override
-    protected Backend<String> getBackend() {
-        return new RMapBasedRedissonBackend<>(buckets, ClientSideConfig.getDefault());
+    protected ProxyManager<String> getProxyManager() {
+        return new RMapBasedRedissonProxyManager<>(buckets, ClientSideConfig.getDefault());
     }
 
     @Override
-    protected void removeBucketFromBackingStorage(String key) {
-        buckets.remove(key);
+    protected String generateRandomKey() {
+        return UUID.randomUUID().toString();
     }
 
 }

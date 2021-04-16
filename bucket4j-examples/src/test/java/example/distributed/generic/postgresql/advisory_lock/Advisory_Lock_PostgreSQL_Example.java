@@ -37,13 +37,13 @@ public class Advisory_Lock_PostgreSQL_Example {
     public static void main(String[] args) throws SQLException, InterruptedException {
         PostgreSQLContainer container = startPostgreSQLContainer();
         final DataSource dataSource = createJdbcDataSource(container);
-        AdvisoryLockBasedPostgreSQLBackend backend = new AdvisoryLockBasedPostgreSQLBackend(dataSource, ClientSideConfig.getDefault());
+        AdvisoryLockBasedPostgreSQLProxyManager proxyManager = new AdvisoryLockBasedPostgreSQLProxyManager(dataSource, ClientSideConfig.getDefault());
 
         BucketConfiguration configuration = BucketConfiguration.builder()
                 .addLimit(Bandwidth.simple(10, Duration.ofSeconds(1)))
                 .build();
 
-        Bucket bucket = backend.builder().buildProxy(42L, configuration);
+        Bucket bucket = proxyManager.builder().buildProxy(42L, configuration);
 
         CountDownLatch startLatch = new CountDownLatch(4);
         CountDownLatch stopLatch = new CountDownLatch(4);

@@ -21,7 +21,7 @@
 package io.github.bucket4j.distributed.proxy.generic.select_for_update;
 
 import io.github.bucket4j.TimeMeter;
-import io.github.bucket4j.distributed.proxy.AbstractBackend;
+import io.github.bucket4j.distributed.proxy.AbstractProxyManager;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.generic.GenericEntry;
 import io.github.bucket4j.distributed.remote.CommandResult;
@@ -30,9 +30,9 @@ import io.github.bucket4j.distributed.remote.Request;
 
 import java.util.concurrent.CompletableFuture;
 
-public abstract class AbstractLockBasedBackend<K> extends AbstractBackend<K> {
+public abstract class AbstractLockBasedProxyManager<K> extends AbstractProxyManager<K> {
 
-    protected AbstractLockBasedBackend(ClientSideConfig clientSideConfig) {
+    protected AbstractLockBasedProxyManager(ClientSideConfig clientSideConfig) {
         super(injectTimeClock(clientSideConfig));
     }
 

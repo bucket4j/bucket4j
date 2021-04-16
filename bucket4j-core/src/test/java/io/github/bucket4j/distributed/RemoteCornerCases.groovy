@@ -2,7 +2,7 @@ package io.github.bucket4j.distributed
 
 import io.github.bucket4j.Bandwidth
 import io.github.bucket4j.BucketConfiguration
-import io.github.bucket4j.mock.GridBackendMock
+import io.github.bucket4j.mock.ProxyManagerMock
 import spock.lang.Specification
 
 import java.time.Duration
@@ -13,18 +13,18 @@ import static io.github.bucket4j.distributed.proxy.RecoveryStrategy.THROW_BUCKET
 
 class RemoteCornerCases extends Specification {
 
-    def "should complete future exceptionally if backend failed"() {
+    def "should complete future exceptionally if proxyManager failed"() {
         setup:
-            GridBackendMock backendMock = new GridBackendMock(SYSTEM_MILLISECONDS)
+            ProxyManagerMock proxyManagerMock = new ProxyManagerMock(SYSTEM_MILLISECONDS)
             BucketConfiguration configuration = BucketConfiguration.builder()
                 .addLimit(Bandwidth.simple(1, Duration.ofNanos(1)))
                 .build()
 
-            AsyncBucketProxy bucket = backendMock.asAsync().builder()
+            AsyncBucketProxy bucket = proxyManagerMock.asAsync().builder()
                 .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
                 .buildProxy("66", configuration)
         when:
-            backendMock.setException(new RuntimeException())
+            proxyManagerMock.setException(new RuntimeException())
             CompletableFuture<Boolean> future = bucket.tryConsume(1)
         then:
             future.isCompletedExceptionally()

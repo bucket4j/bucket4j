@@ -36,7 +36,7 @@
 
 package io.github.bucket4j.grid.infinispan;
 
-import io.github.bucket4j.distributed.proxy.AbstractBackend;
+import io.github.bucket4j.distributed.proxy.AbstractProxyManager;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.remote.*;
 import org.infinispan.commons.CacheException;
@@ -50,12 +50,13 @@ import static io.github.bucket4j.distributed.serialization.InternalSerialization
 /**
  * The extension of Bucket4j library addressed to support <a href="https://infinispan.org/">Infinispan</a> in-memory computing platform.
  */
-public class InfinispanBackend<K> extends AbstractBackend<K> {
+public class InfinispanProxyManager<K> extends AbstractProxyManager<K> {
 
+    private final InfinispanProcessor<K, Void> REMOVE_BUCKET_ENTRY_PROCESSOR = new InfinispanProcessor<>(new byte[0]);
     private final ReadWriteMap<K, byte[]> readWriteMap;
 
     // TODO javadocs
-    public InfinispanBackend(ReadWriteMap<K, byte[]> readWriteMap, ClientSideConfig clientSideConfig) {
+    public InfinispanProxyManager(ReadWriteMap<K, byte[]> readWriteMap, ClientSideConfig clientSideConfig) {
         super(clientSideConfig);
         this.readWriteMap = Objects.requireNonNull(readWriteMap);
     }
@@ -74,6 +75,27 @@ public class InfinispanBackend<K> extends AbstractBackend<K> {
     @Override
     public boolean isAsyncModeSupported() {
         return true;
+    }
+
+    @Override
+    public void removeProxy(K key) {
+        try {
+            removeAsync(key).get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new CacheException(e);
+        }
+    }
+
+    @Override
+    protected CompletableFuture<Void> removeAsync(K key) {
+        try {
+            CompletableFuture<byte[]> resultFuture = readWriteMap.eval(key, REMOVE_BUCKET_ENTRY_PROCESSOR);
+            return resultFuture.thenApply(resultBytes -> null);
+        } catch (Throwable t) {
+            CompletableFuture<Void> fail = new CompletableFuture<>();
+            fail.completeExceptionally(t);
+            return fail;
+        }
     }
 
     @Override

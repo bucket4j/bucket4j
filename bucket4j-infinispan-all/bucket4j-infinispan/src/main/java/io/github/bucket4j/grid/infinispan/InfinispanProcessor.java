@@ -20,7 +20,6 @@
 package io.github.bucket4j.grid.infinispan;
 
 import io.github.bucket4j.distributed.remote.AbstractBinaryTransaction;
-import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.remote.Request;
 import io.github.bucket4j.distributed.serialization.InternalSerializationHelper;
 import io.github.bucket4j.util.ComparableByContent;
@@ -45,6 +44,14 @@ public class InfinispanProcessor<K, R> implements
 
     @Override
     public byte[] apply(EntryView.ReadWriteEntryView<K, byte[]> entry) {
+        if (requestBytes.length == 0) {
+            // it is the marker to remove bucket state
+            if (entry.find().isPresent()) {
+                entry.remove();
+                return new byte[0];
+            }
+        }
+
         return new AbstractBinaryTransaction(requestBytes) {
             @Override
             public boolean exists() {

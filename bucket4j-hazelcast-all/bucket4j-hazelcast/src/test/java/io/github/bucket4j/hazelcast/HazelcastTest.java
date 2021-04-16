@@ -5,9 +5,9 @@ import com.hazelcast.config.JoinConfig;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.map.IMap;
-import io.github.bucket4j.distributed.proxy.Backend;
+import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
-import io.github.bucket4j.grid.hazelcast.HazelcastBackend;
+import io.github.bucket4j.grid.hazelcast.HazelcastProxyManager;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
 import org.gridkit.nanocloud.Cloud;
 import org.gridkit.nanocloud.CloudFactory;
@@ -17,8 +17,9 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 
 import java.io.Serializable;
+import java.util.UUID;
 
-public class HazelcastTest extends AbstractDistributedBucketTest {
+public class HazelcastTest extends AbstractDistributedBucketTest<String> {
 
     private static IMap<String, byte[]> map;
     private static Cloud cloud;
@@ -65,16 +66,14 @@ public class HazelcastTest extends AbstractDistributedBucketTest {
         }
     }
 
-
-
     @Override
-    protected Backend<String> getBackend() {
-        return new HazelcastBackend<>(map, ClientSideConfig.getDefault());
+    protected ProxyManager<String> getProxyManager() {
+        return new HazelcastProxyManager<>(map, ClientSideConfig.getDefault());
     }
 
     @Override
-    protected void removeBucketFromBackingStorage(String key) {
-        map.remove(key);
+    protected String generateRandomKey() {
+        return UUID.randomUUID().toString();
     }
 
 }

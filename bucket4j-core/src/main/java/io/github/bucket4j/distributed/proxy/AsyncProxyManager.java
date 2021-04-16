@@ -20,22 +20,42 @@
 package io.github.bucket4j.distributed.proxy;
 
 import io.github.bucket4j.BucketConfiguration;
+import io.github.bucket4j.distributed.AsyncBucketProxy;
 
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-public interface AsyncBackend<K> {
+/**
+ * The asynchronous equivalent of {@link ProxyManager}.
+ *
+ * @param <K> type of primary key
+ *
+ * @see AsyncBucketProxy
+ * @see ProxyManager
+ */
+public interface AsyncProxyManager<K> {
 
+    /**
+     * Creates new instance of {@link RemoteAsyncBucketBuilder}
+     *
+     * @return new instance of {@link RemoteAsyncBucketBuilder}
+     */
     RemoteAsyncBucketBuilder<K> builder();
 
     /**
-     * TODO
+     * Asynchronously removes persisted state of bucket from underlying storage.
      *
-     * Locates configuration of bucket which actually stored outside current JVM.
+     * @param key the primary key of bucket which state need to be removed from underlying storage.
+     * @return the future that will be completed after deletion
+     */
+    CompletableFuture<Void> removeProxy(K key);
+
+    /**
+     * Asynchronously locates configuration of bucket which actually stored in the underlying storage.
      *
      * @param key the unique identifier used to point to the bucket in external storage.
      *
-     * @return Optional surround the configuration or empty optional if bucket with specified key are not stored.
+     * @return The future that completed by optional surround the configuration or empty optional if bucket with specified key is not stored.
      */
     CompletableFuture<Optional<BucketConfiguration>> getProxyConfiguration(K key);
 

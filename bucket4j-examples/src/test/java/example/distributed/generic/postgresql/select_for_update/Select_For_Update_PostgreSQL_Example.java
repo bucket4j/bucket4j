@@ -37,13 +37,13 @@ public class Select_For_Update_PostgreSQL_Example {
     public static void main(String[] args) throws SQLException, InterruptedException {
         PostgreSQLContainer container = startPostgreSQLContainer();
         final DataSource dataSource = createJdbcDataSource(container);
-        SelectForUpdateBasedPostgreSQLBackend backend = new SelectForUpdateBasedPostgreSQLBackend(dataSource, ClientSideConfig.getDefault());
+        SelectForUpdateBasedPostgreSQLProxyManager proxyManager = new SelectForUpdateBasedPostgreSQLProxyManager(dataSource, ClientSideConfig.getDefault());
 
         BucketConfiguration configuration = BucketConfiguration.builder()
                 .addLimit(Bandwidth.simple(10, Duration.ofSeconds(1)))
                 .build();
 
-        Bucket bucket = backend.builder().buildProxy(42L, configuration);
+        Bucket bucket = proxyManager.builder().buildProxy(42L, configuration);
 
         CountDownLatch startLatch = new CountDownLatch(4);
         CountDownLatch stopLatch = new CountDownLatch(4);

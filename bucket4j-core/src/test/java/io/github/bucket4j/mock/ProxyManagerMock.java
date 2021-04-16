@@ -19,7 +19,7 @@ package io.github.bucket4j.mock;
 
 
 import io.github.bucket4j.TimeMeter;
-import io.github.bucket4j.distributed.proxy.AbstractBackend;
+import io.github.bucket4j.distributed.proxy.AbstractProxyManager;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.remote.*;
 import io.github.bucket4j.distributed.serialization.DataOutputSerializationAdapter;
@@ -32,7 +32,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
-public class GridBackendMock<K> extends AbstractBackend<K> {
+public class ProxyManagerMock<K> extends AbstractProxyManager<K> {
 
     private static Map<Class, SerializationHandle> allHandles = new HashMap<Class, SerializationHandle>()
     {{
@@ -44,7 +44,7 @@ public class GridBackendMock<K> extends AbstractBackend<K> {
     private Map<K, RemoteBucketState> stateMap = new HashMap<>();
     private RuntimeException exception;
 
-    public GridBackendMock(TimeMeter timeMeter) {
+    public ProxyManagerMock(TimeMeter timeMeter) {
         super(ClientSideConfig.withClientClock(timeMeter));
     }
 
@@ -67,7 +67,7 @@ public class GridBackendMock<K> extends AbstractBackend<K> {
             }
             @Override
             public void set(RemoteBucketState state) {
-                GridBackendMock.this.stateMap.put(key, emulateDataSerialization(state, request.getBackwardCompatibilityVersion()));
+                ProxyManagerMock.this.stateMap.put(key, emulateDataSerialization(state, request.getBackwardCompatibilityVersion()));
             }
             @Override
             public RemoteBucketState get() {
@@ -79,6 +79,11 @@ public class GridBackendMock<K> extends AbstractBackend<K> {
 
         CommandResult<T> result = command.execute(entry, getClientSideTime());
         return emulateDataSerialization(result, request.getBackwardCompatibilityVersion());
+    }
+
+    @Override
+    public void removeProxy(K key) {
+        stateMap.remove(key);
     }
 
     @Override
@@ -94,6 +99,12 @@ public class GridBackendMock<K> extends AbstractBackend<K> {
             return future;
         }
         return CompletableFuture.completedFuture(execute(key, request));
+    }
+
+    @Override
+    protected CompletableFuture<Void> removeAsync(K key) {
+        stateMap.remove(key);
+        return CompletableFuture.completedFuture(null);
     }
 
     protected <T> T emulateDataSerialization(T object, Version version) {

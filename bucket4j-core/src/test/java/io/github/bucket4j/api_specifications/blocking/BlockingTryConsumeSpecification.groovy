@@ -9,7 +9,7 @@ import io.github.bucket4j.TimeMeter
 import io.github.bucket4j.distributed.AsyncBucketProxy
 import io.github.bucket4j.mock.BlockingStrategyMock
 import io.github.bucket4j.mock.BucketType
-import io.github.bucket4j.mock.GridBackendMock
+import io.github.bucket4j.mock.ProxyManagerMock
 import io.github.bucket4j.mock.SchedulerMock
 import io.github.bucket4j.mock.TimeMeterMock;
 import spock.lang.Specification
@@ -172,7 +172,7 @@ class BlockingTryConsumeSpecification extends Specification {
             BucketConfiguration configuration = BucketConfiguration.builder()
                 .addLimit(Bandwidth.simple(1, Duration.ofNanos(1)))
                 .build()
-            GridBackendMock mockProxy = new GridBackendMock(SYSTEM_MILLISECONDS)
+            ProxyManagerMock mockProxy = new ProxyManagerMock(SYSTEM_MILLISECONDS)
             SchedulerMock schedulerMock = new SchedulerMock()
             AsyncBucketProxy bucket = mockProxy.asAsync().builder()
                 .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)

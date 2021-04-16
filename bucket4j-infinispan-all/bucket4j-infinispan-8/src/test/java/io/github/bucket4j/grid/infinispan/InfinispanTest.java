@@ -1,6 +1,6 @@
 package io.github.bucket4j.grid.infinispan;
 
-import io.github.bucket4j.distributed.proxy.Backend;
+import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
 import org.infinispan.commons.api.functional.FunctionalMap.ReadWriteMap;
@@ -16,9 +16,10 @@ import javax.cache.spi.CachingProvider;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.UUID;
 
 
-public class InfinispanTest extends AbstractDistributedBucketTest {
+public class InfinispanTest extends AbstractDistributedBucketTest<String> {
 
     private static ReadWriteMap<String, byte[]> readWriteMap;
     private static Cache<String, byte[]> cache;
@@ -46,13 +47,13 @@ public class InfinispanTest extends AbstractDistributedBucketTest {
     }
 
     @Override
-    protected Backend<String> getBackend() {
-        return new InfinispanBackend<>(readWriteMap, ClientSideConfig.getDefault());
+    protected ProxyManager<String> getProxyManager() {
+        return new InfinispanProxyManager<>(readWriteMap, ClientSideConfig.getDefault());
     }
 
     @Override
-    protected void removeBucketFromBackingStorage(String key) {
-        cache.remove(key);
+    protected String generateRandomKey() {
+        return UUID.randomUUID().toString();
     }
 
     public static class TestClassLoader extends ClassLoader {

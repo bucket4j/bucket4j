@@ -36,10 +36,8 @@
 
 package io.github.bucket4j.grid.infinispan;
 
-import io.github.bucket4j.TimeMeter;
-import io.github.bucket4j.distributed.proxy.AbstractBackend;
+import io.github.bucket4j.distributed.proxy.AbstractProxyManager;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
-import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.remote.*;
 import io.github.bucket4j.distributed.serialization.InternalSerializationHelper;
 import io.github.bucket4j.distributed.versioning.Version;
@@ -57,12 +55,12 @@ import static io.github.bucket4j.distributed.serialization.InternalSerialization
 /**
  * The extension of Bucket4j library addressed to support <a href="https://infinispan.org/">Infinispan</a> in-memory computing platform.
  */
-public class InfinispanBackend<K> extends AbstractBackend<K> {
+public class InfinispanProxyManager<K> extends AbstractProxyManager<K> {
 
     private final ReadWriteMap<K, byte[]> readWriteMap;
 
     // TODO javadocs
-    public InfinispanBackend(ReadWriteMap<K, byte[]> readWriteMap, ClientSideConfig clientSideConfig) {
+    public InfinispanProxyManager(ReadWriteMap<K, byte[]> readWriteMap, ClientSideConfig clientSideConfig) {
         super(clientSideConfig);
         this.readWriteMap = Objects.requireNonNull(readWriteMap);
     }
@@ -91,6 +89,25 @@ public class InfinispanBackend<K> extends AbstractBackend<K> {
         CompletableFuture<byte[]> resultFuture = readWriteMap.eval(key, entryProcessor);
         Version backwardCompatibilityVersion = request.getBackwardCompatibilityVersion();
         return resultFuture.thenApply(resultBytes -> deserializeResult(resultBytes, backwardCompatibilityVersion));
+    }
+
+    @Override
+    public void removeProxy(K key) {
+        try {
+            removeAsync(key).get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new CacheException(e);
+        }
+    }
+
+    @Override
+    protected CompletableFuture<Void> removeAsync(K key) {
+        return readWriteMap.eval(key, (SerializableFunction<ReadWriteEntryView<K, byte[]>, Void>) entryView -> {
+            if (entryView.find().isPresent()) {
+                entryView.remove();
+            }
+            return null;
+        });
     }
 
     private static class InfinispanProcessor<K> implements SerializableFunction<ReadWriteEntryView<K, byte[]>, byte[]> {

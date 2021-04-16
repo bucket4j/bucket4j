@@ -12,6 +12,7 @@ import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.distributed.AsyncBucketProxy;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.optimization.Optimizations;
+import io.github.bucket4j.grid.hazelcast.HazelcastProxyManager;
 import org.gridkit.nanocloud.Cloud;
 import org.gridkit.nanocloud.CloudFactory;
 import org.gridkit.nanocloud.VX;
@@ -22,7 +23,6 @@ import org.junit.BeforeClass;
 import com.hazelcast.config.Config;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
-import io.github.bucket4j.grid.hazelcast.HazelcastBackend;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,14 +54,14 @@ public class HazelcastWithBatchingPerformanceExample {
         server.exec((Runnable & Serializable) () -> {
             Config config = new Config();
             config.setLiteMember(false);
-            HazelcastBackend.addCustomSerializers(config.getSerializationConfig(), 100);
+            HazelcastProxyManager.addCustomSerializers(config.getSerializationConfig(), 100);
             HazelcastInstance hazelcastInstance = Hazelcast.newHazelcastInstance(config);
             hazelcastInstance.getMap("my_buckets");
         });
 
         // start hazelcast client which works inside current JVM and does not hold data
         Config config = new Config();
-        HazelcastBackend.addCustomSerializers(config.getSerializationConfig(), 100);
+        HazelcastProxyManager.addCustomSerializers(config.getSerializationConfig(), 100);
         config.setLiteMember(true);
         hazelcastInstance = Hazelcast.newHazelcastInstance(config);
         map = hazelcastInstance.getMap("my_buckets");
@@ -83,13 +83,13 @@ public class HazelcastWithBatchingPerformanceExample {
         Meter consumptionRate = new Meter();
         com.codahale.metrics.Timer latencyTimer = buildLatencyTimer();
 
-        HazelcastBackend<String> backend = new HazelcastBackend<>(map, ClientSideConfig.getDefault());
+        HazelcastProxyManager<String> proxyManager = new HazelcastProxyManager<>(map, ClientSideConfig.getDefault());
         BucketConfiguration configuration = BucketConfiguration.builder()
                 .addLimit(
                     Bandwidth.simple(10, Duration.ofSeconds(1)).withInitialTokens(0))
                 .build();
 
-        Bucket bucket = backend.builder()
+        Bucket bucket = proxyManager.builder()
                 .withOptimization(Optimizations.batching())
                 .buildProxy("13", configuration);
 
@@ -134,13 +134,13 @@ public class HazelcastWithBatchingPerformanceExample {
         Meter consumptionRate = new Meter();
         com.codahale.metrics.Timer latencyTimer = buildLatencyTimer();
 
-        HazelcastBackend<String> backend = new HazelcastBackend<>(map, ClientSideConfig.getDefault());
+        HazelcastProxyManager<String> proxyManager = new HazelcastProxyManager<>(map, ClientSideConfig.getDefault());
         BucketConfiguration configuration = BucketConfiguration.builder()
                 .addLimit(
                         Bandwidth.simple(10, Duration.ofSeconds(1)).withInitialTokens(0))
                 .build();
 
-        AsyncBucketProxy bucket = backend.asAsync().builder()
+        AsyncBucketProxy bucket = proxyManager.asAsync().builder()
                 .withOptimization(Optimizations.batching())
                 .buildProxy("13", configuration);
 
