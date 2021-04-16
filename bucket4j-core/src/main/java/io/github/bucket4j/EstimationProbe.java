@@ -30,7 +30,7 @@ import io.github.bucket4j.util.ComparableByContent;
 
 import java.io.IOException;
 
-import static io.github.bucket4j.distributed.versioning.Versions.v_5_0_0;
+import static io.github.bucket4j.distributed.versioning.Versions.v_7_0_0;
 
 /**
  * Describes the estimation result.
@@ -48,7 +48,7 @@ public class EstimationProbe implements ComparableByContent<EstimationProbe> {
         @Override
         public <S> EstimationProbe deserialize(DeserializationAdapter<S> adapter, S input, Version backwardCompatibilityVersion) throws IOException {
             int formatNumber = adapter.readInt(input);
-            Versions.check(formatNumber, v_5_0_0, v_5_0_0);
+            Versions.check(formatNumber, v_7_0_0, v_7_0_0);
 
             boolean canBeConsumed = adapter.readBoolean(input);
             long remainingTokens = adapter.readLong(input);
@@ -59,7 +59,7 @@ public class EstimationProbe implements ComparableByContent<EstimationProbe> {
 
         @Override
         public <O> void serialize(SerializationAdapter<O> adapter, O output, EstimationProbe probe, Version backwardCompatibilityVersion) throws IOException {
-            adapter.writeInt(output, v_5_0_0.getNumber());
+            adapter.writeInt(output, v_7_0_0.getNumber());
 
             adapter.writeBoolean(output, probe.canBeConsumed);
             adapter.writeLong(output, probe.remainingTokens);

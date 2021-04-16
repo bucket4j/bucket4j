@@ -21,7 +21,7 @@ package io.github.bucket4j.distributed.versioning;
 
 public enum Versions implements Version {
 
-    v_5_0_0(1);
+    v_7_0_0(1);
 
     private final int number;
 
@@ -56,11 +56,11 @@ public enum Versions implements Version {
     }
 
     public static Version getLatest() {
-        return v_5_0_0;
+        return v_7_0_0;
     }
 
     public static Version getOldest() {
-        return v_5_0_0;
+        return v_7_0_0;
     }
 
     public static Version byNumber(int number) {

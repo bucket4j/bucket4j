@@ -31,7 +31,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Objects;
 
-import static io.github.bucket4j.distributed.versioning.Versions.v_5_0_0;
+import static io.github.bucket4j.distributed.versioning.Versions.v_7_0_0;
 
 public class BucketState64BitsInteger implements BucketState, ComparableByContent<BucketState64BitsInteger> {
 
@@ -43,7 +43,7 @@ public class BucketState64BitsInteger implements BucketState, ComparableByConten
         @Override
         public <S> BucketState64BitsInteger deserialize(DeserializationAdapter<S> adapter, S input, Version backwardCompatibilityVersion) throws IOException {
             int formatNumber = adapter.readInt(input);
-            Versions.check(formatNumber, v_5_0_0, v_5_0_0);
+            Versions.check(formatNumber, v_7_0_0, v_7_0_0);
 
             long[] data = adapter.readLongArray(input);
             return new BucketState64BitsInteger(data);
@@ -51,7 +51,7 @@ public class BucketState64BitsInteger implements BucketState, ComparableByConten
 
         @Override
         public <O> void serialize(SerializationAdapter<O> adapter, O output, BucketState64BitsInteger state, Version backwardCompatibilityVersion) throws IOException {
-            adapter.writeInt(output, v_5_0_0.getNumber());
+            adapter.writeInt(output, v_7_0_0.getNumber());
 
             adapter.writeLongArray(output, state.stateData);
         }

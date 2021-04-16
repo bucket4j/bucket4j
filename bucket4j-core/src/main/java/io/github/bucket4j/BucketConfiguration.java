@@ -32,7 +32,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
-import static io.github.bucket4j.distributed.versioning.Versions.v_5_0_0;
+import static io.github.bucket4j.distributed.versioning.Versions.v_7_0_0;
 
 public final class BucketConfiguration implements ComparableByContent<BucketConfiguration> {
 
@@ -93,7 +93,7 @@ public final class BucketConfiguration implements ComparableByContent<BucketConf
         @Override
         public <S> BucketConfiguration deserialize(DeserializationAdapter<S> adapter, S input, Version backwardCompatibilityVersion) throws IOException {
             int formatNumber = adapter.readInt(input);
-            Versions.check(formatNumber, v_5_0_0, v_5_0_0);
+            Versions.check(formatNumber, v_7_0_0, v_7_0_0);
 
             int bandwidthAmount = adapter.readInt(input);
             List<Bandwidth> bandwidths = new ArrayList<>(bandwidthAmount);
@@ -106,7 +106,7 @@ public final class BucketConfiguration implements ComparableByContent<BucketConf
 
         @Override
         public <O> void serialize(SerializationAdapter<O> adapter, O output, BucketConfiguration configuration, Version backwardCompatibilityVersion) throws IOException {
-            adapter.writeInt(output, v_5_0_0.getNumber());
+            adapter.writeInt(output, v_7_0_0.getNumber());
 
             adapter.writeInt(output, configuration.bandwidths.length);
             for (Bandwidth bandwidth : configuration.bandwidths) {

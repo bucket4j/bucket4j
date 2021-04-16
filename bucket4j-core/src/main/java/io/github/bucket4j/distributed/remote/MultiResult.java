@@ -30,7 +30,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static io.github.bucket4j.distributed.versioning.Versions.v_5_0_0;
+import static io.github.bucket4j.distributed.versioning.Versions.v_7_0_0;
 
 public class MultiResult implements ComparableByContent<MultiResult> {
 
@@ -40,7 +40,7 @@ public class MultiResult implements ComparableByContent<MultiResult> {
         @Override
         public <S> MultiResult deserialize(DeserializationAdapter<S> adapter, S input, Version backwardCompatibilityVersion) throws IOException {
             int formatNumber = adapter.readInt(input);
-            Versions.check(formatNumber, v_5_0_0, v_5_0_0);
+            Versions.check(formatNumber, v_7_0_0, v_7_0_0);
 
             int size = adapter.readInt(input);
             List<CommandResult<?>> results = new ArrayList<>(size);
@@ -53,7 +53,7 @@ public class MultiResult implements ComparableByContent<MultiResult> {
 
         @Override
         public <O> void serialize(SerializationAdapter<O> adapter, O output, MultiResult multiResult, Version backwardCompatibilityVersion) throws IOException {
-            adapter.writeInt(output, v_5_0_0.getNumber());
+            adapter.writeInt(output, v_7_0_0.getNumber());
 
             adapter.writeInt(output, multiResult.results.size());
             for (CommandResult<?> result : multiResult.results) {

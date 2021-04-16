@@ -30,7 +30,7 @@ import io.github.bucket4j.util.ComparableByContent;
 import java.io.IOException;
 import java.util.Arrays;
 
-import static io.github.bucket4j.distributed.versioning.Versions.v_5_0_0;
+import static io.github.bucket4j.distributed.versioning.Versions.v_7_0_0;
 
 public class BucketStateIEEE754 implements BucketState, ComparableByContent<BucketStateIEEE754> {
 
@@ -45,7 +45,7 @@ public class BucketStateIEEE754 implements BucketState, ComparableByContent<Buck
         @Override
         public <S> BucketStateIEEE754 deserialize(DeserializationAdapter<S> adapter, S input, Version backwardCompatibilityVersion) throws IOException {
             int formatNumber = adapter.readInt(input);
-            Versions.check(formatNumber, v_5_0_0, v_5_0_0);
+            Versions.check(formatNumber, v_7_0_0, v_7_0_0);
 
             double[] tokens = adapter.readDoubleArray(input);
             long[] lastRefillTime = adapter.readLongArray(input);
@@ -54,7 +54,7 @@ public class BucketStateIEEE754 implements BucketState, ComparableByContent<Buck
 
         @Override
         public <O> void serialize(SerializationAdapter<O> adapter, O output, BucketStateIEEE754 state, Version backwardCompatibilityVersion) throws IOException {
-            adapter.writeInt(output, v_5_0_0.getNumber());
+            adapter.writeInt(output, v_7_0_0.getNumber());
 
             adapter.writeDoubleArray(output, state.tokens);
             adapter.writeLongArray(output, state.lastRefillTime);
