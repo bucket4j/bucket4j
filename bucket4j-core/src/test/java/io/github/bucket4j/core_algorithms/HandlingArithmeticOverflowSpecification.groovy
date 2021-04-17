@@ -157,7 +157,7 @@ class HandlingArithmeticOverflowSpecification extends Specification {
                 .withCustomTimePrecision(meter)
 				.withMath(MathType.IEEE_754)
                 .build()
-			BucketState state = bucket.createSnapshot()
+			BucketState state = bucket.asVerbose().getAvailableTokens().getState()
             Bandwidth[] limits = bucket.configuration.bandwidths
 
         expect:
@@ -184,7 +184,7 @@ class HandlingArithmeticOverflowSpecification extends Specification {
                     .withCustomTimePrecision(meter)
 					.withMath(MathType.IEEE_754)
                     .build()
-			BucketState state = bucket.createSnapshot()
+			BucketState state = bucket.asVerbose().getAvailableTokens().getState()
             Bandwidth[] limits = bucket.configuration.bandwidths
 
         expect:

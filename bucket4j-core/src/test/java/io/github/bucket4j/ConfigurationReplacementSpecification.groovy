@@ -110,7 +110,7 @@ class ConfigurationReplacementSpecification extends Specification {
                             bucket.asVerbose().replaceConfiguration(newConfiguration, TokensInheritanceStrategy.AS_IS)
                         }
                         assert bucket.getAvailableTokens() == 1
-                        def snapshot = bucket.createSnapshot()
+                        def snapshot = bucket.asVerbose().getAvailableTokens().getState()
                         assert snapshot.getCurrentSize(0) == 60
                         assert snapshot.getCurrentSize(1) == 1
                     } else {
@@ -401,7 +401,7 @@ class ConfigurationReplacementSpecification extends Specification {
                         bucket.asVerbose().replaceConfiguration(newConfiguration, TokensInheritanceStrategy.PROPORTIONALLY)
                     }
                     assert bucket.getAvailableTokens() == 1 // 1.125 after replacement
-                    assert bucket.createSnapshot().getRoundingError(0) == 1 // 1/8 == 0.125
+                    assert bucket.asVerbose().getAvailableTokens().getState().getRoundingError(0) == 1 // 1/8 == 0.125
                 } else {
                     AsyncBucketProxy bucket = bucketType.createAsyncBucket(configuration, clock) // 0.75
                     bucket.getAvailableTokens().get()
@@ -444,7 +444,7 @@ class ConfigurationReplacementSpecification extends Specification {
                             bucket.asVerbose().replaceConfiguration(newConfiguration, TokensInheritanceStrategy.PROPORTIONALLY)
                         }
                         assert bucket.getAvailableTokens() == -2 // -1.375 after replacement
-                        assert bucket.createSnapshot().getRoundingError(0) == 5 // 5/8 == 1 - 0.375
+                        assert bucket.asVerbose().getAvailableTokens().getState().getRoundingError(0) == 5 // 5/8 == 1 - 0.375
                     } else {
                         def bucket = bucketType.createAsyncBucket(configuration, clock) // 0.75
                         bucket.getAvailableTokens().get()

@@ -118,11 +118,6 @@ public class DefaultBucketProxy extends AbstractBucket implements BucketProxy {
     }
 
     @Override
-    public BucketState createSnapshot() {
-        return execute(new CreateSnapshotCommand()).getState();
-    }
-
-    @Override
     protected VerboseResult<Long> consumeAsMuchAsPossibleVerboseImpl(long limit) {
         ConsumeAsMuchAsPossibleCommand command = new ConsumeAsMuchAsPossibleCommand(limit);
         return execute(command.asVerbose()).asLocal();

@@ -473,11 +473,6 @@ public class LockFreeBucket extends LockFreeBucket_FinalFields_CacheLinePadding 
     }
 
     @Override
-    public BucketState createSnapshot() {
-        return stateRef.get().state.copy();
-    }
-
-    @Override
     public BucketConfiguration getConfiguration() {
         return stateRef.get().configuration;
     }

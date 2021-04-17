@@ -20,12 +20,16 @@ package io.github.bucket4j.core_algorithms
 import io.github.bucket4j.*
 import io.github.bucket4j.local.LocalBucket
 import io.github.bucket4j.mock.TimeMeterMock
+import spock.lang.Shared
 import spock.lang.Specification
 import spock.lang.Unroll
 
 import java.time.Duration
 
 class BucketStateSpecification extends Specification {
+
+    @Shared
+    private TimeMeter timeMeter = new TimeMeterMock(0l)
 
     @Unroll
     def "GetAvailableTokens specification #testNumber"(String testNumber, long requiredAvailableTokens, LocalBucket bucket) {
@@ -43,6 +47,7 @@ class BucketStateSpecification extends Specification {
                         Bucket.builder()
                             .withMath(MathType.IEEE_754)
                             .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)))
+                            .withCustomTimePrecision(timeMeter)
                             .build()
                 ], [
                         "#2",
@@ -50,6 +55,7 @@ class BucketStateSpecification extends Specification {
                         Bucket.builder()
                             .withMath(MathType.IEEE_754)
                             .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(0))
+                            .withCustomTimePrecision(timeMeter)
                             .build()
                 ], [
                         "#3",
@@ -57,6 +63,7 @@ class BucketStateSpecification extends Specification {
                         Bucket.builder()
                             .withMath(MathType.IEEE_754)
                             .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(5))
+                            .withCustomTimePrecision(timeMeter)
                             .build()
                 ], [
                         "#4",
@@ -65,6 +72,7 @@ class BucketStateSpecification extends Specification {
                             .withMath(MathType.IEEE_754)
                             .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(5))
                             .addLimit(Bandwidth.simple(2, Duration.ofNanos(100)))
+                            .withCustomTimePrecision(timeMeter)
                             .build()
                 ], [
                         "#5",
@@ -72,6 +80,7 @@ class BucketStateSpecification extends Specification {
                         Bucket.builder()
                             .withMath(MathType.IEEE_754)
                             .addLimit(Bandwidth.classic(10, Refill.greedy(1, Duration.ofSeconds(1))))
+                            .withCustomTimePrecision(timeMeter)
                             .build()
                 ]
             ]
@@ -384,7 +393,7 @@ class BucketStateSpecification extends Specification {
     }
 
     protected BucketState getState(LocalBucket bucket) {
-        return bucket.createSnapshot()
+        return bucket.asVerbose().getAvailableTokens().getState()
     }
 
 }

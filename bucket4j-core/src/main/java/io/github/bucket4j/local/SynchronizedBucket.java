@@ -365,16 +365,6 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket {
     }
 
     @Override
-    public BucketState createSnapshot() {
-        lock.lock();
-        try {
-            return state.copy();
-        } finally {
-            lock.unlock();
-        }
-    }
-
-    @Override
     public BucketConfiguration getConfiguration() {
         return configuration;
     }

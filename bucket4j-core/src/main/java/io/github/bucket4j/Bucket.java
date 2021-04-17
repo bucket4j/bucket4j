@@ -44,19 +44,27 @@ public interface Bucket {
     }
 
     /**
-     * Returns the {@link BlockingBucket} view of this bucket, that provides operations which are able to block caller thread.
+     * Returns the blocking API for this bucket, that provides operations which are able to block caller thread in case of lack of tokens.
      *
-     * @return the view to bucket that can be used as scheduler
+     * @return the blocking API for this bucket.
+     *
+     * @see BlockingBucket
      */
     BlockingBucket asBlocking();
 
     /**
-     * TODO
+     * Returns the scheduling API for this bucket, that provides operations which can delay user operation via {@link java.util.concurrent.ScheduledExecutorService} in case of lack of tokens.
+     *
+     * @return the scheduling API for this bucket.
+     *
+     * @see ScheduledBucket
      */
     ScheduledBucket asScheduler();
 
     /**
-     * Returns the verbose view of this bucket.
+     * Returns the verbose API for this bucket.
+     *
+     * @return the verbose API for this bucket.
      */
     VerboseBucket asVerbose();
 
@@ -179,8 +187,8 @@ public interface Bucket {
     /**
      * Returns amount of available tokens in this bucket.
 
-     * <p> This method designed to be used only for monitoring and testing, you should never use this method for business cases,
-     * because available tokens can be changed by concurrent transactions for case of multithreaded/multi-process environment.
+     * <p>
+     *     Typically you should avoid using of this method for, because available tokens can be changed by concurrent transactions for case of multithreaded/multi-process environment.
      *
      * @return amount of available tokens
      */
@@ -252,17 +260,6 @@ public interface Bucket {
      * @param tokensInheritanceStrategy specifies the rules for inheritance of available tokens
      */
      void replaceConfiguration(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy);
-
-    /**
-     * Creates the copy of internal state.
-     *
-     * <p> This method is designed to be used only for monitoring and testing, you should never use this method for business cases.
-     *
-     * @return snapshot of internal state
-     *
-     * // TODO remove this method
-     */
-    BucketState createSnapshot();
 
     /**
      * Returns new copy of this bucket instance decorated by {@code listener}.

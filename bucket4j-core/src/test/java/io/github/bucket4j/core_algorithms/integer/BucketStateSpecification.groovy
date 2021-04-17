@@ -9,18 +9,22 @@ import io.github.bucket4j.MathType
 import io.github.bucket4j.Refill
 import io.github.bucket4j.TimeMeter
 import io.github.bucket4j.mock.TimeMeterMock
+import spock.lang.Shared
 import spock.lang.Specification
 import spock.lang.Unroll
 
 import java.time.Duration
 
 
-class BucketTaskQueueSpecification extends Specification {
+class BucketStateSpecification extends Specification {
+
+    @Shared
+    private TimeMeter timeMeter = new TimeMeterMock();
 
     @Unroll
     def "GetAvailableTokens specification #testNumber"(String testNumber, long requiredAvailableTokens, Bucket bucket) {
         setup:
-            BucketState state = bucket.createSnapshot()
+            BucketState state = bucket.asVerbose().getAvailableTokens().getState()
         when:
             long availableTokens = state.getAvailableTokens(bucket.configuration.bandwidths)
         then:
@@ -32,18 +36,21 @@ class BucketTaskQueueSpecification extends Specification {
                         10,
                         Bucket.builder()
                             .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)))
+                            .withCustomTimePrecision(timeMeter)
                             .build()
                 ], [
                         "#2",
                         0,
                         Bucket.builder()
                             .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(0))
+                            .withCustomTimePrecision(timeMeter)
                             .build()
                 ], [
                         "#3",
                         5,
                         Bucket.builder()
                             .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(5))
+                            .withCustomTimePrecision(timeMeter)
                             .build()
                 ], [
                         "#4",
@@ -51,6 +58,7 @@ class BucketTaskQueueSpecification extends Specification {
                         Bucket.builder()
                             .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(5))
                             .addLimit(Bandwidth.simple(2, Duration.ofNanos(100)))
+                            .withCustomTimePrecision(timeMeter)
                             .build()
                 ], [
                         "#5",
@@ -65,7 +73,7 @@ class BucketTaskQueueSpecification extends Specification {
     @Unroll
     def "addTokens specification #testNumber"(String testNumber, long tokensToAdd, long requiredAvailableTokens, Bucket bucket) {
         setup:
-            BucketState state = bucket.createSnapshot()
+            BucketState state = bucket.asVerbose().getAvailableTokens().getState()
         when:
             state.addTokens(bucket.configuration.bandwidths, tokensToAdd)
             long availableTokens = state.getAvailableTokens(bucket.configuration.bandwidths)
@@ -79,6 +87,7 @@ class BucketTaskQueueSpecification extends Specification {
                         10,
                         Bucket.builder()
                                 .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(0))
+                                .withCustomTimePrecision(timeMeter)
                                 .build()
                 ], [
                         "#2",
@@ -86,6 +95,7 @@ class BucketTaskQueueSpecification extends Specification {
                         10,
                         Bucket.builder()
                                 .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)))
+                                .withCustomTimePrecision(timeMeter)
                                 .build()
                 ], [
                         "#3",
@@ -93,6 +103,7 @@ class BucketTaskQueueSpecification extends Specification {
                         10,
                         Bucket.builder()
                                 .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(5))
+                                .withCustomTimePrecision(timeMeter)
                                 .build()
                 ], [
                         "#4",
@@ -101,6 +112,7 @@ class BucketTaskQueueSpecification extends Specification {
                         Bucket.builder()
                                 .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(5))
                                 .addLimit(Bandwidth.simple(2, Duration.ofNanos(100)))
+                                .withCustomTimePrecision(timeMeter)
                                 .build()
                 ], [
                         "#5",
@@ -108,6 +120,7 @@ class BucketTaskQueueSpecification extends Specification {
                         5,
                         Bucket.builder()
                                 .addLimit(Bandwidth.classic(10, Refill.greedy(1, Duration.ofSeconds(1))).withInitialTokens(1))
+                                .withCustomTimePrecision(timeMeter)
                                 .build()
                 ]
         ]
@@ -118,7 +131,7 @@ class BucketTaskQueueSpecification extends Specification {
         setup:
             def configuration = bucket.configuration
             TimeMeter timeMeter = bucket.timeMeter
-            BucketState state = bucket.createSnapshot()
+            BucketState state = bucket.asVerbose().getAvailableTokens().getState()
         when:
             long actualTime = state.calculateDelayNanosAfterWillBePossibleToConsume(configuration.bandwidths, toConsume, timeMeter.currentTimeNanos())
         then:
@@ -289,7 +302,7 @@ class BucketTaskQueueSpecification extends Specification {
                     .addLimit(Bandwidth.simple(capacity, Duration.ofNanos(period)).withInitialTokens(initialTokens))
                     .withCustomTimePrecision(mockTimer)
                     .build()
-            BucketState state = bucket.createSnapshot()
+            BucketState state = bucket.asVerbose().getAvailableTokens().getState()
             BucketConfiguration configuration = bucket.getConfiguration()
         when:
             mockTimer.setCurrentTimeNanos(timeOnRefill)
@@ -318,7 +331,7 @@ class BucketTaskQueueSpecification extends Specification {
                     .addLimit(Bandwidth.classic(capacity, refill).withInitialTokens(initialTokens))
                     .withCustomTimePrecision(mockTimer)
                     .build()
-            BucketState state = bucket.createSnapshot()
+            BucketState state = bucket.asVerbose().getAvailableTokens().getState()
             BucketConfiguration configuration = bucket.getConfiguration()
         when:
             mockTimer.setCurrentTimeNanos(timeOnRefill)
@@ -345,7 +358,7 @@ class BucketTaskQueueSpecification extends Specification {
             Bucket bucket = Bucket.builder()
                 .addLimit(Bandwidth.simple(capacity, Duration.ofNanos(period)).withInitialTokens(initialTokens))
                 .build()
-            BucketState state = bucket.createSnapshot()
+            BucketState state = bucket.asVerbose().getAvailableTokens().getState()
             BucketConfiguration configuration = bucket.getConfiguration()
         when:
             state.consume(configuration.bandwidths, toConsume)
