@@ -23,7 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * TODO add notes for building configuration
+ * The builder for {@link BucketConfiguration}
  *
  */
 public class ConfigurationBuilder {

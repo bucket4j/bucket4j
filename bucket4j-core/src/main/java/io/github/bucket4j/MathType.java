@@ -20,19 +20,22 @@
 
 package io.github.bucket4j;
 
-import java.util.Collections;
-import java.util.EnumSet;
-import java.util.Set;
-
-// TODO javadocs
+@Experimental
 public enum MathType {
 
-    // TODO javadocs
+    /**
+     * The default math precision that uses integer arithmetic with 64 bits numbers.
+     */
     INTEGER_64_BITS,
 
-    // TODO javadocs
+    /**
+     * Experimental math precision that uses IEEE-754 arithmetic.
+     *
+     * <p>
+     * <b>Warning: </b> you should not use this precision in production, because intention of this precision is the testing purpose for backends written in Lua or JS,
+     * in other words for testing backends that do not provide 64-bit integer arithmetic.
+     */
+    @Experimental
     IEEE_754;
-
-    public static Set<MathType> ALL = Collections.unmodifiableSet(EnumSet.allOf(MathType.class));
 
 }

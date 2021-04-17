@@ -27,7 +27,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 /**
- * Provides TODO async API for bucket that allows to use bucket as async scheduler.
+ * Provides the scheduling API for {@link Bucket}.
+ * Any method of this interface can delay user operation via {@link java.util.concurrent.ScheduledExecutorService} in case of lack of tokens.
  */
 public interface ScheduledBucket {
 

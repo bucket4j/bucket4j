@@ -100,7 +100,15 @@ public class LocalBucketBuilder {
         return this;
     }
 
-    // TODO javadocs
+    /**
+     * <b>Warnings:</b> this is not a part of Public API.
+     *
+     * This method is intended to be used strongly by internal code and can be removed at any time without prior notice.
+     *
+     * @param mathType
+     * @return
+     */
+    @Experimental
     public LocalBucketBuilder withMath(MathType mathType) {
         this.mathType = Objects.requireNonNull(mathType);
         return this;
