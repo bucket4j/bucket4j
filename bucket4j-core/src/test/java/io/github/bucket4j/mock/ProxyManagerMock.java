@@ -45,7 +45,7 @@ public class ProxyManagerMock<K> extends AbstractProxyManager<K> {
     private RuntimeException exception;
 
     public ProxyManagerMock(TimeMeter timeMeter) {
-        super(ClientSideConfig.withClientClock(timeMeter));
+        super(ClientSideConfig.getDefault().withClientClock(timeMeter));
     }
 
     public void setException(RuntimeException exception) {

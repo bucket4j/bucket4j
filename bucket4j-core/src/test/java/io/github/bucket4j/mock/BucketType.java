@@ -91,7 +91,7 @@ public enum BucketType {
     COMPARE_AND_SWAP {
         @Override
         public Bucket createBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
-            CompareAndSwapBasedProxyManagerMock<Integer> proxyManager = new CompareAndSwapBasedProxyManagerMock<>(ClientSideConfig.withClientClock(timeMeter));
+            CompareAndSwapBasedProxyManagerMock<Integer> proxyManager = new CompareAndSwapBasedProxyManagerMock<>(ClientSideConfig.getDefault().withClientClock(timeMeter));
             return proxyManager.builder()
                     .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
                     .buildProxy(42, configuration);
@@ -99,7 +99,7 @@ public enum BucketType {
 
         @Override
         public AsyncBucketProxy createAsyncBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
-            CompareAndSwapBasedProxyManagerMock<Integer> proxyManager = new CompareAndSwapBasedProxyManagerMock<>(ClientSideConfig.withClientClock(timeMeter));
+            CompareAndSwapBasedProxyManagerMock<Integer> proxyManager = new CompareAndSwapBasedProxyManagerMock<>(ClientSideConfig.getDefault().withClientClock(timeMeter));
             return proxyManager.asAsync().builder()
                 .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
                 .buildProxy(42, configuration);
@@ -108,7 +108,7 @@ public enum BucketType {
     SELECT_FOR_UPDATE {
         @Override
         public Bucket createBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
-            LockBasedProxyManagerMock<Integer> proxyManager = new LockBasedProxyManagerMock<>(ClientSideConfig.withClientClock(timeMeter));
+            LockBasedProxyManagerMock<Integer> proxyManager = new LockBasedProxyManagerMock<>(ClientSideConfig.getDefault().withClientClock(timeMeter));
             return proxyManager.builder()
                     .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
                     .buildProxy(42, configuration);

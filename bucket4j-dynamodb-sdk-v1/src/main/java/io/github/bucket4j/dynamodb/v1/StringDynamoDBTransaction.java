@@ -26,7 +26,7 @@ final class StringDynamoDBTransaction extends BaseDynamoDBTransaction {
         if (key.isEmpty()) {
             throw new IllegalArgumentException("key is empty");
         }
-        // TODO: bring in guava for Utf8#encodedLength ?
+
         int length = key.getBytes(StandardCharsets.UTF_8).length;
         if (length > MAX_SUPPORTED_LENGTH) {
             throw new IllegalArgumentException(

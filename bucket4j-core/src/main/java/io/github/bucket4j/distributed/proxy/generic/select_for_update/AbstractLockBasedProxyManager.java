@@ -99,7 +99,7 @@ public abstract class AbstractLockBasedProxyManager<K> extends AbstractProxyMana
         if (clientSideConfig.getClientSideClock().isPresent()) {
             return clientSideConfig;
         }
-        return ClientSideConfig.withClientClockAndCompatibility(TimeMeter.SYSTEM_MILLISECONDS, clientSideConfig.getBackwardCompatibilityVersion());
+        return clientSideConfig.withClientClock(TimeMeter.SYSTEM_MILLISECONDS);
     }
 
 }

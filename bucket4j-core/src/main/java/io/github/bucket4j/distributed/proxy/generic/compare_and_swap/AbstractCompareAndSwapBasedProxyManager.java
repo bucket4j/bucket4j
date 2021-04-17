@@ -117,7 +117,7 @@ public abstract class AbstractCompareAndSwapBasedProxyManager<K> extends Abstrac
         if (clientSideConfig.getClientSideClock().isPresent()) {
             return clientSideConfig;
         }
-        return ClientSideConfig.withClientClockAndCompatibility(TimeMeter.SYSTEM_MILLISECONDS, clientSideConfig.getBackwardCompatibilityVersion());
+        return clientSideConfig.withClientClock(TimeMeter.SYSTEM_MILLISECONDS);
     }
 
 }

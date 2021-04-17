@@ -27,7 +27,11 @@ import java.util.Objects;
 import java.util.Optional;
 
 /**
- * TODO
+ * Represents additional options for {@link ProxyManager} such as:
+ * <ul>
+ *     <li>Backward compatibility version, see {@link #backwardCompatibleWith(Version)} for more details.</li>
+ *     <li>Client-side clock, see {@link #withClientClock(TimeMeter)} for more details.</li>
+ * </ul>
  */
 public class ClientSideConfig {
 
@@ -42,39 +46,70 @@ public class ClientSideConfig {
     }
 
     /**
-     * TODO
+     * Returns default client-side configuration for proxy-manager that configured with following parameters:
+     * <ul>
+     *     <li><b>Client-clock:</b> is null. This means that server-side clock is always used.</li>
+     *     <li><b>Backward compatibility version:</b> is {@code Versions.getLatest()}. This means that compatibility with legacy versions is switched off.</li>
+     * </ul>
+     *
+     * @return default client-side configuration for proxy-manager
      */
     public static ClientSideConfig getDefault() {
         return defaultConfig;
     }
 
     /**
-     * TODO
+     * Returns new instance of {@link ClientSideConfig} with configured {@code backwardCompatibilityVersion}.
+     *
+     * <p>
+     * Use this method in case of rolling upgrades, when you want from already new nodes to continue communication using
+     * the legacy protocol version which is compatible with {@code backwardCompatibilityVersion}.
+     *
+     * <p> By default backward compatibility version is {@code Versions.getLatest()}. This means that compatibility with legacy versions is switched off.
+     *
+     * @param backwardCompatibilityVersion the Bucket4j protocol version to be backward compatible with other nodes in the cluster.
+     *
+     * @return new instance of {@link ClientSideConfig} with configured {@code backwardCompatibilityVersion}.
      */
-    public static ClientSideConfig backwardCompatibleWith(Version backwardCompatibilityVersion) {
-        return new ClientSideConfig(backwardCompatibilityVersion, Optional.empty());
+    public ClientSideConfig backwardCompatibleWith(Version backwardCompatibilityVersion) {
+        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock);
     }
 
     /**
-     * TODO
+     * Returns new instance of {@link ClientSideConfig} with configured {@code clientClock}.
+     *
+     * <p>
+     * Use this method when you want to measure current time by yourself. In normal scenarios you should not use this functionality,
+     * but sometimes it can be useful, especially for testing and modeling.
+     *
+     * <p>
+     * By default client-clock is null. This means that server-side clock is always used.
+     *
+     * @param clientClock the clock that will be used for time measuring instead of server-side clock.
+     *
+     * @return new instance of {@link ClientSideConfig} with configured {@code clientClock}.
      */
-    public static ClientSideConfig withClientClock(TimeMeter clientClock) {
-        return new ClientSideConfig(Versions.getLatest(), Optional.of(clientClock));
-    }
-
-    public static ClientSideConfig withClientClockAndCompatibility(TimeMeter clientClock, Version backwardCompatibilityVersion) {
+    public ClientSideConfig withClientClock(TimeMeter clientClock) {
         return new ClientSideConfig(backwardCompatibilityVersion, Optional.of(clientClock));
     }
 
     /**
-     * TODO
+     * Returns clock that will be used for time measurement.
+     *
+     * @return clock that will be used for time measurement.
+     *
+     * @see #withClientClock(TimeMeter)
      */
     public Optional<TimeMeter> getClientSideClock() {
         return clientSideClock;
     }
 
     /**
-     * TODO
+     * Returns the Bucket4j protocol version is used to be backward compatible with other nodes in the cluster.
+     *
+     * @return the Bucket4j protocol version is used to be backward compatible with other nodes in the cluster.
+     *
+     * @see #backwardCompatibleWith(Version)
      */
     public Version getBackwardCompatibilityVersion() {
         return backwardCompatibilityVersion;
