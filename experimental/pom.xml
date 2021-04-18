@@ -21,8 +21,6 @@
     </properties>
 
     <modules>
-        <module>bucket4j-mysql</module>
-        <module>bucket4j-postgresql</module>
         <module>bucket4j-lua</module>
     </modules>
 

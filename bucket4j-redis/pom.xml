@@ -12,6 +12,7 @@
         <relativePath>../bucket4j-parent</relativePath>
     </parent>
     <artifactId>bucket4j-redis</artifactId>
+    <name>bucket4j-redis</name>
 
     <properties>
         <modular-name>redis</modular-name>

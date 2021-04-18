@@ -11,6 +11,7 @@
     </parent>
 
     <properties>
+        <skipNexusStagingDeployMojo>true</skipNexusStagingDeployMojo>
         <maven.deploy.skip>true</maven.deploy.skip>
         <revapi.skip>true</revapi.skip>
         <sonar.skip>true</sonar.skip>

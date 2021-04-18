@@ -12,6 +12,7 @@
     </parent>
 
     <artifactId>bucket4j-dynamodb-sdk-v1</artifactId>
+    <name>bucket4j-dynamodb-sdk-v1</name>
 
     <repositories>
         <repository>
