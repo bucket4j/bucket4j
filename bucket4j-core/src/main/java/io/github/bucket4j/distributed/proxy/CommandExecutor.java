@@ -23,10 +23,8 @@ package io.github.bucket4j.distributed.proxy;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 
-// TODO javadocs
 public interface CommandExecutor {
 
-    // TODO javadocs
     <T> CommandResult<T> execute(RemoteCommand<T> command);
 
 }

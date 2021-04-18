@@ -25,14 +25,8 @@ import io.github.bucket4j.distributed.remote.RemoteCommand;
 
 import java.util.concurrent.CompletableFuture;
 
-/**
- * TODO javadocs
- */
 public interface AsyncCommandExecutor {
 
-    /**
-     * TODO javadocs
-     */
     <T> CompletableFuture<CommandResult<T>> executeAsync(RemoteCommand<T> command);
 
 }

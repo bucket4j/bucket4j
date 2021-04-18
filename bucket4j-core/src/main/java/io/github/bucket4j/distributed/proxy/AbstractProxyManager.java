@@ -187,10 +187,8 @@ public abstract class AbstractProxyManager<K> implements ProxyManager<K> {
 
     }
 
-    // TODO javadocs
     abstract protected <T> CommandResult<T> execute(K key, Request<T> request);
 
-    // TODO javadocs
     abstract protected <T> CompletableFuture<CommandResult<T>> executeAsync(K key, Request<T> request);
 
     abstract protected CompletableFuture<Void> removeAsync(K key);

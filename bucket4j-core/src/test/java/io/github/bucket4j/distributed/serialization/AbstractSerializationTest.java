@@ -5,6 +5,7 @@ import io.github.bucket4j.*;
 import io.github.bucket4j.distributed.remote.commands.ForceAddTokensCommand;
 import io.github.bucket4j.distributed.remote.*;
 import io.github.bucket4j.distributed.remote.commands.*;
+import io.github.bucket4j.distributed.versioning.Versions;
 import io.github.bucket4j.util.ComparableByContent;
 import org.junit.Test;
 
@@ -283,6 +284,9 @@ public abstract class AbstractSerializationTest {
         testSerialization(new VerboseCommand<>(new GetAvailableTokensCommand()));
         testSerialization(new VerboseCommand<>(new ReplaceConfigurationCommand(configuration, TokensInheritanceStrategy.AS_IS)));
         testSerialization(new SyncCommand(20, 10000000));
+
+        testSerialization(new Request(new GetAvailableTokensCommand(), Versions.getLatest(), null));
+        testSerialization(new Request(new GetAvailableTokensCommand(), Versions.getLatest(), 0L));
     }
 
 }

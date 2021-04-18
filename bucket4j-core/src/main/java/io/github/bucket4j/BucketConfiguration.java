@@ -51,7 +51,6 @@ public final class BucketConfiguration implements ComparableByContent<BucketConf
             if (this.bandwidths[i].getId() != Bandwidth.UNDEFINED_ID) {
                 for (int j = i + 1; j < this.bandwidths.length; j++) {
                     if (Objects.equals(this.bandwidths[i].getId(), this.bandwidths[j].getId())) {
-                        // TODO add unit test
                         throw BucketExceptions.foundTwoBandwidthsWithSameId(i, j, this.bandwidths[i].getId());
                     }
                 }

@@ -3,6 +3,7 @@ package io.github.bucket4j.mock;
 
 import io.github.bucket4j.*;
 import io.github.bucket4j.distributed.AsyncBucketProxy;
+import io.github.bucket4j.distributed.AsyncBucketProxyAdapter;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.optimization.Optimizations;
 import io.github.bucket4j.local.LocalBucketBuilder;
@@ -123,7 +124,7 @@ public enum BucketType {
 
     public AsyncBucketProxy createAsyncBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
         Bucket bucket = createBucket(configuration, timeMeter);
-        return AsyncBucketProxy.fromSync(bucket);
+        return AsyncBucketProxyAdapter.fromSync(bucket);
     }
 
     public AsyncBucketProxy createAsyncBucket(BucketConfiguration configuration) {

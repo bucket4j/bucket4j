@@ -27,7 +27,8 @@ import java.util.concurrent.CompletableFuture;
 
 import static io.github.bucket4j.AbstractBucket.completedFuture;
 
-public class AsyncBucketProxyAdapter implements AsyncBucketProxy {
+@Experimental
+public class AsyncBucketProxyAdapter implements AsyncBucketProxy, AsyncOptimizationController {
 
     private final Bucket target;
 
@@ -84,6 +85,16 @@ public class AsyncBucketProxyAdapter implements AsyncBucketProxy {
             return completedFuture(() -> target.asVerbose().getAvailableTokens());
         }
     };
+
+    /**
+     * TODO
+     *
+     * @param bucket
+     * @return
+     */
+    public static AsyncBucketProxy fromSync(Bucket bucket) {
+        return new AsyncBucketProxyAdapter(bucket);
+    }
 
     public AsyncBucketProxyAdapter(Bucket target) {
         this.target = Objects.requireNonNull(target);
@@ -158,6 +169,16 @@ public class AsyncBucketProxyAdapter implements AsyncBucketProxy {
     @Override
     public CompletableFuture<Long> getAvailableTokens() {
         return completedFuture(() -> target.getAvailableTokens());
+    }
+
+    @Override
+    public AsyncOptimizationController getOptimizationController() {
+        return this;
+    }
+
+    @Override
+    public CompletableFuture<Void> syncImmediately() {
+        return CompletableFuture.completedFuture(null);
     }
 
     @Override

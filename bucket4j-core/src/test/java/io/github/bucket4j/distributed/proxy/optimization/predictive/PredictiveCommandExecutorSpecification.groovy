@@ -121,7 +121,7 @@ class PredictiveCommandExecutorSpecification extends Specification {
 
         when:
             clock.addMillis(40)
-            optimizedBucket.syncImmediately()
+            optimizedBucket.getOptimizationController().syncImmediately()
         then:
             optimizedBucket.getAvailableTokens() == -15
             notOptimizedBucket.getAvailableTokens() == -15
@@ -168,7 +168,7 @@ class PredictiveCommandExecutorSpecification extends Specification {
             notOptimizedBucket.getAvailableTokens() == 100
 
         when: "explicit synchronization request"
-            optimizedBucket.syncImmediately()
+            optimizedBucket.getOptimizationController().syncImmediately()
         then: "synchronization performed"
             optimizedBucket.getAvailableTokens() == 99
             notOptimizedBucket.getAvailableTokens() == 99
@@ -185,25 +185,25 @@ class PredictiveCommandExecutorSpecification extends Specification {
             notOptimizedBucket.getAvailableTokens() == 100
 
         when: "synchronization requested with thresholds 20 tokens"
-            optimizedBucket.syncByCondition(20, Duration.ZERO)
+            optimizedBucket.getOptimizationController().syncByCondition(20, Duration.ZERO)
         then: "synchronization have not performed"
             optimizedBucket.getAvailableTokens() == 90
             notOptimizedBucket.getAvailableTokens() == 100
 
         when: "synchronization requested with thresholds 10 tokens"
-            optimizedBucket.syncByCondition(10, Duration.ZERO)
+            optimizedBucket.getOptimizationController().syncByCondition(10, Duration.ZERO)
         then: "synchronization have not performed"
             optimizedBucket.getAvailableTokens() == 90
             notOptimizedBucket.getAvailableTokens() == 90
 
         when: "synchronization requested with thresholds 10 tokens"
-            optimizedBucket.syncByCondition(10, Duration.ZERO)
+            optimizedBucket.getOptimizationController().syncByCondition(10, Duration.ZERO)
         then: "synchronization have performed"
             optimizedBucket.getAvailableTokens() == 90
             notOptimizedBucket.getAvailableTokens() == 90
 
         when: "synchronization requested with thresholds 10 tokens"
-            optimizedBucket.syncByCondition(10, Duration.ZERO)
+            optimizedBucket.getOptimizationController().syncByCondition(10, Duration.ZERO)
         then: "synchronization have performed"
             optimizedBucket.getAvailableTokens() == 90
             notOptimizedBucket.getAvailableTokens() == 90
@@ -211,19 +211,19 @@ class PredictiveCommandExecutorSpecification extends Specification {
         when: "9 millis passed 10 tokens consumed and synchronization requested with 20 millis limit"
             clock.addMillis(9)
             optimizedBucket.tryConsume(10)
-            optimizedBucket.syncByCondition(10, Duration.ofMillis(20))
+            optimizedBucket.getOptimizationController().syncByCondition(10, Duration.ofMillis(20))
         then: "synchronization have not performed"
             optimizedBucket.getAvailableTokens() == 80
             notOptimizedBucket.getAvailableTokens() == 90
 
         when: "synchronization requested with limit 10 millis + 9 tokens"
-            optimizedBucket.syncByCondition(9, Duration.ofMillis(10))
+            optimizedBucket.getOptimizationController().syncByCondition(9, Duration.ofMillis(10))
         then: "synchronization have not performed"
             optimizedBucket.getAvailableTokens() == 80
             notOptimizedBucket.getAvailableTokens() == 90
 
         when: "synchronization requested with limit 9 millis + 10 tokens"
-            optimizedBucket.syncByCondition(10, Duration.ofMillis(9))
+            optimizedBucket.getOptimizationController().syncByCondition(10, Duration.ofMillis(9))
         then: "synchronization have performed"
             optimizedBucket.getAvailableTokens() == 80
             notOptimizedBucket.getAvailableTokens() == 80

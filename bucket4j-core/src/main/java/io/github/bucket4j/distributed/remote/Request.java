@@ -24,12 +24,14 @@ import io.github.bucket4j.distributed.serialization.SerializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
 import io.github.bucket4j.distributed.versioning.Version;
 import io.github.bucket4j.distributed.versioning.Versions;
+import io.github.bucket4j.util.ComparableByContent;
 
 import java.io.IOException;
+import java.util.Objects;
 
 import static io.github.bucket4j.distributed.versioning.Versions.v_7_0_0;
 
-public class Request<T> {
+public class Request<T> implements ComparableByContent<Request<T>> {
 
     private final Version backwardCompatibilityVersion;
     private final RemoteCommand<T> command;
@@ -53,7 +55,6 @@ public class Request<T> {
         return clientSideTime;
     }
 
-    // TODO add testcase for serialization
     public static SerializationHandle<Request> SERIALIZATION_HANDLE = new SerializationHandle<Request>() {
         @Override
         public <S> Request deserialize(DeserializationAdapter<S> adapter, S input, Version backwardCompatibilityVersion) throws IOException {
@@ -102,5 +103,12 @@ public class Request<T> {
         }
 
     };
+
+    @Override
+    public boolean equalsByContent(Request<T> other) {
+        return backwardCompatibilityVersion.equals(other.backwardCompatibilityVersion)
+            && ComparableByContent.equals(command, other.command)
+            && Objects.equals(clientSideTime, other.clientSideTime);
+    }
 
 }

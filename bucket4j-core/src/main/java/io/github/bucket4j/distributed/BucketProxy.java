@@ -21,11 +21,13 @@ package io.github.bucket4j.distributed;
 
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketListener;
+import io.github.bucket4j.distributed.proxy.RemoteBucketBuilder;
+import io.github.bucket4j.distributed.proxy.optimization.Optimization;
 
 import java.time.Duration;
 
 /**
- * Provides an light-weight proxy to bucket which state actually stored in any external storage outside current JVM, like in-memory jvm or relational database.
+ * Provides an light-weight proxy to bucket which state actually stored in external storage, like in-memory jvm or relational database.
  */
 public interface BucketProxy extends Bucket {
 
@@ -33,17 +35,14 @@ public interface BucketProxy extends Bucket {
     BucketProxy toListenable(BucketListener listener);
 
     /**
-     * TODO javadocs
-     */
-    default void syncImmediately() {
-        syncByCondition(0L, Duration.ZERO);
-    }
-
-    /**
+     * Returns optimization controller for this proxy.
      *
-     * @param unsynchronizedTokens
-     * @param timeSinceLastSync
+     * <p>
+     * This method is actual only if an optimization was applied during bucket construction via {@link RemoteBucketBuilder#withOptimization(Optimization)}
+     * otherwise returned controller will do nothing.
+     *
+     * @return optimization controller for this proxy
      */
-    void syncByCondition(long unsynchronizedTokens, Duration timeSinceLastSync);
+    OptimizationController getOptimizationController();
 
 }

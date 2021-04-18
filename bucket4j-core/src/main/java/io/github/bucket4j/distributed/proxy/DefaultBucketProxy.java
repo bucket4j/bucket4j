@@ -22,6 +22,7 @@ package io.github.bucket4j.distributed.proxy;
 
 import io.github.bucket4j.*;
 import io.github.bucket4j.distributed.BucketProxy;
+import io.github.bucket4j.distributed.OptimizationController;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.commands.*;
@@ -31,7 +32,7 @@ import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
-public class DefaultBucketProxy extends AbstractBucket implements BucketProxy {
+public class DefaultBucketProxy extends AbstractBucket implements BucketProxy, OptimizationController {
 
     private final CommandExecutor commandExecutor;
     private final RecoveryStrategy recoveryStrategy;
@@ -41,6 +42,11 @@ public class DefaultBucketProxy extends AbstractBucket implements BucketProxy {
     @Override
     public BucketProxy toListenable(BucketListener listener) {
         return new DefaultBucketProxy(configurationSupplier, commandExecutor, recoveryStrategy, wasInitialized, listener);
+    }
+
+    @Override
+    public OptimizationController getOptimizationController() {
+        return this;
     }
 
     @Override

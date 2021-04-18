@@ -22,6 +22,7 @@ package io.github.bucket4j.distributed.proxy;
 
 import io.github.bucket4j.*;
 import io.github.bucket4j.distributed.AsyncBucketProxy;
+import io.github.bucket4j.distributed.AsyncOptimizationController;
 import io.github.bucket4j.distributed.AsyncVerboseBucket;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
@@ -38,7 +39,7 @@ import java.util.function.Supplier;
 
 import static io.github.bucket4j.LimitChecker.*;
 
-public class DefaultAsyncBucketProxy implements AsyncBucketProxy, ScheduledBucket {
+public class DefaultAsyncBucketProxy implements AsyncBucketProxy, AsyncOptimizationController, ScheduledBucket {
 
     private final AsyncCommandExecutor commandExecutor;
     private final RecoveryStrategy recoveryStrategy;
@@ -347,6 +348,11 @@ public class DefaultAsyncBucketProxy implements AsyncBucketProxy, ScheduledBucke
     @Override
     public CompletableFuture<Long> getAvailableTokens() {
         return execute(new GetAvailableTokensCommand());
+    }
+
+    @Override
+    public AsyncOptimizationController getOptimizationController() {
+        return this;
     }
 
     @Override

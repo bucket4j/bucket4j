@@ -20,6 +20,8 @@
 package io.github.bucket4j.distributed;
 
 import io.github.bucket4j.*;
+import io.github.bucket4j.distributed.proxy.RemoteAsyncBucketBuilder;
+import io.github.bucket4j.distributed.proxy.optimization.Optimization;
 
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
@@ -27,9 +29,7 @@ import java.util.concurrent.Executor;
 import java.util.function.Function;
 
 /**
- * Provides asynchronous API for bucket.
- *
- * TODO fix javadocs
+ * Asynchronous analog of {@link BucketProxy}.
  */
 public interface AsyncBucketProxy {
 
@@ -44,10 +44,6 @@ public interface AsyncBucketProxy {
      * Returns the verbose view of this bucket.
      */
     AsyncVerboseBucket asVerbose();
-
-    static AsyncBucketProxy fromSync(Bucket bucket) {
-        return new AsyncBucketProxyAdapter(bucket);
-    }
 
     /**
      * Asynchronous version of {@link Bucket#tryConsume(long)}, follows the same semantic.
@@ -120,13 +116,6 @@ public interface AsyncBucketProxy {
      */
     CompletableFuture<ConsumptionProbe> tryConsumeAndReturnRemaining(long numTokens);
 
-    /**
-     * Estimates ability to consume a specified number of tokens.
-     *
-     * @param numTokens The number of tokens to consume, must be a positive number.
-     *
-     * @return {@link EstimationProbe} which describes the ability to consume.
-     */
     /**
      * Asynchronous version of {@link Bucket#estimateAbilityToConsume(long)}, follows the same semantic.
      *
@@ -315,22 +304,14 @@ public interface AsyncBucketProxy {
     CompletableFuture<Long> getAvailableTokens();
 
     /**
-     * TODO javadocs
+     * Returns optimization controller for this proxy.
      *
-     * @return
+     * <p>
+     * This method is actual only if an optimization was applied during bucket construction via {@link RemoteAsyncBucketBuilder#withOptimization(Optimization)}
+     * otherwise returned controller will do nothing.
+     *
+     * @return optimization controller for this proxy
      */
-    default CompletableFuture<Void> syncImmediately() {
-        return syncByCondition(0L, Duration.ZERO);
-    }
-
-    /**
-     * TODO javadocs
-     *
-     * @param unsynchronizedTokens
-     * @param timeSinceLastSync
-     *
-     * @return
-     */
-    CompletableFuture<Void> syncByCondition(long unsynchronizedTokens, Duration timeSinceLastSync);
+    AsyncOptimizationController getOptimizationController();
 
 }

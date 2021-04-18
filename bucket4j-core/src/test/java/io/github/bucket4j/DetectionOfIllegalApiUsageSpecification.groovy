@@ -225,7 +225,7 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
                 .build()
         then:
             IllegalArgumentException ex = thrown()
-            ex.message == "All identifiers must unique. Id: xyz, first index: 0, second index: 1"
+            ex.message == foundTwoBandwidthsWithSameId(0, 1, "xyz").message
         where:
             type << BucketType.values()
     }
