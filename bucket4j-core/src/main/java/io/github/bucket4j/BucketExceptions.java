@@ -117,6 +117,47 @@ public final class BucketExceptions {
         return new IllegalArgumentException(msg);
     }
 
+    // TODO add test
+    public static IllegalArgumentException nonPositiveTokensForDelayParameters(long maxUnsynchronizedTokens) {
+        String pattern = "{0} is wrong value for maxUnsynchronizedTokens, because tokens should be positive";
+        String msg = MessageFormat.format(pattern, maxUnsynchronizedTokens);
+        return new IllegalArgumentException(msg);
+    }
+
+    // TODO add test
+    public static IllegalArgumentException nullMaxTimeoutBetweenSynchronizationForDelayParameters() {
+        String msg = "maxTimeoutBetweenSynchronization can not be null";
+        return new IllegalArgumentException(msg);
+    }
+
+    // TODO add test
+    public static IllegalArgumentException nonPositiveMaxTimeoutBetweenSynchronizationForDelayParameters(Duration maxTimeoutBetweenSynchronization) {
+        String pattern = "maxTimeoutBetweenSynchronization = {0}, maxTimeoutBetweenSynchronization can not be negative";
+        String msg = MessageFormat.format(pattern, maxTimeoutBetweenSynchronization);
+        return new IllegalArgumentException(msg);
+    }
+
+    // TODO add test
+    public static IllegalArgumentException wrongValueOfMinSamplesForPredictionParameters(int minSamples) {
+        String pattern = "minSamples = {0}, minSamples must be >= 2";
+        String msg = MessageFormat.format(pattern, minSamples);
+        return new IllegalArgumentException(msg);
+    }
+
+    // TODO add test
+    public static IllegalArgumentException maxSamplesForPredictionParametersCanNotBeLessThanMinSamples(int minSamples, int maxSamples) {
+        String pattern = "minSamples = {0}, maxSamples = {1}, maxSamples must be >= minSamples";
+        String msg = MessageFormat.format(pattern, minSamples, maxSamples);
+        return new IllegalArgumentException(msg);
+    }
+
+    // TODO add test
+    public static IllegalArgumentException nonPositiveSampleMaxAgeForPredictionParameters(long maxUnsynchronizedTimeoutNanos) {
+        String pattern = "maxUnsynchronizedTimeoutNanos = {0}, maxUnsynchronizedTimeoutNanos must be positive";
+        String msg = MessageFormat.format(pattern, maxUnsynchronizedTimeoutNanos);
+        return new IllegalArgumentException(msg);
+    }
+
     public static IllegalArgumentException restrictionsNotSpecified() {
         String msg = "At list one limited bandwidth should be specified";
         return new IllegalArgumentException(msg);

@@ -23,6 +23,7 @@ package io.github.bucket4j.distributed.proxy;
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.distributed.AsyncBucketProxy;
 import io.github.bucket4j.distributed.proxy.optimization.Optimization;
+import io.github.bucket4j.distributed.proxy.optimization.Optimizations;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
@@ -50,7 +51,7 @@ public interface RemoteAsyncBucketBuilder<K> {
      * It is worth mentioning that optimization will take effect only if you reuse the bucket, so you need to store a reference to the bucket anywhere in order to reuse it later. In other words, if any request optimization strategy has been applied to the bucket proxy then proxy can not be treated as a cheap object.
      *
      * <p>
-     *   * The full list of built-in optimizations can be found there {@link io.github.bucket4j.distributed.proxy.optimization.Optimizations}
+     * The full list of built-in optimizations can be found there {@link Optimizations}
      *
      * @param optimization optimization strategy
      *

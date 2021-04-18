@@ -21,6 +21,9 @@ package io.github.bucket4j.distributed.proxy.optimization;
 
 import java.util.concurrent.atomic.AtomicLong;
 
+/**
+ * The simple listener that just stores all events as AtomicLong counters and provides getters for them.
+ */
 public class DefaultOptimizationListener implements OptimizationListener {
 
     private final AtomicLong mergeCount = new AtomicLong();

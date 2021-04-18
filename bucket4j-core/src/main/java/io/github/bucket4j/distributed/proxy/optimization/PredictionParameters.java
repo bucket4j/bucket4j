@@ -19,8 +19,14 @@
  */
 package io.github.bucket4j.distributed.proxy.optimization;
 
+import io.github.bucket4j.BucketExceptions;
+import io.github.bucket4j.distributed.proxy.optimization.predictive.PredictiveOptimization;
+
 import java.time.Duration;
 
+/**
+ * Specifies the parameters for quality of distributes consumption rate prediction that are used by {@link PredictiveOptimization}
+ */
 public class PredictionParameters {
 
     public static final int DEFAULT_MIN_SAMPLES = 2;
@@ -30,14 +36,31 @@ public class PredictionParameters {
     public final int maxSamples;
     public final long sampleMaxAgeNanos;
 
+    /**
+     * Creates new instance of {@link PredictionParameters}
+     *
+     * @param minSamples the minimum amount of samples that requred to make prediction about distributed consumption rate.
+     * @param maxSamples the maximum amount of samples to store.
+     * @param sampleMaxAge the maximum period of time that sample is stored.
+     */
     public PredictionParameters(int minSamples, int maxSamples, Duration sampleMaxAge) {
         this(minSamples, maxSamples, sampleMaxAge.toNanos());
     }
 
     public PredictionParameters(int minSamples, int maxSamples, long maxUnsynchronizedTimeoutNanos) {
-        // TODO argument validation
+        if (minSamples < 2) {
+            throw BucketExceptions.wrongValueOfMinSamplesForPredictionParameters(minSamples);
+        }
         this.minSamples = minSamples;
+
+        if (maxSamples < minSamples) {
+            throw BucketExceptions.maxSamplesForPredictionParametersCanNotBeLessThanMinSamples(minSamples, maxSamples);
+        }
         this.maxSamples = maxSamples;
+
+        if (maxUnsynchronizedTimeoutNanos <= 0) {
+            throw BucketExceptions.nonPositiveSampleMaxAgeForPredictionParameters(maxUnsynchronizedTimeoutNanos);
+        }
         this.sampleMaxAgeNanos = maxUnsynchronizedTimeoutNanos;
     }
 

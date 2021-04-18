@@ -28,7 +28,16 @@ import io.github.bucket4j.distributed.proxy.optimization.DelayParameters;
 import io.github.bucket4j.distributed.proxy.optimization.OptimizationListener;
 import io.github.bucket4j.distributed.proxy.optimization.batch.AsyncBatchingExecutor;
 import io.github.bucket4j.distributed.proxy.optimization.batch.BatchingExecutor;
+import io.github.bucket4j.distributed.proxy.optimization.batch.BatchingOptimization;
 
+/**
+ * Optimization that can serve requests locally without synchronization with external storage until thresholds are not violated.
+ * This optimization is based on top of {@link BatchingOptimization}, so multiple parallel request to same bucket are grouped.
+ *
+ * <p>Usage of this optimization can lead to temporal overconsumption because the synchronization with external storage is performed periodically when thresholds are violated.
+ *
+ * @see DelayParameters
+ */
 public class DelayOptimization implements Optimization {
 
     private final DelayParameters delayParameters;

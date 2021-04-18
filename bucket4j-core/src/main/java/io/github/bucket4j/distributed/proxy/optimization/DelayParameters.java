@@ -19,17 +19,40 @@
  */
 package io.github.bucket4j.distributed.proxy.optimization;
 
+import io.github.bucket4j.BucketExceptions;
+import io.github.bucket4j.distributed.proxy.optimization.delay.DelayOptimization;
+
 import java.time.Duration;
 
+/**
+ * Describes parameters for {@link DelayOptimization}.
+ *
+ * @see DelayOptimization
+ * @see Optimizations#delaying(DelayParameters)
+ */
 public class DelayParameters {
 
     public final long maxUnsynchronizedTokens;
     public final long maxUnsynchronizedTimeoutNanos;
 
-    public DelayParameters(long maxUnsynchronizedTokens, Duration maxTimeoutBetweenRequests) {
-        // TODO argument validation
+    /**
+     * Creates the new instance of {@link DelayParameters}
+     *
+     * @param maxUnsynchronizedTokens threshold that describes how many tokens can be consumed locally without synchronization with external storage. Must be a positive number.
+     * @param maxTimeoutBetweenSynchronization threshold that describes how long bucket proxy can act locally without synchronization with external storage. Must be a positive duration.
+     */
+    public DelayParameters(long maxUnsynchronizedTokens, Duration maxTimeoutBetweenSynchronization) {
         this.maxUnsynchronizedTokens = maxUnsynchronizedTokens;
-        this.maxUnsynchronizedTimeoutNanos = maxTimeoutBetweenRequests.toNanos();
+        if (maxUnsynchronizedTokens <= 0) {
+            throw BucketExceptions.nonPositiveTokensForDelayParameters(maxUnsynchronizedTokens);
+        }
+        if (maxTimeoutBetweenSynchronization == null) {
+            throw BucketExceptions.nullMaxTimeoutBetweenSynchronizationForDelayParameters();
+        }
+        if (maxTimeoutBetweenSynchronization.isNegative() || maxTimeoutBetweenSynchronization.isZero()) {
+            throw BucketExceptions.nonPositiveMaxTimeoutBetweenSynchronizationForDelayParameters(maxTimeoutBetweenSynchronization);
+        }
+        this.maxUnsynchronizedTimeoutNanos = maxTimeoutBetweenSynchronization.toNanos();
     }
 
 }

@@ -29,7 +29,20 @@ import io.github.bucket4j.distributed.proxy.optimization.OptimizationListener;
 import io.github.bucket4j.distributed.proxy.optimization.PredictionParameters;
 import io.github.bucket4j.distributed.proxy.optimization.batch.AsyncBatchingExecutor;
 import io.github.bucket4j.distributed.proxy.optimization.batch.BatchingExecutor;
+import io.github.bucket4j.distributed.proxy.optimization.batch.BatchingOptimization;
+import io.github.bucket4j.distributed.proxy.optimization.delay.DelayOptimization;
 
+/**
+ * Optimization that can serve requests locally without synchronization with external storage until thresholds are not violated.
+ * This optimization is based on top of {@link BatchingOptimization} and {@link DelayOptimization},
+ * and in additionally this optimization tries to predict aggregated consumption rate in whole cluster in order to reduce the risk of overconsumption that caused by {@link DelayOptimization}.
+ *
+ * <p>Usage of this optimization can lead to temporal over-consumption because the synchronization with external storage is performed periodically when thresholds are violated,
+ * as well as under-consumption in case of the wrong prediction of aggregated consumption rate.
+ *
+ * @see DelayParameters
+ * @see PredictionParameters
+ */
 public class PredictiveOptimization implements Optimization {
 
     private final DelayParameters delayParameters;

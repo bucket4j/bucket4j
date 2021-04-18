@@ -28,7 +28,10 @@ import io.github.bucket4j.distributed.proxy.CommandExecutor;
 /**
  * Specifies request optimization strategy for {@link BucketProxy} and {@link AsyncBucketProxy}.
  * By default an interaction with {@link BucketProxy} and {@link AsyncBucketProxy} leads to immediately request to remote storage,
- * various implementations of {@link Optimization} interface can optimize this behavior
+ * various implementations of {@link Optimization} interface can optimize this behavior.
+ *
+ * @see Optimizations
+ * @see OptimizationListener
  */
 public interface Optimization {
 
@@ -50,25 +53,29 @@ public interface Optimization {
     };
 
     /**
-     * TODO
+     * Specifies the listener for optimization events
      *
-     * @param listener
-     * @return
+     * @param listener the listener for optimization events
+     *
+     * @return the new instance of {@link Optimization} with configured listener
      */
     Optimization withListener(OptimizationListener listener);
 
     /**
-     * TODO
+     * Decorates command executor in order to apply optimization strategy.
      *
-     * @param originalExecutor
-     * @return
+     * @param originalExecutor command executor that need to be optimized
+     *
+     * @return decorated command executor
      */
     CommandExecutor apply(CommandExecutor originalExecutor);
 
     /**
-     * Optimizations
-     * @param originalExecutor
-     * @return
+     * Decorates command executor in order to apply optimization strategy.
+     *
+     * @param originalExecutor command executor that need to be optimized
+     *
+     * @return decorated command executor
      */
     AsyncCommandExecutor apply(AsyncCommandExecutor originalExecutor);
 
