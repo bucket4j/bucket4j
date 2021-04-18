@@ -30,6 +30,11 @@ import io.github.bucket4j.distributed.remote.Request;
 
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * The base class for proxy managers that built on top of idea that underlining storage provide Compare-And-Swap functionality.
+ *
+ * @param <K> the generic type for unique identifiers that used to point to the bucket in external storage.
+ */
 public abstract class AbstractLockBasedProxyManager<K> extends AbstractProxyManager<K> {
 
     protected AbstractLockBasedProxyManager(ClientSideConfig clientSideConfig) {

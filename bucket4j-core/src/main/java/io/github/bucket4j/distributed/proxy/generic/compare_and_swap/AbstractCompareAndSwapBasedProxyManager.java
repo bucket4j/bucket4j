@@ -31,6 +31,11 @@ import io.github.bucket4j.distributed.remote.Request;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * The base class for proxy managers that built on top of idea that underlining storage provide transactions and locking.
+ *
+ * @param <K> the generic type for unique identifiers that used to point to the bucket in external storage.
+ */
 public abstract class AbstractCompareAndSwapBasedProxyManager<K> extends AbstractProxyManager<K> {
 
     private static final CommandResult<?> UNSUCCESSFUL_CAS_RESULT = null;
@@ -57,18 +62,8 @@ public abstract class AbstractCompareAndSwapBasedProxyManager<K> extends Abstrac
         return result.thenCompose((CommandResult<T> response) -> retryIfCasWasUnsuccessful(operation, request, response));
     }
 
-    /**
-     * TODO
-     * @param key
-     * @return
-     */
     protected abstract CompareAndSwapOperation beginCompareAndSwapOperation(K key);
 
-    /**
-     * TODO
-     * @param key
-     * @return
-     */
     protected abstract AsyncCompareAndSwapOperation beginAsyncCompareAndSwapOperation(K key);
 
     private <T> CommandResult<T> execute(Request<T> request, CompareAndSwapOperation operation) {

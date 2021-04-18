@@ -23,6 +23,15 @@ package io.github.bucket4j.distributed.proxy.generic.compare_and_swap;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * Describes the set of operations that {@link AbstractCompareAndSwapBasedProxyManager} typically performs in reaction to user request.
+ * The typical flow is following:
+ * <ol>
+ *     <li>getStateData - {@link #getStateData()}</li>
+ *     <li>compareAndSwap - {@link #compareAndSwap(byte[], byte[])}</li>
+ *     <li>Return to first step if CAS was unsuccessful</li>
+ * </ol>
+ */
 public interface AsyncCompareAndSwapOperation {
 
     /**

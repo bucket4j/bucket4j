@@ -21,7 +21,15 @@
 package io.github.bucket4j.distributed.proxy.generic.select_for_update;
 
 /**
- * TODO
+ * Describes the set of operations that {@link AbstractLockBasedProxyManager} typically performs in reaction to user request.
+ * The typical flow is following:
+ * <ol>
+ *     <li>begin - {@link #begin()}</li>
+ *     <li>lock - {@link #lock()}</li>
+ *     <li>getData - {@link #getData()}</li>
+ *     <li>update - {@link #update(byte[])}</li>
+ *     <li>commit - {@link #commit()}</li>
+ * </ol>
  */
 public interface LockBasedTransaction {
 
@@ -51,8 +59,6 @@ public interface LockBasedTransaction {
 
     /**
      * Unlocks data by the key associated with this transaction.
-     *
-     * @return {@code true} if data has been locked, {@code false} if data does not exists
      */
     void unlock();
 
