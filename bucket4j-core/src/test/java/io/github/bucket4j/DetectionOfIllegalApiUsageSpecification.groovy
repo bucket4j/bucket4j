@@ -295,7 +295,7 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
         when:
             mockProxy.builder()
                 .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
-                .buildProxy("66", (BucketConfiguration) null)
+                .build("66", (BucketConfiguration) null)
 
         then:
             Exception ex = thrown()
@@ -304,7 +304,7 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
         when:
             mockProxy.builder()
                 .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
-                .buildProxy("66", { null })
+                .build("66", { null })
                 .getAvailableTokens()
         then:
             ex = thrown()
@@ -313,7 +313,7 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
         when:
             mockProxy.builder()
                 .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
-                .buildProxy("66", (Supplier<BucketConfiguration>) null)
+                .build("66", (Supplier<BucketConfiguration>) null)
 
         then:
             ex = thrown()
@@ -322,7 +322,7 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
         when:
             mockProxy.asAsync().builder()
                 .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
-                .buildProxy("66", (BucketConfiguration) null)
+                .build("66", (BucketConfiguration) null)
 
         then:
             ex = thrown()
@@ -331,7 +331,7 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
         when:
             mockProxy.asAsync().builder()
                 .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
-                .buildProxy("66", { null })
+                .build("66", { null })
                 .getAvailableTokens().get()
         then:
             ex = thrown()
@@ -340,7 +340,7 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
         when:
             mockProxy.asAsync().builder()
                 .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
-                .buildProxy("66", { CompletableFuture.completedFuture(null) })
+                .build("66", { CompletableFuture.completedFuture(null) })
                 .getAvailableTokens().get()
         then:
             ex = thrown()
@@ -349,7 +349,7 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
         when:
             mockProxy.asAsync().builder()
                 .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
-                .buildProxy("66", (Supplier<CompletableFuture<BucketConfiguration>>) null)
+                .build("66", (Supplier<CompletableFuture<BucketConfiguration>>) null)
 
         then:
             ex = thrown()

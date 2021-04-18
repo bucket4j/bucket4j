@@ -28,44 +28,66 @@ import io.github.bucket4j.distributed.proxy.optimization.Optimization;
 import java.util.function.Supplier;
 
 /**
- * TODO
+ * The builder for {@link BucketProxy}
  *
- * @param <K>
+ * @param <K> the type of keys in the external storage
+ *
+ * @see ProxyManager
  */
 public interface RemoteBucketBuilder<K> {
 
     /**
-     * TODO
+     * Configures custom recovery strategy instead of {@link RecoveryStrategy#RECONSTRUCT} that is used by default.
      *
-     * @param recoveryStrategy
-     * @return
+     * @param recoveryStrategy specifies the reaction which should be applied in case of previously saved state of bucket has been lost.
+     *
+     * @return {@code this}
      */
     RemoteBucketBuilder<K> withRecoveryStrategy(RecoveryStrategy recoveryStrategy);
 
     /**
-     * TODO
+     * Configures the optimization strategy that will be applied for buckets that are built by this builder.
      *
-     * @param optimization
-     * @return
+     * <p>
+     * It is worth mentioning that optimization will take effect only if you reuse the bucket, so you need to store a reference to the bucket anywhere in order to reuse it later. In other words, if any request optimization strategy has been applied to the bucket proxy then proxy can not be treated as a cheap object.
+     *
+     * <p>
+ *   * The full list of built-in optimizations can be found there {@link io.github.bucket4j.distributed.proxy.optimization.Optimizations}
+     *
+     * @param optimization optimization strategy
+     *
+     * @return {@code this}
      */
     RemoteBucketBuilder<K> withOptimization(Optimization optimization);
 
     /**
-     * TODO
+     * Builds the {@link BucketProxy}. Proxy is being created in lazy mode, its state is not persisted in external storage until first interaction,
+     * so if you want to save bucket state immediately then just call {@link BucketProxy#getAvailableTokens()}.
      *
-     * @param key
-     * @param configuration
-     * @return
+     * <p>
+     *     If you had not used {@link #withOptimization(Optimization)} during construction then created proxy can be treated as cheap object,
+     *     feel free just build, use and forget as many proxies under the same key as you need, do not cache the built instances.
+     * </p>
+     *
+     * @param key the key that used in external storage to distinguish one bucket from another.
+     * @param configuration limits configuration
+     *
+     * @return new instance of {@link BucketProxy} created in lazy mode.
      */
-    BucketProxy buildProxy(K key, BucketConfiguration configuration);
+    BucketProxy build(K key, BucketConfiguration configuration);
 
     /**
-     * TODO
+     * Has the same semantic with {@link #build(Object, BucketConfiguration)},
+     * but additionally provides ability to provide configuration lazily, that can be helpful when figuring-out the right configuration parameters
+     * is costly, for example because parameters for particular {@code key} are stored in external database,
+     * {@code configurationSupplier} will be called if and only if bucket has not been persisted before.
      *
-     * @param key
-     * @param configurationSupplier
-     * @return
+     *
+     * @param key the key that used in external storage to distinguish one bucket from another.
+     * @param configurationSupplier provider for bucket configuration
+     *
+     * @return new instance of {@link BucketProxy} created in lazy mode.
      */
-    BucketProxy buildProxy(K key, Supplier<BucketConfiguration> configurationSupplier);
+    BucketProxy build(K key, Supplier<BucketConfiguration> configurationSupplier);
 
 }

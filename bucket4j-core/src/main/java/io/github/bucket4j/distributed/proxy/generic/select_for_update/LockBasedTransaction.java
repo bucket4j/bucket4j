@@ -45,7 +45,7 @@ public interface LockBasedTransaction {
      * Locks data by the key associated with this transaction.
      * There is strong guarantee that {@link #unlock()} will be called if {@link #lock()} returns successfully.
      *
-     * @return
+     * @return lock result
      */
     LockResult lock();
 

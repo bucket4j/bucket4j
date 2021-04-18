@@ -27,9 +27,9 @@ class PredictiveAsyncCommandExecutorSpecification extends Specification {
     private Optimization optimization = new PredictiveOptimization(prediction, delay, listener, clock)
     private AsyncBucketProxy optimizedBucket = proxyManager.asAsync().builder()
         .withOptimization(optimization)
-        .buildProxy(1L, configuration)
+        .build(1L, configuration)
     private Bucket notOptimizedBucket = proxyManager.builder()
-        .buildProxy(1L, configuration)
+        .build(1L, configuration)
 
     def "Should delay sync consumption"() {
         when: "first tryAcquire(1) happened"

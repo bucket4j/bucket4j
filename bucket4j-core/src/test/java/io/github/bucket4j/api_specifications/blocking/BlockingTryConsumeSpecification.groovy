@@ -176,7 +176,7 @@ class BlockingTryConsumeSpecification extends Specification {
             SchedulerMock schedulerMock = new SchedulerMock()
             AsyncBucketProxy bucket = mockProxy.asAsync().builder()
                 .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
-                .buildProxy("66", configuration)
+                .build("66", configuration)
         when:
             schedulerMock.setException(new RuntimeException())
             CompletableFuture<Boolean> future = bucket.asScheduler().tryConsume(10, Duration.ofNanos(100000), schedulerMock)

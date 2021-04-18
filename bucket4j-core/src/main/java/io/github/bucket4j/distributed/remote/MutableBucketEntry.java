@@ -20,9 +20,6 @@
 
 package io.github.bucket4j.distributed.remote;
 
-/**
- * TODO javadocs
- */
 public interface MutableBucketEntry {
 
     boolean exists();

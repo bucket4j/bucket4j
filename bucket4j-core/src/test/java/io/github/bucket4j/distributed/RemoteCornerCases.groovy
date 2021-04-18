@@ -22,7 +22,7 @@ class RemoteCornerCases extends Specification {
 
             AsyncBucketProxy bucket = proxyManagerMock.asAsync().builder()
                 .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
-                .buildProxy("66", configuration)
+                .build("66", configuration)
         when:
             proxyManagerMock.setException(new RuntimeException())
             CompletableFuture<Boolean> future = bucket.tryConsume(1)

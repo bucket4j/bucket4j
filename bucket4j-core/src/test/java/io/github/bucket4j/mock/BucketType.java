@@ -59,7 +59,7 @@ public enum BucketType {
             ProxyManagerMock<Integer> proxyManager = new ProxyManagerMock<>(timeMeter);
             return proxyManager.builder()
                     .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
-                    .buildProxy(42, configuration);
+                    .build(42, configuration);
         }
 
         @Override
@@ -67,7 +67,7 @@ public enum BucketType {
             ProxyManagerMock<Integer> proxyManager = new ProxyManagerMock<>(timeMeter);
             return proxyManager.asAsync().builder()
                     .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
-                    .buildProxy(42, configuration);
+                    .build(42, configuration);
         }
     },
     GRID_WITH_BATCHING_OPTIMIZATION {
@@ -77,7 +77,7 @@ public enum BucketType {
             return proxyManager.builder()
                     .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
                     .withOptimization(Optimizations.batching())
-                    .buildProxy(42, configuration);
+                    .build(42, configuration);
         }
 
         @Override
@@ -86,7 +86,7 @@ public enum BucketType {
             return proxyManager.asAsync().builder()
                     .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
                     .withOptimization(Optimizations.batching())
-                    .buildProxy(42, configuration);
+                    .build(42, configuration);
         }
     },
     COMPARE_AND_SWAP {
@@ -95,7 +95,7 @@ public enum BucketType {
             CompareAndSwapBasedProxyManagerMock<Integer> proxyManager = new CompareAndSwapBasedProxyManagerMock<>(ClientSideConfig.getDefault().withClientClock(timeMeter));
             return proxyManager.builder()
                     .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
-                    .buildProxy(42, configuration);
+                    .build(42, configuration);
         }
 
         @Override
@@ -103,7 +103,7 @@ public enum BucketType {
             CompareAndSwapBasedProxyManagerMock<Integer> proxyManager = new CompareAndSwapBasedProxyManagerMock<>(ClientSideConfig.getDefault().withClientClock(timeMeter));
             return proxyManager.asAsync().builder()
                 .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
-                .buildProxy(42, configuration);
+                .build(42, configuration);
         }
     },
     SELECT_FOR_UPDATE {
@@ -112,7 +112,7 @@ public enum BucketType {
             LockBasedProxyManagerMock<Integer> proxyManager = new LockBasedProxyManagerMock<>(ClientSideConfig.getDefault().withClientClock(timeMeter));
             return proxyManager.builder()
                     .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
-                    .buildProxy(42, configuration);
+                    .build(42, configuration);
         }
     };
 

@@ -74,7 +74,7 @@ public abstract class BaseDynamoDBProxyManagerTest<K> {
         BucketConfiguration configuration = BucketConfiguration.builder()
                 .addLimit(Bandwidth.simple(4, Duration.ofHours(1)))
                 .build();
-        BucketProxy bucket = proxyManager.builder().buildProxy(key, configuration);
+        BucketProxy bucket = proxyManager.builder().build(key, configuration);
         bucket.getAvailableTokens();
 
         assertTrue(proxyManager.getProxyConfiguration(key).isPresent());

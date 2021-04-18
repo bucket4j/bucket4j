@@ -3,7 +3,6 @@ package io.github.bucket4j.tck;
 import io.github.bucket4j.*;
 import io.github.bucket4j.distributed.AsyncBucketProxy;
 import io.github.bucket4j.distributed.BucketProxy;
-import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.distributed.proxy.BucketNotFoundException;
 import io.github.bucket4j.util.AsyncConsumptionScenario;
@@ -12,7 +11,6 @@ import org.junit.Test;
 
 import java.time.Duration;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -46,7 +44,7 @@ public abstract class AbstractDistributedBucketTest<K> {
                 .addLimit(Bandwidth.simple(200, Duration.ofSeconds(10)))
                 .build();
 
-        Bucket bucket = proxyManager.builder().buildProxy(key, configuration);
+        Bucket bucket = proxyManager.builder().build(key, configuration);
 
         assertTrue(bucket.tryConsume(1));
 
@@ -63,7 +61,7 @@ public abstract class AbstractDistributedBucketTest<K> {
                 .build();
         Bucket bucket = proxyManager.builder()
                 .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
-                .buildProxy(key, configuration);
+                .build(key, configuration);
 
         assertTrue(bucket.tryConsume(1));
 
@@ -90,7 +88,7 @@ public abstract class AbstractDistributedBucketTest<K> {
                 .build();
         proxyManager.builder()
                 .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
-                .buildProxy(key, configuration)
+                .build(key, configuration)
                 .getAvailableTokens();
         remoteConfiguration = proxyManager.getProxyConfiguration(key);
         assertTrue(remoteConfiguration.isPresent());
@@ -108,7 +106,7 @@ public abstract class AbstractDistributedBucketTest<K> {
         BucketConfiguration configuration = BucketConfiguration.builder()
                 .addLimit(Bandwidth.simple(4, Duration.ofHours(1)))
                 .build();
-        BucketProxy bucket = proxyManager.builder().buildProxy(key, configuration);
+        BucketProxy bucket = proxyManager.builder().build(key, configuration);
         bucket.getAvailableTokens();
 
         assertTrue(proxyManager.getProxyConfiguration(key).isPresent());
@@ -122,7 +120,7 @@ public abstract class AbstractDistributedBucketTest<K> {
                 .addLimit(Bandwidth.simple(1_000, Duration.ofMinutes(1)))
                 .build();
 
-        Bucket bucket = proxyManager.builder().buildProxy(key, () -> configuration);
+        Bucket bucket = proxyManager.builder().build(key, () -> configuration);
         long overdraftNanos = bucket.consumeIgnoringRateLimits(121_000);
         assertEquals(overdraftNanos, TimeUnit.MINUTES.toNanos(120));
     }
@@ -133,7 +131,7 @@ public abstract class AbstractDistributedBucketTest<K> {
                 .addLimit(Bandwidth.simple(1_000, Duration.ofMinutes(1)))
                 .build();
 
-        Bucket bucket = proxyManager.builder().buildProxy(key, () -> configuration);
+        Bucket bucket = proxyManager.builder().build(key, () -> configuration);
         VerboseResult<Long> result = bucket.asVerbose().consumeIgnoringRateLimits(121_000);
         long overdraftNanos = result.getValue();
 
@@ -146,7 +144,7 @@ public abstract class AbstractDistributedBucketTest<K> {
         Function<Bucket, Long> action = bucket -> bucket.tryConsume(1)? 1L : 0L;
         Supplier<Bucket> bucketSupplier = () -> proxyManager.builder()
                 .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
-                .buildProxy(key, configurationForLongRunningTests);
+                .build(key, configurationForLongRunningTests);
         ConsumptionScenario scenario = new ConsumptionScenario(4, TimeUnit.SECONDS.toNanos(5), bucketSupplier, action, permittedRatePerSecond);
         scenario.executeAndValidateRate();
     }
@@ -156,7 +154,7 @@ public abstract class AbstractDistributedBucketTest<K> {
         Function<Bucket, Long> action = bucket -> bucket.asBlocking().tryConsumeUninterruptibly(1, TimeUnit.MILLISECONDS.toNanos(50), UninterruptibleBlockingStrategy.PARKING) ? 1L : 0L;
         Supplier<Bucket> bucketSupplier = () -> proxyManager.builder()
                 .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
-                .buildProxy(key, configurationForLongRunningTests);
+                .build(key, configurationForLongRunningTests);
         ConsumptionScenario scenario = new ConsumptionScenario(4, TimeUnit.SECONDS.toNanos(5), bucketSupplier, action, permittedRatePerSecond);
         scenario.executeAndValidateRate();
     }
@@ -176,7 +174,7 @@ public abstract class AbstractDistributedBucketTest<K> {
         };
         Supplier<AsyncBucketProxy> bucketSupplier = () -> proxyManager.asAsync().builder()
                 .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
-                .buildProxy(key, configurationForLongRunningTests);
+                .build(key, configurationForLongRunningTests);
         AsyncConsumptionScenario scenario = new AsyncConsumptionScenario(4, TimeUnit.SECONDS.toNanos(5), bucketSupplier, action, permittedRatePerSecond);
         scenario.executeAndValidateRate();
     }
@@ -197,7 +195,7 @@ public abstract class AbstractDistributedBucketTest<K> {
         };
         Supplier<AsyncBucketProxy> bucketSupplier = () -> proxyManager.asAsync().builder()
                 .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
-                .buildProxy(key, configurationForLongRunningTests);
+                .build(key, configurationForLongRunningTests);
         AsyncConsumptionScenario scenario = new AsyncConsumptionScenario(4, TimeUnit.SECONDS.toNanos(5), bucketSupplier, action, permittedRatePerSecond);
         scenario.executeAndValidateRate();
     }
@@ -208,11 +206,11 @@ public abstract class AbstractDistributedBucketTest<K> {
                 .addLimit(Bandwidth.simple(10, Duration.ofDays(1)))
                 .build();
 
-        Bucket bucket1 = proxyManager.builder().buildProxy(key, configuration);
+        Bucket bucket1 = proxyManager.builder().build(key, configuration);
         assertTrue(bucket1.tryConsume(10));
         assertFalse(bucket1.tryConsume(1));
 
-        Bucket bucket2 = proxyManager.builder().buildProxy(anotherKey, () -> configuration);
+        Bucket bucket2 = proxyManager.builder().build(anotherKey, () -> configuration);
         assertTrue(bucket2.tryConsume(10));
         assertFalse(bucket2.tryConsume(1));
     }
@@ -223,7 +221,7 @@ public abstract class AbstractDistributedBucketTest<K> {
                 .addLimit(Bandwidth.simple(10, Duration.ofDays(1)))
                 .build();
 
-        Bucket bucket = proxyManager.builder().buildProxy(key, configuration);
+        Bucket bucket = proxyManager.builder().build(key, configuration);
         assertTrue(bucket.tryConsume(10));
         assertFalse(bucket.tryConsume(1));
     }
