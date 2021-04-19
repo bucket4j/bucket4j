@@ -1,7 +1,5 @@
 = Bucket4j {revnumber} Reference
 
-include::release-note.adoc[]
-
 include::quick-start.adoc[]
 
 include::basics.adoc[]
@@ -9,3 +7,5 @@ include::basics.adoc[]
 include::distributed.adoc[]
 
 include::math-model.adoc[]
+
+include::release-note.adoc[]
