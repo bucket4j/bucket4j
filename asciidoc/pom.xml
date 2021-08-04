@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.github.vladimir-bukhtoyarov</groupId>
+        <artifactId>bucket4j-parent</artifactId>
+        <version>7.0.0-beta-2020-04-18</version>
+        <relativePath>../bucket4j-parent</relativePath>
+    </parent>
+    <artifactId>asciidoc</artifactId>
+    <name>Bucket4j Documentation</name>
+
+    <properties>
+        <maven.deploy.skip>true</maven.deploy.skip>
+        <skipNexusStagingDeployMojo>true</skipNexusStagingDeployMojo>
+        <sonar.skip>true</sonar.skip>
+    </properties>
+
+    <profiles>
+        <profile>
+            <id>generate-html</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.asciidoctor</groupId>
+                        <artifactId>asciidoctor-maven-plugin</artifactId>
+                        <version>1.6.0</version>
+                        <executions>
+                            <execution>
+                                <id>output-html</id>
+                                <phase>generate-resources</phase>
+                                <goals>
+                                    <goal>process-asciidoc</goal>
+                                </goals>
+                                <configuration>
+                                    <sourceDirectory>${project.basedir}/src/main/docs/asciidoc</sourceDirectory>
+                                    <outputDirectory>${project.basedir}/target/docs/asciidoc/html/${project.version}</outputDirectory>
+                                    <backend>html</backend>
+                                    <doctype>book</doctype>
+                                    <attributes>
+                                        <project-version>${project.version}</project-version>
+                                        <toc>left</toc>
+                                        <linkcss>false</linkcss>
+                                        <sectnums>true</sectnums>
+                                        <toclevels>4</toclevels>
+                                        <revnumber>${project.version}</revnumber>
+                                        <revdate>${maven.build.timestamp}</revdate>
+                                        <organization>${project.organization.name}</organization>
+                                        <imagesdir>.</imagesdir>
+                                        <sectanchors>true</sectanchors>
+                                        <idprefix/>
+                                        <idseparator>-</idseparator>
+                                        <docinfo1>true</docinfo1>
+                                    </attributes>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>generate-pdf</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <properties>
+                <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+                <maven.compiler.source>1.8</maven.compiler.source>
+                <maven.compiler.target>1.8</maven.compiler.target>
+                <asciidoctor.maven.plugin.version>2.2.1</asciidoctor.maven.plugin.version>
+                <asciidoctorj.pdf.version>1.6.0</asciidoctorj.pdf.version>
+                <asciidoctorj.version>2.5.1</asciidoctorj.version>
+                <jruby.version>9.2.17.0</jruby.version>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.asciidoctor</groupId>
+                        <artifactId>asciidoctor-maven-plugin</artifactId>
+                        <version>${asciidoctor.maven.plugin.version}</version>
+                        <dependencies>
+                            <dependency>
+                                <groupId>org.asciidoctor</groupId>
+                                <artifactId>asciidoctorj-pdf</artifactId>
+                                <version>${asciidoctorj.pdf.version}</version>
+                            </dependency>
+                            <!-- Comment this section to use the default jruby artifact provided by the plugin -->
+                            <dependency>
+                                <groupId>org.jruby</groupId>
+                                <artifactId>jruby-complete</artifactId>
+                                <version>${jruby.version}</version>
+                            </dependency>
+                            <!-- Comment this section to use the default AsciidoctorJ artifact provided by the plugin -->
+                            <dependency>
+                                <groupId>org.asciidoctor</groupId>
+                                <artifactId>asciidoctorj</artifactId>
+                                <version>${asciidoctorj.version}</version>
+                            </dependency>
+                        </dependencies>
+                        <configuration>
+                            <sourceDirectory>${project.basedir}/src/main/docs/asciidoc</sourceDirectory>
+                            <outputDirectory>${project.basedir}/target/docs/asciidoc/pdf/${project.version}</outputDirectory>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>generate-pdf-doc</id>
+                                <phase>generate-resources</phase>
+                                <goals>
+                                    <goal>process-asciidoc</goal>
+                                </goals>
+                                <configuration>
+                                    <backend>pdf</backend>
+                                    <!-- Since 1.5.0-alpha.9 PDF back-end can use 'rouge' as well as 'coderay'
+                                    for source highlighting -->
+                                    <!-- Due to a known issue on windows, it is recommended to use 'coderay' until an new version of 'rouge' is released.
+                                            see discussions: https://github.com/asciidoctor/asciidoctor-maven-examples/pull/58
+                                                             https://github.com/asciidoctor/asciidoctorj-pdf/issues/3
+                                                             https://github.com/jneen/rouge/issues/661
+                                    -->
+                                    <attributes>
+                                        <source-highlighter>coderay</source-highlighter>
+                                        <icons>font</icons>
+                                        <pagenums/>
+                                        <toc/>
+                                        <idprefix/>
+                                        <idseparator>-</idseparator>
+                                        <revnumber>${project.version}</revnumber>
+                                        <revdate>${maven.build.timestamp}</revdate>
+                                        <organization>${project.organization.name}</organization>
+                                        <imagesdir>${project.basedir}/target/docs/asciidoc/pdf/${project.version}</imagesdir>
+                                        <generate-pdf/>
+                                        <allow-uri-read/>
+                                    </attributes>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
+</project>
