@@ -1,0 +1,6 @@
+== About the author
+Vladimir Bukhtoyarov::
+Lead Java developer at Dino Systems/RingCentral +
+Saint-Petersburg, Russia +
+jsecoder@mail.ru +
+image:images/photo.jpg[80,80] +

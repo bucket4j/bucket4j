@@ -5,6 +5,14 @@ ifndef::generate-pdf[]
 image::./images/white-logo.png[]
 endif::[]
 
+ifndef::generate-pdf[]
+++++
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5275939145150040"
+crossorigin="anonymous">
+</script>
+++++
+endif::[]
+
 include::about.adoc[]
 
 include::quick-start.adoc[]
@@ -16,3 +24,5 @@ include::distributed.adoc[]
 include::math-model.adoc[]
 
 include::release-note.adoc[]
+
+include::author.adoc[]
