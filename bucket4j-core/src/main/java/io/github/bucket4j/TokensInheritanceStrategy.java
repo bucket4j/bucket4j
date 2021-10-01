@@ -65,7 +65,34 @@ public enum TokensInheritanceStrategy {
      * {@code bucket.replaceConfiguration(newConfiguration, TokensInheritanceStrategy.RESET)} just erases all previous state.
      * Using this strategy equals to removing bucket and creating again with new configuration.
      */
-    RESET((byte) 2);
+    RESET((byte) 2),
+
+    /**
+     * Instructs to copy available tokens as is, but with one exclusion: if new bandwidth capacity is greater than old capacity, available tokens will be increased by the difference between the old and the new configuration.
+     *
+     * <p>
+     * The formula is <code>newAvailableTokens = Math.min(availableTokensBeforeReplacement, newBandwidthCapacity) + Math.max(0, newBandwidthCapacity - capacityBeforeReplacement)</code>
+     *
+     * <p>
+     * Let's describe few examples.
+     *
+     * <p>
+     *     <b>Example 1:</b> imagine bandwidth that was created by {@code Bandwidth.classic(100, Refill.gready(10, Duration.ofMinutes(1)))}.
+     *     At the moment of configuration replacement, it was 40 available tokens.
+     *     After replacing this bandwidth by following {@code Bandwidth.classic(200, Refill.gready(10, Duration.ofMinutes(1)))} 40 available tokens will be copied and added to the difference between old and new configuration,
+     *     and after replacement, we will have 140 available tokens.
+     *
+     * <p>
+     *     <b>Example 2:</b> imagine bandwidth that was created by {@code Bandwidth.classic(100, Refill.gready(10, Duration.ofMinutes(1)))}.
+     *     At the moment of config replacement it was 40 available tokens.
+     *     After replacing this bandwidth by following {@codeBandwidth.classic(20, Refill.gready(10, Duration.ofMinutes(1))))},
+     *     and after replacement we will have 20 available tokens.
+     *
+     * Example 3: imagine bandwidth that was created by {@code Bandwidth.classic(100, Refill.gready(10, Duration.ofMinutes(1)))}. At the moment of config replacement it was 10 available tokens. After replacing this bandwidth by following Bandwidth.classic(20, Refill.gready(10, Duration.ofMinutes(1)))), and after replacement we will have 10 available tokens.
+     */
+    ADDITIVE((byte) 3)
+
+    ;
 
     private final byte id;
 
