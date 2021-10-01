@@ -33,12 +33,9 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.oracle</groupId>
+            <groupId>com.oracle.coherence.ce</groupId>
             <artifactId>coherence</artifactId>
-            <version>12.2.1.0</version>
-            <scope>system</scope>
-            <!-- Point directly to jar from repository, because oracle does not provide maven distribution of coherence  -->
-            <systemPath>${project.basedir}/lib/cl.jar</systemPath>
+            <version>21.06</version>
         </dependency>
         <dependency>
             <groupId>javax.cache</groupId>
