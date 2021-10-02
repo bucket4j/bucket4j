@@ -213,7 +213,9 @@ public abstract class AbstractSerializationTest {
         BucketConfiguration configuration = Bucket4j.configurationBuilder()
                 .addLimit(simple(10, ofSeconds(1)))
                 .build();
-        testSerialization(new ReplaceConfigurationCommand(configuration, TokensInheritanceStrategy.AS_IS));
+        for (TokensInheritanceStrategy tokensInheritanceStrategy : TokensInheritanceStrategy.values()) {
+            testSerialization(new ReplaceConfigurationCommand(configuration, tokensInheritanceStrategy));
+        }
 
         testSerialization(new ConsumeIgnoringRateLimitsCommand(100));
 
