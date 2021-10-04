@@ -26,4 +26,4 @@ jobs:
         distribution: 'zulu'
         cache: 'maven'
     - name: Build
-      run: mvn --no-transfer-progress -B clean package
+      run: ./mvnw --no-transfer-progress -B clean package
