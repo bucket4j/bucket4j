@@ -22,9 +22,19 @@ public class CoherenceWithJdkSerializationTest extends AbstractDistributedBucket
 
     @BeforeClass
     public static void prepareCache() throws InterruptedException {
-        memberGroup = ClusterMemberGroupUtils.newBuilder().setStorageEnabledCount(2)
-                .setCacheConfiguration("test-coherence-jdk_serialization-config.xml")
-                .buildAndConfigureForStorageDisabledClient();
+        if (System.getenv("CI") == null) {
+            memberGroup = ClusterMemberGroupUtils.newBuilder().setStorageEnabledCount(2)
+                    .setCacheConfiguration("test-coherence-config.xml")
+                    .buildAndConfigureForStorageDisabledClient();
+        } else {
+            // Use less nodes on Github Actions build environment in order to satisfy the 7Gb limit
+            // https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources
+            // https://docs.github.com/en/actions/learn-github-actions/environment-variables#default-environment-variables
+            memberGroup = ClusterMemberGroupUtils.newBuilder()
+                    .setStorageEnabledCount(0)
+                    .buildAndConfigureFor(ClusterMemberGroup.BuildAndConfigureEnum.STORAGE_ENABLED_MEMBER);
+        }
+
         cache = CacheFactory.getCache("my_buckets");
     }
 
