@@ -22,7 +22,12 @@ public class CoherenceWithPofSerializationTest extends AbstractDistributedBucket
 
     @BeforeClass
     public static void prepareCache() throws InterruptedException {
-        memberGroup = ClusterMemberGroupUtils.newBuilder().setStorageEnabledCount(2)
+        // Use less nodes on Github Actions build environment in order to satisfy the 7Gb limit
+        // https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources
+        // https://docs.github.com/en/actions/learn-github-actions/environment-variables#default-environment-variables
+        int storageNodesCount = System.getenv("CI") == null? 2 : 1;
+
+        memberGroup = ClusterMemberGroupUtils.newBuilder().setStorageEnabledCount(storageNodesCount)
                 .setCacheConfiguration("test-coherence-config.xml")
                 .buildAndConfigureForStorageDisabledClient();
         cache = CacheFactory.getCache("my_buckets");

@@ -12,9 +12,11 @@ jobs:
   build:
     strategy:
       matrix:
-        java: [ '8', '11' ]
+        # java: [ '8', '11' ]
+        java: [ '8' ]
         os: [ 'ubuntu-latest' ]
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
     steps:
     - uses: actions/checkout@v2
     - name: Set up JDK ${{ matrix.java }}
