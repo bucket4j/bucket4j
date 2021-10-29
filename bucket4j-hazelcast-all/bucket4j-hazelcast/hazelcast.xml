@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hazelcast xmlns="http://www.hazelcast.com/schema/config"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://www.hazelcast.com/schema/config
+           http://www.hazelcast.com/schema/config/hazelcast-config-4.2.xsd">
+    <map name="buckets">
+        <time-to-live-seconds>120</time-to-live-seconds>
+        <eviction eviction-policy="NONE" max-size-policy="PER_NODE" size="20000000"/>
+    </map>
+    <cache name="buckets">
+    </cache>
+</hazelcast>
