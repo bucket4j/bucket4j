@@ -43,6 +43,20 @@ public class VerboseResult<T extends Serializable> implements Serializable {
         public long calculateFullRefillingTime() {
             return state.calculateFullRefillingTime(configuration.getBandwidths(), operationTimeNanos);
         }
+        @Override
+        public long getAvailableTokens() {
+            return state.getAvailableTokens(configuration.getBandwidths());
+        }
+
+        @Override
+        public long[] getAvailableTokensPerEachBandwidth() {
+            Bandwidth[] bandwidths = configuration.getBandwidths();
+            long[] availableTokens = new long[bandwidths.length];
+            for (int i = 0; i < bandwidths.length; i++) {
+                availableTokens[i] = state.getCurrentSize(i);
+            }
+            return availableTokens;
+        }
     };
 
     public VerboseResult(long operationTimeNanos, T value, BucketConfiguration configuration, BucketState state) {
@@ -98,6 +112,21 @@ public class VerboseResult<T extends Serializable> implements Serializable {
          * @return time in nanoseconds that need to wait until bucket will be fully refilled to its maximum
          */
         long calculateFullRefillingTime();
+
+        /**
+         * Returns currently available tokens
+         *
+         * @return currently available tokens
+         */
+        long getAvailableTokens();
+
+        /**
+         * Returns currently available tokens per each bandwidth.
+         * Element's order inside resulted array depends from order in which bandwidth is specified inside {@link BucketConfiguration}.
+         *
+         * @return currently available tokens per each bandwidth
+         */
+        long[] getAvailableTokensPerEachBandwidth();
 
     }
 

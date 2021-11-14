@@ -94,4 +94,80 @@ class VerboseApiTest extends Specification {
             ]
     }
 
+    def "getAvailableTokens"(String testNumber, long requiredAvailableTokens, BucketConfiguration configuration) {
+        setup:
+            long currentTimeNanos = 0L
+            BucketState state = BucketState.createInitialState(configuration, currentTimeNanos)
+            VerboseResult verboseResult = new VerboseResult(currentTimeNanos, 42, configuration, state)
+        when:
+            long availableTokens = verboseResult.getDiagnostics().getAvailableTokens()
+        then:
+            availableTokens == requiredAvailableTokens
+        where:
+            [testNumber, requiredAvailableTokens, configuration] << [
+                [
+                        "#1",
+                        3,
+                        Bucket4j.configurationBuilder()
+                                .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(3))
+                                .build()
+                ], [
+                        "#2",
+                        10,
+                        Bucket4j.configurationBuilder()
+                                .addLimit(Bandwidth.classic(10, Refill.intervally(10, Duration.ofNanos(100))))
+                                .build()
+                ], [
+                        "#3",
+                        1,
+                        Bucket4j.configurationBuilder()
+                                .addLimit(Bandwidth.classic(10, Refill.greedy(2, Duration.ofNanos(100))).withInitialTokens(1))
+                                .addLimit(Bandwidth.classic(100, Refill.greedy(20, Duration.ofNanos(100))))
+                                .build()
+                ]
+        ]
+    }
+
+    @Unroll
+    def "getAvailableTokensPerEachBandwidth"(String testNumber, List<Long> requiredAvailableTokens, BucketConfiguration configuration) {
+        setup:
+            long currentTimeNanos = 0L
+            BucketState state = BucketState.createInitialState(configuration, currentTimeNanos)
+            VerboseResult verboseResult = new VerboseResult(currentTimeNanos, 42, configuration, state)
+        when:
+            long[] availableTokens = verboseResult.getDiagnostics().getAvailableTokensPerEachBandwidth()
+        then:
+            Arrays.asList(availableTokens) == requiredAvailableTokens
+        where:
+            [testNumber, requiredAvailableTokens, configuration] << [
+                [
+                        "#1",
+                        [ 3l ] as List,
+                        Bucket4j.configurationBuilder()
+                                .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(3))
+                                .build()
+                ], [
+                        "#2",
+                        [ 10l ] as List,
+                        Bucket4j.configurationBuilder()
+                                .addLimit(Bandwidth.classic(10, Refill.intervally(10, Duration.ofNanos(100))))
+                                .build()
+                ], [
+                        "#3",
+                        [ 1l, 100l ] as List,
+                        Bucket4j.configurationBuilder()
+                                .addLimit(Bandwidth.classic(10, Refill.greedy(2, Duration.ofNanos(100))).withInitialTokens(1))
+                                .addLimit(Bandwidth.classic(100, Refill.greedy(20, Duration.ofNanos(100))))
+                                .build()
+                ], [
+                        "#3",
+                        [ 100l, 1l ] as List,
+                        Bucket4j.configurationBuilder()
+                                .addLimit(Bandwidth.classic(100, Refill.greedy(20, Duration.ofNanos(100))))
+                                .addLimit(Bandwidth.classic(10, Refill.greedy(2, Duration.ofNanos(100))).withInitialTokens(1))
+                                .build()
+                ]
+        ]
+    }
+
 }
