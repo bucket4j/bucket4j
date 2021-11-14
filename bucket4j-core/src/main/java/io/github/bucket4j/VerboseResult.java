@@ -38,26 +38,6 @@ public class VerboseResult<T extends Serializable> implements Serializable {
     private final T value;
     private final BucketConfiguration configuration;
     private final BucketState state;
-    private final Diagnostics diagnostics = new Diagnostics() {
-        @Override
-        public long calculateFullRefillingTime() {
-            return state.calculateFullRefillingTime(configuration.getBandwidths(), operationTimeNanos);
-        }
-        @Override
-        public long getAvailableTokens() {
-            return state.getAvailableTokens(configuration.getBandwidths());
-        }
-
-        @Override
-        public long[] getAvailableTokensPerEachBandwidth() {
-            Bandwidth[] bandwidths = configuration.getBandwidths();
-            long[] availableTokens = new long[bandwidths.length];
-            for (int i = 0; i < bandwidths.length; i++) {
-                availableTokens[i] = state.getCurrentSize(i);
-            }
-            return availableTokens;
-        }
-    };
 
     public VerboseResult(long operationTimeNanos, T value, BucketConfiguration configuration, BucketState state) {
         this.operationTimeNanos = operationTimeNanos;
@@ -98,7 +78,26 @@ public class VerboseResult<T extends Serializable> implements Serializable {
      * @return internal state describer
      */
     public Diagnostics getDiagnostics() {
-        return diagnostics;
+        return new Diagnostics() {
+            @Override
+            public long calculateFullRefillingTime() {
+                return state.calculateFullRefillingTime(configuration.getBandwidths(), operationTimeNanos);
+            }
+            @Override
+            public long getAvailableTokens() {
+                return state.getAvailableTokens(configuration.getBandwidths());
+            }
+
+            @Override
+            public long[] getAvailableTokensPerEachBandwidth() {
+                Bandwidth[] bandwidths = configuration.getBandwidths();
+                long[] availableTokens = new long[bandwidths.length];
+                for (int i = 0; i < bandwidths.length; i++) {
+                    availableTokens[i] = state.getCurrentSize(i);
+                }
+                return availableTokens;
+            }
+        };
     }
 
     /**
