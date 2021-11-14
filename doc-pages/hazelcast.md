@@ -72,5 +72,5 @@ import io.github.bucket4j.grid.hazelcast.serialization.HazelcastSerializer;
 ```
 
 ## Known issues related with Docker and(or) SpringBoot
-[#186 HazelcastEntryProcessorAdapter class not found](https://github.com/vladimir-bukhtoyarov/bucket4j/discussions/186) - check file permissins inside your image.
-[#182 HazelcastSerializationException with Hazelcast 4.2](https://github.com/vladimir-bukhtoyarov/bucket4j/issues/162) - properly setup classloader for Hazelcast client configuration
+* [#186 HazelcastEntryProcessorAdapter class not found](https://github.com/vladimir-bukhtoyarov/bucket4j/discussions/186) - check file permissins inside your image.
+* [#182 HazelcastSerializationException with Hazelcast 4.2](https://github.com/vladimir-bukhtoyarov/bucket4j/issues/162) - properly setup classloader for Hazelcast client configuration.
