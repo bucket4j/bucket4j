@@ -38,6 +38,12 @@ public class VerboseResult<T extends Serializable> implements Serializable {
     private final T value;
     private final BucketConfiguration configuration;
     private final BucketState state;
+    private final Diagnostics diagnostics = new Diagnostics() {
+        @Override
+        public long calculateFullRefillingTime() {
+            return state.calculateFullRefillingTime(configuration.getBandwidths(), operationTimeNanos);
+        }
+    };
 
     public VerboseResult(long operationTimeNanos, T value, BucketConfiguration configuration, BucketState state) {
         this.operationTimeNanos = operationTimeNanos;
@@ -52,7 +58,6 @@ public class VerboseResult<T extends Serializable> implements Serializable {
     public T getValue() {
         return value;
     }
-
 
     /**
      * @return snapshot of configuration which was actual at operation time
@@ -73,6 +78,27 @@ public class VerboseResult<T extends Serializable> implements Serializable {
      */
     public long getOperationTimeNanos() {
         return operationTimeNanos;
+    }
+
+    /**
+     * @return internal state describer
+     */
+    public Diagnostics getDiagnostics() {
+        return diagnostics;
+    }
+
+    /**
+     * Describer of internal bucket state
+     */
+    interface Diagnostics {
+
+        /**
+         * Returns time in nanoseconds that need to wait until bucket will be fully refilled to its maximum
+         *
+         * @return time in nanoseconds that need to wait until bucket will be fully refilled to its maximum
+         */
+        long calculateFullRefillingTime();
+
     }
 
     public <R extends Serializable> VerboseResult<R> map(Function<T, R> mapper) {
