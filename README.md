@@ -1,9 +1,7 @@
 ![](/doc-pages/white-logo.png)
 
 # Java rate-limiting library based on token-bucket algorithm.
-[![Join the chat at https://gitter.im/vladimir-bukhtoyarov/bucket4j](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/vladimir-bukhtoyarov/bucket4j?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Licence](https://img.shields.io/hexpm/l/plug.svg)](https://github.com/vladimir-bukhtoyarov/bucket4j/blob/master/LICENSE)
-[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=BCY8T8GHTT5T4)
 
 ## Advantages of Bucket4j
 * Implemented on top of ideas of well known algorithm, which are by de-facto standard for rate limiting in the IT industry.
@@ -32,7 +30,7 @@ As mentioned above in addition to local in-memory buckets, the Bucket4j supports
 ## General documentation
 #### Basics:
 * [Token bucket wikipedia](https://en.wikipedia.org/wiki/Token_bucket) - wikipedia page describes the token-bucket algorithm in classical form.
-* [Non-formal overview of token-bucket algorithm](doc-pages/token-bucket-brief-overview.md) - the brief overview of token-bucket algorithm.
+* [Non-formal overview of token-bucket algorithm](https://vbukhtoyarov-java.blogspot.com/2021/11/non-formal-overview-of-token-bucket.html) - the brief overview of token-bucket algorithm.
 
 #### Examples:
 * [Basic-usage](doc-pages/basic-usage.md) - examples of basic usage.
@@ -80,7 +78,6 @@ mvn clean install
 Feel free to ask via:
 * [Bucket4j discussions](https://github.com/vladimir-bukhtoyarov/bucket4j/discussions) for questions, feature proposals, sharing of experience.
 * [Bucket4j issue tracker](https://github.com/vladimir-bukhtoyarov/bucket4j/issues/new) to report a bug.
-* [Vladimir Bukhtoyarov - Upwork Profile](https://www.upwork.com/freelancers/~013d8e02a32ffdd5f5) if you want to get one time paid support. 
 
 ## License
 Copyright 2015-2020 Vladimir Bukhtoyarov
