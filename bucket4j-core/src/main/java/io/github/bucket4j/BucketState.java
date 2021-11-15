@@ -478,7 +478,7 @@ public class BucketState implements Serializable {
         stateData[bandwidth * BANDWIDTH_SIZE] = nanos;
     }
 
-    long getCurrentSize(int bandwidth) {
+    public long getCurrentSize(int bandwidth) {
         return stateData[bandwidth * BANDWIDTH_SIZE + 1];
     }
 
@@ -490,12 +490,34 @@ public class BucketState implements Serializable {
         stateData[bandwidth * BANDWIDTH_SIZE + 1] -= tokens;
     }
 
-    long getRoundingError(int bandwidth) {
+    public long getRoundingError(int bandwidth) {
         return stateData[bandwidth * BANDWIDTH_SIZE + 2];
     }
 
     private void setRoundingError(int bandwidth, long roundingError) {
         stateData[bandwidth * BANDWIDTH_SIZE + 2] = roundingError;
+    }
+
+    public long calculateFullRefillingTime(Bandwidth[] bandwidths, long currentTimeNanos) {
+        long maxTimeToFullRefillNanos = calculateFullRefillingTime(0, bandwidths[0], currentTimeNanos);
+        for (int i = 1; i < bandwidths.length; i++) {
+            maxTimeToFullRefillNanos = Math.max(maxTimeToFullRefillNanos, calculateFullRefillingTime(i, bandwidths[i], currentTimeNanos));
+        }
+        return maxTimeToFullRefillNanos;
+    }
+
+    private long calculateFullRefillingTime(int bandwidthIndex, Bandwidth bandwidth, long currentTimeNanos) {
+        long availableTokens = getCurrentSize(bandwidthIndex);
+        if (availableTokens >= bandwidth.capacity) {
+            return 0L;
+        }
+        long deficit = bandwidth.capacity - availableTokens;
+
+        if (bandwidth.isRefillIntervally()) {
+            return calculateDelayNanosAfterWillBePossibleToConsumeForIntervalBandwidth(bandwidthIndex, bandwidth, deficit, currentTimeNanos);
+        } else {
+            return calculateDelayNanosAfterWillBePossibleToConsumeForGreedyBandwidth(bandwidthIndex, bandwidth, deficit);
+        }
     }
 
     public static final SerializationHandle<BucketState> SERIALIZATION_HANDLE = new SerializationHandle<BucketState>() {

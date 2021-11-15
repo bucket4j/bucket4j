@@ -1,5 +1,6 @@
 # Documentation links for legacy releases:
 ## 2021
+* [6.3](https://github.com/vladimir-bukhtoyarov/bucket4j/tree/6.3) ```Oct 02, 2021``` Additive strategy for configuration replacement
 * [6.2](https://github.com/vladimir-bukhtoyarov/bucket4j/tree/6.2) ```Mar 21 2021``` Support for ApacheIgnite Thin client
 * [6.1](https://github.com/vladimir-bukhtoyarov/bucket4j/tree/6.1) ```Mar 03 2021``` Support for refilling buckets over maximum
 ## 2020
