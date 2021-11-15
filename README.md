@@ -1,52 +1,34 @@
-![](/doc-pages/white-logo.png)
+![](/asciidoc/src/main/docs/asciidoc/images/white-logo.png)
 
 # Java rate-limiting library based on token-bucket algorithm.
 
 [![Licence](https://img.shields.io/hexpm/l/plug.svg)](https://github.com/vladimir-bukhtoyarov/bucket4j/blob/master/LICENSE)
-[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=BCY8T8GHTT5T4)
 
+## Bucket4j basic features
+* *Absolutely non-compromise precision* - Bucket4j does not operate with floats or doubles, all calculation are performed in the integer arithmetic, this feature protects end users from calculation errors involved by rounding.
+* *Effective implementation in terms of concurrency*:
+- Bucket4j is good scalable for multi-threading case it by defaults uses lock-free implementation.
+- In same time, library provides different concurrency strategies that can be chosen when default lock-free strategy is not desired.
+* *Effective API in terms of garbage collector footprint*: Bucket4j API tries to use primitive types as much as it is possible in order to avoid boxing and other types of floating garbage.
+* *Pluggable listener API* that allows to implement monitoring and logging.
+* *Rich diagnostic API* that allows to investigate internal state.
+* *Rich configuration management* - configuration of the bucket can be changed on fly
 
+## Bucket4j distributed features
+In additional to basic features described above, ```Bucket4j``` provides ability to implement rate-limiting in cluster of JVMs:
+- Bucket4j out of the box supports any GRID solution which compatible with JCache API (JSR 107) specification.
+- Bucket4j provides the framework that allows to quickly build integration with your own persistent technology like RDMS or a key-value storage.
+- For clustered usage scenarios Bucket4j supports asynchronous API that extremely matters when going to distribute world, because asynchronous API allows avoiding blocking your application threads each time when you need to execute Network request.
 
-## Supported back-ends
-As mentioned above in addition to local in-memory buckets, the Bucket4j supports clustered usage scenario on top of following back-ends:
- 
-| Back-end                   | Documentation page                                  | Async supported | Optimized serialization | Thin-client support |
-| -------------------------- | --------------------------------------------------- | :-------------: | :-------------:         | :-------------:     |
-| ```JCache API (JSR 107)``` | [bucket4j-jcache](doc-pages/jcache-usage.md)        | No              | No                      | No                  |
-| ```Hazelcast```            | [bucket4j-hazelcast](doc-pages/hazelcast.md)        | Yes             | Yes                     | Planned             |
-| ```Apache Ignite```        | [bucket4j-ignite](doc-pages/ignite.md)              | Yes             | n/a                     | Yes                 |
-| ```Inifinispan```          | [bucket4j-infinspan](doc-pages/infinispan.md)       | Yes             | Yes                     | No                  |
-| ```Oracle Coherence```     | [bucket4j-coherence](doc-pages/coherence.md)        | Yes             | Yes                     | No                  |
-
-## General documentation
-#### Basics:
-* [Token bucket wikipedia](https://en.wikipedia.org/wiki/Token_bucket) - wikipedia page describes the token-bucket algorithm in classical form.
-* [Non-formal overview of token-bucket algorithm](doc-pages/token-bucket-brief-overview.md) - the brief overview of token-bucket algorithm.
-
-#### Examples:
-* [Basic-usage](doc-pages/basic-usage.md) - examples of basic usage.
-* [Advanced-usage](doc-pages/advanced-usage.md) - examples of advanced usage.
-* [Asynchronous-usage](doc-pages/asynchronous.md) - examples of asynchronous usage.
-* [Listening of bucket events](doc-pages/listener.md) - examples of monitoring.
-
-#### Production checklist
-* [Common production checklist](doc-pages/production-generic-checklist.md) - Mandatory points that need to be understood before using the Bucket4j in production, independently of local or clustered usage scenarios.
-* [JCache production checklist](doc-pages/production-jcache-checklist.md) - Mandatory points that need to be understood before using the Bucket4j over JCache cluster.
-
-#### Archive:
-* [Documentation for legacy releases](doc-pages/archive-links.md).
-
-## Third-party integrations:
-* [marcosbarbero/spring-cloud-zuul-ratelimit](https://github.com/marcosbarbero/spring-cloud-zuul-ratelimit)
-* [MarcGiffing/Spring Boot Starter for Bucket4j](https://github.com/MarcGiffing/bucket4j-spring-boot-starter) . Demos of usage (incluing Zuul and Hazelcast) can be found there [bucket4j-spring-boot-starter-examples](https://github.com/MarcGiffing/bucket4j-spring-boot-starter-examples).
-* [JHipster/JHipster API Gateway](https://jhipster.github.io/api-gateway/#rate_limiting)
-* [Zivver/Dropwizard Ratelimit](https://github.com/zivver/dropwizard-ratelimit)
-
-## Third-party demos and articles:
-* [Rate limiting Spring MVC endpoints with bucket4j](https://golb.hplar.ch/2019/08/rate-limit-bucket4j.html)
-* [Abdennebi/spring-boot-bucket4j-hazelcast-demo](https://github.com/Abdennebi/spring-boot-bucket4j-hazelcast-demo)
-* [ProgrammerSought Bucket4j - preliminary understanding](http://www.programmersought.com/article/2524209291/)
-* [Baeldung - Rate Limiting a Spring API Using Bucket4j](https://www.baeldung.com/spring-bucket4j)
+### Supported JCache compatible(or similar) back-ends
+In addition to local in-memory buckets, the Bucket4j supports clustered usage scenario on top of following back-ends:
+| Back-end                   |  Async supported | Optimized serialization | Thin-client support |
+| :---                       | :---:            | :---:                   | :---:               |
+| ```JCache API (JSR 107)``` |  No              | No                      | No                  |
+| ```Hazelcast```            |  Yes             | Yes                     | Planned             |
+| ```Apache Ignite```        |  Yes             | n/a                     | Yes                 |
+| ```Inifinispan```          |  Yes             | Yes                     | No                  |
+| ```Oracle Coherence```     |  Yes             | Yes                     | No                  |
 
 ## Get Bucket4j library
 #### You can add Bucket4j to your project as maven dependency
@@ -72,5 +54,5 @@ Feel free to ask via:
 * [Vladimir Bukhtoyarov - Upwork Profile](https://www.upwork.com/freelancers/~013d8e02a32ffdd5f5) if you want to get one time paid support. 
 
 ## License
-Copyright 2015-2020 Vladimir Bukhtoyarov
+Copyright 2015-2021 Vladimir Bukhtoyarov
 Licensed under the Apache Software License, Version 2.0: <http://www.apache.org/licenses/LICENSE-2.0>.

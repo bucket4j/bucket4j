@@ -2,6 +2,9 @@
 === What is Bucket4j
 Bucket4j is Java rate-limiting library is mainly based on token-bucket algorithm, which are by de-facto standard for rate limiting in the IT industry.
 
+* [Token bucket wikipedia](https://en.wikipedia.org/wiki/Token_bucket) - wikipedia page describes the token-bucket algorithm in classical form.
+* [Non-formal overview of token-bucket algorithm](doc-pages/token-bucket-brief-overview.md) - the brief overview of token-bucket algorithm.
+
 .Bucket4j is more than direct implementation of token-bucket
 IMPORTANT: Its math model provides several useful extensions that are not mentioned in the classic token-bucket interpretations,
 such as multiple limits per bucket or overdraft. These math extensions will be detailed described later.
@@ -17,5 +20,6 @@ such as multiple limits per bucket or overdraft. These math extensions will be d
  - Bucket4j provides the framework that allows to quickly build integration with your own persistent technology like RDMS or a key-value storage.
  - For clustered usage scenarios Bucket4j supports asynchronous API that extremely matters when going to distribute world, because asynchronous API allows avoiding blocking your application threads each time when you need to execute Network request.
 * *Pluggable listener API* that allows to implement monitoring and logging.
-
+* *Rich diagnostic API* that allows to investigate internal state.
+* *Rich configuration management* - configuration of the bucket can be changed on fly
 

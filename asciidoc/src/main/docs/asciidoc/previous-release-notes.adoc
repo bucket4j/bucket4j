@@ -1,4 +1,4 @@
-# Documentation links for legacy releases:
+# Release notes
 ## 2021
 * [6.1](https://github.com/vladimir-bukhtoyarov/bucket4j/tree/6.1) ```Mar 03 2021``` Support for refilling buckets over maximum
 ## 2020
@@ -26,6 +26,5 @@
 * [1.1](https://github.com/vladimir-bukhtoyarov/bucket4j/tree/1.1) ```2 Mar 2017``` Removing intrusive support of Oracle Coherence
 ## 2016
 No releases
-## 2015  
+## 2015
 * [1.0](https://github.com/vladimir-bukhtoyarov/bucket4j/tree/release_1-0) ```10 May 2015``` First version of bucket4j library
-
