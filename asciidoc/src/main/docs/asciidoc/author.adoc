@@ -4,3 +4,9 @@ Lead Java developer at Dino Systems/RingCentral +
 Saint-Petersburg, Russia +
 jsecoder@mail.ru +
 image:images/photo.jpg[80,80] +
+
+Maxim Bartkov::
+Lead Java developer at RooX Solutions +
+Kharkov, Ukraine +
+maxgalayoutop@gmail.com +
+image:images/Maxim_Bartkov.jpg[80,80] +
