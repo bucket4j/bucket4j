@@ -1,4 +1,4 @@
-== Oracle Coherence integration
+=== Oracle Coherence integration
 Before use ``bucket4j-coherence`` module please read [bucket4j-jcache documentation](jcache-usage.md),
 because ``bucket4j-coherence`` is just a follow-up of ``bucket4j-jcache``.
 
@@ -9,7 +9,7 @@ developing the dedicated module ``bucket4j-coherence`` was the only way to provi
 **Question:** Should I migrate from ``bucket4j-jcache`` to ``bucketj-coherence`` If I do not need in asynchronous API?  
 **Answer:** No, you should not migrate to ``bucketj-coherence`` in this case.
 
-=== Dependencies
+==== Dependencies
 To use ``bucket4j-coherence`` extension you need to add following dependency:
 [source, xml, subs=attributes+]
 ----
@@ -20,7 +20,7 @@ To use ``bucket4j-coherence`` extension you need to add following dependency:
 </dependency>
 ----
 
-=== Example of Bucket instantiation
+==== Example of Bucket instantiation
 [source, java]
 ----
 com.tangosol.net.NamedCache<K, GridBucketState> cache = ...;
@@ -31,7 +31,7 @@ Bucket bucket = Bucket4j.extension(Coherence.class).builder()
                    .build(cache, key, RecoveryStrategy.RECONSTRUCT);
 ----
 
-=== Example of ProxyManager instantiation
+==== Example of ProxyManager instantiation
 [source, java]
 ----
 com.tangosol.net.NamedCache<K, GridBucketState> cache = ...;
@@ -39,7 +39,7 @@ com.tangosol.net.NamedCache<K, GridBucketState> cache = ...;
 ProxyManager proxyManager = Bucket4j.extension(Coherence.class).proxyManagerForCache(cache);
 ----
 
-=== Configuring POF serialization for Bucket4j library classes
+==== Configuring POF serialization for Bucket4j library classes
 If you configure nothing, then by default Java serialization will be used for serialization Bucket4j library classes. Java serialization can be rather slow and should be avoided in general.
 ``Bucket4j`` provides https://docs.oracle.com/cd/E24290_01/coh.371/e22837/api_pof.htm#COHDG1363[custom POF serializers] for all library classes that could be transferred over network.
 To let Coherence know about POF serializers you should register three serializers in the POF configuration config file: 

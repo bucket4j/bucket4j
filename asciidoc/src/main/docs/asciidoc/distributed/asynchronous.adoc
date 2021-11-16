@@ -1,28 +1,30 @@
-== Asynchronous API
-
+=== Asynchronous API
 Since version ``3.0`` Bucket4j provides asynchronous analogs for majority of API methods.
 Async view of bucket is availble through ``asAsync()`` method:
-``
+[source, java]
+----
 Bucket bucket = ...;
 AsyncBucket asyncBucket = bucket.asAsync();
-``
+----
 Each method of class [AsyncBucket](https://github.com/vladimir-bukhtoyarov/bucket4j/blob/3.1/bucket4j-core/src/main/java/io/github/bucket4j/AsyncBucket.java)
  has full equivalence with same semantic in synchronous version in the [Bucket](https://github.com/vladimir-bukhtoyarov/bucket4j/blob/3.0/bucket4j-core/src/main/java/io/github/bucket4j/Bucket.java) class.
 
-=== Example - limiting the rate of access to asynchronous servlet
+==== Example - limiting the rate of access to asynchronous servlet
 Imagine that you develop SMS service, which allows send SMS via HTTP interface.
 You want from your architecture to be protected from overloading, clustered and fully asynchronous.
 
 **Overloading protection requirement:**
-to prevent fraud and service overloading you want to introduce following limit for any outbound phone number:
-> The bucket size is 20 SMS (which cannot be exceeded at any given time), with a "refill rate" of 10 SMS per minute that continually increases tokens in the bucket.
+
+> To prevent fraud and service overloading you want to introduce following limit for any outbound phone number: The bucket size is 20 SMS (which cannot be exceeded at any given time), with a "refill rate" of 10 SMS per minute that continually increases tokens in the bucket.
 In other words, if client sends 10 SMS per minute, it will never be throttled,
 and moreover client have overdraft equals to 20 SMS which can be used if average is little bit higher that 10 SMS/minute on short time period.  
 **Solution:** lets use bucket4j for this.
 
 **Clustering requirement:**
-You want to avoid the single point of failure, if one server crashed that information about consumed tokens should not be lost,
+
+> You want to avoid the single point of failure, if one server crashed that information about consumed tokens should not be lost,
 thus it would be better to use any distributed computation platform for storing the buckets.  
+
 **Solution:** lets use JBoss Infinispan for this and ``bucket4j-infinispan`` extension.
 Hazelcast and Apache Ignite will be also well choice, Infinispan just selected as example.
 

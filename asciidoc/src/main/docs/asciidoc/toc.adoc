@@ -11,18 +11,10 @@ include::about.adoc[]
 
 include::quick-start.adoc[]
 
-include::basics.adoc[]
-include::math-model.adoc[]
-include::listener.adoc[]
-include::production-generic-checklist.adoc[]
+include::basic/basic-functionality-index.adoc[]
 
-include::distributed/distributed.adoc[]
-include::distributed/jcache/jcache-usage.adoc[]
-include::distributed/jcache/hazelcast.adoc[]
-include::distributed/jcache/ignite.adoc[]
-include::distributed/jcache/infinispan.adoc[]
+include::distributed/distributed-index.adoc[]
 
-include::third-party/articles.adoc[]
-include::third-party/integrations.adoc[]
+include::third-party/third-party-index.adoc[]
 
 include::release-notes.adoc[]

@@ -1,3 +1,0 @@
-== Math model explanation
-
-Math model of...

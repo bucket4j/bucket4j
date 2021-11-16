@@ -1,6 +1,6 @@
-== Listening for bucket events
+=== Listening for bucket events
 
-=== What can be listened:
+==== What can be listened:
 You can decorate the bucket by listener in order to track following events:
 - When tokens consumed from bucket.
 - When consumption requests was rejected by bucket.
@@ -8,7 +8,7 @@ You can decorate the bucket by listener in order to track following events:
 - When thread was interrupted during the wait of tokens refill  in result of interaction with ``BlockingBucket``.
 - When delayed task was submit to ``ScheduledExecutorService`` in result of interaction with ``AsyncScheduledBucket``.
 
-=== Corner cases:
+==== Corner cases:
 **Question:** How many listeners is need to create in case of application uses many buckets?  
 **Answer:**  it depends:
 - If you want to have aggregated statistics for all buckets then create single listener per application and reuse this listener for all buckets.
@@ -23,7 +23,7 @@ It is not possible to serialize and invoke listener on this non-java back-ends, 
 in order to avoid inconsistency between different back-ends in the future.
 You can do post-aggregation of monitoring statistics via features built-into your monitoring database or via mediator(like StatsD) between your application and monitoring database.
 
-=== How to attach listener to bucket?
+==== How to attach listener to bucket?
 The bucket can be decorated by listener via ``toListenable`` method.
 [source, java]
 ----
@@ -35,7 +35,7 @@ Bucket bucket = Bucket4j.builder()
                     .toListenable(listener);
 ----
 
-=== Example of integration with Dropwizard metrics-core
+==== Example of integration with Dropwizard metrics-core
 [SimpleBucketListener](https://github.com/vladimir-bukhtoyarov/bucket4j/blob/4.0/bucket4j-core/src/main/java/io/github/bucket4j/SimpleBucketListener.java) is simple implementation of ``BucketListener`` that available out of the box.
 It is example of exposing statistics via Dropwizard Metrics(for Micrometer it should be quite similar):
 [source, java]

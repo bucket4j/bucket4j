@@ -1,4 +1,4 @@
-== Third-party integrations
+=== Third-party integrations
 * https://github.com/marcosbarbero/spring-cloud-zuul-ratelimit[marcosbarbero/spring-cloud-zuul-ratelimit]
 * https://github.com/MarcGiffing/bucket4j-spring-boot-starter[MarcGiffing/Spring Boot Starter for Bucket4j]. Demos of usage (including Zuul and Hazelcast) can be found there https://github.com/MarcGiffing/bucket4j-spring-boot-starter-examples[bucket4j-spring-boot-starter-examples]
 * https://jhipster.github.io/api-gateway/#rate_limiting[JHipster/JHipster API Gateway]

@@ -1,4 +1,4 @@
-== About the author
+== About the authors
 Vladimir Bukhtoyarov::
 Lead Java developer at Dino Systems/RingCentral +
 Saint-Petersburg, Russia +

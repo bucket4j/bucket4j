@@ -1,4 +1,4 @@
-== JCache integration
+=== JCache integration
 ``Bucket4j`` supports any GRID solution which compatible with https://www.jcp.org/en/jsr/detail?id=107[JCache API (JSR 107)] specification.
 
 **Do not forget to read** [JCache production checklist](production-jcache-checklist.md) **before using the Bucket4j over JCache cluster.**
@@ -23,7 +23,7 @@ JCache expects javax.cache.cache-api to be a provided dependency. Do not forget 
 </dependency>
 ----
 
-=== Example 1 - limiting access to HTTP server by IP address
+==== Example 1 - limiting access to HTTP server by IP address
 Imagine that you develop any Servlet based WEB application and want to limit access per IP basis.
 You want to use same limits for each IP - 30 requests per minute.
 
@@ -72,7 +72,7 @@ public class IpThrottlingFilter implements javax.servlet.Filter {
 }
 ----
 
-=== Example 2 - limiting access to service by contract agreements
+==== Example 2 - limiting access to service by contract agreements
 Imagine that you provides paid language translation service via HTTP.
 Each your user has unique agreement which differs from each other. 
 Details of each agreement is stored in relational database, and takes significant time to fetch(for example 100ms). 
@@ -157,7 +157,7 @@ ProxyManager protects you from common performance pitfalls(like described in htt
 But when you have deal with one or few buckets which well known at development time, then it would be better to avoid ProxyManager 
 and work directly with [GridBucket](https://github.com/vladimir-bukhtoyarov/bucket4j/blob/2.0/bucket4j-core/src/main/java/io/github/bucket4j/grid/GridBucket.java) as described in the next example.
 
-=== Example 3 - working with JCache without ProxyManager abstraction
+==== Example 3 - working with JCache without ProxyManager abstraction
 Imagine yet another time that you develop WEB application and want to protect the whole cluster by 1000 requests per second, independently from request source,
 in other words you need one single bucket which protects the system at whole. Lets create ServletFilter to check limits similar to ``Example 1``:
 [source, java]
@@ -198,10 +198,10 @@ public class GlobalThrottlingFilter implements javax.servlet.Filter {
 ----
 As you can see the code is simpler when you work with Bucket directly without ProxyManager, so use this way always when all buckets are known at development time.
 
-=== Runnable examples of JCache integration
+==== Runnable examples of JCache integration
 Bucket4j well tested with ``Hazelcast`` and ``Apache Ignite/GridGain``, you can use integration tests from https://github.com/vladimir-bukhtoyarov/bucket4j/tree/2.0/bucket4j-jcache/src/test/java/io/github/bucket4j/grid/jcache[this folder] as live examples.
 
-=== Why JCache specification is not enough and since 3.0 were introduced the dedicated modules for Infinispan, Hazelcast and Ignite?
+==== Why JCache specification is not enough and since 3.0 were introduced the dedicated modules for Infinispan, Hazelcast and Ignite?
 Asynchronous processing is very important for high-throughput applications, but JCache specification does not specify asynchronous API, because two early attempts to bring this kind functionality at spec level https://github.com/jsr107/jsr107spec/issues/307[307], https://github.com/jsr107/jsr107spec/issues/312[312] were failed in absence of consensus.
 Sad, but true, if you need for asynchronous API, then JCache extension is useless, and you need to choose from following extensions:
 
@@ -212,7 +212,7 @@ Sad, but true, if you need for asynchronous API, then JCache extension is useles
 Of course implementation the asynchronous support for any other JCache provider outside from the list above should be easy exercise, 
 so feel free to return back the pull request addressed to cover your favorite JCache provider.
 
-=== Verification of compatibility with particular JCache provider is your responsibility
+==== Verification of compatibility with particular JCache provider is your responsibility
 Keep in mind that there are many non-certified implementations of JCache specification on the market.
 Many of them want to increase their popularity by declaring support for the JCache API,
 but often only the API is supported and the semantic of JCache is totally ignored.

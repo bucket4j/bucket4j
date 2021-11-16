@@ -2,25 +2,28 @@
 === What is Bucket4j
 Bucket4j is Java rate-limiting library is mainly based on token-bucket algorithm, which are by de-facto standard for rate limiting in the IT industry.
 
-.You can read more about token bucket by following links:
+.Bucket4j is more than direct implementation of token-bucket
+IMPORTANT: Its math model provides several useful extensions that are not mentioned in the classic token-bucket interpretations, such as multiple limits per bucket or overdraft. These math extensions will be detailed described later.
+
+You can read more about token bucket by following links:
+
 * https://en.wikipedia.org/wiki/Token_bucket[Token bucket] - wikipedia page describes the token-bucket algorithm in classical form.
 * https://vbukhtoyarov-java.blogspot.com/2021/11/non-formal-overview-of-token-bucket.html[Non-formal overview of token-bucket algorithm] - the brief overview of token-bucket algorithm.
 
-.Bucket4j is more than direct implementation of token-bucket
-IMPORTANT: Its math model provides several useful extensions that are not mentioned in the classic token-bucket interpretations,
-such as multiple limits per bucket or overdraft. These math extensions will be detailed described later.
-
-=== Bucket4j features
+=== Bucket4j basic features
 * *Absolutely non-compromise precision* - Bucket4j does not operate with floats or doubles, all calculation are performed in the integer arithmetic, this feature protects end users from calculation errors involved by rounding.
 * *Effective implementation in terms of concurrency*:
  - Bucket4j is good scalable for multi-threading case it by defaults uses lock-free implementation.
  - In same time, library provides different concurrency strategies that can be chosen when default lock-free strategy is not desired.
 * *Effective API in terms of garbage collector footprint*: Bucket4j API tries to use primitive types as much as it is possible in order to avoid boxing and other types of floating garbage.
-* *Ability to switch from one JVM to cluster* - using Bucket4j you are able to limiting something in the cluster of JVMs:
- - Bucket4j out of the box supports any GRID solution which compatible with JCache API (JSR 107) specification.
- - Bucket4j provides the framework that allows to quickly build integration with your own persistent technology like RDMS or a key-value storage.
- - For clustered usage scenarios Bucket4j supports asynchronous API that extremely matters when going to distribute world, because asynchronous API allows avoiding blocking your application threads each time when you need to execute Network request.
 * *Pluggable listener API* that allows to implement monitoring and logging.
 * *Rich diagnostic API* that allows to investigate internal state.
 * *Rich configuration management* - configuration of the bucket can be changed on fly
+
+=== Bucket4j distributed features
+In additional to basic features described above, `Bucket4j` provides ability to implement rate-limiting in cluster of JVMs:
+
+* Bucket4j out of the box supports any GRID solution which compatible with JCache API (JSR 107) specification.
+* Bucket4j provides the framework that allows to quickly build integration with your own persistent technology like RDMS or a key-value storage.
+* For clustered usage scenarios Bucket4j supports asynchronous API that extremely matters when going to distribute world, because asynchronous API allows avoiding blocking your application threads each time when you need to execute Network request.
 
