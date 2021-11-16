@@ -32,7 +32,8 @@ non-blocking architecture means that both SMS sending and limit checking should 
 **Solution:** lets use asynchronous features provided by bucket4j and Servlet-API.
 
 **Mockup of service based on top of Servlet API and bucket4j-infinispan**:
-``java
+[source, java]
+----
 
 public class SmsServlet extends javax.servlet.http.HttpServlet {
 
@@ -101,4 +102,4 @@ public class SmsServlet extends javax.servlet.http.HttpServlet {
     }
 
 }
-``
+----

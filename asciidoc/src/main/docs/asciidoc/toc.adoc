@@ -5,14 +5,6 @@ ifndef::generate-pdf[]
 image::./images/white-logo.png[]
 endif::[]
 
-ifndef::generate-pdf[]
-++++
-<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5275939145150040"
-crossorigin="anonymous">
-</script>
-++++
-endif::[]
-
 include::author.adoc[]
 
 include::about.adoc[]
@@ -20,11 +12,17 @@ include::about.adoc[]
 include::quick-start.adoc[]
 
 include::basics.adoc[]
+include::math-model.adoc[]
+include::listener.adoc[]
+include::production-generic-checklist.adoc[]
 
 include::distributed/distributed.adoc[]
+include::distributed/jcache/jcache-usage.adoc[]
+include::distributed/jcache/hazelcast.adoc[]
+include::distributed/jcache/ignite.adoc[]
+include::distributed/jcache/infinispan.adoc[]
 
-include::math-model.adoc[]
+include::third-party/articles.adoc[]
+include::third-party/integrations.adoc[]
 
-include::release-note.adoc[]
-
-include::previous-release-notes.adoc[]
+include::release-notes.adoc[]

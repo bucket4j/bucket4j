@@ -1,3 +1,0 @@
-== Release notes bla-bla {revnumber}
-
-Release notes bla-bla
