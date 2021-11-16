@@ -1,14 +1,15 @@
-# Asynchrous API
-Since version ```3.0``` Bucket4j provides asynchronous analogs for majority of API methods.
-Async view of bucket is availble through ```asAsync()``` method:
-```
+== Asynchronous API
+
+Since version ``3.0`` Bucket4j provides asynchronous analogs for majority of API methods.
+Async view of bucket is availble through ``asAsync()`` method:
+``
 Bucket bucket = ...;
 AsyncBucket asyncBucket = bucket.asAsync();
-```
+``
 Each method of class [AsyncBucket](https://github.com/vladimir-bukhtoyarov/bucket4j/blob/3.1/bucket4j-core/src/main/java/io/github/bucket4j/AsyncBucket.java)
  has full equivalence with same semantic in synchronous version in the [Bucket](https://github.com/vladimir-bukhtoyarov/bucket4j/blob/3.0/bucket4j-core/src/main/java/io/github/bucket4j/Bucket.java) class.
 
-### Example - limiting the rate of access to asynchronous servlet
+=== Example - limiting the rate of access to asynchronous servlet
 Imagine that you develop SMS service, which allows send SMS via HTTP interface.
 You want from your architecture to be protected from overloading, clustered and fully asynchronous.
 
@@ -22,7 +23,7 @@ and moreover client have overdraft equals to 20 SMS which can be used if average
 **Clustering requirement:**
 You want to avoid the single point of failure, if one server crashed that information about consumed tokens should not be lost,
 thus it would be better to use any distributed computation platform for storing the buckets.  
-**Solution:** lets use JBoss Infinispan for this and ```bucket4j-infinispan``` extension.
+**Solution:** lets use JBoss Infinispan for this and ``bucket4j-infinispan`` extension.
 Hazelcast and Apache Ignite will be also well choice, Infinispan just selected as example.
 
 **Asynchronous processing requirement:**
@@ -31,7 +32,7 @@ non-blocking architecture means that both SMS sending and limit checking should 
 **Solution:** lets use asynchronous features provided by bucket4j and Servlet-API.
 
 **Mockup of service based on top of Servlet API and bucket4j-infinispan**:
-```java
+``java
 
 public class SmsServlet extends javax.servlet.http.HttpServlet {
 
@@ -100,4 +101,4 @@ public class SmsServlet extends javax.servlet.http.HttpServlet {
     }
 
 }
-```
+``

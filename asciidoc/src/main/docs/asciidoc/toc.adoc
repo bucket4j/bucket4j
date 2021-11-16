@@ -27,4 +27,4 @@ include::math-model.adoc[]
 
 include::release-note.adoc[]
 
-include::previous-release-notes.adoc
+include::previous-release-notes.adoc[]

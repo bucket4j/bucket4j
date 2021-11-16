@@ -1,32 +1,32 @@
 # JCache integration
-```Bucket4j``` supports any GRID solution which compatible with [JCache API (JSR 107)](https://www.jcp.org/en/jsr/detail?id=107) specification. 
+``Bucket4j`` supports any GRID solution which compatible with [JCache API (JSR 107)](https://www.jcp.org/en/jsr/detail?id=107) specification. 
 
 **Do not forget to read** [JCache production checklist](production-jcache-checklist.md) **before using the Bucket4j over JCache cluster.**
 
 To use JCache extension you also need to add following dependency:
-```xml
+``xml
 <dependency>
     <groupId>com.github.vladimir-bukhtoyarov</groupId>
     <artifactId>bucket4j-jcache</artifactId>
     <version>${bucket4j.version}</version>
 </dependency>
-``` 
+`` 
 
 JCache expects javax.cache.cache-api to be a provided dependency. Do not forget to add following dependency:
-```xml
+``xml
 <dependency>
     <groupId>javax.cache</groupId>
     <artifactId>cache-api</artifactId>
     <version>${jcache.version}</version>
 </dependency>
-```
+``
 
 ## Example 1 - limiting access to HTTP server by IP address
 Imagine that you develop any Servlet based WEB application and want to limit access per IP basis.
 You want to use same limits for each IP - 30 requests per minute.
 
 ServletFilter would be obvious place to check limits:
-```java
+``java
 public class IpThrottlingFilter implements javax.servlet.Filter {
     
     private static final BucketConfiguration configuration = Bucket4j.configurationBuilder()
@@ -67,7 +67,7 @@ public class IpThrottlingFilter implements javax.servlet.Filter {
     }
 
 }
-```
+``
 
 ## Example 2 - limiting access to service by contract agreements
 Imagine that you provides paid language translation service via HTTP.
@@ -78,7 +78,7 @@ will be 100 times slower than limit-checking itself.
 Bucket4j solves this problem via lazy configuration suppliers which are called if and only if bucket was not yet stored in grid,
 thus it is possible to implement solution  that will read agreement from database once per each user. 
 
-```java
+``java
 public class IpThrottlingFilter implements javax.servlet.Filter {
 
     // service to provide per user limits
@@ -131,7 +131,7 @@ public class IpThrottlingFilter implements javax.servlet.Filter {
     }
 
 }
-```
+``
 
 
 **Question:** is the provided JCache integration safe across multiple JVMs? Does it ensure that two nodes creating a bucket simultaneously on a given Cache<K, V> will only actually create one single bucket (without resetting a previously created one with the same key)?  
@@ -140,7 +140,7 @@ This behavior is guaranteed by **putIfAbsent** method contract of [javax.cache.C
 
 **Question:** Does ProxyManager store buckets internally, could be this a reason of OutOfMemoryError?  
 **Answer:** No. ProxyManager stores nothing about buckets which it returns, the buckets actually stored in in-memory GRID outside client JVM.
-Think about proxy returned by ```ProxyManager#getBucket``` just about very cheap pointer to data which actually stored somewhere outside.
+Think about proxy returned by ``ProxyManager#getBucket`` just about very cheap pointer to data which actually stored somewhere outside.
 So, independently of count of buckets ProxyManager will never be a reason of crash or extreme memory consumption.
 
 **Question:** what will happen if bucket state will be lost in the GRID  because of split-brain, human mistake or pragmatically errors introduced by GRID vendor?  
@@ -155,8 +155,8 @@ and work directly with [GridBucket](https://github.com/vladimir-bukhtoyarov/buck
  
 ## Example 3 - working with JCache without ProxyManager abstraction
 Imagine yet another time that you develop WEB application and want to protect the whole cluster by 1000 requests per second, independently from request source,
-in other words you need one single bucket which protects the system at whole. Lets create ServletFilter to check limits similar to ```Example 1```:
-```java
+in other words you need one single bucket which protects the system at whole. Lets create ServletFilter to check limits similar to ``Example 1``:
+``java
 public class GlobalThrottlingFilter implements javax.servlet.Filter {
 
     private static final String BUCKET_ID = "global-limit";
@@ -190,11 +190,11 @@ public class GlobalThrottlingFilter implements javax.servlet.Filter {
     }
 
 }
-```
+``
 As you can see the code is simpler when you work with Bucket directly without ProxyManager, so use this way always when all buckets are known at development time. 
 
 ## Runnable examples of JCache integration
-Bucket4j well tested with ```Hazelcast``` and ```Apache Ignite/GridGain```, you can use integration tests from [this folder](https://github.com/vladimir-bukhtoyarov/bucket4j/tree/2.0/bucket4j-jcache/src/test/java/io/github/bucket4j/grid/jcache) as live examples.
+Bucket4j well tested with ``Hazelcast`` and ``Apache Ignite/GridGain``, you can use integration tests from [this folder](https://github.com/vladimir-bukhtoyarov/bucket4j/tree/2.0/bucket4j-jcache/src/test/java/io/github/bucket4j/grid/jcache) as live examples.
 
 ## Why JCache specification is not enough and since 3.0 were introduced the dedicated modules for Infinispan, Hazelcast and Ignite?
 Asynchronous processing is very important for high-throughput applications, but JCache specification does not specify asynchronous API, because two early attempts to bring this kind functionality at spec level [307](https://github.com/jsr107/jsr107spec/issues/307),[312](https://github.com/jsr107/jsr107spec/issues/312) were failed in absence of consensus.
@@ -243,7 +243,7 @@ Oracle Coherence, Apache Ignite, Hazelcast are good examples of safe implementat
 
 Because it is impossible to test all possible JCache providers, you need to test your provider by yourself.
 Just run this code in order to be sure that your implementation of JCache provides good isolation for EntryProcessors
-```java
+``java
 import javax.cache.Cache;
 import javax.cache.processor.EntryProcessor;
 import java.util.concurrent.CountDownLatch;
@@ -292,7 +292,7 @@ public class CompatibilityTest {
     }
 
 }
-```
+``
 The check does 4000 increments of integer in parallel and verifies that no one update has been missed.
 If check passed then your JCache provider is compatible with Bucket4j, the throttling will work fine in distributed and concurrent environment.
 If check is not passed, then reach to the particular JCache provider team and consult why its implementation misses the writes.

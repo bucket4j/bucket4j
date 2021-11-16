@@ -2,8 +2,9 @@
 === What is Bucket4j
 Bucket4j is Java rate-limiting library is mainly based on token-bucket algorithm, which are by de-facto standard for rate limiting in the IT industry.
 
-* [Token bucket wikipedia](https://en.wikipedia.org/wiki/Token_bucket) - wikipedia page describes the token-bucket algorithm in classical form.
-* [Non-formal overview of token-bucket algorithm](doc-pages/token-bucket-brief-overview.md) - the brief overview of token-bucket algorithm.
+.You can read more about token bucket by following links:
+* https://en.wikipedia.org/wiki/Token_bucket[Token bucket] - wikipedia page describes the token-bucket algorithm in classical form.
+* https://vbukhtoyarov-java.blogspot.com/2021/11/non-formal-overview-of-token-bucket.html[Non-formal overview of token-bucket algorithm] - the brief overview of token-bucket algorithm.
 
 .Bucket4j is more than direct implementation of token-bucket
 IMPORTANT: Its math model provides several useful extensions that are not mentioned in the classic token-bucket interpretations,
