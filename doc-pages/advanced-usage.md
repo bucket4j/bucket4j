@@ -19,7 +19,7 @@ Bucket bucket = Bucket4j.builder()
 // ...
 while (true) {
   // Consume a token from the token bucket.  If a token is not available this method will block until the refill adds one to the bucket.
-  if (bucket.tryConsume(1, MAX_WAIT_NANOS, BlockingStrategy.PARKING)) {
+  if (bucket.asScheduler().tryConsume(1, MAX_WAIT_NANOS, BlockingStrategy.PARKING)) {
        workloadExecutor.execute(new LoadTask());
   };
 }
