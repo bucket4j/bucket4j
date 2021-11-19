@@ -45,10 +45,9 @@ import static io.github.bucket4j.distributed.versioning.Versions.v_7_0_0;
  * <ul>
  *     <li>{@link #simple(long, Duration) Simple} - most popular way, which does not require from you to fully understand the token-bucket algorithm.
  *     Use this way when you just want to specify easy limitation <tt>N</tt> tokens per <tt>M</tt> time window.
- *     See <a href="https://github.com/vladimir-bukhtoyarov/bucket4j/blob/1.3/doc-pages/basic-usage.md#example-1---limiting-the-rate-of-heavy-work">this example</a> of usage.
  *     </li>
  *     <li>{@link #classic(long, Refill)} Classic} - hard way to specify limitation,
- *     use it when you want to utilize the whole power of token-bucket. See <a href="https://github.com/vladimir-bukhtoyarov/bucket4j/blob/1.3/doc-pages/basic-usage.md#example-3---limiting-the-rate-of-access-to-rest-api">this example</a> of usage.
+ *     use it when you want to utilize the whole power of token-bucket.
  *     </li>
  * </ul>
  *
@@ -105,7 +104,7 @@ public class Bandwidth implements ComparableByContent<Bandwidth> {
     }
 
     /**
-     * Specifies limitation in <a href="https://github.com/vladimir-bukhtoyarov/bucket4j/blob/1.3/doc-pages/token-bucket-brief-overview.md#token-bucket-algorithm">classic interpretation</a> of token-bucket algorithm.
+     * Specifies limitation in conventional interpretation of token-bucket algorithm.
      *
      * @param capacity
      * @param refill

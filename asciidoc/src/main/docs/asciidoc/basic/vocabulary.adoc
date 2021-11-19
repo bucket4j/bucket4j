@@ -1,25 +1,51 @@
-=== Vocabulary:
+=== Vocabulary
 
-Bucket::
-Bucket is ...
+[[bucket, Bucket]]
+==== Bucket
+`Bucket` is rate-limiter that is implemented on the top of ideas of well-known https://en.wikipedia.org/wiki/Token_bucket[Token Bucket algorithm].
+In the Bucket4j library code the `Bucket` is represented by interface https://github.com/vladimir-bukhtoyarov/bucket4j/blob/{minor-number}/bucket4j-core/src/main/java/io/github/bucket4j/Bucket.java[io.github.bucket4j.Bucket].
 
-Bandwidth::
+.Bucket aggregates following parts:
+* <<bucket-bonfiguration>> specifies which limitation rules should be used by bucket.
+* <<bucket-state>> the place where bucket stores mutable state like amount of current available tokens.
+* <<time-meter>> specifies the way to measure time.
+
+Bucket can be constructed via special builder API <<local-bucket-builder>> that is available by factory method:
+[source, java, subs=attributes+]
+----
+Bucket.builder()
+----
+
+[[bucket-bonfiguration, BucketConfiguration]]
+==== BucketConfiguration
+`BucketConfiguration` describes the limitation rules that is used by <<bucket>>.
+In the Bucket4j library code the `BucketConfiguration` is represented by class https://github.com/vladimir-bukhtoyarov/bucket4j/blob/{minor-number}/bucket4j-core/src/main/java/io/github/bucket4j/BucketConfiguration.java[io.github.bucket4j.BucketConfiguration].
+
+==== Limitation/Bandwidth
 Bandwidth is ...
 
-Capacity::
+==== Capacity
 Bandwidth capacity is ...
 
-Refill::
+==== Refill
 Refill is ...
 
-Local bucket::
-Local bucket is ...
+[[bucket-state, BucketState]]
+==== BucketState
+BucketState is ...
 
-TimeMeter::
+[[time-meter, TimeMeter]]
+==== TimeMeter
 TimeMeter is ...
 
-Remote bucket::
-Remote bucket is ...
+[[local-bucket-builder, LocalBucketBuilder]]
+==== TimeMeter
+LocalBucketBuilder is ...
 
-Proxy manager::
-Proxy manager is ...
+
+==== Bucket proxy
+Bucket proxy ...
+
+==== Backend
+
+

@@ -1,10 +1,6 @@
 = Bucket4j {revnumber} Reference
 :front-cover-image: images/white-logo.png
 
-ifndef::generate-pdf[]
-image::./images/white-logo.png[]
-endif::[]
-
 include::author.adoc[]
 
 include::about.adoc[]
@@ -16,5 +12,3 @@ include::basic/basic-functionality-index.adoc[]
 include::distributed/distributed-index.adoc[]
 
 include::third-party/third-party-index.adoc[]
-
-include::release-notes.adoc[]

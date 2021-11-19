@@ -21,16 +21,8 @@ package io.github.bucket4j;
 
 import io.github.bucket4j.local.LocalBucketBuilder;
 
-import java.time.Duration;
-
 /**
  * Performs rate limiting using algorithm based on top of ideas of <a href="https://en.wikipedia.org/wiki/Token_bucket">Token Bucket</a>.
- * <p>
- * Use following links for further details:
- * <ul>
- * <li><a href="https://github.com/vladimir-bukhtoyarov/bucket4j/blob/4.0/doc-pages/basic-usage.md">Basic example of usage</a></li>
- * <li><a href="https://github.com/vladimir-bukhtoyarov/bucket4j/blob/4.0/doc-pages/advanced-usage.md">Advanced examples of usage</a></li>
- * </ul>
  */
 public interface Bucket {
 

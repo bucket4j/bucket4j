@@ -53,6 +53,53 @@
                                         <revnumber>${project.version}</revnumber>
                                         <revdate>${maven.build.timestamp}</revdate>
                                         <organization>${project.organization.name}</organization>
+                                        <minor-number>7.0</minor-number>
+                                        <imagesdir>.</imagesdir>
+                                        <sectanchors>true</sectanchors>
+                                        <idprefix/>
+                                        <idseparator>-</idseparator>
+                                        <docinfo1>true</docinfo1>
+                                    </attributes>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>generate-html-plain</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.asciidoctor</groupId>
+                        <artifactId>asciidoctor-maven-plugin</artifactId>
+                        <version>1.6.0</version>
+                        <executions>
+                            <execution>
+                                <id>output-html</id>
+                                <phase>generate-resources</phase>
+                                <goals>
+                                    <goal>process-asciidoc</goal>
+                                </goals>
+                                <configuration>
+                                    <sourceDirectory>${project.basedir}/src/main/docs/asciidoc</sourceDirectory>
+                                    <outputDirectory>${project.basedir}/target/docs/asciidoc/html/${project.version}</outputDirectory>
+                                    <backend>html</backend>
+                                    <doctype>Inline</doctype>
+                                    <attributes>
+                                        <project-version>${project.version}</project-version>
+<!--                                        <toc>left</toc>-->
+                                        <linkcss>false</linkcss>
+<!--                                        <sectnums>true</sectnums>-->
+<!--                                        <toclevels>4</toclevels>-->
+                                        <revnumber>${project.version}</revnumber>
+                                        <revdate>${maven.build.timestamp}</revdate>
+                                        <organization>${project.organization.name}</organization>
+                                        <minor-number>7.0</minor-number>
                                         <imagesdir>.</imagesdir>
                                         <sectanchors>true</sectanchors>
                                         <idprefix/>
