@@ -103,7 +103,7 @@ public class VerboseResult<T extends Serializable> implements Serializable {
     /**
      * Describer of internal bucket state
      */
-    interface Diagnostics {
+    public interface Diagnostics {
 
         /**
          * Returns time in nanoseconds that need to wait until bucket will be fully refilled to its maximum
