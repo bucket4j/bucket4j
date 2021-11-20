@@ -7,8 +7,8 @@ endif::[]
 == Current version {revnumber} documentation
 `31 Dec 2021` redesigning of distributed facilities
 
-* http://bucket4j/{revnumber}/release-notes.html[{revnumber} Release notes]
-* http://bucket4j/{revnumber}/toc.html[{revnumber} Reference]
+* http://bucket4j.com/{revnumber}/release-notes.html[{revnumber} Release notes]
+* http://bucket4j.com/{revnumber}/toc.html[{revnumber} Reference]
 
 == Documentation for previous versions
 === 2021
