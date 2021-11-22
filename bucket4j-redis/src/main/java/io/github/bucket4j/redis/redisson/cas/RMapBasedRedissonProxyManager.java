@@ -24,59 +24,91 @@ import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AbstractCompareAndSwapBasedProxyManager;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AsyncCompareAndSwapOperation;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.CompareAndSwapOperation;
+import io.netty.buffer.ByteBuf;
 import org.redisson.api.RFuture;
-import org.redisson.api.RMap;
+import org.redisson.client.codec.ByteArrayCodec;
+import org.redisson.client.codec.Codec;
+import org.redisson.client.protocol.RedisCommands;
+import org.redisson.command.CommandExecutor;
+import org.redisson.command.CommandSyncService;
 
+import java.io.IOException;
+import java.time.Duration;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-public class RMapBasedRedissonProxyManager<K> extends AbstractCompareAndSwapBasedProxyManager<K> {
+public class RMapBasedRedissonProxyManager extends AbstractCompareAndSwapBasedProxyManager<String> {
 
-    private final RMap<K, byte[]> buckets;
+    private final CommandExecutor commandExecutor;
+    private final long ttlMillis;
 
-    public RMapBasedRedissonProxyManager(RMap<K, byte[]> buckets, ClientSideConfig clientSideConfig) {
+    public RMapBasedRedissonProxyManager(CommandExecutor commandExecutor, ClientSideConfig clientSideConfig, Duration ttl) {
         super(clientSideConfig);
-        this.buckets = buckets;
+        this.commandExecutor = Objects.requireNonNull(commandExecutor);
+        this.ttlMillis = ttl.toMillis();
     }
 
     @Override
-    protected CompareAndSwapOperation beginCompareAndSwapOperation(K key) {
+    protected CompareAndSwapOperation beginCompareAndSwapOperation(String key) {
+        List<Object> keys = Collections.singletonList(key);
         return new CompareAndSwapOperation() {
             @Override
             public Optional<byte[]> getStateData() {
-                byte[] persistedState = buckets.get(key);
+                byte[] persistedState = commandExecutor.read(key, ByteArrayCodec.INSTANCE, RedisCommands.GET, key);
                 return Optional.ofNullable(persistedState);
             }
             @Override
             public boolean compareAndSwap(byte[] originalData, byte[] newData) {
                 if (originalData == null) {
                     // Redisson prohibits the usage null as values, so "replace" must not be used in such cases
-                    return buckets.putIfAbsent(key, newData) == null;
+                    RFuture<Boolean> redissonFuture = commandExecutor.writeAsync(key, ByteArrayCodec.INSTANCE, RedisCommands.SETPXNX, key, encodeByteArray(newData), "PX", ttlMillis, "NX");
+                    return commandExecutor.get(redissonFuture);
                 } else {
-                    return buckets.replace(key, originalData, newData);
+                    String script =
+                            "if redis.call('get', KEYS[1]) == ARGV[1] then " +
+                                    "redis.call('psetex', KEYS[1], ARGV[3], ARGV[2]); " +
+                                    "return 1; " +
+                                    "else " +
+                                    "return 0; " +
+                                    "end";
+                    Object[] params = new Object[] {originalData, newData, ttlMillis};
+                    RFuture<Boolean> redissonFuture = commandExecutor.evalWriteAsync(key, ByteArrayCodec.INSTANCE, RedisCommands.EVAL_BOOLEAN, script, keys, params);
+                    return commandExecutor.get(redissonFuture);
                 }
             }
         };
     }
 
+
+
     @Override
-    protected AsyncCompareAndSwapOperation beginAsyncCompareAndSwapOperation(K key) {
+    protected AsyncCompareAndSwapOperation beginAsyncCompareAndSwapOperation(String key) {
+        List<Object> keys = Collections.singletonList(key);
         return new AsyncCompareAndSwapOperation() {
             @Override
             public CompletableFuture<Optional<byte[]>> getStateData() {
-                RFuture<byte[]> redissonFuture = buckets.getAsync(key);
+                RFuture<byte[]> redissonFuture = commandExecutor.readAsync(key, ByteArrayCodec.INSTANCE, RedisCommands.GET, key);
                 return convertFuture(redissonFuture)
                     .thenApply((byte[] resultBytes) -> Optional.ofNullable(resultBytes));
             }
             @Override
             public CompletableFuture<Boolean> compareAndSwap(byte[] originalData, byte[] newData) {
                 if (originalData == null) {
-                    // Redisson prohibits the usage null as values, so "replace" must not be used in such cases
-                    RFuture<byte[]> redissonFuture = buckets.putIfAbsentAsync(key, newData);
-                    return convertFuture(redissonFuture).thenApply(Objects::isNull);
+                    RFuture<Boolean> redissonFuture = commandExecutor.writeAsync(key, ByteArrayCodec.INSTANCE, RedisCommands.SETPXNX, key, encodeByteArray(newData), "PX", ttlMillis, "NX");
+                    return convertFuture(redissonFuture);
                 } else {
-                    RFuture<Boolean> redissonFuture = buckets.replaceAsync(key, originalData, newData);
+                    String script =
+                            "if redis.call('get', KEYS[1]) == ARGV[1] then " +
+                                    "redis.call('psetex', KEYS[1], ARGV[3], ARGV[2]); " +
+                                    "return 1; " +
+                            "else " +
+                                    "return 0; " +
+                            "end";
+                    Object[] params = new Object[] {encodeByteArray(originalData), encodeByteArray(newData), ttlMillis};
+                    RFuture<Boolean> redissonFuture = commandExecutor.evalWriteAsync(key, ByteArrayCodec.INSTANCE, RedisCommands.EVAL_BOOLEAN, script, keys, params);
                     return convertFuture(redissonFuture);
                 }
             }
@@ -84,13 +116,14 @@ public class RMapBasedRedissonProxyManager<K> extends AbstractCompareAndSwapBase
     }
 
     @Override
-    public void removeProxy(K key) {
-        buckets.remove(key);
+    public void removeProxy(String key) {
+        RFuture<Object> future = commandExecutor.writeAsync(key, RedisCommands.DEL_VOID, key);
+        commandExecutor.get(future);
     }
 
     @Override
-    protected CompletableFuture<Void> removeAsync(K key) {
-        RFuture<byte[]> redissonFuture = buckets.removeAsync(key);
+    protected CompletableFuture<Void> removeAsync(String key) {
+        RFuture<?> redissonFuture = commandExecutor.writeAsync(key, RedisCommands.DEL_VOID, key);
         return convertFuture(redissonFuture).thenApply(bytes -> null);
     }
 
@@ -109,6 +142,14 @@ public class RMapBasedRedissonProxyManager<K> extends AbstractCompareAndSwapBase
            }
         });
         return jdkFuture;
+    }
+
+    public ByteBuf encodeByteArray(byte[] value) {
+        try {
+            return ByteArrayCodec.INSTANCE.getValueEncoder().encode(value);
+        } catch (IOException e) {
+            throw new IllegalArgumentException(e);
+        }
     }
 
 }

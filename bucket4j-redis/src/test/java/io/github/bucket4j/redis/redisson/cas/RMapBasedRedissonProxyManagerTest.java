@@ -9,36 +9,35 @@ import org.redisson.Redisson;
 import org.redisson.api.RMap;
 import org.redisson.api.RedissonClient;
 import org.redisson.config.Config;
+import org.redisson.config.ConfigSupport;
+import org.redisson.connection.ConnectionManager;
 import org.testcontainers.containers.GenericContainer;
 
+import java.time.Duration;
 import java.util.UUID;
 
 public class RMapBasedRedissonProxyManagerTest extends AbstractDistributedBucketTest<String> {
 
-    private static String MAP_NAME = "buckets";
-
     private static GenericContainer container;
-    private static RedissonClient redisson;
-    private static RMap<String, byte[]> buckets;
+    private static ConnectionManager connectionManager;
 
     @BeforeClass
     public static void setup() {
         container = startRedisContainer();
-        redisson = createRedissonClient(container);
-        buckets = redisson.getMap(MAP_NAME);
+        connectionManager = createRedissonClient(container);
     }
 
     @AfterClass
     public static void shutdown() {
-        if (redisson != null) {
-            redisson.shutdown();
+        if (connectionManager != null) {
+            connectionManager.shutdown();
         }
         if (container != null) {
             container.close();
         }
     }
 
-    private static RedissonClient createRedissonClient(GenericContainer container) {
+    private static ConnectionManager createRedissonClient(GenericContainer container) {
         String redisAddress = container.getContainerIpAddress();
         Integer redisPort = container.getMappedPort(6379);
         String redisUrl = "redis://" + redisAddress + ":" + redisPort;
@@ -46,7 +45,8 @@ public class RMapBasedRedissonProxyManagerTest extends AbstractDistributedBucket
         Config config = new Config();
         config.useSingleServer().setAddress(redisUrl);
 
-        return Redisson.create(config);
+        ConnectionManager connectionManager = ConfigSupport.createConnectionManager(config);
+        return connectionManager;
     }
 
     private static GenericContainer startRedisContainer() {
@@ -58,7 +58,7 @@ public class RMapBasedRedissonProxyManagerTest extends AbstractDistributedBucket
 
     @Override
     protected ProxyManager<String> getProxyManager() {
-        return new RMapBasedRedissonProxyManager<>(buckets, ClientSideConfig.getDefault());
+        return new RMapBasedRedissonProxyManager(connectionManager.getCommandExecutor(), ClientSideConfig.getDefault(), Duration.ofMinutes(10));
     }
 
     @Override
