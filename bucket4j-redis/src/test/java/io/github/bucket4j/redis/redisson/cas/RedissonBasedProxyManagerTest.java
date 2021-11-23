@@ -5,9 +5,6 @@ import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.redisson.Redisson;
-import org.redisson.api.RMap;
-import org.redisson.api.RedissonClient;
 import org.redisson.config.Config;
 import org.redisson.config.ConfigSupport;
 import org.redisson.connection.ConnectionManager;
@@ -16,7 +13,7 @@ import org.testcontainers.containers.GenericContainer;
 import java.time.Duration;
 import java.util.UUID;
 
-public class RMapBasedRedissonProxyManagerTest extends AbstractDistributedBucketTest<String> {
+public class RedissonBasedProxyManagerTest extends AbstractDistributedBucketTest<String> {
 
     private static GenericContainer container;
     private static ConnectionManager connectionManager;
@@ -58,7 +55,7 @@ public class RMapBasedRedissonProxyManagerTest extends AbstractDistributedBucket
 
     @Override
     protected ProxyManager<String> getProxyManager() {
-        return new RMapBasedRedissonProxyManager(connectionManager.getCommandExecutor(), ClientSideConfig.getDefault(), Duration.ofMinutes(10));
+        return new RedissonBasedProxyManager(connectionManager.getCommandExecutor(), ClientSideConfig.getDefault(), Duration.ofMinutes(10));
     }
 
     @Override

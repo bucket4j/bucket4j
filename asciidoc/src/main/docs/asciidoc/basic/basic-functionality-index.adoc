@@ -1,5 +1,7 @@
 == Basic functionality
 
+include::quick-start.adoc[]
+
 include::vocabulary.adoc[]
 
 include::limitations.adoc[]

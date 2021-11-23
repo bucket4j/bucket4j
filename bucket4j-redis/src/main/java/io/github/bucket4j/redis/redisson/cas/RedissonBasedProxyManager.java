@@ -27,10 +27,8 @@ import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.CompareAndS
 import io.netty.buffer.ByteBuf;
 import org.redisson.api.RFuture;
 import org.redisson.client.codec.ByteArrayCodec;
-import org.redisson.client.codec.Codec;
 import org.redisson.client.protocol.RedisCommands;
 import org.redisson.command.CommandExecutor;
-import org.redisson.command.CommandSyncService;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -40,12 +38,12 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-public class RMapBasedRedissonProxyManager extends AbstractCompareAndSwapBasedProxyManager<String> {
+public class RedissonBasedProxyManager extends AbstractCompareAndSwapBasedProxyManager<String> {
 
     private final CommandExecutor commandExecutor;
     private final long ttlMillis;
 
-    public RMapBasedRedissonProxyManager(CommandExecutor commandExecutor, ClientSideConfig clientSideConfig, Duration ttl) {
+    public RedissonBasedProxyManager(CommandExecutor commandExecutor, ClientSideConfig clientSideConfig, Duration ttl) {
         super(clientSideConfig);
         this.commandExecutor = Objects.requireNonNull(commandExecutor);
         this.ttlMillis = ttl.toMillis();

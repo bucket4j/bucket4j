@@ -11,7 +11,7 @@ In the Bucket4j library code the `Bucket` is represented by interface https://gi
 * <<time-meter>> specifies the way to measure time.
 
 Bucket can be constructed via special builder API <<local-bucket-builder>> that is available by factory method:
-[source, java, subs=attributes+]
+[source, java]
 ----
 Bucket.builder()
 ----

@@ -1,5 +1,0 @@
-== Third-party articles and integrations
-
-include::articles.adoc[]
-
-include::integrations.adoc[]
