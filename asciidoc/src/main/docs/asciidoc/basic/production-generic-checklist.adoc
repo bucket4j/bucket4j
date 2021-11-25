@@ -21,6 +21,7 @@ Bucket bucket = Bucket4j.jCacheBuilder(RecoveryStrategy.RECONSTRUCT)
 ----
 The number of limits specified per bucket does not impact the performance.
 
+[[short-timed-bursts, short-timed bursts]]
 ==== Be wary of short-timed bursts
 Token bucket is an efficient algorithm with low and fixed memory footprint, independently of the incoming request-rate(it can be millions per second) the bucket consumes no more then 40 bytes(five longs).
 But an efficient memory footprint has its own cost - bandwidth limitation is only satisfied over a long period of time. In other words you cannot avoid short-timed bursts.

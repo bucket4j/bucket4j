@@ -13,39 +13,74 @@ In the Bucket4j library code the `Bucket` is represented by interface https://gi
 Bucket can be constructed via special builder API <<local-bucket-builder>> that is available by factory method:
 [source, java]
 ----
-Bucket.builder()
+Bucket bucket = Bucket.builder()
+   .addLimit(...)
+   .build();
 ----
 
 [[bucket-bonfiguration, BucketConfiguration]]
 ==== BucketConfiguration
-`BucketConfiguration` describes the limitation rules that is used by <<bucket>>.
-In the Bucket4j library code the `BucketConfiguration` is represented by class https://github.com/vladimir-bukhtoyarov/bucket4j/blob/{minor-number}/bucket4j-core/src/main/java/io/github/bucket4j/BucketConfiguration.java[io.github.bucket4j.BucketConfiguration].
+`BucketConfiguration` can be described as collection of <<bandwidth, limits>> that are used by <<bucket>> during its job. Configuration
+In the Bucket4j library code the `BucketConfiguration` is represented by class https://github.com/vladimir-bukhtoyarov/bucket4j/blob/{minor-number}/bucket4j-core/src/main/java/io/github/bucket4j/BucketConfiguration.java[io.github.bucket4j.BucketConfiguration]. Configuration is immutable, there is no way to add or remove a limit to already created configuration.
+However, you can replace configuration of bucket via creating new configuration instancce and calling `bucket.replaceConfiguration(newConfiguration)`.
 
+Usually you should not create BucketConfiguration directly(excepting the case with configuration replacement) because <<local-bucket-builder>> does for you behind the scene, for rare cases when you need to create configuration directly you have to use `ConfigurationBuilder` that is available by factory method:
+[source, java]
+----
+BucketConfiguration configuration = BucketConfiguration.builder()
+    .addLimit(...)
+    .build()
+----
+
+IMPORTANT: Mostly users configure single limit per configuration, but it is strongly recommended analyzing whether xref:production-generic-checklist.adoc#short-timed-bursts[short-timed bursts problem] can affect your application and if so then thinking about to adding more limits.
+
+[[bandwidth]]
 ==== Limitation/Bandwidth
-Bandwidth is ...
+Limitations that are used by bucket can be denoted in terms of bandwidths. Each bandwidth can be denoted as:
 
-==== Capacity
-Bandwidth capacity is ...
+Capacity::
+Capacity is the term that directly inherited from classic interpretation of token-bucket algorithm, this specifies how many tokens your bucket has.
 
-==== Refill
-Refill is ...
+Refill::
+Refill is the term that directly inherited from classic interpretation of token-bucket algorithm, this specifies how fast tokens can be refilled after it were consumed from bucket.
 
-[[bucket-state, BucketState]]
-==== BucketState
-BucketState is ...
+Initial tokens::
+Bucket4j extend token-bucket algorithm by allowing to specify initial amount of tokens for each bandwidth. By default, initial amount of tokens equals to capacity, and can be changed by `withInitialTokens` method:
+[source, java]
+----
+Bandwidth bandwidth = Bandwidth.simple(42, Duration.ofMinutes(1))
+                          .withInitialTokens(13);
+----
 
-[[time-meter, TimeMeter]]
-==== TimeMeter
-TimeMeter is ...
+ID::
+Identifier is the optional attribute that is null by default. You may prefer to assign identifiers for bandwidths if you use on the fly configuration replacement and your buckets have more than one bandwidth per bucket, otherwise it is better to avoid using identifiers in order to preserve memory.
+Identifier for a bandwidth can be specified by `withId` method:
+[source, java]
+----
+BucketConfiguration configuration = BucketConfiguration.builder()
+        .addLimit(Bandwidth.simple(1000, Duration.ofMinutes(1)).withId("business-limit"))
+        .addLimit(Bandwidth.simple(100, Duration.ofSeconds(1)).withId("burst-protection"))
+        .build();
 
-[[local-bucket-builder, LocalBucketBuilder]]
-==== TimeMeter
-LocalBucketBuilder is ...
+----
+NOTE: Identifiers are critical for on the fly configuration replacement functionality because during replacement it needs to make decision about how correctly propagate information about already consumed tokens from state before config replacement to state after replacement. This is not trivial task especially when amount of limits is changing.
 
+[[local-bucket-builder, BucketBuilder]]
+==== BucketBuilder
+It was explicitly decided by library authors to not provide for end users to construct a library entity via direct constructors.
 
-==== Bucket proxy
-Bucket proxy ...
+.It were to reason to split built-time and usage-time APIs:
+* To be able in the future to change internal implementations without breaking backward compatibility.
+* In order to provide `Fluent Builder API` that in our minds is good modern library design pattern.
 
-==== Backend
+`LocalBucketBuilder` is a fluent builder that is specialized to construct the local buckets, where local bucket is the bucket that holds  internal state just in memory and does not provide clustering functionality. Bellow an example of LocalBucketBuilder usage:
+[source, java]
+----
+Bucket bucket = Bucket.builder()
+    .addLimit(Bandwidth.simple())
+    .withNanosecondPrecision()
+    .withSynchronizationStrategy(SynchronizationStrategy.LOCK_FREE)
+    .build()
+----
 
 
