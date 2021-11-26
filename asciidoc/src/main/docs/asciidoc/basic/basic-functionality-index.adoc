@@ -8,6 +8,4 @@ include::limitations.adoc[]
 
 include::math-model.adoc[]
 
-include::listener.adoc[]
-
 include::production-generic-checklist.adoc[]

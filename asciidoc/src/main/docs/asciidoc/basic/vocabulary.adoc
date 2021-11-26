@@ -6,9 +6,8 @@
 In the Bucket4j library code the `Bucket` is represented by interface https://github.com/vladimir-bukhtoyarov/bucket4j/blob/{minor-number}/bucket4j-core/src/main/java/io/github/bucket4j/Bucket.java[io.github.bucket4j.Bucket].
 
 .Bucket aggregates following parts:
-* <<bucket-bonfiguration>> specifies which limitation rules should be used by bucket.
+* <<bucket-bonfiguration>> specifies an immutable collection of limitation rules that is used by bucket during its work.
 * <<bucket-state>> the place where bucket stores mutable state like amount of current available tokens.
-* <<time-meter>> specifies the way to measure time.
 
 Bucket can be constructed via special builder API <<local-bucket-builder>> that is available by factory method:
 [source, java]
@@ -22,7 +21,7 @@ Bucket bucket = Bucket.builder()
 ==== BucketConfiguration
 `BucketConfiguration` can be described as collection of <<bandwidth, limits>> that are used by <<bucket>> during its job. Configuration
 In the Bucket4j library code the `BucketConfiguration` is represented by class https://github.com/vladimir-bukhtoyarov/bucket4j/blob/{minor-number}/bucket4j-core/src/main/java/io/github/bucket4j/BucketConfiguration.java[io.github.bucket4j.BucketConfiguration]. Configuration is immutable, there is no way to add or remove a limit to already created configuration.
-However, you can replace configuration of bucket via creating new configuration instancce and calling `bucket.replaceConfiguration(newConfiguration)`.
+However, you can replace configuration of bucket via creating new configuration instance and calling `bucket.replaceConfiguration(newConfiguration)`.
 
 Usually you should not create BucketConfiguration directly(excepting the case with configuration replacement) because <<local-bucket-builder>> does for you behind the scene, for rare cases when you need to create configuration directly you have to use `ConfigurationBuilder` that is available by factory method:
 [source, java]
@@ -32,7 +31,8 @@ BucketConfiguration configuration = BucketConfiguration.builder()
     .build()
 ----
 
-IMPORTANT: Mostly users configure single limit per configuration, but it is strongly recommended analyzing whether xref:production-generic-checklist.adoc#short-timed-bursts[short-timed bursts problem] can affect your application and if so then thinking about to adding more limits.
+IMPORTANT: Mostly users configure single limit per configuration, but it is strongly recommended analyzing whether <<short-timed-bursts, short-timed bursts problem>>
+ can affect your application and if so then thinking about to adding more limits.
 
 [[bandwidth]]
 ==== Limitation/Bandwidth
@@ -64,6 +64,17 @@ BucketConfiguration configuration = BucketConfiguration.builder()
 
 ----
 NOTE: Identifiers are critical for on the fly configuration replacement functionality because during replacement it needs to make decision about how correctly propagate information about already consumed tokens from state before config replacement to state after replacement. This is not trivial task especially when amount of limits is changing.
+
+[[bucket-state, BucketState]]
+==== BucketState
+BucketState is the place where bucket stores own mutable state like:
+
+* Amount of current available tokens.
+* Timestamp when the last refill was happen.
+
+`BucketState` is represented by interface https://github.com/vladimir-bukhtoyarov/bucket4j/blob/{minor-number}/bucket4j-core/src/main/java/io/github/bucket4j/Bucket.java[io.github.bucket4j.BucketState]. Usually you never interact with this interface, excepting the cases when you want to get access to low-level diagnostic API that is described in
+
+
 
 [[local-bucket-builder, BucketBuilder]]
 ==== BucketBuilder

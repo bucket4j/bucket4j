@@ -1,0 +1,67 @@
+=== Verbose API
+Verbose API:: is the API which intent is in injecting low-level diagnostic information into results of any interaction with bucket. Verbose API providing the same functionality as Regular API, with one exception - result of any method always decorated by `VerboseResult` wrapper.
+
+VerboseResult:: is the wrapper for interaction result that provides the snapshot of bucket and its configuration that was actual at the moment of interaction with bucket.
+
+==== Verbose API entry-points
+The way to get access for `Verbose API` is the same for all type of buckets, just call `asVerbose()` method:
+
+[source, java]
+----
+// for io.github.bucket4j.Bucket
+Bucket bucket = ...;
+bucket.asVerbose();
+----
+[source, java]
+----
+// for io.github.bucket4j.Bucket
+Bucket bucket = ...;
+VerboseBucket verboseBucket = bucket.asVerbose();
+----
+[source, java]
+----
+// for io.github.bucket4j.distributed.BucketProxy
+BucketProxy bucket = ...;
+VerboseBucket verboseBucket = bucket.asVerbose();
+----
+[source, java]
+----
+// for io.github.bucket4j.distributed.AsyncBucketProxy
+AsyncBucketProxy bucket = ...;
+AsyncVerboseBucket verboseBucket = bucket.asVerbose();
+----
+
+NOTE: BlockingBucket and ScheduledBucket do not provide the verbose analogs. VerboseResult has no sense for this kind of buckets because interactions with them can be followed by thread sleep or delayed execution, so VerboseResult can be absolutely stale and irrelevant to the moment of time when control over execution is being returned to your code.
+
+==== Principles of result decoration
+ * void return type always decorated by `VerboseResult<Void>`
+ * A primitive result type like long, boolean always decorated by correspondent boxed type for example `VerboseResult<Boolean>`
+ * None primitive reult type always decorated as is, for example `VerboseResult<EstimationProbe>`
+
+==== Example of Verbose API usage
+[source, java]
+----
+VerboseResult<ConsumptionProbe> verboseResult = bucket.asVerbose().tryConsumeAndReturnRemaining(numberOfTokens);
+
+BucketConfiguration bucketConfiguration = verboseResult.getConfiguration();
+long capacity = Arrays.stream(bucketConfiguration.getBandwidths())
+                .mapToLong(Bandwidth::getCapacity)
+                .max().getAsLong();
+response.addHeader("RateLimit-Limit", "" + capacity));
+
+VerboseResult.Diagnostics diagnostics = result.getDiagnostics()
+response.addHeader("RateLimit-Remaining", "" + diagnostics.getAvailableTokens());
+response.addHeader("RateLimit-Reset", "" + TimeUnit.NANOSECONDS.toSeconds(diagnostics.calculateFullRefillingTime()));
+
+ConsumptionProbe probe = verboseResult.getValue();
+if (probe.isConsumed()) {
+    // the limit is not exceeded
+    filterChain.doFilter(servletRequest, servletResponse);
+} else {
+    // limit is exceeded
+    HttpServletResponse httpResponse = (HttpServletResponse) servletResponse;
+    httpResponse.setStatus(429);
+    httpResponse.setContentType("text/plain");
+    httpResponse.getWriter().append("Too many requests");
+}
+----

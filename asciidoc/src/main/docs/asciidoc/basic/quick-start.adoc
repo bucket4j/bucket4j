@@ -278,10 +278,13 @@ bucket.replaceConfiguration(newConfiguration, TokensInheritanceStrategy.PROPORTI
 Read javadocs for more information.
 
 ==== Using the VerboseResult API
-The `VerboseResult` API can be used to retrieve the current `BucketConfiguration` of a bucket.  This
-can be used to include an HTTP header that describes the current rate limit.
+Verbose API:: is the
 
-For example:
+
+
+The `VerboseResult` API can be used to retrieve the current `BucketConfiguration` of a bucket, as well as low-level diagnostic  which can be used to include an HTTP headers that describes the current rate limit.
+
+.For example:
 [source, java]
 ----
 VerboseResult<ConsumptionProbe> verboseResult = bucket.asVerbose().tryConsumeAndReturnRemaining(numberOfTokens);
@@ -290,5 +293,8 @@ BucketConfiguration bucketConfiguration = verboseResult.getConfiguration();
 long capacity = Arrays.stream(bucketConfiguration.getBandwidths())
                 .mapToLong(Bandwidth::getCapacity)
                 .max().getAsLong();
-response.addHeader(X_RATE_LIMIT_LIMIT, "" + capacity));
+VerboseResult.Diagnostics diagnostics = result.getDiagnostics()
+response.addHeader("RateLimit-Limit", "" + capacity));
+response.addHeader("RateLimit-Remaining", "" + diagnostics.getAvailableTokens());
+response.addHeader("RateLimit-Reset", "" + TimeUnit.NANOSECONDS.toSeconds(diagnostics.calculateFullRefillingTime()));
 ----
