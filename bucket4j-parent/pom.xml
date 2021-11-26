@@ -7,7 +7,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.github.vladimir-bukhtoyarov</groupId>
-    <version>7.0.0-beta-2020-04-18</version>
+    <version>7.0.0</version>
     <artifactId>bucket4j-parent</artifactId>
     <packaging>pom</packaging>
     <name>bucket4j-parent</name>
