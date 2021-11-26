@@ -273,8 +273,9 @@ public abstract class AbstractSerializationTest {
 
         testSerialization(new TryConsumeAndReturnRemainingTokensCommand(11));
 
-        testSerialization(new ReplaceConfigurationCommand(configuration, TokensInheritanceStrategy.PROPORTIONALLY));
-        testSerialization(new ReplaceConfigurationCommand(configuration, TokensInheritanceStrategy.RESET));
+        for (TokensInheritanceStrategy tokensInheritanceStrategy : TokensInheritanceStrategy.values()) {
+            testSerialization(new ReplaceConfigurationCommand(configuration, tokensInheritanceStrategy));
+        }
 
         testSerialization(new GetConfigurationCommand());
 

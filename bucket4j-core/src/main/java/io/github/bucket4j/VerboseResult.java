@@ -68,6 +68,61 @@ public class VerboseResult<T> implements ComparableByContent<VerboseResult<?>> {
         return operationTimeNanos;
     }
 
+    /**
+     * @return internal state describer
+     */
+    public Diagnostics getDiagnostics() {
+        return new Diagnostics() {
+            @Override
+            public long calculateFullRefillingTime() {
+                return state.calculateFullRefillingTime(configuration.getBandwidths(), operationTimeNanos);
+            }
+            @Override
+            public long getAvailableTokens() {
+                return state.getAvailableTokens(configuration.getBandwidths());
+            }
+
+            @Override
+            public long[] getAvailableTokensPerEachBandwidth() {
+                Bandwidth[] bandwidths = configuration.getBandwidths();
+                long[] availableTokens = new long[bandwidths.length];
+                for (int i = 0; i < bandwidths.length; i++) {
+                    availableTokens[i] = state.getCurrentSize(i);
+                }
+                return availableTokens;
+            }
+        };
+    }
+
+    /**
+     * Describer of internal bucket state
+     */
+    public interface Diagnostics {
+
+        /**
+         * Returns time in nanoseconds that need to wait until bucket will be fully refilled to its maximum
+         *
+         * @return time in nanoseconds that need to wait until bucket will be fully refilled to its maximum
+         */
+        long calculateFullRefillingTime();
+
+        /**
+         * Returns currently available tokens
+         *
+         * @return currently available tokens
+         */
+        long getAvailableTokens();
+
+        /**
+         * Returns currently available tokens per each bandwidth.
+         * Element's order inside resulted array depends from order in which bandwidth is specified inside {@link BucketConfiguration}.
+         *
+         * @return currently available tokens per each bandwidth
+         */
+        long[] getAvailableTokensPerEachBandwidth();
+
+    }
+
     public <R> VerboseResult<R> map(Function<T, R> mapper) {
         return new VerboseResult<R>(operationTimeNanos, mapper.apply(value), configuration, state);
     }

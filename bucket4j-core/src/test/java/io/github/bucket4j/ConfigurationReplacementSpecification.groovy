@@ -255,6 +255,132 @@ class ConfigurationReplacementSpecification extends Specification {
     }
 
     @Unroll
+    def "#bucketType test replace configuration additive from gready refill to gready refill  when capacity increased"(BucketType bucketType) {
+        expect:
+        for (boolean sync : [true, false]) {
+            for (boolean verbose: [true, false]) {
+                // System.err.println("sync: $sync verbose: $verbose")
+                TimeMeterMock clock = new TimeMeterMock(0)
+                Bucket bucket = bucketType.createBucket(Bucket4j.builder()
+                        .addLimit(Bandwidth.simple(3, Duration.ofNanos(5)).withInitialTokens(0)),
+                        clock
+                )
+                clock.addTime(3) // 1.8
+                BucketConfiguration newConfiguration = Bucket4j.configurationBuilder()
+                        .addLimit(Bandwidth.simple(60, Duration.ofNanos(1000)))
+                        .build()
+                if (sync) {
+                    if (!verbose) {
+                        bucket.replaceConfiguration(newConfiguration, TokensInheritanceStrategy.ADDITIVE)
+                    } else {
+                        bucket.asVerbose().replaceConfiguration(newConfiguration, TokensInheritanceStrategy.ADDITIVE)
+                    }
+                } else {
+                    if (!verbose) {
+                        bucket.asAsync().replaceConfiguration(newConfiguration, TokensInheritanceStrategy.ADDITIVE).get()
+                    } else {
+                        bucket.asAsync().asVerbose().replaceConfiguration(newConfiguration, TokensInheritanceStrategy.ADDITIVE).get()
+                    }
+                }
+                assert bucket.getAvailableTokens() == 58
+
+                clock.addTime(4)
+                assert bucket.getAvailableTokens() == 59
+            }
+        }
+        where:
+        bucketType << BucketType.values()
+    }
+
+    @Unroll
+    def "#bucketType test replace configuration additive from gready refill to intervally refill when capacity increased"(BucketType bucketType) {
+        expect:
+        for (boolean sync : [true, false]) {
+            for (boolean verbose: [true, false]) {
+                // System.err.println("sync: $sync verbose: $verbose")
+                TimeMeterMock clock = new TimeMeterMock(0)
+                Bucket bucket = bucketType.createBucket(Bucket4j.builder()
+                        .addLimit(Bandwidth.simple(3, Duration.ofNanos(5)).withInitialTokens(0)),
+                        clock
+                )
+                clock.addTime(3) // 1.8
+                Refill refill = Refill.intervally(60, Duration.ofNanos(1000))
+                BucketConfiguration newConfiguration = Bucket4j.configurationBuilder()
+                        .addLimit(Bandwidth.classic(60, refill))
+                        .build()
+                if (sync) {
+                    if (!verbose) {
+                        bucket.replaceConfiguration(newConfiguration, TokensInheritanceStrategy.ADDITIVE)
+                    } else {
+                        bucket.asVerbose().replaceConfiguration(newConfiguration, TokensInheritanceStrategy.ADDITIVE)
+                    }
+                } else {
+                    if (!verbose) {
+                        bucket.asAsync().replaceConfiguration(newConfiguration, TokensInheritanceStrategy.ADDITIVE).get()
+                    } else {
+                        bucket.asAsync().asVerbose().replaceConfiguration(newConfiguration, TokensInheritanceStrategy.ADDITIVE).get()
+                    }
+                }
+                assert bucket.getAvailableTokens() == 58
+
+                clock.addTime(999)
+                assert bucket.getAvailableTokens() == 58 // 0.8 tokens from previous bucket should not be copied after config replacement
+
+                clock.addTime(1)
+                assert bucket.getAvailableTokens() == 60
+            }
+        }
+        where:
+        bucketType << BucketType.values()
+    }
+
+    @Unroll
+    def "#bucketType should decrease available tokens when reducing capacity and copying tokens additive"(BucketType bucketType) {
+        expect:
+        for (boolean sync : [true, false]) {
+            TimeMeterMock clock = new TimeMeterMock(0)
+            Bucket bucket = bucketType.createBucket(Bucket4j.builder()
+                    .addLimit(Bandwidth.classic(500, Refill.greedy(100, Duration.ofNanos(100)))),
+                    clock
+            )
+            BucketConfiguration newConfiguration = Bucket4j.configurationBuilder()
+                    .addLimit(Bandwidth.classic (200, Refill.greedy(100, Duration.ofNanos(100)) ))
+                    .build()
+            if (sync) {
+                bucket.replaceConfiguration(newConfiguration, TokensInheritanceStrategy.ADDITIVE)
+            } else {
+                bucket.asAsync().replaceConfiguration(newConfiguration, TokensInheritanceStrategy.ADDITIVE).get()
+            }
+            assert bucket.getAvailableTokens() == 200
+        }
+        where:
+        bucketType << BucketType.values()
+    }
+
+    @Unroll
+    def "#bucketType should increase available tokens when reducing capacity and copying tokens additive"(BucketType bucketType) {
+        expect:
+        for (boolean sync : [true, false]) {
+            TimeMeterMock clock = new TimeMeterMock(0)
+            Bucket bucket = bucketType.createBucket(Bucket4j.builder()
+                    .addLimit(Bandwidth.classic(500, Refill.greedy(100, Duration.ofNanos(100))).withInitialTokens(200)),
+                    clock
+            )
+            BucketConfiguration newConfiguration = Bucket4j.configurationBuilder()
+                    .addLimit(Bandwidth.classic (900, Refill.greedy(100, Duration.ofNanos(100)) ))
+                    .build()
+            if (sync) {
+                bucket.replaceConfiguration(newConfiguration, TokensInheritanceStrategy.ADDITIVE)
+            } else {
+                bucket.asAsync().replaceConfiguration(newConfiguration, TokensInheritanceStrategy.ADDITIVE).get()
+            }
+            assert bucket.getAvailableTokens() == 600
+        }
+        where:
+        bucketType << BucketType.values()
+    }
+
+    @Unroll
     def "#bucketType should decrease available tokens when reducing capacity and copying tokens proportionally"(BucketType bucketType) {
         expect:
             for (boolean sync : [true, false]) {
