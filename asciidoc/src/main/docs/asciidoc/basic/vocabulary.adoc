@@ -20,8 +20,7 @@ Bucket bucket = Bucket.builder()
 [[bucket-bonfiguration, BucketConfiguration]]
 ==== BucketConfiguration
 `BucketConfiguration` can be described as collection of <<bandwidth, limits>> that are used by <<bucket>> during its job. Configuration
-In the Bucket4j library code the `BucketConfiguration` is represented by class https://github.com/vladimir-bukhtoyarov/bucket4j/blob/{minor-number}/bucket4j-core/src/main/java/io/github/bucket4j/BucketConfiguration.java[io.github.bucket4j.BucketConfiguration]. Configuration is immutable, there is no way to add or remove a limit to already created configuration.
-However, you can replace configuration of bucket via creating new configuration instance and calling `bucket.replaceConfiguration(newConfiguration)`.
+In the Bucket4j library code the `BucketConfiguration` is represented by class https://github.com/vladimir-bukhtoyarov/bucket4j/blob/{minor-number}/bucket4j-core/src/main/java/io/github/bucket4j/BucketConfiguration.java[io.github.bucket4j.BucketConfiguration]. Configuration is immutable, there is no way to add or remove a limit to already created configuration. However, you can replace configuration of bucket via creating new configuration instance and calling `bucket.replaceConfiguration(newConfiguration)`.
 
 Usually you should not create BucketConfiguration directly(excepting the case with configuration replacement) because <<local-bucket-builder>> does for you behind the scene, for rare cases when you need to create configuration directly you have to use `ConfigurationBuilder` that is available by factory method:
 [source, java]

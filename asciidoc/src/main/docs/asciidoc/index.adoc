@@ -1,5 +1,3 @@
-== Bucket4j Documentation home
-
 ifndef::generate-pdf[]
 image::./images/white-logo.png[]
 endif::[]
@@ -12,30 +10,35 @@ endif::[]
 
 == About the authors
 Vladimir Bukhtoyarov::
-Lead Java developer at Dino Systems/RingCentral +
+Lead Java developer at DINS/RingCentral +
 Saint-Petersburg, Russia +
 jsecoder@mail.ru +
+Role: maintainer, future vision +
 image:images/photo.jpg[80,80] +
 
 Maxim Bartkov::
 Lead Java developer at RooX Solutions +
 Kharkov, Ukraine +
 maxgalayoutop@gmail.com +
+Role: evangelist, author of scientific publications  +
 image:images/Maxim_Bartkov.jpg[80,80] +
 
 == Third-party articles and integrations
 
 === Third-party articles:
 * https://golb.hplar.ch/2019/08/rate-limit-bucket4j.html[Rate limiting Spring MVC endpoints with bucket4j]
-* https://github.com/Abdennebi/spring-boot-bucket4j-hazelcast-demo[Abdennebi/spring-boot-bucket4j-hazelcast-demo]
 * http://www.programmersought.com/article/2524209291/[ProgrammerSought Bucket4j - preliminary understanding]
 * https://www.baeldung.com/spring-bucket4j[Baeldung - Rate Limiting a Spring API Using Bucket4j]
 
 === Third-party integrations
 * https://github.com/marcosbarbero/spring-cloud-zuul-ratelimit[marcosbarbero/spring-cloud-zuul-ratelimit]
-* https://github.com/MarcGiffing/bucket4j-spring-boot-starter[MarcGiffing/Spring Boot Starter for Bucket4j]. Demos of usage (including Zuul and Hazelcast) can be found there https://github.com/MarcGiffing/bucket4j-spring-boot-starter-examples[bucket4j-spring-boot-starter-examples]
+* https://github.com/MarcGiffing/bucket4j-spring-boot-starter[MarcGiffing/Spring Boot Starter for Bucket4j].
 * https://jhipster.github.io/api-gateway/#rate_limiting[JHipster/JHipster API Gateway]
 * https://github.com/zivver/dropwizard-ratelimit[Zivver/Dropwizard Ratelimit]
+
+=== Third-party demos
+* https://github.com/MarcGiffing/bucket4j-spring-boot-starter-examples[bucket4j-spring-boot-starter-examples]
+* https://github.com/Abdennebi/spring-boot-bucket4j-hazelcast-demo[Abdennebi/spring-boot-bucket4j-hazelcast-demo]
 
 == Documentation for previous versions
 === 2021

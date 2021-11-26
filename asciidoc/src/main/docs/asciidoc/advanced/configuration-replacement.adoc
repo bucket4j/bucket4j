@@ -1,2 +1,108 @@
 === On-the-fly configuration replacement
-TODO...
+As previously mentioned in the definition for <<bucket-bonfiguration>> it is immutable object.
+It is not possible to add, remove or change the limits for already created configuration, however, you can replace configuration of bucket via creating new configuration instance and calling `bucket.replaceConfiguration(newConfiguration, tokensInheritanceStrategy)`.
+
+==== Why configuration replacement is not trivial?
+1. The first problem of configuration replacement is making decision how to propagate available tokens from bucket with previous configuration to bucket with new configuration. If you don't care about previous bucket state then use `TokensInheritanceStrategy.RESET`. But it becomes to a tricky problem when we expect that previous consumption(that has not been compensated by refill yet) should take effect to the bucket with new configuration. In this case you need to make a choice between:
+* <<tokens-inheritance-strategy-proportionally, TokensInheritanceStrategy.PROPORTIONALLY>>
+* <<tokens-inheritance-strategy-as-is, TokensInheritanceStrategy.AS_IS>>
+* <<tokens-inheritance-strategy-additive, TokensInheritanceStrategy.ADDITIVE>>
+
+2. There is another problem when you are choosing <<tokens-inheritance-strategy-proportionally, PROPORTIONALLY>>, <<tokens-inheritance-strategy-as-is, AS_IS>> or <<tokens-inheritance-strategy-additive, ADDITIVE>> or <<tokens-inheritance-strategy-as-is, AS_IS>>  and bucket has more then one bandwidth. For example how does replaceConfiguration implementation should bind bandwidths to each other in the following example?
+[source, java]
+----
+Bucket bucket = Bucket4j.builder()
+    .addLimit(Bandwidth.simple(10, Duration.ofSeconds(1)))
+    .addLimit(Bandwidth.simple(10000, Duration.ofHours(1)))
+    .build();
+    ...
+BucketConfiguration newConfiguration = Bucket4j.configurationBuilder()
+    .addLimit(Bandwidth.simple(5000, Duration.ofHours(1)))
+    .addLimit(Bandwidth.simple(100, Duration.ofSeconds(10)))
+    .build();
+bucket.replaceConfiguration(newConfiguration, TokensInheritanceStrategy.AS_IS);
+----
+It is obviously that simple strategy - copying tokens by bandwidth index will not work well in this case, because of it highly depends on order in which bandwidths were mentioneed in new and previous configuration.
+
+==== Taking control over replacement process via bandwidth identifiers
+Instead of inventing the backward maggic Bucket4j provides to you ability to deap controll of this process by specifying identifiers for bandwidth,
+so in case of multiple bandwidth configuratoin replacement code can copy available tokens by bandwidth ID. So it is better to rewrite code above as following:
+[source, java]
+----
+Bucket bucket = Bucket4j.builder()
+     .addLimit(Bandwidth.simple(10, Duration.ofSeconds(1)).withId("technical-limit"))
+     .addLimit(Bandwidth.simple(10000, Duration.ofHours(1)).withId("business-limit"))
+     .build();
+     ...
+     BucketConfiguration newConfiguration = Bucket4j.configurationBuilder()
+        .addLimit(Bandwidth.simple(5000, Duration.ofHours(1)).withId("business-limit"))
+        .addLimit(Bandwidth.simple(100, Duration.ofSeconds(10)).withId("technical-limit"))
+        .build();
+     bucket.replaceConfiguration(newConfiguration, TokensInheritanceStrategy.PROPORTIONALLY);
+----
+.There are following rules for bandwidth identifiers:
+* By default bandwidth has <b>null</b> identifier.
+* null value of identifier equals to another null value if and only if there is only one bandwidth with null identifier.
+* If identifier for bandwidth is specified then it must has unique in the bucket. Bucket does not allow to create several bandwidth with same ID.
+
+==== TokensInheritanceStrategy explanation
+*TokensInheritanceStrategy* specifies the rules for inheritance of available tokens during configuration replacement process.
+
+.There are four strategies:
+PROPORTIONALLY::
+Makes to copy available tokens proportional to bandwidth capacity by following formula: *newAvailableTokens = availableTokensBeforeReplacement * (newBandwidthCapacity / capacityBeforeReplacement)*
++
+.PROPORTIONALLY strategy examples:
+** *Example 1:* imagine bandwidth that was created by `Bandwidth.classic(100, Refill.gready(10, Duration.ofMinutes(1)))`. +
++
+At the moment of config replacement it was 40 available tokens. +
++
+After replacing this bandwidth by following `Bandwidth.classic(200, Refill.gready(10, Duration.ofMinutes(1)))` 40 available tokens will be multiplied by 2(200/100), and after replacement we will have 80 available tokens.
+
+** *Example 2:* imagine bandwidth that was created by `Bandwidth.classic(100, Refill.gready(10, Duration.ofMinutes(1)))`.
+ At the moment of config replacement it was 40 available tokens. After replacing this bandwidth by following `Bandwidth.classic(20, Refill.gready(10, Duration.ofMinutes(1)))` 40 available tokens will be multiplied by 0.2(20/100), and after replacement we will have 8 available tokens.
+
+AS_IS::
+Instructs to copy available tokens as is, but with one exclusion: if available tokens is greater than new capacity, available tokens will be decreased to new capacity.
++
+.AS_IS strategy examples:
+** *Example 1:* imagine bandwidth that was created by `Bandwidth.classic(100, Refill.gready(10, Duration.ofMinutes(1)))`. +
++
+At the moment of config replacement it was 40 available tokens. +
++
+After replacing this bandwidth by following `Bandwidth.classic(200, Refill.gready(10, Duration.ofMinutes(1)))}` 40 available tokens will be just copied, and after replacement we will have 40 available tokens.
+
+** *Example 2:* imagine bandwidth that was created by `Bandwidth.classic(100, Refill.gready(10, Duration.ofMinutes(1)))`. +
++
+At the moment of config replacement it was 40 available tokens. +
++
+After replacing this bandwidth by following `Bandwidth.classic(20, Refill.gready(10, Duration.ofMinutes(1)))` 40 available tokens can not be copied as is, because it is greater than new capacity, so available tokens will be reduced to 20.
+
+RESET::
+Use this mode when you want just to forget about previous bucket state. RESET just instructs to erases all previous state. Using this strategy equals to removing bucket and creating again with new configuration.
+
+ADDITIVE::
+Instructs to copy available tokens as is, but with one exclusion: if new bandwidth capacity is greater than old capacity, available tokens will be increased by the difference between the old and the new configuration. +
++
+*The formula is following:* +
+`newAvailableTokens = Math.min(availableTokensBeforeReplacement, newBandwidthCapacity) + Math.max(0, newBandwidthCapacity - capacityBeforeReplacement)` +
++
+.ADDITIVE strategy examples:
+** *Example 1:* imagine bandwidth that was created by `Bandwidth.classic(100, Refill.gready(10, Duration.ofMinutes(1)))`. +
++
+At the moment of configuration replacement, it was 40 available tokens. +
++
+After replacing this bandwidth by following `Bandwidth.classic(200, Refill.gready(10, Duration.ofMinutes(1)))` 40 available tokens will be copied and added to the difference between old and new configuration, and after replacement, we will have 140 available tokens.
+
+** *Example 2:* imagine bandwidth that was created by `Bandwidth.classic(100, Refill.gready(10, Duration.ofMinutes(1)))`. +
++
+At the moment of config replacement it was 40 available tokens. +
++
+After replacing this bandwidth by following `Bandwidth.classic(20, Refill.gready(10, Duration.ofMinutes(1))))`,
+and after replacement we will have 20 available tokens.
+
+** *Example 3:* imagine bandwidth that was created by `Bandwidth.classic(100, Refill.gready(10, Duration.ofMinutes(1)))`. +
++
+At the moment of config replacement it was 10 available tokens.
++
+After replacing this bandwidth by following `Bandwidth.classic(20, Refill.gready(10, Duration.ofMinutes(1))))`, and after replacement we will have 10 available tokens.
