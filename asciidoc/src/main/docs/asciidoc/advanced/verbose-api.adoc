@@ -1,3 +1,4 @@
+[[verbose-api]]
 === Verbose API
 Verbose API:: is the API which intent is in injecting low-level diagnostic information into results of any interaction with bucket. Verbose API providing the same functionality as Regular API, with one exception - result of any method always decorated by `VerboseResult` wrapper.
 

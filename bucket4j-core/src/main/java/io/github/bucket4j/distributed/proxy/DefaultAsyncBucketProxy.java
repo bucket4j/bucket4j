@@ -39,7 +39,7 @@ import java.util.function.Supplier;
 
 import static io.github.bucket4j.LimitChecker.*;
 
-public class DefaultAsyncBucketProxy implements AsyncBucketProxy, AsyncOptimizationController, ScheduledBucket {
+public class DefaultAsyncBucketProxy implements AsyncBucketProxy, AsyncOptimizationController, SchedulingBucket {
 
     private final AsyncCommandExecutor commandExecutor;
     private final RecoveryStrategy recoveryStrategy;
@@ -58,7 +58,7 @@ public class DefaultAsyncBucketProxy implements AsyncBucketProxy, AsyncOptimizat
     }
 
     @Override
-    public ScheduledBucket asScheduler() {
+    public SchedulingBucket asScheduler() {
         return this;
     }
 

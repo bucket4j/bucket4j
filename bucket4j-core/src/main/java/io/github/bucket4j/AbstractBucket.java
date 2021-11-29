@@ -26,7 +26,7 @@ import java.util.function.Supplier;
 
 import static io.github.bucket4j.LimitChecker.*;
 
-public abstract class AbstractBucket implements Bucket, BlockingBucket, ScheduledBucket {
+public abstract class AbstractBucket implements Bucket, BlockingBucket, SchedulingBucket {
 
     protected static long INFINITY_DURATION = Long.MAX_VALUE;
     protected static long UNLIMITED_AMOUNT = Long.MAX_VALUE;
@@ -173,7 +173,7 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket, Schedule
     };
 
     @Override
-    public ScheduledBucket asScheduler() {
+    public SchedulingBucket asScheduler() {
         return this;
     }
 

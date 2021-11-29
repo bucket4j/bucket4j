@@ -253,48 +253,7 @@ public class ClusteredTimeMeter implements TimeMeter {
 
 Bandwidth limit = Bandwidth.simple(100, Duration.ofMinutes(1));
 Bucket bucket = Bucket4j.builder()
-                .withCustomTimePrecision(new ClusteredTimeMeter())
-                .addLimit(limit)
-                .build();
-----
-
-==== Change configuration of bucket on the fly
-Sometimes you want to change configuration for already created bucket.
-For example because client upgrade its service plan and you want to provide additional tokens for him.
-If you do not want to lose information about already consumed tokens,
-then you can reconfigure bucket on the fly instead of creation new instance of bucket:
-[source, java]
-----
-Bucket bucket = ...
-
-
-Bandwidth newLimit = Bandwidth.simple(newCapacity, Duration.ofMinutes(1));
-BucketConfiguration newConfiguration = Bucket4j.configurationBuilder()
-                .addLimit(newLimit)
-                .build();
-bucket.replaceConfiguration(newConfiguration, TokensInheritanceStrategy.PROPORTIONALLY)
-// or bucket.replaceConfiguration(newConfiguration, TokensInheritanceStrategy.AS_IS)
-----
-Read javadocs for more information.
-
-==== Using the VerboseResult API
-Verbose API:: is the
-
-
-
-The `VerboseResult` API can be used to retrieve the current `BucketConfiguration` of a bucket, as well as low-level diagnostic  which can be used to include an HTTP headers that describes the current rate limit.
-
-.For example:
-[source, java]
-----
-VerboseResult<ConsumptionProbe> verboseResult = bucket.asVerbose().tryConsumeAndReturnRemaining(numberOfTokens);
-ConsumptionProbe probe = verboseResult.getValue();
-BucketConfiguration bucketConfiguration = verboseResult.getConfiguration();
-long capacity = Arrays.stream(bucketConfiguration.getBandwidths())
-                .mapToLong(Bandwidth::getCapacity)
-                .max().getAsLong();
-VerboseResult.Diagnostics diagnostics = result.getDiagnostics()
-response.addHeader("RateLimit-Limit", "" + capacity));
-response.addHeader("RateLimit-Remaining", "" + diagnostics.getAvailableTokens());
-response.addHeader("RateLimit-Reset", "" + TimeUnit.NANOSECONDS.toSeconds(diagnostics.calculateFullRefillingTime()));
+    .withCustomTimePrecision(new ClusteredTimeMeter())
+    .addLimit(limit)
+    .build();
 ----

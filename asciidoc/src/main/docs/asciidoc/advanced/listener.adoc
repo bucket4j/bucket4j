@@ -1,3 +1,4 @@
+[[listener]]
 === Listening for bucket events
 
 ==== What can be listened

@@ -23,7 +23,6 @@ import io.github.bucket4j.*;
 import io.github.bucket4j.distributed.proxy.RemoteAsyncBucketBuilder;
 import io.github.bucket4j.distributed.proxy.optimization.Optimization;
 
-import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.function.Function;
@@ -38,7 +37,7 @@ public interface AsyncBucketProxy {
      *
      * @return Asynchronous view of this bucket that allows to use bucket as async scheduler.
      */
-    ScheduledBucket asScheduler();
+    SchedulingBucket asScheduler();
 
     /**
      * Returns the verbose view of this bucket.

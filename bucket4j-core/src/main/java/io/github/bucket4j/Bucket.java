@@ -49,9 +49,9 @@ public interface Bucket {
      *
      * @return the scheduling API for this bucket.
      *
-     * @see ScheduledBucket
+     * @see SchedulingBucket
      */
-    ScheduledBucket asScheduler();
+    SchedulingBucket asScheduler();
 
     /**
      * Returns the verbose API for this bucket.

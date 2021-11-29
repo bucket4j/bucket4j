@@ -45,11 +45,12 @@
                                     <backend>html</backend>
                                     <doctype>book</doctype>
                                     <attributes>
+                                        <source-highlighter>highlight.js</source-highlighter>
                                         <project-version>${project.version}</project-version>
                                         <toc>left</toc>
                                         <linkcss>false</linkcss>
                                         <sectnums>true</sectnums>
-                                        <toclevels>4</toclevels>
+                                        <toclevels>5</toclevels>
                                         <revnumber>${project.version}</revnumber>
                                         <revdate>${maven.build.timestamp}</revdate>
                                         <organization>${project.organization.name}</organization>
@@ -91,6 +92,8 @@
                                     <backend>html</backend>
                                     <doctype>Inline</doctype>
                                     <attributes>
+                                        <source-highlighter>highlight.js</source-highlighter>
+
                                         <project-version>${project.version}</project-version>
 <!--                                        <toc>left</toc>-->
                                         <linkcss>false</linkcss>

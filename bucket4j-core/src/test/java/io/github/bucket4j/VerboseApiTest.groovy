@@ -12,7 +12,7 @@ class VerboseApiTest extends Specification {
                                                                long timeShiftBeforeAsk, long tokensConsumeBeforeAsk, BucketConfiguration configuration) {
         setup:
             long currentTimeNanos = 0L
-            BucketState state = BucketState.createInitialState(configuration, currentTimeNanos)
+            BucketState state = BucketState.createInitialState(configuration, MathType.INTEGER_64_BITS,  currentTimeNanos)
             state.refillAllBandwidth(configuration.bandwidths, timeShiftBeforeAsk)
             state.consume(configuration.bandwidths, tokensConsumeBeforeAsk)
             VerboseResult verboseResult = new VerboseResult(timeShiftBeforeAsk, 42, configuration, state)
@@ -97,7 +97,7 @@ class VerboseApiTest extends Specification {
     def "getAvailableTokens"(String testNumber, long requiredAvailableTokens, BucketConfiguration configuration) {
         setup:
             long currentTimeNanos = 0L
-            BucketState state = BucketState.createInitialState(configuration, currentTimeNanos)
+            BucketState state = BucketState.createInitialState(configuration, MathType.INTEGER_64_BITS,  currentTimeNanos)
             VerboseResult verboseResult = new VerboseResult(currentTimeNanos, 42, configuration, state)
         when:
             long availableTokens = verboseResult.getDiagnostics().getAvailableTokens()
@@ -132,7 +132,7 @@ class VerboseApiTest extends Specification {
     def "getAvailableTokensPerEachBandwidth"(String testNumber, List<Long> requiredAvailableTokens, BucketConfiguration configuration) {
         setup:
             long currentTimeNanos = 0L
-            BucketState state = BucketState.createInitialState(configuration, currentTimeNanos)
+            BucketState state = BucketState.createInitialState(configuration, MathType.INTEGER_64_BITS, currentTimeNanos)
             VerboseResult verboseResult = new VerboseResult(currentTimeNanos, 42, configuration, state)
         when:
             long[] availableTokens = verboseResult.getDiagnostics().getAvailableTokensPerEachBandwidth()

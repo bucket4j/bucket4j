@@ -101,7 +101,7 @@ public class AsyncBucketProxyAdapter implements AsyncBucketProxy, AsyncOptimizat
     }
 
     @Override
-    public ScheduledBucket asScheduler() {
+    public SchedulingBucket asScheduler() {
         return target.asScheduler();
     }
 

@@ -30,7 +30,7 @@ import java.util.function.Function;
  * Provides the scheduling API for {@link Bucket}.
  * Any method of this interface can delay user operation via {@link java.util.concurrent.ScheduledExecutorService} in case of lack of tokens.
  */
-public interface ScheduledBucket {
+public interface SchedulingBucket {
 
     /**
      * Tries to consume the specified number of tokens from the bucket.

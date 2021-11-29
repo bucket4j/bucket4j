@@ -72,7 +72,7 @@ public class Refill {
     /**
      * Creates the {@link Refill} that does refill of tokens in greedy manner,
      * it will try to add the tokens to bucket as soon as possible.
-     * For example "of" refill "10 tokens per 1 second" will add 1 token per each 100 millisecond,
+     * For example refill "10 tokens per 1 second" will add 1 token per each 100 millisecond,
      * in other words refill will not wait 1 second to regenerate whole bunch of 10 tokens.
      *
      * <p>

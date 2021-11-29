@@ -25,15 +25,14 @@ image:images/Maxim_Bartkov.jpg[80,80] +
 
 == Third-party articles and integrations
 
-=== Third-party articles:
+=== Third-party articles
 * https://golb.hplar.ch/2019/08/rate-limit-bucket4j.html[Rate limiting Spring MVC endpoints with bucket4j]
 * http://www.programmersought.com/article/2524209291/[ProgrammerSought Bucket4j - preliminary understanding]
 * https://www.baeldung.com/spring-bucket4j[Baeldung - Rate Limiting a Spring API Using Bucket4j]
 
 === Third-party integrations
 * https://github.com/marcosbarbero/spring-cloud-zuul-ratelimit[marcosbarbero/spring-cloud-zuul-ratelimit]
-* https://github.com/MarcGiffing/bucket4j-spring-boot-starter[MarcGiffing/Spring Boot Starter for Bucket4j].
-* https://jhipster.github.io/api-gateway/#rate_limiting[JHipster/JHipster API Gateway]
+* https://github.com/MarcGiffing/bucket4j-spring-boot-starter[MarcGiffing/Spring Boot Starter for Bucket4j]
 * https://github.com/zivver/dropwizard-ratelimit[Zivver/Dropwizard Ratelimit]
 
 === Third-party demos

@@ -2,10 +2,10 @@
 
 include::quick-start.adoc[]
 
-include::vocabulary.adoc[]
+include::concepts.adoc[]
 
 include::limitations.adoc[]
 
-include::math-model.adoc[]
+include::api-reference.adoc[]
 
 include::production-generic-checklist.adoc[]

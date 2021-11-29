@@ -261,31 +261,39 @@ class ConfigurationReplacementSpecification extends Specification {
             for (boolean verbose: [true, false]) {
                 // System.err.println("sync: $sync verbose: $verbose")
                 TimeMeterMock clock = new TimeMeterMock(0)
-                Bucket bucket = bucketType.createBucket(Bucket4j.builder()
-                        .addLimit(Bandwidth.simple(3, Duration.ofNanos(5)).withInitialTokens(0)),
-                        clock
-                )
-                clock.addTime(3) // 1.8
-                BucketConfiguration newConfiguration = Bucket4j.configurationBuilder()
+                BucketConfiguration configuration = BucketConfiguration.builder()
+                        .addLimit(Bandwidth.simple(3, Duration.ofNanos(5)).withInitialTokens(0))
+                        .build()
+                BucketConfiguration newConfiguration = BucketConfiguration.builder()
                         .addLimit(Bandwidth.simple(60, Duration.ofNanos(1000)))
                         .build()
                 if (sync) {
+                    Bucket bucket = bucketType.createBucket(configuration, clock)
+                    bucket.getAvailableTokens()
+                    clock.addTime(3) // 1.8
                     if (!verbose) {
                         bucket.replaceConfiguration(newConfiguration, TokensInheritanceStrategy.ADDITIVE)
                     } else {
                         bucket.asVerbose().replaceConfiguration(newConfiguration, TokensInheritanceStrategy.ADDITIVE)
                     }
-                } else {
-                    if (!verbose) {
-                        bucket.asAsync().replaceConfiguration(newConfiguration, TokensInheritanceStrategy.ADDITIVE).get()
-                    } else {
-                        bucket.asAsync().asVerbose().replaceConfiguration(newConfiguration, TokensInheritanceStrategy.ADDITIVE).get()
-                    }
-                }
-                assert bucket.getAvailableTokens() == 58
+                    assert bucket.getAvailableTokens() == 58
 
-                clock.addTime(4)
-                assert bucket.getAvailableTokens() == 59
+                    clock.addTime(4)
+                    assert bucket.getAvailableTokens() == 59
+                } else {
+                    AsyncBucketProxy bucket = bucketType.createAsyncBucket(configuration, clock)
+                    bucket.getAvailableTokens().get()
+                    clock.addTime(3) // 1.8
+                    if (!verbose) {
+                        bucket.replaceConfiguration(newConfiguration, TokensInheritanceStrategy.ADDITIVE).get()
+                    } else {
+                        bucket.asVerbose().replaceConfiguration(newConfiguration, TokensInheritanceStrategy.ADDITIVE).get()
+                    }
+                    assert bucket.getAvailableTokens().get() == 58
+
+                    clock.addTime(4)
+                    assert bucket.getAvailableTokens().get() == 59
+                }
             }
         }
         where:
@@ -299,35 +307,46 @@ class ConfigurationReplacementSpecification extends Specification {
             for (boolean verbose: [true, false]) {
                 // System.err.println("sync: $sync verbose: $verbose")
                 TimeMeterMock clock = new TimeMeterMock(0)
-                Bucket bucket = bucketType.createBucket(Bucket4j.builder()
-                        .addLimit(Bandwidth.simple(3, Duration.ofNanos(5)).withInitialTokens(0)),
-                        clock
-                )
-                clock.addTime(3) // 1.8
+                BucketConfiguration configuration = BucketConfiguration.builder()
+                    .addLimit(Bandwidth.simple(3, Duration.ofNanos(5)).withInitialTokens(0))
+                    .build()
                 Refill refill = Refill.intervally(60, Duration.ofNanos(1000))
-                BucketConfiguration newConfiguration = Bucket4j.configurationBuilder()
+                BucketConfiguration newConfiguration = BucketConfiguration.builder()
                         .addLimit(Bandwidth.classic(60, refill))
                         .build()
                 if (sync) {
+                    Bucket bucket = bucketType.createBucket(configuration, clock)
+                    bucket.getAvailableTokens();
+                    clock.addTime(3) // 1.8
                     if (!verbose) {
                         bucket.replaceConfiguration(newConfiguration, TokensInheritanceStrategy.ADDITIVE)
                     } else {
                         bucket.asVerbose().replaceConfiguration(newConfiguration, TokensInheritanceStrategy.ADDITIVE)
                     }
+                    assert bucket.getAvailableTokens() == 58
+
+                    clock.addTime(999)
+                    assert bucket.getAvailableTokens() == 58 // 0.8 tokens from previous bucket should not be copied after config replacement
+
+                    clock.addTime(1)
+                    assert bucket.getAvailableTokens() == 60
                 } else {
+                    AsyncBucketProxy bucket = bucketType.createAsyncBucket(configuration, clock)
+                    bucket.getAvailableTokens().get();
+                    clock.addTime(3) // 1.8
                     if (!verbose) {
-                        bucket.asAsync().replaceConfiguration(newConfiguration, TokensInheritanceStrategy.ADDITIVE).get()
+                        bucket.replaceConfiguration(newConfiguration, TokensInheritanceStrategy.ADDITIVE).get()
                     } else {
-                        bucket.asAsync().asVerbose().replaceConfiguration(newConfiguration, TokensInheritanceStrategy.ADDITIVE).get()
+                        bucket.asVerbose().replaceConfiguration(newConfiguration, TokensInheritanceStrategy.ADDITIVE).get()
                     }
+                    assert bucket.getAvailableTokens().get() == 58
+
+                    clock.addTime(999)
+                    assert bucket.getAvailableTokens().get() == 58 // 0.8 tokens from previous bucket should not be copied after config replacement
+
+                    clock.addTime(1)
+                    assert bucket.getAvailableTokens().get() == 60
                 }
-                assert bucket.getAvailableTokens() == 58
-
-                clock.addTime(999)
-                assert bucket.getAvailableTokens() == 58 // 0.8 tokens from previous bucket should not be copied after config replacement
-
-                clock.addTime(1)
-                assert bucket.getAvailableTokens() == 60
             }
         }
         where:
@@ -339,19 +358,22 @@ class ConfigurationReplacementSpecification extends Specification {
         expect:
         for (boolean sync : [true, false]) {
             TimeMeterMock clock = new TimeMeterMock(0)
-            Bucket bucket = bucketType.createBucket(Bucket4j.builder()
-                    .addLimit(Bandwidth.classic(500, Refill.greedy(100, Duration.ofNanos(100)))),
-                    clock
-            )
-            BucketConfiguration newConfiguration = Bucket4j.configurationBuilder()
+            BucketConfiguration configuration = BucketConfiguration.builder()
+                    .addLimit(Bandwidth.classic(500, Refill.greedy(100, Duration.ofNanos(100))))
+                    .build()
+            BucketConfiguration newConfiguration = BucketConfiguration.builder()
                     .addLimit(Bandwidth.classic (200, Refill.greedy(100, Duration.ofNanos(100)) ))
                     .build()
             if (sync) {
+                Bucket bucket = bucketType.createBucket(configuration, clock)
+                bucket.getAvailableTokens()
                 bucket.replaceConfiguration(newConfiguration, TokensInheritanceStrategy.ADDITIVE)
+                assert bucket.getAvailableTokens() == 200
             } else {
-                bucket.asAsync().replaceConfiguration(newConfiguration, TokensInheritanceStrategy.ADDITIVE).get()
+                AsyncBucketProxy bucket = bucketType.createAsyncBucket(configuration, clock)
+                bucket.replaceConfiguration(newConfiguration, TokensInheritanceStrategy.ADDITIVE).get()
+                assert bucket.getAvailableTokens().get() == 200
             }
-            assert bucket.getAvailableTokens() == 200
         }
         where:
         bucketType << BucketType.values()
@@ -362,19 +384,23 @@ class ConfigurationReplacementSpecification extends Specification {
         expect:
         for (boolean sync : [true, false]) {
             TimeMeterMock clock = new TimeMeterMock(0)
-            Bucket bucket = bucketType.createBucket(Bucket4j.builder()
-                    .addLimit(Bandwidth.classic(500, Refill.greedy(100, Duration.ofNanos(100))).withInitialTokens(200)),
-                    clock
-            )
-            BucketConfiguration newConfiguration = Bucket4j.configurationBuilder()
+
+            def configuration = BucketConfiguration.builder()
+                    .addLimit(Bandwidth.classic(500, Refill.greedy(100, Duration.ofNanos(100))).withInitialTokens(200)).build()
+            BucketConfiguration newConfiguration = BucketConfiguration.builder()
                     .addLimit(Bandwidth.classic (900, Refill.greedy(100, Duration.ofNanos(100)) ))
                     .build()
             if (sync) {
+                Bucket bucket = bucketType.createBucket(configuration, clock)
+                bucket.getAvailableTokens()
                 bucket.replaceConfiguration(newConfiguration, TokensInheritanceStrategy.ADDITIVE)
+                assert bucket.getAvailableTokens() == 600
             } else {
-                bucket.asAsync().replaceConfiguration(newConfiguration, TokensInheritanceStrategy.ADDITIVE).get()
+                AsyncBucketProxy bucket = bucketType.createAsyncBucket(configuration, clock)
+                bucket.getAvailableTokens().get()
+                bucket.replaceConfiguration(newConfiguration, TokensInheritanceStrategy.ADDITIVE).get()
+                assert bucket.getAvailableTokens().get() == 600
             }
-            assert bucket.getAvailableTokens() == 600
         }
         where:
         bucketType << BucketType.values()

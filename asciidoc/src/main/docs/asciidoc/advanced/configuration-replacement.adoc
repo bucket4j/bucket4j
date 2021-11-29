@@ -1,3 +1,4 @@
+[[configuration-replacement]]
 === On-the-fly configuration replacement
 As previously mentioned in the definition for <<bucket-bonfiguration>> it is immutable object.
 It is not possible to add, remove or change the limits for already created configuration, however, you can replace configuration of bucket via creating new configuration instance and calling `bucket.replaceConfiguration(newConfiguration, tokensInheritanceStrategy)`.
