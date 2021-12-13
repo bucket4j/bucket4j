@@ -50,7 +50,7 @@ public class SmsServlet extends javax.servlet.http.HttpServlet {
         
         smsSender = (SmsSender) ctx.getAttribute("sms-sender");
         
-        FunctionalMapImpl<String, GridBucketState> bucketMap = (FunctionalMapImpl<String, GridBucketState>) ctx.getAttribute("bucket-map");
+        FunctionalMapImpl<String, byte[]> bucketMap = (FunctionalMapImpl<String, byte[]>) ctx.getAttribute("bucket-map");
         this.buckets = Bucket4j.extension(Infinispan.class).proxyManagerForMap(bucketMap);
         
         this.configuration = () -> {

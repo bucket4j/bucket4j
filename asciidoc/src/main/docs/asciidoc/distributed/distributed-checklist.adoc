@@ -1,3 +1,4 @@
+[[distributed-checklist, Distributed usage checklist]]
 === Production checklist especially in the context of distributed systems
 Before using Bucket4j in clustered scenario you need to understand, agree and configure following points:
 

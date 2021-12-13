@@ -1,3 +1,4 @@
+[[bucket4j-ignite, Bucket4j-Ignite]]
 === Apache Ignite integration
 Before use ``bucket4j-ignite`` module please read [bucket4j-jcache documentation](jcache-usage.md),
 because ``bucket4j-ignite`` is just a follow-up of ``bucket4j-jcache``. 
@@ -25,7 +26,7 @@ To use ``bucket4j-ignite`` extension you need to add following dependency:
 ==== Example of Bucket instantiation
 [source, java]
 ----
-org.apache.ignite.IgniteCache<K, GridBucketState> cache = ...;
+org.apache.ignite.IgniteCache<K, byte[]> cache = ...;
 ...
 
 Bucket bucket = Bucket4j.extension(io.github.bucket4j.grid.ignite.Ignite.class).builder()
@@ -36,7 +37,7 @@ Bucket bucket = Bucket4j.extension(io.github.bucket4j.grid.ignite.Ignite.class).
 ==== Example of ProxyManager instantiation
 [source, java]
 ----
-org.apache.ignite.IgniteCache<K, GridBucketState> cache = ...;
+org.apache.ignite.IgniteCache<K, byte[]> cache = ...;
 ...
 
 ProxyManager proxyManager = Bucket4j.extension(io.github.bucket4j.grid.ignite.Ignite.class).proxyManagerForCache(cache);
@@ -45,7 +46,7 @@ ProxyManager proxyManager = Bucket4j.extension(io.github.bucket4j.grid.ignite.Ig
 ==== Example of Bucket instantiation via Thin Client
 [source, java]
 ----
-org.apache.ignite.client.ClientCache<K, GridBucketState> cache = ...;
+org.apache.ignite.client.ClientCache<K, byte[]> cache = ...;
 org.apache.ignite.client.ClientCompute clientCompute = ...;
 
 ...
@@ -58,7 +59,7 @@ Bucket bucket = Bucket4j.extension(io.github.bucket4j.grid.ignite.Ignite.class).
 ==== Example of ProxyManager instantiation via Thin Client
 [source, java]
 ----
-org.apache.ignite.client.ClientCache<K, GridBucketState> cache = ...;
+org.apache.ignite.client.ClientCache<K, bute[]> cache = ...;
 org.apache.ignite.client.ClientCompute clientCompute = ...;
 ...
 

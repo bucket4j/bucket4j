@@ -1,3 +1,4 @@
+[[bucket4j-coherence, Bucket4j-Coherence]]
 === Oracle Coherence integration
 Before use ``bucket4j-coherence`` module please read [bucket4j-jcache documentation](jcache-usage.md),
 because ``bucket4j-coherence`` is just a follow-up of ``bucket4j-jcache``.
@@ -23,7 +24,7 @@ To use ``bucket4j-coherence`` extension you need to add following dependency:
 ==== Example of Bucket instantiation
 [source, java]
 ----
-com.tangosol.net.NamedCache<K, GridBucketState> cache = ...;
+com.tangosol.net.NamedCache<K, byte[]> cache = ...;
 ...
 
 Bucket bucket = Bucket4j.extension(Coherence.class).builder()
@@ -34,7 +35,7 @@ Bucket bucket = Bucket4j.extension(Coherence.class).builder()
 ==== Example of ProxyManager instantiation
 [source, java]
 ----
-com.tangosol.net.NamedCache<K, GridBucketState> cache = ...;
+com.tangosol.net.NamedCache<K, byte[]> cache = ...;
 
 ProxyManager proxyManager = Bucket4j.extension(Coherence.class).proxyManagerForCache(cache);
 ----

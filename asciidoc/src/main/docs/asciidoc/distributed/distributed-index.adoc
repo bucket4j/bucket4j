@@ -1,5 +1,7 @@
 == Distributed facilities
 
+include::concepts.adoc[]
+
 include::jcache/jcache-usage.adoc[]
 
 include::jcache/hazelcast.adoc[]

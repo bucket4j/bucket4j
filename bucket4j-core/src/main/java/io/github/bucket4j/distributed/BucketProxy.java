@@ -27,7 +27,7 @@ import io.github.bucket4j.distributed.proxy.optimization.Optimization;
 import java.time.Duration;
 
 /**
- * Provides an light-weight proxy to bucket which state actually stored in external storage, like in-memory jvm or relational database.
+ * Provides a light-weight proxy to bucket which state actually stored in external storage, like in-memory jvm or relational database.
  */
 public interface BucketProxy extends Bucket {
 

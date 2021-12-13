@@ -162,14 +162,14 @@ long getAvailableTokens();
 ===== builder
 [source, java]
 ----
-/**
-* Creates the new builder of in-memory buckets.
-*
-* @return new instance of {@link LocalBucketBuilder}
-*/
-static LocalBucketBuilder builder() {
-    return new LocalBucketBuilder();
-}
+    /**
+    * Creates the new builder of in-memory buckets.
+    *
+    * @return new instance of {@link LocalBucketBuilder}
+    */
+    static LocalBucketBuilder builder() {
+        return new LocalBucketBuilder();
+    }
 ----
 
 ===== replaceConfiguration

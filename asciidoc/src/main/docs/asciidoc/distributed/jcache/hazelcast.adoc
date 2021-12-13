@@ -1,3 +1,4 @@
+[[bucket4j-hazelcast, Bucket4j-Hazelcast]]
 === Hazelcast integration
 Before use ``bucket4j-hazelcast`` module please read [bucket4j-jcache documentation](jcache-usage.md),
 because ``bucket4j-hazelcast`` is just a follow-up of ``bucket4j-jcache``.
@@ -37,7 +38,7 @@ just log issue to https://github.com/vladimir-bukhtoyarov/bucket4j/issues[bug tr
 ==== Example of Bucket instantiation
 [source, java]
 ----
-IMap<K, GridBucketState> map = ...;
+IMap<K, byte[]> map = ...;
 ...
 
 Bucket bucket = Bucket4j.extension(Hazelcast.class).builder()
@@ -48,7 +49,7 @@ Bucket bucket = Bucket4j.extension(Hazelcast.class).builder()
 ==== Example of ProxyManager instantiation
 [source, java]
 ----
-IMap<K, GridBucketState> map = ...;
+IMap<K, byte[]> map = ...;
 ...
 
 ProxyManager proxyManager = Bucket4j.extension(Hazelcast.class).proxyManagerForMap(map);
@@ -76,6 +77,6 @@ import io.github.bucket4j.grid.hazelcast.serialization.HazelcastSerializer;
     HazelcastSerializer.addCustomSerializers(serializationConfig, baseTypeIdNumber);
 ----
 
-## Known issues related with Docker and(or) SpringBoot
+==== Known issues related with Docker and(or) SpringBoot
 * [#186 HazelcastEntryProcessorAdapter class not found](https://github.com/vladimir-bukhtoyarov/bucket4j/discussions/186) - check file permissins inside your image.
 * [#182 HazelcastSerializationException with Hazelcast 4.2](https://github.com/vladimir-bukhtoyarov/bucket4j/issues/162) - properly setup classloader for Hazelcast client configuration.
