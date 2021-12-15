@@ -53,7 +53,6 @@ mvn clean install
 Feel free to ask via:
 * [Bucket4j discussions](https://github.com/vladimir-bukhtoyarov/bucket4j/discussions) for questions, feature proposals, sharing of experience.
 * [Bucket4j issue tracker](https://github.com/vladimir-bukhtoyarov/bucket4j/issues/new) to report a bug.
-* [Vladimir Bukhtoyarov - Upwork Profile](https://www.upwork.com/freelancers/~013d8e02a32ffdd5f5) if you want to get one time paid support.
 
 ## License
 Copyright 2015-2021 Vladimir Bukhtoyarov
