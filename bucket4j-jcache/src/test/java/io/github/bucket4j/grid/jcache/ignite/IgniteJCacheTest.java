@@ -1,7 +1,6 @@
 
 package io.github.bucket4j.grid.jcache.ignite;
 
-import io.github.bucket4j.grid.GridBucketState;
 import io.github.bucket4j.grid.jcache.AbstractJCacheTest;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.Ignition;
@@ -13,17 +12,17 @@ import org.gridkit.nanocloud.Cloud;
 import org.gridkit.nanocloud.CloudFactory;
 import org.gridkit.nanocloud.VX;
 import org.gridkit.vicluster.ViNode;
-import org.junit.*;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 
 import javax.cache.Cache;
 import java.io.Serializable;
-import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Collections;
 
 public class IgniteJCacheTest extends AbstractJCacheTest {
 
-    private static Cache<String, GridBucketState> cache;
+    private static Cache<String, byte[]> cache;
     private static Cloud cloud;
     private static ViNode server;
 
@@ -82,7 +81,7 @@ public class IgniteJCacheTest extends AbstractJCacheTest {
     }
 
     @Override
-    protected Cache<String, GridBucketState> getCache() {
+    protected Cache<String, byte[]> getCache() {
         return cache;
     }
 

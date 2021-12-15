@@ -76,7 +76,7 @@ public interface BucketListener {
 
     /**
      * This method is called each time when delayed task was submit to {@link java.util.concurrent.ScheduledExecutorService} because of wait for tokens refill
-     * in result of interaction with {@link AsyncScheduledBucket}
+     * in result of interaction with {@link SchedulingBucket}
      *
      * @param nanos amount of nanoseconds for which thread was parked
      */

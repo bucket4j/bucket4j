@@ -19,20 +19,22 @@
  */
 package io.github.bucket4j;
 
-import io.github.bucket4j.serialization.DeserializationAdapter;
-import io.github.bucket4j.serialization.SerializationHandle;
-import io.github.bucket4j.serialization.SerializationAdapter;
+import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
+import io.github.bucket4j.distributed.serialization.SerializationHandle;
+import io.github.bucket4j.distributed.serialization.SerializationAdapter;
+import io.github.bucket4j.distributed.versioning.Version;
+import io.github.bucket4j.distributed.versioning.Versions;
+import io.github.bucket4j.util.ComparableByContent;
 
 import java.io.IOException;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
-public final class BucketConfiguration implements Serializable {
+import static io.github.bucket4j.distributed.versioning.Versions.v_7_0_0;
 
-    private static final long serialVersionUID = 42L;
+public final class BucketConfiguration implements ComparableByContent<BucketConfiguration> {
 
     private final Bandwidth[] bandwidths;
 
@@ -49,12 +51,15 @@ public final class BucketConfiguration implements Serializable {
             if (this.bandwidths[i].getId() != Bandwidth.UNDEFINED_ID) {
                 for (int j = i + 1; j < this.bandwidths.length; j++) {
                     if (Objects.equals(this.bandwidths[i].getId(), this.bandwidths[j].getId())) {
-                        // TODO add unit test
                         throw BucketExceptions.foundTwoBandwidthsWithSameId(i, j, this.bandwidths[i].getId());
                     }
                 }
             }
         }
+    }
+
+    public static ConfigurationBuilder builder() {
+        return new ConfigurationBuilder();
     }
 
     public Bandwidth[] getBandwidths() {
@@ -85,21 +90,26 @@ public final class BucketConfiguration implements Serializable {
 
     public static final SerializationHandle<BucketConfiguration> SERIALIZATION_HANDLE = new SerializationHandle<BucketConfiguration>() {
         @Override
-        public <S> BucketConfiguration deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
+        public <S> BucketConfiguration deserialize(DeserializationAdapter<S> adapter, S input, Version backwardCompatibilityVersion) throws IOException {
+            int formatNumber = adapter.readInt(input);
+            Versions.check(formatNumber, v_7_0_0, v_7_0_0);
+
             int bandwidthAmount = adapter.readInt(input);
             List<Bandwidth> bandwidths = new ArrayList<>(bandwidthAmount);
             for (int ii = 0; ii < bandwidthAmount; ii++) {
-                Bandwidth bandwidth = adapter.readObject(input, Bandwidth.class);
+                Bandwidth bandwidth = Bandwidth.SERIALIZATION_HANDLE.deserialize(adapter, input, backwardCompatibilityVersion);
                 bandwidths.add(bandwidth);
             }
             return new BucketConfiguration(bandwidths);
         }
 
         @Override
-        public <O> void serialize(SerializationAdapter<O> adapter, O output, BucketConfiguration configuration) throws IOException {
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, BucketConfiguration configuration, Version backwardCompatibilityVersion) throws IOException {
+            adapter.writeInt(output, v_7_0_0.getNumber());
+
             adapter.writeInt(output, configuration.bandwidths.length);
             for (Bandwidth bandwidth : configuration.bandwidths) {
-                adapter.writeObject(output, bandwidth);
+                Bandwidth.SERIALIZATION_HANDLE.serialize(adapter, output, bandwidth, backwardCompatibilityVersion);
             }
         }
 
@@ -114,5 +124,20 @@ public final class BucketConfiguration implements Serializable {
         }
 
     };
+
+    @Override
+    public boolean equalsByContent(BucketConfiguration other) {
+        if (bandwidths.length != other.bandwidths.length) {
+            return false;
+        }
+        for (int i = 0; i < other.getBandwidths().length; i++) {
+            Bandwidth bandwidth1 = bandwidths[i];
+            Bandwidth bandwidth2 = other.bandwidths[i];
+            if (!bandwidth1.equalsByContent(bandwidth2)) {
+                return false;
+            }
+        }
+        return true;
+    }
 
 }

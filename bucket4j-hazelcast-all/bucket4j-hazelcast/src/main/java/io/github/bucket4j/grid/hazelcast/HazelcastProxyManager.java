@@ -17,51 +17,122 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
+/*
+ *
+ * Copyright 2015-2018 Vladimir Bukhtoyarov
+ *
+ *       Licensed under the Apache License, Version 2.0 (the "License");
+ *       you may not use this file except in compliance with the License.
+ *       You may obtain a copy of the License at
+ *
+ *             http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *      Unless required by applicable law or agreed to in writing, software
+ *      distributed under the License is distributed on an "AS IS" BASIS,
+ *      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *      See the License for the specific language governing permissions and
+ *      limitations under the License.
+ */
 
 package io.github.bucket4j.grid.hazelcast;
 
+import com.hazelcast.config.SerializationConfig;
+import com.hazelcast.config.SerializerConfig;
 import com.hazelcast.map.IMap;
-import io.github.bucket4j.Bucket;
-import io.github.bucket4j.BucketConfiguration;
-import io.github.bucket4j.grid.GridBucket;
-import io.github.bucket4j.grid.GridBucketState;
-import io.github.bucket4j.grid.GridProxy;
-import io.github.bucket4j.grid.ProxyManager;
+import io.github.bucket4j.distributed.proxy.AbstractProxyManager;
+import io.github.bucket4j.distributed.proxy.ClientSideConfig;
+import io.github.bucket4j.distributed.remote.CommandResult;
+import io.github.bucket4j.distributed.remote.Request;
+import io.github.bucket4j.distributed.versioning.Version;
+import io.github.bucket4j.grid.hazelcast.serialization.HazelcastEntryProcessorSerializer;
+import io.github.bucket4j.grid.hazelcast.serialization.SimpleBackupProcessorSerializer;
+import io.github.bucket4j.distributed.serialization.InternalSerializationHelper;
 
-import java.io.Serializable;
-import java.util.Optional;
-import java.util.function.Supplier;
+import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+
+import static io.github.bucket4j.distributed.serialization.InternalSerializationHelper.deserializeResult;
 
 /**
- * Hazelcast specific implementation of {@link ProxyManager}
- *
- * @param <K> type of key for buckets
+ * The extension of Bucket4j library addressed to support <a href="https://hazelcast.com//">Hazelcast</a> in-memory data grid.
  */
-public class HazelcastProxyManager<K extends Serializable> implements ProxyManager<K> {
+public class HazelcastProxyManager<K> extends AbstractProxyManager<K> {
 
-    private final GridProxy<K> gridProxy;
+    private final IMap<K, byte[]> map;
 
-    HazelcastProxyManager(IMap<K, GridBucketState> map) {
-        if (map == null) {
-            throw new IllegalArgumentException("map must not be null");
-        }
-        this.gridProxy = new HazelcastProxy<>(map);
+    public HazelcastProxyManager(IMap<K, byte[]> map) {
+        this(map, ClientSideConfig.getDefault());
+    }
+
+    public HazelcastProxyManager(IMap<K, byte[]> map, ClientSideConfig clientSideConfig) {
+        super(clientSideConfig);
+        this.map = Objects.requireNonNull(map);
     }
 
     @Override
-    public Bucket getProxy(K key, Supplier<BucketConfiguration> supplier) {
-        return GridBucket.createLazyBucket(key, supplier, gridProxy);
+    public <T> CommandResult<T> execute(K key, Request<T> request) {
+        HazelcastEntryProcessor<K, T> entryProcessor = new HazelcastEntryProcessor<>(request);
+        byte[] response = map.executeOnKey(key, entryProcessor);
+        Version backwardCompatibilityVersion = request.getBackwardCompatibilityVersion();
+        return deserializeResult(response, backwardCompatibilityVersion);
     }
 
     @Override
-    public Optional<Bucket> getProxy(K key) {
-        return getProxyConfiguration(key)
-                .map(configuration -> GridBucket.createLazyBucket(key, () -> configuration, gridProxy));
+    public boolean isAsyncModeSupported() {
+        return true;
     }
 
     @Override
-    public Optional<BucketConfiguration> getProxyConfiguration(K key) {
-        return gridProxy.getConfiguration(key);
+    public <T> CompletableFuture<CommandResult<T>> executeAsync(K key, Request<T> request) {
+        HazelcastEntryProcessor<K, T> entryProcessor = new HazelcastEntryProcessor<>(request);
+        CompletionStage<byte[]> future = map.submitToKey(key, entryProcessor);
+        Version backwardCompatibilityVersion = request.getBackwardCompatibilityVersion();
+        return (CompletableFuture) future.thenApply((byte[] bytes) -> InternalSerializationHelper.deserializeResult(bytes, backwardCompatibilityVersion));
+    }
+
+    @Override
+    public void removeProxy(K key) {
+        map.remove(key);
+    }
+
+    @Override
+    protected CompletableFuture<Void> removeAsync(K key) {
+        CompletionStage<byte[]> hazelcastFuture = map.removeAsync(key);
+        CompletableFuture<Void> resultFuture = new CompletableFuture<>();
+        hazelcastFuture.whenComplete((oldState, error) -> {
+          if (error == null) {
+              resultFuture.complete(null);
+          } else {
+              resultFuture.completeExceptionally(error);
+          }
+        });
+        return resultFuture;
+    }
+
+    /**
+     * Registers custom Hazelcast serializers for all classes from Bucket4j library which can be transferred over network.
+     * Each serializer will have different typeId, and this id will not be changed in the feature releases.
+     *
+     * <p>
+     *     <strong>Note:</strong> it would be better to leave an empty space in the Ids in order to handle the extension of Bucket4j library when new classes can be added to library.
+     *     For example if you called {@code getAllSerializers(10000)} then it would be reasonable to avoid registering your custom types in the interval 10000-10100.
+     * </p>
+     *
+     * @param typeIdBase a starting number from for typeId sequence
+     */
+    public static void addCustomSerializers(SerializationConfig serializationConfig, final int typeIdBase) {
+        serializationConfig.addSerializerConfig(
+                new SerializerConfig()
+                        .setImplementation(new HazelcastEntryProcessorSerializer(typeIdBase))
+                        .setTypeClass(HazelcastEntryProcessor.class)
+        );
+
+        serializationConfig.addSerializerConfig(
+                new SerializerConfig()
+                        .setImplementation(new SimpleBackupProcessorSerializer(typeIdBase + 1))
+                        .setTypeClass(SimpleBackupProcessor.class)
+        );
     }
 
 }

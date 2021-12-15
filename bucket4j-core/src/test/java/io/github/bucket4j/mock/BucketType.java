@@ -2,39 +2,52 @@
 package io.github.bucket4j.mock;
 
 import io.github.bucket4j.*;
-import io.github.bucket4j.grid.GridBucket;
-import io.github.bucket4j.grid.RecoveryStrategy;
+import io.github.bucket4j.distributed.AsyncBucketProxy;
+import io.github.bucket4j.distributed.AsyncBucketProxyAdapter;
+import io.github.bucket4j.distributed.proxy.ClientSideConfig;
+import io.github.bucket4j.distributed.proxy.optimization.Optimizations;
 import io.github.bucket4j.local.LocalBucketBuilder;
 import io.github.bucket4j.local.SynchronizationStrategy;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import static io.github.bucket4j.grid.RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION;
+import static io.github.bucket4j.distributed.proxy.RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION;
 
 public enum BucketType {
 
     LOCAL_LOCK_FREE {
         @Override
-        public Bucket createBucket(AbstractBucketBuilder builder, TimeMeter timeMeter) {
-            return ((LocalBucketBuilder) builder)
+        public Bucket createBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
+            LocalBucketBuilder builder = Bucket.builder();
+            for (Bandwidth bandwidth : configuration.getBandwidths()) {
+                builder.addLimit(bandwidth);
+            }
+            return builder
                     .withCustomTimePrecision(timeMeter)
                     .build();
         }
+
     },
     LOCAL_SYNCHRONIZED {
         @Override
-        public Bucket createBucket(AbstractBucketBuilder builder, TimeMeter timeMeter) {
-            return ((LocalBucketBuilder) builder)
+        public Bucket createBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
+            LocalBucketBuilder builder = Bucket.builder();
+            for (Bandwidth bandwidth : configuration.getBandwidths()) {
+                builder.addLimit(bandwidth);
+            }
+            return builder
                     .withCustomTimePrecision(timeMeter)
                     .withSynchronizationStrategy(SynchronizationStrategy.SYNCHRONIZED)
                     .build();
         }
+
     },
     LOCAL_UNSAFE {
         @Override
-        public Bucket createBucket(AbstractBucketBuilder builder, TimeMeter timeMeter) {
-            return ((LocalBucketBuilder) builder)
+        public Bucket createBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
+            LocalBucketBuilder builder = Bucket.builder();
+            for (Bandwidth bandwidth : configuration.getBandwidths()) {
+                builder.addLimit(bandwidth);
+            }
+            return builder
                     .withCustomTimePrecision(timeMeter)
                     .withSynchronizationStrategy(SynchronizationStrategy.NONE)
                     .build();
@@ -42,13 +55,84 @@ public enum BucketType {
     },
     GRID {
         @Override
-        public Bucket createBucket(AbstractBucketBuilder builder, TimeMeter timeMeter) {
-            BucketConfiguration configuration = PackageAcessor.buildConfiguration(builder);
-            GridProxyMock gridProxy = new GridProxyMock(timeMeter);
-            return GridBucket.createInitializedBucket(42, configuration, gridProxy, THROW_BUCKET_NOT_FOUND_EXCEPTION);
+        public Bucket createBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
+            ProxyManagerMock<Integer> proxyManager = new ProxyManagerMock<>(timeMeter);
+            return proxyManager.builder()
+                    .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
+                    .build(42, configuration);
+        }
+
+        @Override
+        public AsyncBucketProxy createAsyncBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
+            ProxyManagerMock<Integer> proxyManager = new ProxyManagerMock<>(timeMeter);
+            return proxyManager.asAsync().builder()
+                    .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
+                    .build(42, configuration);
+        }
+    },
+    GRID_WITH_BATCHING_OPTIMIZATION {
+        @Override
+        public Bucket createBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
+            ProxyManagerMock<Integer> proxyManager = new ProxyManagerMock<>(timeMeter);
+            return proxyManager.builder()
+                    .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
+                    .withOptimization(Optimizations.batching())
+                    .build(42, configuration);
+        }
+
+        @Override
+        public AsyncBucketProxy createAsyncBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
+            ProxyManagerMock<Integer> proxyManager = new ProxyManagerMock<>(timeMeter);
+            return proxyManager.asAsync().builder()
+                    .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
+                    .withOptimization(Optimizations.batching())
+                    .build(42, configuration);
+        }
+    },
+    COMPARE_AND_SWAP {
+        @Override
+        public Bucket createBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
+            CompareAndSwapBasedProxyManagerMock<Integer> proxyManager = new CompareAndSwapBasedProxyManagerMock<>(ClientSideConfig.getDefault().withClientClock(timeMeter));
+            return proxyManager.builder()
+                    .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
+                    .build(42, configuration);
+        }
+
+        @Override
+        public AsyncBucketProxy createAsyncBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
+            CompareAndSwapBasedProxyManagerMock<Integer> proxyManager = new CompareAndSwapBasedProxyManagerMock<>(ClientSideConfig.getDefault().withClientClock(timeMeter));
+            return proxyManager.asAsync().builder()
+                .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
+                .build(42, configuration);
+        }
+    },
+    SELECT_FOR_UPDATE {
+        @Override
+        public Bucket createBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
+            LockBasedProxyManagerMock<Integer> proxyManager = new LockBasedProxyManagerMock<>(ClientSideConfig.getDefault().withClientClock(timeMeter));
+            return proxyManager.builder()
+                    .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
+                    .build(42, configuration);
         }
     };
 
-    abstract public Bucket createBucket(AbstractBucketBuilder builder, TimeMeter timeMeter);
+    abstract public Bucket createBucket(BucketConfiguration configuration, TimeMeter timeMeter);
+
+    public Bucket createBucket(BucketConfiguration configuration) {
+        return createBucket(configuration, TimeMeter.SYSTEM_MILLISECONDS);
+    }
+
+    public AsyncBucketProxy createAsyncBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
+        Bucket bucket = createBucket(configuration, timeMeter);
+        return AsyncBucketProxyAdapter.fromSync(bucket);
+    }
+
+    public AsyncBucketProxy createAsyncBucket(BucketConfiguration configuration) {
+        return createAsyncBucket(configuration, TimeMeter.SYSTEM_MILLISECONDS);
+    }
+
+    public boolean isLocal() {
+        return this == LOCAL_LOCK_FREE || this == LOCAL_SYNCHRONIZED || this == LOCAL_UNSAFE;
+    }
 
 }

@@ -17,58 +17,37 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-
 package io.github.bucket4j.grid.hazelcast;
 
 import com.hazelcast.map.EntryProcessor;
-import io.github.bucket4j.grid.GridBucketState;
-import io.github.bucket4j.serialization.DeserializationAdapter;
-import io.github.bucket4j.serialization.SerializationAdapter;
-import io.github.bucket4j.serialization.SerializationHandle;
+import io.github.bucket4j.util.ComparableByContent;
 
-import java.io.IOException;
-import java.io.Serializable;
+import java.util.Arrays;
 import java.util.Map;
 
-
-public class SimpleBackupProcessor<K extends Serializable> implements EntryProcessor<K, GridBucketState, Object> {
+public class SimpleBackupProcessor<K> implements EntryProcessor<K, byte[], byte[]>, ComparableByContent<SimpleBackupProcessor> {
 
     private static final long serialVersionUID = 1L;
 
-    private final GridBucketState state;
+    private final byte[] state;
 
-    public SimpleBackupProcessor(GridBucketState state) {
+    public SimpleBackupProcessor(byte[] state) {
         this.state = state;
     }
 
+    public byte[] getState() {
+        return state;
+    }
+
     @Override
-    public Object process(Map.Entry<K, GridBucketState> entry) {
+    public boolean equalsByContent(SimpleBackupProcessor other) {
+        return Arrays.equals(state, other.state);
+    }
+
+    @Override
+    public byte[] process(Map.Entry<K, byte[]> entry) {
         entry.setValue(state);
         return null; // return value from backup processor is ignored, see https://github.com/hazelcast/hazelcast/pull/14995
     }
-
-    public static final SerializationHandle<SimpleBackupProcessor<?>> SERIALIZATION_HANDLE = new SerializationHandle<SimpleBackupProcessor<?>>() {
-
-        @Override
-        public <I> SimpleBackupProcessor<?> deserialize(DeserializationAdapter<I> adapter, I input) throws IOException {
-            GridBucketState state = adapter.readObject(input, GridBucketState.class);
-            return new SimpleBackupProcessor<>(state);
-        }
-
-        @Override
-        public <O> void serialize(SerializationAdapter<O> adapter, O output, SimpleBackupProcessor<?> processor) throws IOException {
-            adapter.writeObject(output, processor.state);
-        }
-
-        @Override
-        public int getTypeId() {
-            return 20;
-        }
-
-        @Override
-        public Class<SimpleBackupProcessor<?>> getSerializedType() {
-            return (Class) SimpleBackupProcessor.class;
-        }
-    };
 
 }

@@ -1,0 +1,17 @@
+=== Bucket4j {revnumber} release notes
+Release `{revnumber}` is addressed for redesign of distributed facilities
+
+.The major issues in release scope are following:
+* https://github.com/vladimir-bukhtoyarov/bucket4j/issues/90[#90 Adopt distributed version Bucket4j for huge request rate on single key]
+* https://github.com/vladimir-bukhtoyarov/bucket4j/issues/18[#18 Support for none-jcache based backends like Redis and Relational databases]
+* https://github.com/vladimir-bukhtoyarov/bucket4j/issues/70[#70 Support rolling upgrades]
+* https://github.com/vladimir-bukhtoyarov/bucket4j/issues/69[#69 Migrate documentation from Github pages to Asciidoc]
+
+.Migration guide for basic(non-distributed) functionality
+Backward compatibility for local buckets was not broken. If you do not use distributed features then upgrade will be transparent for you.
+
+NOTE: some API was marked as deprecated, it will be removed in the 2023. Each deprecation note picks to the new API that should be used instead.
+
+.Migration guide for non-distributed functionality
+API for distributed facilities was rewritten a lot, especially the builder API.
+The best migration strategy will be just find documentation for your particular backend http://bucket4j.com/7.0.0/toc.html#distributed-facilities[there] and rewrite the code according instructions.

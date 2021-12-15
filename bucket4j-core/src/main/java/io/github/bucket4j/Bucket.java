@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,61 +19,46 @@
  */
 package io.github.bucket4j;
 
+import io.github.bucket4j.local.LocalBucketBuilder;
+
 /**
  * Performs rate limiting using algorithm based on top of ideas of <a href="https://en.wikipedia.org/wiki/Token_bucket">Token Bucket</a>.
- * <p>
- * Use following links for further details:
- * <ul>
- * <li><a href="https://github.com/vladimir-bukhtoyarov/bucket4j/blob/4.0/doc-pages/basic-usage.md">Basic example of usage</a></li>
- * <li><a href="https://github.com/vladimir-bukhtoyarov/bucket4j/blob/4.0/doc-pages/advanced-usage.md">Advanced examples of usage</a></li>
- * </ul>
  */
 public interface Bucket {
 
     /**
-     * Returns the {@link BlockingBucket} view of this bucket, that provides operations which are able to block caller thread.
+     * Creates the new builder of in-memory buckets.
      *
-     * @return the view to bucket that can be used as scheduler
+     * @return new instance of {@link LocalBucketBuilder}
      */
-    BlockingBucket asScheduler();
+    static LocalBucketBuilder builder() {
+        return new LocalBucketBuilder();
+    }
 
     /**
-     * Returns the verbose view of this bucket.
+     * Returns the blocking API for this bucket, that provides operations which are able to block caller thread in case of lack of tokens.
+     *
+     * @return the blocking API for this bucket.
+     *
+     * @see BlockingBucket
+     */
+    BlockingBucket asBlocking();
+
+    /**
+     * Returns the scheduling API for this bucket, that provides operations which can delay user operation via {@link java.util.concurrent.ScheduledExecutorService} in case of lack of tokens.
+     *
+     * @return the scheduling API for this bucket.
+     *
+     * @see SchedulingBucket
+     */
+    SchedulingBucket asScheduler();
+
+    /**
+     * Returns the verbose API for this bucket.
+     *
+     * @return the verbose API for this bucket.
      */
     VerboseBucket asVerbose();
-
-    /**
-     * Describes whether or not this bucket supports asynchronous mode.
-     *
-     * <p>If asynchronous mode is  not supported any attempt to call {@link #asAsync()} will fail with {@link UnsupportedOperationException}
-     *
-     * @return true if this extension supports asynchronous mode.
-     */
-    boolean isAsyncModeSupported();
-
-    /**
-     * Returns asynchronous view of this bucket.
-     *
-     * <p>If asynchronous mode is not supported by particular extension behind this bucket,
-     * then any attempt to call this method will fail with {@link UnsupportedOperationException}.
-     *
-     * @return Asynchronous view of this bucket.
-     *
-     * @throws UnsupportedOperationException if particular extension behind the bucket does not support asynchronous mode.
-     */
-    AsyncBucket asAsync();
-
-    /**
-     * Returns asynchronous view of this bucket that allows to use bucket as async scheduler.
-     *
-     * <p>If asynchronous mode is not supported by particular extension behind this bucket,
-     * then any attempt to call this method will fail with {@link UnsupportedOperationException}.
-     *
-     * @return Asynchronous view of this bucket that allows to use bucket as async scheduler.
-     *
-     * @throws UnsupportedOperationException if particular extension behind the bucket does not support asynchronous mode.
-     */
-    AsyncScheduledBucket asAsyncScheduler();
 
     /**
      * Tries to consume a specified number of tokens from this bucket.
@@ -194,8 +179,8 @@ public interface Bucket {
     /**
      * Returns amount of available tokens in this bucket.
 
-     * <p> This method designed to be used only for monitoring and testing, you should never use this method for business cases,
-     * because available tokens can be changed by concurrent transactions for case of multithreaded/multi-process environment.
+     * <p>
+     *     Typically you should avoid using of this method for, because available tokens can be changed by concurrent transactions for case of multithreaded/multi-process environment.
      *
      * @return amount of available tokens
      */
@@ -214,12 +199,12 @@ public interface Bucket {
      * For example how does replaceConfiguration implementation should bind bandwidths to each other in the following example?
      * <pre>
      * <code>
-     *     Bucket bucket = Bucket4j.builder()
+     *     Bucket bucket = Bucket.builder()
      *                       .addLimit(Bandwidth.simple(10, Duration.ofSeconds(1)))
      *                       .addLimit(Bandwidth.simple(10000, Duration.ofHours(1)))
      *                       .build();
      *     ...
-     *     BucketConfiguration newConfiguration = Bucket4j.configurationBuilder()
+     *     BucketConfiguration newConfiguration = BucketConfiguratiion.builder()
      *                                               .addLimit(Bandwidth.simple(5000, Duration.ofHours(1)))
      *                                               .addLimit(Bandwidth.simple(100, Duration.ofSeconds(10)))
      *                                               .build();
@@ -231,12 +216,12 @@ public interface Bucket {
      * so in case of multiple bandwidth configuratoin replacement code can copy available tokens by bandwidth ID. So it is better to rewrite code above as following:
      * <pre>
      * <code>
-     * Bucket bucket = Bucket4j.builder()
+     * Bucket bucket = Bucket.builder()
      *                            .addLimit(Bandwidth.simple(10, Duration.ofSeconds(1)).withId("technical-limit"))
      *                            .addLimit(Bandwidth.simple(10000, Duration.ofHours(1)).withId("business-limit"))
      *                            .build();
      * ...
-     * BucketConfiguration newConfiguration = Bucket4j.configurationBuilder()
+     * BucketConfiguration newConfiguration = BucketConfiguratiion.builder()
      *                            .addLimit(Bandwidth.simple(5000, Duration.ofHours(1)).withId("business-limit"))
      *                            .addLimit(Bandwidth.simple(100, Duration.ofSeconds(10)).withId("technical-limit"))
      *                            .build();
@@ -267,15 +252,6 @@ public interface Bucket {
      * @param tokensInheritanceStrategy specifies the rules for inheritance of available tokens
      */
      void replaceConfiguration(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy);
-
-    /**
-     * Creates the copy of internal state.
-     *
-     * <p> This method is designed to be used only for monitoring and testing, you should never use this method for business cases.
-     *
-     * @return snapshot of internal state
-     */
-    BucketState createSnapshot();
 
     /**
      * Returns new copy of this bucket instance decorated by {@code listener}.

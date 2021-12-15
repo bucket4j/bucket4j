@@ -5,26 +5,23 @@ import com.hazelcast.config.JoinConfig;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
-import io.github.bucket4j.AbstractDistributedBucketTest;
-import io.github.bucket4j.Bucket;
-import io.github.bucket4j.Bucket4j;
-import io.github.bucket4j.grid.GridBucketState;
-import io.github.bucket4j.grid.ProxyManager;
-import io.github.bucket4j.grid.RecoveryStrategy;
-import io.github.bucket4j.grid.hazelcast.HazelcastBucketBuilder;
+import io.github.bucket4j.distributed.proxy.ClientSideConfig;
+import io.github.bucket4j.grid.hazelcast.HazelcastProxyManager;
+import io.github.bucket4j.distributed.proxy.ProxyManager;
+import io.github.bucket4j.tck.AbstractDistributedBucketTest;
 import org.gridkit.nanocloud.Cloud;
 import org.gridkit.nanocloud.CloudFactory;
 import org.gridkit.nanocloud.VX;
 import org.gridkit.vicluster.ViNode;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Test;
 
 import java.io.Serializable;
+import java.util.UUID;
 
-public class HazelcastTest extends AbstractDistributedBucketTest<HazelcastBucketBuilder, io.github.bucket4j.grid.hazelcast.Hazelcast> {
+public class HazelcastTest extends AbstractDistributedBucketTest<String> {
 
-    private static IMap<String, GridBucketState> map;
+    private static IMap<String, byte[]> map;
     private static Cloud cloud;
     private static ViNode server;
 
@@ -69,30 +66,15 @@ public class HazelcastTest extends AbstractDistributedBucketTest<HazelcastBucket
         }
     }
 
-    @Test(expected = IllegalArgumentException.class)
+
     @Override
-    public void testThatImpossibleToPassNullCacheToProxyManagerConstructor() {
-        Bucket4j.extension(getExtensionClass()).proxyManagerForMap(null);
+    protected ProxyManager<String> getProxyManager() {
+        return new HazelcastProxyManager<>(map, ClientSideConfig.getDefault());
     }
 
     @Override
-    protected Class<io.github.bucket4j.grid.hazelcast.Hazelcast> getExtensionClass() {
-        return io.github.bucket4j.grid.hazelcast.Hazelcast.class;
-    }
-
-    @Override
-    protected Bucket build(HazelcastBucketBuilder builder, String key, RecoveryStrategy recoveryStrategy) {
-        return builder.build(map, key, recoveryStrategy);
-    }
-
-    @Override
-    protected ProxyManager<String> newProxyManager() {
-        return Bucket4j.extension(getExtensionClass()).proxyManagerForMap(map);
-    }
-
-    @Override
-    protected void removeBucketFromBackingStorage(String key) {
-        map.remove(key);
+    protected String generateRandomKey() {
+        return UUID.randomUUID().toString();
     }
 
 }

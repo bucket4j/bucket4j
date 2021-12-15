@@ -2,21 +2,20 @@ package io.github.bucket4j.hazelcast;
 
 import com.hazelcast.config.SerializationConfig;
 import com.hazelcast.config.SerializerConfig;
-import com.hazelcast.internal.serialization.InternalSerializationService;
-import com.hazelcast.internal.serialization.impl.DefaultSerializationServiceBuilder;
 import com.hazelcast.internal.nio.BufferObjectDataInput;
 import com.hazelcast.internal.nio.BufferObjectDataOutput;
+import com.hazelcast.internal.serialization.InternalSerializationService;
+import com.hazelcast.internal.serialization.impl.DefaultSerializationServiceBuilder;
 import com.hazelcast.nio.serialization.StreamSerializer;
-import io.github.bucket4j.Bucket4j;
-import io.github.bucket4j.BucketConfiguration;
-import io.github.bucket4j.EqualityUtils;
-import io.github.bucket4j.grid.AddTokensCommand;
-import io.github.bucket4j.grid.GridCommand;
-import io.github.bucket4j.grid.hazelcast.serialization.*;
-import io.github.bucket4j.grid.jcache.ExecuteProcessor;
-import io.github.bucket4j.grid.jcache.InitStateAndExecuteProcessor;
-import io.github.bucket4j.grid.jcache.InitStateProcessor;
-import io.github.bucket4j.serialization.AbstractSerializationTest;
+import io.github.bucket4j.distributed.remote.RemoteCommand;
+import io.github.bucket4j.distributed.remote.Request;
+import io.github.bucket4j.distributed.remote.commands.AddTokensCommand;
+import io.github.bucket4j.distributed.versioning.Versions;
+import io.github.bucket4j.grid.hazelcast.HazelcastEntryProcessor;
+import io.github.bucket4j.grid.hazelcast.SimpleBackupProcessor;
+import io.github.bucket4j.grid.hazelcast.serialization.HazelcastEntryProcessorSerializer;
+import io.github.bucket4j.grid.hazelcast.serialization.SimpleBackupProcessorSerializer;
+import io.github.bucket4j.util.ComparableByContent;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -24,49 +23,49 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import static io.github.bucket4j.Bandwidth.simple;
-import static java.time.Duration.ofSeconds;
+import static org.junit.Assert.assertTrue;
 
-public class HazelcastSerializerTest extends AbstractSerializationTest {
+
+public class HazelcastSerializerTest {
 
     private InternalSerializationService serializationService;
-    private Map<Class<?>, HazelcastSerializer<?>> serializerByClass = new HashMap<>();
-
-    static {
-        EqualityUtils.registerComparator(ExecuteProcessor.class, (processor1, processor2) -> {
-            return EqualityUtils.equals(processor1.getTargetCommand(), processor2.getTargetCommand());
-        });
-
-        EqualityUtils.registerComparator(InitStateProcessor.class, (processor1, processor2) -> {
-            return EqualityUtils.equals(processor1.getConfiguration(), processor2.getConfiguration());
-        });
-
-        EqualityUtils.registerComparator(InitStateAndExecuteProcessor.class, (processor1, processor2) -> {
-            return EqualityUtils.equals(processor1.getTargetCommand(), processor2.getTargetCommand())
-                    && EqualityUtils.equals(processor1.getConfiguration(), processor2.getConfiguration());
-        });
-    }
+    private Map<Class<?>, StreamSerializer<?>> serializerByClass = new HashMap<>();
 
     @Before
     public void setup() {
         SerializationConfig serializationConfig = new SerializationConfig();
-        for (HazelcastSerializer serializer : HazelcastSerializer.getAllSerializers(1000)) {
-            serializationConfig.addSerializerConfig(
-                new SerializerConfig()
-                    .setImplementation(serializer)
-                    .setTypeClass(serializer.getSerializableType())
-            );
 
-            serializerByClass.put(serializer.getSerializableType(), serializer);
-        }
+        HazelcastEntryProcessorSerializer processorSerializer = new HazelcastEntryProcessorSerializer(1000);
+        serializationConfig.addSerializerConfig(
+                new SerializerConfig()
+                        .setImplementation(processorSerializer)
+                        .setTypeClass(processorSerializer.getSerializableType())
+        );
+
+        SimpleBackupProcessorSerializer backupSerializer = new SimpleBackupProcessorSerializer(1001);
+        serializationConfig.addSerializerConfig(
+                new SerializerConfig()
+                        .setImplementation(backupSerializer)
+                        .setTypeClass(backupSerializer.getSerializableType())
+        );
+
+        serializerByClass.put(processorSerializer.getSerializableType(), processorSerializer);
+        serializerByClass.put(backupSerializer.getSerializableType(), backupSerializer);
 
         this.serializationService = new DefaultSerializationServiceBuilder()
                 .setConfig(serializationConfig)
                 .build();
     }
 
-    @Override
-    protected <T> T serializeAndDeserialize(T original) {
+    @Test
+    public void tetsSerializationOfEntryProcessors() {
+        RemoteCommand<?> command = new AddTokensCommand(42);
+        Request request = new Request(command, Versions.getLatest(), null);
+        testSerialization(new HazelcastEntryProcessor(request));
+        testSerialization(new SimpleBackupProcessor(new byte[] {1,2,3}));
+    }
+
+    private <T> T serializeAndDeserialize(T original) {
         try {
             StreamSerializer<T> serializer = (StreamSerializer<T>) serializerByClass.get(original.getClass());
 
@@ -80,16 +79,9 @@ public class HazelcastSerializerTest extends AbstractSerializationTest {
         }
     }
 
-    @Test
-    public void tetsSerializationOfEntryProcessors() {
-        BucketConfiguration configuration = Bucket4j.configurationBuilder()
-                .addLimit(simple(10, ofSeconds(1)))
-                .build();
-        GridCommand command = new AddTokensCommand(42);
-
-        testSerialization(new InitStateProcessor<>(configuration));
-        testSerialization(new ExecuteProcessor<>(command));
-        testSerialization(new InitStateAndExecuteProcessor(command, configuration));
+    private void testSerialization(Object object) {
+        Object object2 = serializeAndDeserialize(object);
+        assertTrue(ComparableByContent.equals(object, object2));
     }
 
 }

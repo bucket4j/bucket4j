@@ -7,7 +7,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.github.vladimir-bukhtoyarov</groupId>
-    <version>6.4.1</version>
+    <version>7.0.0</version>
     <artifactId>bucket4j-parent</artifactId>
     <packaging>pom</packaging>
     <name>bucket4j-parent</name>
@@ -26,6 +26,13 @@
         </repository>
     </distributionManagement>
 
+    <repositories>
+        <repository>
+            <id>jcenter</id>
+            <url>https://jcenter.bintray.com/</url>
+        </repository>
+    </repositories>
+
     <licenses>
         <license>
             <name>The Apache Software License, Version 2.0</name>
@@ -40,8 +47,11 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
+        <VERSION-FOR-REVAPI-COMPARISION>4.10.0</VERSION-FOR-REVAPI-COMPARISION>
+
         <benchmark.jar.name>benchmarks</benchmark.jar.name>
         <argLine/>
+        <maven.build.timestamp.format>yyyy-MM-dd HH</maven.build.timestamp.format>
         <jcache.version>1.0.0</jcache.version>
         <ignite.version>2.10.0</ignite.version>
 
@@ -49,10 +59,13 @@
         <hazelcast.latest.version>4.2</hazelcast.latest.version>
 
         <infinispan-8.version>8.2.0.Final</infinispan-8.version>
-        <infinispan.latest.version>10.1.0.CR1</infinispan.latest.version>
+        <infinispan.latest.version>11.0.1.Final</infinispan.latest.version>
+        <ehcache.version>3.8.1</ehcache.version>
 
         <testcontainers.version>1.15.1</testcontainers.version>
         <lettuce-version>5.0.2.RELEASE</lettuce-version>
+        <jedis.version>2.9.0</jedis.version>
+        <redisson.version>3.11.5</redisson.version>
     </properties>
 
     <scm>
@@ -119,6 +132,7 @@
                 <configuration>
                     <source>1.8</source>
                     <target>1.8</target>
+                    <compilerArgument>-parameters</compilerArgument>
                 </configuration>
             </plugin>
             <plugin>
@@ -155,6 +169,49 @@
                         <phase>clean</phase>
                         <goals>
                             <goal>clean</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <version>3.0.0-M3</version>
+                <configuration>
+                    <rules>
+                        <banDuplicatePomDependencyVersions/>
+                        <dependencyConvergence/>
+                    </rules>
+                    <fail>false</fail>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.revapi</groupId>
+                <artifactId>revapi-maven-plugin</artifactId>
+                <version>0.12.1</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.revapi</groupId>
+                        <artifactId>revapi-java</artifactId>
+                        <version>0.22.0</version>
+                    </dependency>
+                </dependencies>
+                <configuration>
+                    <alwaysCheckForReleaseVersion>false</alwaysCheckForReleaseVersion>
+                    <oldArtifacts>
+                        <artifact>${project.groupId}:${project.artifactId}:${VERSION-FOR-REVAPI-COMPARISION}</artifact>
+                    </oldArtifacts>
+                    <newArtifacts>
+                        <artifact>${project.groupId}:${project.artifactId}:${project.version}</artifact>
+                    </newArtifacts>
+                    <analysisConfiguration>
+                    </analysisConfiguration>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>verify-compatibility</id>
+                        <goals>
+                            <goal>report</goal>
                         </goals>
                     </execution>
                 </executions>
@@ -247,6 +304,9 @@
                                 </goals>
                             </execution>
                         </executions>
+                        <configuration>
+                            <additionalOptions>-Xdoclint:none</additionalOptions>
+                        </configuration>
                     </plugin>
                 </plugins>
             </build>
@@ -331,6 +391,18 @@
             <groupId>org.gridkit.lab</groupId>
             <artifactId>nanocloud</artifactId>
             <version>0.8.16</version>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-api</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>1.2.3</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

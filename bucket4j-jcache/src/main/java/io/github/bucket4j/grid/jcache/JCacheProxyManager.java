@@ -17,51 +17,182 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
+/*
+ *
+ * Copyright 2015-2018 Vladimir Bukhtoyarov
+ *
+ *       Licensed under the Apache License, Version 2.0 (the "License");
+ *       you may not use this file except in compliance with the License.
+ *       You may obtain a copy of the License at
+ *
+ *             http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *      Unless required by applicable law or agreed to in writing, software
+ *      distributed under the License is distributed on an "AS IS" BASIS,
+ *      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *      See the License for the specific language governing permissions and
+ *      limitations under the License.
+ */
 
 package io.github.bucket4j.grid.jcache;
 
-import io.github.bucket4j.Bucket;
-import io.github.bucket4j.BucketConfiguration;
-import io.github.bucket4j.grid.ProxyManager;
-import io.github.bucket4j.grid.GridBucket;
-import io.github.bucket4j.grid.GridBucketState;
-import io.github.bucket4j.grid.GridProxy;
+import io.github.bucket4j.distributed.proxy.AbstractProxyManager;
+import io.github.bucket4j.distributed.proxy.ClientSideConfig;
+import io.github.bucket4j.distributed.remote.*;
+import io.github.bucket4j.distributed.serialization.InternalSerializationHelper;
 
 import javax.cache.Cache;
+import javax.cache.CacheManager;
+import javax.cache.processor.EntryProcessor;
+import javax.cache.processor.MutableEntry;
+import javax.cache.spi.CachingProvider;
 import java.io.Serializable;
-import java.util.Optional;
-import java.util.function.Supplier;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 /**
- * JCache specific implementation of {@link ProxyManager}
- *
- * @param <K> type of key for buckets
+ * The extension of Bucket4j library addressed to support <a href="https://www.jcp.org/en/jsr/detail?id=107">JCache API (JSR 107)</a> specification.
  */
-public class JCacheProxyManager<K extends Serializable> implements ProxyManager<K> {
+public class JCacheProxyManager<K> extends AbstractProxyManager<K> {
 
-    private final GridProxy<K> gridProxy;
+    private static final Map<String, String> incompatibleProviders = Collections.emptyMap();
+    static {
+        // incompatibleProviders.put("org.infinispan", " use module bucket4j-infinispan directly");
+    }
 
-    JCacheProxyManager(Cache<K, GridBucketState> cache) {
-        if (cache == null) {
-            throw new IllegalArgumentException("cache must not be null");
+    private static final Set<String> preferLambdaStyleProviders = Collections.singleton("org.infinispan");
+
+    private final Cache<K, byte[]> cache;
+    private final boolean preferLambdaStyle;
+
+    public JCacheProxyManager(Cache<K, byte[]> cache) {
+        this(cache, ClientSideConfig.getDefault());
+    }
+
+    public JCacheProxyManager(Cache<K, byte[]> cache, ClientSideConfig clientSideConfig) {
+        super(clientSideConfig);
+        checkCompatibilityWithProvider(cache);
+        this.cache = Objects.requireNonNull(cache);
+        this.preferLambdaStyle = preferLambdaStyle(cache);
+    }
+
+    @Override
+    public <T> CommandResult<T> execute(K key, Request<T> request) {
+        EntryProcessor<K, byte[], byte[]> entryProcessor = preferLambdaStyle? createLambdaProcessor(request) : new BucketProcessor<>(request);
+        byte[] resultBytes = cache.invoke(key, entryProcessor);
+        return InternalSerializationHelper.deserializeResult(resultBytes, request.getBackwardCompatibilityVersion());
+    }
+
+    @Override
+    public void removeProxy(K key) {
+        cache.remove(key);
+    }
+
+    @Override
+    public boolean isAsyncModeSupported() {
+        return false;
+    }
+
+    @Override
+    public <T> CompletableFuture<CommandResult<T>> executeAsync(K key, Request<T> request) {
+        // because JCache does not specify async API
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    protected CompletableFuture<Void> removeAsync(K key) {
+        // because JCache does not specify async API
+        throw new UnsupportedOperationException();
+    }
+
+    private void checkCompatibilityWithProvider(Cache<K, byte[]> cache) {
+        CacheManager cacheManager = cache.getCacheManager();
+        if (cacheManager == null) {
+            return;
         }
-        this.gridProxy = new JCacheProxy<>(cache);
+
+        CachingProvider cachingProvider = cacheManager.getCachingProvider();
+        if (cachingProvider == null) {
+            return;
+        }
+
+        String providerClassName = cachingProvider.getClass().getName();
+        incompatibleProviders.forEach((providerPrefix, recommendation) -> {
+            if (providerClassName.startsWith(providerPrefix)) {
+                String message = "The Cache provider " + providerClassName + " is incompatible with Bucket4j, " + recommendation;
+                throw new UnsupportedOperationException(message);
+            }
+        });
     }
 
-    @Override
-    public Bucket getProxy(K key, Supplier<BucketConfiguration> supplier) {
-        return GridBucket.createLazyBucket(key, supplier, gridProxy);
+    private boolean preferLambdaStyle(Cache<K, byte[]> cache) {
+        CacheManager cacheManager = cache.getCacheManager();
+        if (cacheManager == null) {
+            return false;
+        }
+
+        CachingProvider cachingProvider = cacheManager.getCachingProvider();
+        if (cachingProvider == null) {
+            return false;
+        }
+
+        String providerClassName = cachingProvider.getClass().getName();
+        for (String providerPrefix : preferLambdaStyleProviders) {
+            if (providerClassName.startsWith(providerPrefix)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
-    @Override
-    public Optional<Bucket> getProxy(K key) {
-        return getProxyConfiguration(key)
-                .map(configuration -> GridBucket.createLazyBucket(key, () -> configuration, gridProxy));
+    public <T> EntryProcessor<K, byte[], byte[]> createLambdaProcessor(Request<T> request) {
+        byte[] serializedRequest = InternalSerializationHelper.serializeRequest(request);
+        return  (Serializable & EntryProcessor<K, byte[], byte[]>) (mutableEntry, objects)
+                -> new JCacheTransaction(mutableEntry, serializedRequest).execute();
     }
 
-    @Override
-    public Optional<BucketConfiguration> getProxyConfiguration(K key) {
-        return gridProxy.getConfiguration(key);
+    private static class BucketProcessor<K, T> implements Serializable, EntryProcessor<K, byte[], byte[]> {
+
+        private static final long serialVersionUID = 911;
+
+        private final byte[] serializedRequest;
+
+        public BucketProcessor(Request<T> request) {
+            this.serializedRequest = InternalSerializationHelper.serializeRequest(request);
+        }
+
+        @Override
+        public byte[] process(MutableEntry<K, byte[]> mutableEntry, Object... arguments) {
+            return new JCacheTransaction(mutableEntry, serializedRequest).execute();
+        }
+
+    }
+
+    private static class JCacheTransaction extends AbstractBinaryTransaction {
+
+        private final MutableEntry<?, byte[]> targetEntry;
+
+        private JCacheTransaction(MutableEntry<?, byte[]> targetEntry, byte[] requestBustes) {
+            super(requestBustes);
+            this.targetEntry = targetEntry;
+        }
+
+        @Override
+        public boolean exists() {
+            return targetEntry.exists();
+        }
+
+        @Override
+        protected byte[] getRawState() {
+            return targetEntry.getValue();
+        }
+
+        @Override
+        protected void setRawState(byte[] stateBytes) {
+            targetEntry.setValue(stateBytes);
+        }
+
     }
 
 }

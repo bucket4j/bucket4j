@@ -1,0 +1,32 @@
+//=== The design
+//
+//
+//
+//When rate-limiter
+//
+//==== Vocubalarity
+//Distributed use-case of Bucket4j brings following entities that need to added to vocubalarity in additionaly to already mentioned:
+//
+//
+
+// BucketProxy Provides a light-weight proxy to bucket which state actually stored in external storage, like in-memory jvm or relational database. Is represented by
+
+//=== Concurrency Guarantees
+//**Question:** is the provided JCache integration safe across multiple JVMs? Does it ensure that two nodes creating a bucket simultaneously on a given Cache<K, V> will only actually create one single bucket (without resetting a previously created one with the same key)?
+//**Answer:** Yes. JCache integration is safe for multi node environment, Bucket4j never replaces bucket which already exists.
+//This behavior is guaranteed by **putIfAbsent** method contract of [javax.cache.Cache](http://static.javadoc.io/javax.cache/cache-api/1.0.0/javax/cache/Cache.html) class.
+//
+//**Question:** Does ProxyManager store buckets internally, could be this a reason of OutOfMemoryError?
+//**Answer:** No. ProxyManager stores nothing about buckets which it returns, the buckets actually stored in in-memory GRID outside client JVM.
+//Think about proxy returned by ``ProxyManager#getBucket`` just about very cheap pointer to data which actually stored somewhere outside.
+//So, independently of count of buckets ProxyManager will never be a reason of crash or extreme memory consumption.
+//
+//**Question:** what will happen if bucket state will be lost in the GRID  because of split-brain, human mistake or pragmatically errors introduced by GRID vendor?
+//**Answer:** ProxyManager automatically detect this kind of situations and save bucket yet another time, to reconstruct bucket it uses provided configuration supplier.
+//Reconstructed bucket remembers nothing about previously consumed tokens, so limit can be exceeded in this kind of GRID failures.
+//
+//**Question:** should I always work with JCache through ProxyManager?
+//**Answer:** It depends. When you have deal with potentially huge and unpredictable amount of buckets, it is always better to use ProxyManager.
+//ProxyManager protects you from common performance pitfalls(like described in https://github.com/vladimir-bukhtoyarov/bucket4j/issues/26[this issue]).
+//But when you have deal with one or few buckets which well known at development time, then it would be better to avoid ProxyManager
+//and work directly with [GridBucket](https://github.com/vladimir-bukhtoyarov/bucket4j/blob/2.0/bucket4j-core/src/main/java/io/github/bucket4j/grid/GridBucket.java) as described in the next example.

@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,7 +23,6 @@ package io.github.bucket4j.local;
 
 import io.github.bucket4j.*;
 
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -35,12 +34,12 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket {
     private BucketState state;
     private final Lock lock;
 
-    public SynchronizedBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
-        this(configuration, timeMeter, new ReentrantLock());
+    public SynchronizedBucket(BucketConfiguration configuration, MathType mathType, TimeMeter timeMeter) {
+        this(configuration, mathType, timeMeter, new ReentrantLock());
     }
 
-    SynchronizedBucket(BucketConfiguration configuration, TimeMeter timeMeter, Lock lock) {
-        this(BucketListener.NOPE, configuration, timeMeter, lock, BucketState.createInitialState(configuration, timeMeter.currentTimeNanos()));
+    SynchronizedBucket(BucketConfiguration configuration, MathType mathType, TimeMeter timeMeter, Lock lock) {
+        this(BucketListener.NOPE, configuration, timeMeter, lock, BucketState.createInitialState(configuration, mathType, timeMeter.currentTimeNanos()));
     }
 
     private SynchronizedBucket(BucketListener listener, BucketConfiguration configuration, TimeMeter timeMeter, Lock lock, BucketState initialState) {
@@ -55,11 +54,6 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket {
     @Override
     public Bucket toListenable(BucketListener listener) {
         return new SynchronizedBucket(listener, configuration, timeMeter, lock, state);
-    }
-
-    @Override
-    public boolean isAsyncModeSupported() {
-        return true;
     }
 
     @Override
@@ -106,10 +100,13 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket {
             long availableToConsume = state.getAvailableTokens(bandwidths);
             if (tokensToConsume > availableToConsume) {
                 long nanosToWaitForRefill = state.calculateDelayNanosAfterWillBePossibleToConsume(bandwidths, tokensToConsume, currentTimeNanos);
-                return ConsumptionProbe.rejected(availableToConsume, nanosToWaitForRefill);
+                long nanosToWaitForReset = state.calculateFullRefillingTime(bandwidths, currentTimeNanos);
+                return ConsumptionProbe.rejected(availableToConsume, nanosToWaitForRefill, nanosToWaitForReset);
             }
             state.consume(bandwidths, tokensToConsume);
-            return ConsumptionProbe.consumed(availableToConsume - tokensToConsume);
+            long remainingTokens = availableToConsume - tokensToConsume;
+            long nanosToWaitForReset = state.calculateFullRefillingTime(bandwidths, currentTimeNanos);
+            return ConsumptionProbe.consumed(remainingTokens, nanosToWaitForReset);
         } finally {
             lock.unlock();
         }
@@ -213,11 +210,13 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket {
             long availableToConsume = state.getAvailableTokens(bandwidths);
             if (tokensToConsume > availableToConsume) {
                 long nanosToWaitForRefill = state.calculateDelayNanosAfterWillBePossibleToConsume(bandwidths, tokensToConsume, currentTimeNanos);
-                ConsumptionProbe probe = ConsumptionProbe.rejected(availableToConsume, nanosToWaitForRefill);
+                long nanosToWaitForReset = state.calculateFullRefillingTime(bandwidths, currentTimeNanos);
+                ConsumptionProbe probe = ConsumptionProbe.rejected(availableToConsume, nanosToWaitForRefill, nanosToWaitForReset);
                 return new VerboseResult<>(currentTimeNanos, probe, configuration, state.copy());
             }
             state.consume(bandwidths, tokensToConsume);
-            ConsumptionProbe probe = ConsumptionProbe.consumed(availableToConsume - tokensToConsume);
+            long nanosToWaitForReset = state.calculateFullRefillingTime(bandwidths, currentTimeNanos);
+            ConsumptionProbe probe = ConsumptionProbe.consumed(availableToConsume - tokensToConsume, nanosToWaitForReset);
             return new VerboseResult<>(currentTimeNanos, probe, configuration, state.copy());
         } finally {
             lock.unlock();
@@ -366,120 +365,13 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket {
     }
 
     @Override
-    protected CompletableFuture<Boolean> tryConsumeAsyncImpl(long tokensToConsume) {
-        boolean result = tryConsumeImpl(tokensToConsume);
-        return CompletableFuture.completedFuture(result);
-    }
-
-    @Override
-    protected CompletableFuture<Void> addTokensAsyncImpl(long tokensToAdd) {
-        addTokensImpl(tokensToAdd);
-        return CompletableFuture.completedFuture(null);
-    }
-
-    @Override
-    protected CompletableFuture<Void> forceAddTokensAsyncImpl(long tokensToAdd) {
-        forceAddTokensImpl(tokensToAdd);
-        return CompletableFuture.completedFuture(null);
-    }
-
-    @Override
-    protected CompletableFuture<ConsumptionProbe> tryConsumeAndReturnRemainingTokensAsyncImpl(long tokensToConsume) {
-        ConsumptionProbe result = tryConsumeAndReturnRemainingTokensImpl(tokensToConsume);
-        return CompletableFuture.completedFuture(result);
-    }
-
-    @Override
-    protected CompletableFuture<EstimationProbe> estimateAbilityToConsumeAsyncImpl(long tokensToEstimate) {
-        EstimationProbe result = estimateAbilityToConsumeImpl(tokensToEstimate);
-        return CompletableFuture.completedFuture(result);
-    }
-
-    @Override
-    protected CompletableFuture<Long> tryConsumeAsMuchAsPossibleAsyncImpl(long limit) {
-        long result = consumeAsMuchAsPossibleImpl(limit);
-        return CompletableFuture.completedFuture(result);
-    }
-
-    @Override
-    protected CompletableFuture<Long> reserveAndCalculateTimeToSleepAsyncImpl(long tokensToConsume, long maxWaitTimeNanos) {
-        long result = reserveAndCalculateTimeToSleepImpl(tokensToConsume, maxWaitTimeNanos);
-        return CompletableFuture.completedFuture(result);
-    }
-
-    @Override
-    protected CompletableFuture<Nothing> replaceConfigurationAsyncImpl(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy) {
-        replaceConfigurationImpl(newConfiguration, tokensInheritanceStrategy);
-        return CompletableFuture.completedFuture(Nothing.INSTANCE);
-    }
-
-    @Override
-    protected CompletableFuture<Long> consumeIgnoringRateLimitsAsyncImpl(long tokensToConsume) {
-        long result = consumeIgnoringRateLimitsImpl(tokensToConsume);
-        return CompletableFuture.completedFuture(result);
-    }
-
-    @Override
-    protected CompletableFuture<VerboseResult<Long>> tryConsumeAsMuchAsPossibleVerboseAsyncImpl(long limit) {
-        VerboseResult<Long> result = consumeAsMuchAsPossibleVerboseImpl(limit);
-        return CompletableFuture.completedFuture(result);
-    }
-
-    @Override
-    protected CompletableFuture<VerboseResult<Boolean>> tryConsumeVerboseAsyncImpl(long tokensToConsume) {
-        VerboseResult<Boolean> result = tryConsumeVerboseImpl(tokensToConsume);
-        return CompletableFuture.completedFuture(result);
-    }
-
-    @Override
-    protected CompletableFuture<VerboseResult<ConsumptionProbe>> tryConsumeAndReturnRemainingTokensVerboseAsyncImpl(long tokensToConsume) {
-        VerboseResult<ConsumptionProbe> result = tryConsumeAndReturnRemainingTokensVerboseImpl(tokensToConsume);
-        return CompletableFuture.completedFuture(result);
-    }
-
-    @Override
-    protected CompletableFuture<VerboseResult<EstimationProbe>> estimateAbilityToConsumeVerboseAsyncImpl(long tokensToEstimate) {
-        VerboseResult<EstimationProbe> result = estimateAbilityToConsumeVerboseImpl(tokensToEstimate);
-        return CompletableFuture.completedFuture(result);
-    }
-
-    @Override
-    protected CompletableFuture<VerboseResult<Nothing>> addTokensVerboseAsyncImpl(long tokensToAdd) {
-        VerboseResult<Nothing> result = addTokensVerboseImpl(tokensToAdd);
-        return CompletableFuture.completedFuture(result);
-    }
-
-    @Override
-    protected CompletableFuture<VerboseResult<Nothing>> forceAddTokensVerboseAsyncImpl(long tokensToAdd) {
-        VerboseResult<Nothing> result = forceAddTokensVerboseImpl(tokensToAdd);
-        return CompletableFuture.completedFuture(result);
-    }
-
-    @Override
-    protected CompletableFuture<VerboseResult<Nothing>> replaceConfigurationVerboseAsyncImpl(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy) {
-        VerboseResult<Nothing> result = replaceConfigurationVerboseImpl(newConfiguration, tokensInheritanceStrategy);
-        return CompletableFuture.completedFuture(result);
-    }
-
-    @Override
-    protected CompletableFuture<VerboseResult<Long>> consumeIgnoringRateLimitsVerboseAsyncImpl(long tokensToConsume) {
-        VerboseResult<Long> result = consumeIgnoringRateLimitsVerboseImpl(tokensToConsume);
-        return CompletableFuture.completedFuture(result);
-    }
-
-    @Override
-    public BucketState createSnapshot() {
-        lock.lock();
-        try {
-            return state.copy();
-        } finally {
-            lock.unlock();
-        }
-    }
-
-    @Override
     public BucketConfiguration getConfiguration() {
         return configuration;
+    }
+
+    @Override
+    public TimeMeter getTimeMeter() {
+        return timeMeter;
     }
 
     @Override

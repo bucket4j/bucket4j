@@ -1,24 +1,21 @@
 import com.tangosol.net.CacheFactory;
 import com.tangosol.net.NamedCache;
-import io.github.bucket4j.AbstractDistributedBucketTest;
-import io.github.bucket4j.Bucket;
-import io.github.bucket4j.Bucket4j;
-import io.github.bucket4j.grid.ProxyManager;
-import io.github.bucket4j.grid.RecoveryStrategy;
-import io.github.bucket4j.grid.coherence.Coherence;
-import io.github.bucket4j.grid.coherence.CoherenceBucketBuilder;
+import io.github.bucket4j.distributed.proxy.ClientSideConfig;
+import io.github.bucket4j.tck.AbstractDistributedBucketTest;
+import io.github.bucket4j.grid.coherence.CoherenceProxyManager;
+import io.github.bucket4j.distributed.proxy.ProxyManager;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Test;
 import org.littlegrid.ClusterMemberGroup;
 import org.littlegrid.ClusterMemberGroupUtils;
 
-import static junit.framework.TestCase.assertEquals;
+import java.util.UUID;
 
-public class CoherenceWithPofSerializationTest extends AbstractDistributedBucketTest<CoherenceBucketBuilder, Coherence> {
+
+public class CoherenceWithPofSerializationTest extends AbstractDistributedBucketTest<String> {
 
     private static ClusterMemberGroup memberGroup;
-    private static NamedCache cache;
+    private static NamedCache<String, byte[]> cache;
 
     @BeforeClass
     public static void prepareCache() throws InterruptedException {
@@ -43,36 +40,14 @@ public class CoherenceWithPofSerializationTest extends AbstractDistributedBucket
         ClusterMemberGroupUtils.shutdownCacheFactoryThenClusterMemberGroups(memberGroup);
     }
 
-    @Test
-    public void testThatCoherenceCanBeStarted() {
-        cache.put("13", "42");
-        assertEquals("42", cache.get("13"));
+    @Override
+    protected ProxyManager<String> getProxyManager() {
+        return new CoherenceProxyManager<>(cache, ClientSideConfig.getDefault());
     }
 
     @Override
-    protected Class<Coherence> getExtensionClass() {
-        return Coherence.class;
-    }
-
-    @Override
-    protected Bucket build(CoherenceBucketBuilder builder, String key, RecoveryStrategy recoveryStrategy) {
-        return builder.build(cache, key, recoveryStrategy);
-    }
-
-    @Override
-    protected ProxyManager<String> newProxyManager() {
-        return Bucket4j.extension(getExtensionClass()).proxyManagerForCache(cache);
-    }
-
-    @Override
-    protected void removeBucketFromBackingStorage(String key) {
-        cache.remove(key);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    @Override
-    public void testThatImpossibleToPassNullCacheToProxyManagerConstructor() {
-        Bucket4j.extension(getExtensionClass()).proxyManagerForCache(null);
+    protected String generateRandomKey() {
+        return UUID.randomUUID().toString();
     }
 
 }

@@ -5,8 +5,15 @@
 
     <groupId>com.github.vladimir-bukhtoyarov</groupId>
     <artifactId>bucket4j</artifactId>
-    <version>6.4.1</version>
+    <version>7.0.0</version>
     <packaging>pom</packaging>
+
+    <parent>
+        <groupId>com.github.vladimir-bukhtoyarov</groupId>
+        <artifactId>bucket4j-parent</artifactId>
+        <version>7.0.0</version>
+        <relativePath>./bucket4j-parent</relativePath>
+    </parent>
 
     <name>bucket4j</name>
 
@@ -17,14 +24,20 @@
         <module>bucket4j-ignite</module>
         <module>bucket4j-infinispan-all</module>
         <module>bucket4j-hazelcast-all</module>
-        <module>experimental</module>
+<!--        <module>experimental</module>-->
         <module>bucket4j-benchmarks</module>
+        <module>bucket4j-examples</module>
+        <module>lincheck-tests</module>
+        <module>bucket4j-dynamodb-sdk-v1</module>
+        <module>bucket4j-redis</module>
         <module>bucket4j-coherence</module>
+        <module>asciidoc</module>
     </modules>
 
     <properties>
-        <skipNexusStagingDeployMojo>true</skipNexusStagingDeployMojo>
-        <maven.deploy.skip>true</maven.deploy.skip>
+<!--        <skipNexusStagingDeployMojo>true</skipNexusStagingDeployMojo>-->
+<!--        <maven.deploy.skip>true</maven.deploy.skip>-->
+        <enforcer.skip>true</enforcer.skip>
     </properties>
 
 </project>

@@ -1,24 +1,27 @@
 
 package io.github.bucket4j
 
-import io.github.bucket4j.grid.GridBucket
-import io.github.bucket4j.local.LocalBucketBuilder
+
+import io.github.bucket4j.distributed.AsyncBucketProxy
+import io.github.bucket4j.mock.ProxyManagerMock
 import io.github.bucket4j.mock.BucketType
-import io.github.bucket4j.mock.GridProxyMock
 import spock.lang.Specification
 import spock.lang.Unroll
+
 import java.time.Duration
 import java.time.Instant
+import java.util.concurrent.CompletableFuture
+import java.util.function.Supplier
 
-import static BucketExceptions.*
-import static io.github.bucket4j.grid.RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION
+import static io.github.bucket4j.BucketExceptions.*
+import static io.github.bucket4j.distributed.proxy.RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION
 
 class DetectionOfIllegalApiUsageSpecification extends Specification {
 
     private static final Duration VALID_PERIOD = Duration.ofMinutes(10)
     private static final long VALID_CAPACITY = 1000
 
-    AbstractBucketBuilder builder = Bucket4j.builder()
+    def builder = Bucket.builder()
 
     @Unroll
     def "Should detect that capacity #capacity is wrong"(long capacity) {
@@ -93,7 +96,7 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
 
     def "Should check that time meter is not null"() {
         when:
-            Bucket4j.builder().withCustomTimePrecision(null)
+            Bucket.builder().withCustomTimePrecision(null)
         then:
             IllegalArgumentException ex = thrown()
             ex.message == nullTimeMeter().message
@@ -101,9 +104,12 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
 
     @Unroll
     def "Should check that listener is not null when decorating bucket with type #bucketType"(BucketType bucketType) {
+        setup:
+            def configuration = BucketConfiguration.builder()
+                    .addLimit(Bandwidth.simple(3, Duration.ofMinutes(1)))
+                    .build()
         when:
-            bucketType.createBucket(Bucket4j.builder().addLimit(Bandwidth.simple(3, Duration.ofMinutes(1))), TimeMeter.SYSTEM_MILLISECONDS)
-                    .toListenable(null)
+            bucketType.createBucket(configuration, TimeMeter.SYSTEM_MILLISECONDS).toListenable(null)
         then:
             IllegalArgumentException ex = thrown()
             ex.message == nullListener().message
@@ -113,7 +119,7 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
 
     def  "Should check that limited bandwidth list is not empty"() {
         setup:
-            def builder = Bucket4j.builder()
+            def builder = Bucket.builder()
         when:
             builder.build()
         then:
@@ -123,7 +129,7 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
 
     def "Should check that tokens to consume should be positive"() {
         setup:
-            def bucket = Bucket4j.builder().addLimit(
+            def bucket = Bucket.builder().addLimit(
                     Bandwidth.simple(VALID_CAPACITY, VALID_PERIOD)
             ).build()
 
@@ -152,13 +158,13 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
             ex.message == nonPositiveTokensToConsume(-1).message
 
         when:
-            bucket.asScheduler().tryConsume(0L, VALID_PERIOD.toNanos(), BlockingStrategy.PARKING)
+            bucket.asBlocking().tryConsume(0L, VALID_PERIOD.toNanos(), BlockingStrategy.PARKING)
         then:
             ex = thrown()
             ex.message == nonPositiveTokensToConsume(0).message
 
         when:
-            bucket.asScheduler().tryConsume(-1, VALID_PERIOD.toNanos(), BlockingStrategy.PARKING)
+            bucket.asBlocking().tryConsume(-1, VALID_PERIOD.toNanos(), BlockingStrategy.PARKING)
         then:
             ex = thrown()
             ex.message == nonPositiveTokensToConsume(-1).message
@@ -166,7 +172,7 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
 
     def "Should detect the high rate of refill"() {
         when:
-           Bucket4j.builder().addLimit(Bandwidth.simple(2, Duration.ofNanos(1)))
+           Bucket.builder().addLimit(Bandwidth.simple(2, Duration.ofNanos(1)))
         then:
             IllegalArgumentException ex = thrown()
             ex.message == tooHighRefillRate(1, 2).message
@@ -198,13 +204,13 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
             Bandwidth bandwidth = Bandwidth.classic(2, refill)
 
         when:
-            Bucket4j.builder().withNanosecondPrecision().addLimit(bandwidth).build()
+            Bucket.builder().withNanosecondPrecision().addLimit(bandwidth).build()
         then:
             IllegalArgumentException ex = thrown()
             ex.message == intervallyAlignedRefillCompatibleOnlyWithWallClock().message
 
         when:
-            Bucket4j.builder().addLimit(bandwidth).withNanosecondPrecision().build()
+            Bucket.builder().addLimit(bandwidth).withNanosecondPrecision().build()
         then:
             ex = thrown()
             ex.message == intervallyAlignedRefillCompatibleOnlyWithWallClock().message
@@ -219,24 +225,24 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
                 .build()
         then:
             IllegalArgumentException ex = thrown()
-            ex.message == "All identifiers must unique. Id: xyz, first index: 0, second index: 1"
+            ex.message == foundTwoBandwidthsWithSameId(0, 1, "xyz").message
         where:
             type << BucketType.values()
     }
 
     def "Should check that time units to wait should be positive"() {
         setup:
-            def bucket = Bucket4j.builder().addLimit(
+            def bucket = Bucket.builder().addLimit(
                     Bandwidth.simple(VALID_CAPACITY, VALID_PERIOD)
             ).build()
         when:
-            bucket.asScheduler().tryConsume(1, 0, BlockingStrategy.PARKING)
+            bucket.asBlocking().tryConsume(1, 0, BlockingStrategy.PARKING)
         then:
             IllegalArgumentException ex = thrown()
             ex.message == nonPositiveNanosToWait(0).message
 
         when:
-            bucket.asScheduler().tryConsume(1, -1, BlockingStrategy.PARKING)
+            bucket.asBlocking().tryConsume(1, -1, BlockingStrategy.PARKING)
         then:
             ex = thrown()
             ex.message == nonPositiveNanosToWait(-1).message
@@ -245,7 +251,7 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
     @Unroll
     def "Should check that #tokens tokens is not positive to add"(long tokens) {
         setup:
-            def bucket = Bucket4j.builder().addLimit(
+            def bucket = Bucket.builder().addLimit(
                     Bandwidth.simple(VALID_CAPACITY, VALID_PERIOD)
             ).build()
         when:
@@ -272,43 +278,79 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
 
     def "Should that scheduler passed to tryConsume is not null"() {
         setup:
-            def bucket = Bucket4j.builder().addLimit(
-                    Bandwidth.simple(VALID_CAPACITY, VALID_PERIOD)
-            ).build()
+            BucketConfiguration configuration = BucketConfiguration.builder()
+                    .addLimit(Bandwidth.simple(VALID_CAPACITY, VALID_PERIOD))
+                    .build()
+            AsyncBucketProxy asyncBucket = BucketType.GRID.createAsyncBucket(configuration)
         when:
-            bucket.asAsyncScheduler().tryConsume(32, 1000_000, null)
+            asyncBucket.asScheduler().tryConsume(32, 1000_000, null)
         then:
             IllegalArgumentException ex = thrown()
             ex.message == nullScheduler().message
     }
 
-    def "Should detect when extension unregistered"() {
-        when:
-            Bucket4j.extension(FakeExtension.class)
-        then:
-            thrown(IllegalArgumentException)
-    }
-
     def "GridBucket should check that configuration is not null"() {
         setup:
-            GridProxyMock mockProxy = new GridProxyMock(TimeMeter.SYSTEM_MILLISECONDS)
+            ProxyManagerMock mockProxy = new ProxyManagerMock(TimeMeter.SYSTEM_MILLISECONDS)
         when:
-            GridBucket.createInitializedBucket("66", null, mockProxy, THROW_BUCKET_NOT_FOUND_EXCEPTION)
+            mockProxy.builder()
+                .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
+                .build("66", (BucketConfiguration) null)
 
         then:
-            IllegalArgumentException ex = thrown()
+            Exception ex = thrown()
             ex.message == nullConfiguration().message
 
         when:
-            GridBucket.createLazyBucket("66", {null}, mockProxy)
-                    .tryConsume(1)
+            mockProxy.builder()
+                .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
+                .build("66", { null })
+                .getAvailableTokens()
         then:
             ex = thrown()
             ex.message == nullConfiguration().message
 
         when:
-            GridBucket.createLazyBucket("66", null, mockProxy)
-                    .tryConsume(1)
+            mockProxy.builder()
+                .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
+                .build("66", (Supplier<BucketConfiguration>) null)
+
+        then:
+            ex = thrown()
+            ex.message == nullConfigurationSupplier().message
+
+        when:
+            mockProxy.asAsync().builder()
+                .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
+                .build("66", (BucketConfiguration) null)
+
+        then:
+            ex = thrown()
+            ex.message == nullConfiguration().message
+
+        when:
+            mockProxy.asAsync().builder()
+                .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
+                .build("66", { null })
+                .getAvailableTokens().get()
+        then:
+            ex = thrown()
+            ex.cause.message == nullConfigurationFuture().message
+
+        when:
+            mockProxy.asAsync().builder()
+                .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
+                .build("66", { CompletableFuture.completedFuture(null) })
+                .getAvailableTokens().get()
+        then:
+            ex = thrown()
+            ex.cause.message == nullConfiguration().message
+
+        when:
+            mockProxy.asAsync().builder()
+                .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
+                .build("66", (Supplier<CompletableFuture<BucketConfiguration>>) null)
+
         then:
             ex = thrown()
             ex.message == nullConfigurationSupplier().message
@@ -317,8 +359,9 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
     @Unroll
     def "#type should detect that configuration is null during configuration replacement"(BucketType type) {
         setup:
-            def builder = Bucket4j.builder().addLimit(Bandwidth.simple(1, Duration.ofSeconds(10)))
-            def bucket = type.createBucket(builder, TimeMeter.SYSTEM_MILLISECONDS)
+            def configuration = BucketConfiguration.builder().addLimit(Bandwidth.simple(1, Duration.ofSeconds(10))).build()
+            def bucket = type.createBucket(configuration, TimeMeter.SYSTEM_MILLISECONDS)
+            def asyncBucket = type.createAsyncBucket(configuration, TimeMeter.SYSTEM_MILLISECONDS)
 
         when:
             bucket.replaceConfiguration(null, TokensInheritanceStrategy.AS_IS)
@@ -333,13 +376,13 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
             ex.message == nullConfiguration().message
 
         when:
-            bucket.asAsync().replaceConfiguration(null, TokensInheritanceStrategy.AS_IS)
+            asyncBucket.replaceConfiguration(null, TokensInheritanceStrategy.AS_IS)
         then:
             ex = thrown()
             ex.message == nullConfiguration().message
 
         when:
-            bucket.asAsync().asVerbose().replaceConfiguration(null, TokensInheritanceStrategy.AS_IS)
+            asyncBucket.asVerbose().replaceConfiguration(null, TokensInheritanceStrategy.AS_IS)
         then:
             ex = thrown()
             ex.message == nullConfiguration().message
@@ -351,9 +394,10 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
     @Unroll
     def "#type should detect that tokenMigrationMode is null during configuration replacement"(BucketType type) {
         setup:
-            def builder = Bucket4j.builder().addLimit(Bandwidth.simple(1, Duration.ofSeconds(10)))
-            def bucket = type.createBucket(builder, TimeMeter.SYSTEM_MILLISECONDS)
-            def newConfiguration = builder.build().getConfiguration()
+            def builder = BucketConfiguration.builder().addLimit(Bandwidth.simple(1, Duration.ofSeconds(10)))
+            def bucket = type.createBucket(builder.build(), TimeMeter.SYSTEM_MILLISECONDS)
+            def asyncBucket = type.createAsyncBucket(builder.build(), TimeMeter.SYSTEM_MILLISECONDS)
+            def newConfiguration = builder.build()
         when:
             bucket.replaceConfiguration(newConfiguration, null)
         then:
@@ -367,26 +411,19 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
             ex.message == nullTokensInheritanceStrategy().message
 
         when:
-            bucket.asAsync().replaceConfiguration(newConfiguration, null)
+            asyncBucket.replaceConfiguration(newConfiguration, null)
         then:
             ex = thrown()
             ex.message == nullTokensInheritanceStrategy().message
 
         when:
-            bucket.asAsync().asVerbose().replaceConfiguration(newConfiguration, null)
+            asyncBucket.asVerbose().replaceConfiguration(newConfiguration, null)
         then:
             ex = thrown()
             ex.message == nullTokensInheritanceStrategy().message
 
         where:
             type << BucketType.values()
-    }
-
-    private static class FakeExtension implements Extension {
-        @Override
-        AbstractBucketBuilder builder() {
-            return new LocalBucketBuilder()
-        }
     }
 
 }

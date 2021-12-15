@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,11 +22,14 @@ package io.github.bucket4j;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
-public abstract class AbstractBucket implements Bucket, BlockingBucket {
+import static io.github.bucket4j.LimitChecker.*;
+
+public abstract class AbstractBucket implements Bucket, BlockingBucket, SchedulingBucket {
 
     protected static long INFINITY_DURATION = Long.MAX_VALUE;
-    private static long UNLIMITED_AMOUNT = Long.MAX_VALUE;
+    protected static long UNLIMITED_AMOUNT = Long.MAX_VALUE;
 
     protected abstract long consumeAsMuchAsPossibleImpl(long limit);
 
@@ -64,40 +67,6 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket {
 
     protected abstract VerboseResult<Long> consumeIgnoringRateLimitsVerboseImpl(long tokensToConsume);
 
-    protected abstract CompletableFuture<Long> tryConsumeAsMuchAsPossibleAsyncImpl(long limit);
-
-    protected abstract CompletableFuture<Boolean> tryConsumeAsyncImpl(long tokensToConsume);
-
-    protected abstract CompletableFuture<ConsumptionProbe> tryConsumeAndReturnRemainingTokensAsyncImpl(long tokensToConsume);
-
-    protected abstract CompletableFuture<EstimationProbe> estimateAbilityToConsumeAsyncImpl(long tokensToEstimate);
-
-    protected abstract CompletableFuture<Long> reserveAndCalculateTimeToSleepAsyncImpl(long tokensToConsume, long maxWaitTimeNanos);
-
-    protected abstract CompletableFuture<Void> addTokensAsyncImpl(long tokensToAdd);
-
-    protected abstract CompletableFuture<Void> forceAddTokensAsyncImpl(long tokensToAdd);
-
-    protected abstract CompletableFuture<Nothing> replaceConfigurationAsyncImpl(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy);
-
-    protected abstract CompletableFuture<Long> consumeIgnoringRateLimitsAsyncImpl(long tokensToConsume);
-
-    protected abstract CompletableFuture<VerboseResult<Long>> tryConsumeAsMuchAsPossibleVerboseAsyncImpl(long limit);
-
-    protected abstract CompletableFuture<VerboseResult<Boolean>> tryConsumeVerboseAsyncImpl(long tokensToConsume);
-
-    protected abstract CompletableFuture<VerboseResult<ConsumptionProbe>> tryConsumeAndReturnRemainingTokensVerboseAsyncImpl(long tokensToConsume);
-
-    protected abstract CompletableFuture<VerboseResult<EstimationProbe>> estimateAbilityToConsumeVerboseAsyncImpl(long tokensToEstimate);
-
-    protected abstract CompletableFuture<VerboseResult<Nothing>> addTokensVerboseAsyncImpl(long tokensToAdd);
-
-    protected abstract CompletableFuture<VerboseResult<Nothing>> forceAddTokensVerboseAsyncImpl(long tokensToAdd);
-
-    protected abstract CompletableFuture<VerboseResult<Nothing>> replaceConfigurationVerboseAsyncImpl(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy);
-
-    protected abstract CompletableFuture<VerboseResult<Long>> consumeIgnoringRateLimitsVerboseAsyncImpl(long tokensToConsume);
-
     public AbstractBucket(BucketListener listener) {
         if (listener == null) {
             throw BucketExceptions.nullListener();
@@ -106,260 +75,6 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket {
     }
 
     private final BucketListener listener;
-
-    private final AsyncScheduledBucketImpl asyncView = new AsyncScheduledBucketImpl() {
-
-        @Override
-        public AsyncVerboseBucket asVerbose() {
-            return asyncVerboseView;
-        }
-
-        @Override
-        public CompletableFuture<Boolean> tryConsume(long tokensToConsume) {
-            checkTokensToConsume(tokensToConsume);
-
-            return tryConsumeAsyncImpl(tokensToConsume).thenApply(consumed -> {
-                if (consumed) {
-                    listener.onConsumed(tokensToConsume);
-                } else {
-                    listener.onRejected(tokensToConsume);
-                }
-                return consumed;
-            });
-        }
-
-        @Override
-        public CompletableFuture<Long> consumeIgnoringRateLimits(long tokensToConsume) {
-            checkTokensToConsume(tokensToConsume);
-            return consumeIgnoringRateLimitsAsyncImpl(tokensToConsume).thenApply(penaltyNanos -> {
-                if (penaltyNanos == INFINITY_DURATION) {
-                    throw BucketExceptions.reservationOverflow();
-                }
-                listener.onConsumed(tokensToConsume);
-                return penaltyNanos;
-            });
-        }
-
-        @Override
-        public CompletableFuture<ConsumptionProbe> tryConsumeAndReturnRemaining(long tokensToConsume) {
-            checkTokensToConsume(tokensToConsume);
-
-            return tryConsumeAndReturnRemainingTokensAsyncImpl(tokensToConsume).thenApply(probe -> {
-                if (probe.isConsumed()) {
-                    listener.onConsumed(tokensToConsume);
-                } else {
-                    listener.onRejected(tokensToConsume);
-                }
-                return probe;
-            });
-        }
-
-        @Override
-        public CompletableFuture<EstimationProbe> estimateAbilityToConsume(long numTokens) {
-            checkTokensToConsume(numTokens);
-            return estimateAbilityToConsumeAsyncImpl(numTokens);
-        }
-
-        @Override
-        public CompletableFuture<Long> tryConsumeAsMuchAsPossible() {
-            return tryConsumeAsMuchAsPossibleAsyncImpl(UNLIMITED_AMOUNT).thenApply(consumedTokens -> {
-                if (consumedTokens > 0) {
-                    listener.onConsumed(consumedTokens);
-                }
-                return consumedTokens;
-            });
-        }
-
-        @Override
-        public CompletableFuture<Long> tryConsumeAsMuchAsPossible(long limit) {
-            checkTokensToConsume(limit);
-
-            return tryConsumeAsMuchAsPossibleAsyncImpl(limit).thenApply(consumedTokens -> {
-                if (consumedTokens > 0) {
-                    listener.onConsumed(consumedTokens);
-                }
-                return consumedTokens;
-            });
-        }
-
-        @Override
-        public CompletableFuture<Boolean> tryConsume(long tokensToConsume, long maxWaitTimeNanos, ScheduledExecutorService scheduler) {
-            checkMaxWaitTime(maxWaitTimeNanos);
-            checkTokensToConsume(tokensToConsume);
-            checkScheduler(scheduler);
-            CompletableFuture<Boolean> resultFuture = new CompletableFuture<>();
-            CompletableFuture<Long> reservationFuture = reserveAndCalculateTimeToSleepAsyncImpl(tokensToConsume, maxWaitTimeNanos);
-            reservationFuture.whenComplete((nanosToSleep, exception) -> {
-                if (exception != null) {
-                    resultFuture.completeExceptionally(exception);
-                    return;
-                }
-                if (nanosToSleep == INFINITY_DURATION) {
-                    resultFuture.complete(false);
-                    listener.onRejected(tokensToConsume);
-                    return;
-                }
-                if (nanosToSleep == 0L) {
-                    resultFuture.complete(true);
-                    listener.onConsumed(tokensToConsume);
-                    return;
-                }
-                try {
-                    listener.onConsumed(tokensToConsume);
-                    listener.onDelayed(nanosToSleep);
-                    Runnable delayedCompletion = () -> resultFuture.complete(true);
-                    scheduler.schedule(delayedCompletion, nanosToSleep, TimeUnit.NANOSECONDS);
-                } catch (Throwable t) {
-                    resultFuture.completeExceptionally(t);
-                }
-            });
-            return resultFuture;
-        }
-
-        @Override
-        public CompletableFuture<Void> consume(long tokensToConsume, ScheduledExecutorService scheduler) {
-            checkTokensToConsume(tokensToConsume);
-            checkScheduler(scheduler);
-            CompletableFuture<Void> resultFuture = new CompletableFuture<>();
-            CompletableFuture<Long> reservationFuture = reserveAndCalculateTimeToSleepAsyncImpl(tokensToConsume, INFINITY_DURATION);
-            reservationFuture.whenComplete((nanosToSleep, exception) -> {
-                if (exception != null) {
-                    resultFuture.completeExceptionally(exception);
-                    return;
-                }
-                if (nanosToSleep == INFINITY_DURATION) {
-                    resultFuture.completeExceptionally(BucketExceptions.reservationOverflow());
-                    return;
-                }
-                if (nanosToSleep == 0L) {
-                    resultFuture.complete(null);
-                    listener.onConsumed(tokensToConsume);
-                    return;
-                }
-                try {
-                    listener.onConsumed(tokensToConsume);
-                    listener.onDelayed(nanosToSleep);
-                    Runnable delayedCompletion = () -> resultFuture.complete(null);
-                    scheduler.schedule(delayedCompletion, nanosToSleep, TimeUnit.NANOSECONDS);
-                } catch (Throwable t) {
-                    resultFuture.completeExceptionally(t);
-                }
-            });
-            return resultFuture;
-        }
-
-        @Override
-        public CompletableFuture<Void> replaceConfiguration(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy) {
-            checkConfiguration(newConfiguration);
-            checkMigrationMode(tokensInheritanceStrategy);
-            return replaceConfigurationAsyncImpl(newConfiguration, tokensInheritanceStrategy).thenApply(conflictingConfiguration -> null);
-        }
-
-        @Override
-        public CompletableFuture<Void> addTokens(long tokensToAdd) {
-            checkTokensToAdd(tokensToAdd);
-            return addTokensAsyncImpl(tokensToAdd);
-        }
-
-        @Override
-        public CompletableFuture<Void> forceAddTokens(long tokensToAdd) {
-            checkTokensToAdd(tokensToAdd);
-            return forceAddTokensAsyncImpl(tokensToAdd);
-        }
-
-    };
-
-    private final AsyncVerboseBucket asyncVerboseView = new AsyncVerboseBucket() {
-        @Override
-        public CompletableFuture<VerboseResult<Boolean>> tryConsume(long tokensToConsume) {
-            checkTokensToConsume(tokensToConsume);
-
-            return tryConsumeVerboseAsyncImpl(tokensToConsume).thenApply(consumed -> {
-                if (consumed.getValue()) {
-                    listener.onConsumed(tokensToConsume);
-                } else {
-                    listener.onRejected(tokensToConsume);
-                }
-                return consumed;
-            });
-        }
-
-        @Override
-        public CompletableFuture<VerboseResult<Long>> consumeIgnoringRateLimits(long tokensToConsume) {
-            checkTokensToConsume(tokensToConsume);
-            return consumeIgnoringRateLimitsVerboseAsyncImpl(tokensToConsume).thenApply(penaltyNanos -> {
-                if (penaltyNanos.getValue() == INFINITY_DURATION) {
-                    throw BucketExceptions.reservationOverflow();
-                }
-                listener.onConsumed(tokensToConsume);
-                return penaltyNanos;
-            });
-        }
-
-        @Override
-        public CompletableFuture<VerboseResult<ConsumptionProbe>> tryConsumeAndReturnRemaining(long tokensToConsume) {
-            checkTokensToConsume(tokensToConsume);
-
-            return tryConsumeAndReturnRemainingTokensVerboseAsyncImpl(tokensToConsume).thenApply(probe -> {
-                if (probe.getValue().isConsumed()) {
-                    listener.onConsumed(tokensToConsume);
-                } else {
-                    listener.onRejected(tokensToConsume);
-                }
-                return probe;
-            });
-        }
-
-        @Override
-        public CompletableFuture<VerboseResult<EstimationProbe>> estimateAbilityToConsume(long numTokens) {
-            checkTokensToConsume(numTokens);
-            return estimateAbilityToConsumeVerboseAsyncImpl(numTokens);
-        }
-
-        @Override
-        public CompletableFuture<VerboseResult<Long>> tryConsumeAsMuchAsPossible() {
-            return tryConsumeAsMuchAsPossibleVerboseAsyncImpl(UNLIMITED_AMOUNT).thenApply(consumedTokens -> {
-                long actuallyConsumedTokens = consumedTokens.getValue();
-                if (actuallyConsumedTokens > 0) {
-                    listener.onConsumed(actuallyConsumedTokens);
-                }
-                return consumedTokens;
-            });
-        }
-
-        @Override
-        public CompletableFuture<VerboseResult<Long>> tryConsumeAsMuchAsPossible(long limit) {
-            checkTokensToConsume(limit);
-
-            return tryConsumeAsMuchAsPossibleVerboseAsyncImpl(limit).thenApply(consumedTokens -> {
-                long actuallyConsumedTokens = consumedTokens.getValue();
-                if (actuallyConsumedTokens > 0) {
-                    listener.onConsumed(actuallyConsumedTokens);
-                }
-                return consumedTokens;
-            });
-        }
-
-        @Override
-        public CompletableFuture<VerboseResult<Nothing>> addTokens(long tokensToAdd) {
-            checkTokensToAdd(tokensToAdd);
-            return addTokensVerboseAsyncImpl(tokensToAdd);
-        }
-
-        @Override
-        public CompletableFuture<VerboseResult<Nothing>> forceAddTokens(long tokensToAdd) {
-            checkTokensToAdd(tokensToAdd);
-            return forceAddTokensVerboseAsyncImpl(tokensToAdd);
-        }
-
-        @Override
-        public CompletableFuture<VerboseResult<Nothing>> replaceConfiguration(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy) {
-            checkConfiguration(newConfiguration);
-            checkMigrationMode(tokensInheritanceStrategy);
-            CompletableFuture<VerboseResult<Nothing>> resultFuture = replaceConfigurationVerboseAsyncImpl(newConfiguration, tokensInheritanceStrategy);
-            return resultFuture.thenApply(result -> result.map(conflictingConfiguration -> Nothing.INSTANCE));
-        }
-    };
 
     private final VerboseBucket verboseView = new VerboseBucket() {
         @Override
@@ -452,9 +167,15 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket {
         public VerboseResult<Nothing> replaceConfiguration(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy) {
             checkConfiguration(newConfiguration);
             checkMigrationMode(tokensInheritanceStrategy);
+
             return replaceConfigurationVerboseImpl(newConfiguration, tokensInheritanceStrategy);
         }
     };
+
+    @Override
+    public SchedulingBucket asScheduler() {
+        return this;
+    }
 
     @Override
     public VerboseBucket asVerbose() {
@@ -462,23 +183,7 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket {
     }
 
     @Override
-    public AsyncBucket asAsync() {
-        if (!isAsyncModeSupported()) {
-            throw new UnsupportedOperationException();
-        }
-        return asyncView;
-    }
-
-    @Override
-    public AsyncScheduledBucket asAsyncScheduler() {
-        if (!isAsyncModeSupported()) {
-            throw new UnsupportedOperationException();
-        }
-        return asyncView;
-    }
-
-    @Override
-    public BlockingBucket asScheduler() {
+    public BlockingBucket asBlocking() {
         return this;
     }
 
@@ -647,42 +352,78 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket {
         replaceConfigurationImpl(newConfiguration, tokensInheritanceStrategy);
     }
 
-    private static void checkTokensToAdd(long tokensToAdd) {
-        if (tokensToAdd <= 0) {
-            throw new IllegalArgumentException("tokensToAdd should be >= 0");
+    @Override
+    public CompletableFuture<Boolean> tryConsume(long tokensToConsume, long maxWaitTimeNanos, ScheduledExecutorService scheduler) {
+        checkMaxWaitTime(maxWaitTimeNanos);
+        checkTokensToConsume(tokensToConsume);
+        checkScheduler(scheduler);
+
+        try {
+            long nanosToSleep = reserveAndCalculateTimeToSleepImpl(tokensToConsume, maxWaitTimeNanos);
+            if (nanosToSleep == INFINITY_DURATION) {
+                listener.onRejected(tokensToConsume);
+                return CompletableFuture.completedFuture(false);
+            }
+            if (nanosToSleep == 0L) {
+                listener.onConsumed(tokensToConsume);
+                return CompletableFuture.completedFuture(true);
+            }
+
+            listener.onConsumed(tokensToConsume);
+            listener.onDelayed(nanosToSleep);
+            CompletableFuture<Boolean> resultFuture = new CompletableFuture<>();
+            Runnable delayedCompletion = () -> resultFuture.complete(true);
+            scheduler.schedule(delayedCompletion, nanosToSleep, TimeUnit.NANOSECONDS);
+            return resultFuture;
+        } catch (Throwable t) {
+            return failedFuture(t);
         }
     }
 
-    private static void checkTokensToConsume(long tokensToConsume) {
-        if (tokensToConsume <= 0) {
-            throw BucketExceptions.nonPositiveTokensToConsume(tokensToConsume);
+    @Override
+    public CompletableFuture<Void> consume(long tokensToConsume, ScheduledExecutorService scheduler) {
+        checkTokensToConsume(tokensToConsume);
+        checkScheduler(scheduler);
+
+        try {
+            long nanosToSleep = reserveAndCalculateTimeToSleepImpl(tokensToConsume, INFINITY_DURATION);
+            if (nanosToSleep == INFINITY_DURATION) {
+                return failedFuture(BucketExceptions.reservationOverflow());
+            }
+            if (nanosToSleep == 0L) {
+                listener.onConsumed(tokensToConsume);
+                return CompletableFuture.completedFuture(null);
+            }
+
+            listener.onConsumed(tokensToConsume);
+            listener.onDelayed(nanosToSleep);
+            CompletableFuture<Void> resultFuture = new CompletableFuture<>();
+            Runnable delayedCompletion = () -> resultFuture.complete(null);
+            scheduler.schedule(delayedCompletion, nanosToSleep, TimeUnit.NANOSECONDS);
+            return resultFuture;
+        } catch (Throwable t) {
+            return failedFuture(t);
         }
     }
 
-    private static void checkMaxWaitTime(long maxWaitTimeNanos) {
-        if (maxWaitTimeNanos <= 0) {
-            throw BucketExceptions.nonPositiveNanosToWait(maxWaitTimeNanos);
+    protected BucketListener getListener() {
+        return listener;
+    }
+
+    public static <T> CompletableFuture<T> completedFuture(Supplier<T> supplier) {
+        try {
+            return CompletableFuture.completedFuture(supplier.get());
+        } catch (Throwable t) {
+            CompletableFuture<T> fail = new CompletableFuture<>();
+            fail.completeExceptionally(t);
+            return fail;
         }
     }
 
-    private static void checkScheduler(ScheduledExecutorService scheduler) {
-        if (scheduler == null) {
-            throw BucketExceptions.nullScheduler();
-        }
+    public static <T> CompletableFuture<T> failedFuture(Throwable t) {
+        CompletableFuture<T> fail = new CompletableFuture<>();
+        fail.completeExceptionally(t);
+        return fail;
     }
-
-    private static void checkConfiguration(BucketConfiguration newConfiguration) {
-        if (newConfiguration == null) {
-            throw BucketExceptions.nullConfiguration();
-        }
-    }
-
-    private void checkMigrationMode(TokensInheritanceStrategy tokensInheritanceStrategy) {
-        if (tokensInheritanceStrategy == null) {
-            throw BucketExceptions.nullTokensInheritanceStrategy();
-        }
-    }
-
-    private interface AsyncScheduledBucketImpl extends AsyncBucket, AsyncScheduledBucket {}
 
 }

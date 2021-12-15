@@ -83,6 +83,11 @@ public final class BucketExceptions {
         return new IllegalArgumentException(msg);
     }
 
+    public static Throwable nullConfigurationFuture() {
+        String msg = "Configuration future can not be null";
+        return new IllegalArgumentException(msg);
+    }
+
     public static IllegalArgumentException nullConfigurationSupplier() {
         String msg = "Configuration supplier can not be null";
         return new IllegalArgumentException(msg);
@@ -91,6 +96,12 @@ public final class BucketExceptions {
     public static IllegalArgumentException nonPositivePeriod(long period) {
         String pattern = "{0} is wrong value for period of bandwidth, because period should be positive";
         String msg = MessageFormat.format(pattern, period);
+        return new IllegalArgumentException(msg);
+    }
+
+    public static IllegalArgumentException nonPositiveLimitToSync(long unsynchronizedPeriod) {
+        String pattern = "{0} is wrong value for limit to sync, because period should be positive";
+        String msg = MessageFormat.format(pattern, unsynchronizedPeriod);
         return new IllegalArgumentException(msg);
     }
 
@@ -103,6 +114,47 @@ public final class BucketExceptions {
     public static IllegalArgumentException nonPositivePeriodTokens(long tokens) {
         String pattern = "{0} is wrong value for period tokens, because tokens should be positive";
         String msg = MessageFormat.format(pattern, tokens);
+        return new IllegalArgumentException(msg);
+    }
+
+    // TODO add test
+    public static IllegalArgumentException nonPositiveTokensForDelayParameters(long maxUnsynchronizedTokens) {
+        String pattern = "{0} is wrong value for maxUnsynchronizedTokens, because tokens should be positive";
+        String msg = MessageFormat.format(pattern, maxUnsynchronizedTokens);
+        return new IllegalArgumentException(msg);
+    }
+
+    // TODO add test
+    public static IllegalArgumentException nullMaxTimeoutBetweenSynchronizationForDelayParameters() {
+        String msg = "maxTimeoutBetweenSynchronization can not be null";
+        return new IllegalArgumentException(msg);
+    }
+
+    // TODO add test
+    public static IllegalArgumentException nonPositiveMaxTimeoutBetweenSynchronizationForDelayParameters(Duration maxTimeoutBetweenSynchronization) {
+        String pattern = "maxTimeoutBetweenSynchronization = {0}, maxTimeoutBetweenSynchronization can not be negative";
+        String msg = MessageFormat.format(pattern, maxTimeoutBetweenSynchronization);
+        return new IllegalArgumentException(msg);
+    }
+
+    // TODO add test
+    public static IllegalArgumentException wrongValueOfMinSamplesForPredictionParameters(int minSamples) {
+        String pattern = "minSamples = {0}, minSamples must be >= 2";
+        String msg = MessageFormat.format(pattern, minSamples);
+        return new IllegalArgumentException(msg);
+    }
+
+    // TODO add test
+    public static IllegalArgumentException maxSamplesForPredictionParametersCanNotBeLessThanMinSamples(int minSamples, int maxSamples) {
+        String pattern = "minSamples = {0}, maxSamples = {1}, maxSamples must be >= minSamples";
+        String msg = MessageFormat.format(pattern, minSamples, maxSamples);
+        return new IllegalArgumentException(msg);
+    }
+
+    // TODO add test
+    public static IllegalArgumentException nonPositiveSampleMaxAgeForPredictionParameters(long maxUnsynchronizedTimeoutNanos) {
+        String pattern = "maxUnsynchronizedTimeoutNanos = {0}, maxUnsynchronizedTimeoutNanos must be positive";
+        String msg = MessageFormat.format(pattern, maxUnsynchronizedTimeoutNanos);
         return new IllegalArgumentException(msg);
     }
 
@@ -156,6 +208,12 @@ public final class BucketExceptions {
         return new IllegalArgumentException(msg);
     }
 
+    public static IllegalArgumentException nonPositiveTokensLimitToSync(long tokens) {
+        String pattern = "Sync threshold tokens should be positive, {0} is wrong waiting period";
+        String msg = MessageFormat.format(pattern, tokens);
+        return new IllegalArgumentException(msg);
+    }
+
     public static IllegalArgumentException reservationOverflow() {
         String msg = "Existed hardware is unable to service the reservation of so many tokens";
         return new IllegalArgumentException(msg);
@@ -170,14 +228,19 @@ public final class BucketExceptions {
         return new BucketExecutionException(cause);
     }
 
-    private BucketExceptions() {
-        // private constructor for utility class
+    public static UnsupportedOperationException asyncModeIsNotSupported() {
+        String msg = "Asynchronous mode is not supported";
+        return new UnsupportedOperationException(msg);
     }
 
     public static class BucketExecutionException extends RuntimeException {
         public BucketExecutionException(Throwable cause) {
             super(cause);
         }
+    }
+
+    private BucketExceptions() {
+        // private constructor for utility class
     }
 
 }

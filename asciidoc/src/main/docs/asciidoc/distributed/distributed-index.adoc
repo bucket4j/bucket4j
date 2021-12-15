@@ -1,0 +1,17 @@
+== Distributed facilities
+
+include::concepts.adoc[]
+
+include::jcache/jcache-usage.adoc[]
+
+include::jcache/hazelcast.adoc[]
+
+include::jcache/ignite.adoc[]
+
+include::jcache/infinispan.adoc[]
+
+include::jcache/coherence.adoc[]
+
+include::asynchronous.adoc[]
+
+include::distributed-checklist.adoc[]

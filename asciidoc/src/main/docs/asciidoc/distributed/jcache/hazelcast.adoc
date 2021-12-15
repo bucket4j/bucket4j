@@ -1,0 +1,66 @@
+[[bucket4j-hazelcast, Bucket4j-Hazelcast]]
+=== Hazelcast integration
+==== Dependencies
+To use Bucket4j extension for Hazelcast with ``Hazelcast 4.x`` you need to add following dependency:
+[source, xml, subs=attributes+]
+----
+<dependency>
+    <groupId>com.github.vladimir-bukhtoyarov</groupId>
+    <artifactId>bucket4j-hazelcast</artifactId>
+    <version>{revnumber}</version>
+</dependency>
+----
+If you are using legacy version of Hazelcast ``3.x`` then you need to add following dependency:
+[source, xml, subs=attributes+]
+----
+<dependency>
+    <groupId>com.github.vladimir-bukhtoyarov</groupId>
+    <artifactId>bucket4j-hazelcast-3</artifactId>
+    <version>{revnumber}</version>
+</dependency>
+----
+
+==== General compatibility matrix principles:
+* Bucket4j authors do not perform continues monitoring of new Hazelcast releases. So, there is can be case when there is no one version of Bucket4j which is compatible with newly released Hazelcast,
+just log issue to https://github.com/vladimir-bukhtoyarov/bucket4j/issues[bug tracker] in this case, adding support to new version of Hazelcast is usually easy exercise.
+* Integrations with legacy versions of Hazelcast are not removed without a clear reason. Hence You are in safety, even you are working in a big enterprise company that does not update its infrastructure frequently because You still get new Bucket4j's features even for legacy Hazelcast's releases.
+
+==== Example of Bucket instantiation
+[source, java]
+----
+IMap<K, byte[]> map = ...;
+private static final HazelcastProxyManager<K> proxyManager = new HazelcastProxyManager(map);
+
+...
+BucketConfiguration configuration = BucketConfiguration.builder()
+    .addLimit(Bandwidth.simple(1_000, Duration.ofMinutes(1)))
+    .build(key, configuration);
+
+Bucket bucket = proxyManager.builder().build(configuration);
+----
+
+==== Configuring Custom Serialization for Bucket4j library classes
+If you configure nothing, then by default Java serialization will be used for serialization Bucket4j library classes. Java serialization can be rather slow and should be avoided in general.
+``Bucket4j`` provides https://docs.hazelcast.org/docs/3.0/manual/html/ch03s03.html[custom serializers] for all library classes that could be transferred over network.
+To let Hazelcast know about fast serializers you should register them programmatically in the serialization config:
+[source, java]
+----
+import com.hazelcast.config.Config;
+import com.hazelcast.config.SerializationConfig;
+import com.hazelcast.config.SerializerConfig;
+import io.github.bucket4j.grid.hazelcast.serialization.HazelcastSerializer;
+...
+    Config config = ...
+    SerializationConfig serializationConfig = config.getSerializationConfig();
+
+    // the starting type ID number for Bucket4j classes.
+    // you free to choose any unused ID, but be aware that Bucket4j uses 2 types currently,
+    // and may use more types in the future, so leave enough empty space after baseTypeIdNumber 
+    int baseTypeIdNumber = 10000;
+    
+    HazelcastProxyManager.addCustomSerializers(serializationConfig, baseTypeIdNumber);
+----
+
+==== Known issues related with Docker and(or) SpringBoot
+* https://github.com/vladimir-bukhtoyarov/bucket4j/discussions/186:[#186 HazelcastEntryProcessor class not found] - check file permissions inside your image.
+* https://github.com/vladimir-bukhtoyarov/bucket4j/issues/162:[#182 HazelcastSerializationException with Hazelcast 4.2] - properly setup classloader for Hazelcast client configuration.

@@ -1,49 +1,42 @@
 package io.github.bucket4j.grid.infinispan;
 
-import io.github.bucket4j.AbstractDistributedBucketTest;
-import io.github.bucket4j.Bucket;
-import io.github.bucket4j.Bucket4j;
-import io.github.bucket4j.grid.GridBucketState;
-import io.github.bucket4j.grid.ProxyManager;
-import io.github.bucket4j.grid.RecoveryStrategy;
-import org.infinispan.commons.api.functional.FunctionalMap;
+import io.github.bucket4j.distributed.proxy.ProxyManager;
+import io.github.bucket4j.distributed.proxy.ClientSideConfig;
+import io.github.bucket4j.tck.AbstractDistributedBucketTest;
+import org.infinispan.commons.api.functional.FunctionalMap.ReadWriteMap;
 import org.infinispan.functional.impl.FunctionalMapImpl;
 import org.infinispan.functional.impl.ReadWriteMapImpl;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Test;
 
 import javax.cache.Cache;
 import javax.cache.CacheManager;
 import javax.cache.Caching;
+import javax.cache.spi.CachingProvider;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.UUID;
 
 
-public class InfinispanTest extends AbstractDistributedBucketTest<InfinispanBucketBuilder, Infinispan> {
+public class InfinispanTest extends AbstractDistributedBucketTest<String> {
 
-    private static FunctionalMap.ReadWriteMap<String, GridBucketState> readWriteMap;
-    private static Cache<String, GridBucketState> cache;
+    private static ReadWriteMap<String, byte[]> readWriteMap;
+    private static Cache<String, byte[]> cache;
     private static CacheManager cacheManager1;
     private static CacheManager cacheManager2;
-
-    @Test(expected = IllegalArgumentException.class)
-    @Override
-    public void testThatImpossibleToPassNullCacheToProxyManagerConstructor() {
-        Bucket4j.extension(getExtensionClass()).proxyManagerForMap(null);
-    }
 
     @BeforeClass
     public static void init() throws MalformedURLException, URISyntaxException {
         URI configurationUri = InfinispanTest.class.getResource("/infinispan-jcache-cluster.xml").toURI();
         ClassLoader tccl = InfinispanTest.class.getClassLoader();
 
-        cacheManager1 = Caching.getCachingProvider().getCacheManager(configurationUri, new TestClassLoader(tccl));
+        CachingProvider cachingProvider = Caching.getCachingProvider("org.infinispan.jcache.embedded.JCachingProvider");
+        cacheManager1 = cachingProvider.getCacheManager(configurationUri, new TestClassLoader(tccl));
         cache = cacheManager1.getCache("namedCache");
         readWriteMap = toMap(cache);
 
-        cacheManager2 = Caching.getCachingProvider().getCacheManager(configurationUri, new TestClassLoader(tccl));
+        cacheManager2 = cachingProvider.getCacheManager(configurationUri, new TestClassLoader(tccl));
         cacheManager2.getCache("namedCache");
     }
 
@@ -54,23 +47,13 @@ public class InfinispanTest extends AbstractDistributedBucketTest<InfinispanBuck
     }
 
     @Override
-    protected Class<Infinispan> getExtensionClass() {
-        return Infinispan.class;
+    protected ProxyManager<String> getProxyManager() {
+        return new InfinispanProxyManager<>(readWriteMap, ClientSideConfig.getDefault());
     }
 
     @Override
-    protected Bucket build(InfinispanBucketBuilder builder, String key, RecoveryStrategy recoveryStrategy) {
-        return builder.build(readWriteMap, key, recoveryStrategy);
-    }
-
-    @Override
-    protected ProxyManager<String> newProxyManager() {
-        return Bucket4j.extension(Infinispan.class).proxyManagerForMap(readWriteMap);
-    }
-
-    @Override
-    protected void removeBucketFromBackingStorage(String key) {
-        cache.remove(key);
+    protected String generateRandomKey() {
+        return UUID.randomUUID().toString();
     }
 
     public static class TestClassLoader extends ClassLoader {
@@ -79,9 +62,9 @@ public class InfinispanTest extends AbstractDistributedBucketTest<InfinispanBuck
         }
     }
 
-    private static FunctionalMap.ReadWriteMap<String, GridBucketState> toMap(Cache<String, GridBucketState> cache) {
-        org.infinispan.Cache<String, GridBucketState> nativeCache = cache.unwrap(org.infinispan.Cache.class);
-        FunctionalMapImpl<String, GridBucketState> functionalMap = FunctionalMapImpl.create(nativeCache.getAdvancedCache());
+    private static ReadWriteMap<String, byte[]> toMap(Cache<String, byte[]> cache) {
+        org.infinispan.Cache<String, byte[]> nativeCache = cache.unwrap(org.infinispan.Cache.class);
+        FunctionalMapImpl<String, byte[]> functionalMap = FunctionalMapImpl.create(nativeCache.getAdvancedCache());
         return ReadWriteMapImpl.create(functionalMap);
     }
 

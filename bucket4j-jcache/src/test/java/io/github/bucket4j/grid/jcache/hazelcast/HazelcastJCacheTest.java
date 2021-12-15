@@ -7,8 +7,8 @@ import com.hazelcast.config.JoinConfig;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ICacheManager;
-import io.github.bucket4j.grid.GridBucketState;
 import io.github.bucket4j.grid.jcache.AbstractJCacheTest;
+import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import org.gridkit.nanocloud.Cloud;
 import org.gridkit.nanocloud.CloudFactory;
 import org.gridkit.nanocloud.VX;
@@ -21,7 +21,7 @@ import java.io.Serializable;
 
 public class HazelcastJCacheTest extends AbstractJCacheTest {
 
-    private static Cache<String, GridBucketState> cache;
+    private static Cache<String, byte[]> cache;
     private static Cloud cloud;
     private static ViNode server;
 
@@ -73,7 +73,7 @@ public class HazelcastJCacheTest extends AbstractJCacheTest {
     }
 
     @Override
-    protected Cache<String, GridBucketState> getCache() {
+    protected Cache<String, byte[]> getCache() {
         return cache;
     }
 

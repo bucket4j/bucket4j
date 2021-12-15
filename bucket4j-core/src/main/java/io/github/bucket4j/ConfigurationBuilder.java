@@ -19,29 +19,31 @@
  */
 package io.github.bucket4j;
 
-
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * A builder for buckets. Builder can be reused, i.e. one builder can create multiple buckets with similar configuration.
+ * The builder for {@link BucketConfiguration}
  *
  */
 public class ConfigurationBuilder {
 
-    private List<Bandwidth> bandwidths;
+    private final List<Bandwidth> bandwidths;
 
-    protected ConfigurationBuilder() {
+    public ConfigurationBuilder() {
         this.bandwidths = new ArrayList<>(1);
     }
 
     /**
-     * @return configuration which used for bucket construction.
+     * @return configuration that used for bucket construction.
      */
     public BucketConfiguration build() {
         return new BucketConfiguration(this.bandwidths);
     }
 
+    /**
+     * @see #build()
+     */
     @Deprecated
     public BucketConfiguration buildConfiguration() {
         return build();
@@ -64,7 +66,7 @@ public class ConfigurationBuilder {
     @Override
     public String toString() {
         return "ConfigurationBuilder{" +
-                ", bandwidths=" + bandwidths +
+                "bandwidths=" + bandwidths +
                 '}';
     }
 

@@ -1,11 +1,9 @@
 package io.github.bucket4j.grid.ignite;
 
-import io.github.bucket4j.AbstractDistributedBucketTest;
-import io.github.bucket4j.Bucket;
-import io.github.bucket4j.Bucket4j;
-import io.github.bucket4j.grid.GridBucketState;
-import io.github.bucket4j.grid.ProxyManager;
-import io.github.bucket4j.grid.RecoveryStrategy;
+import io.github.bucket4j.distributed.proxy.ClientSideConfig;
+import io.github.bucket4j.grid.ignite.thick.IgniteProxyManager;
+import io.github.bucket4j.tck.AbstractDistributedBucketTest;
+import io.github.bucket4j.distributed.proxy.ProxyManager;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.IgniteCache;
 import org.apache.ignite.Ignition;
@@ -19,16 +17,15 @@ import org.gridkit.nanocloud.VX;
 import org.gridkit.vicluster.ViNode;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Test;
 
 import java.io.Serializable;
-import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Collections;
+import java.util.UUID;
 
-public class IgniteTest extends AbstractDistributedBucketTest<IgniteBucketBuilder, io.github.bucket4j.grid.ignite.Ignite> {
+public class IgniteTest extends AbstractDistributedBucketTest<String> {
 
-    private static IgniteCache<String, GridBucketState> cache;
+    private static IgniteCache<String, byte[]> cache;
     private static Cloud cloud;
     private static ViNode server;
 
@@ -76,6 +73,7 @@ public class IgniteTest extends AbstractDistributedBucketTest<IgniteBucketBuilde
         cache = ignite.getOrCreateCache(cacheConfiguration);
     }
 
+
     @AfterClass
     public static void shutdown() {
         if (ignite != null) {
@@ -86,30 +84,14 @@ public class IgniteTest extends AbstractDistributedBucketTest<IgniteBucketBuilde
         }
     }
 
-    @Test(expected = IllegalArgumentException.class)
     @Override
-    public void testThatImpossibleToPassNullCacheToProxyManagerConstructor() {
-        Bucket4j.extension(getExtensionClass()).proxyManagerForCache((IgniteCache<String, GridBucketState>)null);
+    protected ProxyManager<String> getProxyManager() {
+        return new IgniteProxyManager<>(cache, ClientSideConfig.getDefault());
     }
 
     @Override
-    protected Class<io.github.bucket4j.grid.ignite.Ignite> getExtensionClass() {
-        return io.github.bucket4j.grid.ignite.Ignite.class;
-    }
-
-    @Override
-    protected Bucket build(IgniteBucketBuilder builder, String key, RecoveryStrategy recoveryStrategy) {
-        return builder.build(cache, key, recoveryStrategy);
-    }
-
-    @Override
-    protected ProxyManager<String> newProxyManager() {
-        return Bucket4j.extension(getExtensionClass()).proxyManagerForCache(cache);
-    }
-
-    @Override
-    protected void removeBucketFromBackingStorage(String key) {
-        cache.remove(key);
+    protected String generateRandomKey() {
+        return UUID.randomUUID().toString();
     }
 
 }

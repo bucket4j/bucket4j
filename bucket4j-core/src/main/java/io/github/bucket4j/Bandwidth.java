@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,13 +19,17 @@
  */
 package io.github.bucket4j;
 
-import io.github.bucket4j.serialization.DeserializationAdapter;
-import io.github.bucket4j.serialization.SerializationHandle;
-import io.github.bucket4j.serialization.SerializationAdapter;
+import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
+import io.github.bucket4j.distributed.serialization.SerializationHandle;
+import io.github.bucket4j.distributed.serialization.SerializationAdapter;
+import io.github.bucket4j.distributed.versioning.Version;
+import io.github.bucket4j.distributed.versioning.Versions;
+import io.github.bucket4j.util.ComparableByContent;
 
 import java.io.IOException;
-import java.io.Serializable;
 import java.time.Duration;
+
+import static io.github.bucket4j.distributed.versioning.Versions.v_7_0_0;
 
 /**
  * <h3>Anatomy of bandwidth:</h3>
@@ -41,10 +45,9 @@ import java.time.Duration;
  * <ul>
  *     <li>{@link #simple(long, Duration) Simple} - most popular way, which does not require from you to fully understand the token-bucket algorithm.
  *     Use this way when you just want to specify easy limitation <tt>N</tt> tokens per <tt>M</tt> time window.
- *     See <a href="https://github.com/vladimir-bukhtoyarov/bucket4j/blob/1.3/doc-pages/basic-usage.md#example-1---limiting-the-rate-of-heavy-work">this example</a> of usage.
  *     </li>
  *     <li>{@link #classic(long, Refill)} Classic} - hard way to specify limitation,
- *     use it when you want to utilize the whole power of token-bucket. See <a href="https://github.com/vladimir-bukhtoyarov/bucket4j/blob/1.3/doc-pages/basic-usage.md#example-3---limiting-the-rate-of-access-to-rest-api">this example</a> of usage.
+ *     use it when you want to utilize the whole power of token-bucket.
  *     </li>
  * </ul>
  *
@@ -56,15 +59,13 @@ import java.time.Duration;
  * in other words any token can not be partially consumed.
  * <br> Example of multiple bandwidth:
  * <pre>{@code // Adds bandwidth that restricts to consume not often 1000 tokens per 1 minute and not often than 100 tokens per second
- * Bucket bucket = Bucket4j.builder().
+ * Bucket bucket = Bucket.builder().
  *      .addLimit(Bandwidth.create(1000, Duration.ofMinutes(1)));
  *      .addLimit(Bandwidth.create(100, Duration.ofSeconds(1)));
  *      .build()
  * }</pre>
  */
-public class Bandwidth implements Serializable {
-
-    private static final long serialVersionUID = 101L;
+public class Bandwidth implements ComparableByContent<Bandwidth> {
 
     public static final String UNDEFINED_ID = null;
 
@@ -103,7 +104,7 @@ public class Bandwidth implements Serializable {
     }
 
     /**
-     * Specifies limitation in <a href="https://github.com/vladimir-bukhtoyarov/bucket4j/blob/1.3/doc-pages/token-bucket-brief-overview.md#token-bucket-algorithm">classic interpretation</a> of token-bucket algorithm.
+     * Specifies limitation in conventional interpretation of token-bucket algorithm.
      *
      * @param capacity
      * @param refill
@@ -157,6 +158,10 @@ public class Bandwidth implements Serializable {
         return timeOfFirstRefillMillis != Refill.UNSPECIFIED_TIME_OF_FIRST_REFILL;
     }
 
+    public long getTimeOfFirstRefillMillis() {
+        return timeOfFirstRefillMillis;
+    }
+
     public long getCapacity() {
         return capacity;
     }
@@ -173,20 +178,12 @@ public class Bandwidth implements Serializable {
         return refillTokens;
     }
 
-    public boolean isRefillIntervally() {
-        return refillIntervally;
-    }
-
     public boolean isUseAdaptiveInitialTokens() {
         return useAdaptiveInitialTokens;
     }
 
-    public static long getSerialVersionUID() {
-        return serialVersionUID;
-    }
-
-    public long getTimeOfFirstRefillMillis() {
-        return timeOfFirstRefillMillis;
+    public boolean isRefillIntervally() {
+        return refillIntervally;
     }
 
     public boolean isGready() {
@@ -199,7 +196,10 @@ public class Bandwidth implements Serializable {
 
     public static final SerializationHandle<Bandwidth> SERIALIZATION_HANDLE = new SerializationHandle<Bandwidth>() {
         @Override
-        public <S> Bandwidth deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
+        public <S> Bandwidth deserialize(DeserializationAdapter<S> adapter, S input, Version backwardCompatibilityVersion) throws IOException {
+            int formatNumber = adapter.readInt(input);
+            Versions.check(formatNumber, v_7_0_0, v_7_0_0);
+
             long capacity = adapter.readLong(input);
             long initialTokens = adapter.readLong(input);
             long refillPeriodNanos = adapter.readLong(input);
@@ -215,7 +215,9 @@ public class Bandwidth implements Serializable {
         }
 
         @Override
-        public <O> void serialize(SerializationAdapter<O> adapter, O output, Bandwidth bandwidth) throws IOException {
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, Bandwidth bandwidth, Version backwardCompatibilityVersion) throws IOException {
+            adapter.writeInt(output, v_7_0_0.getNumber());
+
             adapter.writeLong(output, bandwidth.capacity);
             adapter.writeLong(output, bandwidth.initialTokens);
             adapter.writeLong(output, bandwidth.refillPeriodNanos);
@@ -285,6 +287,17 @@ public class Bandwidth implements Serializable {
         sb.append(", useAdaptiveInitialTokens=").append(useAdaptiveInitialTokens);
         sb.append('}');
         return sb.toString();
+    }
+
+    @Override
+    public boolean equalsByContent(Bandwidth other) {
+        return capacity == other.capacity &&
+                initialTokens == other.initialTokens &&
+                refillPeriodNanos == other.refillPeriodNanos &&
+                refillTokens == other.refillTokens &&
+                refillIntervally == other.refillIntervally &&
+                timeOfFirstRefillMillis == other.timeOfFirstRefillMillis &&
+                useAdaptiveInitialTokens == other.useAdaptiveInitialTokens;
     }
 
 }
