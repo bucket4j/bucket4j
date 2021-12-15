@@ -60,6 +60,10 @@ public class IgniteThinClientProxyManager<K> extends AbstractProxyManager<K> {
     private final ClientCache<K, byte[]> cache;
     private final ClientCompute clientCompute;
 
+    public IgniteThinClientProxyManager(ClientCache<K, byte[]> cache, ClientCompute clientCompute) {
+        this(cache, clientCompute, ClientSideConfig.getDefault());
+    }
+
     public IgniteThinClientProxyManager(ClientCache<K, byte[]> cache, ClientCompute clientCompute, ClientSideConfig clientSideConfig) {
         super(clientSideConfig);
         this.cache = Objects.requireNonNull(cache);

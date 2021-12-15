@@ -61,6 +61,10 @@ public class IgniteProxyManager<K> extends AbstractProxyManager<K> {
 
     private final IgniteCache<K, byte[]> cache;
 
+    public IgniteProxyManager(IgniteCache<K, byte[]> cache) {
+        this(cache, ClientSideConfig.getDefault());
+    }
+
     public IgniteProxyManager(IgniteCache<K, byte[]> cache, ClientSideConfig clientSideConfig) {
         super(clientSideConfig);
         this.cache = Objects.requireNonNull(cache);

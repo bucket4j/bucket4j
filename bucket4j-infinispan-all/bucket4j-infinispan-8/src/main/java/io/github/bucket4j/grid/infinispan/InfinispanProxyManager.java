@@ -59,6 +59,10 @@ public class InfinispanProxyManager<K> extends AbstractProxyManager<K> {
 
     private final ReadWriteMap<K, byte[]> readWriteMap;
 
+    public InfinispanProxyManager(ReadWriteMap<K, byte[]> readWriteMap) {
+        this(readWriteMap, ClientSideConfig.getDefault());
+    }
+
     public InfinispanProxyManager(ReadWriteMap<K, byte[]> readWriteMap, ClientSideConfig clientSideConfig) {
         super(clientSideConfig);
         this.readWriteMap = Objects.requireNonNull(readWriteMap);

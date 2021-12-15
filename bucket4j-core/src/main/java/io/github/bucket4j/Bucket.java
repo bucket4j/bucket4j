@@ -199,12 +199,12 @@ public interface Bucket {
      * For example how does replaceConfiguration implementation should bind bandwidths to each other in the following example?
      * <pre>
      * <code>
-     *     Bucket bucket = Bucket4j.builder()
+     *     Bucket bucket = Bucket.builder()
      *                       .addLimit(Bandwidth.simple(10, Duration.ofSeconds(1)))
      *                       .addLimit(Bandwidth.simple(10000, Duration.ofHours(1)))
      *                       .build();
      *     ...
-     *     BucketConfiguration newConfiguration = Bucket4j.configurationBuilder()
+     *     BucketConfiguration newConfiguration = BucketConfiguratiion.builder()
      *                                               .addLimit(Bandwidth.simple(5000, Duration.ofHours(1)))
      *                                               .addLimit(Bandwidth.simple(100, Duration.ofSeconds(10)))
      *                                               .build();
@@ -216,12 +216,12 @@ public interface Bucket {
      * so in case of multiple bandwidth configuratoin replacement code can copy available tokens by bandwidth ID. So it is better to rewrite code above as following:
      * <pre>
      * <code>
-     * Bucket bucket = Bucket4j.builder()
+     * Bucket bucket = Bucket.builder()
      *                            .addLimit(Bandwidth.simple(10, Duration.ofSeconds(1)).withId("technical-limit"))
      *                            .addLimit(Bandwidth.simple(10000, Duration.ofHours(1)).withId("business-limit"))
      *                            .build();
      * ...
-     * BucketConfiguration newConfiguration = Bucket4j.configurationBuilder()
+     * BucketConfiguration newConfiguration = BucketConfiguratiion.builder()
      *                            .addLimit(Bandwidth.simple(5000, Duration.ofHours(1)).withId("business-limit"))
      *                            .addLimit(Bandwidth.simple(100, Duration.ofSeconds(10)).withId("technical-limit"))
      *                            .build();

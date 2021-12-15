@@ -65,6 +65,10 @@ public class JCacheProxyManager<K> extends AbstractProxyManager<K> {
     private final Cache<K, byte[]> cache;
     private final boolean preferLambdaStyle;
 
+    public JCacheProxyManager(Cache<K, byte[]> cache) {
+        this(cache, ClientSideConfig.getDefault());
+    }
+
     public JCacheProxyManager(Cache<K, byte[]> cache, ClientSideConfig clientSideConfig) {
         super(clientSideConfig);
         checkCompatibilityWithProvider(cache);

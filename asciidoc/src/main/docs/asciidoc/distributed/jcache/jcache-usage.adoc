@@ -33,10 +33,10 @@ ServletFilter would be obvious place to check limits:
 ----
 public class IpThrottlingFilter implements javax.servlet.Filter {
     
-    private static final BucketConfiguration configuration = Bucket4j.configurationBuilder()
-                                                              .addLimit(Bandwidth.simple(30, Duration.ofMinutes(1)))
-                                                              .build();
-    
+    private static final BucketConfiguration configuration = BucketConfiguration.builder()
+          .addLimit(Bandwidth.simple(30, Duration.ofMinutes(1)))
+          .build();
+
     // cache for storing token buckets, where IP is key.
     @Inject
     private javax.cache.Cache<String, byte[]> cache;
@@ -46,7 +46,7 @@ public class IpThrottlingFilter implements javax.servlet.Filter {
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
          // init bucket registry
-         buckets = Bucket4j.extension(JCache.class).proxyManagerForCache(cache);
+         buckets = new JCacheProxyManager<>(cache);
     }
     
     @Override
@@ -55,7 +55,7 @@ public class IpThrottlingFilter implements javax.servlet.Filter {
         String ip = IpHelper.getIpFromRequest(httpRequest);
         
         // acquire cheap proxy to bucket  
-        Bucket bucket = buckets.getProxy(ip, configuration);
+        Bucket bucket = proxyManager.builder().build(key, configuration);
 
         // tryConsume returns false immediately if no tokens available with the bucket
         if (bucket.tryConsume(1)) {
@@ -98,7 +98,7 @@ public class IpThrottlingFilter implements javax.servlet.Filter {
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
          // init bucket registry
-         buckets = new JCacheProxyManager<>(getCache(), ClientSideConfig.getDefault());
+         buckets = new JCacheProxyManager<>(cache);
     }
     
     @Override
@@ -128,7 +128,7 @@ public class IpThrottlingFilter implements javax.servlet.Filter {
     private Supplier<BucketConfiguration> getConfigSupplierForUser(String userId) {
          return () -> {
              long translationsPerDay = limitProvider.readPerDayLimitFromAgreementsDatabase(userId);
-             return Bucket4j.configurationBuilder()
+             return BucketConfiguratiion.builder()
                          .addLimit(Bandwidth.simple(translationsPerDay, Duration.ofDays(1)))
                          .build();
          };

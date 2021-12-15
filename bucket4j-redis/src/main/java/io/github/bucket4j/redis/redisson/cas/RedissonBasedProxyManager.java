@@ -43,6 +43,10 @@ public class RedissonBasedProxyManager extends AbstractCompareAndSwapBasedProxyM
     private final CommandExecutor commandExecutor;
     private final long ttlMillis;
 
+    public RedissonBasedProxyManager(CommandExecutor commandExecutor, Duration ttl) {
+        this(commandExecutor, ClientSideConfig.getDefault(), ttl);
+    }
+
     public RedissonBasedProxyManager(CommandExecutor commandExecutor, ClientSideConfig clientSideConfig, Duration ttl) {
         super(clientSideConfig);
         this.commandExecutor = Objects.requireNonNull(commandExecutor);

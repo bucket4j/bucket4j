@@ -59,6 +59,10 @@ public class CoherenceProxyManager<K> extends AbstractProxyManager<K> {
 
     private final NamedCache<K, byte[]> cache;
 
+    public CoherenceProxyManager(NamedCache<K, byte[]> cache) {
+        this(cache, ClientSideConfig.getDefault());
+    }
+
     public CoherenceProxyManager(NamedCache<K, byte[]> cache, ClientSideConfig clientSideConfig) {
         super(clientSideConfig);
         this.cache = cache;

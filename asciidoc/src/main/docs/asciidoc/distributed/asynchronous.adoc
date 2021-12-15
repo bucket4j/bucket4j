@@ -1,13 +1,15 @@
 === Asynchronous API
 Since version ``3.0`` Bucket4j provides asynchronous analogs for majority of API methods.
-Async view of bucket is availble through ``asAsync()`` method:
+Async view of proxyManager is available through ``asAsync()`` method:
 [source, java]
 ----
-Bucket bucket = ...;
-AsyncBucket asyncBucket = bucket.asAsync();
+ProxyManager proxyManager = ...;
+AsyncProxyManager asyncProxyManager = proxyManager.asAsync();
+
+BucketConfiguration configuration = ...;
+AsyncBucketProxy asyncBucket = asyncProxyManager.builder().build(key, configuration);
 ----
-Each method of class [AsyncBucket](https://github.com/vladimir-bukhtoyarov/bucket4j/blob/3.1/bucket4j-core/src/main/java/io/github/bucket4j/AsyncBucket.java)
- has full equivalence with same semantic in synchronous version in the [Bucket](https://github.com/vladimir-bukhtoyarov/bucket4j/blob/3.0/bucket4j-core/src/main/java/io/github/bucket4j/Bucket.java) class.
+Each method of class ```AsyncBucketProxy``` has full equivalence with same semantic in synchronous version in the ```Bucket``` class.
 
 ==== Example - limiting the rate of access to asynchronous servlet
 Imagine that you develop SMS service, which allows send SMS via HTTP interface.
@@ -36,11 +38,10 @@ non-blocking architecture means that both SMS sending and limit checking should 
 **Mockup of service based on top of Servlet API and bucket4j-infinispan**:
 [source, java]
 ----
-
 public class SmsServlet extends javax.servlet.http.HttpServlet {
 
     private SmsSender smsSender;
-    private ProxyManager<String> buckets;
+    private AsyncProxyManager<String> buckets;
     private Supplier<BucketConfiguration> configuration;
        
     @Override
@@ -51,13 +52,13 @@ public class SmsServlet extends javax.servlet.http.HttpServlet {
         smsSender = (SmsSender) ctx.getAttribute("sms-sender");
         
         FunctionalMapImpl<String, byte[]> bucketMap = (FunctionalMapImpl<String, byte[]>) ctx.getAttribute("bucket-map");
-        this.buckets = Bucket4j.extension(Infinispan.class).proxyManagerForMap(bucketMap);
+        this.buckets = new InfinispanProxyManager(bucketMap).asAsync();
         
         this.configuration = () -> {
             long overdraft = 20;
             Refill refill = Refill.greedy(10, Duration.ofMinutes(1));
             Bandwidth limit = Bandwidth.classic(overdraft, refill);
-            return Bucket4j.configurationBuilder()
+            return BucketConfiguratiion.builder()
                 .addLimit(limit)
                 .build();
         };
@@ -71,7 +72,7 @@ public class SmsServlet extends javax.servlet.http.HttpServlet {
         String toNumber = req.getParameter("to");
         String text = req.getParameter("text");
         
-        Bucket bucket = buckets.getProxy(fromNumber, configuration);
+        AsyncBucketProxy bucket = buckets.builder().build(fromNumber, configuration);
         CompletableFuture<ConsumptionProbe> limitCheckingFuture = bucket.asAsync().tryConsumeAndReturnRemaining(1);
         final AsyncContext asyncContext = req.startAsync();
         limitCheckingFuture.thenCompose(probe -> {

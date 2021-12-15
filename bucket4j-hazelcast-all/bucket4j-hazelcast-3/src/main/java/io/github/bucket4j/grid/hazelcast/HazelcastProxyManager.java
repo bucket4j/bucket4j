@@ -60,6 +60,10 @@ public class HazelcastProxyManager<K> extends AbstractProxyManager<K> {
 
     private final IMap<K, byte[]> map;
 
+    public HazelcastProxyManager(IMap<K, byte[]> map) {
+        this(map, ClientSideConfig.getDefault());
+    }
+
     public HazelcastProxyManager(IMap<K, byte[]> map, ClientSideConfig clientSideConfig) {
         super(clientSideConfig);
         this.map = Objects.requireNonNull(map);

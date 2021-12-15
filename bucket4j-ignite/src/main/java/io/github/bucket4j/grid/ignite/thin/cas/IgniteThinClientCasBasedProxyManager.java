@@ -37,6 +37,10 @@ public class IgniteThinClientCasBasedProxyManager<K> extends AbstractCompareAndS
 
     private final ClientCache<K, ByteBuffer> cache;
 
+    public IgniteThinClientCasBasedProxyManager(ClientCache<K, ByteBuffer> cache) {
+        this(cache, ClientSideConfig.getDefault());
+    }
+
     public IgniteThinClientCasBasedProxyManager(ClientCache<K, ByteBuffer> cache, ClientSideConfig clientSideConfig) {
         super(clientSideConfig);
         this.cache = Objects.requireNonNull(cache);

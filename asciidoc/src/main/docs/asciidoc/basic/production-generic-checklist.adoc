@@ -14,10 +14,10 @@ you need to pay close attention to the throttling time window.
 To protect from this kind attacks, you should specify multiple limits like bellow
 [source, java]
 ----
-Bucket bucket = Bucket4j.jCacheBuilder(RecoveryStrategy.RECONSTRUCT)
+Bucket bucket = Bucket.builder()
     .addLimit(Bandwidth.simple(10000, Duration.ofSeconds(3_600))
     .addLimit(Bandwidth.simple(20, Duration.ofSeconds(1)) // attacker is unable to achieve 1000RPS and crash service in short time
-    .build(cache, bucketId);
+    .build();
 ----
 The number of limits specified per bucket does not impact the performance.
 

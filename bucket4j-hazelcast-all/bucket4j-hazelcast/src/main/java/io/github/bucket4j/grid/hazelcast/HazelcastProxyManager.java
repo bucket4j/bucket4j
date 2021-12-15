@@ -38,7 +38,6 @@ package io.github.bucket4j.grid.hazelcast;
 
 import com.hazelcast.config.SerializationConfig;
 import com.hazelcast.config.SerializerConfig;
-import com.hazelcast.core.ExecutionCallback;
 import com.hazelcast.map.IMap;
 import io.github.bucket4j.distributed.proxy.AbstractProxyManager;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
@@ -61,6 +60,10 @@ import static io.github.bucket4j.distributed.serialization.InternalSerialization
 public class HazelcastProxyManager<K> extends AbstractProxyManager<K> {
 
     private final IMap<K, byte[]> map;
+
+    public HazelcastProxyManager(IMap<K, byte[]> map) {
+        this(map, ClientSideConfig.getDefault());
+    }
 
     public HazelcastProxyManager(IMap<K, byte[]> map, ClientSideConfig clientSideConfig) {
         super(clientSideConfig);

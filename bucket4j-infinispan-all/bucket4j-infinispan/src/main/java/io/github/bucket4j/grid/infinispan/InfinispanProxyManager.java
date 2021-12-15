@@ -55,6 +55,10 @@ public class InfinispanProxyManager<K> extends AbstractProxyManager<K> {
     private final InfinispanProcessor<K, Void> REMOVE_BUCKET_ENTRY_PROCESSOR = new InfinispanProcessor<>(new byte[0]);
     private final ReadWriteMap<K, byte[]> readWriteMap;
 
+    public InfinispanProxyManager(ReadWriteMap<K, byte[]> readWriteMap) {
+        this(readWriteMap, ClientSideConfig.getDefault());
+    }
+
     public InfinispanProxyManager(ReadWriteMap<K, byte[]> readWriteMap, ClientSideConfig clientSideConfig) {
         super(clientSideConfig);
         this.readWriteMap = Objects.requireNonNull(readWriteMap);
