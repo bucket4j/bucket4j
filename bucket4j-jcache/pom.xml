@@ -69,6 +69,7 @@
             <groupId>org.ehcache</groupId>
             <artifactId>ehcache</artifactId>
             <version>${ehcache.version}</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
