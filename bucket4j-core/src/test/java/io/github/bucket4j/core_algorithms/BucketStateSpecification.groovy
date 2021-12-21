@@ -378,6 +378,7 @@ class BucketStateSpecification extends Specification {
             Bucket bucket = Bucket.builder()
                 .withMath(MathType.IEEE_754)
                 .addLimit(bandwidth)
+                .withCustomTimePrecision(new TimeMeterMock(0))
                 .build()
             BucketState state = getState(bucket)
             BucketConfiguration configuration = bucket.getConfiguration()

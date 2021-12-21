@@ -357,6 +357,7 @@ class BucketStateSpecification extends Specification {
         setup:
             Bucket bucket = Bucket.builder()
                 .addLimit(Bandwidth.simple(capacity, Duration.ofNanos(period)).withInitialTokens(initialTokens))
+                .withCustomTimePrecision(new TimeMeterMock(0))
                 .build()
             BucketState state = bucket.asVerbose().getAvailableTokens().getState()
             BucketConfiguration configuration = bucket.getConfiguration()
