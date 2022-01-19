@@ -44,7 +44,7 @@ try {
 }
 ----
 
-==== Using bucket as scheduler
+==== Using bucket in blocking mode
 Suppose you need to have the fresh exchange rate between dollars and euros.
 To get the rate you continuously poll the third-party provider,
 and by contract with provider you should poll not often than 100 times per 1 minute, else provider will block your ip:
@@ -63,7 +63,7 @@ volatile double exchangeRate;
 while (true) {
   // Consume a token from the token bucket.
   // If a token is not available this method will block until the refill adds one to the bucket.
-  bucket.asScheduler().consume(1);
+  bucket.asBlocking().consume(1);
 
   exchangeRate = pollExchangeRate();
 }
