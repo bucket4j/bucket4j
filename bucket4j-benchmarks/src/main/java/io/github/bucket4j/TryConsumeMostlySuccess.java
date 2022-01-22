@@ -24,6 +24,7 @@ import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Mode;
 import org.openjdk.jmh.annotations.OutputTimeUnit;
+import org.openjdk.jmh.profile.GCProfiler;
 import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.RunnerException;
 import org.openjdk.jmh.runner.options.Options;
@@ -60,6 +61,16 @@ public class TryConsumeMostlySuccess {
         return state.guavaRateLimiter.tryAcquire();
     }
 
+    @Benchmark
+    public String tryConsumeOneToken_mostlySuccess_Resilience4j_SemaphoreBasedPermission(Resilience4jState state) {
+        return state.semaphoreGuardedSupplier.get();
+    }
+
+    @Benchmark
+    public String tryConsumeOneToken_mostlySuccess_Resilience4j_AtomicPermission(Resilience4jState state) {
+        return state.atomicGuardedSupplier.get();
+    }
+
     public static class OneThread {
 
         public static void main(String[] args) throws RunnerException {
@@ -91,8 +102,8 @@ public class TryConsumeMostlySuccess {
                 .measurementIterations(10)
                 .threads(threadCount)
                 .forks(1)
+                .addProfiler(GCProfiler.class)
                 .build();
-
         new Runner(opt).run();
     }
 
