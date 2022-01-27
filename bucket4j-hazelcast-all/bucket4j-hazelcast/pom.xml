@@ -8,7 +8,7 @@
     <parent>
         <groupId>com.github.vladimir-bukhtoyarov</groupId>
         <artifactId>bucket4j-hazelcast-all</artifactId>
-        <version>7.0.0</version>
+        <version>7.1.0</version>
         <relativePath>../../bucket4j-hazelcast-all</relativePath>
     </parent>
     <artifactId>bucket4j-hazelcast</artifactId>
