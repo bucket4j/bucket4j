@@ -27,6 +27,7 @@ public class LuaStateProxy implements BucketState {
     private final Bucket4jScript script = new Bucket4jScript();
     private final TimeMeter timeMeter;
     private final Table state;
+    private BucketConfiguration configuration;
 
     public LuaStateProxy(LocalBucket bucket) {
         BucketConfiguration configuration = bucket.getConfiguration();
@@ -35,37 +36,37 @@ public class LuaStateProxy implements BucketState {
     }
 
     @Override
-    public long getAvailableTokens(Bandwidth[] bandwidths) {
+    public long getAvailableTokens() {
         return 0;
     }
 
     @Override
-    public void consume(Bandwidth[] bandwidths, long toConsume) {
+    public void consume(long toConsume) {
 
     }
 
     @Override
-    public long calculateDelayNanosAfterWillBePossibleToConsume(Bandwidth[] bandwidths, long tokensToConsume, long currentTimeNanos) {
+    public long calculateDelayNanosAfterWillBePossibleToConsume(long tokensToConsume, long currentTimeNanos) {
         return 0;
     }
 
     @Override
-    public long calculateFullRefillingTime(Bandwidth[] bandwidths, long currentTimeNanos) {
+    public long calculateFullRefillingTime(long currentTimeNanos) {
         return 0;
     }
 
     @Override
-    public void refillAllBandwidth(Bandwidth[] limits, long currentTimeNanos) {
+    public void refillAllBandwidth(long currentTimeNanos) {
 
     }
 
     @Override
-    public void addTokens(Bandwidth[] bandwidths, long tokensToAdd) {
+    public void addTokens(long tokensToAdd) {
 
     }
 
     @Override
-    public void forceAddTokens(Bandwidth[] bandwidths, long tokensToAdd) {
+    public void forceAddTokens(long tokensToAdd) {
 
     }
 
@@ -90,7 +91,17 @@ public class LuaStateProxy implements BucketState {
     }
 
     @Override
-    public BucketState replaceConfiguration(BucketConfiguration previousConfiguration, BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy, long currentTimeNanos) {
+    public BucketConfiguration getConfiguration() {
+        return configuration;
+    }
+
+    @Override
+    public void setConfiguration(BucketConfiguration configuration) {
+        this.configuration = configuration;
+    }
+
+    @Override
+    public BucketState replaceConfiguration(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy, long currentTimeNanos) {
         return null;
     }
 

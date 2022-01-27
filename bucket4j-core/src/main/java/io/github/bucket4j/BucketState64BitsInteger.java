@@ -37,7 +37,9 @@ public class BucketState64BitsInteger implements BucketState, ComparableByConten
 
     private static final int BANDWIDTH_SIZE = 3;
 
-    final long[] stateData;
+    long[] stateData;
+
+    private BucketConfiguration configuration;
 
     public static SerializationHandle<BucketState64BitsInteger> SERIALIZATION_HANDLE = new SerializationHandle<BucketState64BitsInteger>() {
         @Override
@@ -67,11 +69,17 @@ public class BucketState64BitsInteger implements BucketState, ComparableByConten
         }
     };
 
-    BucketState64BitsInteger(long[] stateData) {
+    private BucketState64BitsInteger(BucketState64BitsInteger otherState) {
+        this.stateData = otherState.stateData.clone();
+        this.configuration = otherState.configuration;
+    }
+
+    private BucketState64BitsInteger(long[] stateData) {
         this.stateData = stateData;
     }
 
     public BucketState64BitsInteger(BucketConfiguration configuration, long currentTimeNanos) {
+        this.configuration = configuration;
         Bandwidth[] bandwidths = configuration.getBandwidths();
 
         this.stateData = new long[bandwidths.length * 3];
@@ -83,12 +91,23 @@ public class BucketState64BitsInteger implements BucketState, ComparableByConten
 
     @Override
     public BucketState copy() {
-        return new BucketState64BitsInteger(stateData.clone());
+        return new BucketState64BitsInteger(this);
     }
 
     @Override
-    public BucketState replaceConfiguration(BucketConfiguration previousConfiguration, BucketConfiguration newConfiguration,
+    public BucketConfiguration getConfiguration() {
+        return configuration;
+    }
+
+    @Override
+    public void setConfiguration(BucketConfiguration configuration) {
+        this.configuration = configuration;
+    }
+
+    @Override
+    public BucketState replaceConfiguration(BucketConfiguration newConfiguration,
                                             TokensInheritanceStrategy tokensInheritanceStrategy, long currentTimeNanos) {
+        BucketConfiguration previousConfiguration = this.configuration;
         if (tokensInheritanceStrategy == TokensInheritanceStrategy.RESET) {
             return new BucketState64BitsInteger(newConfiguration, currentTimeNanos);
         }
@@ -100,6 +119,7 @@ public class BucketState64BitsInteger implements BucketState, ComparableByConten
         Bandwidth[] newBandwidths = newConfiguration.getBandwidths();
 
         BucketState64BitsInteger newState = new BucketState64BitsInteger(new long[newBandwidths.length * 3]);
+        newState.setConfiguration(newConfiguration);
         for (int newBandwidthIndex = 0; newBandwidthIndex < newBandwidths.length; newBandwidthIndex++) {
             Bandwidth newBandwidth = newBandwidths[newBandwidthIndex];
             Bandwidth previousBandwidth = null;
@@ -250,27 +270,33 @@ public class BucketState64BitsInteger implements BucketState, ComparableByConten
     @Override
     public void copyStateFrom(BucketState sourceState) {
         BucketState64BitsInteger sourceState64BitsInteger = (BucketState64BitsInteger) sourceState;
-        System.arraycopy(sourceState64BitsInteger.stateData, 0, stateData, 0, stateData.length);
+        if (sourceState64BitsInteger.configuration == configuration) {
+            System.arraycopy(sourceState64BitsInteger.stateData, 0, stateData, 0, stateData.length);
+        } else {
+            this.configuration = sourceState64BitsInteger.configuration;
+            this.stateData = sourceState64BitsInteger.stateData.clone();
+        }
     }
 
     @Override
-    public long getAvailableTokens(Bandwidth[] bandwidths) {
+    public long getAvailableTokens() {
         long availableTokens = getCurrentSize(0);
-        for (int i = 1; i < bandwidths.length; i++) {
+        for (int i = 1; i < configuration.getBandwidths().length; i++) {
             availableTokens = Math.min(availableTokens, getCurrentSize(i));
         }
         return availableTokens;
     }
 
     @Override
-    public void consume(Bandwidth[] bandwidths, long toConsume) {
-        for (int i = 0; i < bandwidths.length; i++) {
+    public void consume(long toConsume) {
+        for (int i = 0; i < configuration.getBandwidths().length; i++) {
             consume(i, toConsume);
         }
     }
 
     @Override
-    public long calculateDelayNanosAfterWillBePossibleToConsume(Bandwidth[] bandwidths, long tokensToConsume, long currentTimeNanos) {
+    public long calculateDelayNanosAfterWillBePossibleToConsume(long tokensToConsume, long currentTimeNanos) {
+        Bandwidth[] bandwidths = configuration.getBandwidths();
         long delayAfterWillBePossibleToConsume = calculateDelayNanosAfterWillBePossibleToConsume(0, bandwidths[0], tokensToConsume, currentTimeNanos);
         for (int i = 1; i < bandwidths.length; i++) {
             Bandwidth bandwidth = bandwidths[i];
@@ -284,22 +310,26 @@ public class BucketState64BitsInteger implements BucketState, ComparableByConten
     }
 
     @Override
-    public void refillAllBandwidth(Bandwidth[] limits, long currentTimeNanos) {
-        for (int i = 0; i < limits.length; i++) {
-            refill(i, limits[i], currentTimeNanos);
+    public void refillAllBandwidth(long currentTimeNanos) {
+        Bandwidth[] bandwidths = configuration.getBandwidths();
+        for (int i = 0; i < bandwidths.length; i++) {
+            refill(i, bandwidths[i], currentTimeNanos);
         }
     }
 
     @Override
-    public void addTokens(Bandwidth[] limits, long tokensToAdd) {
-        for (int i = 0; i < limits.length; i++) {
-            addTokens(i, limits[i], tokensToAdd);
+    public void addTokens(long tokensToAdd) {
+        Bandwidth[] bandwidths = configuration.getBandwidths();
+        for (int i = 0; i < bandwidths.length; i++) {
+            addTokens(i, bandwidths[i], tokensToAdd);
         }
     }
 
-    public void forceAddTokens(Bandwidth[] limits, long tokensToAdd) {
-        for (int i = 0; i < limits.length; i++) {
-            forceAddTokens(i, limits[i], tokensToAdd);
+    @Override
+    public void forceAddTokens(long tokensToAdd) {
+        Bandwidth[] bandwidths = configuration.getBandwidths();
+        for (int i = 0; i < bandwidths.length; i++) {
+            forceAddTokens(i, bandwidths[i], tokensToAdd);
         }
     }
 
@@ -332,7 +362,8 @@ public class BucketState64BitsInteger implements BucketState, ComparableByConten
     }
 
     @Override
-    public long calculateFullRefillingTime(Bandwidth[] bandwidths, long currentTimeNanos) {
+    public long calculateFullRefillingTime(long currentTimeNanos) {
+        Bandwidth[] bandwidths = configuration.getBandwidths();
         long maxTimeToFullRefillNanos = calculateFullRefillingTime(0, bandwidths[0], currentTimeNanos);
         for (int i = 1; i < bandwidths.length; i++) {
             maxTimeToFullRefillNanos = Math.max(maxTimeToFullRefillNanos, calculateFullRefillingTime(i, bandwidths[i], currentTimeNanos));

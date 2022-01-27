@@ -37,7 +37,7 @@ import static io.github.bucket4j.distributed.versioning.Versions.v_7_0_0;
 
 public class RemoteBucketState implements ComparableByContent<RemoteBucketState> {
 
-    private BucketConfiguration configuration;
+
     private BucketState state;
     private RemoteStat stat;
 
@@ -49,15 +49,16 @@ public class RemoteBucketState implements ComparableByContent<RemoteBucketState>
 
             BucketConfiguration bucketConfiguration = BucketConfiguration.SERIALIZATION_HANDLE.deserialize(adapter, input, backwardCompatibilityVersion);
             BucketState bucketState = BucketState.deserialize(adapter, input, backwardCompatibilityVersion);
+            bucketState.setConfiguration(bucketConfiguration);
             RemoteStat stat = RemoteStat.SERIALIZATION_HANDLE.deserialize(adapter, input, backwardCompatibilityVersion);
-            return new RemoteBucketState(bucketConfiguration, bucketState, stat);
+            return new RemoteBucketState(bucketState, stat);
         }
 
         @Override
         public <O> void serialize(SerializationAdapter<O> adapter, O output, RemoteBucketState gridState, Version backwardCompatibilityVersion) throws IOException {
             adapter.writeInt(output, v_7_0_0.getNumber());
 
-            BucketConfiguration.SERIALIZATION_HANDLE.serialize(adapter, output, gridState.configuration, backwardCompatibilityVersion);
+            BucketConfiguration.SERIALIZATION_HANDLE.serialize(adapter, output, gridState.getConfiguration(), backwardCompatibilityVersion);
             BucketState.serialize(adapter, output, gridState.state, backwardCompatibilityVersion);
             RemoteStat.SERIALIZATION_HANDLE.serialize(adapter, output, gridState.stat, backwardCompatibilityVersion);
         }
@@ -74,39 +75,38 @@ public class RemoteBucketState implements ComparableByContent<RemoteBucketState>
 
     };
 
-    public RemoteBucketState(BucketConfiguration configuration, BucketState state, RemoteStat stat) {
-        this.configuration = configuration;
+    public RemoteBucketState(BucketState state, RemoteStat stat) {
         this.state = state;
         this.stat = stat;
     }
 
     public void refillAllBandwidth(long currentTimeNanos) {
-        state.refillAllBandwidth(configuration.getBandwidths(), currentTimeNanos);
+        state.refillAllBandwidth(currentTimeNanos);
     }
 
     public long getAvailableTokens() {
-        return state.getAvailableTokens(configuration.getBandwidths());
+        return state.getAvailableTokens();
     }
 
     public void consume(long tokensToConsume) {
-        state.consume(configuration.getBandwidths(), tokensToConsume);
+        state.consume(tokensToConsume);
         stat.addConsumedTokens(tokensToConsume);
     }
 
     public long calculateFullRefillingTime(long currentTimeNanos) {
-        return state.calculateFullRefillingTime(configuration.getBandwidths(), currentTimeNanos);
+        return state.calculateFullRefillingTime(currentTimeNanos);
     }
 
     public long calculateDelayNanosAfterWillBePossibleToConsume(long tokensToConsume, long currentTimeNanos) {
-        return state.calculateDelayNanosAfterWillBePossibleToConsume(configuration.getBandwidths(), tokensToConsume, currentTimeNanos);
+        return state.calculateDelayNanosAfterWillBePossibleToConsume(tokensToConsume, currentTimeNanos);
     }
 
     public void addTokens(long tokensToAdd) {
-        state.addTokens(configuration.getBandwidths(), tokensToAdd);
+        state.addTokens(tokensToAdd);
     }
 
     public void forceAddTokens(long tokensToAdd) {
-        state.forceAddTokens(configuration.getBandwidths(), tokensToAdd);
+        state.forceAddTokens(tokensToAdd);
     }
 
     public BucketState copyBucketState() {
@@ -114,12 +114,11 @@ public class RemoteBucketState implements ComparableByContent<RemoteBucketState>
     }
 
     public void replaceConfiguration(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy, long currentTimeNanos) {
-        state = state.replaceConfiguration(configuration, newConfiguration, tokensInheritanceStrategy, currentTimeNanos);
-        configuration = newConfiguration;
+        state = state.replaceConfiguration(newConfiguration, tokensInheritanceStrategy, currentTimeNanos);
     }
 
     public BucketConfiguration getConfiguration() {
-        return configuration;
+        return state.getConfiguration();
     }
 
     public RemoteStat getRemoteStat() {
@@ -133,18 +132,18 @@ public class RemoteBucketState implements ComparableByContent<RemoteBucketState>
     @Override
     public boolean equalsByContent(RemoteBucketState other) {
         return ComparableByContent.equals(state, other.state) &&
-                ComparableByContent.equals(configuration, other.configuration) &&
+                ComparableByContent.equals(state.getConfiguration(), other.getConfiguration()) &&
                 ComparableByContent.equals(stat, other.stat);
     }
 
     public RemoteBucketState copy() {
-        return new RemoteBucketState(configuration, state.copy(), stat.copy());
+        return new RemoteBucketState(state.copy(), stat.copy());
     }
 
     @Override
     public String toString() {
         return "RemoteBucketState{" +
-                "configuration=" + configuration +
+                "configuration=" + state.getConfiguration() +
                 ", state=" + state +
                 ", stat=" + stat +
                 '}';

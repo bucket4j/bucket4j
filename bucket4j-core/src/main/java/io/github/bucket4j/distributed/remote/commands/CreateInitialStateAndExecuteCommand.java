@@ -84,7 +84,7 @@ public class CreateInitialStateAndExecuteCommand<T> implements RemoteCommand<T>,
             state = mutableEntry.get();
         } else {
             BucketState bucketState = BucketState.createInitialState(configuration, MathType.INTEGER_64_BITS, currentTimeNanos);
-            state = new RemoteBucketState(configuration, bucketState, new RemoteStat(0));
+            state = new RemoteBucketState(bucketState, new RemoteStat(0));
         }
 
         BucketEntryWrapper entryWrapper = new BucketEntryWrapper(state);

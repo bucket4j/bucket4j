@@ -35,10 +35,12 @@ import static io.github.bucket4j.distributed.versioning.Versions.v_7_0_0;
 public class BucketStateIEEE754 implements BucketState, ComparableByContent<BucketStateIEEE754> {
 
     // holds the current amount of tokens per each bandwidth
-    final double[] tokens;
+    double[] tokens;
 
     // holds the last refill time per each bandwidth
-    final long[] lastRefillTime;
+    long[] lastRefillTime;
+
+    BucketConfiguration configuration;
 
     public static SerializationHandle<BucketStateIEEE754> SERIALIZATION_HANDLE = new SerializationHandle<BucketStateIEEE754>() {
 
@@ -78,6 +80,7 @@ public class BucketStateIEEE754 implements BucketState, ComparableByContent<Buck
     }
 
     public BucketStateIEEE754(BucketConfiguration configuration, long currentTimeNanos) {
+        this.configuration = configuration;
         Bandwidth[] bandwidths = configuration.getBandwidths();
 
         this.tokens = new double[bandwidths.length];
@@ -89,27 +92,45 @@ public class BucketStateIEEE754 implements BucketState, ComparableByContent<Buck
     }
 
     @Override
-    public BucketState replaceConfiguration(BucketConfiguration previousConfiguration, BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy, long currentTimeNanos) {
+    public BucketConfiguration getConfiguration() {
+        return configuration;
+    }
+
+    @Override
+    public void setConfiguration(BucketConfiguration configuration) {
+        this.configuration = configuration;
+    }
+
+    @Override
+    public BucketState replaceConfiguration(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy, long currentTimeNanos) {
         // TODO
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void forceAddTokens(Bandwidth[] bandwidths, long tokensToAdd) {
+    public void forceAddTokens(long tokensToAdd) {
         // TODO
         throw new UnsupportedOperationException();
     }
 
     @Override
     public BucketStateIEEE754 copy() {
-        return new BucketStateIEEE754(tokens.clone(), lastRefillTime.clone());
+        BucketStateIEEE754 copy = new BucketStateIEEE754(tokens.clone(), lastRefillTime.clone());
+        copy.setConfiguration(configuration);
+        return copy;
     }
 
     @Override
     public void copyStateFrom(BucketState sourceState) {
         BucketStateIEEE754 sourceStateIEEE754 = (BucketStateIEEE754) sourceState;
-        System.arraycopy(sourceStateIEEE754.tokens, 0, tokens, 0, tokens.length);
-        System.arraycopy(sourceStateIEEE754.lastRefillTime, 0, lastRefillTime, 0, lastRefillTime.length);
+        if (sourceStateIEEE754.configuration == configuration) {
+            System.arraycopy(sourceStateIEEE754.tokens, 0, tokens, 0, tokens.length);
+            System.arraycopy(sourceStateIEEE754.lastRefillTime, 0, lastRefillTime, 0, lastRefillTime.length);
+        } else {
+            this.configuration = sourceStateIEEE754.configuration;
+            this.lastRefillTime = sourceStateIEEE754.lastRefillTime.clone();
+            this.tokens = sourceStateIEEE754.tokens.clone();
+        }
     }
 
     @Override
@@ -129,7 +150,7 @@ public class BucketStateIEEE754 implements BucketState, ComparableByContent<Buck
     }
 
     @Override
-    public long getAvailableTokens(Bandwidth[] bandwidths) {
+    public long getAvailableTokens() {
         long availableTokens = (long) tokens[0];
         for (int i = 1; i < tokens.length; i++) {
             availableTokens = Math.min(availableTokens, (long) tokens[i]);
@@ -138,14 +159,15 @@ public class BucketStateIEEE754 implements BucketState, ComparableByContent<Buck
     }
 
     @Override
-    public void consume(Bandwidth[] bandwidths, long toConsume) {
+    public void consume(long toConsume) {
         for (int i = 0; i < tokens.length; i++) {
             tokens[i] -= toConsume;
         }
     }
 
     @Override
-    public void addTokens(Bandwidth[] bandwidths, long tokensToAdd) {
+    public void addTokens(long tokensToAdd) {
+        Bandwidth[] bandwidths = configuration.getBandwidths();
         for (int i = 0; i < bandwidths.length; i++) {
             double currentSize = tokens[i];
             double newSize = currentSize + tokensToAdd;
@@ -158,7 +180,8 @@ public class BucketStateIEEE754 implements BucketState, ComparableByContent<Buck
     }
 
     @Override
-    public void refillAllBandwidth(Bandwidth[] limits, long currentTimeNanos) {
+    public void refillAllBandwidth(long currentTimeNanos) {
+        Bandwidth[] limits = configuration.getBandwidths();
         for (int i = 0; i < limits.length; i++) {
             refill(i, limits[i], currentTimeNanos);
         }
@@ -207,7 +230,8 @@ public class BucketStateIEEE754 implements BucketState, ComparableByContent<Buck
     }
 
     @Override
-    public long calculateDelayNanosAfterWillBePossibleToConsume(Bandwidth[] bandwidths, long tokensToConsume, long currentTimeNanos) {
+    public long calculateDelayNanosAfterWillBePossibleToConsume(long tokensToConsume, long currentTimeNanos) {
+        Bandwidth[] bandwidths = configuration.getBandwidths();
         long delayAfterWillBePossibleToConsume = calculateDelayNanosAfterWillBePossibleToConsumeForBandwidth(0, bandwidths[0], tokensToConsume, currentTimeNanos);
         for (int i = 1; i < bandwidths.length; i++) {
             Bandwidth bandwidth = bandwidths[i];
@@ -218,7 +242,8 @@ public class BucketStateIEEE754 implements BucketState, ComparableByContent<Buck
     }
 
     @Override
-    public long calculateFullRefillingTime(Bandwidth[] bandwidths, long currentTimeNanos) {
+    public long calculateFullRefillingTime(long currentTimeNanos) {
+        Bandwidth[] bandwidths = configuration.getBandwidths();
         long maxTimeToFullRefillNanos = calculateFullRefillingTime(0, bandwidths[0], currentTimeNanos);
         for (int i = 1; i < bandwidths.length; i++) {
             maxTimeToFullRefillNanos = Math.max(maxTimeToFullRefillNanos, calculateFullRefillingTime(i, bandwidths[i], currentTimeNanos));

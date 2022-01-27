@@ -36,7 +36,7 @@ class BucketStateSpecification extends Specification {
         setup:
             BucketState state = getState(bucket)
         when:
-            long availableTokens = state.getAvailableTokens(bucket.configuration.bandwidths)
+            long availableTokens = state.getAvailableTokens()
         then:
             availableTokens == requiredAvailableTokens
         where:
@@ -91,8 +91,8 @@ class BucketStateSpecification extends Specification {
         setup:
             BucketState state = getState(bucket)
         when:
-            state.addTokens(bucket.configuration.bandwidths, tokensToAdd)
-            long availableTokens = state.getAvailableTokens(bucket.configuration.bandwidths)
+            state.addTokens(tokensToAdd)
+            long availableTokens = state.getAvailableTokens()
         then:
             availableTokens == requiredAvailableTokens
         where:
@@ -144,12 +144,11 @@ class BucketStateSpecification extends Specification {
 
     @Unroll
     def "delayAfterWillBePossibleToConsume specification #testNumber"(String testNumber, long toConsume, long requiredTime, LocalBucket bucket) {
-            def configuration = bucket.configuration
         TimeMeter timeMeter = bucket.timeMeter
         setup:
             BucketState state = getState(bucket)
         when:
-            long actualTime = state.calculateDelayNanosAfterWillBePossibleToConsume(configuration.bandwidths, toConsume, timeMeter.currentTimeNanos())
+            long actualTime = state.calculateDelayNanosAfterWillBePossibleToConsume(toConsume, timeMeter.currentTimeNanos())
         then:
             actualTime == requiredTime
         where:
@@ -239,10 +238,10 @@ class BucketStateSpecification extends Specification {
         setup:
             BucketConfiguration configuration = builder.build()
             BucketState state = BucketState.createInitialState(configuration, MathType.IEEE_754, 0L)
-            state.refillAllBandwidth(configuration.bandwidths, timeShiftBeforeAsk)
-            state.consume(configuration.bandwidths, tokensConsumeBeforeAsk)
+            state.refillAllBandwidth(timeShiftBeforeAsk)
+            state.consume(tokensConsumeBeforeAsk)
         when:
-            long actualTime = state.calculateFullRefillingTime(configuration.bandwidths, timeShiftBeforeAsk)
+            long actualTime = state.calculateFullRefillingTime(timeShiftBeforeAsk)
         then:
             actualTime == requiredTime
         where:
@@ -321,10 +320,9 @@ class BucketStateSpecification extends Specification {
                     .withCustomTimePrecision(mockTimer)
                     .build()
             BucketState state = getState(bucket)
-            BucketConfiguration configuration = bucket.getConfiguration()
         when:
             mockTimer.setCurrentTimeNanos(timeOnRefill)
-            state.refillAllBandwidth(configuration.bandwidths, timeOnRefill)
+            state.refillAllBandwidth(timeOnRefill)
         then:
             state.getCurrentSize(0) == tokensAfterRefill
             state.getRoundingError(0) == 0
@@ -351,10 +349,9 @@ class BucketStateSpecification extends Specification {
                     .withCustomTimePrecision(mockTimer)
                     .build()
             BucketState state = getState(bucket)
-            BucketConfiguration configuration = bucket.getConfiguration()
         when:
             mockTimer.setCurrentTimeNanos(timeOnRefill)
-            state.refillAllBandwidth(configuration.bandwidths, timeOnRefill)
+            state.refillAllBandwidth(timeOnRefill)
         then:
             state.getCurrentSize(0) == tokensAfterRefill
             state.getRoundingError(0) == 0
@@ -381,9 +378,8 @@ class BucketStateSpecification extends Specification {
                 .withCustomTimePrecision(new TimeMeterMock(0))
                 .build()
             BucketState state = getState(bucket)
-            BucketConfiguration configuration = bucket.getConfiguration()
         when:
-            state.consume(configuration.bandwidths, toConsume)
+            state.consume(toConsume)
         then:
             state.getCurrentSize(0) == requiredSize
         where:
