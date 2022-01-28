@@ -138,14 +138,14 @@ class HandlingArithmeticOverflowSpecification extends Specification {
             Bandwidth[] limits = bucket.configuration.bandwidths
 
         expect:
-            assert state.calculateDelayNanosAfterWillBePossibleToConsume(10, meter.currentTimeNanos()) == 10
+            assert state.calculateDelayNanosAfterWillBePossibleToConsume(10, meter.currentTimeNanos(), false) == 10
 
         when:
             state.consume(1)
 
         then:
             state.getAvailableTokens() == -1
-            state.calculateDelayNanosAfterWillBePossibleToConsume(Long.MAX_VALUE, meter.currentTimeNanos()) == Long.MAX_VALUE
+            state.calculateDelayNanosAfterWillBePossibleToConsume(Long.MAX_VALUE, meter.currentTimeNanos(), false) == Long.MAX_VALUE
     }
 
     def "Should detect overflow during deficit calculation for interval refill"() {
@@ -164,22 +164,22 @@ class HandlingArithmeticOverflowSpecification extends Specification {
             Bandwidth[] limits = bucket.configuration.bandwidths
 
         expect:
-            assert state.calculateDelayNanosAfterWillBePossibleToConsume(10, meter.currentTimeNanos()) == bandwidthPeriodNanos
+            assert state.calculateDelayNanosAfterWillBePossibleToConsume(10, meter.currentTimeNanos(), false) == bandwidthPeriodNanos
 
         when:
             state.consume(1)
 
         then:
             state.getAvailableTokens() == -1
-            state.calculateDelayNanosAfterWillBePossibleToConsume(Long.MAX_VALUE, meter.currentTimeNanos()) == Long.MAX_VALUE
-            state.calculateDelayNanosAfterWillBePossibleToConsume((long)Long.MAX_VALUE/2, meter.currentTimeNanos()) == Long.MAX_VALUE
+            state.calculateDelayNanosAfterWillBePossibleToConsume(Long.MAX_VALUE, meter.currentTimeNanos(), false) == Long.MAX_VALUE
+            state.calculateDelayNanosAfterWillBePossibleToConsume((long)Long.MAX_VALUE/2, meter.currentTimeNanos(), false) == Long.MAX_VALUE
 
         when:
             state.addTokens(1)
             meter.addTime(bandwidthPeriodNanos - 10)
         then:
             state.getAvailableTokens() == 0
-            state.calculateDelayNanosAfterWillBePossibleToConsume(Long.MAX_VALUE - 10, meter.currentTimeNanos()) == Long.MAX_VALUE
+            state.calculateDelayNanosAfterWillBePossibleToConsume(Long.MAX_VALUE - 10, meter.currentTimeNanos(), false) == Long.MAX_VALUE
     }
 
     def "Should detect math overflow during initial tokens calculation for intervally aligned refill"() {

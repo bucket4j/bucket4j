@@ -295,12 +295,12 @@ public class BucketState64BitsInteger implements BucketState, ComparableByConten
     }
 
     @Override
-    public long calculateDelayNanosAfterWillBePossibleToConsume(long tokensToConsume, long currentTimeNanos) {
+    public long calculateDelayNanosAfterWillBePossibleToConsume(long tokensToConsume, long currentTimeNanos, boolean checkTokensToConsumeShouldBeLessThenCapacity) {
         Bandwidth[] bandwidths = configuration.getBandwidths();
-        long delayAfterWillBePossibleToConsume = calculateDelayNanosAfterWillBePossibleToConsume(0, bandwidths[0], tokensToConsume, currentTimeNanos);
+        long delayAfterWillBePossibleToConsume = calculateDelayNanosAfterWillBePossibleToConsume(0, bandwidths[0], tokensToConsume, currentTimeNanos, checkTokensToConsumeShouldBeLessThenCapacity);
         for (int i = 1; i < bandwidths.length; i++) {
             Bandwidth bandwidth = bandwidths[i];
-            long delay = calculateDelayNanosAfterWillBePossibleToConsume(i, bandwidth, tokensToConsume, currentTimeNanos);
+            long delay = calculateDelayNanosAfterWillBePossibleToConsume(i, bandwidth, tokensToConsume, currentTimeNanos, checkTokensToConsumeShouldBeLessThenCapacity);
             delayAfterWillBePossibleToConsume = Math.max(delayAfterWillBePossibleToConsume, delay);
             if (delay > delayAfterWillBePossibleToConsume) {
                 delayAfterWillBePossibleToConsume = delay;
@@ -497,7 +497,10 @@ public class BucketState64BitsInteger implements BucketState, ComparableByConten
         setRoundingError(bandwidthIndex, 0);
     }
 
-    private long calculateDelayNanosAfterWillBePossibleToConsume(int bandwidthIndex, Bandwidth bandwidth, long tokens, long currentTimeNanos) {
+    private long calculateDelayNanosAfterWillBePossibleToConsume(int bandwidthIndex, Bandwidth bandwidth, long tokens, long currentTimeNanos, boolean checkTokensToConsumeShouldBeLessThenCapacity) {
+        if (checkTokensToConsumeShouldBeLessThenCapacity && tokens > bandwidth.capacity) {
+            return Long.MAX_VALUE;
+        }
         long currentSize = getCurrentSize(bandwidthIndex);
         if (tokens <= currentSize) {
             return 0;

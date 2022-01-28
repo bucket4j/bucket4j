@@ -97,8 +97,8 @@ public class RemoteBucketState implements ComparableByContent<RemoteBucketState>
         return state.calculateFullRefillingTime(currentTimeNanos);
     }
 
-    public long calculateDelayNanosAfterWillBePossibleToConsume(long tokensToConsume, long currentTimeNanos) {
-        return state.calculateDelayNanosAfterWillBePossibleToConsume(tokensToConsume, currentTimeNanos);
+    public long calculateDelayNanosAfterWillBePossibleToConsume(long tokensToConsume, long currentTimeNanos, boolean checkTokensToConsumeShouldBeLessThenCapacity) {
+        return state.calculateDelayNanosAfterWillBePossibleToConsume(tokensToConsume, currentTimeNanos, checkTokensToConsumeShouldBeLessThenCapacity);
     }
 
     public void addTokens(long tokensToAdd) {

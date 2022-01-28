@@ -6,6 +6,7 @@ import io.github.bucket4j.Bucket
 import io.github.bucket4j.BucketConfiguration
 import io.github.bucket4j.ConsumptionProbe
 import io.github.bucket4j.EstimationProbe
+import io.github.bucket4j.Refill
 import io.github.bucket4j.mock.BucketType
 import io.github.bucket4j.mock.TimeMeterMock
 import spock.lang.Specification
@@ -62,7 +63,7 @@ class BucketRoundingRulesSpecification extends Specification {
         expect:
             def timeMeter = new TimeMeterMock(0)
             def configuration = BucketConfiguration.builder()
-                    .addLimit(Bandwidth.simple(1, Duration.ofSeconds(1)))
+                    .addLimit(Bandwidth.classic(4, Refill.greedy(1, Duration.ofSeconds(1))).withInitialTokens(1))
                     .build()
             Bucket bucket = bucketType.createBucket(configuration, timeMeter)
 

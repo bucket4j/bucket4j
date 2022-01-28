@@ -132,7 +132,7 @@ class BucketStateSpecification extends Specification {
             TimeMeter timeMeter = bucket.timeMeter
             BucketState state = bucket.asVerbose().getAvailableTokens().getState()
         when:
-            long actualTime = state.calculateDelayNanosAfterWillBePossibleToConsume(toConsume, timeMeter.currentTimeNanos())
+            long actualTime = state.calculateDelayNanosAfterWillBePossibleToConsume(toConsume, timeMeter.currentTimeNanos(), false)
         then:
             actualTime == requiredTime
         where:

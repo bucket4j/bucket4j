@@ -230,12 +230,12 @@ public class BucketStateIEEE754 implements BucketState, ComparableByContent<Buck
     }
 
     @Override
-    public long calculateDelayNanosAfterWillBePossibleToConsume(long tokensToConsume, long currentTimeNanos) {
+    public long calculateDelayNanosAfterWillBePossibleToConsume(long tokensToConsume, long currentTimeNanos, boolean checkTokensToConsumeShouldBeLessThenCapacity) {
         Bandwidth[] bandwidths = configuration.getBandwidths();
-        long delayAfterWillBePossibleToConsume = calculateDelayNanosAfterWillBePossibleToConsumeForBandwidth(0, bandwidths[0], tokensToConsume, currentTimeNanos);
+        long delayAfterWillBePossibleToConsume = calculateDelayNanosAfterWillBePossibleToConsumeForBandwidth(0, bandwidths[0], tokensToConsume, currentTimeNanos, checkTokensToConsumeShouldBeLessThenCapacity);
         for (int i = 1; i < bandwidths.length; i++) {
             Bandwidth bandwidth = bandwidths[i];
-            long delay = calculateDelayNanosAfterWillBePossibleToConsumeForBandwidth(i, bandwidth, tokensToConsume, currentTimeNanos);
+            long delay = calculateDelayNanosAfterWillBePossibleToConsumeForBandwidth(i, bandwidth, tokensToConsume, currentTimeNanos, checkTokensToConsumeShouldBeLessThenCapacity);
             delayAfterWillBePossibleToConsume = Math.max(delayAfterWillBePossibleToConsume, delay);
         }
         return delayAfterWillBePossibleToConsume;
@@ -267,7 +267,10 @@ public class BucketStateIEEE754 implements BucketState, ComparableByContent<Buck
         return nanosToWait < Long.MAX_VALUE? (long) nanosToWait : Long.MAX_VALUE;
     }
 
-    private long calculateDelayNanosAfterWillBePossibleToConsumeForBandwidth(int bandwidthIndex, Bandwidth bandwidth, long tokensToConsume, long currentTimeNanos) {
+    private long calculateDelayNanosAfterWillBePossibleToConsumeForBandwidth(int bandwidthIndex, Bandwidth bandwidth, long tokensToConsume, long currentTimeNanos, boolean checkTokensToConsumeShouldBeLessThenCapacity) {
+        if (checkTokensToConsumeShouldBeLessThenCapacity && tokensToConsume > bandwidth.capacity) {
+            return Long.MAX_VALUE;
+        }
         double currentSize = tokens[bandwidthIndex];
         if (tokensToConsume <= currentSize) {
             return 0;

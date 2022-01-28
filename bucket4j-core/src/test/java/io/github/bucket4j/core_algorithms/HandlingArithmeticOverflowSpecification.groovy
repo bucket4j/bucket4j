@@ -158,17 +158,16 @@ class HandlingArithmeticOverflowSpecification extends Specification {
 				.withMath(MathType.IEEE_754)
                 .build()
 			BucketState state = bucket.asVerbose().getAvailableTokens().getState()
-            Bandwidth[] limits = bucket.configuration.bandwidths
 
         expect:
-            state.calculateDelayNanosAfterWillBePossibleToConsume(10, meter.currentTimeNanos()) == 10
+            state.calculateDelayNanosAfterWillBePossibleToConsume(10, meter.currentTimeNanos(), false) == 10
 
         when:
             state.consume(1)
 
         then:
             state.getAvailableTokens() == -1
-            state.calculateDelayNanosAfterWillBePossibleToConsume(Long.MAX_VALUE, meter.currentTimeNanos()) == Long.MAX_VALUE
+            state.calculateDelayNanosAfterWillBePossibleToConsume(Long.MAX_VALUE, meter.currentTimeNanos(), false) == Long.MAX_VALUE
     }
 
     def "Should detect overflow during deficit calculation for interval refill"() {
@@ -188,22 +187,22 @@ class HandlingArithmeticOverflowSpecification extends Specification {
             Bandwidth[] limits = bucket.configuration.bandwidths
 
         expect:
-            state.calculateDelayNanosAfterWillBePossibleToConsume(10, meter.currentTimeNanos()) == 4611686018427387904
+            state.calculateDelayNanosAfterWillBePossibleToConsume(10, meter.currentTimeNanos(), false) == 4611686018427387904
 
         when:
             state.consume(1)
 
         then:
             state.getAvailableTokens() == -1
-            state.calculateDelayNanosAfterWillBePossibleToConsume(Long.MAX_VALUE, meter.currentTimeNanos()) == Long.MAX_VALUE
-            state.calculateDelayNanosAfterWillBePossibleToConsume((long)Long.MAX_VALUE/2, meter.currentTimeNanos()) == Long.MAX_VALUE
+            state.calculateDelayNanosAfterWillBePossibleToConsume(Long.MAX_VALUE, meter.currentTimeNanos(), false) == Long.MAX_VALUE
+            state.calculateDelayNanosAfterWillBePossibleToConsume((long)Long.MAX_VALUE/2, meter.currentTimeNanos(), false) == Long.MAX_VALUE
 
         when:
             state.addTokens(1)
             meter.addTime(bandwidthPeriodNanos - 10)
         then:
             state.getAvailableTokens() == 0
-            state.calculateDelayNanosAfterWillBePossibleToConsume(Long.MAX_VALUE - 10, meter.currentTimeNanos()) == Long.MAX_VALUE
+            state.calculateDelayNanosAfterWillBePossibleToConsume(Long.MAX_VALUE - 10, meter.currentTimeNanos(), false) == Long.MAX_VALUE
     }
 
 }

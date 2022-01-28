@@ -41,7 +41,7 @@ public interface BucketState {
 
     void consume(long toConsume);
 
-    long calculateDelayNanosAfterWillBePossibleToConsume(long tokensToConsume, long currentTimeNanos);
+    long calculateDelayNanosAfterWillBePossibleToConsume(long tokensToConsume, long currentTimeNanos, boolean checkTokensToConsumeShouldBeLessThenCapacity);
 
     long calculateFullRefillingTime(long currentTimeNanos);
 

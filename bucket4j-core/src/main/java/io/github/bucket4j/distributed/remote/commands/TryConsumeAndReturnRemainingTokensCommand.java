@@ -93,7 +93,7 @@ public class TryConsumeAndReturnRemainingTokensCommand implements RemoteCommand<
             return CommandResult.success(probe, ConsumptionProbe.SERIALIZATION_HANDLE);
         } else {
             long nanosToWaitForReset = state.calculateFullRefillingTime(currentTimeNanos);
-            long nanosToWaitForRefill = state.calculateDelayNanosAfterWillBePossibleToConsume(tokensToConsume, currentTimeNanos);
+            long nanosToWaitForRefill = state.calculateDelayNanosAfterWillBePossibleToConsume(tokensToConsume, currentTimeNanos, true);
             ConsumptionProbe probe = ConsumptionProbe.rejected(availableToConsume, nanosToWaitForRefill, nanosToWaitForReset);
             return CommandResult.success(probe, ConsumptionProbe.SERIALIZATION_HANDLE);
         }

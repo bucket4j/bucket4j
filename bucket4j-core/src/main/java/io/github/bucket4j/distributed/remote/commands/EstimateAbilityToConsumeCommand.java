@@ -87,7 +87,7 @@ public class EstimateAbilityToConsumeCommand implements RemoteCommand<Estimation
             EstimationProbe estimationProbe = EstimationProbe.canBeConsumed(availableToConsume);
             return CommandResult.success(estimationProbe, EstimationProbe.SERIALIZATION_HANDLE);
         } else {
-            long nanosToWaitForRefill = state.calculateDelayNanosAfterWillBePossibleToConsume(tokensToConsume, currentTimeNanos);
+            long nanosToWaitForRefill = state.calculateDelayNanosAfterWillBePossibleToConsume(tokensToConsume, currentTimeNanos, true);
             EstimationProbe estimationProbe = EstimationProbe.canNotBeConsumed(availableToConsume, nanosToWaitForRefill);
             return CommandResult.success(estimationProbe, EstimationProbe.SERIALIZATION_HANDLE);
         }

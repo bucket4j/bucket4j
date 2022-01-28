@@ -127,14 +127,7 @@ class FixedIntervalRefillSpecification extends Specification {
         then:
             !probe.consumed
             probe.remainingTokens == 0
-            probe.nanosToWaitForRefill == TimeUnit.SECONDS.toNanos(45 + 60)
-
-        when:
-            probe = bucket.tryConsumeAndReturnRemaining(21)
-        then:
-            !probe.consumed
-            probe.remainingTokens == 0
-            probe.nanosToWaitForRefill == TimeUnit.SECONDS.toNanos(45 + 60 + 60)
+            probe.nanosToWaitForRefill == Long.MAX_VALUE
     }
 
 }

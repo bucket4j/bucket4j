@@ -148,7 +148,7 @@ class BucketStateSpecification extends Specification {
         setup:
             BucketState state = getState(bucket)
         when:
-            long actualTime = state.calculateDelayNanosAfterWillBePossibleToConsume(toConsume, timeMeter.currentTimeNanos())
+            long actualTime = state.calculateDelayNanosAfterWillBePossibleToConsume(toConsume, timeMeter.currentTimeNanos(), false)
         then:
             actualTime == requiredTime
         where:

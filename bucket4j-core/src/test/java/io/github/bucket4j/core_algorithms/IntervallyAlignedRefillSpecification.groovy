@@ -116,7 +116,7 @@ class IntervallyAlignedRefillSpecification extends Specification {
         when: "all tokens consumed"
             bucket.tryConsumeAsMuchAsPossible()
         then: "bucket should report that 3 minute required to wait in order to consume 401 tokens"
-            bucket.tryConsumeAndReturnRemaining(401).nanosToWaitForRefill == TimeUnit.MINUTES.toNanos(3)
+            bucket.consumeIgnoringRateLimits(401) == TimeUnit.MINUTES.toNanos(3)
 
         where:
             mathType << MathType.values()
@@ -176,7 +176,7 @@ class IntervallyAlignedRefillSpecification extends Specification {
         when: "all tokens consumed"
             bucket.tryConsumeAsMuchAsPossible()
         then: "bucket should report that 3 minute required to wait in order to consume 401 tokens"
-            bucket.tryConsumeAndReturnRemaining(401).nanosToWaitForRefill == TimeUnit.MINUTES.toNanos(3)
+            bucket.consumeIgnoringRateLimits(401) == TimeUnit.MINUTES.toNanos(3)
 
         where:
             mathType << MathType.values()

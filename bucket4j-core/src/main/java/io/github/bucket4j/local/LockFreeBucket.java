@@ -99,7 +99,7 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket {
             newState.refillAllBandwidth(currentTimeNanos);
             long availableToConsume = newState.getAvailableTokens();
             if (tokensToConsume > availableToConsume) {
-                long nanosToWaitForRefill = newState.calculateDelayNanosAfterWillBePossibleToConsume(tokensToConsume, currentTimeNanos);
+                long nanosToWaitForRefill = newState.calculateDelayNanosAfterWillBePossibleToConsume(tokensToConsume, currentTimeNanos, true);
                 long nanosToWaitForReset = newState.calculateFullRefillingTime(currentTimeNanos);
                 return ConsumptionProbe.rejected(availableToConsume, nanosToWaitForRefill, nanosToWaitForReset);
             }
@@ -124,7 +124,7 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket {
         newState.refillAllBandwidth(currentTimeNanos);
         long availableToConsume = newState.getAvailableTokens();
         if (tokensToEstimate > availableToConsume) {
-            long nanosToWaitForRefill = newState.calculateDelayNanosAfterWillBePossibleToConsume(tokensToEstimate, currentTimeNanos);
+            long nanosToWaitForRefill = newState.calculateDelayNanosAfterWillBePossibleToConsume(tokensToEstimate, currentTimeNanos, true);
             return EstimationProbe.canNotBeConsumed(availableToConsume, nanosToWaitForRefill);
         } else {
             return EstimationProbe.canBeConsumed(availableToConsume);
@@ -139,7 +139,7 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket {
 
         while (true) {
             newState.refillAllBandwidth(currentTimeNanos);
-            long nanosToCloseDeficit = newState.calculateDelayNanosAfterWillBePossibleToConsume(tokensToConsume, currentTimeNanos);
+            long nanosToCloseDeficit = newState.calculateDelayNanosAfterWillBePossibleToConsume(tokensToConsume, currentTimeNanos, false);
             if (nanosToCloseDeficit == 0) {
                 newState.consume(tokensToConsume);
                 if (stateRef.compareAndSet(previousState, newState)) {
@@ -225,7 +225,7 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket {
 
         while (true) {
             newState.refillAllBandwidth(currentTimeNanos);
-            long nanosToCloseDeficit = newState.calculateDelayNanosAfterWillBePossibleToConsume(tokensToConsume, currentTimeNanos);
+            long nanosToCloseDeficit = newState.calculateDelayNanosAfterWillBePossibleToConsume(tokensToConsume, currentTimeNanos, false);
 
             if (nanosToCloseDeficit == INFINITY_DURATION) {
                 return nanosToCloseDeficit;
@@ -295,7 +295,7 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket {
             newState.refillAllBandwidth(currentTimeNanos);
             long availableToConsume = newState.getAvailableTokens();
             if (tokensToConsume > availableToConsume) {
-                long nanosToWaitForRefill = newState.calculateDelayNanosAfterWillBePossibleToConsume(tokensToConsume, currentTimeNanos);
+                long nanosToWaitForRefill = newState.calculateDelayNanosAfterWillBePossibleToConsume(tokensToConsume, currentTimeNanos, true);
                 long nanosToWaitForReset = newState.calculateFullRefillingTime(currentTimeNanos);
                 ConsumptionProbe consumptionProbe = ConsumptionProbe.rejected(availableToConsume, nanosToWaitForRefill, nanosToWaitForReset);
                 return new VerboseResult<>(currentTimeNanos, consumptionProbe, newState);
@@ -321,7 +321,7 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket {
         newState.refillAllBandwidth(currentTimeNanos);
         long availableToConsume = newState.getAvailableTokens();
         if (tokensToEstimate > availableToConsume) {
-            long nanosToWaitForRefill = newState.calculateDelayNanosAfterWillBePossibleToConsume(tokensToEstimate, currentTimeNanos);
+            long nanosToWaitForRefill = newState.calculateDelayNanosAfterWillBePossibleToConsume(tokensToEstimate, currentTimeNanos, true);
             EstimationProbe estimationProbe = EstimationProbe.canNotBeConsumed(availableToConsume, nanosToWaitForRefill);
             return new VerboseResult<>(currentTimeNanos, estimationProbe, newState);
         } else {
@@ -400,7 +400,7 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket {
 
         while (true) {
             newState.refillAllBandwidth(currentTimeNanos);
-            long nanosToCloseDeficit = newState.calculateDelayNanosAfterWillBePossibleToConsume(tokensToConsume, currentTimeNanos);
+            long nanosToCloseDeficit = newState.calculateDelayNanosAfterWillBePossibleToConsume(tokensToConsume, currentTimeNanos, false);
 
             if (nanosToCloseDeficit == INFINITY_DURATION) {
                 return new VerboseResult<>(currentTimeNanos, nanosToCloseDeficit, newState);

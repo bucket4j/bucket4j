@@ -11,7 +11,9 @@ import io.github.bucket4j.mock.TimeMeterMock
 import spock.lang.Specification
 import spock.lang.Unroll
 
-import java.time.Duration;
+import java.time.Duration
+
+import static java.lang.Long.MAX_VALUE;
 
 class EstimateAbilityToConsumeSpecification extends Specification {
 
@@ -43,10 +45,10 @@ class EstimateAbilityToConsumeSpecification extends Specification {
         2 |     1      |   true  |        0      | BucketConfiguration.builder().addLimit(Bandwidth.simple(100, Duration.ofNanos(100)).withInitialTokens(1)).build()
         3 |    80      |   false |       10      | BucketConfiguration.builder().addLimit(Bandwidth.simple(100, Duration.ofNanos(100)).withInitialTokens(70)).build()
         4 |    10      |   false |       10      | BucketConfiguration.builder().addLimit(Bandwidth.simple(100, Duration.ofNanos(100)).withInitialTokens(0)).build()
-        5 |   120      |   false |      110      | BucketConfiguration.builder().addLimit(Bandwidth.simple(100, Duration.ofNanos(100)).withInitialTokens(10)).build()
+        5 |   120      |   false |    MAX_VALUE  | BucketConfiguration.builder().addLimit(Bandwidth.simple(100, Duration.ofNanos(100)).withInitialTokens(10)).build()
         6 |    80      |   false |      100      | BucketConfiguration.builder().addLimit(Bandwidth.classic(100, Refill.intervally(100, Duration.ofNanos(100))).withInitialTokens(70)).build()
         7 |    10      |   false |      100      | BucketConfiguration.builder().addLimit(Bandwidth.classic(100, Refill.intervally(100, Duration.ofNanos(100))).withInitialTokens(0)).build()
-        8 |   120      |   false |      200      | BucketConfiguration.builder().addLimit(Bandwidth.classic(100, Refill.intervally(100, Duration.ofNanos(100))).withInitialTokens(10)).build()
+        8 |   120      |   false |   MAX_VALUE   | BucketConfiguration.builder().addLimit(Bandwidth.classic(100, Refill.intervally(100, Duration.ofNanos(100))).withInitialTokens(10)).build()
     }
 
 }

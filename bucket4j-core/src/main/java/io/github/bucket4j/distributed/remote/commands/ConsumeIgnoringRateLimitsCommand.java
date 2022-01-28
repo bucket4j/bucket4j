@@ -86,7 +86,7 @@ public class ConsumeIgnoringRateLimitsCommand implements RemoteCommand<Long>, Co
 
         RemoteBucketState state = mutableEntry.get();
         state.refillAllBandwidth(currentTimeNanos);
-        long nanosToCloseDeficit = state.calculateDelayNanosAfterWillBePossibleToConsume(tokensToConsume, currentTimeNanos);
+        long nanosToCloseDeficit = state.calculateDelayNanosAfterWillBePossibleToConsume(tokensToConsume, currentTimeNanos, false);
 
         if (nanosToCloseDeficit == Long.MAX_VALUE) {
             return CommandResult.success(Long.MAX_VALUE, LONG_HANDLE);

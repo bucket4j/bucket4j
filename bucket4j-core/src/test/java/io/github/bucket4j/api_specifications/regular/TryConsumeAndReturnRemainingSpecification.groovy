@@ -14,6 +14,8 @@ import spock.lang.Unroll
 
 import java.time.Duration
 
+import static java.lang.Long.MAX_VALUE
+
 class TryConsumeAndReturnRemainingSpecification extends Specification {
 
     TimeMeterMock clock = new TimeMeterMock()
@@ -47,7 +49,7 @@ class TryConsumeAndReturnRemainingSpecification extends Specification {
         2 |     1     |   true  |            0       |       0      | BucketConfiguration.builder().addLimit(Bandwidth.simple(100, Duration.ofNanos(100)).withInitialTokens(1)).build()
         3 |    80     |   false |           70       |      10      | BucketConfiguration.builder().addLimit(Bandwidth.simple(100, Duration.ofNanos(100)).withInitialTokens(70)).build()
         4 |    10     |   false |            0       |      10      | BucketConfiguration.builder().addLimit(Bandwidth.simple(100, Duration.ofNanos(100)).withInitialTokens(0)).build()
-        5 |   120     |   false |           10       |     110      | BucketConfiguration.builder().addLimit(Bandwidth.simple(100, Duration.ofNanos(100)).withInitialTokens(10)).build()
+        5 |   120     |   false |           10       |   MAX_VALUE  | BucketConfiguration.builder().addLimit(Bandwidth.simple(100, Duration.ofNanos(100)).withInitialTokens(10)).build()
     }
 
     @Unroll
