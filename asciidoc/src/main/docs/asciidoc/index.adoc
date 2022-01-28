@@ -3,7 +3,7 @@ image::./images/white-logo.png[]
 endif::[]
 
 == Current version {revnumber} documentation
-`31 Dec 2021` redesigning of distributed facilities
+`30 Jan 2022` Support for Hazelcast for topology without access to classpath of server nodes.
 
 * http://bucket4j.com/{revnumber}/release-notes.html[{revnumber} Release notes]
 * http://bucket4j.com/{revnumber}/toc.html[{revnumber} Reference]
@@ -42,6 +42,30 @@ image:images/Maxim_Bartkov.jpg[80,80] +
 
 == Documentation for previous versions
 === 2021
+==== 7.0.0
+`31 Dec 2021` redesigning of distributed facilities
+
+* https://bucket4j.com/7.0.0/release-notes.html[7.0.0 Release notes]
+* https://bucket4j.com/7.0.0/toc.html[7.0.0 Reference]
+
+==== 6.4.0
+`Nov 14, 2021` Enhancements for Verbose API
+
+* https://github.com/vladimir-bukhtoyarov/bucket4j/releases/tag/6.4.0[6.4.0 Release notes]
+* https://github.com/vladimir-bukhtoyarov/bucket4j/tree/6.4[6.4.0 Reference]
+
+==== 6.3.0
+`Oct 02, 2021` Additive strategy for configuration replacement
+
+* https://github.com/vladimir-bukhtoyarov/bucket4j/releases/tag/6.3.0[6.3.0 Release notes]
+* https://github.com/vladimir-bukhtoyarov/bucket4j/tree/6.3[6.3.0 Reference]
+
+==== 6.2.0
+`Mar 21, 2021` Support for ApacheIgnite Thin client
+
+* https://github.com/vladimir-bukhtoyarov/bucket4j/releases/tag/6.2.0[6.2.0 Release notes]
+* https://github.com/vladimir-bukhtoyarov/bucket4j/tree/6.2[6.2.0 Reference]
+
 ==== 6.1.0
 `Mar 03 2021` Support for refilling buckets over maximum
 
