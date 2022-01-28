@@ -20,11 +20,9 @@ package io.github.bucket4j.mock;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.generic.select_for_update.AbstractLockBasedProxyManager;
 import io.github.bucket4j.distributed.proxy.generic.select_for_update.LockBasedTransaction;
-import io.github.bucket4j.distributed.proxy.generic.select_for_update.LockResult;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 
 public class LockBasedProxyManagerMock<K> extends AbstractLockBasedProxyManager<K> {
 
@@ -35,16 +33,11 @@ public class LockBasedProxyManagerMock<K> extends AbstractLockBasedProxyManager<
     }
 
     @Override
-    protected CompletableFuture<Void> removeAsync(K key) {
-        stateMap.remove(key);
-        return CompletableFuture.completedFuture(null);
-    }
-
-    @Override
     protected LockBasedTransaction allocateTransaction(K key) {
         byte[] backup = stateMap.get(key);
 
         return new LockBasedTransaction() {
+
             @Override
             public void begin() {
                 // do nothing
@@ -77,21 +70,13 @@ public class LockBasedProxyManagerMock<K> extends AbstractLockBasedProxyManager<
             }
 
             @Override
-            public LockResult lock() {
-                return backup == null? LockResult.DATA_NOT_EXISTS_AND_LOCKED : LockResult.DATA_EXISTS_AND_LOCKED;
+            public byte[] lockAndGet() {
+                return backup;
             }
 
             @Override
             public void unlock() {
                 // do nothing
-            }
-
-            @Override
-            public byte[] getData() {
-                if (backup == null) {
-                    throw new IllegalStateException();
-                }
-                return backup;
             }
 
         };

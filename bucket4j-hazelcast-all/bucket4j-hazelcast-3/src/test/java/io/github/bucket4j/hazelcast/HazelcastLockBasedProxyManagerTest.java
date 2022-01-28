@@ -4,10 +4,10 @@ import com.hazelcast.config.Config;
 import com.hazelcast.config.JoinConfig;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.map.IMap;
+import com.hazelcast.core.IMap;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
-import io.github.bucket4j.grid.hazelcast.HazelcastCompareAndSwapBasedProxyManager;
+import io.github.bucket4j.grid.hazelcast.HazelcastLockBasedProxyManager;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
 import org.gridkit.nanocloud.Cloud;
 import org.gridkit.nanocloud.CloudFactory;
@@ -19,7 +19,7 @@ import org.junit.BeforeClass;
 import java.io.Serializable;
 import java.util.UUID;
 
-public class HazelcastCompareAndSwapProxyManagerTest extends AbstractDistributedBucketTest<String> {
+public class HazelcastLockBasedProxyManagerTest extends AbstractDistributedBucketTest<String> {
 
     private static IMap<String, byte[]> map;
     private static Cloud cloud;
@@ -68,7 +68,7 @@ public class HazelcastCompareAndSwapProxyManagerTest extends AbstractDistributed
 
     @Override
     protected ProxyManager<String> getProxyManager() {
-        return new HazelcastCompareAndSwapBasedProxyManager<>(map, ClientSideConfig.getDefault());
+        return new HazelcastLockBasedProxyManager<>(map, ClientSideConfig.getDefault());
     }
 
     @Override

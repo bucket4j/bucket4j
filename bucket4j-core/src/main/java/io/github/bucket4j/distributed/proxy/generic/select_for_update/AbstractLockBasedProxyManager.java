@@ -61,6 +61,11 @@ public abstract class AbstractLockBasedProxyManager<K> extends AbstractProxyMana
         throw new UnsupportedOperationException();
     }
 
+    @Override
+    protected CompletableFuture<Void> removeAsync(Object key) {
+        return null;
+    }
+
     protected abstract LockBasedTransaction allocateTransaction(K key);
 
     protected abstract void releaseTransaction(LockBasedTransaction transaction);
@@ -70,13 +75,8 @@ public abstract class AbstractLockBasedProxyManager<K> extends AbstractProxyMana
         transaction.begin();
         try {
             try {
-                byte[] persistedDataOnBeginOfTransaction;
-                LockResult lockResult = transaction.lock();
-                if (lockResult == LockResult.DATA_EXISTS_AND_LOCKED) {
-                    persistedDataOnBeginOfTransaction = transaction.getData();
-                } else if (command.isInitializationCommand()) {
-                    persistedDataOnBeginOfTransaction = null;
-                } else {
+                byte[] persistedDataOnBeginOfTransaction = transaction.lockAndGet();
+                if (persistedDataOnBeginOfTransaction == null && !command.isInitializationCommand()) {
                     return CommandResult.bucketNotFound();
                 }
                 GenericEntry entry = new GenericEntry(persistedDataOnBeginOfTransaction, request.getBackwardCompatibilityVersion());

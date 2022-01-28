@@ -10,15 +10,15 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-public class HazelcastCompareAndSwapProxyManager<K> extends AbstractCompareAndSwapBasedProxyManager<K> {
+public class HazelcastCompareAndSwapBasedProxyManager<K> extends AbstractCompareAndSwapBasedProxyManager<K> {
 
     private final IMap<K, byte[]> map;
 
-    public HazelcastCompareAndSwapProxyManager(IMap<K, byte[]> map) {
+    public HazelcastCompareAndSwapBasedProxyManager(IMap<K, byte[]> map) {
         this(map, ClientSideConfig.getDefault());
     }
 
-    public HazelcastCompareAndSwapProxyManager(IMap<K, byte[]> map, ClientSideConfig clientSideConfig) {
+    public HazelcastCompareAndSwapBasedProxyManager(IMap<K, byte[]> map, ClientSideConfig clientSideConfig) {
         super(clientSideConfig);
         this.map = Objects.requireNonNull(map);
     }
