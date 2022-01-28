@@ -26,6 +26,7 @@ image:images/Maxim_Bartkov.jpg[80,80] +
 == Third-party articles and integrations
 
 === Third-party articles
+* https://dzone.com/articles/how-to-provide-rate-limiting-via-bucket4j-in-java[Maxim Bartkov - How to Provide Rate-Limiting Via Bucket4j in Java]
 * https://golb.hplar.ch/2019/08/rate-limit-bucket4j.html[Rate limiting Spring MVC endpoints with bucket4j]
 * http://www.programmersought.com/article/2524209291/[ProgrammerSought - Bucket4j preliminary understanding]
 * https://www.baeldung.com/spring-bucket4j[Baeldung - Rate Limiting a Spring API Using Bucket4j]
