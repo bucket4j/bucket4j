@@ -20,12 +20,10 @@ package example.distributed.generic.postgresql.advisory_lock;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.generic.select_for_update.AbstractLockBasedProxyManager;
 import io.github.bucket4j.distributed.proxy.generic.select_for_update.LockBasedTransaction;
-import io.github.bucket4j.distributed.proxy.generic.select_for_update.LockResult;
 
 import javax.sql.DataSource;
 import java.sql.*;
 import java.util.Objects;
-import java.util.concurrent.CompletableFuture;
 
 public class AdvisoryLockBasedPostgreSQLProxyManager extends AbstractLockBasedProxyManager<Long> {
 
@@ -78,11 +76,6 @@ public class AdvisoryLockBasedPostgreSQLProxyManager extends AbstractLockBasedPr
     }
 
     @Override
-    protected CompletableFuture<Void> removeAsync(Long key) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public void removeProxy(Long key) {
         // TODO implement removal
         throw new UnsupportedOperationException();
@@ -92,8 +85,6 @@ public class AdvisoryLockBasedPostgreSQLProxyManager extends AbstractLockBasedPr
 
         private final long key;
         private final Connection connection;
-
-        private byte[] bucketStateBeforeTransaction;
 
         private PostgreAdvisoryLockBasedTransaction(long key, Connection connection) {
             this.key = key;
@@ -114,7 +105,7 @@ public class AdvisoryLockBasedPostgreSQLProxyManager extends AbstractLockBasedPr
         }
 
         @Override
-        public LockResult lock() {
+        public byte[] lockAndGet() {
             try {
                 // acquire pessimistic lock
                 String lockSQL = "SELECT pg_advisory_xact_lock(?)";
@@ -129,10 +120,9 @@ public class AdvisoryLockBasedPostgreSQLProxyManager extends AbstractLockBasedPr
                     selectStatement.setLong(1, key);
                     try (ResultSet rs = selectStatement.executeQuery()) {
                         if (rs.next()) {
-                            bucketStateBeforeTransaction = rs.getBytes("state");
-                            return LockResult.DATA_EXISTS_AND_LOCKED;
+                            return rs.getBytes("state");
                         } else {
-                            return LockResult.DATA_NOT_EXISTS_AND_LOCKED;
+                            return null;
                         }
                     }
                 }
@@ -210,11 +200,6 @@ public class AdvisoryLockBasedPostgreSQLProxyManager extends AbstractLockBasedPr
         @Override
         public void unlock() {
             // do nothing, because advisory lock will be auto unlocked when transaction finishes
-        }
-
-        @Override
-        public byte[] getData() {
-            return bucketStateBeforeTransaction;
         }
 
     }

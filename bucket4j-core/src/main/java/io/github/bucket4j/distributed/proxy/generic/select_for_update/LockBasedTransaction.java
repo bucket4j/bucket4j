@@ -25,9 +25,9 @@ package io.github.bucket4j.distributed.proxy.generic.select_for_update;
  * The typical flow is following:
  * <ol>
  *     <li>begin - {@link #begin()}</li>
- *     <li>lock - {@link #lock()}</li>
- *     <li>getData - {@link #getData()}</li>
+ *     <li>lock - {@link #lockAndGet()}</li>
  *     <li>update - {@link #update(byte[])}</li>
+ *     <li>unlock - {@link #unlock()}</li>
  *     <li>commit - {@link #commit()}</li>
  * </ol>
  */
@@ -50,24 +50,17 @@ public interface LockBasedTransaction {
     void commit();
 
     /**
-     * Locks data by the key associated with this transaction.
-     * There is strong guarantee that {@link #unlock()} will be called if {@link #lock()} returns successfully.
+     * Locks data by the key associated with this transaction and returns data that is associated with the key.
+     * There is strong guarantee that {@link #unlock()} will be called if {@link #lockAndGet()} returns successfully.
      *
-     * @return lock result
+     * @return Returns the data by the key associated with this transaction, or null data associated with key does not exist
      */
-    LockResult lock();
+    byte[] lockAndGet();
 
     /**
      * Unlocks data by the key associated with this transaction.
      */
     void unlock();
-
-    /**
-     * Returns the data by the key associated with this transaction.
-     *
-     * @return persisted state of bucket
-     */
-    byte[] getData();
 
     /**
      * Creates the data by the key associated with this transaction.

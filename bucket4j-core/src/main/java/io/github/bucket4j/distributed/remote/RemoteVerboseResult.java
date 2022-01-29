@@ -73,7 +73,7 @@ public class RemoteVerboseResult<T> implements ComparableByContent<RemoteVerbose
     }
 
     public VerboseResult<T> asLocal() {
-        return new VerboseResult<>(operationTimeNanos, value, state.getConfiguration(), state.copyBucketState());
+        return new VerboseResult<>(operationTimeNanos, value, state.copyBucketState());
     }
 
     public <R> RemoteVerboseResult<R> map(Function<T, R> mapper) {

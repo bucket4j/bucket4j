@@ -81,7 +81,7 @@ public class CreateInitialStateCommand implements RemoteCommand<Nothing>, Compar
         }
 
         BucketState bucketState = BucketState.createInitialState(configuration, MathType.INTEGER_64_BITS, currentTimeNanos);
-        RemoteBucketState remoteBucketState = new RemoteBucketState(configuration, bucketState, new RemoteStat(0L));
+        RemoteBucketState remoteBucketState = new RemoteBucketState(bucketState, new RemoteStat(0L));
         mutableEntry.set(remoteBucketState);
         return CommandResult.NOTHING;
     }

@@ -14,8 +14,8 @@ public class PackageAccessor {
 
     public static BucketState getState(Bucket bucket) {
         if (bucket instanceof LockFreeBucket) {
-            AtomicReference stateRef = getFieldValue(bucket, "stateRef");
-            return getFieldValue(stateRef.get(), "state");
+            AtomicReference<BucketState> stateRef = getFieldValue(bucket, "stateRef");
+            return stateRef.get();
         } else if (bucket instanceof SynchronizedBucket) {
             return getFieldValue(bucket, "state");
         } else if (bucket instanceof DefaultBucketProxy) {

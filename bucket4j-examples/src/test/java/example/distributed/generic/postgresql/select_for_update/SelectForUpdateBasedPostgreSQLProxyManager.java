@@ -20,12 +20,10 @@ package example.distributed.generic.postgresql.select_for_update;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.generic.select_for_update.AbstractLockBasedProxyManager;
 import io.github.bucket4j.distributed.proxy.generic.select_for_update.LockBasedTransaction;
-import io.github.bucket4j.distributed.proxy.generic.select_for_update.LockResult;
 
 import javax.sql.DataSource;
 import java.sql.*;
 import java.util.Objects;
-import java.util.concurrent.CompletableFuture;
 
 public class SelectForUpdateBasedPostgreSQLProxyManager extends AbstractLockBasedProxyManager<Long> {
 
@@ -78,11 +76,6 @@ public class SelectForUpdateBasedPostgreSQLProxyManager extends AbstractLockBase
     }
 
     @Override
-    protected CompletableFuture<Void> removeAsync(Long key) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public void removeProxy(Long key) {
         // TODO implement removal
         throw new UnsupportedOperationException();
@@ -92,8 +85,6 @@ public class SelectForUpdateBasedPostgreSQLProxyManager extends AbstractLockBase
 
         private final long key;
         private final Connection connection;
-
-        private byte[] bucketStateBeforeTransaction;
 
         private PostgreLockBasedTransaction(long key, Connection connection) {
             this.key = key;
@@ -114,19 +105,19 @@ public class SelectForUpdateBasedPostgreSQLProxyManager extends AbstractLockBase
         }
 
         @Override
-        public LockResult lock() {
+        public byte[] lockAndGet() {
             try {
                 String selectForUpdateSQL = "SELECT state FROM buckets WHERE id = ? FOR UPDATE";
                 try (PreparedStatement selectStatement = connection.prepareStatement(selectForUpdateSQL)) {
                     selectStatement.setLong(1, key);
                     try (ResultSet rs = selectStatement.executeQuery()) {
                         if (rs.next()) {
-                            bucketStateBeforeTransaction = rs.getBytes("state");
+                            byte[] bucketStateBeforeTransaction = rs.getBytes("state");
                             if (bucketStateBeforeTransaction != null) {
-                                return LockResult.DATA_EXISTS_AND_LOCKED;
+                                return bucketStateBeforeTransaction;
                             } else {
                                 // we detected fake data that inserted by previous transaction
-                                return LockResult.DATA_NOT_EXISTS_AND_LOCKED;
+                                return null;
                             }
                         }
                     }
@@ -145,7 +136,7 @@ public class SelectForUpdateBasedPostgreSQLProxyManager extends AbstractLockBase
                     }
                 }
 
-                // it is need to execute select for update again in order to obtain the lock
+                // it needs to execute select for update again in order to obtain the lock
                 try (PreparedStatement selectStatement = connection.prepareStatement(selectForUpdateSQL)) {
                     selectStatement.setLong(1, key);
                     try (ResultSet rs = selectStatement.executeQuery()) {
@@ -153,8 +144,8 @@ public class SelectForUpdateBasedPostgreSQLProxyManager extends AbstractLockBase
                             // query does not see the record which inserted on step above
                             throw new IllegalStateException("Something unexpected happen, it needs to read PostgreSQL manual");
                         }
-                        // we need to return epmty Optional because bucket is not initialized yet
-                        return LockResult.DATA_NOT_EXISTS_AND_LOCKED;
+                        // we need to return empty Optional because bucket is not initialized yet
+                        return null;
                     }
                 }
             } catch (SQLException e) {
@@ -219,11 +210,6 @@ public class SelectForUpdateBasedPostgreSQLProxyManager extends AbstractLockBase
         @Override
         public void unlock() {
             // do nothing, because locked rows will be auto unlocked when transaction finishes
-        }
-
-        @Override
-        public byte[] getData() {
-            return bucketStateBeforeTransaction;
         }
 
     }

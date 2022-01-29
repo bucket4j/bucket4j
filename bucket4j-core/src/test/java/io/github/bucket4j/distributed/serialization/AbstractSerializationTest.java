@@ -102,7 +102,7 @@ public abstract class AbstractSerializationTest {
             BucketConfiguration bucketConfiguration = new BucketConfiguration(Arrays.asList(bandwidths));
             BucketState bucketState = BucketState.createInitialState(bucketConfiguration, mathType, System.nanoTime());
 
-            bucketState.addTokens(bandwidths, 300);
+            bucketState.addTokens(300);
 
             testSerialization(bucketState);
         }
@@ -119,7 +119,7 @@ public abstract class AbstractSerializationTest {
             BucketConfiguration bucketConfiguration = new BucketConfiguration(Arrays.asList(bandwidths));
             BucketState bucketState = BucketState.createInitialState(bucketConfiguration, mathType, System.nanoTime());
 
-            bucketState.addTokens(bandwidths, 42);
+            bucketState.addTokens(42);
 
             testSerialization(bucketState);
         }
@@ -134,7 +134,7 @@ public abstract class AbstractSerializationTest {
             };
             BucketConfiguration bucketConfiguration = new BucketConfiguration(Arrays.asList(bandwidths));
             BucketState bucketState = BucketState.createInitialState(bucketConfiguration, mathType, System.nanoTime());
-            RemoteBucketState gridBucketState = new RemoteBucketState(bucketConfiguration, bucketState, new RemoteStat(14));
+            RemoteBucketState gridBucketState = new RemoteBucketState(bucketState, new RemoteStat(14));
 
             testSerialization(gridBucketState);
         }
@@ -149,8 +149,8 @@ public abstract class AbstractSerializationTest {
             BucketConfiguration bucketConfiguration = new BucketConfiguration(Arrays.asList(bandwidths));
             BucketState bucketState = BucketState.createInitialState(bucketConfiguration, mathType, System.nanoTime());
 
-            bucketState.addTokens(bandwidths, 300);
-            RemoteBucketState gridBucketState = new RemoteBucketState(bucketConfiguration, bucketState, new RemoteStat(666));
+            bucketState.addTokens(300);
+            RemoteBucketState gridBucketState = new RemoteBucketState(bucketState, new RemoteStat(666));
 
             testSerialization(gridBucketState);
         }
@@ -167,8 +167,8 @@ public abstract class AbstractSerializationTest {
             BucketConfiguration bucketConfiguration = new BucketConfiguration(Arrays.asList(bandwidths));
             BucketState bucketState = BucketState.createInitialState(bucketConfiguration, mathType, System.nanoTime());
 
-            bucketState.addTokens(bandwidths, 42);
-            RemoteBucketState gridBucketState = new RemoteBucketState(bucketConfiguration, bucketState, new RemoteStat(66));
+            bucketState.addTokens(42);
+            RemoteBucketState gridBucketState = new RemoteBucketState(bucketState, new RemoteStat(66));
 
             testSerialization(gridBucketState);
         }
@@ -194,22 +194,22 @@ public abstract class AbstractSerializationTest {
         // with complex payload
         EstimationProbe resultWithComplexPayload = EstimationProbe.canNotBeConsumed(10, 20);
         testSerialization(CommandResult.success(resultWithComplexPayload, EstimationProbe.SERIALIZATION_HANDLE));
-//        // without payload
-//        testSerialization(CommandResult.bucketNotFound());
-//
-//        // with integer payload
-//        testSerialization(CommandResult.success(42L));
-//
-//        // with complex payload
-//        testSerialization(CommandResult.success(EstimationProbe.canNotBeConsumed(10, 20)));
-//
-//        // estimation probes
-//        testSerialization(EstimationProbe.canNotBeConsumed(10, 20));
-//        testSerialization(EstimationProbe.canBeConsumed(10));
-//
-//        // consumption probes
-//        testSerialization(ConsumptionProbe.rejected(10, 20));
-//        testSerialization(ConsumptionProbe.consumed(10));
+        // without payload
+        testSerialization(CommandResult.bucketNotFound());
+
+        // with integer payload
+        testSerialization(CommandResult.success(42L, LONG_HANDLE));
+
+        // with complex payload
+        testSerialization(CommandResult.success(EstimationProbe.canNotBeConsumed(10, 20), EstimationProbe.SERIALIZATION_HANDLE.getTypeId()));
+
+        // estimation probes
+        testSerialization(EstimationProbe.canNotBeConsumed(10, 20));
+        testSerialization(EstimationProbe.canBeConsumed(10));
+
+        // consumption probes
+        testSerialization(ConsumptionProbe.rejected(10, 20, 43));
+        testSerialization(ConsumptionProbe.consumed(10, 46));
 
         // estimation probes
         testSerialization(EstimationProbe.canNotBeConsumed(10, 20));
@@ -229,7 +229,7 @@ public abstract class AbstractSerializationTest {
         )));
         // verbose results
         RemoteStat remoteStat = new RemoteStat(42);
-        RemoteBucketState remoteBucketState = new RemoteBucketState(bucketConfiguration, bucketState, remoteStat);
+        RemoteBucketState remoteBucketState = new RemoteBucketState(bucketState, remoteStat);
         testSerialization(new RemoteVerboseResult<>(323L, NULL_HANDLE.getTypeId(), null, remoteBucketState));
         testSerialization(new RemoteVerboseResult<>(323L, BOOLEAN_HANDLE.getTypeId(), true, remoteBucketState));
         testSerialization(new RemoteVerboseResult<>(323L, LONG_HANDLE.getTypeId(), 6666666L, remoteBucketState));

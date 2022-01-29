@@ -30,13 +30,11 @@ public class VerboseResult<T> implements ComparableByContent<VerboseResult<?>> {
 
     private final long operationTimeNanos;
     private final T value;
-    private final BucketConfiguration configuration;
     private final BucketState state;
 
-    public VerboseResult(long operationTimeNanos, T value, BucketConfiguration configuration, BucketState state) {
+    public VerboseResult(long operationTimeNanos, T value, BucketState state) {
         this.operationTimeNanos = operationTimeNanos;
         this.value = value;
-        this.configuration = configuration;
         this.state = state;
     }
 
@@ -51,7 +49,7 @@ public class VerboseResult<T> implements ComparableByContent<VerboseResult<?>> {
      * @return snapshot of configuration which was actual at operation time
      */
     public BucketConfiguration getConfiguration() {
-        return configuration;
+        return state.getConfiguration();
     }
 
     /**
@@ -75,16 +73,16 @@ public class VerboseResult<T> implements ComparableByContent<VerboseResult<?>> {
         return new Diagnostics() {
             @Override
             public long calculateFullRefillingTime() {
-                return state.calculateFullRefillingTime(configuration.getBandwidths(), operationTimeNanos);
+                return state.calculateFullRefillingTime(operationTimeNanos);
             }
             @Override
             public long getAvailableTokens() {
-                return state.getAvailableTokens(configuration.getBandwidths());
+                return state.getAvailableTokens();
             }
 
             @Override
             public long[] getAvailableTokensPerEachBandwidth() {
-                Bandwidth[] bandwidths = configuration.getBandwidths();
+                Bandwidth[] bandwidths = state.getConfiguration().getBandwidths();
                 long[] availableTokens = new long[bandwidths.length];
                 for (int i = 0; i < bandwidths.length; i++) {
                     availableTokens[i] = state.getCurrentSize(i);
@@ -124,14 +122,14 @@ public class VerboseResult<T> implements ComparableByContent<VerboseResult<?>> {
     }
 
     public <R> VerboseResult<R> map(Function<T, R> mapper) {
-        return new VerboseResult<R>(operationTimeNanos, mapper.apply(value), configuration, state);
+        return new VerboseResult<R>(operationTimeNanos, mapper.apply(value), state);
     }
 
     @Override
     public boolean equalsByContent(VerboseResult<?> other) {
         return operationTimeNanos == other.operationTimeNanos
             && ComparableByContent.equals(value, other.value)
-            && configuration.equalsByContent(other.configuration)
+            && state.getConfiguration().equalsByContent(other.getState().getConfiguration())
             && ComparableByContent.equals(state, other.state);
     }
 

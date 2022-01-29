@@ -29,24 +29,27 @@ public interface BucketState {
 
     BucketState copy();
 
-    BucketState replaceConfiguration(BucketConfiguration previousConfiguration, BucketConfiguration newConfiguration,
-                                     TokensInheritanceStrategy tokensInheritanceStrategy, long currentTimeNanos);
+    BucketConfiguration getConfiguration();
+
+    void setConfiguration(BucketConfiguration configuration);
+
+    BucketState replaceConfiguration(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy, long currentTimeNanos);
 
     void copyStateFrom(BucketState sourceState);
 
-    long getAvailableTokens(Bandwidth[] bandwidths);
+    long getAvailableTokens();
 
-    void consume(Bandwidth[] bandwidths, long toConsume);
+    void consume(long toConsume);
 
-    long calculateDelayNanosAfterWillBePossibleToConsume(Bandwidth[] bandwidths, long tokensToConsume, long currentTimeNanos);
+    long calculateDelayNanosAfterWillBePossibleToConsume(long tokensToConsume, long currentTimeNanos, boolean checkTokensToConsumeShouldBeLessThenCapacity);
 
-    long calculateFullRefillingTime(Bandwidth[] bandwidths, long currentTimeNanos);
+    long calculateFullRefillingTime(long currentTimeNanos);
 
-    void refillAllBandwidth(Bandwidth[] limits, long currentTimeNanos);
+    void refillAllBandwidth(long currentTimeNanos);
 
-    void addTokens(Bandwidth[] bandwidths, long tokensToAdd);
+    void addTokens(long tokensToAdd);
 
-    void forceAddTokens(Bandwidth[] bandwidths, long tokensToAdd);
+    void forceAddTokens(long tokensToAdd);
 
     long getCurrentSize(int bandwidth);
 

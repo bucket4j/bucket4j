@@ -19,14 +19,14 @@ import java.time.Duration
 class BucketStateSpecification extends Specification {
 
     @Shared
-    private TimeMeter timeMeter = new TimeMeterMock();
+    private TimeMeter timeMeter = new TimeMeterMock()
 
     @Unroll
     def "GetAvailableTokens specification #testNumber"(String testNumber, long requiredAvailableTokens, Bucket bucket) {
         setup:
             BucketState state = bucket.asVerbose().getAvailableTokens().getState()
         when:
-            long availableTokens = state.getAvailableTokens(bucket.configuration.bandwidths)
+            long availableTokens = state.getAvailableTokens()
         then:
             availableTokens == requiredAvailableTokens
         where:
@@ -75,8 +75,8 @@ class BucketStateSpecification extends Specification {
         setup:
             BucketState state = bucket.asVerbose().getAvailableTokens().getState()
         when:
-            state.addTokens(bucket.configuration.bandwidths, tokensToAdd)
-            long availableTokens = state.getAvailableTokens(bucket.configuration.bandwidths)
+            state.addTokens(tokensToAdd)
+            long availableTokens = state.getAvailableTokens()
         then:
             availableTokens == requiredAvailableTokens
         where:
@@ -129,11 +129,10 @@ class BucketStateSpecification extends Specification {
     @Unroll
     def "delayAfterWillBePossibleToConsume specification #testNumber"(String testNumber, long toConsume, long requiredTime, Bucket bucket) {
         setup:
-            def configuration = bucket.configuration
             TimeMeter timeMeter = bucket.timeMeter
             BucketState state = bucket.asVerbose().getAvailableTokens().getState()
         when:
-            long actualTime = state.calculateDelayNanosAfterWillBePossibleToConsume(configuration.bandwidths, toConsume, timeMeter.currentTimeNanos())
+            long actualTime = state.calculateDelayNanosAfterWillBePossibleToConsume(toConsume, timeMeter.currentTimeNanos(), false)
         then:
             actualTime == requiredTime
         where:
@@ -214,10 +213,10 @@ class BucketStateSpecification extends Specification {
                                                                long timeShiftBeforeAsk, long tokensConsumeBeforeAsk, BucketConfiguration configuration) {
         setup:
             BucketState state = BucketState.createInitialState(configuration, MathType.INTEGER_64_BITS, 0L)
-            state.refillAllBandwidth(configuration.bandwidths, timeShiftBeforeAsk)
-            state.consume(configuration.bandwidths, tokensConsumeBeforeAsk)
+            state.refillAllBandwidth(timeShiftBeforeAsk)
+            state.consume(tokensConsumeBeforeAsk)
         when:
-            long actualTime = state.calculateFullRefillingTime(configuration.bandwidths, timeShiftBeforeAsk)
+            long actualTime = state.calculateFullRefillingTime(timeShiftBeforeAsk)
         then:
             actualTime == requiredTime
         where:
@@ -303,10 +302,9 @@ class BucketStateSpecification extends Specification {
                     .withCustomTimePrecision(mockTimer)
                     .build()
             BucketState state = bucket.asVerbose().getAvailableTokens().getState()
-            BucketConfiguration configuration = bucket.getConfiguration()
         when:
             mockTimer.setCurrentTimeNanos(timeOnRefill)
-            state.refillAllBandwidth(configuration.bandwidths, timeOnRefill)
+            state.refillAllBandwidth(timeOnRefill)
         then:
             state.getCurrentSize(0) == tokensAfterRefill
             state.getRoundingError(0) == roundingError
@@ -332,10 +330,9 @@ class BucketStateSpecification extends Specification {
                     .withCustomTimePrecision(mockTimer)
                     .build()
             BucketState state = bucket.asVerbose().getAvailableTokens().getState()
-            BucketConfiguration configuration = bucket.getConfiguration()
         when:
             mockTimer.setCurrentTimeNanos(timeOnRefill)
-            state.refillAllBandwidth(configuration.bandwidths, timeOnRefill)
+            state.refillAllBandwidth(timeOnRefill)
         then:
             state.getCurrentSize(0) == tokensAfterRefill
             state.getRoundingError(0) == roundingError
@@ -360,9 +357,8 @@ class BucketStateSpecification extends Specification {
                 .withCustomTimePrecision(new TimeMeterMock(0))
                 .build()
             BucketState state = bucket.asVerbose().getAvailableTokens().getState()
-            BucketConfiguration configuration = bucket.getConfiguration()
         when:
-            state.consume(configuration.bandwidths, toConsume)
+            state.consume(toConsume)
         then:
             state.getCurrentSize(0) == requiredSize
         where:

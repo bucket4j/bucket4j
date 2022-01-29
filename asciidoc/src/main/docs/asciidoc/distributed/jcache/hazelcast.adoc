@@ -61,6 +61,24 @@ import io.github.bucket4j.grid.hazelcast.serialization.HazelcastSerializer;
     HazelcastProxyManager.addCustomSerializers(serializationConfig, baseTypeIdNumber);
 ----
 
+==== Support for externally managed Hazelcast without classpath access
+`bucket4j-hazelcast` requires putting Bucket4j jars to classpath of each node of Hazelcast cluster.
+Sometimes you have no control over classpath because Hazelcast cluster is externally managed(Paas scenario).
+In such cases ```HazelcastProxyManager``` can not be used because it is implemented on top of https://docs.hazelcast.com/imdg/4.2/computing/entry-processor[EntryProcessor] functionality.
+
+.Bucket4j provides two alternatives for PaaS topology:
+HazelcastLockBasedProxyManager:: is implemented on top IMap methods `lock`, `get`, `put`, `unlock`.
+This implementation always requires 4 network hops for one rate-limit check.
+
+HazelcastCompareAndSwapBasedProxyManager:: is implemented on top IMap methods `get`, `replace`, `putIfAbsent`.
+This implementation requires 2 network hops if no contention happens, but in case of high contention on the key amount of hops is unpredictable.
+
+.Limitations of HazelcastLockBasedProxyManager and HazelcastCompareAndSwapBasedProxyManager
+* `HazelcastLockBasedProxyManager` does not provide async API because lack of `lockAsync` and `unlockAsync`  methods inside IMap API.
+* `HazelcastCompareAndSwapBasedProxyManager` does not provide async API because lack of `replaceAsync` and `putIfAbsentAsync` methods inside IMap API.
+
+If you wish to async API be supported by `HazelcastLockBasedProxyManager` and `HazelcastCompareAndSwapBasedProxyManager` ask Hazelcast maintainers to support the missed APIs mentioned above.
+
 ==== Known issues related with Docker and(or) SpringBoot
-* https://github.com/vladimir-bukhtoyarov/bucket4j/discussions/186:[#186 HazelcastEntryProcessor class not found] - check file permissions inside your image.
-* https://github.com/vladimir-bukhtoyarov/bucket4j/issues/162:[#182 HazelcastSerializationException with Hazelcast 4.2] - properly setup classloader for Hazelcast client configuration.
+* https://github.com/vladimir-bukhtoyarov/bucket4j/discussions/186[#186 HazelcastEntryProcessor class not found] - check file permissions inside your image.
+* https://github.com/vladimir-bukhtoyarov/bucket4j/issues/162[#182 HazelcastSerializationException with Hazelcast 4.2] - properly setup classloader for Hazelcast client configuration.
