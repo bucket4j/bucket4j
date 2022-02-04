@@ -31,6 +31,7 @@
         <module>bucket4j-dynamodb-sdk-v1</module>
         <module>bucket4j-redis</module>
         <module>bucket4j-coherence</module>
+        <module>bucket4j-postgresql</module>
         <module>asciidoc</module>
     </modules>
 

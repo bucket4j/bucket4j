@@ -48,6 +48,7 @@ public class Select_For_Update_PostgreSQL_Example {
         CountDownLatch startLatch = new CountDownLatch(4);
         CountDownLatch stopLatch = new CountDownLatch(4);
         AtomicLong consumed = new AtomicLong();
+        long now = System.nanoTime();
         for (int i = 0; i < 4; i++) {
             new Thread(() -> {
                 startLatch.countDown();
@@ -68,12 +69,17 @@ public class Select_For_Update_PostgreSQL_Example {
             }).start();
         }
         stopLatch.await();
+        long finish = System.nanoTime();
+        System.out.println("time:" + (finish - now));
         System.out.println("Was consumed " + consumed.get() + " tokens");
 
+        long nowv2 = System.nanoTime();
         for (int i = 0; i < 5; i++) {
             bucket.asBlocking().consume(10);
             System.out.println("Was consumed 10 token in blocking mode " + new Date());
         }
+        long finishv2 = System.nanoTime();
+        System.out.println("timev2:" + (finishv2 - nowv2));
     }
 
     private static DataSource createJdbcDataSource(PostgreSQLContainer container) {
