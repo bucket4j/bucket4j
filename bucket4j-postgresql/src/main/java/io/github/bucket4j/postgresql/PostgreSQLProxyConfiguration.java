@@ -6,46 +6,38 @@ import javax.sql.DataSource;
 
 public class PostgreSQLProxyConfiguration {
 
-    private final String idName;
-
-    private final String stateName;
-
-    private final String tableName;
-
     private final DataSource dataSource;
-
     private final ClientSideConfig clientSideConfig;
+    private final BucketTableSettings tableSettings;
 
     public PostgreSQLProxyConfiguration(DataSource dataSource) {
-        this(dataSource, "bucket");
+        this(dataSource, BucketTableSettings.defaultSettings());
     }
 
-    public PostgreSQLProxyConfiguration(DataSource dataSource, String tableName) {
-        this(dataSource, ClientSideConfig.getDefault(), tableName);
+    public PostgreSQLProxyConfiguration(DataSource dataSource, BucketTableSettings tableSettings) {
+        this(dataSource, ClientSideConfig.getDefault(), tableSettings);
     }
 
-    public PostgreSQLProxyConfiguration(DataSource dataSource, ClientSideConfig clientSideConfig, String tableName) {
-        this(dataSource, clientSideConfig, tableName, "id", "state");
+    public PostgreSQLProxyConfiguration(DataSource dataSource, ClientSideConfig clientSideConfig) {
+        this(dataSource, clientSideConfig, BucketTableSettings.defaultSettings());
     }
 
-    public PostgreSQLProxyConfiguration(DataSource dataSource, ClientSideConfig clientSideConfig, String tableName, String idName, String stateName) {
+    public PostgreSQLProxyConfiguration(DataSource dataSource, ClientSideConfig clientSideConfig, BucketTableSettings tableSettings) {
         this.dataSource = dataSource;
         this.clientSideConfig = clientSideConfig;
-        this.tableName = tableName;
-        this.idName = idName;
-        this.stateName = stateName;
+        this.tableSettings = tableSettings;
     }
 
     public String getIdName() {
-        return idName;
+        return tableSettings.getIdName();
     }
 
     public String getStateName() {
-        return stateName;
+        return tableSettings.getStateName();
     }
 
     public String getTableName() {
-        return tableName;
+        return tableSettings.getTableName();
     }
 
     public DataSource getDataSource() {
