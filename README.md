@@ -39,7 +39,7 @@ The Bucket4j is distributed through [Maven Central](http://search.maven.org/):
 <dependency>
     <groupId>com.github.vladimir-bukhtoyarov</groupId>
     <artifactId>bucket4j-core</artifactId>
-    <version>7.1.0</version>
+    <version>7.2.0</version>
 </dependency>
 ``` 
 #### You can build Bucket4j from sources
