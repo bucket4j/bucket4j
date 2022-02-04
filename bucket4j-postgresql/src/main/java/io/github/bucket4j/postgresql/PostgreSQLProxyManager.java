@@ -10,13 +10,13 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Objects;
 
-public class AdvisoryLockBasedPostgreSQLProxyManager extends AbstractLockBasedProxyManager<Long> {
+public class PostgreSQLProxyManager extends AbstractLockBasedProxyManager<Long> {
 
     private final DataSource dataSource;
     private final PostgreSQLProxyConfiguration configuration;
     private static final String INIT_TABLE_SCRIPT = "CREATE TABLE IF NOT EXISTS ?(? BIGINT PRIMARY KEY, ? BYTEA);";
 
-    public AdvisoryLockBasedPostgreSQLProxyManager(PostgreSQLProxyConfiguration configuration) throws SQLException {
+    public PostgreSQLProxyManager(PostgreSQLProxyConfiguration configuration) throws SQLException {
         super(configuration.getClientSideConfig());
         this.dataSource = Objects.requireNonNull(configuration.getDataSource());
         this.configuration = configuration;
@@ -36,7 +36,7 @@ public class AdvisoryLockBasedPostgreSQLProxyManager extends AbstractLockBasedPr
     @Override
     protected LockBasedTransaction allocateTransaction(Long key) {
         try {
-            return new PostgreAdvisoryLockBasedTransaction(key, configuration, dataSource.getConnection());
+            return new PostgreSQLAdvisoryLockBasedTransaction(key, configuration, dataSource.getConnection());
         } catch (SQLException e) {
             throw new BucketExceptions.BucketExecutionException(e);
         }
@@ -46,7 +46,7 @@ public class AdvisoryLockBasedPostgreSQLProxyManager extends AbstractLockBasedPr
     protected void releaseTransaction(LockBasedTransaction transaction) {
         try {
             // return connection to pool
-            ((PostgreAdvisoryLockBasedTransaction) transaction).getConnection().close();
+            ((PostgreSQLAdvisoryLockBasedTransaction) transaction).getConnection().close();
         } catch (SQLException e) {
             throw new BucketExceptions.BucketExecutionException(e);
         }

@@ -8,13 +8,13 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public class PostgreAdvisoryLockBasedTransaction implements LockBasedTransaction {
+public class PostgreSQLAdvisoryLockBasedTransaction implements LockBasedTransaction {
 
     private final long key;
     private final Connection connection;
     private final PostgreSQLProxyConfiguration configuration;
 
-    PostgreAdvisoryLockBasedTransaction(long key, PostgreSQLProxyConfiguration configuration, Connection connection) {
+    PostgreSQLAdvisoryLockBasedTransaction(long key, PostgreSQLProxyConfiguration configuration, Connection connection) {
         this.key = key;
         this.configuration = configuration;
         this.connection = connection;
