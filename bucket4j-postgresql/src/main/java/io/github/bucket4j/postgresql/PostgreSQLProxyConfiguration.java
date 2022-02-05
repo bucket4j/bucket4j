@@ -9,23 +9,41 @@ public class PostgreSQLProxyConfiguration {
     private final DataSource dataSource;
     private final ClientSideConfig clientSideConfig;
     private final BucketTableSettings tableSettings;
+    private final LockBasedTransactionType lockBasedTransactionType;
 
     public PostgreSQLProxyConfiguration(DataSource dataSource) {
         this(dataSource, BucketTableSettings.defaultSettings());
     }
 
     public PostgreSQLProxyConfiguration(DataSource dataSource, BucketTableSettings tableSettings) {
-        this(dataSource, ClientSideConfig.getDefault(), tableSettings);
+        this(dataSource, ClientSideConfig.getDefault(), tableSettings, LockBasedTransactionType.ADVISORY);
     }
 
     public PostgreSQLProxyConfiguration(DataSource dataSource, ClientSideConfig clientSideConfig) {
-        this(dataSource, clientSideConfig, BucketTableSettings.defaultSettings());
+        this(dataSource, clientSideConfig, BucketTableSettings.defaultSettings(), LockBasedTransactionType.ADVISORY);
     }
 
-    public PostgreSQLProxyConfiguration(DataSource dataSource, ClientSideConfig clientSideConfig, BucketTableSettings tableSettings) {
+    public PostgreSQLProxyConfiguration(DataSource dataSource, LockBasedTransactionType lockBasedTransactionType) {
+        this(dataSource, BucketTableSettings.defaultSettings(), lockBasedTransactionType);
+    }
+
+    public PostgreSQLProxyConfiguration(DataSource dataSource, BucketTableSettings tableSettings, LockBasedTransactionType lockBasedTransactionType) {
+        this(dataSource, ClientSideConfig.getDefault(), tableSettings, lockBasedTransactionType);
+    }
+
+    public PostgreSQLProxyConfiguration(DataSource dataSource, ClientSideConfig clientSideConfig, LockBasedTransactionType lockBasedTransactionType) {
+        this(dataSource, clientSideConfig, BucketTableSettings.defaultSettings(), lockBasedTransactionType);
+    }
+
+    public PostgreSQLProxyConfiguration(DataSource dataSource, ClientSideConfig clientSideConfig, BucketTableSettings tableSettings, LockBasedTransactionType lockBasedTransactionType) {
         this.dataSource = dataSource;
         this.clientSideConfig = clientSideConfig;
         this.tableSettings = tableSettings;
+        this.lockBasedTransactionType = lockBasedTransactionType;
+    }
+
+    public LockBasedTransactionType getLockBasedTransactionType() {
+        return lockBasedTransactionType;
     }
 
     public String getIdName() {

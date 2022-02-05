@@ -5,8 +5,6 @@ import io.github.bucket4j.distributed.proxy.generic.select_for_update.AbstractLo
 import io.github.bucket4j.distributed.proxy.generic.select_for_update.LockBasedTransaction;
 
 import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Objects;
 
@@ -14,29 +12,17 @@ public class PostgreSQLProxyManager extends AbstractLockBasedProxyManager<Long> 
 
     private final DataSource dataSource;
     private final PostgreSQLProxyConfiguration configuration;
-    private static final String INIT_TABLE_SCRIPT = "CREATE TABLE IF NOT EXISTS ?(? BIGINT PRIMARY KEY, ? BYTEA);";
 
-    public PostgreSQLProxyManager(PostgreSQLProxyConfiguration configuration) throws SQLException {
+    public PostgreSQLProxyManager(PostgreSQLProxyConfiguration configuration) {
         super(configuration.getClientSideConfig());
         this.dataSource = Objects.requireNonNull(configuration.getDataSource());
         this.configuration = configuration;
-
-        // TODO for real application table initialization should be moved to the right place
-        // TODO ANSWER for above TODO - not sure about that statement, I've no idea, where a better place is than here
-        try (Connection connection = dataSource.getConnection()) {
-            try (PreparedStatement statement = connection.prepareStatement(INIT_TABLE_SCRIPT)) {
-                statement.setString(1, configuration.getTableName());
-                statement.setString(2, configuration.getIdName());
-                statement.setString(3, configuration.getTableName());
-                statement.executeQuery();
-            }
-        }
     }
 
     @Override
     protected LockBasedTransaction allocateTransaction(Long key) {
         try {
-            return new PostgreSQLAdvisoryLockBasedTransaction(key, configuration, dataSource.getConnection());
+            return new PostgreSQLLockBasedTransactionFactory(key, configuration, dataSource.getConnection()).getLockBasedTransaction(configuration.getLockBasedTransactionType());
         } catch (SQLException e) {
             throw new BucketExceptions.BucketExecutionException(e);
         }
@@ -45,8 +31,7 @@ public class PostgreSQLProxyManager extends AbstractLockBasedProxyManager<Long> 
     @Override
     protected void releaseTransaction(LockBasedTransaction transaction) {
         try {
-            // return connection to pool
-            ((PostgreSQLAdvisoryLockBasedTransaction) transaction).getConnection().close();
+            ((AbstractPostgreSQLLockBasedTransaction) transaction).getConnection().close();
         } catch (SQLException e) {
             throw new BucketExceptions.BucketExecutionException(e);
         }

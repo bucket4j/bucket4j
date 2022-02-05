@@ -8,7 +8,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.MessageFormat;
 
-public class PostgreSQLAdvisoryLockBasedTransaction implements AbstractPostgreSQLLockBasedTransaction {
+public class PostgreSQLSelectForUpdateLockBasedTransaction implements AbstractPostgreSQLLockBasedTransaction {
 
     private final long key;
     private final Connection connection;
@@ -17,13 +17,14 @@ public class PostgreSQLAdvisoryLockBasedTransaction implements AbstractPostgreSQ
     private final String insertSqlQuery;
     private final String selectSqlQuery;
 
-    PostgreSQLAdvisoryLockBasedTransaction(long key, PostgreSQLProxyConfiguration configuration, Connection connection) {
+    PostgreSQLSelectForUpdateLockBasedTransaction(long key, PostgreSQLProxyConfiguration configuration, Connection connection) {
         this.key = key;
         this.configuration = configuration;
         this.connection = connection;
         updateSqlQuery = MessageFormat.format("UPDATE {0} SET {1}=? WHERE {2}=?", configuration.getTableName(), configuration.getStateName(), configuration.getIdName());
-        insertSqlQuery = MessageFormat.format("INSERT INTO {0}({1}, {2}) VALUES(?, ?)", configuration.getTableName(), configuration.getIdName(), configuration.getStateName());
-        selectSqlQuery = MessageFormat.format("SELECT {0} FROM {1} WHERE {2} = ?", configuration.getStateName(), configuration.getTableName(), configuration.getIdName());
+        insertSqlQuery = MessageFormat.format("INSERT INTO {0}({1}, {2}) VALUES(?, null) ON CONFLICT({3}) DO NOTHING",
+                configuration.getTableName(), configuration.getIdName(), configuration.getStateName(), configuration.getIdName());
+        selectSqlQuery = MessageFormat.format("SELECT {0} FROM {1} WHERE {2} = ? FOR UPDATE", configuration.getStateName(), configuration.getTableName(), configuration.getIdName());
     }
 
     @Override
@@ -43,20 +44,31 @@ public class PostgreSQLAdvisoryLockBasedTransaction implements AbstractPostgreSQ
     @Override
     public byte[] lockAndGet() {
         try {
-            String lockSQL = "SELECT pg_advisory_xact_lock(?)";
-            try (PreparedStatement lockStatement = connection.prepareStatement(lockSQL)) {
-                lockStatement.setLong(1, key);
-                lockStatement.executeQuery();
-            }
-
             try (PreparedStatement selectStatement = connection.prepareStatement(selectSqlQuery)) {
                 selectStatement.setLong(1, key);
                 try (ResultSet rs = selectStatement.executeQuery()) {
                     if (rs.next()) {
-                        return rs.getBytes(configuration.getStateName());
-                    } else {
-                        return null;
+                        byte[] bucketStateBeforeTransaction = rs.getBytes("state");
+                        if (bucketStateBeforeTransaction != null) {
+                            return bucketStateBeforeTransaction;
+                        } else {
+                            // we detected fake data that inserted by previous transaction
+                            return null;
+                        }
                     }
+                }
+            }
+            try (PreparedStatement insertStatement = connection.prepareStatement(insertSqlQuery)) {
+                insertStatement.setLong(1, key);
+                insertStatement.executeUpdate();
+            }
+            try (PreparedStatement selectStatement = connection.prepareStatement(selectSqlQuery)) {
+                selectStatement.setLong(1, key);
+                try (ResultSet rs = selectStatement.executeQuery()) {
+                    if (!rs.next()) {
+                        throw new IllegalStateException("Something unexpected happens, it needs to read the PostgreSQL manual");
+                    }
+                    return null;
                 }
             }
         } catch (SQLException e) {
@@ -79,15 +91,7 @@ public class PostgreSQLAdvisoryLockBasedTransaction implements AbstractPostgreSQ
 
     @Override
     public void create(byte[] data) {
-        try {
-            try (PreparedStatement insertStatement = connection.prepareStatement(insertSqlQuery)) {
-                insertStatement.setLong(1, key);
-                insertStatement.setBytes(2, data);
-                insertStatement.executeUpdate();
-            }
-        } catch (SQLException e) {
-            throw new BucketExceptions.BucketExecutionException(e);
-        }
+        update(data);
     }
 
     @Override
@@ -109,5 +113,7 @@ public class PostgreSQLAdvisoryLockBasedTransaction implements AbstractPostgreSQ
     }
 
     @Override
-    public void unlock() {}
+    public void unlock() {
+        // do nothing, because locked rows will be auto unlocked when transaction finishes
+    }
 }
