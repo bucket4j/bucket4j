@@ -48,7 +48,7 @@ public class Advisory_Lock_PostgreSQL_Example {
                 statement.execute(query);
             }
         }
-        PostgreSQLProxyManager proxyManager = new PostgreSQLProxyManager(new PostgreSQLProxyConfiguration(dataSource, settings, LockBasedTransactionType.SELECT_FOR_UPDATE));
+        PostgreSQLProxyManager proxyManager = new PostgreSQLProxyManager(new PostgreSQLProxyConfiguration(dataSource));
 
         BucketConfiguration configuration = BucketConfiguration.builder()
                 .addLimit(Bandwidth.simple(10, Duration.ofSeconds(1)))

@@ -13,6 +13,7 @@ public final class PostgreSQLLockBasedTransactionFactory {
         this.connection = connection;
         this.configuration = configuration;
     }
+    
     public AbstractPostgreSQLLockBasedTransaction getLockBasedTransaction(LockBasedTransactionType type) {
         if(LockBasedTransactionType.ADVISORY.equals(type)) {
             return new PostgreSQLAdvisoryLockBasedTransaction(key, configuration, connection);
