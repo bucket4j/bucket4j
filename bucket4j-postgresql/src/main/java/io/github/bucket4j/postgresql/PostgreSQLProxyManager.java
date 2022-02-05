@@ -5,18 +5,23 @@ import io.github.bucket4j.distributed.proxy.generic.select_for_update.AbstractLo
 import io.github.bucket4j.distributed.proxy.generic.select_for_update.LockBasedTransaction;
 
 import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.text.MessageFormat;
 import java.util.Objects;
 
 public class PostgreSQLProxyManager extends AbstractLockBasedProxyManager<Long> {
 
     private final DataSource dataSource;
     private final PostgreSQLProxyConfiguration configuration;
+    private final String removeSqlQuery;
 
     public PostgreSQLProxyManager(PostgreSQLProxyConfiguration configuration) {
         super(configuration.getClientSideConfig());
         this.dataSource = Objects.requireNonNull(configuration.getDataSource());
         this.configuration = configuration;
+        this.removeSqlQuery = MessageFormat.format("DELETE FROM {0} WHERE {1} = ?", configuration.getTableName(), configuration.getIdName());
     }
 
     @Override
@@ -39,7 +44,14 @@ public class PostgreSQLProxyManager extends AbstractLockBasedProxyManager<Long> 
 
     @Override
     public void removeProxy(Long key) {
-        // TODO implement removal
-        throw new UnsupportedOperationException();
+        try {
+            Connection connection = dataSource.getConnection();
+            try(PreparedStatement removeStatement = connection.prepareStatement(removeSqlQuery)) {
+                removeStatement.setLong(1, key);
+                removeStatement.executeQuery();
+            }
+        } catch (SQLException e) {
+            throw new BucketExceptions.BucketExecutionException(e);
+        }
     }
 }
