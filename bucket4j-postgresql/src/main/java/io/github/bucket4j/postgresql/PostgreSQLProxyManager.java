@@ -11,12 +11,24 @@ import java.sql.SQLException;
 import java.text.MessageFormat;
 import java.util.Objects;
 
+/**
+ * @author Maxim Bartkov
+ * The extension of Bucket4j library addressed to support <a href="https://www.postgresql.org/">PostgreSQL</a>
+ * To start work with the PostgreSQL extension you must create a table, which will include the possibility to work with buckets
+ * In order to do this, your table should include the next columns: id as a PRIMARY KEY (BIGINT) and state (BYTEA)
+ * To define column names, {@link PostgreSQLProxyConfiguration} include {@link BucketTableSettings} which takes settings for the table to work with Bucket4j
+ * @see {@link PostgreSQLProxyConfigurationBuilder} to get more information how to build {@link PostgreSQLProxyConfiguration}
+ */
 public class PostgreSQLProxyManager extends AbstractLockBasedProxyManager<Long> {
 
     private final DataSource dataSource;
     private final PostgreSQLProxyConfiguration configuration;
     private final String removeSqlQuery;
 
+    /**
+     *
+     * @param configuration {@link PostgreSQLProxyConfiguration} configuration.
+     */
     public PostgreSQLProxyManager(PostgreSQLProxyConfiguration configuration) {
         super(configuration.getClientSideConfig());
         this.dataSource = Objects.requireNonNull(configuration.getDataSource());
