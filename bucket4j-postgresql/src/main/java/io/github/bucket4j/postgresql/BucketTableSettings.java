@@ -2,6 +2,7 @@ package io.github.bucket4j.postgresql;
 
 import java.util.Objects;
 
+
 public class BucketTableSettings {
 
     private final String idName;

@@ -48,7 +48,7 @@ public class PostgreSQLProxyManager extends AbstractLockBasedProxyManager<Long> 
             Connection connection = dataSource.getConnection();
             try(PreparedStatement removeStatement = connection.prepareStatement(removeSqlQuery)) {
                 removeStatement.setLong(1, key);
-                removeStatement.executeQuery();
+                removeStatement.executeUpdate();
             }
         } catch (SQLException e) {
             throw new BucketExceptions.BucketExecutionException(e);

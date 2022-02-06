@@ -48,7 +48,8 @@ public class PostgreSQLSelectForUpdateLockBasedTransaction implements AbstractPo
                 selectStatement.setLong(1, key);
                 try (ResultSet rs = selectStatement.executeQuery()) {
                     if (rs.next()) {
-                        byte[] bucketStateBeforeTransaction = rs.getBytes("state");
+                        //TODO fix state
+                        byte[] bucketStateBeforeTransaction = rs.getBytes(configuration.getStateName());
                         if (bucketStateBeforeTransaction != null) {
                             return bucketStateBeforeTransaction;
                         } else {
