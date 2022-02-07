@@ -1,0 +1,69 @@
+=== Framework to implement custom work with your database
+The Bucket4j library gives an opportunity to implement work with any database.
+If you didn't find in distributed realization your database (currently Bucket4j supports the next databases: Redis, Hazelcast, Apache Ignite, Infinispan, Oracle coherence, Dynamodb, PostgreSQL)
+you can implement your database as a distributed storage.
+All what you need to do, extends from io.github.bucket4j.distributed.proxy.generic.select_for_update.AbstractLockBasedProxyManager
+and override 3 methods and create your implementation which implements from io.github.bucket4j.distributed.proxy.generic.select_for_update.LockBasedTransaction.
+
+**Step by step to take that.**
+
+**First of all**
+we need to create our custom proxy manages which extends from AbstractLockBasedProxyManager<T> (As a genetic the class takes type of key table).
+
+After need to override works of allocation transaction, in order to do that, we should override method allocateTransaction.
+The main idea of allocateTransaction to just return class which implements LockBasedTransaction (we will implement it later)
+The next method that we should override is a releaseTransaction().
+The method releaseTransaction() - is a method, in which closing transaction (close connection)
+And override removeProxy() for remove bucket from the table which store buckets.
+
+**Second of all**
+Need to implement LockBasedTransaction to realize custom work of database for transaction.
+In order to do that, we need to create a custom class to implement from LockBasedTransaction.
+
+----
+    /**
+     * Begins transaction if underlying storage requires transactions.
+     * There is strong guarantee that {@link #commit()} or {@link #rollback()} will be called if {@link #begin()} returns successfully.
+     */
+    void begin();
+
+    /**
+     * Rollbacks transaction if underlying storage requires transactions
+     */
+    void rollback();
+
+    /**
+     * Commits transaction if underlying storage requires transactions
+     */
+    void commit();
+
+    /**
+     * Locks data by the key associated with this transaction and returns data that is associated with the key.
+     * There is strong guarantee that {@link #unlock()} will be called if {@link #lockAndGet()} returns successfully.
+     *
+     * @return Returns the data by the key associated with this transaction, or null data associated with key does not exist
+     */
+    byte[] lockAndGet();
+
+    /**
+     * Unlocks data by the key associated with this transaction.
+     */
+    void unlock();
+
+    /**
+     * Creates the data by the key associated with this transaction.
+     *
+     * @param data bucket state to persists
+     */
+    void create(byte[] data);
+
+    /**
+     * Updates the data by the key associated with this transaction.
+     *
+     * @param data bucket state to persists
+     */
+    void update(byte[] data);
+----
+
+As an example, you can see to the PostgreSQL realization.
+

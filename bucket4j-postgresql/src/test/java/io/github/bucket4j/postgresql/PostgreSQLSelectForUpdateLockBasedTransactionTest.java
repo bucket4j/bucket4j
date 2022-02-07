@@ -31,7 +31,7 @@ public class PostgreSQLSelectForUpdateLockBasedTransactionTest {
     public static void initializeInstance() throws SQLException {
         container = startPostgreSQLContainer();
         dataSource = createJdbcDataSource(container);
-        BucketTableSettings tableSettings = BucketTableSettings.defaultSettings();
+        BucketTableSettings tableSettings = BucketTableSettings.getDefault();
         final String INIT_TABLE_SCRIPT = "CREATE TABLE IF NOT EXISTS {0}({1} BIGINT PRIMARY KEY, {2} BYTEA)";
         try (Connection connection = dataSource.getConnection()) {
             try (Statement statement = connection.createStatement()) {

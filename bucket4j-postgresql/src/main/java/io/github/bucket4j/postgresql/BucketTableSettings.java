@@ -35,7 +35,7 @@ public class BucketTableSettings {
      * The method will define the default configuration of the table for the work with the PostgreSQL extension
      * @return {@link BucketTableSettings} with the default setting, which includes "bucket" as the table name, "id" as the id column, "state" as the state column
      */
-    public static BucketTableSettings defaultSettings(){
+    public static BucketTableSettings getDefault(){
         return new BucketTableSettings("bucket", "id", "state");
     }
 

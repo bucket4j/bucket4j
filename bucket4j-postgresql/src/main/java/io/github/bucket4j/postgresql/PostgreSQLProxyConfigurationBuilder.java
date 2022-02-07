@@ -33,7 +33,7 @@ public final class PostgreSQLProxyConfigurationBuilder {
 
     /**
      * @param tableSettings {@link BucketTableSettings} define a configuration of the table to use as a Buckets store.
-     *                                                 By default, under the hood uses {@link BucketTableSettings#defaultSettings}
+     *                                                 By default, under the hood uses {@link BucketTableSettings#getDefault}
      * @return {@link PostgreSQLProxyConfigurationBuilder}
      */
     public PostgreSQLProxyConfigurationBuilder addTableSettings(BucketTableSettings tableSettings) {
@@ -64,7 +64,7 @@ public final class PostgreSQLProxyConfigurationBuilder {
             this.lockBasedTransactionType = LockBasedTransactionType.ADVISORY;
         }
         if(tableSettings == null) {
-            this.tableSettings = BucketTableSettings.defaultSettings();
+            this.tableSettings = BucketTableSettings.getDefault();
         }
         if(clientSideConfig == null) {
             this.clientSideConfig = ClientSideConfig.getDefault();
