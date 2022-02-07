@@ -15,3 +15,7 @@ include::jcache/coherence.adoc[]
 include::asynchronous.adoc[]
 
 include::distributed-checklist.adoc[]
+
+include::implement-custom-database/concept.adoc[]
+
+include::implement-custom-database/postgresql.adoc[]

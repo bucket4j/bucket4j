@@ -68,7 +68,6 @@ public class Advisory_Lock_PostgreSQL_Example {
             }).start();
         }
         stopLatch.await();
-        System.out.println("Was consumed " + consumed.get() + " tokens");
 
         for (int i = 0; i < 5; i++) {
             bucket.asBlocking().consume(10);

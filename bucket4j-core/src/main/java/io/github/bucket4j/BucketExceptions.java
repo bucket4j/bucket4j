@@ -237,6 +237,9 @@ public final class BucketExceptions {
         public BucketExecutionException(Throwable cause) {
             super(cause);
         }
+        public BucketExecutionException(String message) {
+            super(message);
+        }
     }
 
     private BucketExceptions() {

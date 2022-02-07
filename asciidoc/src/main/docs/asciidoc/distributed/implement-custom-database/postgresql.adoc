@@ -1,0 +1,110 @@
+=== PostgreSQL integration
+==== Dependencies
+To use Bucket4j extension for PostgreSQL you need to add following dependency:
+[source, xml, subs=attributes+]
+----
+<dependency>
+    <groupId>com.github.vladimir-bukhtoyarov</groupId>
+    <artifactId>bucket4j-postgresql</artifactId>
+    <version>{revnumber}</version>
+</dependency>
+----
+
+==== General compatibility matrix principles:
+* Bucket4j authors do not provide create a table for store buckets, you must make the table personally
+* You should create a trigger or a scheduler that will clear your bucket storage table since PostgreSQL is not IMDB, and DBMS don't give TTL the opportunity
+* You should create a table, which includes the next required columns: BIGINT as a PRIMARY KEY, BYTEA as a state. By default, Bucket4j works with the next structure:
+----
+CREATE TABLE IF NOT EXISTS buckets(id BIGINT PRIMARY KEY, state BYTEA);
+----
+But you can override the names of the columns to set your custom name of columns
+
+==== Example of Bucket instantiation
+----
+        Long key = 1L;
+        PostgreSQLProxyManager proxyManager = new PostgreSQLProxyManager(new PostgreSQLProxyConfiguration(dataSource));
+        BucketConfiguration bucketConfiguration = BucketConfiguration.builder()
+                .addLimit(Bandwidth.simple(10, Duration.ofSeconds(1)))
+                .build();
+        BucketProxy bucket = proxyManager.builder().build(key, bucketConfiguration);
+----
+
+==== Configuring custom settings of PostgreSQLProxyManager
+* `PostgreSQLProxyManager` takes a few configurations that you can set to make it customizable
+* In order to do that, you should use `PostgreSQLProxyConfigurationBuilder`, which includes the next parameters:
+----
+    /**
+     * @param clientSideConfig {@link ClientSideConfig} client-side configuration for proxy-manager.
+     *                                                 By default, under the hood uses {@link ClientSideConfig#getDefault}
+     * @return {@link PostgreSQLProxyConfigurationBuilder}
+     */
+    public PostgreSQLProxyConfigurationBuilder addClientSideConfig(ClientSideConfig clientSideConfig) {
+        this.clientSideConfig = clientSideConfig;
+        return this;
+    }
+
+    /**
+     * @param tableSettings {@link BucketTableSettings} define a configuration of the table to use as a Buckets store.
+     *                                                 By default, under the hood uses {@link BucketTableSettings#getDefault}
+     * @return {@link PostgreSQLProxyConfigurationBuilder}
+     */
+    public PostgreSQLProxyConfigurationBuilder addTableSettings(BucketTableSettings tableSettings) {
+        this.tableSettings = tableSettings;
+        return this;
+    }
+
+    /**
+     * @param lockBasedTransactionType a strategy of transaction for the table.
+     *                                 By default, under the hood uses {@link LockBasedTransactionType#ADVISORY}
+     * @return {@link PostgreSQLProxyConfigurationBuilder}
+     */
+    public PostgreSQLProxyConfigurationBuilder addLockBasedTransactionType(LockBasedTransactionType lockBasedTransactionType) {
+        this.lockBasedTransactionType = lockBasedTransactionType;
+        return this;
+    }
+----
+
+* The example of usage `PostgreSQLProxyConfigurationBuilder` to customize your setting for the `PostgreSQLProxyManager`:
+----
+        PostgreSQLProxyConfiguration configuration = PostgreSQLProxyConfigurationBuilder.builder()
+                .addLockBasedTransactionType(LockBasedTransactionType.SELECT_FOR_UPDATE)
+                .addClientSideConfig(ClientSideConfig.getDefault().withClientClock(TimeMeter.SYSTEM_MILLISECONDS))
+                .addTableSettings(BucketTableSettings.customSettings("tableName", "idName", "stateName"))
+                .build(dataSource);
+        PostgreSQLProxyManager proxyManager = new PostgreSQLProxyManager(configuration);
+----
+
+==== Parameters to customize table buckets storage settings via PostgreSQLProxyConfigurationBuilder
+
+===== addLockBasedTransactionType
+Takes `LockBasedTransactionType` - is a strategy of transaction for the table. By default, under the hood uses `ADVISORY`
+
+Lock based transaction types:
+
+`ADVISORY` - Based on pg_advisory_xact_lock locks an application-defined resource, which can be identified either by a single 64-bit key value or two 32-bit key values (note that these two key spaces do not overlap).
+If another session already holds a lock on the same resource identifier, this function will wait until the resource becomes available.
+The lock is exclusive.
+Multiple lock requests stack so that if the same resource is locked three times it must then be unlocked three times to be released for other sessions use.
+The lock is automatically released at the end of the current transaction and cannot be released explicitly.
+
+`SELECT_FOR_UPDATE` - Based on Select For Update
+This prevents them from being modified or deleted by other transactions until the current transaction ends.
+That is, other transactions that attempt UPDATE, DELETE, or SELECT FOR UPDATE of these rows will be blocked until the current transaction ends.
+Also, if an UPDATE, DELETE, or SELECT FOR UPDATE from another transaction has already locked a selected row or rows, SELECT FOR UPDATE will wait for the other transaction to complete, and will then lock and return the updated row (or no row, if the row was deleted).
+Within a SERIALIZABLE transaction, however, an error will be thrown if a row to be locked has changed since the transaction started.
+
+===== addTableSettings
+Takes `BucketTableSettings` - is the class to define a configuration of the table to use as a buckets store. By default, under the hood uses `BucketTableSettings.getDefault()`
+
+Parameters:
+
+`tableName` - name of table to use as a Buckets store
+
+`idName` - name of id (PRIMARY KEY - BIGINT)
+
+`stateName` - name of state (BYTEA)
+
+By default, uses: "buckets" as a `tableName`; "id" as a `idName`; "state" as a `stateName`
+
+===== addClientSideConfig
+Takes `ClientSideConfig` - is a client-side configuration for proxy-manager. By default, under the hood uses `ClientSideConfig.getDefault()`
