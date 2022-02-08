@@ -51,20 +51,6 @@ public class PostgreSQLAdvisoryLockBasedTransactionTest extends AbstractDistribu
         proxyManager = new PostgreSQLProxyManager(configuration);
     }
 
-    @Test
-    public void testBucketRemoval() {
-        Long key = 1L;
-        BucketConfiguration configuration = BucketConfiguration.builder()
-                .addLimit(Bandwidth.simple(4, Duration.ofHours(1)))
-                .build();
-        BucketProxy bucket = proxyManager.builder().build(key, configuration);
-        bucket.getAvailableTokens();
-
-        assertTrue(proxyManager.getProxyConfiguration(key).isPresent());
-        proxyManager.removeProxy(key);
-        assertFalse(proxyManager.getProxyConfiguration(key).isPresent());
-    }
-
     @Override
     protected ProxyManager<Long> getProxyManager() {
         return proxyManager;

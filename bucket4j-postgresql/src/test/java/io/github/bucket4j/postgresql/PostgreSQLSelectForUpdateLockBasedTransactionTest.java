@@ -61,20 +61,6 @@ public class PostgreSQLSelectForUpdateLockBasedTransactionTest extends AbstractD
         return ThreadLocalRandom.current().nextLong(1_000_000_000);
     }
 
-    @Test
-    public void testBucketRemoval() {
-        Long key = 1L;
-        BucketConfiguration configuration = BucketConfiguration.builder()
-                .addLimit(Bandwidth.simple(4, Duration.ofHours(1)))
-                .build();
-        BucketProxy bucket = proxyManager.builder().build(key, configuration);
-        bucket.getAvailableTokens();
-
-        assertTrue(proxyManager.getProxyConfiguration(key).isPresent());
-        proxyManager.removeProxy(key);
-        assertFalse(proxyManager.getProxyConfiguration(key).isPresent());
-    }
-
     @AfterClass
     public static void shutdown() {
         if (container != null) {

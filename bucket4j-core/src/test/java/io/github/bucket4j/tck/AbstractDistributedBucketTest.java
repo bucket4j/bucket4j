@@ -11,10 +11,7 @@ import org.junit.Test;
 
 import java.time.Duration;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -112,6 +109,76 @@ public abstract class AbstractDistributedBucketTest<K> {
         assertTrue(proxyManager.getProxyConfiguration(key).isPresent());
         proxyManager.removeProxy(key);
         assertFalse(proxyManager.getProxyConfiguration(key).isPresent());
+    }
+
+    @Test
+    public void testParallelInitialization() throws InterruptedException {
+        BucketConfiguration configuration = BucketConfiguration.builder()
+                .addLimit(Bandwidth.classic(10, Refill.intervally(1, Duration.ofMinutes(1))))
+                .build();
+
+        int PARALLELISM = 4;
+        CountDownLatch startLatch = new CountDownLatch(PARALLELISM);
+        CountDownLatch stopLatch = new CountDownLatch(PARALLELISM);
+        for (int i = 0; i < PARALLELISM; i++) {
+            new Thread(() -> {
+                startLatch.countDown();
+                try {
+                    startLatch.await();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                try {
+                    proxyManager.builder().build(key, () -> configuration).tryConsume(1);
+                } finally {
+                    stopLatch.countDown();
+                }
+            }).start();
+        }
+        stopLatch.await();
+
+        BucketProxy bucket = proxyManager.builder().build(key, () -> configuration);
+        assertEquals(10 - PARALLELISM, bucket.getAvailableTokens());
+    }
+
+    @Test
+    public void testAsyncParallelInitialization() throws InterruptedException {
+        if (!proxyManager.isAsyncModeSupported()) {
+            return;
+        }
+
+        final BucketConfiguration configuration = BucketConfiguration.builder()
+                .addLimit(Bandwidth.classic(10, Refill.intervally(1, Duration.ofMinutes(1))))
+                .build();
+
+        int PARALLELISM = 4;
+        CountDownLatch startLatch = new CountDownLatch(PARALLELISM);
+        CountDownLatch stopLatch = new CountDownLatch(PARALLELISM);
+        for (int i = 0; i < PARALLELISM; i++) {
+            new Thread(() -> {
+                startLatch.countDown();
+                try {
+                    startLatch.await();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                try {
+                    try {
+                        proxyManager.asAsync().builder().build(key, () -> CompletableFuture.completedFuture(configuration)).tryConsume(1).get();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    } catch (ExecutionException e) {
+                        e.printStackTrace();
+                    }
+                } finally {
+                    stopLatch.countDown();
+                }
+            }).start();
+        }
+        stopLatch.await();
+
+        BucketProxy bucket = proxyManager.builder().build(key, () -> configuration);
+        assertEquals(10 - PARALLELISM, bucket.getAvailableTokens());
     }
 
     @Test
