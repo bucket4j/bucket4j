@@ -5,7 +5,10 @@ import com.zaxxer.hikari.HikariDataSource;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.distributed.BucketProxy;
+import io.github.bucket4j.distributed.jdbc.BucketTableSettings;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
+import io.github.bucket4j.distributed.proxy.ProxyManager;
+import io.github.bucket4j.tck.AbstractDistributedBucketTest;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -17,11 +20,12 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.MessageFormat;
 import java.time.Duration;
+import java.util.concurrent.ThreadLocalRandom;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-public class PostgreSQLAdvisoryLockBasedTransactionTest {
+public class PostgreSQLAdvisoryLockBasedTransactionTest extends AbstractDistributedBucketTest<Long> {
 
     private static PostgreSQLContainer container;
     private static DataSource dataSource;
@@ -59,6 +63,16 @@ public class PostgreSQLAdvisoryLockBasedTransactionTest {
         assertTrue(proxyManager.getProxyConfiguration(key).isPresent());
         proxyManager.removeProxy(key);
         assertFalse(proxyManager.getProxyConfiguration(key).isPresent());
+    }
+
+    @Override
+    protected ProxyManager<Long> getProxyManager() {
+        return proxyManager;
+    }
+
+    @Override
+    protected Long generateRandomKey() {
+        return ThreadLocalRandom.current().nextLong(1_000_000_000);
     }
 
     @AfterClass

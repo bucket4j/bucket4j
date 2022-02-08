@@ -1,6 +1,7 @@
 package io.github.bucket4j.postgresql;
 
 import io.github.bucket4j.BucketExceptions;
+import io.github.bucket4j.distributed.jdbc.BucketTableSettings;
 import io.github.bucket4j.distributed.proxy.generic.select_for_update.AbstractLockBasedProxyManager;
 import io.github.bucket4j.distributed.proxy.generic.select_for_update.LockBasedTransaction;
 

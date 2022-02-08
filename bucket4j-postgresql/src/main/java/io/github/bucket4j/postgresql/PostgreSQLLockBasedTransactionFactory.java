@@ -17,9 +17,9 @@ public final class PostgreSQLLockBasedTransactionFactory {
     public AbstractPostgreSQLLockBasedTransaction getLockBasedTransaction(LockBasedTransactionType type) {
         if(LockBasedTransactionType.ADVISORY.equals(type)) {
             return new PostgreSQLAdvisoryLockBasedTransaction(key, configuration, connection);
-        } else if (LockBasedTransactionType.SELECT_FOR_UPDATE.equals(type)) {
+        } else {
             return new PostgreSQLSelectForUpdateLockBasedTransaction(key, configuration, connection);
         }
-        throw new UnsupportedLockBasedTransactionException(type);
     }
+
 }

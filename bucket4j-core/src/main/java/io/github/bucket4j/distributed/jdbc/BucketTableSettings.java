@@ -1,4 +1,4 @@
-package io.github.bucket4j.postgresql;
+package io.github.bucket4j.distributed.jdbc;
 
 import java.util.Objects;
 
