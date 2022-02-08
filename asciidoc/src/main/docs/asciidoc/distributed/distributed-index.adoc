@@ -18,4 +18,4 @@ include::distributed-checklist.adoc[]
 
 include::implement-custom-database/concept.adoc[]
 
-include::implement-custom-database/postgresql.adoc[]
+include::implement-custom-database/jdbc-integraions.adoc[]
