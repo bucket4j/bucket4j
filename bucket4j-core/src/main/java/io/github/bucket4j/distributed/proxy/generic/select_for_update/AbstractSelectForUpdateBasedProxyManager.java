@@ -38,7 +38,7 @@ import java.util.concurrent.CompletableFuture;
  */
 public abstract class AbstractSelectForUpdateBasedProxyManager<K> extends AbstractProxyManager<K> {
 
-    private static final CommandResult RETRY = CommandResult.success(true, 666);
+    private static final CommandResult RETRY_IN_THE_SCOPE_OF_NEW_TRANSACTION = CommandResult.success(true, 666);
 
     protected AbstractSelectForUpdateBasedProxyManager(ClientSideConfig clientSideConfig) {
         super(injectTimeClock(clientSideConfig));
@@ -53,9 +53,9 @@ public abstract class AbstractSelectForUpdateBasedProxyManager<K> extends Abstra
         } finally {
             transaction.release();
         }
-        if (result == RETRY) {
+        if (result == RETRY_IN_THE_SCOPE_OF_NEW_TRANSACTION) {
             result = execute(key, request);
-            if (result == RETRY) {
+            if (result == RETRY_IN_THE_SCOPE_OF_NEW_TRANSACTION) {
                 throw new IllegalStateException();
             }
         }
@@ -89,19 +89,21 @@ public abstract class AbstractSelectForUpdateBasedProxyManager<K> extends Abstra
         try {
             lockResult = transaction.tryLockAndGet();
         } catch (Throwable t) {
-            unlockAndRollback(transaction);
+            transaction.rollback();
             throw new BucketExceptions.BucketExecutionException(t);
         }
 
         // insert data that can be locked in next transaction if data does not exist
         if (!lockResult.isLocked()) {
             try {
-                transaction.tryInsertEmptyData();
-                transaction.unlock();
-                transaction.commit();
-                return RETRY;
+                if (transaction.tryInsertEmptyData()) {
+                    transaction.commit();
+                } else {
+                    transaction.rollback();
+                }
+                return RETRY_IN_THE_SCOPE_OF_NEW_TRANSACTION;
             } catch (Throwable t) {
-                unlockAndRollback(transaction);
+                transaction.rollback();
                 throw new BucketExceptions.BucketExecutionException(t);
             }
         }
@@ -109,7 +111,7 @@ public abstract class AbstractSelectForUpdateBasedProxyManager<K> extends Abstra
         // check that command is able to provide initial state in case of bucket does not exist
         persistedDataOnBeginOfTransaction = lockResult.getData();
         if (persistedDataOnBeginOfTransaction == null && !request.getCommand().isInitializationCommand()) {
-            unlockAndRollback(transaction);
+            transaction.rollback();
             return CommandResult.bucketNotFound();
         }
 
@@ -120,20 +122,11 @@ public abstract class AbstractSelectForUpdateBasedProxyManager<K> extends Abstra
                 byte[] bytes = entry.getModifiedStateBytes();
                 transaction.update(bytes);
             }
-            transaction.unlock();
             transaction.commit();
             return result;
         } catch (Throwable t) {
-            unlockAndRollback(transaction);
-            throw new BucketExceptions.BucketExecutionException(t);
-        }
-    }
-
-    private void unlockAndRollback(SelectForUpdateBasedTransaction transaction) {
-        try {
-            transaction.unlock();
-        } finally {
             transaction.rollback();
+            throw new BucketExceptions.BucketExecutionException(t);
         }
     }
 

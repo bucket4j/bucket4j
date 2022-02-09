@@ -1,8 +1,10 @@
 package io.github.bucket4j.mysql;
 
+import com.mysql.cj.jdbc.exceptions.MySQLTransactionRollbackException;
 import io.github.bucket4j.BucketExceptions;
-import io.github.bucket4j.distributed.proxy.generic.pessimistic_locking.AbstractLockBasedProxyManager;
-import io.github.bucket4j.distributed.proxy.generic.pessimistic_locking.LockBasedTransaction;
+import io.github.bucket4j.distributed.proxy.generic.select_for_update.AbstractSelectForUpdateBasedProxyManager;
+import io.github.bucket4j.distributed.proxy.generic.select_for_update.LockAndGetResult;
+import io.github.bucket4j.distributed.proxy.generic.select_for_update.SelectForUpdateBasedTransaction;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -20,7 +22,7 @@ import java.util.Objects;
  * To define column names, {@link MySQLProxyConfiguration} include {@link io.github.bucket4j.distributed.jdbc.BucketTableSettings} which takes settings for the table to work with Bucket4j
  * @see {@link MySQLProxyConfigurationBuilder} to get more information how to build {@link MySQLProxyConfiguration}
  */
-public class MySQLProxyManager extends AbstractLockBasedProxyManager<Long> {
+public class MySQLSelectForUpdateBasedProxyManager extends AbstractSelectForUpdateBasedProxyManager<Long> {
 
     private final DataSource dataSource;
     private final MySQLProxyConfiguration configuration;
@@ -33,7 +35,7 @@ public class MySQLProxyManager extends AbstractLockBasedProxyManager<Long> {
      *
      * @param configuration {@link MySQLProxyConfiguration} configuration.
      */
-    public MySQLProxyManager(MySQLProxyConfiguration configuration) {
+    public MySQLSelectForUpdateBasedProxyManager(MySQLProxyConfiguration configuration) {
         super(configuration.getClientSideConfig());
         this.dataSource = Objects.requireNonNull(configuration.getDataSource());
         this.configuration = configuration;
@@ -45,7 +47,7 @@ public class MySQLProxyManager extends AbstractLockBasedProxyManager<Long> {
     }
 
     @Override
-    protected LockBasedTransaction allocateTransaction(Long key) {
+    protected SelectForUpdateBasedTransaction allocateTransaction(Long key) {
         Connection connection;
         try {
             connection = dataSource.getConnection();
@@ -53,52 +55,16 @@ public class MySQLProxyManager extends AbstractLockBasedProxyManager<Long> {
             throw new BucketExceptions.BucketExecutionException(e);
         }
 
-        return new LockBasedTransaction() {
+        return new SelectForUpdateBasedTransaction() {
             @Override
             public void begin() {
                 try {
                     connection.setAutoCommit(false);
-                    PreparedStatement sth = connection.prepareStatement("SELECT GET_LOCK(?, ?)");
-                    sth.setLong(1, key);
-                    sth.setInt(2, 2);
-                    sth.executeQuery();
                 } catch (SQLException e) {
                     throw new BucketExceptions.BucketExecutionException(e);
                 }
             }
-            @Override
-            public byte[] lockAndGet() {
-                try {
-                    try (PreparedStatement selectStatement = connection.prepareStatement(selectSqlQuery)) {
-                        selectStatement.setLong(1, key);
-                        try (ResultSet rs = selectStatement.executeQuery()) {
-                            if (rs.next()) {
-                                byte[] bucketStateBeforeTransaction = rs.getBytes(configuration.getStateName());
-                                if (bucketStateBeforeTransaction != null) {
-                                    return bucketStateBeforeTransaction;
-                                } else {
-                                    return null;
-                                }
-                            }
-                        }
-                    }
-                    try (PreparedStatement insertStatement = connection.prepareStatement(insertSqlQuery)) {
-                        insertStatement.setLong(1, key);
-                        insertStatement.executeUpdate();
-                    }
-                    try (PreparedStatement selectStatement = connection.prepareStatement(selectSqlQuery)) {
-                        selectStatement.setLong(1, key);
-                        try (ResultSet rs = selectStatement.executeQuery()) {
-                            if (!rs.next()) {
-                                throw new IllegalStateException("Something unexpected happens, it needs to read the MySQL manual");
-                            }
-                            return null;
-                        }
-                    }
-                } catch (SQLException e) {
-                    throw new BucketExceptions.BucketExecutionException(e);
-                }
-            }
+
             @Override
             public void update(byte[] data) {
                 try {
@@ -111,6 +77,7 @@ public class MySQLProxyManager extends AbstractLockBasedProxyManager<Long> {
                     throw new BucketExceptions.BucketExecutionException(e);
                 }
             }
+
             @Override
             public void release() {
                 try {
@@ -119,10 +86,7 @@ public class MySQLProxyManager extends AbstractLockBasedProxyManager<Long> {
                     throw new BucketExceptions.BucketExecutionException(e);
                 }
             }
-            @Override
-            public void create(byte[] data) {
-                update(data);
-            }
+
             @Override
             public void rollback() {
                 try {
@@ -131,6 +95,7 @@ public class MySQLProxyManager extends AbstractLockBasedProxyManager<Long> {
                     throw new BucketExceptions.BucketExecutionException(e);
                 }
             }
+
             @Override
             public void commit() {
                 try {
@@ -139,16 +104,37 @@ public class MySQLProxyManager extends AbstractLockBasedProxyManager<Long> {
                     throw new BucketExceptions.BucketExecutionException(e);
                 }
             }
+
             @Override
-            public void unlock() {
-                try {
-                    PreparedStatement sth = connection.prepareStatement("SELECT RELEASE_LOCK(?)");
-                    sth.setLong(1, key);
-                    sth.executeQuery();
+            public LockAndGetResult tryLockAndGet() {
+                try (PreparedStatement selectStatement = connection.prepareStatement(selectSqlQuery)) {
+                    selectStatement.setLong(1, key);
+                    try (ResultSet rs = selectStatement.executeQuery()) {
+                        if (!rs.next()) {
+                            return LockAndGetResult.notLocked();
+                        }
+                        byte[] bucketStateBeforeTransaction = rs.getBytes(configuration.getStateName());
+                        return LockAndGetResult.locked(bucketStateBeforeTransaction);
+                    }
                 } catch (SQLException e) {
                     throw new BucketExceptions.BucketExecutionException(e);
                 }
             }
+
+            @Override
+            public boolean tryInsertEmptyData() {
+                try (PreparedStatement insertStatement = connection.prepareStatement(insertSqlQuery)) {
+                    insertStatement.setLong(1, key);
+                    insertStatement.executeUpdate();
+                    return true;
+                } catch (MySQLTransactionRollbackException conflict) {
+                    // do nothing, because parallel transaction has been already inserted the row
+                    return false;
+                } catch (SQLException e) {
+                    throw new BucketExceptions.BucketExecutionException(e);
+                }
+            }
+
         };
     }
 

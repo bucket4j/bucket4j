@@ -79,16 +79,12 @@ public class SelectForUpdateBasedProxyManagerMock<K> extends AbstractSelectForUp
             }
 
             @Override
-            public void unlock() {
-                // do nothing
-            }
-
-            @Override
-            public void tryInsertEmptyData() {
+            public boolean tryInsertEmptyData() {
                 if (backup != null) {
                     throw new IllegalStateException();
                 }
                 stateMap.put(key, null);
+                return true;
             }
 
         };

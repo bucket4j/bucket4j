@@ -147,7 +147,7 @@ To use Bucket4j extension for MySQL you need to add following dependency:
 ----
 
 ===== Configuring custom settings of MySQLProxyManager
-* `MySQLProxyManager` takes a few configurations that you can set to make it customizable
+* `MySQLSelectForUpdateBasedProxyManager` takes a few configurations that you can set to make it customizable
 * In order to do that, you should use `MySQLProxyConfigurationBuilder`, which includes the next parameters:
 ----
     /**
@@ -171,7 +171,7 @@ To use Bucket4j extension for MySQL you need to add following dependency:
     }
 ----
 
-* The example of usage `MySQLProxyConfigurationBuilder` to customize your setting for the `MySQLProxyManager`:
+* The example of usage `MySQLProxyConfigurationBuilder` to customize your setting for the `MySQLSelectForUpdateBasedProxyManager`:
 ----
         MySQLProxyConfiguration configuration = MySQLProxyConfigurationBuilder.builder()
                 .addClientSideConfig(ClientSideConfig.getDefault().withClientClock(TimeMeter.SYSTEM_MILLISECONDS))

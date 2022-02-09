@@ -21,7 +21,7 @@ public class MySQLSelectForUpdateLockBasedTransactionTest extends AbstractDistri
 
     private static MySQLContainer container;
     private static DataSource dataSource;
-    private static MySQLProxyManager proxyManager;
+    private static MySQLSelectForUpdateBasedProxyManager proxyManager;
 
     @BeforeClass
     public static void initializeInstance() throws SQLException {
@@ -39,7 +39,7 @@ public class MySQLSelectForUpdateLockBasedTransactionTest extends AbstractDistri
                 .withClientSideConfig(ClientSideConfig.getDefault())
                 .withTableSettings(tableSettings)
                 .build(dataSource);
-        proxyManager = new MySQLProxyManager(configuration);
+        proxyManager = new MySQLSelectForUpdateBasedProxyManager(configuration);
     }
 
     @Override

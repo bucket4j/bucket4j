@@ -27,7 +27,6 @@ package io.github.bucket4j.distributed.proxy.generic.select_for_update;
  *     <li>begin - {@link #begin()}</li>
  *     <li>lock - {@link #tryLockAndGet()}</li>
  *     <li>update - {@link #update(byte[])}</li>
- *     <li>unlock - {@link #unlock()}</li>
  *     <li>commit - {@link #commit()}</li>
  *     <li>release - {@link #release()}</li>
  * </ol>
@@ -52,22 +51,18 @@ public interface SelectForUpdateBasedTransaction {
 
     /**
      * Locks data by the key associated with this transaction and returns data that is associated with the key.
-     * There is strong guarantee that {@link #unlock()} will be called if {@link #tryLockAndGet()} returns successfully.
      *
-     * @return Returns the data by the key associated with this transaction, or null data associated with key does not exist
+     * @return the data by the key associated with this transaction, or null data associated with key does not exist
      */
     LockAndGetResult tryLockAndGet();
 
     /**
-     * Unlocks data by the key associated with this transaction.
-     */
-    void unlock();
-
-    /**
      * Creates empty data by for the key associated with this transaction.
      * This operation is required to be able to lock data in the scope of next transaction.
+     *
+     * @return true if data has been inserted
      */
-    void tryInsertEmptyData();
+    boolean tryInsertEmptyData();
 
     /**
      * Updates the data by the key associated with this transaction.

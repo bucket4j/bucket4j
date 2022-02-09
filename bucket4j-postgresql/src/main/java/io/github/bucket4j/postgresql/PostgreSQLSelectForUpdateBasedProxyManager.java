@@ -111,10 +111,10 @@ public class PostgreSQLSelectForUpdateBasedProxyManager extends AbstractSelectFo
             }
 
             @Override
-            public void tryInsertEmptyData() {
+            public boolean tryInsertEmptyData() {
                 try (PreparedStatement insertStatement = connection.prepareStatement(insertSqlQuery)) {
                     insertStatement.setLong(1, key);
-                    insertStatement.executeUpdate();
+                    return insertStatement.executeUpdate() > 0;
                 } catch (SQLException e) {
                     throw new BucketExceptions.BucketExecutionException(e);
                 }
@@ -142,10 +142,6 @@ public class PostgreSQLSelectForUpdateBasedProxyManager extends AbstractSelectFo
                 }
             }
 
-            @Override
-            public void unlock() {
-                // do nothing, because locked rows will be auto unlocked when transaction finishes
-            }
         };
 
     }
