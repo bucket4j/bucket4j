@@ -1,5 +1,38 @@
-=== PostgreSQL integration
-==== Dependencies
+=== JDBC integrations
+General compatibility matrix principles:
+
+* Bucket4j authors do not provide create a table for store buckets, you must make the table personally
+* You should create a trigger or a scheduler that will clear your bucket storage table since DBMS is not IMDB, and DBMS don't give TTL the opportunity
+* You should create a table, which includes the next required columns: BIGINT as a PRIMARY KEY, BYTEA as a state. By default, Bucket4j works with the next structure:
+
+.PostgreSQL
+----
+CREATE TABLE IF NOT EXISTS buckets(id BIGINT PRIMARY KEY, state BYTEA);
+----
+
+.MySQL
+----
+CREATE TABLE IF NOT EXISTS buckets(id BIGINT PRIMARY KEY, state BLOB);
+----
+
+[[listener]]
+===== Overriding table configuration
+You can override the names of the columns to set your custom name of columns, in order to do that, you should use `BucketTableSettings` to set into `ProxyConfigurationBuilder` of your JDBC implementation.
+
+Each `ProxyConfigurationBuilder` Takes `BucketTableSettings` - is the class to define a configuration of the table to use as a buckets store. By default, under the hood uses `BucketTableSettings.getDefault()`
+
+Parameters:
+
+`tableName` - name of table to use as a Buckets store
+
+`idName` - name of id (PRIMARY KEY - BIGINT)
+
+`stateName` - name of state (BYTEA)
+
+By default, uses: "buckets" as a `tableName`; "id" as a `idName`; "state" as a `stateName`
+
+==== PostgreSQL integration
+===== Dependencies
 To use Bucket4j extension for PostgreSQL you need to add following dependency:
 [source, xml, subs=attributes+]
 ----
@@ -10,16 +43,7 @@ To use Bucket4j extension for PostgreSQL you need to add following dependency:
 </dependency>
 ----
 
-==== General compatibility matrix principles:
-* Bucket4j authors do not provide create a table for store buckets, you must make the table personally
-* You should create a trigger or a scheduler that will clear your bucket storage table since PostgreSQL is not IMDB, and DBMS don't give TTL the opportunity
-* You should create a table, which includes the next required columns: BIGINT as a PRIMARY KEY, BYTEA as a state. By default, Bucket4j works with the next structure:
-----
-CREATE TABLE IF NOT EXISTS buckets(id BIGINT PRIMARY KEY, state BYTEA);
-----
-But you can override the names of the columns to set your custom name of columns
-
-==== Example of Bucket instantiation
+===== Example of Bucket instantiation
 ----
         Long key = 1L;
         PostgreSQLProxyManager proxyManager = new PostgreSQLProxyManager(new PostgreSQLProxyConfiguration(dataSource));
@@ -29,7 +53,7 @@ But you can override the names of the columns to set your custom name of columns
         BucketProxy bucket = proxyManager.builder().build(key, bucketConfiguration);
 ----
 
-==== Configuring custom settings of PostgreSQLProxyManager
+===== Configuring custom settings of PostgreSQLProxyManager
 * `PostgreSQLProxyManager` takes a few configurations that you can set to make it customizable
 * In order to do that, you should use `PostgreSQLProxyConfigurationBuilder`, which includes the next parameters:
 ----
@@ -74,9 +98,9 @@ But you can override the names of the columns to set your custom name of columns
         PostgreSQLProxyManager proxyManager = new PostgreSQLProxyManager(configuration);
 ----
 
-==== Parameters to customize table buckets storage settings via PostgreSQLProxyConfigurationBuilder
+===== Parameters to customize table buckets storage settings via PostgreSQLProxyConfigurationBuilder
 
-===== addLockBasedTransactionType
+====== addLockBasedTransactionType
 Takes `LockBasedTransactionType` - is a strategy of transaction for the table. By default, under the hood uses `ADVISORY`
 
 Lock based transaction types:
@@ -93,18 +117,78 @@ That is, other transactions that attempt UPDATE, DELETE, or SELECT FOR UPDATE of
 Also, if an UPDATE, DELETE, or SELECT FOR UPDATE from another transaction has already locked a selected row or rows, SELECT FOR UPDATE will wait for the other transaction to complete, and will then lock and return the updated row (or no row, if the row was deleted).
 Within a SERIALIZABLE transaction, however, an error will be thrown if a row to be locked has changed since the transaction started.
 
-===== addTableSettings
-Takes `BucketTableSettings` - is the class to define a configuration of the table to use as a buckets store. By default, under the hood uses `BucketTableSettings.getDefault()`
+====== addTableSettings
+Takes `BucketTableSettings` - See <<listener, Overriding table configuration>>.
 
-Parameters:
-
-`tableName` - name of table to use as a Buckets store
-
-`idName` - name of id (PRIMARY KEY - BIGINT)
-
-`stateName` - name of state (BYTEA)
-
-By default, uses: "buckets" as a `tableName`; "id" as a `idName`; "state" as a `stateName`
-
-===== addClientSideConfig
+====== addClientSideConfig
 Takes `ClientSideConfig` - is a client-side configuration for proxy-manager. By default, under the hood uses `ClientSideConfig.getDefault()`
+
+
+==== MySQL integration
+===== Dependencies
+To use Bucket4j extension for MySQL you need to add following dependency:
+[source, xml, subs=attributes+]
+----
+<dependency>
+    <groupId>com.github.vladimir-bukhtoyarov</groupId>
+    <artifactId>bucket4j-mysql</artifactId>
+    <version>{revnumber}</version>
+</dependency>
+----
+
+===== Example of Bucket instantiation
+----
+        Long key = 1L;
+        MySQLProxyManager proxyManager = new MySQLProxyManager(new MySQLProxyConfiguration(dataSource));
+        BucketConfiguration bucketConfiguration = BucketConfiguration.builder()
+                .addLimit(Bandwidth.simple(10, Duration.ofSeconds(1)))
+                .build();
+        BucketProxy bucket = proxyManager.builder().build(key, bucketConfiguration);
+----
+
+===== Configuring custom settings of MySQLProxyManager
+* `MySQLProxyManager` takes a few configurations that you can set to make it customizable
+* In order to do that, you should use `MySQLProxyConfigurationBuilder`, which includes the next parameters:
+----
+    /**
+     * @param clientSideConfig {@link ClientSideConfig} client-side configuration for proxy-manager.
+     *                                                 By default, under the hood uses {@link ClientSideConfig#getDefault}
+     * @return {@link MySQLProxyConfigurationBuilder}
+     */
+    public MySQLProxyConfigurationBuilder addClientSideConfig(ClientSideConfig clientSideConfig) {
+        this.clientSideConfig = clientSideConfig;
+        return this;
+    }
+
+    /**
+     * @param tableSettings {@link BucketTableSettings} define a configuration of the table to use as a Buckets store.
+     *                                                 By default, under the hood uses {@link BucketTableSettings#getDefault}
+     * @return {@link MySQLProxyConfigurationBuilder}
+     */
+    public MySQLProxyConfigurationBuilder addTableSettings(BucketTableSettings tableSettings) {
+        this.tableSettings = tableSettings;
+        return this;
+    }
+----
+
+* The example of usage `MySQLProxyConfigurationBuilder` to customize your setting for the `MySQLProxyManager`:
+----
+        MySQLProxyConfiguration configuration = MySQLProxyConfigurationBuilder.builder()
+                .addClientSideConfig(ClientSideConfig.getDefault().withClientClock(TimeMeter.SYSTEM_MILLISECONDS))
+                .addTableSettings(BucketTableSettings.customSettings("tableName", "idName", "stateName"))
+                .build(dataSource);
+        MySQLProxyManager proxyManager = new MySQLProxyManager(configuration);
+----
+
+===== Parameters to customize table buckets storage settings via MySQLProxyConfigurationBuilder
+
+====== addTableSettings
+Takes `BucketTableSettings` - See <<listener, Overriding table configuration>>.
+
+====== addClientSideConfig
+Takes `ClientSideConfig` - is a client-side configuration for proxy-manager. By default, under the hood uses `ClientSideConfig.getDefault()`
+
+
+
+
+

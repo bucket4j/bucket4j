@@ -65,5 +65,5 @@ In order to do that, we need to create a custom class to implement from LockBase
     void update(byte[] data);
 ----
 
-As an example, you can see to the PostgreSQL realization.
+As an example, you can see to the PostgreSQL or MySQL realization.
 
