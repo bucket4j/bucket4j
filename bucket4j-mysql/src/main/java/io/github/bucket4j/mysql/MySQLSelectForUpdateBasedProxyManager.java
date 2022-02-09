@@ -2,6 +2,8 @@ package io.github.bucket4j.mysql;
 
 import com.mysql.cj.jdbc.exceptions.MySQLTransactionRollbackException;
 import io.github.bucket4j.BucketExceptions;
+import io.github.bucket4j.distributed.jdbc.SQLProxyConfiguration;
+import io.github.bucket4j.distributed.jdbc.SQLProxyConfigurationBuilder;
 import io.github.bucket4j.distributed.proxy.generic.select_for_update.AbstractSelectForUpdateBasedProxyManager;
 import io.github.bucket4j.distributed.proxy.generic.select_for_update.LockAndGetResult;
 import io.github.bucket4j.distributed.proxy.generic.select_for_update.SelectForUpdateBasedTransaction;
@@ -19,13 +21,13 @@ import java.util.Objects;
  * The extension of Bucket4j library addressed to support <a href="https://www.mysql.com">MySQL</a>
  * To start work with the MySQL extension you must create a table, which will include the possibility to work with buckets
  * In order to do this, your table should include the next columns: id as a PRIMARY KEY (BIGINT) and state (BYTEA)
- * To define column names, {@link MySQLProxyConfiguration} include {@link io.github.bucket4j.distributed.jdbc.BucketTableSettings} which takes settings for the table to work with Bucket4j
- * @see {@link MySQLProxyConfigurationBuilder} to get more information how to build {@link MySQLProxyConfiguration}
+ * To define column names, {@link SQLProxyConfiguration} include {@link io.github.bucket4j.distributed.jdbc.BucketTableSettings} which takes settings for the table to work with Bucket4j
+ * @see {@link SQLProxyConfigurationBuilder} to get more information how to build {@link SQLProxyConfiguration}
  */
 public class MySQLSelectForUpdateBasedProxyManager extends AbstractSelectForUpdateBasedProxyManager<Long> {
 
     private final DataSource dataSource;
-    private final MySQLProxyConfiguration configuration;
+    private final SQLProxyConfiguration configuration;
     private final String removeSqlQuery;
     private final String updateSqlQuery;
     private final String insertSqlQuery;
@@ -33,9 +35,9 @@ public class MySQLSelectForUpdateBasedProxyManager extends AbstractSelectForUpda
 
     /**
      *
-     * @param configuration {@link MySQLProxyConfiguration} configuration.
+     * @param configuration {@link SQLProxyConfiguration} configuration.
      */
-    public MySQLSelectForUpdateBasedProxyManager(MySQLProxyConfiguration configuration) {
+    public MySQLSelectForUpdateBasedProxyManager(SQLProxyConfiguration configuration) {
         super(configuration.getClientSideConfig());
         this.dataSource = Objects.requireNonNull(configuration.getDataSource());
         this.configuration = configuration;
