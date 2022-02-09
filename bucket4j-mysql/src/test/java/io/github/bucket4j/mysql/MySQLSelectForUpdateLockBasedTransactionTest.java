@@ -36,8 +36,8 @@ public class MySQLSelectForUpdateLockBasedTransactionTest extends AbstractDistri
             }
         }
         MySQLProxyConfiguration configuration = MySQLProxyConfigurationBuilder.builder()
-                .addClientSideConfig(ClientSideConfig.getDefault())
-                .addTableSettings(tableSettings)
+                .withClientSideConfig(ClientSideConfig.getDefault())
+                .withTableSettings(tableSettings)
                 .build(dataSource);
         proxyManager = new MySQLProxyManager(configuration);
     }

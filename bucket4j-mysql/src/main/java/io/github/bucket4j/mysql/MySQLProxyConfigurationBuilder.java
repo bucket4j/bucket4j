@@ -26,7 +26,7 @@ public final class MySQLProxyConfigurationBuilder {
      *                                                 By default, under the hood uses {@link ClientSideConfig#getDefault}
      * @return {@link MySQLProxyConfigurationBuilder}
      */
-    public MySQLProxyConfigurationBuilder addClientSideConfig(ClientSideConfig clientSideConfig) {
+    public MySQLProxyConfigurationBuilder withClientSideConfig(ClientSideConfig clientSideConfig) {
         this.clientSideConfig = clientSideConfig;
         return this;
     }
@@ -36,7 +36,7 @@ public final class MySQLProxyConfigurationBuilder {
      *                                                 By default, under the hood uses {@link BucketTableSettings#getDefault}
      * @return {@link MySQLProxyConfigurationBuilder}
      */
-    public MySQLProxyConfigurationBuilder addTableSettings(BucketTableSettings tableSettings) {
+    public MySQLProxyConfigurationBuilder withTableSettings(BucketTableSettings tableSettings) {
         this.tableSettings = tableSettings;
         return this;
     }
