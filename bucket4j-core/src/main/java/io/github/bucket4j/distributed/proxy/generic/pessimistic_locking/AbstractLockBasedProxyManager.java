@@ -18,12 +18,14 @@
  * =========================LICENSE_END==================================
  */
 
-package io.github.bucket4j.distributed.proxy.generic.select_for_update;
+package io.github.bucket4j.distributed.proxy.generic.pessimistic_locking;
 
+import io.github.bucket4j.BucketExceptions;
 import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.proxy.AbstractProxyManager;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.generic.GenericEntry;
+import io.github.bucket4j.distributed.proxy.generic.select_for_update.LockAndGetResult;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.remote.Request;
@@ -47,7 +49,7 @@ public abstract class AbstractLockBasedProxyManager<K> extends AbstractProxyMana
         try {
             return execute(request, transaction);
         } finally {
-            releaseTransaction(transaction);
+            transaction.release();
         }
     }
 
@@ -68,35 +70,50 @@ public abstract class AbstractLockBasedProxyManager<K> extends AbstractProxyMana
 
     protected abstract LockBasedTransaction allocateTransaction(K key);
 
-    protected abstract void releaseTransaction(LockBasedTransaction transaction);
-
     private <T> CommandResult<T> execute(Request<T> request, LockBasedTransaction transaction) {
         RemoteCommand<T> command = request.getCommand();
         transaction.begin();
+
+        // lock and get data
+        byte[] persistedDataOnBeginOfTransaction;
         try {
-            try {
-                byte[] persistedDataOnBeginOfTransaction = transaction.lockAndGet();
-                if (persistedDataOnBeginOfTransaction == null && !command.isInitializationCommand()) {
-                    return CommandResult.bucketNotFound();
+            persistedDataOnBeginOfTransaction = transaction.lockAndGet();
+        } catch (Throwable t) {
+            unlockAndRollback(transaction);
+            throw new BucketExceptions.BucketExecutionException(t);
+        }
+
+        // check that command is able to provide initial state in case of bucket does not exist
+        if (persistedDataOnBeginOfTransaction == null && !request.getCommand().isInitializationCommand()) {
+            unlockAndRollback(transaction);
+            return CommandResult.bucketNotFound();
+        }
+
+        try {
+            GenericEntry entry = new GenericEntry(persistedDataOnBeginOfTransaction, request.getBackwardCompatibilityVersion());
+            CommandResult<T> result = command.execute(entry, super.getClientSideTime());
+            if (entry.isModified()) {
+                byte[] bytes = entry.getModifiedStateBytes();
+                if (persistedDataOnBeginOfTransaction == null) {
+                    transaction.create(bytes);
+                } else {
+                    transaction.update(bytes);
                 }
-                GenericEntry entry = new GenericEntry(persistedDataOnBeginOfTransaction, request.getBackwardCompatibilityVersion());
-                CommandResult<T> result = command.execute(entry, super.getClientSideTime());
-                if (entry.isModified()) {
-                    byte[] bytes = entry.getModifiedStateBytes();
-                    if (persistedDataOnBeginOfTransaction == null) {
-                        transaction.create(bytes);
-                    } else {
-                        transaction.update(bytes);
-                    }
-                }
-                transaction.commit();
-                return result;
-            } finally {
-                transaction.unlock();
             }
-        } catch (RuntimeException e) {
+            transaction.unlock();
+            transaction.commit();
+            return result;
+        } catch (Throwable t) {
+            unlockAndRollback(transaction);
+            throw new BucketExceptions.BucketExecutionException(t);
+        }
+    }
+
+    private void unlockAndRollback(LockBasedTransaction transaction) {
+        try {
+            transaction.unlock();
+        } finally {
             transaction.rollback();
-            throw e;
         }
     }
 

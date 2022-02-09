@@ -1,8 +1,8 @@
 package io.github.bucket4j.mysql;
 
 import io.github.bucket4j.BucketExceptions;
-import io.github.bucket4j.distributed.proxy.generic.select_for_update.AbstractLockBasedProxyManager;
-import io.github.bucket4j.distributed.proxy.generic.select_for_update.LockBasedTransaction;
+import io.github.bucket4j.distributed.proxy.generic.pessimistic_locking.AbstractLockBasedProxyManager;
+import io.github.bucket4j.distributed.proxy.generic.pessimistic_locking.LockBasedTransaction;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -40,15 +40,6 @@ public class MySQLProxyManager extends AbstractLockBasedProxyManager<Long> {
     protected LockBasedTransaction allocateTransaction(Long key) {
         try {
             return new MySQLSelectForUpdateLockBasedTransaction(key, configuration, dataSource.getConnection());
-        } catch (SQLException e) {
-            throw new BucketExceptions.BucketExecutionException(e);
-        }
-    }
-
-    @Override
-    protected void releaseTransaction(LockBasedTransaction transaction) {
-        try {
-            ((MySQLSelectForUpdateLockBasedTransaction) transaction).getConnection().close();
         } catch (SQLException e) {
             throw new BucketExceptions.BucketExecutionException(e);
         }

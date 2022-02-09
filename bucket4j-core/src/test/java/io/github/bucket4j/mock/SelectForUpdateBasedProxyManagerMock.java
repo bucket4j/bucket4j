@@ -20,23 +20,27 @@ package io.github.bucket4j.mock;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.generic.pessimistic_locking.AbstractLockBasedProxyManager;
 import io.github.bucket4j.distributed.proxy.generic.pessimistic_locking.LockBasedTransaction;
+import io.github.bucket4j.distributed.proxy.generic.select_for_update.AbstractSelectForUpdateBasedProxyManager;
+import io.github.bucket4j.distributed.proxy.generic.select_for_update.LockAndGetResult;
+import io.github.bucket4j.distributed.proxy.generic.select_for_update.SelectForUpdateBasedTransaction;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public class LockBasedProxyManagerMock<K> extends AbstractLockBasedProxyManager<K> {
+public class SelectForUpdateBasedProxyManagerMock<K> extends AbstractSelectForUpdateBasedProxyManager<K> {
 
     private final Map<K, byte[]> stateMap = new HashMap<>();
 
-    public LockBasedProxyManagerMock(ClientSideConfig clientSideConfig) {
+    public SelectForUpdateBasedProxyManagerMock(ClientSideConfig clientSideConfig) {
         super(clientSideConfig);
     }
 
     @Override
-    protected LockBasedTransaction allocateTransaction(K key) {
+    protected SelectForUpdateBasedTransaction allocateTransaction(K key) {
+        boolean existBeforeTransaction = stateMap.containsKey(key);
         byte[] backup = stateMap.get(key);
 
-        return new LockBasedTransaction() {
+        return new SelectForUpdateBasedTransaction() {
 
             @Override
             public void begin() {
@@ -57,14 +61,6 @@ public class LockBasedProxyManagerMock<K> extends AbstractLockBasedProxyManager<
             }
 
             @Override
-            public void create(byte[] data) {
-                if (backup != null) {
-                    throw new IllegalStateException();
-                }
-                stateMap.put(key, data);
-            }
-
-            @Override
             public void rollback() {
                 stateMap.put(key, backup);
             }
@@ -75,13 +71,24 @@ public class LockBasedProxyManagerMock<K> extends AbstractLockBasedProxyManager<
             }
 
             @Override
-            public byte[] lockAndGet() {
-                return backup;
+            public LockAndGetResult tryLockAndGet() {
+                if (!existBeforeTransaction) {
+                    return LockAndGetResult.notLocked();
+                }
+                return LockAndGetResult.locked(backup);
             }
 
             @Override
             public void unlock() {
                 // do nothing
+            }
+
+            @Override
+            public void tryInsertEmptyData() {
+                if (backup != null) {
+                    throw new IllegalStateException();
+                }
+                stateMap.put(key, null);
             }
 
         };

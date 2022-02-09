@@ -21,8 +21,8 @@ package io.github.bucket4j.grid.hazelcast;
 
 import com.hazelcast.map.IMap;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
-import io.github.bucket4j.distributed.proxy.generic.select_for_update.AbstractLockBasedProxyManager;
-import io.github.bucket4j.distributed.proxy.generic.select_for_update.LockBasedTransaction;
+import io.github.bucket4j.distributed.proxy.generic.pessimistic_locking.AbstractLockBasedProxyManager;
+import io.github.bucket4j.distributed.proxy.generic.pessimistic_locking.LockBasedTransaction;
 
 import java.util.Objects;
 
@@ -89,12 +89,12 @@ public class HazelcastLockBasedProxyManager<K> extends AbstractLockBasedProxyMan
             public void update(byte[] data) {
                 map.put(key, data);
             }
-        };
-    }
 
-    @Override
-    protected void releaseTransaction(LockBasedTransaction transaction) {
-        // do nothing
+            @Override
+            public void release() {
+                // do nothing
+            }
+        };
     }
 
 }

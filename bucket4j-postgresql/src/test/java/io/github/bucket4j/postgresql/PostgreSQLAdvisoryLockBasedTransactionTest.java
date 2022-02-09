@@ -2,16 +2,12 @@ package io.github.bucket4j.postgresql;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import io.github.bucket4j.Bandwidth;
-import io.github.bucket4j.BucketConfiguration;
-import io.github.bucket4j.distributed.BucketProxy;
 import io.github.bucket4j.distributed.jdbc.BucketTableSettings;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Test;
 import org.testcontainers.containers.PostgreSQLContainer;
 
 import javax.sql.DataSource;
@@ -19,7 +15,6 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.MessageFormat;
-import java.time.Duration;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static org.junit.Assert.assertFalse;
@@ -29,7 +24,7 @@ public class PostgreSQLAdvisoryLockBasedTransactionTest extends AbstractDistribu
 
     private static PostgreSQLContainer container;
     private static DataSource dataSource;
-    private static PostgreSQLProxyManager proxyManager;
+    private static PostgreSQLadvisoryLockBasedProxyManager proxyManager;
 
     @BeforeClass
     public static void initializeInstance() throws SQLException {
@@ -44,11 +39,10 @@ public class PostgreSQLAdvisoryLockBasedTransactionTest extends AbstractDistribu
             }
         }
         PostgreSQLProxyConfiguration configuration = PostgreSQLProxyConfigurationBuilder.builder()
-                .addLockBasedTransactionType(LockBasedTransactionType.ADVISORY)
-                .addClientSideConfig(ClientSideConfig.getDefault())
-                .addTableSettings(tableSettings)
+                .withClientSideConfig(ClientSideConfig.getDefault())
+                .withTableSettings(tableSettings)
                 .build(dataSource);
-        proxyManager = new PostgreSQLProxyManager(configuration);
+        proxyManager = new PostgreSQLadvisoryLockBasedProxyManager(configuration);
     }
 
     @Override

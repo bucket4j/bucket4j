@@ -21,17 +21,18 @@
 package io.github.bucket4j.distributed.proxy.generic.select_for_update;
 
 /**
- * Describes the set of operations that {@link AbstractLockBasedProxyManager} typically performs in reaction to user request.
+ * Describes the set of operations that {@link AbstractSelectForUpdateBasedProxyManager} typically performs in reaction to user request.
  * The typical flow is following:
  * <ol>
  *     <li>begin - {@link #begin()}</li>
- *     <li>lock - {@link #lockAndGet()}</li>
+ *     <li>lock - {@link #tryLockAndGet()}</li>
  *     <li>update - {@link #update(byte[])}</li>
  *     <li>unlock - {@link #unlock()}</li>
  *     <li>commit - {@link #commit()}</li>
+ *     <li>release - {@link #release()}</li>
  * </ol>
  */
-public interface LockBasedTransaction {
+public interface SelectForUpdateBasedTransaction {
 
     /**
      * Begins transaction if underlying storage requires transactions.
@@ -51,11 +52,11 @@ public interface LockBasedTransaction {
 
     /**
      * Locks data by the key associated with this transaction and returns data that is associated with the key.
-     * There is strong guarantee that {@link #unlock()} will be called if {@link #lockAndGet()} returns successfully.
+     * There is strong guarantee that {@link #unlock()} will be called if {@link #tryLockAndGet()} returns successfully.
      *
      * @return Returns the data by the key associated with this transaction, or null data associated with key does not exist
      */
-    byte[] lockAndGet();
+    LockAndGetResult tryLockAndGet();
 
     /**
      * Unlocks data by the key associated with this transaction.
@@ -63,11 +64,10 @@ public interface LockBasedTransaction {
     void unlock();
 
     /**
-     * Creates the data by the key associated with this transaction.
-     *
-     * @param data bucket state to persists
+     * Creates empty data by for the key associated with this transaction.
+     * This operation is required to be able to lock data in the scope of next transaction.
      */
-    void create(byte[] data);
+    void tryInsertEmptyData();
 
     /**
      * Updates the data by the key associated with this transaction.
@@ -76,4 +76,8 @@ public interface LockBasedTransaction {
      */
     void update(byte[] data);
 
+    /**
+     * Frees resources associated with this transaction
+     */
+    void release();
 }

@@ -10,21 +10,15 @@ public class PostgreSQLProxyConfiguration {
     private final DataSource dataSource;
     private final ClientSideConfig clientSideConfig;
     private final BucketTableSettings tableSettings;
-    private final LockBasedTransactionType lockBasedTransactionType;
 
     public PostgreSQLProxyConfiguration(DataSource dataSource) {
-        this(dataSource, ClientSideConfig.getDefault(), BucketTableSettings.getDefault(), LockBasedTransactionType.ADVISORY);
+        this(dataSource, ClientSideConfig.getDefault(), BucketTableSettings.getDefault());
     }
 
-    public PostgreSQLProxyConfiguration(DataSource dataSource, ClientSideConfig clientSideConfig, BucketTableSettings tableSettings, LockBasedTransactionType lockBasedTransactionType) {
+    public PostgreSQLProxyConfiguration(DataSource dataSource, ClientSideConfig clientSideConfig, BucketTableSettings tableSettings) {
         this.dataSource = dataSource;
         this.clientSideConfig = clientSideConfig;
         this.tableSettings = tableSettings;
-        this.lockBasedTransactionType = lockBasedTransactionType;
-    }
-
-    public LockBasedTransactionType getLockBasedTransactionType() {
-        return lockBasedTransactionType;
     }
 
     public String getIdName() {

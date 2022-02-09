@@ -3,8 +3,8 @@ package io.github.bucket4j.tck;
 import io.github.bucket4j.*;
 import io.github.bucket4j.distributed.AsyncBucketProxy;
 import io.github.bucket4j.distributed.BucketProxy;
-import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.distributed.proxy.BucketNotFoundException;
+import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.util.AsyncConsumptionScenario;
 import io.github.bucket4j.util.ConsumptionScenario;
 import org.junit.Test;
@@ -130,6 +130,8 @@ public abstract class AbstractDistributedBucketTest<K> {
                 }
                 try {
                     proxyManager.builder().build(key, () -> configuration).tryConsume(1);
+                } catch (Throwable t) {
+                    t.printStackTrace();
                 } finally {
                     stopLatch.countDown();
                 }
@@ -165,9 +167,7 @@ public abstract class AbstractDistributedBucketTest<K> {
                 try {
                     try {
                         proxyManager.asAsync().builder().build(key, () -> CompletableFuture.completedFuture(configuration)).tryConsume(1).get();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    } catch (ExecutionException e) {
+                    } catch (Throwable e) {
                         e.printStackTrace();
                     }
                 } finally {

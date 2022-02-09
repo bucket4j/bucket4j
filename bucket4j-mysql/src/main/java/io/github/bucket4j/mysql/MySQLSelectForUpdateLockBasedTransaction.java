@@ -1,7 +1,7 @@
 package io.github.bucket4j.mysql;
 
 import io.github.bucket4j.BucketExceptions;
-import io.github.bucket4j.distributed.proxy.generic.select_for_update.LockBasedTransaction;
+import io.github.bucket4j.distributed.proxy.generic.pessimistic_locking.LockBasedTransaction;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -87,6 +87,15 @@ public class MySQLSelectForUpdateLockBasedTransaction implements LockBasedTransa
                 updateStatement.setLong(2, key);
                 updateStatement.executeUpdate();
             }
+        } catch (SQLException e) {
+            throw new BucketExceptions.BucketExecutionException(e);
+        }
+    }
+
+    @Override
+    public void release() {
+        try {
+            connection.close();
         } catch (SQLException e) {
             throw new BucketExceptions.BucketExecutionException(e);
         }

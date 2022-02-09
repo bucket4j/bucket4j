@@ -54,7 +54,7 @@ To use Bucket4j extension for PostgreSQL you need to add following dependency:
 ----
 
 ===== Configuring custom settings of PostgreSQLProxyManager
-* `PostgreSQLProxyManager` takes a few configurations that you can set to make it customizable
+* `PostgreSQLadvisoryLockBasedProxyManager` takes a few configurations that you can set to make it customizable
 * In order to do that, you should use `PostgreSQLProxyConfigurationBuilder`, which includes the next parameters:
 ----
     /**
@@ -88,7 +88,7 @@ To use Bucket4j extension for PostgreSQL you need to add following dependency:
     }
 ----
 
-* The example of usage `PostgreSQLProxyConfigurationBuilder` to customize your setting for the `PostgreSQLProxyManager`:
+* The example of usage `PostgreSQLProxyConfigurationBuilder` to customize your setting for the `PostgreSQLadvisoryLockBasedProxyManager`:
 ----
         PostgreSQLProxyConfiguration configuration = PostgreSQLProxyConfigurationBuilder.builder()
                 .addLockBasedTransactionType(LockBasedTransactionType.SELECT_FOR_UPDATE)
