@@ -3,7 +3,7 @@ image::./images/white-logo.png[]
 endif::[]
 
 == Current version {revnumber} documentation
-`30 Jan 2022` Support for Hazelcast for topology without access to classpath of server nodes.
+`11 Feb 2022` Support for MySQL and PostgreSQL.
 
 * http://bucket4j.com/{revnumber}/release-notes.html[{revnumber} Release notes]
 * http://bucket4j.com/{revnumber}/toc.html[{revnumber} Reference]
@@ -42,6 +42,13 @@ image:images/Maxim_Bartkov.jpg[80,80] +
 * https://github.com/Abdennebi/spring-boot-bucket4j-hazelcast-demo[Abdennebi/spring-boot-bucket4j-hazelcast-demo]
 
 == Documentation for previous versions
+=== 2022
+==== 7.1.0
+`30 Jan 2022` Support for Hazelcast for case without access to classpath of server nodes.
+
+* https://bucket4j.com/7.1.0/release-notes.html[7.1.0 Release notes]
+* https://bucket4j.com/7.1.0/toc.html[7.1.0 Reference]
+
 === 2021
 ==== 7.0.0
 `31 Dec 2021` redesigning of distributed facilities

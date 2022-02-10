@@ -18,7 +18,9 @@
  * =========================LICENSE_END==================================
  */
 
-package io.github.bucket4j.distributed.proxy.generic.select_for_update;
+package io.github.bucket4j.distributed.proxy.generic.pessimistic_locking;
+
+import io.github.bucket4j.distributed.proxy.generic.select_for_update.LockAndGetResult;
 
 /**
  * Describes the set of operations that {@link AbstractLockBasedProxyManager} typically performs in reaction to user request.
@@ -29,6 +31,7 @@ package io.github.bucket4j.distributed.proxy.generic.select_for_update;
  *     <li>update - {@link #update(byte[])}</li>
  *     <li>unlock - {@link #unlock()}</li>
  *     <li>commit - {@link #commit()}</li>
+ *     <li>release - {@link #release()}</li>
  * </ol>
  */
 public interface LockBasedTransaction {
@@ -76,4 +79,8 @@ public interface LockBasedTransaction {
      */
     void update(byte[] data);
 
+    /**
+     * Frees resources associated with this transaction
+     */
+    void release();
 }

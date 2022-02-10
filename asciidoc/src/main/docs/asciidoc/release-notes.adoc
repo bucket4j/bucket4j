@@ -2,8 +2,5 @@
 Release `{revnumber}`
 
 .The issues in release scope are following:
-* https://github.com/vladimir-bukhtoyarov/bucket4j/discussions/218[#218 Support Hazelcast in case lack of access to classpath]
-* https://github.com/vladimir-bukhtoyarov/bucket4j/issues/220[#220 Change response of tryConsumeAndReturnRemaining for cases when requested amount of tokens is greater than bandwidth capacity]
-
-.Migration notes
-Check whether the changes related to https://github.com/vladimir-bukhtoyarov/bucket4j/issues/220 can affect your use-cases.
+* https://github.com/vladimir-bukhtoyarov/bucket4j/discussions/38[#38 Support for PostgreSQL]
+* https://github.com/vladimir-bukhtoyarov/bucket4j/issues/37[#37 Support for MySQL]
