@@ -1,7 +1,7 @@
 === Quick start examples
 ==== How to dependency to Bucket4j
 The Bucket4j is distributed through https://mvnrepository.com/artifact/com.github.vladimir-bukhtoyarov/bucket4j-core[Maven Central].
-You need to add dependency to your project as described bellow in order to be able to compile and run examples
+You need to add the dependency to your project as described below in order to be able to compile and run examples
 
 .Maven dependency
 [source, xml, subs=attributes+]
@@ -20,9 +20,9 @@ implementation 'com.github.vladimir-bukhtoyarov:bucket4j-core:{revnumber}'
 ----
 
 ==== Create your first Bucket, limiting the rate of heavy work
-Imagine that you have a thread-pool executor and you want to know what your threads are doing in the moment when thread-pool throws RejectedExecutionException.
-Printing stacktraces of all threads in the JVM will be the best way to know where are all threads have stuck and why thread-pool is overflown.
-But acquiring stacktraces is very cost operation by itself, and you want to do it not often than 1 time per 10 minutes:
+Imagine that you have a thread-pool executor and you want to know what your threads are doing at the moment when thread-pool throws RejectedExecutionException.
+Printing stack traces of all threads in the JVM will be the best way to know where are all threads have stuck and why the thread pool is overflown.
+But acquiring stack traces is a very cost operation by itself, and you want to do it not often than 1 time per 10 minutes:
 [source, java]
 ----
 // define the limit 1 time per 10 minute
@@ -45,9 +45,9 @@ try {
 ----
 
 ==== Using bucket as scheduler
-Suppose you need to have the fresh exchange rate between dollars and euros.
+Suppose you need to have a fresh exchange rate between dollars and euros.
 To get the rate you continuously poll the third-party provider,
-and by contract with provider you should poll not often than 100 times per 1 minute, else provider will block your ip:
+and by contract with the provider you should poll not often than 100 times per 1 minute, else provider will block your IP:
 [source, java]
 ----
 // define the limit 100 times per 1 minute
@@ -71,14 +71,14 @@ while (true) {
 
 ==== Limiting the rate of access to REST API
 Imagine that you develop yet another social network and you want to provide REST API for third-party developers.
-To protect your system from overloading you want to introduce following limitation:
+To protect your system from overloading you want to introduce the following limitation:
 
 > The bucket size is 50 calls (which cannot be exceeded at any given time), with a "refill rate" of 10 calls per second that continually increases tokens in the bucket.
-In other words. if client app averages 10 calls per second, it will never be throttled,
-and moreover client have overdraft equals to 50 calls which can be used if average is little bit higher that 10 call/sec on short time period.
+In other words. if the client app averages 10 calls per second, it will never be throttled,
+and moreover, the client has overdraft equals to 50 calls which can be used if the average is a little bit higher than 10 calls/sec in a short time period.
 
-Constructing the bucket to satisfy the requirements above is little bit more complicated that for previous examples,
-because we have deal with overdraft, but it is not rocket science:
+Constructing the bucket to satisfy the requirements above is a little bit more complicated than for previous examples,
+because we have to deal with overdraft, but it is not rocket science:
 [source, java]
 ----
 import io.github.bucket4j.Bucket4j;
@@ -119,7 +119,7 @@ public class ThrottlingFilter implements javax.servlet.Filter {
 
 }
 ----
-If you want provide more information to end user about the state of bucket, then last fragment of code above can be rewritten in following way:
+If you want to provide more information to the end-user about the state of the bucket, then the last fragment of code above can be rewritten in the following way:
 [source, java]
 ----
         HttpServletResponse httpResponse = (HttpServletResponse) servletResponse;
@@ -139,9 +139,9 @@ If you want provide more information to end user about the state of bucket, then
 ----
 
 ==== Example of multiple bandwidth
-Imagine that you are developing load testing tool, in order to be ensure that testable system is able to dispatch 1000 requests per 1 minute.
-But you do not want to randomly kill the testable system by generation all 1000 events in one second instead of 1 minute.
-To solve problem you can construct following bucket:
+Imagine that you are developing a load testing tool, in order to ensure that a testable system is able to dispatch 1000 requests per 1 minute.
+But you do not want to randomly kill the testable system by generating all 1000 events in one second instead of 1 minute.
+To solve the problem you can construct the following bucket:
 [source, java]
 ----
 static final long MAX_WAIT_NANOS = TimeUnit.HOURS.toNanos(1);
@@ -164,8 +164,8 @@ while (true) {
 ----
 
 ==== Specifying initial amount of tokens
-By default initial size of bucket equals to capacity.
-But sometimes, you may want to have lesser initial size, for example for case of cold start in order to prevent denial of service:
+By default initial size of the bucket equals capacity.
+But sometimes, you may want to have a lesser initial size, for example for the case of cold start in order to prevent denial of service:
 
 [source, java]
 ----
@@ -179,12 +179,12 @@ Bucket bucket = Bucket.builder()
 ----
 
 ==== Turning-off the refill greediness
-When bandwidth created via ``Bandwidth#simple`` method  it does refill in greedy manner, because bandwidth tries to add the tokens to bucket as soon as possible.
-For example bandwidth with refill "10 tokens per 1 second" will add 1 token per each 100 millisecond,
-in other words refill will not wait 1 second to regenerate whole bunch of 10 tokens.
+When bandwidth is created via ``Bandwidth#simple`` method it does refill in a greedy manner, because bandwidth tries to add the tokens to the bucket as soon as possible.
+For example bandwidth with refill "10 tokens per 1 second" will add 1 token per every 100 milliseconds,
+in other words, the refill will not wait 1 second to regenerate a whole bunch of 10 tokens.
 
-If greediness is undesired then you should explicitly choose non-greedy refill.
-For example the bandwidth bellow will refill 10 tokens per 1 second instead of 1 token per 100 milliseconds:
+If greediness is undesired then you should explicitly choose a non-greedy refill.
+For example, the bandwidth bellow will refill 10 tokens per 1 second instead of 1 token per 100 milliseconds:
 [source, java]
 ----
 // When refill created via "intervally" factory method then greediness is turned-off.
@@ -192,8 +192,8 @@ Refill refill = Refill.intervally(10, Duration.ofSeconds(1));
 Bandwidth bandwidth = Bandwidth.classic(600, refill);
 ----
 
-Also it is possible to specify the time when first refill should happen.
-This option can be used to configure clear interval boundary i.e. start of second, minute, hour, day.
+Also, it is possible to specify the time when the first refill should happen.
+This option can be used to configure clear interval boundary i.e. start of the second, minute, hour, day.
 [source, java]
 ----
    // imagine that wall clock is 16:20, and we need to schedule the first refill to 17:00
@@ -210,7 +210,7 @@ This option can be used to configure clear interval boundary i.e. start of secon
 
 
 ==== Returning tokens back to bucket
-The https://en.wikipedia.org/wiki/Compensating_transaction[compensating transaction] is one of obvious use case when you want to return tokens back to bucket:
+The https://en.wikipedia.org/wiki/Compensating_transaction[compensating transaction] is one of the obvious use cases when you want to return tokens back to the bucket:
 [source, java]
 ----
 Bucket wallet;
@@ -226,19 +226,19 @@ if (wallet.tryConsume(50)) { // get 50 cents from wallet
 ----
 
 ==== Customizing time measurement - choosing nanotime time resolution
-By default Bucket4j uses millisecond time resolution, it is preferred time measurement strategy.
-But rarely(for example benchmarking) you wish the nanosecond precision:
+By default Bucket4j uses millisecond time resolution, it is the preferred time measurement strategy.
+But rarely(for example benchmarking) do you wish the nanosecond precision:
 [source, java]
 ----
 Bucket.builder().withNanosecondPrecision()
 ----
 Be very careful to choose this time measurement strategy, because ``System.nanoTime()`` produces inaccurate results,
-use this strategy only if period of bandwidth is too small that millisecond resolution will be undesired.
+use this strategy only if the period of bandwidth is too small that millisecond resolution will be undesired.
 
 ==== Customizing time measurement -  Specify custom time measurement strategy
-You can specify your custom time meter, if existing miliseconds or nanotime time meters is not enough for your purposes.
-Imagine that you have a clock, which synchronizes its time with other machines in current cluster,
-if you want to use time provided by this clock instead of time provided by JVM then you can write something like this:
+You can specify your custom time meter if existing milliseconds or nanotime time meters are not enough for your purposes.
+Imagine that you have a clock, which synchronizes its time with other machines in the current cluster,
+if you want to use the time provided by this clock instead of time provided by JVM then you can write something like this:
 
 [source, java]
 ----
