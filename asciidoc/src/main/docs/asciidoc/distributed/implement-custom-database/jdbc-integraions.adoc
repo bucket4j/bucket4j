@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS buckets(id BIGINT PRIMARY KEY, state BLOB);
 
 * Each proxy manager takes `SQLProxyConfiguration` to customize work with database
 
-* In order to do that, you should use `SQLProxyConfigurationBuilder`, which includes the next parameters:
+* To do that, you should use `SQLProxyConfigurationBuilder`, which includes the next parameters:
 
 ----
     /**
@@ -46,7 +46,7 @@ CREATE TABLE IF NOT EXISTS buckets(id BIGINT PRIMARY KEY, state BLOB);
 
 [[listener]]
 ===== Overriding table configuration
-You can override the names of the columns to set your custom name of columns, in order to do that, you should use `BucketTableSettings` to set into `SQLProxyConfigurationBuilder` of your JDBC implementation.
+You can override the names of the columns to set your custom name of columns, to do that, you should use `BucketTableSettings` to set into `SQLProxyConfigurationBuilder` of your JDBC implementation.
 
 * `SQLProxyConfigurationBuilder` Takes `BucketTableSettings` - is the class to define a configuration of the table to use as a buckets store. By default, under the hood uses `BucketTableSettings.getDefault()`
 
@@ -135,6 +135,3 @@ To use Bucket4j extension for MySQL you need to add following dependency:
                 .build();
         BucketProxy bucket = proxyManager.builder().build(key, bucketConfiguration);
 ----
-
-
-
