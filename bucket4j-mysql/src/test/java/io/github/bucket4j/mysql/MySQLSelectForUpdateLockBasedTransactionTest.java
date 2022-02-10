@@ -3,6 +3,8 @@ package io.github.bucket4j.mysql;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import io.github.bucket4j.distributed.jdbc.BucketTableSettings;
+import io.github.bucket4j.distributed.jdbc.SQLProxyConfiguration;
+import io.github.bucket4j.distributed.jdbc.SQLProxyConfigurationBuilder;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
@@ -35,7 +37,7 @@ public class MySQLSelectForUpdateLockBasedTransactionTest extends AbstractDistri
                 statement.execute(query);
             }
         }
-        MySQLProxyConfiguration configuration = MySQLProxyConfigurationBuilder.builder()
+        SQLProxyConfiguration configuration = SQLProxyConfigurationBuilder.builder()
                 .withClientSideConfig(ClientSideConfig.getDefault())
                 .withTableSettings(tableSettings)
                 .build(dataSource);

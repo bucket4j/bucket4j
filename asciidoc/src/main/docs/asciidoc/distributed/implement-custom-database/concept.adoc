@@ -1,25 +1,33 @@
 === Framework to implement custom work with your database
 The Bucket4j library gives an opportunity to implement work with any database.
-If you didn't find in distributed realization your database (currently Bucket4j supports the next databases: Redis, Hazelcast, Apache Ignite, Infinispan, Oracle coherence, Dynamodb, PostgreSQL)
+If you didn't find in distributed realization your database (currently Bucket4j supports the next databases: Redis, Hazelcast, Apache Ignite, Infinispan, Oracle coherence, Dynamodb, PostgreSQL, MySQL)
 you can implement your database as a distributed storage.
-All what you need to do, extends from io.github.bucket4j.distributed.proxy.generic.select_for_update.AbstractLockBasedProxyManager
+All what you need to do, extends from io.github.bucket4j.distributed.proxy.generic.select_for_update.AbstractLockBasedProxyManager or
+AbstractSelectForUpdateBasedProxyManager<T>
 and override 3 methods and create your implementation which implements from io.github.bucket4j.distributed.proxy.generic.select_for_update.LockBasedTransaction.
 
 **Step by step to take that.**
 
 **First of all**
-we need to create our custom proxy manages which extends from AbstractLockBasedProxyManager<T> (As a genetic the class takes type of key table).
+we need to create our custom proxy manages which extends from AbstractLockBasedProxyManager<T> or AbstractSelectForUpdateBasedProxyManager<T> (as genetic classes takes a type of key table).
+To define in which class you should extend, need to understand the main idea of these classes:
+
+`AbstractLockBasedProxyManager<T>` - Uses to realize based on exclusive locks
+
+`AbstractSelectForUpdateBasedProxyManager<T>` - Uses to realize Select For Update concept
 
 After need to override works of allocation transaction, in order to do that, we should override method allocateTransaction.
-The main idea of allocateTransaction to just return class which implements LockBasedTransaction (we will implement it later)
-The next method that we should override is a releaseTransaction().
-The method releaseTransaction() - is a method, in which closing transaction (close connection)
+The main idea of allocateTransaction to just return class which implements `LockBasedTransaction` (for `AbstractLockBasedProxyManager<T>`)
+or `SelectForUpdateBasedTransaction` (for `AbstractSelectForUpdateBasedProxyManager<T>`) - we will implement it later
 And override removeProxy() for remove bucket from the table which store buckets.
 
 **Second of all**
-Need to implement LockBasedTransaction to realize custom work of database for transaction.
-In order to do that, we need to create a custom class to implement from LockBasedTransaction.
 
+Need to implement `LockBasedTransaction` or `SelectForUpdateBasedTransaction` to realize custom work of database for transaction.
+
+In order to do that, we need to create a custom class to implement from one of these classes
+
+*LockBasedTransaction*
 ----
     /**
      * Begins transaction if underlying storage requires transactions.
@@ -63,7 +71,59 @@ In order to do that, we need to create a custom class to implement from LockBase
      * @param data bucket state to persists
      */
     void update(byte[] data);
+
+    /**
+     * Frees resources associated with this transaction
+     */
+    void release();
 ----
 
-As an example, you can see to the PostgreSQL or MySQL realization.
+As an example, you can see to the PostgreSQL or MySQL realization which based on select for update concept.
+
+*SelectForUpdateBasedTransaction*
+
+----
+    /**
+     * Begins transaction if underlying storage requires transactions.
+     * There is strong guarantee that {@link #commit()} or {@link #rollback()} will be called if {@link #begin()} returns successfully.
+     */
+    void begin();
+
+    /**
+     * Rollbacks transaction if underlying storage requires transactions
+     */
+    void rollback();
+
+    /**
+     * Commits transaction if underlying storage requires transactions
+     */
+    void commit();
+
+    /**
+     * Locks data by the key associated with this transaction and returns data that is associated with the key.
+     *
+     * @return the data by the key associated with this transaction, or null data associated with key does not exist
+     */
+    LockAndGetResult tryLockAndGet();
+
+    /**
+     * Creates empty data by for the key associated with this transaction.
+     * This operation is required to be able to lock data in the scope of next transaction.
+     *
+     * @return true if data has been inserted
+     */
+    boolean tryInsertEmptyData();
+
+    /**
+     * Updates the data by the key associated with this transaction.
+     *
+     * @param data bucket state to persists
+     */
+    void update(byte[] data);
+
+    /**
+     * Frees resources associated with this transaction
+     */
+    void release();
+----
 

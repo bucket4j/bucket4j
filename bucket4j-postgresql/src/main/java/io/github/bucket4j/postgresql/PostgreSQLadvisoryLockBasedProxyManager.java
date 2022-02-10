@@ -2,6 +2,8 @@ package io.github.bucket4j.postgresql;
 
 import io.github.bucket4j.BucketExceptions;
 import io.github.bucket4j.distributed.jdbc.BucketTableSettings;
+import io.github.bucket4j.distributed.jdbc.SQLProxyConfiguration;
+import io.github.bucket4j.distributed.jdbc.SQLProxyConfigurationBuilder;
 import io.github.bucket4j.distributed.proxy.generic.pessimistic_locking.AbstractLockBasedProxyManager;
 import io.github.bucket4j.distributed.proxy.generic.pessimistic_locking.LockBasedTransaction;
 
@@ -18,7 +20,7 @@ import java.util.Objects;
  * The extension of Bucket4j library addressed to support <a href="https://www.postgresql.org/">PostgreSQL</a>
  * To start work with the PostgreSQL extension you must create a table, which will include the possibility to work with buckets
  * In order to do this, your table should include the next columns: id as a PRIMARY KEY (BIGINT) and state (BYTEA)
- * To define column names, {@link PostgreSQLProxyConfiguration} include {@link BucketTableSettings} which takes settings for the table to work with Bucket4j.
+ * To define column names, {@link SQLProxyConfiguration} include {@link BucketTableSettings} which takes settings for the table to work with Bucket4j.
  *
  * <p>This implementation solves transaction related problems via pg_advisory_xact_lock
  * locks an application-defined resource, which can be identified either by a single 64-bit key value or two 32-bit key values (note that these two key spaces do not overlap).
@@ -26,12 +28,12 @@ import java.util.Objects;
  * The lock is exclusive.
  * Multiple lock requests stack so that if the same resource is locked three times it must then be unlocked three times to be released for other sessions use.
  * The lock is automatically released at the end of the current transaction and cannot be released explicitly.
- * @see {@link PostgreSQLProxyConfigurationBuilder} to get more information how to build {@link PostgreSQLProxyConfiguration}
+ * @see {@link SQLProxyConfigurationBuilder} to get more information how to build {@link SQLProxyConfiguration}
  */
 public class PostgreSQLadvisoryLockBasedProxyManager extends AbstractLockBasedProxyManager<Long> {
 
     private final DataSource dataSource;
-    private final PostgreSQLProxyConfiguration configuration;
+    private final SQLProxyConfiguration configuration;
     private final String removeSqlQuery;
     private final String updateSqlQuery;
     private final String insertSqlQuery;
@@ -39,9 +41,9 @@ public class PostgreSQLadvisoryLockBasedProxyManager extends AbstractLockBasedPr
 
     /**
      *
-     * @param configuration {@link PostgreSQLProxyConfiguration} configuration.
+     * @param configuration {@link SQLProxyConfiguration} configuration.
      */
-    public PostgreSQLadvisoryLockBasedProxyManager(PostgreSQLProxyConfiguration configuration) {
+    public PostgreSQLadvisoryLockBasedProxyManager(SQLProxyConfiguration configuration) {
         super(configuration.getClientSideConfig());
         this.dataSource = Objects.requireNonNull(configuration.getDataSource());
         this.configuration = configuration;

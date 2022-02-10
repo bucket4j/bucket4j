@@ -3,6 +3,8 @@ package io.github.bucket4j.postgresql;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import io.github.bucket4j.distributed.jdbc.BucketTableSettings;
+import io.github.bucket4j.distributed.jdbc.SQLProxyConfiguration;
+import io.github.bucket4j.distributed.jdbc.SQLProxyConfigurationBuilder;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
@@ -16,9 +18,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.MessageFormat;
 import java.util.concurrent.ThreadLocalRandom;
-
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 public class PostgreSQLAdvisoryLockBasedTransactionTest extends AbstractDistributedBucketTest<Long> {
 
@@ -38,7 +37,7 @@ public class PostgreSQLAdvisoryLockBasedTransactionTest extends AbstractDistribu
                 statement.execute(query);
             }
         }
-        PostgreSQLProxyConfiguration configuration = PostgreSQLProxyConfigurationBuilder.builder()
+        SQLProxyConfiguration configuration = SQLProxyConfigurationBuilder.builder()
                 .withClientSideConfig(ClientSideConfig.getDefault())
                 .withTableSettings(tableSettings)
                 .build(dataSource);

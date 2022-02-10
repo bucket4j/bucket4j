@@ -1,21 +1,20 @@
-package io.github.bucket4j.mysql;
+package io.github.bucket4j.distributed.jdbc;
 
-import io.github.bucket4j.distributed.jdbc.BucketTableSettings;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 
 import javax.sql.DataSource;
 
-public class MySQLProxyConfiguration {
+public class SQLProxyConfiguration {
 
     private final DataSource dataSource;
     private final ClientSideConfig clientSideConfig;
     private final BucketTableSettings tableSettings;
 
-    public MySQLProxyConfiguration(DataSource dataSource) {
+    public SQLProxyConfiguration(DataSource dataSource) {
         this(dataSource, ClientSideConfig.getDefault(), BucketTableSettings.getDefault());
     }
 
-    public MySQLProxyConfiguration(DataSource dataSource, ClientSideConfig clientSideConfig, BucketTableSettings tableSettings) {
+    public SQLProxyConfiguration(DataSource dataSource, ClientSideConfig clientSideConfig, BucketTableSettings tableSettings) {
         this.dataSource = dataSource;
         this.clientSideConfig = clientSideConfig;
         this.tableSettings = tableSettings;

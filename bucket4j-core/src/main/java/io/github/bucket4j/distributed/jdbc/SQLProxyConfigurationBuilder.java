@@ -1,32 +1,31 @@
-package io.github.bucket4j.postgresql;
+package io.github.bucket4j.distributed.jdbc;
 
 import io.github.bucket4j.BucketExceptions;
-import io.github.bucket4j.distributed.jdbc.BucketTableSettings;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 
 import javax.sql.DataSource;
 
 /**
  * @author Maxim Bartkov
- * The class to build {@link PostgreSQLProxyConfiguration}
+ * The class to build {@link SQLProxyConfiguration}
  */
-public final class PostgreSQLProxyConfigurationBuilder {
+public final class SQLProxyConfigurationBuilder {
     private ClientSideConfig clientSideConfig;
     private BucketTableSettings tableSettings;
 
-    private PostgreSQLProxyConfigurationBuilder() {
+    private SQLProxyConfigurationBuilder() {
     }
 
-    public static PostgreSQLProxyConfigurationBuilder builder() {
-        return new PostgreSQLProxyConfigurationBuilder();
+    public static SQLProxyConfigurationBuilder builder() {
+        return new SQLProxyConfigurationBuilder();
     }
 
     /**
      * @param clientSideConfig {@link ClientSideConfig} client-side configuration for proxy-manager.
      *                         By default, under the hood uses {@link ClientSideConfig#getDefault}
-     * @return {@link PostgreSQLProxyConfigurationBuilder}
+     * @return {@link SQLProxyConfigurationBuilder}
      */
-    public PostgreSQLProxyConfigurationBuilder withClientSideConfig(ClientSideConfig clientSideConfig) {
+    public SQLProxyConfigurationBuilder withClientSideConfig(ClientSideConfig clientSideConfig) {
         this.clientSideConfig = clientSideConfig;
         return this;
     }
@@ -34,9 +33,9 @@ public final class PostgreSQLProxyConfigurationBuilder {
     /**
      * @param tableSettings {@link BucketTableSettings} define a configuration of the table to use as a Buckets store.
      *                      By default, under the hood uses {@link BucketTableSettings#getDefault}
-     * @return {@link PostgreSQLProxyConfigurationBuilder}
+     * @return {@link SQLProxyConfigurationBuilder}
      */
-    public PostgreSQLProxyConfigurationBuilder withTableSettings(BucketTableSettings tableSettings) {
+    public SQLProxyConfigurationBuilder withTableSettings(BucketTableSettings tableSettings) {
         this.tableSettings = tableSettings;
         return this;
     }
@@ -45,9 +44,9 @@ public final class PostgreSQLProxyConfigurationBuilder {
      * The method takes a {@link DataSource} as a required parameter
      *
      * @param dataSource - a database configuration
-     * @return {@link PostgreSQLProxyConfiguration}
+     * @return {@link SQLProxyConfiguration}
      */
-    public PostgreSQLProxyConfiguration build(DataSource dataSource) {
+    public SQLProxyConfiguration build(DataSource dataSource) {
         if (dataSource == null) {
             throw new BucketExceptions.BucketExecutionException("DataSource cannot be null");
         }
@@ -57,6 +56,6 @@ public final class PostgreSQLProxyConfigurationBuilder {
         if (clientSideConfig == null) {
             this.clientSideConfig = ClientSideConfig.getDefault();
         }
-        return new PostgreSQLProxyConfiguration(dataSource, clientSideConfig, tableSettings);
+        return new SQLProxyConfiguration(dataSource, clientSideConfig, tableSettings);
     }
 }
