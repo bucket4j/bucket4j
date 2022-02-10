@@ -1,5 +1,5 @@
 === Framework to implement custom work with your database
-The Bucket4j library gives an opportunity to implement work with any database.
+The Bucket4j library allows implementing work with any database.
 If you didn't find in distributed realization your database (currently Bucket4j supports the next databases: Redis, Hazelcast, Apache Ignite, Infinispan, Oracle coherence, Dynamodb, PostgreSQL, MySQL)
 you can implement your database as a distributed storage.
 All what you need to do, extends from io.github.bucket4j.distributed.proxy.generic.select_for_update.AbstractLockBasedProxyManager or
@@ -16,7 +16,7 @@ To define in which class you should extend, need to understand the main idea of 
 
 `AbstractSelectForUpdateBasedProxyManager<T>` - Uses to realize Select For Update concept
 
-After need to override works of allocation transaction, in order to do that, we should override method allocateTransaction.
+After need to override works of allocation transaction, to do that, we should override method allocateTransaction.
 The main idea of allocateTransaction to just return class which implements `LockBasedTransaction` (for `AbstractLockBasedProxyManager<T>`)
 or `SelectForUpdateBasedTransaction` (for `AbstractSelectForUpdateBasedProxyManager<T>`) - we will implement it later
 And override removeProxy() for remove bucket from the table which store buckets.
@@ -25,7 +25,7 @@ And override removeProxy() for remove bucket from the table which store buckets.
 
 Need to implement `LockBasedTransaction` or `SelectForUpdateBasedTransaction` to realize custom work of database for transaction.
 
-In order to do that, we need to create a custom class to implement from one of these classes
+To do that, we need to create a custom class to implement from one of these classes
 
 *LockBasedTransaction*
 ----
