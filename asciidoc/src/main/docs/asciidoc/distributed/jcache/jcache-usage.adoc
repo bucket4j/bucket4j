@@ -2,9 +2,9 @@
 === JCache integration
 ``Bucket4j`` supports any GRID solution which compatible with https://www.jcp.org/en/jsr/detail?id=107[JCache API (JSR 107)] specification.
 
-NOTE: Do not forget to read <<distributed-checklist, Distributed usage checklist>>  before using the Bucket4j over JCache cluster.
+NOTE: Do not forget to read <<distributed-checklist, Distributed usage checklist>>  before using the Bucket4j over the JCache cluster.
 
-To use JCache extension you also need to add following dependency:
+To use the JCache extension you also need to add the following dependency:
 [source, xml, subs=attributes+]
 ----
 <dependency>
@@ -14,7 +14,7 @@ To use JCache extension you also need to add following dependency:
 </dependency>
 ----
 
-JCache expects javax.cache.cache-api to be a provided dependency. Do not forget to add following dependency:
+JCache expects javax.cache.cache-api to be a provided dependency. Do not forget to add the following dependency:
 [source, xml]
 ----
 <dependency>
@@ -25,14 +25,14 @@ JCache expects javax.cache.cache-api to be a provided dependency. Do not forget 
 ----
 
 ==== Example 1 - limiting access to HTTP server by IP address
-> Imagine that you develop any Servlet based WEB application and want to limit access per IP basis.
-You want to use same limits for each IP - 30 requests per minute.
+> Imagine that you develop any Servlet-based WEB application and want to limit access per IP basis.
+You want to use the same limits for each IP - 30 requests per minute.
 
-ServletFilter would be obvious place to check limits:
+ServletFilter would be the obvious place to check limits:
 [source, java]
 ----
 public class IpThrottlingFilter implements javax.servlet.Filter {
-    
+
     private static final BucketConfiguration configuration = BucketConfiguration.builder()
           .addLimit(Bandwidth.simple(30, Duration.ofMinutes(1)))
           .build();
@@ -40,21 +40,21 @@ public class IpThrottlingFilter implements javax.servlet.Filter {
     // cache for storing token buckets, where IP is key.
     @Inject
     private javax.cache.Cache<String, byte[]> cache;
-    
+
     private ProxyManager<String> buckets;
-    
+
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
          // init bucket registry
          buckets = new JCacheProxyManager<>(cache);
     }
-    
+
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
         HttpServletRequest httpRequest = (HttpServletRequest) servletRequest;
         String ip = IpHelper.getIpFromRequest(httpRequest);
-        
-        // acquire cheap proxy to bucket  
+
+        // acquire cheap proxy to the bucket
         Bucket bucket = proxyManager.builder().build(key, configuration);
 
         // tryConsume returns false immediately if no tokens available with the bucket
@@ -74,12 +74,12 @@ public class IpThrottlingFilter implements javax.servlet.Filter {
 ----
 
 ==== Example 2 - limiting access to service by contract agreements
-> Imagine that you provide paid language translation service via HTTP. Each user has unique agreement which differs from each other.
-Details of each agreement is stored in relational database, and takes significant time to fetch(for example 100ms). 
-The example above will not work fine in this case, because time to create/fetch configuration of bucket from database
+> Imagine that you provide paid language translation service via HTTP. Each user has a unique agreement that differs from the other.
+Details of each agreement are stored in a relational database and take significant time to fetch(for example 100ms).
+The example above will not work fine in this case, because time to create/fetch the configuration of the bucket from the database
 will be 100 times slower than limit-checking itself.
-Bucket4j solves this problem via lazy configuration suppliers which are called if and only if bucket was not yet stored in grid,
-thus it is possible to implement solution  that will read agreement from database once per each user.
+Bucket4j solves this problem via lazy configuration suppliers which are called if and only if the bucket was not yet stored in the grid,
+thus it is possible to implement a solution that will read the agreement from the database once per user.
 
 [source, java]
 ----
@@ -88,28 +88,28 @@ public class IpThrottlingFilter implements javax.servlet.Filter {
     // service to provide per user limits
     @Inject
     private LimitProvider limitProvider;
-    
+
     // cache for storing token buckets, where IP is key.
     @Inject
     private javax.cache.Cache<String, byte[]> cache;
-    
+
     private ProxyManager<String> buckets;
-    
+
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
          // init bucket registry
          buckets = new JCacheProxyManager<>(cache);
     }
-    
+
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
         HttpServletRequest httpRequest = (HttpServletRequest) servletRequest;
         String userId = AutentificationHelper.getUserIdFromRequest(httpRequest);
-        
-        // prepare configuration supplier which will be called(on first interaction with proxy) if bucket was not saved yet previously. 
+
+        // prepare configuration supplier which will be called(on the first interaction with proxy) if the bucket was not saved yet previously.
         Supplier<BucketConfiguration> configurationLazySupplier = getConfigSupplierForUser(userId);
-        
-        // acquire cheap proxy to bucket  
+
+        // acquire cheap proxy to the bucket
         Bucket bucket = proxyManager.builder().build(key, configurationLazySupplier);
 
         // tryConsume returns false immediately if no tokens available with the bucket
@@ -124,7 +124,7 @@ public class IpThrottlingFilter implements javax.servlet.Filter {
             httpResponse.getWriter().append("Too many requests");
         }
     }
-    
+
     private Supplier<BucketConfiguration> getConfigSupplierForUser(String userId) {
          return () -> {
              long translationsPerDay = limitProvider.readPerDayLimitFromAgreementsDatabase(userId);
@@ -138,7 +138,7 @@ public class IpThrottlingFilter implements javax.servlet.Filter {
 ----
 
 ==== Why JCache specification is not enough in modern stacks and since 3.0 were introduced the dedicated modules for Infinispan, Hazelcast, Coherence and Ignite?
-Asynchronous processing is very important for high-throughput applications, but JCache specification does not specify asynchronous API, because two early attempts to bring this kind functionality at spec level https://github.com/jsr107/jsr107spec/issues/307[307], https://github.com/jsr107/jsr107spec/issues/312[312] were failed in absence of consensus.
+Asynchronous processing is very important for high-throughput applications, but JCache specification does not specify asynchronous API, because two early attempts to bring this kind of functionality at spec level https://github.com/jsr107/jsr107spec/issues/307[307], https://github.com/jsr107/jsr107spec/issues/312[312] were failed in absence of consensus.
 
 .Sad, but true, if you need for asynchronous API, then JCache extension is useless, and you need to choose from following extensions:
 * <<bucket4j-ignite, bucket4j-ignite>>
@@ -146,15 +146,15 @@ Asynchronous processing is very important for high-throughput applications, but 
 * <<bucket4j-infinispan, bucket4j-infinispan>>
 * <<bucket4j-coherence, bucket4j-coherence>>
 
-Also, implementation the asynchronous support for any other JCache provider outside from the list above should be easy exercise, so feel free to return back the pull request addressed to cover your favorite JCache provider.
+Also, implementing the asynchronous support for any other JCache provider outside of the list above should be an easy exercise, so feel free to return back the pull request addressed to cover your favorite JCache provider.
 
-==== Verification of compatibility with particular JCache provider is your responsibility
-IMPORTANT: Keep in mind that there are many non-certified implementations of JCache specification on the market.
+==== Verification of compatibility with a particular JCache provider is your responsibility
+IMPORTANT: Keep in mind that there are many non-certified implementations of JCache specifications on the market.
 Many of them want to increase their popularity by declaring support for the JCache API,
 but often only the API is supported and the semantic of JCache is totally ignored.
-Usage Bucket4j with this kind of libraries should be completely avoided.
+Usage Bucket4j with this kind of library should be completely avoided.
 
-Bucket4j is only compatible with implementations which obey the JCache specification rules(especially related to EntryProcessor execution). Oracle Coherence, Apache Ignite, Hazelcast are good examples of safe implementations of JCache.
+Bucket4j is only compatible with implementations that obey the JCache specification rules(especially related to EntryProcessor execution). Oracle Coherence, Apache Ignite, Hazelcast are good examples of safe implementations of JCache.
 
 IMPORTANT: Because it is impossible to test all possible JCache providers, you need to test your provider by yourself.
 
@@ -211,4 +211,4 @@ public class CompatibilityTest {
 }
 ----
 The check does 4000 increments of integer in parallel and verifies that no one update has been missed.
-If check passed then your JCache provider is compatible with Bucket4j, the throttling will work fine in distributed and concurrent environment. If check is not passed, then reach to the particular JCache provider team and consult why its implementation misses the writes.
+If the check passed then your JCache provider is compatible with Bucket4j, the throttling will work fine in a distributed and concurrent environment. If the check is not passed, then reach out to the particular JCache provider team and consult why its implementation misses the writes.
