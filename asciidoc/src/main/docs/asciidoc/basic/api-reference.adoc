@@ -18,7 +18,7 @@ boolean tryConsume(long numTokens);
 ----
     /**
      * Consumes {@code tokens} from bucket ignoring all limits.
-     * In result of this operation amount of tokens in the bucket could became negative.
+     * As a result of this operation amount of tokens in the bucket could become negative.
      *
      * There are two possible reasons to use this method:
      * <ul>
@@ -26,15 +26,15 @@ boolean tryConsume(long numTokens);
      * <li>You want to apply custom blocking strategy instead of default which applied on {@code asScheduler().consume(tokens)} </li>
      * </ul>
      *
-     * @param tokens amount of tokens that should be consumed from bucket.
+     * @param tokens amount of tokens that should be consumed from a bucket.
      *
      * @return
-     * the amount of rate limit violation in nanoseconds calculated in following way:
+     * the amount of rate limit violation in nanoseconds is calculated in the following way:
      * <ul>
      *     <li><tt>zero</tt> if rate limit was not violated. For example bucket had 5 tokens before invocation of {@code consumeIgnoringRateLimits(2)},
      *     after invocation there are 3 tokens remain in the bucket, since limits were not violated <tt>zero</tt> returned as result.</li>
      *     <li>Positive value which describes the amount of rate limit violation in nanoseconds.
-     *     For example bucket with limit 10 tokens per 1 second, currently has the 2 tokens available, last refill happen 100 milliseconds ago, and {@code consumeIgnoringRateLimits(6)} called.
+     *     For example, a bucket with a limit of 10 tokens per 1 second, currently has the 2 tokens available, last refill happen 100 milliseconds ago, and {@code consumeIgnoringRateLimits(6)} called.
      *     <tt>300_000_000</tt> will be returned as result and available tokens in the bucket will became <tt>-3</tt>, and any variation of {@code tryConsume...} will not be successful for 400 milliseconds(time required to refill amount of available tokens until 1).
      *     </li>
      * </ul>
@@ -50,7 +50,7 @@ boolean tryConsume(long numTokens);
      *
      * @param numTokens The number of tokens to consume from the bucket, must be a positive number.
      *
-     * @return {@link ConsumptionProbe} which describes both result of consumption and tokens remaining in the bucket after consumption.
+     * @return {@link ConsumptionProbe} which describes both the result of consumption and tokens remaining in the bucket after consumption.
      */
     ConsumptionProbe tryConsumeAndReturnRemaining(long numTokens);
 ----
@@ -72,21 +72,21 @@ boolean tryConsume(long numTokens);
 [source, java]
 ----
     /**
-     * Tries to consume as much tokens from this bucket as available at the moment of invocation.
+     * Tries to consume as many tokens from this bucket as available at the moment of invocation.
      *
-     * @return number of tokens which has been consumed, or zero if was consumed nothing.
+     * @return number of tokens which have been consumed, or zero if nothing was consumed.
      */
     long tryConsumeAsMuchAsPossible();
 ----
 [source, java]
 ----
     /**
-     * Tries to consume as much tokens from bucket as available in the bucket at the moment of invocation,
-     * but tokens which should be consumed is limited by {@code limit}.
+     * Tries to consume as much tokens from the bucket as available in the bucket at the moment of invocation,
+     * but tokens which should be consumed are limited by {@code limit}.
      *
-     * @param limit maximum number of tokens to consume, should be positive.
+     * @param limit a maximum number of tokens to consume, should be positive.
      *
-     * @return number of tokens which has been consumed, or zero if was consumed nothing.
+     * @return number of tokens which has been consumed, or zero if nothing was consumed.
      */
     long tryConsumeAsMuchAsPossible(long limit);
 ----
@@ -98,10 +98,10 @@ boolean tryConsume(long numTokens);
      * Add <tt>tokensToAdd</tt> to bucket.
      * Resulted count of tokens are calculated by following formula:
      * <pre>newTokens = Math.min(capacity, currentTokens + tokensToAdd)</pre>
-     * in other words resulted number of tokens never exceeds capacity independent of <tt>tokensToAdd</tt>.
+     * In other words resulted number of tokens never exceeds capacity independent of <tt>tokensToAdd</tt>.
      *
      * <h3>Example of usage</h3>
-     * The "compensating transaction" is one of obvious use case, when any piece of code consumed tokens from bucket, tried to do something and failed, the "addTokens" will be helpful to return tokens back to bucket:
+     * The "compensating transaction" is one of the obvious use case, when any piece of code consumed tokens from a bucket, tried to do something, and failed, the "addTokens" will be helpful to return tokens back to the bucket:
      * <pre>{@code
      *      Bucket wallet;
      *      ...
@@ -127,7 +127,7 @@ boolean tryConsume(long numTokens);
      * Add <tt>tokensToAdd</tt> to bucket. In opposite to {@link #addTokens(long)} usage of this method can lead to overflow bucket capacity.
      *
      * <h3>Example of usage</h3>
-     * The "compensating transaction" is one of obvious use case, when any piece of code consumed tokens from bucket, tried to do something and failed, the "addTokens" will be helpful to return tokens back to bucket:
+     * The "compensating transaction" is one of the obvious use case, when any piece of code consumed tokens from a bucket, tried to do something, and failed, the "addTokens" will be helpful to return tokens back to the bucket:
      * <pre>{@code
      *      Bucket wallet;
      *      ...
@@ -150,9 +150,9 @@ boolean tryConsume(long numTokens);
 [source, java]
 ----
     /**
-     * Returns amount of available tokens in this bucket.
+     * Returns the amount of available tokens in this bucket.
 * <p>
-*     Typically you should avoid using of this method for, because available tokens can be changed by concurrent transactions for case of multithreaded/multi-process environment.
+*     Typically you should avoid using this method for, because available tokens can be changed by concurrent transactions in the case of a multithreaded/multi-process environment.
 *
 * @return amount of available tokens
 */
@@ -179,13 +179,13 @@ long getAvailableTokens();
      * Replaces configuration of this bucket.
      *
      * <p>
-     * The first hard problem of configuration replacement is making decision how to propagate available tokens from bucket with previous configuration to bucket with new configuration.
-     * If you don't care about previous bucket state then use {@link TokensInheritanceStrategy#RESET}.
-     * But it becomes to a tricky problem when we expect that previous consumption(that has not been compensated by refill yet) should take effect to the bucket with new configuration.
-     * In this case you need to make a choice between {@link TokensInheritanceStrategy#PROPORTIONALLY} and {@link TokensInheritanceStrategy#AS_IS}, read documentation about both with strong attention.
+     * The first hard problem of configuration replacement is making decisions on how to propagate available tokens from the bucket with the previous configuration to the bucket with a new configuration.
+     * If you don't care about the previous bucket state then use {@link TokensInheritanceStrategy#RESET}.
+     * But it becomes a tricky problem when we expect that previous consumption(that has not been compensated by refill yet) should take effect to the bucket with a new configuration.
+     * In this case you need to make a choice between {@link TokensInheritanceStrategy#PROPORTIONALLY} and {@link TokensInheritanceStrategy#AS_IS}, read the documentation about both with strong attention.
      *
-     * <p> There is another problem when you are choosing {@link TokensInheritanceStrategy#PROPORTIONALLY} and {@link TokensInheritanceStrategy#AS_IS} and bucket has more then one bandwidth.
-     * For example how does replaceConfiguration implementation should bind bandwidths to each other in the following example?
+     * <p> There is another problem when you are choosing {@link TokensInheritanceStrategy#PROPORTIONALLY} and {@link TokensInheritanceStrategy#AS_IS} and the bucket has more than one bandwidth.
+     * For example how does replaceConfiguration implementation bind bandwidths to each other in the following example?
      * <pre>
      * <code>
      *     Bucket bucket = Bucket.builder()
@@ -200,9 +200,9 @@ long getAvailableTokens();
      *     bucket.replaceConfiguration(newConfiguration, TokensInheritanceStrategy.AS_IS);
      * </code>
      * </pre>
-     * It is obviously that simple strategy - copying tokens by bandwidth index will not work well in this case, because of it highly depends from order.
-     * Instead of inventing the backward maggic Bucket4j provides to you ability to deap controll of this process by specifying identifiers for bandwidth,
-     * so in case of multiple bandwidth configuratoin replacement code can copy available tokens by bandwidth ID. So it is better to rewrite code above as following:
+     * It is obvious that a simple strategy - copying tokens by bandwidth index will not work well in this case, because it highly depends from order.
+     * Instead of inventing the backward magic Bucket4j provides to you the ability to deap controll of this process by specifying identifiers for bandwidth,
+     * so in case of multiple bandwidth configuratoin replacement code can copy available tokens by bandwidth ID. So it is better to rewrite the code above as following:
      * <pre>
      * <code>
      * Bucket bucket = Bucket.builder()
@@ -220,7 +220,7 @@ long getAvailableTokens();
      *
      *
      * <p>
- *     There are following rules for bandwidth identifiers:
+ *     There are the following rules for bandwidth identifiers:
      * <ul>
      *     <li>
      *          By default bandwidth has <b>null</b> identifier.
@@ -229,11 +229,11 @@ long getAvailableTokens();
      *         null value of identifier equals to another null value if and only if there is only one bandwidth with null identifier.
      *     </li>
      *     <li>
-     *         If identifier for bandwidth is specified then it must has unique in the bucket. Bucket does not allow to create several bandwidth with same ID.
+     *         If an identifier for bandwidth is specified then it must be unique in the bucket. Bucket does not allow to create of several bandwidths with the same ID.
      *     </li>
      *     <li>
-     *         {@link TokensInheritanceStrategy#RESET} strategy will be applied for tokens migration during config replacement for bandwidth which has no bound bandwidth with same ID in previous configuration,
-     *         idependently of strategy that was requested.
+     *         {@link TokensInheritanceStrategy#RESET} strategy will be applied for tokens migration during config replacement for bandwidth which has no bound bandwidth with the same ID in the previous configuration,
+     *         independently of the strategy that was requested.
      *     </li>
      * </ul>
      *
@@ -288,10 +288,10 @@ See <<verbose-api, Verbose API>> section for more details.
 [source, java]
 ----
     /**
-     * Returns new copy of this bucket instance decorated by {@code listener}.
-     * The created bucket will share same tokens with source bucket and vice versa.
+     * Returns a new copy of this bucket instance decorated by {@code listener}.
+     * The created bucket will share the same tokens with the source bucket and vice versa.
      *
-     * See javadocs for {@link BucketListener} in order to understand semantic of listener.
+     * See javadocs for {@link BucketListener} in order to understand the semantics of listener.
      *
      * @param listener the listener of bucket events.
      *
@@ -320,20 +320,20 @@ See <<listener, Listening bucket events>> section for more details.
      *     </li>
      *     <li>
      *         If bucket has no enough tokens,
-     *         but deficit can be closed in period of time less then <code>maxWaitTimeNanos</code> nanoseconds,
+     *         but deficit can be closed in period of time less than <code>maxWaitTimeNanos</code> nanoseconds,
      *         then tokens consumed(reserved in fair manner) from bucket and current thread blocked for a time required to close deficit,
      *         after unblocking method returns <tt>true</tt>.
      *
      *         <p>
      *         <strong>Note:</strong> If InterruptedException happen when thread was blocked
      *         then tokens will be not returned back to bucket,
-     *         but you can use {@link Bucket#addTokens(long)} to returned tokens back.
+     *         but you can use {@link Bucket#addTokens(long)} to return tokens back.
      *     </li>
      * </ul>
      *
      * @param numTokens The number of tokens to consume from the bucket.
      * @param maxWaitTimeNanos limit of time(in nanoseconds) which thread can wait.
-     * @param blockingStrategy specifies the way to block current thread to amount of time required to refill missed number of tokens in the bucket
+     * @param blockingStrategy specifies the way to block the current thread to the amount of time required to refill a missed number of tokens in the bucket
      *
      * @return true if {@code numTokens} has been consumed or false when {@code numTokens} has not been consumed
      *
@@ -350,7 +350,7 @@ See <<listener, Listening bucket events>> section for more details.
      *
      * @param numTokens The number of tokens to consume from the bucket.
      * @param maxWait limit of time which thread can wait.
-     * @param blockingStrategy specifies the way to block current thread to amount of time required to refill missed number of tokens in the bucket
+     * @param blockingStrategy specifies the way to block the current thread to the amount of time required to refill a missed number of tokens in the bucket
      *
      * @return true if {@code numTokens} has been consumed or false when {@code numTokens} has not been consumed
      *
@@ -405,7 +405,7 @@ See <<listener, Listening bucket events>> section for more details.
      *
      * @param numTokens The number of tokens to consume from the bucket.
      * @param maxWaitTimeNanos limit of time(in nanoseconds) which thread can wait.
-     * @param blockingStrategy specifies the way to block current thread to amount of time required to refill missed number of tokens in the bucket
+     * @param blockingStrategy specifies the way to block the current thread to the amount of time required to refill missed number of tokens in the bucket
      *
      * @return true if {@code numTokens} has been consumed or false when {@code numTokens} has not been consumed
      *
@@ -420,7 +420,7 @@ See <<listener, Listening bucket events>> section for more details.
      *
      * @param numTokens The number of tokens to consume from the bucket.
      * @param maxWait limit of time which thread can wait.
-     * @param blockingStrategy specifies the way to block current thread to amount of time required to refill missed number of tokens in the bucket
+     * @param blockingStrategy specifies the way to block the current thread to the amount of time required to refill a missed number of tokens in the bucket
      *
      * @return true if {@code numTokens} has been consumed or false when {@code numTokens} has not been consumed
      *
@@ -484,7 +484,7 @@ See <<listener, Listening bucket events>> section for more details.
      * </ul>
      *
      * @param numTokens The number of tokens to consume from the bucket.
-     * @param blockingStrategy specifies the way to block current thread to amount of time required to refill missed number of tokens in the bucket
+     * @param blockingStrategy specifies the way to block the current thread to the amount of time required to refill a missed number of tokens in the bucket
      *
      *
      * @throws InterruptedException in case of current thread has been interrupted during the waiting
@@ -514,7 +514,7 @@ See <<listener, Listening bucket events>> section for more details.
      * Has same semantic with {@link #consume(long, BlockingStrategy)} but ignores interrupts(just restores interruption flag on exit).
      *
      * @param numTokens The number of tokens to consume from the bucket.
-     * @param blockingStrategy specifies the way to block current thread to amount of time required to refill missed number of tokens in the bucket
+     * @param blockingStrategy specifies the way to block the current thread to the amount of time required to refill a missed number of tokens in the bucket
      *
      * @see #consume(long, BlockingStrategy)
      */
@@ -545,26 +545,26 @@ See <<listener, Listening bucket events>> section for more details.
 * <p>
 * <strong>The algorithm for all type of buckets is following:</strong>
 * <ul>
-*     <li>Implementation issues asynchronous request to back-end behind the bucket(for local bucket it is just a synchronous call) in way which specific for each particular back-end.</li>
+*     <li>Implementation issues asynchronous request to back-end behind the bucket(for local bucket it is just a synchronous call) in a way which specific for each particular back-end.</li>
 *     <li>Then uncompleted future returned to the caller.</li>
 *     <li>If back-end provides signal(through callback) that asynchronous request failed, then future completed exceptionally.</li>
 *     <li>When back-end provides signal(through callback) that request is done(for local bucket response got immediately), then following post-processing rules will be applied:
 *          <ul>
 *              <li>
-*                  If tokens were consumed then future immediately completed by <tt>true</tt>.
+*                  If tokens were consumed then the future immediately completed by <tt>true</tt>.
 *              </li>
 *              <li>
-*                  If tokens were not consumed because were not enough tokens in the bucket and <tt>maxWaitNanos</tt> nanoseconds is not enough time to refill deficit,
-*                  then future immediately completed by <tt>false</tt>.
+*                  If tokens were not consumed because were not enough tokens in the bucket and <tt>maxWaitNanos</tt> nanoseconds is not enough time to refill the deficit,
+*                  then the future is immediately completed by <tt>false</tt>.
 *              </li>
 *              <li>
 *                  If tokens were reserved(effectively consumed) then <tt>task</tt> to delayed completion will be scheduled to the <tt>scheduler</tt> via {@link ScheduledExecutorService#schedule(Runnable, long, TimeUnit)},
-*                  when delay equals to time required to refill the deficit of tokens. After scheduler executes task the future completed by <tt>true</tt>.
+*                  when delay equals to the time required to refill the deficit of tokens. After the scheduler executes the task the future completed by <tt>true</tt>.
 *              </li>
 *          </ul>
 *     </li>
 * </ul>
-* It is strongly not recommended to do any heavy work in thread which completes the future,
+* It is strongly not recommended to do any heavy work in a thread which completes the future,
 * because typically this will be a back-end thread which handles NIO selectors,
 * blocking this thread will take negative performance effect to back-end throughput,
 * so you always should resume control flow in another executor via methods like {@link CompletableFuture#thenApplyAsync(Function, Executor)}.
@@ -600,22 +600,22 @@ CompletableFuture<Boolean> tryConsume(long numTokens, long maxWaitNanos, Schedul
      * <p>
      * <strong>The algorithm for all type of buckets is following:</strong>
      * <ul>
-     *     <li>Implementation issues asynchronous request to back-end behind the bucket(for local bucket it is just a synchronous call) in way which specific for each particular back-end.</li>
+     *     <li>Implementation issues asynchronous request to back-end behind the bucket(for local bucket it is just a synchronous call) in a way which specific for each particular back-end.</li>
      *     <li>Then uncompleted future returned to the caller.</li>
      *     <li>If back-end provides signal(through callback) that asynchronous request failed, then future completed exceptionally.</li>
      *     <li>When back-end provides signal(through callback) that request is done(for local bucket response got immediately), then following post-processing rules will be applied:
      *          <ul>
      *              <li>
-     *                  If tokens were consumed then future immediately completed.
+     *                  If tokens were consumed then the future was immediately completed.
      *              </li>
      *              <li>
      *                  Else tokens reserved(effectively consumed) and <tt>task</tt> to delayed completion will be scheduled to the <tt>scheduler</tt> via {@link ScheduledExecutorService#schedule(Runnable, long, TimeUnit)},
-     *                  when delay equals to time required to refill the deficit of tokens. After scheduler executes task the future completed.
+     *                  when delay equals the time required to refill the deficit of tokens. After the scheduler executes the task the future is completed.
      *              </li>
      *          </ul>
      *     </li>
      * </ul>
-     * It is strongly not recommended to do any heavy work in thread which completes the future,
+     * It is strongly not recommended to do any heavy work in a thread that completes the future,
      * because typically this will be a back-end thread which handles NIO selectors,
      * blocking this thread will take negative performance effect to back-end throughput,
      * so you always should resume control flow in another executor via methods like {@link CompletableFuture#thenApplyAsync(Function, Executor)}.
