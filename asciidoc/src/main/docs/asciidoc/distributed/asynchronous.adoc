@@ -1,5 +1,5 @@
 === Asynchronous API
-Since version ``3.0`` Bucket4j provides asynchronous analogs for majority of API methods.
+Since version ``3.0`` Bucket4j provides asynchronous analogs for the majority of API methods.
 Async view of proxyManager is available through ``asAsync()`` method:
 [source, java]
 ----
@@ -9,31 +9,31 @@ AsyncProxyManager asyncProxyManager = proxyManager.asAsync();
 BucketConfiguration configuration = ...;
 AsyncBucketProxy asyncBucket = asyncProxyManager.builder().build(key, configuration);
 ----
-Each method of class ```AsyncBucketProxy``` has full equivalence with same semantic in synchronous version in the ```Bucket``` class.
+Each method of class ```AsyncBucketProxy``` has full equivalence with the same semantic in asynchronous version in the ```Bucket``` class.
 
-==== Example - limiting the rate of access to asynchronous servlet
-Imagine that you develop SMS service, which allows send SMS via HTTP interface.
-You want from your architecture to be protected from overloading, clustered and fully asynchronous.
+==== Example - limiting the rate of access to the asynchronous servlet
+Imagine that you develop an SMS service, which allows sending SMS via an HTTP interface.
+You want your architecture to be protected from overloading, clustered, and fully asynchronous.
 
 **Overloading protection requirement:**
 
-> To prevent fraud and service overloading you want to introduce following limit for any outbound phone number: The bucket size is 20 SMS (which cannot be exceeded at any given time), with a "refill rate" of 10 SMS per minute that continually increases tokens in the bucket.
-In other words, if client sends 10 SMS per minute, it will never be throttled,
-and moreover client have overdraft equals to 20 SMS which can be used if average is little bit higher that 10 SMS/minute on short time period.  
-**Solution:** lets use bucket4j for this.
+> To prevent fraud and service overloading you want to introduce the following limit for any outbound phone number: The bucket size is 20 SMS (which cannot be exceeded at any given time), with a "refill rate" of 10 SMS per minute that continually increases tokens in the bucket.
+In other words, if a client sends 10 SMS per minute, it will never be throttled,
+and moreover, the client has overdraft equals to 20 SMS which can be used if the average is a little bit higher than 10 SMS/minute on short time period.
+**Solution:** let's use bucket4j for this.
 
 **Clustering requirement:**
 
 > You want to avoid the single point of failure, if one server crashed that information about consumed tokens should not be lost,
-thus it would be better to use any distributed computation platform for storing the buckets.  
+thus it would be better to use any distributed computation platform for storing the buckets.
 
-**Solution:** lets use JBoss Infinispan for this and ``bucket4j-infinispan`` extension.
-Hazelcast and Apache Ignite will be also well choice, Infinispan just selected as example.
+**Solution:** let's use JBoss Infinispan for this and ``bucket4j-infinispan`` extension.
+Hazelcast and Apache Ignite will be also well-chosen, Infinispan just selected as an example.
 
 **Asynchronous processing requirement:**
-Also for maximum scalability you want from architecture to be fully non-blocking,
-non-blocking architecture means that both SMS sending and limit checking should be asynchronous.  
-**Solution:** lets use asynchronous features provided by bucket4j and Servlet-API.
+Also for maximum scalability, you want from architecture to be fully non-blocking,
+non-blocking architecture means that both sms sending and limit checking should be asynchronous.
+**Solution:** let's use asynchronous features provided by bucket4j and Servlet-API.
 
 **Mockup of service based on top of Servlet API and bucket4j-infinispan**:
 [source, java]
