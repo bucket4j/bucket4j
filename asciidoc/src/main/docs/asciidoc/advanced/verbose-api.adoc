@@ -1,11 +1,11 @@
 [[verbose-api]]
 === Verbose API
-Verbose API:: is the API whose intent is in injecting low-level diagnostic information into results of any interaction with a bucket. Verbose API provides the same functionality as Regular API, with one exception - result of any method always decorated by `VerboseResult` wrapper.
+Verbose API:: is the API whose intent is in injecting low-level diagnostic information into the results of any interaction with a bucket. Verbose API provides the same functionality as Regular API, with one exception - a result of any method always decorated by `VerboseResult` wrapper.
 
-VerboseResult:: is the wrapper for interaction result that provides the snapshot of bucket and its configuration that was actual at the moment of interaction with bucket.
+VerboseResult:: is the wrapper for interaction result that provides the snapshot of a bucket and its configuration that was actual at the moment of interaction with a bucket.
 
 ==== Verbose API entry-points
-The way to get access for `Verbose API` is the same for all type of buckets, just call `asVerbose()` method:
+The way to get access for `Verbose API` is the same for all types of buckets, just call `asVerbose()` method:
 
 [source, java]
 ----
@@ -32,12 +32,12 @@ AsyncBucketProxy bucket = ...;
 AsyncVerboseBucket verboseBucket = bucket.asVerbose();
 ----
 
-NOTE: BlockingBucket and ScheduledBucket do not provide the verbose analogs. VerboseResult has no sense for this kind of buckets because interactions with them can be followed by thread sleep or delayed execution, so VerboseResult can be absolutely stale and irrelevant to the moment of time when control over execution is being returned to your code.
+NOTE: BlockingBucket and ScheduledBucket do not provide the verbose analogs. VerboseResult has no sense for this kind of buckets because interactions with them can be followed by thread sleep or delayed execution, so VerboseResult can be stale and irrelevant to the moment when control over execution is being returned to your code.
 
 ==== Principles of result decoration
 * void return type always decorated by `VerboseResult<Void>`
 * A primitive result type like long, boolean always decorated by correspondent boxed type for example `VerboseResult<Boolean>`
-* Non primitive reult type always decorated as is, for example `VerboseResult<EstimationProbe>`
+* Non-primitive result type always decorated as is, for example, `VerboseResult<EstimationProbe>`
 
 ==== Example of Verbose API usage
 [source, java]
