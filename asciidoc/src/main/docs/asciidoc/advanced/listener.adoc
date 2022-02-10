@@ -2,11 +2,11 @@
 === Listening for bucket events
 
 ==== What can be listened
-.You can decorate the bucket by listener in order to track following events:
+.You can decorate the bucket by listener to track following events:
 - When tokens are consumed from a bucket.
 - When consumption requests were rejected by the bucket.
-- When thread was parked to wait for tokens refill as a result of interaction with ``BlockingBucket``.
-- When thread was interrupted during the wait for tokens to be refilled as a result of interaction with ``BlockingBucket``.
+- When the thread was parked to wait for tokens refill as a result of interaction with ``BlockingBucket``.
+- When the thread was interrupted during the wait for tokens to be refilled as a result of interaction with ``BlockingBucket``.
 - When a delayed task was submitted to ``ScheduledExecutorService`` as a result of interaction with ``AsyncScheduledBucket``.
 
 ==== Listener API - corner cases
@@ -16,22 +16,22 @@
 **Answer:**  it depends:
 
 - If you want to have aggregated statistics for all buckets then create a single listener per application and reuse this listener for all buckets.
-- If you want to measure statistics independently per each bucket then use a listener per bucket model.
+- If you want to measure statistics independently per bucket then use a listener per bucket model.
 ========
 
 ========
 **Question:** where are methods the listener is invoking in case of distributed usage?
 
-**Answer:** listener always invoked on client side, it means that each client JVM will have its own totally independent stat for the same bucket.
+**Answer:** listener always invoked on the client-side, which means that each client JVM will have its independent stat for the same bucket.
 ========
 
 ========
-**Question:** Why does bucket invoke the listener on client side instead of server side in case of distributed scenario? What do I need to do if I need an aggregated stat across the whole cluster?
+**Question:** Why does bucket invoke the listener on the client-side instead of the server-side in case of distributed scenario? What do I need to do if I need an aggregated stat across the whole cluster?
 
-**Answer:** Because of planned expansion to non-JVM back-ends such as Redis, MySQL, PostgreSQL.
-It is not possible to serialize and invoke listener on this non-java back-ends, so it was decided to invoke listener on client side,
-in order to avoid inconsistency between different back-ends in the future.
-You can do post-aggregation of monitoring statistics via features built-into your monitoring database or via mediator(like StatsD) between your application and monitoring database.
+**Answer:** Because of a planned expansion to non-JVM back-ends such as Redis, MySQL, PostgreSQL.
+It is not possible to serialize and invoke listener on this non-java back-ends, so it was decided to invoke listener on the client-side,
+to avoid inconsistency between different back-ends in the future.
+You can do post-aggregation of monitoring statistics via features built into your monitoring database or via mediator(like StatsD) between your application and the monitoring database.
 ========
 
 ==== How to attach a listener to a bucket?
@@ -47,7 +47,7 @@ Bucket bucket = Bucket.builder()
 ----
 
 ==== Example of integration with Dropwizard metrics-core
-`io.github.bucket4j.SimpleBucketListener` is a simple implementation of `io.github.bucket4j.BucketListener` interface that is available out of the box. Below the example of exposing statistics via Dropwizard Metrics(for Micrometer it should be quite similar):
+`io.github.bucket4j.SimpleBucketListener` is a simple implementation of `io.github.bucket4j.BucketListener` interface that is available out of the box. Below is the example of exposing statistics via Dropwizard Metrics(for Micrometer it should be quite similar):
 [source, java]
 ----
 public static Bucket decorateBucketByStatListener(Bucket originalBucket, String bucketName, MetricRegistry registry) {
