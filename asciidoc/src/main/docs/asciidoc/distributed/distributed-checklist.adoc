@@ -1,28 +1,28 @@
 [[distributed-checklist, Distributed usage checklist]]
 === Production checklist especially in the context of distributed systems
-Before using Bucket4j in clustered scenario you need to understand, agree and configure following points:
+Before using Bucket4j in clustered scenario you need to understand, agree, and configure the following points:
 
 .Do not forget about exception handling
-When working within a distributed system, it is innevitable that requests may cross the border of the current JVM, leading to a communication on the network.
-Network being unreliable, it is impossible to avoid failures. Thus you should embrace this reality and be ready to get unchecked exceptions when interacting with a distributed bucket.
+When working within a distributed system, it is inevitable that requests may cross the border of the current JVM, leading to communication on the network.
+The network being unreliable, it is impossible to avoid failures. Thus you should embrace this reality and be ready to get unchecked exceptions when interacting with a distributed bucket.
 **It is your responsibility to handle(or ignore) such exceptions:**
 
 * You probably do not want to fail business transactions if the grid responsible for throttling goes down. If this is the case you can simply log the exception and continue your business transaction without throttling
 * If you wish to fail your business transaction when the grid responsible for throttling goes down, simply rethrow or don't catch the exception
 
 .Do not forget to configure backups
-If the state of any bucket should survive the restart/crash of grid node that holds its state, you need to configure backups yourself, in way specific to the particular grid vendor. For example, see how to https://apacheignite.readme.io/v2.3/docs/primary-and-backup-copies[configure backups for Apache Ignite].
+If the state of any bucket should survive the restart/crash of the grid node that holds its state, you need to configure backups yourself, in a way specific to the particular grid vendor. For example, see how to https://apacheignite.readme.io/v2.3/docs/primary-and-backup-copies[configure backups for Apache Ignite].
 
 .Retention tuning is your responsibility
 When dealing with multi-tenant scenarios like a bucket per user or a bucket per IP address,
-the amount of buckets in the cache will continuously increase. This is because a new bucket will be created each time a new key is detected.
-To prevent exhausting the available memory of your cluster you need to configure following aspects:
+the number of buckets in the cache will continuously increase. This is because a new bucket will be created each time a new key is detected.
+To prevent exhausting the available memory of your cluster you need to configure the following aspects:
 
 * **Expiration since last access** - in order to allow the grid to remove the keys which haven't been used in a long time. For example, see how to https://apacheignite.readme.io/docs/expiry-policies[configure expiration policy for Apache Ignite].
-* **Maximum cache size(in units or bytes)** - Obviously it is preferable to lose bucket data than lose the whole cluster due to out of memory exception.
+* **Maximum cache size(in units of bytes)** - Obviously it is preferable to lose bucket data than lose the whole cluster due to memory exception.
 
 .High availability(HA) tuning and testing is your responsibility
-There are no special settings for HA supported by Bucket4j, because Bucket4j does nothing more that just invoking EntryProcessors on the cache.
-Instead Bucket4j relies on *you* to configure the cache with proper parameters that control redundancy and high availability.
+There are no special settings for HA supported by Bucket4j because Bucket4j does nothing more than just invoking EntryProcessors on the cache.
+Instead, Bucket4j relies on *you* to configure the cache with proper parameters that control redundancy and high availability.
 
-Years of experience working with distributed system has tought the author that High Availability does not come for free. You need to test and verify that your system remains available. This cannot be provided by this or any other library. Your system will most certainly go down if you do not plan for that.
+Years of experience working with the distributed system has taught the author that High Availability does not come for free. You need to test and verify that your system remains available. This cannot be provided by this or any other library. Your system will most certainly go down if you do not plan for that.

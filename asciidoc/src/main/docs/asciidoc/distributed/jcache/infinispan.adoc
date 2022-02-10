@@ -10,7 +10,7 @@ To use ``bucket4j-infinispan`` with ``Infinispan 9.x, 10.x`` extension you need 
     <version>{revnumber}</version>
 </dependency>
 ----
-If you are using legacy version of Infinispan ``8.x`` then you need to add following dependency:
+If you are using a legacy version of Infinispan ``8.x`` then you need to add the following dependency:
 [source, xml, subs=attributes+]
 ----
 <dependency>
@@ -20,26 +20,26 @@ If you are using legacy version of Infinispan ``8.x`` then you need to add follo
 </dependency>
 ----
 ==== General compatibility matrix principles::
-* Bucket4j authors do not perform continues monitoring of new Infinispan releases. So, there is can be case when there is no one version of Bucket4j which is compatible with newly released Infinispan, just log issue to https://github.com/vladimir-bukhtoyarov/bucket4j/issues[bug tracker] in this case, adding support to new version of Infinispan is usually easy exercise.
+* Bucket4j authors do not perform continuous monitoring of new Infinispan releases. So, there is can be a case when there is no one version of Bucket4j which is compatible with the newly released Infinispan, just log an issue to https://github.com/vladimir-bukhtoyarov/bucket4j/issues[bug tracker] in this case, adding support to new version of Infinispan is usually an easy exercise.
 * Integrations with legacy versions of Infinispan are not removed without a clear reason. Hence, you are in safety, even you are working in a big enterprise company that does not update its infrastructure frequently because You still get new Bucket4j's features even for legacy Infinispan's releases.
 
 
 ==== Special notes for Infinispan 10.0+
-As mentioned in the https://infinispan.org/docs/dev/titles/developing/developing.html#marshalling[Infinispan Marshalling documentation], since release ``10.0.0`` Infinispan does not allow deserialization of custom payloads into Java classes. If you do not configure serialization(as described bellow), you will get the error like this on any attempt to use Bucket4j with brand new Infinispan release:
+As mentioned in the https://infinispan.org/docs/dev/titles/developing/developing.html#marshalling[Infinispan Marshalling documentation], since release ``10.0.0`` Infinispan does not allow deserialization of custom payloads into Java classes. If you do not configure serialization(as described below), you will get an error like this on any attempt to use Bucket4j with a brand new Infinispan release:
 [source, bash]
 ----
 Jan 02, 2020 4:57:56 PM org.infinispan.marshall.persistence.impl.PersistenceMarshallerImpl objectToBuffer
 WARN: ISPN000559: Cannot marshall 'class io.github.bucket4j.grid.infinispan.InfinispanProcessor'
 java.lang.IllegalArgumentException: No marshaller registered for Java type io.github.bucket4j.grid.infinispan.SerializableFunctionAdapter
-	at org.infinispan.protostream.impl.SerializationContextImpl.getMarshallerDelegate(SerializationContextImpl.java:279)
-	at org.infinispan.protostream.WrappedMessage.writeMessage(WrappedMessage.java:240)
-	at org.infinispan.protostream.ProtobufUtil.toWrappedStream(ProtobufUtil.java:196)
+   at org.infinispan.protostream.impl.SerializationContextImpl.getMarshallerDelegate(SerializationContextImpl.java:279)
+   at org.infinispan.protostream.WrappedMessage.writeMessage(WrappedMessage.java:240)
+   at org.infinispan.protostream.ProtobufUtil.toWrappedStream(ProtobufUtil.java:196)
 ----
 There are three options to solve this problem:
-* Configure Jboss marshalling instead of default ProtoStream marshaller as described https://infinispan.org/docs/dev/titles/developing/developing.html#jboss_marshalling[there].
+* Configure Jboss marshaling instead of defaulting ProtoStream marshaller as described https://infinispan.org/docs/dev/titles/developing/developing.html#jboss_marshalling[there].
 * Configure Java Serialization Marshaller instead of default ProtoStream marshaller, as described https://infinispan.org/docs/dev/titles/developing/developing.html#java_serialization_marshaller[there].
 Do not forget to add ``io.github.bucket4j.*`` regexp to the whitelist if choosing this way.
-* And last way(recommended) just register ``Bucket4j serialization context initializer`` in the serialization configuration. 
+* And last way(recommended) just register ``Bucket4j serialization context initializer`` in the serialization configuration.
 You can do it in both programmatically and declarative ways:
 
 .Programmatic registration of Bucket4jProtobufContextInitializer
@@ -59,7 +59,7 @@ builder.serialization().addContextInitializer(new Bucket4jProtobufContextInitial
     <context-initializer class="io.github.bucket4j.grid.infinispan.serialization.Bucket4jProtobufContextInitializer"/>
 </serialization>
 ----
-And that is all. Just registering ``Bucket4jProtobufContextInitializer`` in any way is enough to make Bucket4j compatible with ProtoStream marshaller, you do not have to care about ``*.proto`` files, annotations, whitelist etc, all neccessary Protobuffers configs generated by ``Bucket4jProtobufContextInitializer`` and registerd on the fly.
+And that is all. Just registering ``Bucket4jProtobufContextInitializer`` in any way is enough to make Bucket4j compatible with ProtoStream marshaller, you do not have to care about ``*.proto`` files, annotations, whitelist, etc, all necessary Protobuffers configs generated by ``Bucket4jProtobufContextInitializer`` and register on the fly.
 
 ==== Example of Bucket instantiation
 [source, java]

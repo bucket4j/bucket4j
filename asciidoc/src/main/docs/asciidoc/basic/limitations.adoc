@@ -1,8 +1,8 @@
 === Technical limitations
-In order to provide the best precision, Bucket4j uses integer arithmetic as much as possible, so any internal calculation is limited by bound ``Long.MAX_VALUE``. Library introduces several limits that described further, in order to be sure that calculations will never exceed the bound.
+To provide the best precision, Bucket4j uses integer arithmetic as much as possible, so any internal calculation is limited by bound ``Long.MAX_VALUE``. The library introduces several limits that are described further, to be sure that calculations will never exceed the bound.
 
 ==== Maximum refill rate
-Maximum refill rate is limited by ``1 token/ 1 nanosecond``. Following examples of API usage will raise exceptions
+The maximum refill rate is limited by ``1 token/ 1 nanosecond``. Following examples of API usage will raise exceptions
 
 [source, java]
 ----
@@ -23,15 +23,15 @@ Bucket4j works with time intervals as the 64-bit number of nanoseconds. So maxim
 ----
 Duration.ofNanos(Long.MAX_VALUE);
 ----
-Any attempt to specify period longer that limit above will fail with exception. For example the code bellow will failed
+Any attempt to specify a period longer than the limit above will fail with an exception. For example, the code below will failed
 [source, java]
 ----
 Bandwidth.simple(42, Duration.ofMinutes(153722867280912930));
 
 Exception in thread "main" java.lang.ArithmeticException: long overflow
-	at java.lang.Math.multiplyExact(Math.java:892)
-	at java.time.Duration.toNanos(Duration.java:1186)
-	at io.github.bucket4j.Refill.<init>(Refill.java:48)
-	at io.github.bucket4j.Refill.greedy(Refill.java:100)
-	at io.github.bucket4j.Bandwidth.simple(Bandwidth.java:102)
+   at java.lang.Math.multiplyExact(Math.java:892)
+   at java.time.Duration.toNanos(Duration.java:1186)
+   at io.github.bucket4j.Refill.<init>(Refill.java:48)
+   at io.github.bucket4j.Refill.greedy(Refill.java:100)
+   at io.github.bucket4j.Bandwidth.simple(Bandwidth.java:102)
 ----

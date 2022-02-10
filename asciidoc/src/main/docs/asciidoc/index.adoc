@@ -20,7 +20,7 @@ Maxim Bartkov::
 Lead Java developer at RooX Solutions +
 Kharkov, Ukraine +
 maxgalayoutop@gmail.com +
-Role: evangelist, author of scientific publications  +
+Role: contributor, evangelist, author of scientific publications  +
 image:images/Maxim_Bartkov.jpg[80,80] +
 
 == Third-party articles and integrations

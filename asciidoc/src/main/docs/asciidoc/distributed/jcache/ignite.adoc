@@ -1,15 +1,15 @@
 [[bucket4j-ignite, Bucket4j-Ignite]]
 === Apache Ignite integration
 Before use ``bucket4j-ignite`` module please read [bucket4j-jcache documentation](jcache-usage.md),
-because ``bucket4j-ignite`` is just a follow-up of ``bucket4j-jcache``. 
+because ``bucket4j-ignite`` is just a follow-up of ``bucket4j-jcache``.
 
-Bucket4j supports Ignite Thin-Client as well as regular deployment scenario.
+Bucket4j supports Ignite Thin-Client as well as regular deployment scenarios.
 
-**Question:** Bucket4j already supports JCache since version ``1.2``. Why it was needed to introduce direct support for ``Apache Ignite``?  
+**Question:** Bucket4j already supports JCache since version ``1.2``. Why it was needed to introduce direct support for ``Apache Ignite``?
 **Answer:** Because https://www.jcp.org/en/jsr/detail?id=107[JCache API (JSR 107)] does not specify asynchronous API,
 developing the dedicated module ``bucket4j-ignite`` was the only way to provide asynchrony for users who use ``Bucket4j`` and ``Apache Ignite`` together.
 
-**Question:** Should I migrate from ``bucket4j-jcache`` to ``bucketj-ignite`` If I do not need in asynchronous API?  
+**Question:** Should I migrate from ``bucket4j-jcache`` to ``bucketj-ignite`` If I do not need an asynchronous API?
 **Answer:** No, you should not migrate to ``bucketj-ignite`` in this case.
 
 ==== Dependencies
@@ -35,7 +35,7 @@ BucketConfiguration configuration = BucketConfiguration.builder()
     .build();
 Bucket bucket = proxyManager.builder().build(key, configuration);
 ----
-IMPORTANT: Pay attention that IgniteProxyManager requires from all nodes in the cluster to contain bucket4j Jars in classpath.
+IMPORTANT: Pay attention that IgniteProxyManager requires all nodes in the cluster to contain bucket4j Jars in classpath.
 
 ==== Example of Bucket instantiation via Thin Client
 [source, java]
@@ -50,7 +50,7 @@ BucketConfiguration configuration = BucketConfiguration.builder()
     .build();
 Bucket bucket = proxyManager.builder().build(key, configuration);
 ----
-IMPORTANT: Pay attention that IgniteThinClientProxyManager requires from all nodes in the cluster to contain bucket4j Jars in classpath.
+IMPORTANT: Pay attention that IgniteThinClientProxyManager requires all nodes in the cluster to contain bucket4j Jars in classpath.
 
 ==== Example of Bucket instantiation of via Thin Client and IgniteThinClientCasBasedProxyManager
 [source, java]
@@ -64,4 +64,4 @@ BucketConfiguration configuration = BucketConfiguration.builder()
     .build();
 Bucket bucket = proxyManager.builder().build(key, configuration);
 ----
-IMPORTANT: IgniteThinClientCasBasedProxyManager does not require from all nodes in the cluster to contain bucket4j Jars in classpath, but it operates with more latency, so choose it over IgniteThinClientProxyManager if and only if you have no control over cluster classpath.
+IMPORTANT: IgniteThinClientCasBasedProxyManager does not require all nodes in the cluster to contain bucket4j Jars in classpath, but it operates with more latency, so choose it over IgniteThinClientProxyManager if and only if you have no control over cluster classpath.
