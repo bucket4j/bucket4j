@@ -14,6 +14,10 @@
     <artifactId>bucket4j-mysql</artifactId>
     <name>bucket4j-mysql</name>
 
+    <properties>
+        <modular-name>mysql</modular-name>
+    </properties>
+
     <repositories>
         <repository>
             <id>central</id>
