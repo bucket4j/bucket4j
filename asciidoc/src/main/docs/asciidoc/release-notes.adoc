@@ -2,5 +2,4 @@
 Release `{revnumber}`
 
 .The issues in release scope are following:
-* https://github.com/vladimir-bukhtoyarov/bucket4j/discussions/38[#38 Support for PostgreSQL]
-* https://github.com/vladimir-bukhtoyarov/bucket4j/issues/37[#37 Support for MySQL]
+* https://github.com/vladimir-bukhtoyarov/bucket4j/issues/238[#238 Support for Caffeine]
