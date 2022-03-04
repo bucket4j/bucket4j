@@ -46,7 +46,7 @@ In addition to local in-memory buckets, the Bucket4j supports clustered usage sc
 Sometimes you are having deal with bucket per key scenarios but distributed synchronization is unnecessary, for example where request stickiness is provided by a load balancer, or other use-cases where stickiness can be achieved by the application itself, for example, Kafka consumer. For such scenarios Bucket4j provides support for following list of local caching libraries:
 | Back-end                      | Documentation link      |
 | :---                          | :---:                   |
-| ```Caffeine```                | [bucket4j-caffeine](https://github.com/vladimir-bukhtoyarov/bucket4j/blob/master/bucket4j-redis/src/main/java/io/github/bucket4j/redis/redisson/cas/RedissonBasedProxyManager.java)      |
+| ```Caffeine```                | [bucket4j-caffeine](https://github.com/vladimir-bukhtoyarov/bucket4j/blob/7.3/bucket4j-caffeine/src/main/java/io/github/bucket4j/caffeine/CaffeineProxyManager.java)      |
 
 ## [Documentation](https://bucket4j.com)
 * [Official reference](https://bucket4j.com/7.3.0/toc.html)
