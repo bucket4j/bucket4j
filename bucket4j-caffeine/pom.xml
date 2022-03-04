@@ -7,16 +7,16 @@
 
     <parent>
         <groupId>com.github.vladimir-bukhtoyarov</groupId>
-        <artifactId>bucket4j-hazelcast-all</artifactId>
+        <artifactId>bucket4j-parent</artifactId>
         <version>7.3.0</version>
-        <relativePath>../../bucket4j-hazelcast-all</relativePath>
+        <relativePath>../bucket4j-parent</relativePath>
     </parent>
-    <artifactId>bucket4j-hazelcast</artifactId>
-    <name>bucket4j-hazelcast</name>
-    <description>Bucket4j integration with Hazelcast 4.x branch</description>
+    <artifactId>bucket4j-caffeine</artifactId>
+    <name>bucket4j-caffeine</name>
+    <description>Bucket4j integration with Caffeine</description>
 
     <properties>
-        <modular-name>hazelcast</modular-name>
+        <modular-name>caffeine</modular-name>
     </properties>
 
     <dependencies>
@@ -33,16 +33,9 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>javax.cache</groupId>
-            <artifactId>cache-api</artifactId>
-            <version>${jcache.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.hazelcast</groupId>
-            <artifactId>hazelcast</artifactId>
-            <version>${hazelcast.latest.version}</version>
-            <scope>provided</scope>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
+            <version>${caffeine.version}</version>
         </dependency>
     </dependencies>
     
