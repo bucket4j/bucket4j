@@ -33,6 +33,7 @@
         <module>bucket4j-coherence</module>
         <module>bucket4j-postgresql</module>
         <module>bucket4j-mysql</module>
+        <module>bucket4j-caffeine</module>
         <module>asciidoc</module>
     </modules>
 
