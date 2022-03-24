@@ -78,8 +78,3 @@ Feel free to ask via:
 ## License
 Copyright 2015-2021 Vladimir Bukhtoyarov
 Licensed under the Apache Software License, Version 2.0: <http://www.apache.org/licenses/LICENSE-2.0>.
-
-## Автор ищет работу(Job Looking Statement)
-Ищу работу Java Backend Developer в Российскую компанию, или компанию не имеющую проблем с ведением бизнесса в России. Территориально в Санкт-Петербурге, либо удаленно:
-* [Резюме на HeadHunter](https://spb.hh.ru/resume/8e48c2e9ff009e611e0039ed1f736563726574)
-* [Мой телеграм](https://t.me/Vladimir_Bukhtoyarov)
