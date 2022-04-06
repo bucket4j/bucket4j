@@ -5,6 +5,8 @@ import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.redisson.command.CommandExecutor;
+import org.redisson.command.CommandSyncService;
 import org.redisson.config.Config;
 import org.redisson.config.ConfigSupport;
 import org.redisson.connection.ConnectionManager;
@@ -17,11 +19,13 @@ public class RedissonBasedProxyManagerTest extends AbstractDistributedBucketTest
 
     private static GenericContainer container;
     private static ConnectionManager connectionManager;
+    private static CommandExecutor commandExecutor;
 
     @BeforeClass
     public static void setup() {
         container = startRedisContainer();
         connectionManager = createRedissonClient(container);
+        commandExecutor = createRedissonExecutor(connectionManager);
     }
 
     @AfterClass
@@ -46,6 +50,10 @@ public class RedissonBasedProxyManagerTest extends AbstractDistributedBucketTest
         return connectionManager;
     }
 
+    private static CommandExecutor createRedissonExecutor(ConnectionManager connectionManager) {
+        return new CommandSyncService(connectionManager, null);
+    }
+
     private static GenericContainer startRedisContainer() {
         GenericContainer genericContainer = new GenericContainer("redis:4.0.11")
                 .withExposedPorts(6379);
@@ -55,7 +63,7 @@ public class RedissonBasedProxyManagerTest extends AbstractDistributedBucketTest
 
     @Override
     protected ProxyManager<String> getProxyManager() {
-        return new RedissonBasedProxyManager(connectionManager.getCommandExecutor(), ClientSideConfig.getDefault(), Duration.ofMinutes(10));
+        return new RedissonBasedProxyManager(commandExecutor, ClientSideConfig.getDefault(), Duration.ofMinutes(10));
     }
 
     @Override
