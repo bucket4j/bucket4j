@@ -81,10 +81,21 @@
             <name>Vladimir Bukhtoyarov</name>
             <email>jsecoder@mail.ru</email>
             <url>https://github.com/vladimir-bukhtoyarov</url>
-            <organization>DINS</organization>
-            <organizationUrl>http://www.dins.ru/</organizationUrl>
+            <organization>edna</organization>
+            <organizationUrl>https://edna.ru/</organizationUrl>
             <roles>
-                <role>Lead software developer</role>
+                <role>Software developer</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>MaxBartkov</id>
+            <name>Maxim Bartkov</name>
+            <email>maxgalayoutop@gmail.com</email>
+            <url>https://github.com/MaxBartkov</url>
+            <organization>Jaja finance</organization>
+            <organizationUrl>https://jaja.co.uk</organizationUrl>
+            <roles>
+                <role>Java Technical Leader</role>
             </roles>
         </developer>
     </developers>
