@@ -3,7 +3,7 @@ image::./images/white-logo.png[]
 endif::[]
 
 == Current version {revnumber} documentation
-`04 March 2022` Support for Caffeine.
+`09 April 2022` Method for reset bucket.
 
 * http://bucket4j.com/{revnumber}/release-notes.html[{revnumber} Release notes]
 * http://bucket4j.com/{revnumber}/toc.html[{revnumber} Reference]
@@ -43,6 +43,12 @@ image:images/Maxim_Bartkov.jpg[80,80] +
 
 == Documentation for previous versions
 === 2022
+==== 7.4.0
+`04 March 2022` Support for Caffeine.
+
+* http://bucket4j.com/7.4.0/release-notes.html[7.4.0 Release notes]
+* http://bucket4j.com/7.4.0/toc.html[7.4.0 Reference]
+
 ==== 7.2.0
 `11 Feb 2022` Support for MySQL and PostgreSQL.
 

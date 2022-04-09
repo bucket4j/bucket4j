@@ -2,4 +2,8 @@
 Release `{revnumber}`
 
 .The issues in release scope are following:
-* https://github.com/vladimir-bukhtoyarov/bucket4j/issues/238[#238 Support for Caffeine]
+* https://github.com/vladimir-bukhtoyarov/bucket4j/issues/116[#116 Method for reset bucket]
+
+.The bugfixes in release scope are following:
+* https://github.com/vladimir-bukhtoyarov/bucket4j/issues/246[#246 Connection leak in MySQL/PostgreSQL proxy managers]
+* https://github.com/vladimir-bukhtoyarov/bucket4j/issues/244[#244 RedisCommands.SETPXNX not exists]
