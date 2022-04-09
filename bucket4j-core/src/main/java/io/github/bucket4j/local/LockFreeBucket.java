@@ -200,6 +200,24 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket {
     }
 
     @Override
+    public void reset() {
+        BucketState previousState = stateRef.get();
+        BucketState newState = previousState.copy();
+        long currentTimeNanos = timeMeter.currentTimeNanos();
+
+        while (true) {
+            newState.refillAllBandwidth(currentTimeNanos);
+            newState.reset();
+            if (stateRef.compareAndSet(previousState, newState)) {
+                return;
+            } else {
+                previousState = stateRef.get();
+                newState.copyStateFrom(previousState);
+            }
+        }
+    }
+
+    @Override
     protected void replaceConfigurationImpl(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy) {
         BucketState previousState = stateRef.get();
         BucketState newState = previousState.copy();
@@ -365,6 +383,24 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket {
         while (true) {
             newState.refillAllBandwidth(currentTimeNanos);
             newState.forceAddTokens(tokensToAdd);
+            if (stateRef.compareAndSet(previousState, newState)) {
+                return new VerboseResult<>(currentTimeNanos, Nothing.INSTANCE, newState.copy());
+            } else {
+                previousState = stateRef.get();
+                newState.copyStateFrom(previousState);
+            }
+        }
+    }
+
+    @Override
+    protected VerboseResult<Nothing> resetVerboseImpl() {
+        BucketState previousState = stateRef.get();
+        BucketState newState = previousState.copy();
+        long currentTimeNanos = timeMeter.currentTimeNanos();
+
+        while (true) {
+            newState.refillAllBandwidth(currentTimeNanos);
+            newState.reset();
             if (stateRef.compareAndSet(previousState, newState)) {
                 return new VerboseResult<>(currentTimeNanos, Nothing.INSTANCE, newState.copy());
             } else {

@@ -66,6 +66,11 @@ public interface VerboseBucket {
     VerboseResult<Nothing> addTokens(long tokensToAdd);
 
     /**
+     * Does the same that {@link Bucket#reset()}
+     */
+    VerboseResult<Nothing> reset();
+
+    /**
      * Does the same that {@link Bucket#forceAddTokens(long)}
      */
     VerboseResult<Nothing> forceAddTokens(long tokensToAdd);

@@ -276,6 +276,11 @@ public interface AsyncBucketProxy {
     CompletableFuture<Void> forceAddTokens(long tokensToAdd);
 
     /**
+     * Reset all tokens up to maximum capacity.
+     */
+    CompletableFuture<Void> reset();
+
+    /**
      * Has the same semantic with {@link Bucket#replaceConfiguration(BucketConfiguration, TokensInheritanceStrategy)}
      */
     CompletableFuture<Void> replaceConfiguration(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy);

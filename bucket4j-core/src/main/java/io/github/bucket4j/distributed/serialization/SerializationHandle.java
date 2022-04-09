@@ -64,9 +64,8 @@ public interface SerializationHandle<T> {
             VerboseCommand.SERIALIZATION_HANDLE, // 35
             SyncCommand.SERIALIZATION_HANDLE, // 36
             Request.SERIALIZATION_HANDLE, // 37
-            ForceAddTokensCommand.SERIALIZATION_HANDLE // 38
-
-
+            ForceAddTokensCommand.SERIALIZATION_HANDLE, // 38
+            ResetCommand.SERIALIZATION_HANDLE // 39
     ));
 
     <I> T deserialize(DeserializationAdapter<I> adapter, I input, Version backwardCompatibilityVersion) throws IOException;

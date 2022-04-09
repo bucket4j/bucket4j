@@ -146,6 +146,15 @@ boolean tryConsume(long numTokens);
     void forceAddTokens(long tokensToAdd);
 ----
 
+===== reset
+[source, java]
+----
+   /**
+     * Reset all tokens up to maximum capacity.
+     */
+    void reset();
+----
+
 ===== getAvailableTokens
 [source, java]
 ----

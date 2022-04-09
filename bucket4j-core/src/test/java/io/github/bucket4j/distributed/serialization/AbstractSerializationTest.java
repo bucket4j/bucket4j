@@ -285,6 +285,7 @@ public abstract class AbstractSerializationTest {
         testSerialization(new VerboseCommand<>(new GetAvailableTokensCommand()));
         testSerialization(new VerboseCommand<>(new ReplaceConfigurationCommand(configuration, TokensInheritanceStrategy.AS_IS)));
         testSerialization(new SyncCommand(20, 10000000));
+        testSerialization(new ResetCommand());
 
         testSerialization(new Request(new GetAvailableTokensCommand(), Versions.getLatest(), null));
         testSerialization(new Request(new GetAvailableTokensCommand(), Versions.getLatest(), 0L));

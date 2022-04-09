@@ -109,6 +109,10 @@ public class RemoteBucketState implements ComparableByContent<RemoteBucketState>
         state.forceAddTokens(tokensToAdd);
     }
 
+    public void reset() {
+        state.reset();
+    }
+
     public BucketState copyBucketState() {
         return state.copy();
     }

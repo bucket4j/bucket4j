@@ -172,6 +172,12 @@ public class DefaultAsyncBucketProxy implements AsyncBucketProxy, AsyncOptimizat
         }
 
         @Override
+        public CompletableFuture<VerboseResult<Nothing>> reset() {
+            VerboseCommand<Nothing> verboseCommand = new VerboseCommand<>(new ResetCommand());
+            return execute(verboseCommand).thenApply(RemoteVerboseResult::asLocal);
+        }
+
+        @Override
         public CompletableFuture<VerboseResult<Nothing>> replaceConfiguration(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy) {
             checkConfiguration(newConfiguration);
             checkMigrationMode(tokensInheritanceStrategy);
@@ -342,6 +348,12 @@ public class DefaultAsyncBucketProxy implements AsyncBucketProxy, AsyncOptimizat
     public CompletableFuture<Void> forceAddTokens(long tokensToAdd) {
         checkTokensToAdd(tokensToAdd);
         CompletableFuture<Nothing> future = execute(new ForceAddTokensCommand(tokensToAdd));
+        return future.thenApply(nothing -> null);
+    }
+
+    @Override
+    public CompletableFuture<Void> reset() {
+        CompletableFuture<Nothing> future = execute(new ResetCommand());
         return future.thenApply(nothing -> null);
     }
 

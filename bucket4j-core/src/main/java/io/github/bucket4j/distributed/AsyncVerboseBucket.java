@@ -70,6 +70,11 @@ public interface AsyncVerboseBucket {
     CompletableFuture<VerboseResult<Nothing>> forceAddTokens(long tokensToAdd);
 
     /**
+     * Does the same that {@link Bucket#reset()}
+     */
+    CompletableFuture<VerboseResult<Nothing>> reset();
+
+    /**
      * Does the same that {@link Bucket#replaceConfiguration(BucketConfiguration, TokensInheritanceStrategy)}
      */
     CompletableFuture<VerboseResult<Nothing>> replaceConfiguration(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy);
