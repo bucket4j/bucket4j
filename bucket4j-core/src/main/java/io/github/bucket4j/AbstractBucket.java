@@ -63,6 +63,8 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket, Scheduli
 
     protected abstract VerboseResult<Nothing> forceAddTokensVerboseImpl(long tokensToAdd);
 
+    protected abstract VerboseResult<Nothing> resetVerboseImpl();
+
     protected abstract VerboseResult<Nothing> replaceConfigurationVerboseImpl(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy);
 
     protected abstract VerboseResult<Long> consumeIgnoringRateLimitsVerboseImpl(long tokensToConsume);
@@ -155,6 +157,11 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket, Scheduli
         public VerboseResult<Nothing> addTokens(long tokensToAdd) {
             checkTokensToAdd(tokensToAdd);
             return addTokensVerboseImpl(tokensToAdd);
+        }
+
+        @Override
+        public VerboseResult<Nothing> reset() {
+            return resetVerboseImpl();
         }
 
         @Override

@@ -7,7 +7,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.github.vladimir-bukhtoyarov</groupId>
-    <version>7.3.0</version>
+    <version>7.4.0</version>
     <artifactId>bucket4j-parent</artifactId>
     <packaging>pom</packaging>
     <name>bucket4j-parent</name>
@@ -65,7 +65,7 @@
         <testcontainers.version>1.15.1</testcontainers.version>
         <lettuce-version>5.0.2.RELEASE</lettuce-version>
         <jedis.version>2.9.0</jedis.version>
-        <redisson.version>3.11.5</redisson.version>
+        <redisson.version>3.16.8</redisson.version>
         <caffeine.version>2.9.3</caffeine.version>
     </properties>
 
@@ -81,10 +81,21 @@
             <name>Vladimir Bukhtoyarov</name>
             <email>jsecoder@mail.ru</email>
             <url>https://github.com/vladimir-bukhtoyarov</url>
-            <organization>DINS</organization>
-            <organizationUrl>http://www.dins.ru/</organizationUrl>
+            <organization>edna</organization>
+            <organizationUrl>https://edna.ru/</organizationUrl>
             <roles>
-                <role>Lead software developer</role>
+                <role>Software developer</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>MaxBartkov</id>
+            <name>Maxim Bartkov</name>
+            <email>maxgalayoutop@gmail.com</email>
+            <url>https://github.com/MaxBartkov</url>
+            <organization>Jaja finance</organization>
+            <organizationUrl>https://jaja.co.uk</organizationUrl>
+            <roles>
+                <role>Java Technical Leader</role>
             </roles>
         </developer>
     </developers>

@@ -180,6 +180,14 @@ public class BucketStateIEEE754 implements BucketState, ComparableByContent<Buck
     }
 
     @Override
+    public void reset() {
+        Bandwidth[] bandwidths = configuration.getBandwidths();
+        for (int i = 0; i < bandwidths.length; i++) {
+            tokens[i] = bandwidths[i].getCapacity();
+        }
+    }
+
+    @Override
     public void refillAllBandwidth(long currentTimeNanos) {
         Bandwidth[] limits = configuration.getBandwidths();
         for (int i = 0; i < limits.length; i++) {

@@ -74,6 +74,11 @@ public class AsyncBucketProxyAdapter implements AsyncBucketProxy, AsyncOptimizat
         }
 
         @Override
+        public CompletableFuture<VerboseResult<Nothing>> reset() {
+            return completedFuture(() -> target.asVerbose().reset());
+        }
+
+        @Override
         public CompletableFuture<VerboseResult<Nothing>> replaceConfiguration(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy) {
             LimitChecker.checkConfiguration(newConfiguration);
             LimitChecker.checkMigrationMode(tokensInheritanceStrategy);
@@ -152,6 +157,14 @@ public class AsyncBucketProxyAdapter implements AsyncBucketProxy, AsyncOptimizat
     public CompletableFuture<Void> forceAddTokens(long tokensToAdd) {
         return completedFuture(() -> {
             target.forceAddTokens(tokensToAdd);
+            return null;
+        });
+    }
+
+    @Override
+    public CompletableFuture<Void> reset() {
+        return completedFuture(() -> {
+            target.reset();
             return null;
         });
     }

@@ -119,6 +119,12 @@ public class DefaultBucketProxy extends AbstractBucket implements BucketProxy, O
     }
 
     @Override
+    public void reset() {
+        ResetCommand command = new ResetCommand();
+        execute(command);
+    }
+
+    @Override
     public long getAvailableTokens() {
         return execute(new GetAvailableTokensCommand());
     }
@@ -162,6 +168,12 @@ public class DefaultBucketProxy extends AbstractBucket implements BucketProxy, O
     @Override
     protected VerboseResult<Nothing> forceAddTokensVerboseImpl(long tokensToAdd) {
         ForceAddTokensCommand command = new ForceAddTokensCommand(tokensToAdd);
+        return execute(command.asVerbose()).asLocal();
+    }
+
+    @Override
+    protected VerboseResult<Nothing> resetVerboseImpl() {
+        ResetCommand command = new ResetCommand();
         return execute(command.asVerbose()).asLocal();
     }
 

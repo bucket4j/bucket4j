@@ -326,6 +326,14 @@ public class BucketState64BitsInteger implements BucketState, ComparableByConten
     }
 
     @Override
+    public void reset() {
+        Bandwidth[] bandwidths = configuration.getBandwidths();
+        for (int i = 0; i < bandwidths.length; i++) {
+            resetBandwidth(i, bandwidths[i].capacity);
+        }
+    }
+
+    @Override
     public void forceAddTokens(long tokensToAdd) {
         Bandwidth[] bandwidths = configuration.getBandwidths();
         for (int i = 0; i < bandwidths.length; i++) {

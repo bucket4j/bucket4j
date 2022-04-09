@@ -27,7 +27,9 @@ import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.CompareAndS
 import io.netty.buffer.ByteBuf;
 import org.redisson.api.RFuture;
 import org.redisson.client.codec.ByteArrayCodec;
+import org.redisson.client.protocol.RedisCommand;
 import org.redisson.client.protocol.RedisCommands;
+import org.redisson.client.protocol.convertor.BooleanNotNullReplayConvertor;
 import org.redisson.command.CommandExecutor;
 
 import java.io.IOException;
@@ -39,6 +41,8 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 public class RedissonBasedProxyManager extends AbstractCompareAndSwapBasedProxyManager<String> {
+
+    public static RedisCommand<Boolean> SETPXNX_WORK_ARROUND = new RedisCommand<Boolean>("SET", new BooleanNotNullReplayConvertor());
 
     private final CommandExecutor commandExecutor;
     private final long ttlMillis;
@@ -66,7 +70,7 @@ public class RedissonBasedProxyManager extends AbstractCompareAndSwapBasedProxyM
             public boolean compareAndSwap(byte[] originalData, byte[] newData) {
                 if (originalData == null) {
                     // Redisson prohibits the usage null as values, so "replace" must not be used in such cases
-                    RFuture<Boolean> redissonFuture = commandExecutor.writeAsync(key, ByteArrayCodec.INSTANCE, RedisCommands.SETPXNX, key, encodeByteArray(newData), "PX", ttlMillis, "NX");
+                    RFuture<Boolean> redissonFuture = commandExecutor.writeAsync(key, ByteArrayCodec.INSTANCE, SETPXNX_WORK_ARROUND, key, encodeByteArray(newData), "PX", ttlMillis, "NX");
                     return commandExecutor.get(redissonFuture);
                 } else {
                     String script =
@@ -99,7 +103,7 @@ public class RedissonBasedProxyManager extends AbstractCompareAndSwapBasedProxyM
             @Override
             public CompletableFuture<Boolean> compareAndSwap(byte[] originalData, byte[] newData) {
                 if (originalData == null) {
-                    RFuture<Boolean> redissonFuture = commandExecutor.writeAsync(key, ByteArrayCodec.INSTANCE, RedisCommands.SETPXNX, key, encodeByteArray(newData), "PX", ttlMillis, "NX");
+                    RFuture<Boolean> redissonFuture = commandExecutor.writeAsync(key, ByteArrayCodec.INSTANCE, SETPXNX_WORK_ARROUND, key, encodeByteArray(newData), "PX", ttlMillis, "NX");
                     return convertFuture(redissonFuture);
                 } else {
                     String script =

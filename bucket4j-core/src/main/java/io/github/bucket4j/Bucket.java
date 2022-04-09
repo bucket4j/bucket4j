@@ -177,6 +177,11 @@ public interface Bucket {
     void forceAddTokens(long tokensToAdd);
 
     /**
+     * Reset all tokens up to maximum capacity.
+     */
+    void reset();
+
+    /**
      * Returns amount of available tokens in this bucket.
 
      * <p>

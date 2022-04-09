@@ -161,8 +161,7 @@ public class MySQLSelectForUpdateBasedProxyManager extends AbstractSelectForUpda
 
     @Override
     public void removeProxy(Long key) {
-        try {
-            Connection connection = dataSource.getConnection();
+        try (Connection connection = dataSource.getConnection()) {
             try(PreparedStatement removeStatement = connection.prepareStatement(removeSqlQuery)) {
                 removeStatement.setLong(1, key);
                 removeStatement.executeUpdate();

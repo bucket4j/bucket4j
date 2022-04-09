@@ -49,6 +49,8 @@ public interface BucketState {
 
     void addTokens(long tokensToAdd);
 
+    void reset();
+
     void forceAddTokens(long tokensToAdd);
 
     long getCurrentSize(int bandwidth);
