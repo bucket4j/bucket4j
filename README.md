@@ -24,11 +24,11 @@ In additional to basic features described above, ```Bucket4j``` provides ability
 In addition to local in-memory buckets, the Bucket4j supports clustered usage scenario on top of following back-ends:
 | Back-end                   |  Async supported | Optimized serialization | Thin-client support |  Documentation link     |
 | :---                       | :---:            | :---:                   | :---:               | :---:                   |
-| ```JCache API (JSR 107)``` |  No              | No                      | No                  | [bucket4j-jcache](https://bucket4j.com/7.4.0/toc.html#bucket4j-jcache)     |
-| ```Hazelcast```            |  Yes             | Yes                     | Planned             | [bucket4j-hazelcast](https://bucket4j.com/7.4.0/toc.html#bucket4j-hazelcast)  |
-| ```Apache Ignite```        |  Yes             | n/a                     | Yes                 | [bucket4j-ignite](https://bucket4j.com/7.4.0/toc.html#bucket4j-ignite)     |
-| ```Inifinispan```          |  Yes             | Yes                     | No                  | [bucket4j-infinispan](https://bucket4j.com/7.4.0/toc.html#bucket4j-infinispan) |
-| ```Oracle Coherence```     |  Yes             | Yes                     | No                  | [bucket4j-coherence](https://bucket4j.com/7.4.0/toc.html#bucket4j-coherence)  |
+| ```JCache API (JSR 107)``` |  No              | No                      | No                  | [bucket4j-jcache](https://bucket4j.com/7.5.0/toc.html#bucket4j-jcache)     |
+| ```Hazelcast```            |  Yes             | Yes                     | Planned             | [bucket4j-hazelcast](https://bucket4j.com/7.5.0/toc.html#bucket4j-hazelcast)  |
+| ```Apache Ignite```        |  Yes             | n/a                     | Yes                 | [bucket4j-ignite](https://bucket4j.com/7.5.0/toc.html#bucket4j-ignite)     |
+| ```Inifinispan```          |  Yes             | Yes                     | No                  | [bucket4j-infinispan](https://bucket4j.com/7.5.0/toc.html#bucket4j-infinispan) |
+| ```Oracle Coherence```     |  Yes             | Yes                     | No                  | [bucket4j-coherence](https://bucket4j.com/7.5.0/toc.html#bucket4j-coherence)  |
 
 ### Non-JVM back-ends
 Bucket4j authors strongly recommends to use JVM based back-ends when possible, 
@@ -38,8 +38,8 @@ In addition to local in-memory buckets, the Bucket4j supports clustered usage sc
 | Back-end                   |  Async supported | Documentation link      |
 | :---                       | :---:            | :---:                   |
 | ```Redis```                |  Yes             | [bucket4j-redis](https://github.com/vladimir-bukhtoyarov/bucket4j/blob/master/bucket4j-redis/src/main/java/io/github/bucket4j/redis/redisson/cas/RedissonBasedProxyManager.java)      |
-| ```MySQL```                |  No              | [bucket4j-mysql](https://bucket4j.com/7.4.0/toc.html#mysql-integration)      |
-| ```PostgreSQL```           |  No              | [bucket4j-postgresql](https://bucket4j.com/7.4.0/toc.html#postgresql-integration) |
+| ```MySQL```                |  No              | [bucket4j-mysql](https://bucket4j.com/7.5.0/toc.html#mysql-integration)      |
+| ```PostgreSQL```           |  No              | [bucket4j-postgresql](https://bucket4j.com/7.5.0/toc.html#postgresql-integration) |
 | ```DynamoDb```             |  No              | [bucket4j-dynamodb](https://github.com/vladimir-bukhtoyarov/bucket4j/blob/master/bucket4j-dynamodb-sdk-v1/src/main/java/io/github/bucket4j/dynamodb/v1/LongDynamoDBProxyManager.java) |
 
 ### Local caches support
@@ -49,8 +49,8 @@ Sometimes you are having deal with bucket per key scenarios but distributed sync
 | ```Caffeine```                | [bucket4j-caffeine](https://github.com/vladimir-bukhtoyarov/bucket4j/blob/7.3/bucket4j-caffeine/src/main/java/io/github/bucket4j/caffeine/CaffeineProxyManager.java)      |
 
 ## [Documentation](https://bucket4j.com)
-* [Official reference](https://bucket4j.com/7.4.0/toc.html)
-* [Quick start examples](https://bucket4j.com/7.4.0/toc.html#quick-start-examples)
+* [Official reference](https://bucket4j.com/7.5.0/toc.html)
+* [Quick start examples](https://bucket4j.com/7.5.0/toc.html#quick-start-examples)
 * [Third-party articles](https://bucket4j.com/#third-party-articles)
 
 ## Get Bucket4j library
@@ -60,7 +60,7 @@ The Bucket4j is distributed through [Maven Central](http://search.maven.org/):
 <dependency>
     <groupId>com.github.vladimir-bukhtoyarov</groupId>
     <artifactId>bucket4j-core</artifactId>
-    <version>7.4.0</version>
+    <version>7.5.0</version>
 </dependency>
 ``` 
 #### You can build Bucket4j from sources
