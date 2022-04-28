@@ -36,6 +36,30 @@ public interface LocalBucket extends Bucket {
      */
     BucketConfiguration getConfiguration();
 
+    /**
+     * Returns the clock that is used by this bucket
+     *
+     * @return the clock that is used by this bucket
+     */
     TimeMeter getTimeMeter();
+
+    /**
+     * Takes the binary snapshot of this bucket that later can be used as parameter for {@link #fromBinarySnapshot(byte[])} to restore bucket from snapshot.
+     *
+     * @return the binary snapshot of this bucket
+     */
+    byte[] toBinarySnapshot();
+
+    /**
+     * Reconstructs a bucket from binary snapshot.
+     *
+     * @param snapshot binary snapshot
+     *
+     * @return bucket reconstructed from binary snapshot
+     */
+    static LocalBucket fromBinarySnapshot(byte[] snapshot) {
+        // TODO
+        return null;
+    }
 
 }
