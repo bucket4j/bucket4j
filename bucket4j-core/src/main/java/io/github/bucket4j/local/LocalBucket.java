@@ -24,6 +24,8 @@ import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.TimeMeter;
 
+import java.util.Map;
+
 /**
  * Represents the bucket inside current JVM.
  */
@@ -58,6 +60,25 @@ public interface LocalBucket extends Bucket {
      * @return bucket reconstructed from binary snapshot
      */
     static LocalBucket fromBinarySnapshot(byte[] snapshot) {
+        // TODO
+        return null;
+    }
+
+    /**
+     * Takes the JSON snapshot of this bucket that later can be used as parameter for {@link #fromJsonCompatibleSnapshot(Map)} to restore bucket from snapshot.
+     *
+     * @return the map that transparently can be serialized to JSON via any JSON library
+     */
+    Map<String, ?> toJsonCompatibleSnapshot();
+
+    /**
+     * Reconstructs a bucket from JSON snapshot.
+     *
+     * @param snapshot the snapshot Map that was deserialized from JSON via any JSON library
+     *
+     * @return bucket reconstructed from binary snapshot
+     */
+    static LocalBucket fromJsonCompatibleSnapshot(Map<String, ?> snapshot) {
         // TODO
         return null;
     }
