@@ -97,7 +97,7 @@ This type of refill regenerates tokens in an interval manner. "Interval" in oppo
 [source, java]
 ----
 // generates 100 tokens each minute
-Refill.greedy(100, Duration.ofMinutes(1));
+Refill.intervally(100, Duration.ofMinutes(1));
 ----
 
 IntervallyAligned::
