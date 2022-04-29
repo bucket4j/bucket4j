@@ -22,11 +22,22 @@ package io.github.bucket4j.local;
 
 
 import io.github.bucket4j.*;
+import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
+import io.github.bucket4j.distributed.serialization.SerializationAdapter;
+import io.github.bucket4j.distributed.serialization.SerializationHandle;
+import io.github.bucket4j.distributed.versioning.Version;
+import io.github.bucket4j.distributed.versioning.Versions;
+import io.github.bucket4j.util.ComparableByContent;
 
+import java.io.IOException;
+import java.io.NotSerializableException;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-public class SynchronizedBucket extends AbstractBucket implements LocalBucket {
+import static io.github.bucket4j.distributed.versioning.Versions.v_7_0_0;
+
+public class SynchronizedBucket extends AbstractBucket implements LocalBucket, ComparableByContent<SynchronizedBucket> {
 
     private BucketConfiguration configuration;
     private final TimeMeter timeMeter;
@@ -38,12 +49,12 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket {
     }
 
     SynchronizedBucket(BucketConfiguration configuration, MathType mathType, TimeMeter timeMeter, Lock lock) {
-        this(BucketListener.NOPE, configuration, timeMeter, lock, BucketState.createInitialState(configuration, mathType, timeMeter.currentTimeNanos()));
+        this(BucketListener.NOPE, timeMeter, lock, BucketState.createInitialState(configuration, mathType, timeMeter.currentTimeNanos()));
     }
 
-    private SynchronizedBucket(BucketListener listener, BucketConfiguration configuration, TimeMeter timeMeter, Lock lock, BucketState initialState) {
+    private SynchronizedBucket(BucketListener listener, TimeMeter timeMeter, Lock lock, BucketState initialState) {
         super(listener);
-        this.configuration = configuration;
+        this.configuration = initialState.getConfiguration();
         this.timeMeter = timeMeter;
         this.state = initialState;
         this.lock = lock;
@@ -55,7 +66,7 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket {
 
     @Override
     public Bucket toListenable(BucketListener listener) {
-        return new SynchronizedBucket(listener, configuration, timeMeter, lock, state);
+        return new SynchronizedBucket(listener, timeMeter, lock, state);
     }
 
     @Override
@@ -400,6 +411,11 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket {
     }
 
     @Override
+    public SynchronizationStrategy getSynchronizationStrategy() {
+        return SynchronizationStrategy.SYNCHRONIZED;
+    }
+
+    @Override
     public String toString() {
         synchronized (this) {
             return "SynchronizedBucket{" +
@@ -407,6 +423,48 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket {
                 ", configuration=" + getConfiguration() +
                 '}';
         }
+    }
+
+    public static final SerializationHandle<SynchronizedBucket> SERIALIZATION_HANDLE = new SerializationHandle<SynchronizedBucket>() {
+        @Override
+        public <S> SynchronizedBucket deserialize(DeserializationAdapter<S> adapter, S input, Version backwardCompatibilityVersion) throws IOException {
+            int formatNumber = adapter.readInt(input);
+            Versions.check(formatNumber, v_7_0_0, v_7_0_0);
+
+            BucketConfiguration bucketConfiguration = BucketConfiguration.SERIALIZATION_HANDLE.deserialize(adapter, input, backwardCompatibilityVersion);
+            BucketState bucketState = BucketState.deserialize(adapter, input, backwardCompatibilityVersion);
+            bucketState.setConfiguration(bucketConfiguration);
+
+            return new SynchronizedBucket(BucketListener.NOPE, TimeMeter.SYSTEM_MILLISECONDS, new ReentrantLock(), bucketState);
+        }
+
+        @Override
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, SynchronizedBucket bucket, Version backwardCompatibilityVersion) throws IOException {
+            if (bucket.timeMeter != TimeMeter.SYSTEM_MILLISECONDS) {
+                throw new NotSerializableException("Only TimeMeter.SYSTEM_MILLISECONDS can be serialized safely");
+            }
+            adapter.writeInt(output, v_7_0_0.getNumber());
+            BucketConfiguration.SERIALIZATION_HANDLE.serialize(adapter, output, bucket.state.getConfiguration(), backwardCompatibilityVersion);
+            BucketState.serialize(adapter, output, bucket.state, backwardCompatibilityVersion);
+        }
+
+        @Override
+        public int getTypeId() {
+            return 61;
+        }
+
+        @Override
+        public Class<SynchronizedBucket> getSerializedType() {
+            return SynchronizedBucket.class;
+        }
+
+    };
+
+    @Override
+    public boolean equalsByContent(SynchronizedBucket other) {
+        return ComparableByContent.equals(state, other.state) &&
+                ComparableByContent.equals(state.getConfiguration(), other.getConfiguration()) &&
+                timeMeter == other.timeMeter;
     }
 
 }

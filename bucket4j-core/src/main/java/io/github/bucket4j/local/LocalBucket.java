@@ -24,6 +24,7 @@ import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.TimeMeter;
 
+import java.io.IOException;
 import java.util.Map;
 
 /**
@@ -46,11 +47,20 @@ public interface LocalBucket extends Bucket {
     TimeMeter getTimeMeter();
 
     /**
+     * Returns the synchronization strategy that is used by this bucket
+     *
+     * @return synchronization strategy that is used by this bucket
+     */
+    SynchronizationStrategy getSynchronizationStrategy();
+
+    /**
      * Takes the binary snapshot of this bucket that later can be used as parameter for {@link #fromBinarySnapshot(byte[])} to restore bucket from snapshot.
      *
      * @return the binary snapshot of this bucket
      */
-    byte[] toBinarySnapshot();
+    default byte[] toBinarySnapshot() throws IOException {
+        return LocalBucketSynchronizationHelper.toBinarySnapshot(this);
+    }
 
     /**
      * Reconstructs a bucket from binary snapshot.
@@ -59,9 +69,8 @@ public interface LocalBucket extends Bucket {
      *
      * @return bucket reconstructed from binary snapshot
      */
-    static LocalBucket fromBinarySnapshot(byte[] snapshot) {
-        // TODO
-        return null;
+    static LocalBucket fromBinarySnapshot(byte[] snapshot) throws IOException {
+        return LocalBucketSynchronizationHelper.fromBinarySnapshot(snapshot);
     }
 
     /**
@@ -69,7 +78,9 @@ public interface LocalBucket extends Bucket {
      *
      * @return the map that transparently can be serialized to JSON via any JSON library
      */
-    Map<String, ?> toJsonCompatibleSnapshot();
+    default Map<String, Object> toJsonCompatibleSnapshot() throws IOException {
+        return LocalBucketSynchronizationHelper.toJsonCompatibleSnapshot(this);
+    }
 
     /**
      * Reconstructs a bucket from JSON snapshot.
@@ -78,9 +89,8 @@ public interface LocalBucket extends Bucket {
      *
      * @return bucket reconstructed from binary snapshot
      */
-    static LocalBucket fromJsonCompatibleSnapshot(Map<String, ?> snapshot) {
-        // TODO
-        return null;
+    static LocalBucket fromJsonCompatibleSnapshot(Map<String, Object> snapshot) throws IOException {
+        return LocalBucketSynchronizationHelper.fromJsonCompatibleSnapshot(snapshot);
     }
 
 }

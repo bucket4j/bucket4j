@@ -6,6 +6,10 @@ import io.github.bucket4j.distributed.remote.commands.ForceAddTokensCommand;
 import io.github.bucket4j.distributed.remote.*;
 import io.github.bucket4j.distributed.remote.commands.*;
 import io.github.bucket4j.distributed.versioning.Versions;
+import io.github.bucket4j.local.LockFreeBucket;
+import io.github.bucket4j.local.SynchronizationStrategy;
+import io.github.bucket4j.local.SynchronizedBucket;
+import io.github.bucket4j.local.ThreadUnsafeBucket;
 import io.github.bucket4j.util.ComparableByContent;
 import org.junit.Test;
 
@@ -289,6 +293,26 @@ public abstract class AbstractSerializationTest {
 
         testSerialization(new Request(new GetAvailableTokensCommand(), Versions.getLatest(), null));
         testSerialization(new Request(new GetAvailableTokensCommand(), Versions.getLatest(), 0L));
+    }
+
+    @Test
+    public void serializationOfBuckets() throws IOException {
+        LockFreeBucket lockFreeBucket = (LockFreeBucket) Bucket.builder()
+                .addLimit(Bandwidth.simple(1, Duration.ofSeconds(1)))
+                .build();
+        testSerialization(lockFreeBucket);
+
+        SynchronizedBucket synchronizedBucket = (SynchronizedBucket) Bucket.builder()
+                .addLimit(Bandwidth.simple(1, Duration.ofSeconds(1)))
+                .withSynchronizationStrategy(SynchronizationStrategy.SYNCHRONIZED)
+                .build();
+        testSerialization(synchronizedBucket);
+
+        ThreadUnsafeBucket unsafeBucket = (ThreadUnsafeBucket) Bucket.builder()
+                .addLimit(Bandwidth.simple(1, Duration.ofSeconds(1)))
+                .withSynchronizationStrategy(SynchronizationStrategy.NONE)
+                .build();
+        testSerialization(unsafeBucket);
     }
 
 }

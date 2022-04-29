@@ -43,11 +43,11 @@ image:images/Maxim_Bartkov.jpg[80,80] +
 
 == Documentation for previous versions
 === 2022
-==== 7.4.0
+==== 7.3.0
 `04 March 2022` Support for Caffeine.
 
-* http://bucket4j.com/7.4.0/release-notes.html[7.4.0 Release notes]
-* http://bucket4j.com/7.4.0/toc.html[7.4.0 Reference]
+* http://bucket4j.com/7.4.0/release-notes.html[7.3.0 Release notes]
+* http://bucket4j.com/7.4.0/toc.html[7.3.0 Reference]
 
 ==== 7.2.0
 `11 Feb 2022` Support for MySQL and PostgreSQL.

@@ -25,6 +25,7 @@ import io.github.bucket4j.Nothing;
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
 import io.github.bucket4j.distributed.serialization.SerializationAdapter;
+import io.github.bucket4j.distributed.serialization.SerializationHandles;
 import io.github.bucket4j.distributed.versioning.Version;
 import io.github.bucket4j.distributed.versioning.Versions;
 import io.github.bucket4j.util.ComparableByContent;
@@ -55,7 +56,7 @@ public class CommandResult<T> implements ComparableByContent<CommandResult> {
             Versions.check(formatNumber, v_7_0_0, v_7_0_0);
 
             int typeId = adapter.readInt(input);
-            SerializationHandle handle = SerializationHandle.CORE_HANDLES.getHandleByTypeId(typeId);
+            SerializationHandle handle = SerializationHandles.CORE_HANDLES.getHandleByTypeId(typeId);
             Object resultData = handle.deserialize(adapter, input, backwardCompatibilityVersion);
 
             return CommandResult.success(resultData, typeId);
@@ -66,7 +67,7 @@ public class CommandResult<T> implements ComparableByContent<CommandResult> {
             adapter.writeInt(output, v_7_0_0.getNumber());
 
             adapter.writeInt(output, result.resultTypeId);
-            SerializationHandle handle = SerializationHandle.CORE_HANDLES.getHandleByTypeId(result.resultTypeId);
+            SerializationHandle handle = SerializationHandles.CORE_HANDLES.getHandleByTypeId(result.resultTypeId);
             handle.serialize(adapter, output, result.data, backwardCompatibilityVersion);
         }
 

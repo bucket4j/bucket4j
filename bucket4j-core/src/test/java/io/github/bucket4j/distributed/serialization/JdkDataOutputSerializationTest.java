@@ -10,7 +10,7 @@ public class JdkDataOutputSerializationTest extends AbstractSerializationTest {
 
     private Map<Class, SerializationHandle> allHandles = new HashMap<Class, SerializationHandle>()
     {{
-        for (SerializationHandle<?> handle : SerializationHandle.CORE_HANDLES.getAllHandles()) {
+        for (SerializationHandle<?> handle : SerializationHandles.CORE_HANDLES.getAllHandles()) {
             put(handle.getSerializedType(), handle);
         }
     }};

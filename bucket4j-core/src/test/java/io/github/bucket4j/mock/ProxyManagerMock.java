@@ -24,6 +24,7 @@ import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.remote.*;
 import io.github.bucket4j.distributed.serialization.DataOutputSerializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
+import io.github.bucket4j.distributed.serialization.SerializationHandles;
 import io.github.bucket4j.distributed.versioning.Version;
 
 import java.io.*;
@@ -36,7 +37,7 @@ public class ProxyManagerMock<K> extends AbstractProxyManager<K> {
 
     private static Map<Class, SerializationHandle> allHandles = new HashMap<Class, SerializationHandle>()
     {{
-        for (SerializationHandle<?> handle : SerializationHandle.CORE_HANDLES.getAllHandles()) {
+        for (SerializationHandle<?> handle : SerializationHandles.CORE_HANDLES.getAllHandles()) {
             put(handle.getSerializedType(), handle);
         }
     }};

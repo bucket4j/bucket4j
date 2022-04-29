@@ -19,54 +19,12 @@
  */
 package io.github.bucket4j.distributed.serialization;
 
-import io.github.bucket4j.*;
-import io.github.bucket4j.distributed.remote.*;
-import io.github.bucket4j.distributed.remote.commands.*;
 import io.github.bucket4j.distributed.versioning.Version;
 
 import java.io.IOException;
-import java.util.Arrays;
+import java.util.Map;
 
 public interface SerializationHandle<T> {
-
-    SerializationHandles CORE_HANDLES = new SerializationHandles(Arrays.asList(
-            Bandwidth.SERIALIZATION_HANDLE, // 1
-            BucketConfiguration.SERIALIZATION_HANDLE, // 2
-            BucketState64BitsInteger.SERIALIZATION_HANDLE, // 3
-            BucketStateIEEE754.SERIALIZATION_HANDLE, // 4
-            RemoteBucketState.SERIALIZATION_HANDLE, // 5
-            RemoteStat.SERIALIZATION_HANDLE, // 6
-
-            CommandResult.SERIALIZATION_HANDLE, // 10
-            ConsumptionProbe.SERIALIZATION_HANDLE, // 11
-            EstimationProbe.SERIALIZATION_HANDLE, // 12
-            MultiResult.SERIALIZATION_HANDLE, // 13
-            RemoteVerboseResult.SERIALIZATION_HANDLE, // 14
-            BucketNotFoundError.SERIALIZATION_HANDLE, // 15
-            UnsupportedTypeError.SERIALIZATION_HANDLE, // 16
-            UsageOfObsoleteApiError.SERIALIZATION_HANDLE, // 17
-            UsageOfUnsupportedApiError.SERIALIZATION_HANDLE, // 18
-
-            CreateInitialStateCommand.SERIALIZATION_HANDLE, // 20
-            CreateInitialStateAndExecuteCommand.SERIALIZATION_HANDLE, // 21
-            MultiCommand.SERIALIZATION_HANDLE, // 22
-            ReserveAndCalculateTimeToSleepCommand.SERIALIZATION_HANDLE, // 23
-            AddTokensCommand.SERIALIZATION_HANDLE, // 24
-            ConsumeAsMuchAsPossibleCommand.SERIALIZATION_HANDLE, // 25
-            CreateSnapshotCommand.SERIALIZATION_HANDLE, // 26
-            GetAvailableTokensCommand.SERIALIZATION_HANDLE, // 27
-            EstimateAbilityToConsumeCommand.SERIALIZATION_HANDLE, // 28
-            TryConsumeCommand.SERIALIZATION_HANDLE, // 29
-            TryConsumeAndReturnRemainingTokensCommand.SERIALIZATION_HANDLE, // 30
-            ReplaceConfigurationCommand.SERIALIZATION_HANDLE, // 32
-            GetConfigurationCommand.SERIALIZATION_HANDLE, // 33
-            ConsumeIgnoringRateLimitsCommand.SERIALIZATION_HANDLE, // 34
-            VerboseCommand.SERIALIZATION_HANDLE, // 35
-            SyncCommand.SERIALIZATION_HANDLE, // 36
-            Request.SERIALIZATION_HANDLE, // 37
-            ForceAddTokensCommand.SERIALIZATION_HANDLE, // 38
-            ResetCommand.SERIALIZATION_HANDLE // 39
-    ));
 
     <I> T deserialize(DeserializationAdapter<I> adapter, I input, Version backwardCompatibilityVersion) throws IOException;
 
@@ -78,5 +36,23 @@ public interface SerializationHandle<T> {
     int getTypeId();
 
     Class<T> getSerializedType();
+
+    default T fromJsonCompatibleSnapshot(Map<String, Object> snapshot, Version backwardCompatibilityVersion) {
+        // TODO
+        return null;
+    }
+
+    default Map<String, Object> toJsonCompatibleSnapshot(T serializableObject, Version backwardCompatibilityVersion) {
+        // TODO
+        return null;
+    }
+
+    /**
+     * @return the type identifier that is unique across all Bucket4j classes
+     */
+    default String getTypeName() {
+        // TODO
+        return null;
+    }
 
 }

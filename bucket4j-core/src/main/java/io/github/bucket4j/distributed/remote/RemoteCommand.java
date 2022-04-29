@@ -40,6 +40,7 @@ import io.github.bucket4j.distributed.remote.commands.VerboseCommand;
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
+import io.github.bucket4j.distributed.serialization.SerializationHandles;
 import io.github.bucket4j.distributed.versioning.Version;
 
 import java.io.IOException;
@@ -72,7 +73,7 @@ public interface RemoteCommand<T> {
 
     static <I> RemoteCommand<?> deserialize(DeserializationAdapter<I> adapter, I input, Version backwardCompatibilityVersion) throws IOException {
         int typeId = adapter.readInt(input);
-        SerializationHandle<?> serializer = SerializationHandle.CORE_HANDLES.getHandleByTypeId(typeId);
+        SerializationHandle<?> serializer = SerializationHandles.CORE_HANDLES.getHandleByTypeId(typeId);
         return (RemoteCommand<?>) serializer.deserialize(adapter, input, backwardCompatibilityVersion);
     }
 

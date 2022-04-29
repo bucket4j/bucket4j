@@ -124,7 +124,7 @@ public class LocalBucketBuilder {
         switch (synchronizationStrategy) {
             case LOCK_FREE: return new LockFreeBucket(configuration, mathType, timeMeter);
             case SYNCHRONIZED: return new SynchronizedBucket(configuration, mathType, timeMeter);
-            case NONE: return new SynchronizedBucket(configuration, mathType, timeMeter, FakeLock.INSTANCE);
+            case NONE: return new ThreadUnsafeBucket(configuration, mathType, timeMeter);
             default: throw new IllegalStateException();
         }
     }

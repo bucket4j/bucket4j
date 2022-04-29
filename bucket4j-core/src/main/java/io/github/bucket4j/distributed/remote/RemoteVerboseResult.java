@@ -25,6 +25,7 @@ import io.github.bucket4j.distributed.AsyncVerboseBucket;
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
+import io.github.bucket4j.distributed.serialization.SerializationHandles;
 import io.github.bucket4j.distributed.versioning.Version;
 import io.github.bucket4j.distributed.versioning.Versions;
 import io.github.bucket4j.util.ComparableByContent;
@@ -90,7 +91,7 @@ public class RemoteVerboseResult<T> implements ComparableByContent<RemoteVerbose
             long operationTimeNanos = adapter.readLong(input);
 
             int typeId = adapter.readInt(input);
-            SerializationHandle handle = SerializationHandle.CORE_HANDLES.getHandleByTypeId(typeId);
+            SerializationHandle handle = SerializationHandles.CORE_HANDLES.getHandleByTypeId(typeId);
             Object result = handle.deserialize(adapter, input, backwardCompatibilityVersion);
             RemoteBucketState state = RemoteBucketState.SERIALIZATION_HANDLE.deserialize(adapter, input, backwardCompatibilityVersion);
             return new RemoteVerboseResult(operationTimeNanos, typeId, result, state);
@@ -103,7 +104,7 @@ public class RemoteVerboseResult<T> implements ComparableByContent<RemoteVerbose
             adapter.writeLong(output, result.operationTimeNanos);
 
             adapter.writeInt(output, result.resultTypeId);
-            SerializationHandle handle = SerializationHandle.CORE_HANDLES.getHandleByTypeId(result.resultTypeId);
+            SerializationHandle handle = SerializationHandles.CORE_HANDLES.getHandleByTypeId(result.resultTypeId);
             handle.serialize(adapter, output, result.value, backwardCompatibilityVersion);
             RemoteBucketState.SERIALIZATION_HANDLE.serialize(adapter, output, result.state, backwardCompatibilityVersion);
         }
