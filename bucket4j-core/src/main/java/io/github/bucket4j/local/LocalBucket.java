@@ -59,7 +59,7 @@ public interface LocalBucket extends Bucket {
      * @return the binary snapshot of this bucket
      */
     default byte[] toBinarySnapshot() throws IOException {
-        return LocalBucketSynchronizationHelper.toBinarySnapshot(this);
+        return LocalBucketSerializationHelper.toBinarySnapshot(this);
     }
 
     /**
@@ -70,7 +70,7 @@ public interface LocalBucket extends Bucket {
      * @return bucket reconstructed from binary snapshot
      */
     static LocalBucket fromBinarySnapshot(byte[] snapshot) throws IOException {
-        return LocalBucketSynchronizationHelper.fromBinarySnapshot(snapshot);
+        return LocalBucketSerializationHelper.fromBinarySnapshot(snapshot);
     }
 
     /**
@@ -79,7 +79,7 @@ public interface LocalBucket extends Bucket {
      * @return the map that transparently can be serialized to JSON via any JSON library
      */
     default Map<String, Object> toJsonCompatibleSnapshot() throws IOException {
-        return LocalBucketSynchronizationHelper.toJsonCompatibleSnapshot(this);
+        return LocalBucketSerializationHelper.toJsonCompatibleSnapshot(this);
     }
 
     /**
@@ -90,7 +90,7 @@ public interface LocalBucket extends Bucket {
      * @return bucket reconstructed from binary snapshot
      */
     static LocalBucket fromJsonCompatibleSnapshot(Map<String, Object> snapshot) throws IOException {
-        return LocalBucketSynchronizationHelper.fromJsonCompatibleSnapshot(snapshot);
+        return LocalBucketSerializationHelper.fromJsonCompatibleSnapshot(snapshot);
     }
 
 }
