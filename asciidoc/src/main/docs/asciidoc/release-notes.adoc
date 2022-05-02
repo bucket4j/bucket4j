@@ -1,9 +1,7 @@
 === Bucket4j {revnumber} release notes
 Release `{revnumber}`
 
-.The issues in release scope are following:
-* https://github.com/vladimir-bukhtoyarov/bucket4j/issues/116[#116 Method for reset bucket]
-
-.The bugfixes in release scope are following:
-* https://github.com/vladimir-bukhtoyarov/bucket4j/issues/246[#246 Connection leak in MySQL/PostgreSQL proxy managers]
-* https://github.com/vladimir-bukhtoyarov/bucket4j/issues/244[#244 RedisCommands.SETPXNX not exists]
+.The features in release scope are following:
+* https://github.com/vladimir-bukhtoyarov/bucket4j/discussions/250[#250 Ability to serialize bucket to binary array]
+* https://github.com/vladimir-bukhtoyarov/bucket4j/discussions/255[#255 Ability to serialize bucket to JSON]
+* https://github.com/vladimir-bukhtoyarov/bucket4j/discussions/251[#251 Ability to specify offloadable executor for Hazelcast]

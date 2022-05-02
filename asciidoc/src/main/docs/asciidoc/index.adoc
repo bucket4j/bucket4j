@@ -3,7 +3,7 @@ image::./images/white-logo.png[]
 endif::[]
 
 == Current version {revnumber} documentation
-`09 April 2022` Method for reset bucket.
+Release date: `02 May 2022`
 
 * http://bucket4j.com/{revnumber}/release-notes.html[{revnumber} Release notes]
 * http://bucket4j.com/{revnumber}/toc.html[{revnumber} Reference]
@@ -31,6 +31,7 @@ image:images/Maxim_Bartkov.jpg[80,80] +
 * http://www.programmersought.com/article/2524209291/[ProgrammerSought - Bucket4j preliminary understanding]
 * https://www.baeldung.com/spring-bucket4j[Baeldung - Rate Limiting a Spring API Using Bucket4j]
 * https://virendraoswal.com/rate-limit-apis-with-bucket4j-via-java[Virendra Oswal - Rate Limit APIs with Bucket4J via Java]
+* https://medium.bitwise.blog/rate-limiting-with-token-buckets-7f912525819f[Rate-limiting with Redis by using Bucket4J in a Spring Boot application]
 
 === Third-party integrations
 * https://github.com/marcosbarbero/spring-cloud-zuul-ratelimit[marcosbarbero/spring-cloud-zuul-ratelimit]
@@ -41,8 +42,17 @@ image:images/Maxim_Bartkov.jpg[80,80] +
 * https://github.com/MarcGiffing/bucket4j-spring-boot-starter-examples[bucket4j-spring-boot-starter-examples]
 * https://github.com/Abdennebi/spring-boot-bucket4j-hazelcast-demo[Abdennebi/spring-boot-bucket4j-hazelcast-demo]
 
+==== Scientific publications
+* https://online-journals.org/index.php/i-joe/article/view/25641[Selection of A Suitable Algorithm for the Implementation of Rate-Limiter Based on Bucket4j]
+
 == Documentation for previous versions
 === 2022
+==== 7.4.0
+`09 April 2022` Method for reset bucket.
+
+* http://bucket4j.com/7.4.0/release-notes.html[7.4.0 Release notes]
+* http://bucket4j.com/7.4.0/toc.html[7.4.0 Reference]
+
 ==== 7.3.0
 `04 March 2022` Support for Caffeine.
 
@@ -63,7 +73,7 @@ image:images/Maxim_Bartkov.jpg[80,80] +
 
 === 2021
 ==== 7.0.0
-`31 Dec 2021` redesigning of distributed facilities
+`15 Dec 2021` redesigning of distributed facilities
 
 * https://bucket4j.com/7.0.0/release-notes.html[7.0.0 Release notes]
 * https://bucket4j.com/7.0.0/toc.html[7.0.0 Reference]
