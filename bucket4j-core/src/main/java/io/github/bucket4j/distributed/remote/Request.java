@@ -27,6 +27,8 @@ import io.github.bucket4j.distributed.versioning.Versions;
 import io.github.bucket4j.util.ComparableByContent;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 import static io.github.bucket4j.distributed.versioning.Versions.v_7_0_0;
@@ -57,7 +59,7 @@ public class Request<T> implements ComparableByContent<Request<T>> {
 
     public static SerializationHandle<Request> SERIALIZATION_HANDLE = new SerializationHandle<Request>() {
         @Override
-        public <S> Request deserialize(DeserializationAdapter<S> adapter, S input, Version backwardCompatibilityVersion) throws IOException {
+        public <S> Request<?> deserialize(DeserializationAdapter<S> adapter, S input, Version backwardCompatibilityVersion) throws IOException {
             int formatNumber = adapter.readInt(input);
             Versions.check(formatNumber, v_7_0_0, v_7_0_0);
 
@@ -74,7 +76,7 @@ public class Request<T> implements ComparableByContent<Request<T>> {
                 clientTime = adapter.readLong(input);
             }
 
-            return new Request(command, backwardCompatibilityVersion, clientTime);
+            return new Request<>(command, backwardCompatibilityVersion, clientTime);
         }
 
         @Override
@@ -100,6 +102,42 @@ public class Request<T> implements ComparableByContent<Request<T>> {
         @Override
         public Class<Request> getSerializedType() {
             return Request.class;
+        }
+
+        @Override
+        public Request<?> fromJsonCompatibleSnapshot(Map<String, Object> snapshot, Version backwardCompatibilityVersion) throws IOException {
+            int formatNumber = readIntValue(snapshot, "version");
+            Versions.check(formatNumber, v_7_0_0, v_7_0_0);
+
+            int backwardCompatibilityNumber = readIntValue(snapshot, "backwardCompatibilityNumber");
+            Versions.check(backwardCompatibilityNumber, v_7_0_0, v_7_0_0);
+            backwardCompatibilityVersion = Versions.byNumber(backwardCompatibilityNumber);
+
+            RemoteCommand<?> command = RemoteCommand.fromJsonCompatibleSnapshot((Map<String, Object>) snapshot.get("command"), backwardCompatibilityVersion);
+
+            Long clientTime = null;
+            if (snapshot.containsKey("clientTime")) {
+                clientTime = readLongValue(snapshot, "clientTime");
+            }
+
+            return new Request<>(command, backwardCompatibilityVersion, clientTime);
+        }
+
+        @Override
+        public Map<String, Object> toJsonCompatibleSnapshot(Request request, Version backwardCompatibilityVersion) throws IOException {
+            Map<String, Object> result = new HashMap<>();
+            result.put("version", v_7_0_0.getNumber());
+            result.put("backwardCompatibilityNumber", request.backwardCompatibilityVersion.getNumber());
+            result.put("command", RemoteCommand.toJsonCompatibleSnapshot(request.command, backwardCompatibilityVersion));
+            if (request.clientSideTime != null) {
+                result.put("clientTime", request.clientSideTime);
+            }
+            return result;
+        }
+
+        @Override
+        public String getTypeName() {
+            return "Request";
         }
 
     };

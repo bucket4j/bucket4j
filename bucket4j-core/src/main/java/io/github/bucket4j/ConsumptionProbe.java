@@ -29,6 +29,8 @@ import io.github.bucket4j.distributed.versioning.Versions;
 import io.github.bucket4j.util.ComparableByContent;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import static io.github.bucket4j.distributed.versioning.Versions.v_7_0_0;
 
@@ -78,6 +80,34 @@ public class ConsumptionProbe implements ComparableByContent<ConsumptionProbe> {
         @Override
         public Class<ConsumptionProbe> getSerializedType() {
             return ConsumptionProbe.class;
+        }
+
+        @Override
+        public ConsumptionProbe fromJsonCompatibleSnapshot(Map<String, Object> snapshot, Version backwardCompatibilityVersion) {
+            int formatNumber = readIntValue(snapshot, "version");
+            Versions.check(formatNumber, v_7_0_0, v_7_0_0);
+
+            boolean consumed = (boolean) snapshot.get("consumed");
+            long remainingTokens = readLongValue(snapshot, "remainingTokens");
+            long nanosToWaitForRefill = readLongValue(snapshot, "nanosToWaitForRefill");
+            long nanosToWaitForReset = readLongValue(snapshot, "nanosToWaitForReset");
+            return new ConsumptionProbe(consumed, remainingTokens, nanosToWaitForRefill, nanosToWaitForReset);
+        }
+
+        @Override
+        public Map<String, Object> toJsonCompatibleSnapshot(ConsumptionProbe probe, Version backwardCompatibilityVersion) {
+            Map<String, Object> result = new HashMap<>();
+            result.put("version", v_7_0_0.getNumber());
+            result.put("consumed", probe.consumed);
+            result.put("remainingTokens", probe.remainingTokens);
+            result.put("nanosToWaitForRefill", probe.nanosToWaitForRefill);
+            result.put("nanosToWaitForReset", probe.nanosToWaitForReset);
+            return result;
+        }
+
+        @Override
+        public String getTypeName() {
+            return "ConsumptionProbe";
         }
 
     };

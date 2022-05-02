@@ -27,10 +27,7 @@ import io.github.bucket4j.distributed.versioning.Versions;
 import io.github.bucket4j.util.ComparableByContent;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 import static io.github.bucket4j.distributed.versioning.Versions.v_7_0_0;
 
@@ -121,6 +118,37 @@ public final class BucketConfiguration implements ComparableByContent<BucketConf
         @Override
         public Class<BucketConfiguration> getSerializedType() {
             return BucketConfiguration.class;
+        }
+
+        @Override
+        public BucketConfiguration fromJsonCompatibleSnapshot(Map<String, Object> snapshot, Version backwardCompatibilityVersion) throws IOException {
+            int formatNumber = readIntValue(snapshot, "version");
+            Versions.check(formatNumber, v_7_0_0, v_7_0_0);
+
+            List<Map<String, Object>> bandwidthSnapshots = (List<Map<String, Object>>) snapshot.get("bandwidths");
+            List<Bandwidth> bandwidths = new ArrayList<>(bandwidthSnapshots.size());
+            for (Map<String, Object> bandwidthSnapshot : bandwidthSnapshots) {
+                Bandwidth bandwidth = Bandwidth.SERIALIZATION_HANDLE.fromJsonCompatibleSnapshot(bandwidthSnapshot, backwardCompatibilityVersion);
+                bandwidths.add(bandwidth);
+            }
+            return new BucketConfiguration(bandwidths);
+        }
+
+        @Override
+        public Map<String, Object> toJsonCompatibleSnapshot(BucketConfiguration configuration, Version backwardCompatibilityVersion) throws IOException {
+            Map<String, Object> result = new HashMap<>();
+            result.put("version", v_7_0_0.getNumber());
+            List<Map<String, Object>> bandwidthList = new ArrayList<>(configuration.bandwidths.length);
+            for (Bandwidth bandwidth : configuration.bandwidths) {
+                bandwidthList.add(Bandwidth.SERIALIZATION_HANDLE.toJsonCompatibleSnapshot(bandwidth, backwardCompatibilityVersion));
+            }
+            result.put("bandwidths", bandwidthList);
+            return result;
+        }
+
+        @Override
+        public String getTypeName() {
+            return "BucketConfiguration";
         }
 
     };

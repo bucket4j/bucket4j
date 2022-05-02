@@ -22,13 +22,16 @@ package io.github.bucket4j.distributed.remote;
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
+import io.github.bucket4j.distributed.serialization.SerializationHandles;
 import io.github.bucket4j.distributed.versioning.Version;
 import io.github.bucket4j.distributed.versioning.Versions;
 import io.github.bucket4j.util.ComparableByContent;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static io.github.bucket4j.distributed.versioning.Versions.v_7_0_0;
 
@@ -69,6 +72,40 @@ public class MultiResult implements ComparableByContent<MultiResult> {
         @Override
         public Class<MultiResult> getSerializedType() {
             return MultiResult.class;
+        }
+
+        @Override
+        public MultiResult fromJsonCompatibleSnapshot(Map<String, Object> snapshot, Version backwardCompatibilityVersion) throws IOException {
+            int formatNumber = readIntValue(snapshot, "version");
+            Versions.check(formatNumber, v_7_0_0, v_7_0_0);
+
+            List<Map<String, Object>> resultSnapshots = (List<Map<String, Object>>) snapshot.get("results");
+            List<CommandResult<?>> results = new ArrayList<>(resultSnapshots.size());
+            for (Map<String, Object> resultSnapshot : resultSnapshots) {
+                CommandResult<?> result = CommandResult.SERIALIZATION_HANDLE.fromJsonCompatibleSnapshot(resultSnapshot, backwardCompatibilityVersion);
+                results.add(result);
+            }
+            return new MultiResult(results);
+        }
+
+        @Override
+        public Map<String, Object> toJsonCompatibleSnapshot(MultiResult multiResult, Version backwardCompatibilityVersion) throws IOException {
+            Map<String, Object> snapshot = new HashMap<>();
+            snapshot.put("version", v_7_0_0.getNumber());
+
+            List<Map<String, Object>> resultSnapshots = new ArrayList<>(multiResult.results.size());
+            for (CommandResult<?> result : multiResult.results) {
+                Map<String, Object> resultSnapshot = CommandResult.SERIALIZATION_HANDLE.toJsonCompatibleSnapshot(result, backwardCompatibilityVersion);
+                resultSnapshots.add(resultSnapshot);
+            }
+
+            snapshot.put("results", resultSnapshots);
+            return snapshot;
+        }
+
+        @Override
+        public String getTypeName() {
+            return "MultiResult";
         }
 
     };

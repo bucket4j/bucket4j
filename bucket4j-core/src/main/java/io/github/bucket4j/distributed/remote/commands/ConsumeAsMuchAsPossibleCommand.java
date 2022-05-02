@@ -33,6 +33,8 @@ import io.github.bucket4j.distributed.versioning.Versions;
 import io.github.bucket4j.util.ComparableByContent;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import static io.github.bucket4j.distributed.serialization.PrimitiveSerializationHandles.LONG_HANDLE;
 import static io.github.bucket4j.distributed.versioning.Versions.v_7_0_0;
@@ -67,6 +69,28 @@ public class ConsumeAsMuchAsPossibleCommand implements RemoteCommand<Long>, Comp
         @Override
         public Class<ConsumeAsMuchAsPossibleCommand> getSerializedType() {
             return ConsumeAsMuchAsPossibleCommand.class;
+        }
+
+        @Override
+        public ConsumeAsMuchAsPossibleCommand fromJsonCompatibleSnapshot(Map<String, Object> snapshot, Version backwardCompatibilityVersion) throws IOException {
+            int formatNumber = readIntValue(snapshot, "version");
+            Versions.check(formatNumber, v_7_0_0, v_7_0_0);
+
+            long limit = readLongValue(snapshot, "limit");
+            return new ConsumeAsMuchAsPossibleCommand(limit);
+        }
+
+        @Override
+        public Map<String, Object> toJsonCompatibleSnapshot(ConsumeAsMuchAsPossibleCommand command, Version backwardCompatibilityVersion) throws IOException {
+            Map<String, Object> result = new HashMap<>();
+            result.put("version", v_7_0_0.getNumber());
+            result.put("limit", command.limit);
+            return result;
+        }
+
+        @Override
+        public String getTypeName() {
+            return "ConsumeAsMuchAsPossibleCommand";
         }
 
     };

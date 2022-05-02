@@ -31,6 +31,8 @@ import io.github.bucket4j.distributed.versioning.Versions;
 import io.github.bucket4j.util.ComparableByContent;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import static io.github.bucket4j.distributed.serialization.PrimitiveSerializationHandles.*;
 import static io.github.bucket4j.distributed.versioning.Versions.v_7_0_0;
@@ -81,6 +83,35 @@ public class CommandResult<T> implements ComparableByContent<CommandResult> {
             return (Class) CommandResult.class;
         }
 
+        @Override
+        public CommandResult<?> fromJsonCompatibleSnapshot(Map<String, Object> snapshot, Version backwardCompatibilityVersion) throws IOException {
+            int formatNumber = readIntValue(snapshot, "version");
+            Versions.check(formatNumber, v_7_0_0, v_7_0_0);
+
+            Map<String, Object> dataSnapshot = (Map<String, Object>) snapshot.get("data");
+            String typeName = (String) dataSnapshot.get("type");
+            SerializationHandle handle = SerializationHandles.CORE_HANDLES.getHandleByTypeName(typeName);
+            Object resultData = handle.fromJsonCompatibleSnapshot(dataSnapshot, backwardCompatibilityVersion);
+
+            return CommandResult.success(resultData, handle.getTypeId());
+        }
+
+        @Override
+        public Map<String, Object> toJsonCompatibleSnapshot(CommandResult<?> result, Version backwardCompatibilityVersion) throws IOException {
+            Map<String, Object> snapshot = new HashMap<>();
+            snapshot.put("version", v_7_0_0.getNumber());
+            SerializationHandle<Object> handle = SerializationHandles.CORE_HANDLES.getHandleByTypeId(result.resultTypeId);
+            Map<String, Object> valueSnapshot = handle.toJsonCompatibleSnapshot(result.data, backwardCompatibilityVersion);
+            valueSnapshot.put("type", handle.getTypeName());
+            snapshot.put("data", valueSnapshot);
+            return snapshot;
+        }
+
+        @Override
+        public String getTypeName() {
+            return "CommandResult";
+        }
+
     };
 
     public CommandResult(T data, int resultTypeId) {
@@ -107,6 +138,11 @@ public class CommandResult<T> implements ComparableByContent<CommandResult> {
     public static CommandResult<?> unsupportedType(int typeId) {
         UnsupportedTypeError error = new UnsupportedTypeError(typeId);
         return new CommandResult<>(error, UnsupportedTypeError.SERIALIZATION_HANDLE.getTypeId());
+    }
+
+    public static CommandResult<?> unsupportedNamedType(String typeName) {
+        UnsupportedNamedTypeError error = new UnsupportedNamedTypeError(typeName);
+        return new CommandResult<>(error, UnsupportedNamedTypeError.SERIALIZATION_HANDLE.getTypeId());
     }
 
     public static CommandResult<?> usageOfUnsupportedApiException(int requestedFormatNumber, int maxSupportedFormatNumber) {

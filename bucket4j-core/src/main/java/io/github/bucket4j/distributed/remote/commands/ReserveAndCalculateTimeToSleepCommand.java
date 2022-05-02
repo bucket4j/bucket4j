@@ -32,6 +32,8 @@ import io.github.bucket4j.distributed.versioning.Versions;
 import io.github.bucket4j.util.ComparableByContent;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import static io.github.bucket4j.distributed.serialization.PrimitiveSerializationHandles.LONG_HANDLE;
 import static io.github.bucket4j.distributed.versioning.Versions.v_7_0_0;
@@ -70,6 +72,30 @@ public class ReserveAndCalculateTimeToSleepCommand implements RemoteCommand<Long
         @Override
         public Class<ReserveAndCalculateTimeToSleepCommand> getSerializedType() {
             return ReserveAndCalculateTimeToSleepCommand.class;
+        }
+
+        @Override
+        public ReserveAndCalculateTimeToSleepCommand fromJsonCompatibleSnapshot(Map<String, Object> snapshot, Version backwardCompatibilityVersion) throws IOException {
+            int formatNumber = readIntValue(snapshot, "version");
+            Versions.check(formatNumber, v_7_0_0, v_7_0_0);
+
+            long tokensToConsume = readLongValue(snapshot, "tokensToConsume");
+            long waitIfBusyNanosLimit = readLongValue(snapshot, "waitIfBusyNanosLimit");
+            return new ReserveAndCalculateTimeToSleepCommand(tokensToConsume, waitIfBusyNanosLimit);
+        }
+
+        @Override
+        public Map<String, Object> toJsonCompatibleSnapshot(ReserveAndCalculateTimeToSleepCommand command, Version backwardCompatibilityVersion) throws IOException {
+            Map<String, Object> result = new HashMap<>();
+            result.put("version", v_7_0_0.getNumber());
+            result.put("tokensToConsume", command.tokensToConsume);
+            result.put("waitIfBusyNanosLimit", command.waitIfBusyNanosLimit);
+            return result;
+        }
+
+        @Override
+        public String getTypeName() {
+            return "ReserveAndCalculateTimeToSleepCommand";
         }
 
     };

@@ -24,6 +24,7 @@ import io.github.bucket4j.distributed.serialization.SerializationAdapter;
 import io.github.bucket4j.distributed.versioning.Version;
 
 import java.io.IOException;
+import java.util.Map;
 
 public interface BucketState {
 
@@ -88,6 +89,34 @@ public interface BucketState {
                 adapter.writeInt(output, BucketStateIEEE754.SERIALIZATION_HANDLE.getTypeId());
                 BucketStateIEEE754.SERIALIZATION_HANDLE.serialize(adapter, output, (BucketStateIEEE754) state, backwardCompatibilityVersion);
                 break;
+            default:
+                throw new IOException("Unknown mathType=" + state.getMathType());
+        }
+    }
+
+    static BucketState fromJsonCompatibleSnapshot(Map<String, Object> snapshot, Version backwardCompatibilityVersion) throws IOException {
+        String type = (String) snapshot.get("type");
+        if (BucketState64BitsInteger.SERIALIZATION_HANDLE.getTypeName().equals(type)) {
+            return BucketState64BitsInteger.SERIALIZATION_HANDLE.fromJsonCompatibleSnapshot(snapshot, backwardCompatibilityVersion);
+        } else if (BucketStateIEEE754.SERIALIZATION_HANDLE.getTypeName().equals(type)) {
+            return BucketStateIEEE754.SERIALIZATION_HANDLE.fromJsonCompatibleSnapshot(snapshot, backwardCompatibilityVersion);
+        } else {
+            throw new IOException("Unknown typeName=" + type);
+        }
+    }
+
+    static Object toJsonCompatibleSnapshot(BucketState state, Version backwardCompatibilityVersion) throws IOException {
+        switch (state.getMathType()) {
+            case INTEGER_64_BITS: {
+                Map<String, Object> result = BucketState64BitsInteger.SERIALIZATION_HANDLE.toJsonCompatibleSnapshot((BucketState64BitsInteger) state, backwardCompatibilityVersion);
+                result.put("type", BucketState64BitsInteger.SERIALIZATION_HANDLE.getTypeName());
+                return result;
+            }
+            case IEEE_754: {
+                Map<String, Object> result = BucketStateIEEE754.SERIALIZATION_HANDLE.toJsonCompatibleSnapshot((BucketStateIEEE754) state, backwardCompatibilityVersion);
+                result.put("type", BucketStateIEEE754.SERIALIZATION_HANDLE.getTypeName());
+                return result;
+            }
             default:
                 throw new IOException("Unknown mathType=" + state.getMathType());
         }

@@ -185,6 +185,7 @@ public abstract class AbstractSerializationTest {
         testSerialization(CommandResult.unsupportedType(1000));
         testSerialization(CommandResult.usageOfUnsupportedApiException(10, 9));
         testSerialization(CommandResult.usageOfObsoleteApiException(1, 9));
+        testSerialization(CommandResult.unsupportedNamedType("something"));
 
 
         // with long payload

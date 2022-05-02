@@ -31,6 +31,8 @@ import io.github.bucket4j.distributed.versioning.Versions;
 import io.github.bucket4j.util.ComparableByContent;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Function;
 
 import static io.github.bucket4j.distributed.versioning.Versions.v_7_0_0;
@@ -118,6 +120,45 @@ public class RemoteVerboseResult<T> implements ComparableByContent<RemoteVerbose
         public Class<RemoteVerboseResult<?>> getSerializedType() {
             return (Class) RemoteVerboseResult.class;
         }
+
+        @Override
+        public RemoteVerboseResult<?> fromJsonCompatibleSnapshot(Map<String, Object> snapshot, Version backwardCompatibilityVersion) throws IOException {
+            int formatNumber = readIntValue(snapshot, "version");
+            Versions.check(formatNumber, v_7_0_0, v_7_0_0);
+
+            long operationTimeNanos = readLongValue(snapshot, "operationTimeNanos");
+
+            Map<String, Object> valueSnapshot = (Map<String, Object>) snapshot.get("result");
+            String valueTypeName = (String) valueSnapshot.get("type");
+            SerializationHandle valueHandle = SerializationHandles.CORE_HANDLES.getHandleByTypeName(valueTypeName);
+            Object result = valueHandle.fromJsonCompatibleSnapshot(valueSnapshot, backwardCompatibilityVersion);
+
+            Map<String, Object> stateSnapshot = (Map<String, Object>) snapshot.get("remoteState");
+            RemoteBucketState state = RemoteBucketState.SERIALIZATION_HANDLE.fromJsonCompatibleSnapshot(stateSnapshot, backwardCompatibilityVersion);
+            return new RemoteVerboseResult(operationTimeNanos, valueHandle.getTypeId(), result, state);
+        }
+
+        @Override
+        public Map<String, Object> toJsonCompatibleSnapshot(RemoteVerboseResult<?> verboseResult, Version backwardCompatibilityVersion) throws IOException {
+            Map<String, Object> result = new HashMap<>();
+            result.put("version", v_7_0_0.getNumber());
+            result.put("operationTimeNanos", verboseResult.operationTimeNanos);
+
+            SerializationHandle<Object> valueHandle = SerializationHandles.CORE_HANDLES.getHandleByTypeId(verboseResult.resultTypeId);
+            Map<String, Object> valueSnapshot = valueHandle.toJsonCompatibleSnapshot(verboseResult.value, backwardCompatibilityVersion);
+            valueSnapshot.put("type", valueHandle.getTypeName());
+            result.put("result", valueSnapshot);
+
+            Map<String, Object> stateSnapshot = RemoteBucketState.SERIALIZATION_HANDLE.toJsonCompatibleSnapshot(verboseResult.state, backwardCompatibilityVersion);
+            result.put("remoteState", stateSnapshot);
+            return result;
+        }
+
+        @Override
+        public String getTypeName() {
+            return "RemoteVerboseResult";
+        }
+
     };
 
     @Override

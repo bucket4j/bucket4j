@@ -22,6 +22,7 @@ package io.github.bucket4j.distributed.remote;
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
+import io.github.bucket4j.distributed.versioning.UnsupportedNamedTypeException;
 import io.github.bucket4j.distributed.versioning.Version;
 import io.github.bucket4j.distributed.versioning.Versions;
 import io.github.bucket4j.util.ComparableByContent;
@@ -32,80 +33,75 @@ import java.util.Map;
 
 import static io.github.bucket4j.distributed.versioning.Versions.v_7_0_0;
 
-public class RemoteStat implements ComparableByContent<RemoteStat> {
+public class UnsupportedNamedTypeError implements CommandError, ComparableByContent<UnsupportedNamedTypeError> {
 
-    private long consumedTokens;
+    private final String typeName;
 
-    public RemoteStat(long consumedTokens) {
-        this.consumedTokens = consumedTokens;
+    public UnsupportedNamedTypeError(String typeName) {
+        this.typeName = typeName;
     }
 
-    public long getConsumedTokens() {
-        return consumedTokens;
+    public String getTypeName() {
+        return typeName;
     }
 
-    public void addConsumedTokens(long consumedTokens) {
-        this.consumedTokens += consumedTokens;
+    @Override
+    public RuntimeException asException() {
+        return new UnsupportedNamedTypeException(typeName);
     }
 
-    public static final SerializationHandle<RemoteStat> SERIALIZATION_HANDLE = new SerializationHandle<RemoteStat>() {
+    @Override
+    public boolean equalsByContent(UnsupportedNamedTypeError other) {
+        return other.typeName.equals(typeName);
+    }
+
+    public static SerializationHandle<UnsupportedNamedTypeError> SERIALIZATION_HANDLE = new SerializationHandle<UnsupportedNamedTypeError>() {
         @Override
-        public <S> RemoteStat deserialize(DeserializationAdapter<S> adapter, S input, Version backwardCompatibilityVersion) throws IOException {
+        public <S> UnsupportedNamedTypeError deserialize(DeserializationAdapter<S> adapter, S input, Version backwardCompatibilityVersion) throws IOException {
             int formatNumber = adapter.readInt(input);
             Versions.check(formatNumber, v_7_0_0, v_7_0_0);
 
-            long consumedTokens = adapter.readLong(input);
-            return new RemoteStat(consumedTokens);
+            String typeName = adapter.readString(input);
+            return new UnsupportedNamedTypeError(typeName);
         }
 
         @Override
-        public <O> void serialize(SerializationAdapter<O> adapter, O output, RemoteStat stat, Version backwardCompatibilityVersion) throws IOException {
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, UnsupportedNamedTypeError error, Version backwardCompatibilityVersion) throws IOException {
             adapter.writeInt(output, v_7_0_0.getNumber());
-
-            adapter.writeLong(output, stat.consumedTokens);
+            adapter.writeString(output, error.typeName);
         }
 
         @Override
         public int getTypeId() {
-            return 6;
+            return 19;
         }
 
         @Override
-        public Class<RemoteStat> getSerializedType() {
-            return RemoteStat.class;
+        public Class<UnsupportedNamedTypeError> getSerializedType() {
+            return (Class) UnsupportedNamedTypeError.class;
         }
 
         @Override
-        public RemoteStat fromJsonCompatibleSnapshot(Map<String, Object> snapshot, Version backwardCompatibilityVersion) throws IOException {
+        public UnsupportedNamedTypeError fromJsonCompatibleSnapshot(Map<String, Object> snapshot, Version backwardCompatibilityVersion) throws IOException {
             int formatNumber = readIntValue(snapshot, "version");
             Versions.check(formatNumber, v_7_0_0, v_7_0_0);
-
-            long consumedTokens = readLongValue(snapshot, "consumedTokens");
-            return new RemoteStat(consumedTokens);
+            String typeName = (String) snapshot.get("typeName");
+            return new UnsupportedNamedTypeError(typeName);
         }
 
         @Override
-        public Map<String, Object> toJsonCompatibleSnapshot(RemoteStat stat, Version backwardCompatibilityVersion) throws IOException {
+        public Map<String, Object> toJsonCompatibleSnapshot(UnsupportedNamedTypeError error, Version backwardCompatibilityVersion) throws IOException {
             Map<String, Object> result = new HashMap<>();
             result.put("version", v_7_0_0.getNumber());
-            result.put("consumedTokens", stat.consumedTokens);
+            result.put("typeName", error.typeName);
             return result;
         }
 
         @Override
         public String getTypeName() {
-            return "RemoteStat";
+            return "UnsupportedNamedTypeError";
         }
 
     };
-
-    public RemoteStat copy() {
-        return new RemoteStat(consumedTokens);
-    }
-
-    @Override
-    public boolean equalsByContent(RemoteStat other) {
-        return consumedTokens == other.consumedTokens;
-    }
 
 }

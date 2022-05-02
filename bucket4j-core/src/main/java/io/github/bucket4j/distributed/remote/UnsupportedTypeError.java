@@ -28,6 +28,8 @@ import io.github.bucket4j.distributed.versioning.Versions;
 import io.github.bucket4j.util.ComparableByContent;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import static io.github.bucket4j.distributed.versioning.Versions.v_7_0_0;
 
@@ -77,6 +79,27 @@ public class UnsupportedTypeError implements CommandError, ComparableByContent<U
         @Override
         public Class<UnsupportedTypeError> getSerializedType() {
             return (Class) UnsupportedTypeError.class;
+        }
+
+        @Override
+        public UnsupportedTypeError fromJsonCompatibleSnapshot(Map<String, Object> snapshot, Version backwardCompatibilityVersion) throws IOException {
+            int formatNumber = readIntValue(snapshot, "version");
+            Versions.check(formatNumber, v_7_0_0, v_7_0_0);
+            int typeId = readIntValue(snapshot, "typeId");
+            return new UnsupportedTypeError(typeId);
+        }
+
+        @Override
+        public Map<String, Object> toJsonCompatibleSnapshot(UnsupportedTypeError error, Version backwardCompatibilityVersion) throws IOException {
+            Map<String, Object> result = new HashMap<>();
+            result.put("version", v_7_0_0.getNumber());
+            result.put("typeId", error.typeId);
+            return result;
+        }
+
+        @Override
+        public String getTypeName() {
+            return "UnsupportedTypeError";
         }
 
     };

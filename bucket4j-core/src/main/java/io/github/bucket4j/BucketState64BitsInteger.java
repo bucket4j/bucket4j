@@ -29,6 +29,8 @@ import io.github.bucket4j.util.ComparableByContent;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 import static io.github.bucket4j.distributed.versioning.Versions.v_7_0_0;
@@ -66,6 +68,33 @@ public class BucketState64BitsInteger implements BucketState, ComparableByConten
         @Override
         public Class<BucketState64BitsInteger> getSerializedType() {
             return BucketState64BitsInteger.class;
+        }
+
+        @Override
+        public BucketState64BitsInteger fromJsonCompatibleSnapshot(Map<String, Object> snapshot, Version backwardCompatibilityVersion) throws IOException {
+            int formatNumber = readIntValue(snapshot, "version");
+            Versions.check(formatNumber, v_7_0_0, v_7_0_0);
+
+            long[] stateDate = readLongArray(snapshot, "stateData");
+            Map<String, Object> configurationSnapshot = (Map<String, Object>) snapshot.get("configuration");
+            BucketConfiguration configuration = BucketConfiguration.SERIALIZATION_HANDLE.fromJsonCompatibleSnapshot(configurationSnapshot, backwardCompatibilityVersion);
+            BucketState64BitsInteger state = new BucketState64BitsInteger(stateDate);
+            state.setConfiguration(configuration);
+            return state;
+        }
+
+        @Override
+        public Map<String, Object> toJsonCompatibleSnapshot(BucketState64BitsInteger state, Version backwardCompatibilityVersion) throws IOException {
+            Map<String, Object> result = new HashMap<>();
+            result.put("version", v_7_0_0.getNumber());
+            result.put("stateData", state.stateData);
+            result.put("configuration", BucketConfiguration.SERIALIZATION_HANDLE.toJsonCompatibleSnapshot(state.configuration, backwardCompatibilityVersion));
+            return result;
+        }
+
+        @Override
+        public String getTypeName() {
+            return "BucketState64BitsInteger";
         }
     };
 

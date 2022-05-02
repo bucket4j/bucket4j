@@ -29,6 +29,8 @@ import io.github.bucket4j.distributed.versioning.Versions;
 import io.github.bucket4j.util.ComparableByContent;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import static io.github.bucket4j.distributed.versioning.Versions.v_7_0_0;
 
@@ -74,6 +76,33 @@ public class EstimationProbe implements ComparableByContent<EstimationProbe> {
         @Override
         public Class<EstimationProbe> getSerializedType() {
             return EstimationProbe.class;
+        }
+
+        @Override
+        public EstimationProbe fromJsonCompatibleSnapshot(Map<String, Object> snapshot, Version backwardCompatibilityVersion) {
+            int formatNumber = readIntValue(snapshot, "version");
+            Versions.check(formatNumber, v_7_0_0, v_7_0_0);
+
+            boolean canBeConsumed = (boolean) snapshot.get("canBeConsumed");
+            long remainingTokens = readLongValue(snapshot, "remainingTokens");
+            long nanosToWaitForRefill = readLongValue(snapshot, "nanosToWaitForRefill");
+
+            return new EstimationProbe(canBeConsumed, remainingTokens, nanosToWaitForRefill);
+        }
+
+        @Override
+        public Map<String, Object> toJsonCompatibleSnapshot(EstimationProbe state, Version backwardCompatibilityVersion) {
+            Map<String, Object> result = new HashMap<>();
+            result.put("version", v_7_0_0.getNumber());
+            result.put("canBeConsumed", state.canBeConsumed);
+            result.put("remainingTokens", state.remainingTokens);
+            result.put("nanosToWaitForRefill", state.nanosToWaitForRefill);
+            return result;
+        }
+
+        @Override
+        public String getTypeName() {
+            return "EstimationProbe";
         }
 
     };

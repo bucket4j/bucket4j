@@ -28,6 +28,8 @@ import io.github.bucket4j.distributed.versioning.Versions;
 import io.github.bucket4j.util.ComparableByContent;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import static io.github.bucket4j.distributed.versioning.Versions.v_7_0_0;
 
@@ -67,8 +69,8 @@ public class UsageOfUnsupportedApiError implements CommandError, ComparableByCon
             Versions.check(formatNumber, v_7_0_0, v_7_0_0);
 
             int requestedFormatNumber = adapter.readInt(input);
-            int minSupportedFormatNumber = adapter.readInt(input);
-            return new UsageOfUnsupportedApiError(requestedFormatNumber, minSupportedFormatNumber);
+            int maxSupportedFormatNumber = adapter.readInt(input);
+            return new UsageOfUnsupportedApiError(requestedFormatNumber, maxSupportedFormatNumber);
         }
 
         @Override
@@ -86,6 +88,31 @@ public class UsageOfUnsupportedApiError implements CommandError, ComparableByCon
         @Override
         public Class<UsageOfUnsupportedApiError> getSerializedType() {
             return (Class) UsageOfUnsupportedApiError.class;
+        }
+
+        @Override
+        public UsageOfUnsupportedApiError fromJsonCompatibleSnapshot(Map<String, Object> snapshot, Version backwardCompatibilityVersion) throws IOException {
+            int formatNumber = readIntValue(snapshot, "version");
+            Versions.check(formatNumber, v_7_0_0, v_7_0_0);
+
+            int requestedFormatNumber = readIntValue(snapshot, "requestedFormatNumber");
+            int maxSupportedFormatNumber = readIntValue(snapshot, "maxSupportedFormatNumber");
+
+            return new UsageOfUnsupportedApiError(requestedFormatNumber, maxSupportedFormatNumber);
+        }
+
+        @Override
+        public Map<String, Object> toJsonCompatibleSnapshot(UsageOfUnsupportedApiError error, Version backwardCompatibilityVersion) throws IOException {
+            Map<String, Object> result = new HashMap<>();
+            result.put("version", v_7_0_0.getNumber());
+            result.put("requestedFormatNumber", error.requestedFormatNumber);
+            result.put("maxSupportedFormatNumber", error.maxSupportedFormatNumber);
+            return result;
+        }
+
+        @Override
+        public String getTypeName() {
+            return "UsageOfUnsupportedApiError";
         }
 
     };

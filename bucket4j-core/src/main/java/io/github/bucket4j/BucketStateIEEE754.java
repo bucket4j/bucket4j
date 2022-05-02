@@ -29,6 +29,8 @@ import io.github.bucket4j.util.ComparableByContent;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 import static io.github.bucket4j.distributed.versioning.Versions.v_7_0_0;
 
@@ -70,6 +72,35 @@ public class BucketStateIEEE754 implements BucketState, ComparableByContent<Buck
         @Override
         public Class<BucketStateIEEE754> getSerializedType() {
             return BucketStateIEEE754.class;
+        }
+
+        @Override
+        public BucketStateIEEE754 fromJsonCompatibleSnapshot(Map<String, Object> snapshot, Version backwardCompatibilityVersion) throws IOException {
+            int formatNumber = readIntValue(snapshot, "version");
+            Versions.check(formatNumber, v_7_0_0, v_7_0_0);
+
+            double[] tokens = readDoubleArray(snapshot, "tokens");
+            long[] lastRefillTime = readLongArray(snapshot, "lastRefillTime");
+            Map<String, Object> configurationSnapshot = (Map<String, Object>) snapshot.get("configuration");
+            BucketConfiguration configuration = BucketConfiguration.SERIALIZATION_HANDLE.fromJsonCompatibleSnapshot(configurationSnapshot, backwardCompatibilityVersion);
+            BucketStateIEEE754 state = new BucketStateIEEE754(tokens, lastRefillTime);
+            state.setConfiguration(configuration);
+            return state;
+        }
+
+        @Override
+        public Map<String, Object> toJsonCompatibleSnapshot(BucketStateIEEE754 state, Version backwardCompatibilityVersion) throws IOException {
+            Map<String, Object> result = new HashMap<>();
+            result.put("version", v_7_0_0.getNumber());
+            result.put("tokens", state.tokens);
+            result.put("lastRefillTime", state.lastRefillTime);
+            result.put("configuration", BucketConfiguration.SERIALIZATION_HANDLE.toJsonCompatibleSnapshot(state.configuration, backwardCompatibilityVersion));
+            return result;
+        }
+
+        @Override
+        public String getTypeName() {
+            return "BucketStateIEEE754";
         }
 
     };

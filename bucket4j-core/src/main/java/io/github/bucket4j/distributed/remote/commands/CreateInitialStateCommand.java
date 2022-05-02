@@ -20,10 +20,7 @@
 
 package io.github.bucket4j.distributed.remote.commands;
 
-import io.github.bucket4j.BucketConfiguration;
-import io.github.bucket4j.BucketState;
-import io.github.bucket4j.MathType;
-import io.github.bucket4j.Nothing;
+import io.github.bucket4j.*;
 import io.github.bucket4j.distributed.remote.*;
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationAdapter;
@@ -33,6 +30,8 @@ import io.github.bucket4j.distributed.versioning.Versions;
 import io.github.bucket4j.util.ComparableByContent;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import static io.github.bucket4j.distributed.versioning.Versions.v_7_0_0;
 
@@ -66,6 +65,29 @@ public class CreateInitialStateCommand implements RemoteCommand<Nothing>, Compar
         @Override
         public Class<CreateInitialStateCommand> getSerializedType() {
             return CreateInitialStateCommand.class;
+        }
+
+        @Override
+        public CreateInitialStateCommand fromJsonCompatibleSnapshot(Map<String, Object> snapshot, Version backwardCompatibilityVersion) throws IOException {
+            int formatNumber = readIntValue(snapshot, "version");
+            Versions.check(formatNumber, v_7_0_0, v_7_0_0);
+
+            BucketConfiguration configuration = BucketConfiguration.SERIALIZATION_HANDLE
+                    .fromJsonCompatibleSnapshot((Map<String, Object>) snapshot.get("configuration"), backwardCompatibilityVersion);
+            return new CreateInitialStateCommand(configuration);
+        }
+
+        @Override
+        public Map<String, Object> toJsonCompatibleSnapshot(CreateInitialStateCommand command, Version backwardCompatibilityVersion) throws IOException {
+            Map<String, Object> result = new HashMap<>();
+            result.put("version", v_7_0_0.getNumber());
+            result.put("configuration", BucketConfiguration.SERIALIZATION_HANDLE.toJsonCompatibleSnapshot(command.configuration, backwardCompatibilityVersion));
+            return result;
+        }
+
+        @Override
+        public String getTypeName() {
+            return "CreateInitialStateCommand";
         }
 
     };

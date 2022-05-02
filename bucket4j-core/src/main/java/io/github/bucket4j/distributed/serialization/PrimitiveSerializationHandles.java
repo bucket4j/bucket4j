@@ -23,6 +23,8 @@ import io.github.bucket4j.Nothing;
 import io.github.bucket4j.distributed.versioning.Version;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 public class PrimitiveSerializationHandles {
 
@@ -47,6 +49,21 @@ public class PrimitiveSerializationHandles {
         public Class<Nothing> getSerializedType() {
             return Nothing.class;
         }
+
+        @Override
+        public Nothing fromJsonCompatibleSnapshot(Map<String, Object> snapshot, Version backwardCompatibilityVersion) {
+            return Nothing.INSTANCE;
+        }
+
+        @Override
+        public Map<String, Object> toJsonCompatibleSnapshot(Nothing serializableObject, Version backwardCompatibilityVersion) {
+            return new HashMap<>();
+        }
+
+        @Override
+        public String getTypeName() {
+            return "Nothing";
+        }
     };
 
     public static SerializationHandle<Long> LONG_HANDLE = new SerializationHandle<Long>() {
@@ -69,6 +86,23 @@ public class PrimitiveSerializationHandles {
         public Class<Long> getSerializedType() {
             return Long.TYPE;
         }
+
+        @Override
+        public Long fromJsonCompatibleSnapshot(Map<String, Object> snapshot, Version backwardCompatibilityVersion) {
+            return readLongValue(snapshot, "value");
+        }
+
+        @Override
+        public Map<String, Object> toJsonCompatibleSnapshot(Long serializableObject, Version backwardCompatibilityVersion) {
+            Map<String, Object> result = new HashMap<>();
+            result.put("value", serializableObject);
+            return result;
+        }
+
+        @Override
+        public String getTypeName() {
+            return "Long";
+        }
     };
 
     public static SerializationHandle<Boolean> BOOLEAN_HANDLE = new SerializationHandle<Boolean>() {
@@ -90,6 +124,23 @@ public class PrimitiveSerializationHandles {
         @Override
         public Class<Boolean> getSerializedType() {
             return Boolean.TYPE;
+        }
+
+        @Override
+        public Boolean fromJsonCompatibleSnapshot(Map<String, Object> snapshot, Version backwardCompatibilityVersion) {
+            return (Boolean) snapshot.get("value");
+        }
+
+        @Override
+        public Map<String, Object> toJsonCompatibleSnapshot(Boolean serializableObject, Version backwardCompatibilityVersion) {
+            Map<String, Object> result = new HashMap<>();
+            result.put("value", serializableObject);
+            return result;
+        }
+
+        @Override
+        public String getTypeName() {
+            return "Boolean";
         }
     };
 

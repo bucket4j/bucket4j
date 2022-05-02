@@ -28,6 +28,8 @@ import io.github.bucket4j.distributed.versioning.Versions;
 import io.github.bucket4j.util.ComparableByContent;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import static io.github.bucket4j.distributed.versioning.Versions.v_7_0_0;
 
@@ -61,6 +63,25 @@ public class BucketNotFoundError implements CommandError, ComparableByContent<Bu
         @Override
         public Class<BucketNotFoundError> getSerializedType() {
             return (Class) BucketNotFoundError.class;
+        }
+
+        @Override
+        public BucketNotFoundError fromJsonCompatibleSnapshot(Map<String, Object> snapshot, Version backwardCompatibilityVersion) throws IOException {
+            int formatNumber = readIntValue(snapshot, "version");
+            Versions.check(formatNumber, v_7_0_0, v_7_0_0);
+            return INSTANCE;
+        }
+
+        @Override
+        public Map<String, Object> toJsonCompatibleSnapshot(BucketNotFoundError error, Version backwardCompatibilityVersion) throws IOException {
+            Map<String, Object> result = new HashMap<>();
+            result.put("version", v_7_0_0.getNumber());
+            return result;
+        }
+
+        @Override
+        public String getTypeName() {
+            return "BucketNotFoundError";
         }
 
     };

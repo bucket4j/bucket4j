@@ -44,6 +44,7 @@ import io.github.bucket4j.distributed.serialization.SerializationHandles;
 import io.github.bucket4j.distributed.versioning.Version;
 
 import java.io.IOException;
+import java.util.Map;
 
 public interface RemoteCommand<T> {
 
@@ -75,6 +76,19 @@ public interface RemoteCommand<T> {
         int typeId = adapter.readInt(input);
         SerializationHandle<?> serializer = SerializationHandles.CORE_HANDLES.getHandleByTypeId(typeId);
         return (RemoteCommand<?>) serializer.deserialize(adapter, input, backwardCompatibilityVersion);
+    }
+
+    static RemoteCommand<?> fromJsonCompatibleSnapshot(Map<String, Object> snapshot, Version backwardCompatibilityVersion) throws IOException {
+        String typeName = (String) snapshot.get("type");
+        SerializationHandle<?> serializer = SerializationHandles.CORE_HANDLES.getHandleByTypeName(typeName);
+        return (RemoteCommand<?>) serializer.fromJsonCompatibleSnapshot(snapshot, backwardCompatibilityVersion);
+    }
+
+    static Map<String, Object> toJsonCompatibleSnapshot(RemoteCommand<?> command, Version backwardCompatibilityVersion) throws IOException {
+        SerializationHandle<RemoteCommand<?>> serializer = command.getSerializationHandle();
+        Map<String, Object> result = command.getSerializationHandle().toJsonCompatibleSnapshot(command, backwardCompatibilityVersion);
+        result.put("type", serializer.getTypeName());
+        return result;
     }
 
 }

@@ -29,7 +29,9 @@ import io.github.bucket4j.util.ComparableByContent;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static io.github.bucket4j.distributed.versioning.Versions.v_7_0_0;
 
@@ -70,6 +72,40 @@ public class MultiCommand implements RemoteCommand<MultiResult>, ComparableByCon
         @Override
         public Class<MultiCommand> getSerializedType() {
             return MultiCommand.class;
+        }
+
+        @Override
+        public MultiCommand fromJsonCompatibleSnapshot(Map<String, Object> snapshot, Version backwardCompatibilityVersion) throws IOException {
+            int formatNumber = readIntValue(snapshot, "version");
+            Versions.check(formatNumber, v_7_0_0, v_7_0_0);
+
+            List<Map<String, Object>> commandSnapshots = (List<Map<String, Object>>) snapshot.get("commands");
+            List<RemoteCommand<?>> commands = new ArrayList<>(commandSnapshots.size());
+            for (Map<String, Object> commandSnapshot : commandSnapshots) {
+                RemoteCommand<?> targetCommand = RemoteCommand.fromJsonCompatibleSnapshot(commandSnapshot, backwardCompatibilityVersion);
+                commands.add(targetCommand);
+            }
+
+            return new MultiCommand(commands);
+        }
+
+        @Override
+        public Map<String, Object> toJsonCompatibleSnapshot(MultiCommand command, Version backwardCompatibilityVersion) throws IOException {
+            Map<String, Object> result = new HashMap<>();
+            result.put("version", v_7_0_0.getNumber());
+
+            List<Map<String, Object>> commandSnapshots = new ArrayList<>(command.commands.size());
+            for (RemoteCommand<?> remoteCommand : command.commands) {
+                commandSnapshots.add(RemoteCommand.toJsonCompatibleSnapshot(remoteCommand, backwardCompatibilityVersion));
+            }
+
+            result.put("commands", commandSnapshots);
+            return result;
+        }
+
+        @Override
+        public String getTypeName() {
+            return "MultiCommand";
         }
 
     };

@@ -22,6 +22,7 @@ package io.github.bucket4j.distributed.serialization;
 import io.github.bucket4j.distributed.versioning.Version;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 public interface SerializationHandle<T> {
@@ -37,22 +38,86 @@ public interface SerializationHandle<T> {
 
     Class<T> getSerializedType();
 
-    default T fromJsonCompatibleSnapshot(Map<String, Object> snapshot, Version backwardCompatibilityVersion) {
-        // TODO
-        return null;
-    }
+    T fromJsonCompatibleSnapshot(Map<String, Object> snapshot, Version backwardCompatibilityVersion) throws IOException;
 
-    default Map<String, Object> toJsonCompatibleSnapshot(T serializableObject, Version backwardCompatibilityVersion) {
-        // TODO
-        return null;
-    }
+    Map<String, Object> toJsonCompatibleSnapshot(T serializableObject, Version backwardCompatibilityVersion) throws IOException;
 
     /**
      * @return the type identifier that is unique across all Bucket4j classes
      */
-    default String getTypeName() {
-        // TODO
-        return null;
+    String getTypeName();
+
+
+    default double[] readDoubleArray(Map<String, Object> snapshot, String fieldName) {
+        Object object = snapshot.get(fieldName);
+        if (object instanceof double[]) {
+            return (double[]) object;
+        } else if (object instanceof Number[]) {
+            Number[] array = (Number[]) object;
+            double[] result = new double[array.length];
+            for (int i = 0; i < array.length; i++) {
+                result[i] = array[i].doubleValue();
+            }
+            return result;
+        } else {
+            List<Number> list = (List<Number>) object;
+            double[] result = new double[list.size()];
+            for (int i = 0; i < list.size(); i++) {
+                result[i] = list.get(i).doubleValue();
+            }
+            return result;
+        }
+    }
+
+    default long[] readLongArray(Map<String, Object> snapshot, String fieldName) {
+        Object object = snapshot.get(fieldName);
+        if (object instanceof long[]) {
+            return (long[]) object;
+        } else if (object instanceof Number[]) {
+            Number[] array = (Number[]) object;
+            long[] result = new long[array.length];
+            for (int i = 0; i < array.length; i++) {
+                result[i] = array[i].longValue();
+            }
+            return result;
+        } else {
+            List<Number> list = (List<Number>) object;
+            long[] result = new long[list.size()];
+            for (int i = 0; i < list.size(); i++) {
+                result[i] = list.get(i).longValue();
+            }
+            return result;
+        }
+    }
+
+    default Long readLongValue(Map<String, Object> snapshot, String fieldName) {
+        Object object = snapshot.get(fieldName);
+        if (object instanceof Long) {
+            return (Long) object;
+        } else {
+            Number number = (Number) object;
+            return number.longValue();
+        }
+    }
+
+    default Integer readIntegerValue(Map<String, Object> snapshot, String fieldName) {
+        Object object = snapshot.get(fieldName);
+        if (object instanceof Integer) {
+            return (Integer) object;
+        } else {
+            Number number = (Number) object;
+            return number.intValue();
+        }
+    }
+
+    default int readIntValue(Map<String, Object> snapshot, String fieldName) {
+        Object object = snapshot.get(fieldName);
+        if (object instanceof Integer) {
+            return (Integer) object;
+        } else {
+            Number number = (Number) object;
+            return number.intValue();
+        }
     }
 
 }

@@ -32,6 +32,8 @@ import io.github.bucket4j.distributed.versioning.Versions;
 import io.github.bucket4j.util.ComparableByContent;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import static io.github.bucket4j.distributed.versioning.Versions.v_7_0_0;
 
@@ -61,6 +63,26 @@ public class CreateSnapshotCommand implements RemoteCommand<RemoteBucketState>, 
         @Override
         public Class<CreateSnapshotCommand> getSerializedType() {
             return CreateSnapshotCommand.class;
+        }
+
+        @Override
+        public CreateSnapshotCommand fromJsonCompatibleSnapshot(Map<String, Object> snapshot, Version backwardCompatibilityVersion) throws IOException {
+            int formatNumber = readIntValue(snapshot, "version");
+            Versions.check(formatNumber, v_7_0_0, v_7_0_0);
+
+            return new CreateSnapshotCommand();
+        }
+
+        @Override
+        public Map<String, Object> toJsonCompatibleSnapshot(CreateSnapshotCommand command, Version backwardCompatibilityVersion) throws IOException {
+            Map<String, Object> result = new HashMap<>();
+            result.put("version", v_7_0_0.getNumber());
+            return result;
+        }
+
+        @Override
+        public String getTypeName() {
+            return "CreateSnapshotCommand";
         }
 
     };

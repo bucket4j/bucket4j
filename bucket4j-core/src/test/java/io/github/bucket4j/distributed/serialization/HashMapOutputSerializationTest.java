@@ -2,11 +2,10 @@ package io.github.bucket4j.distributed.serialization;
 
 import io.github.bucket4j.distributed.versioning.Versions;
 
-import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
 
-public class JdkDataOutputSerializationTest extends AbstractSerializationTest {
+public class HashMapOutputSerializationTest extends AbstractSerializationTest {
 
     private Map<Class, SerializationHandle> allHandles = new HashMap<Class, SerializationHandle>()
     {{
@@ -22,18 +21,8 @@ public class JdkDataOutputSerializationTest extends AbstractSerializationTest {
             throw new IllegalArgumentException("Serializer for class " + serializationHandle + " is not specified");
         }
         try {
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            DataOutputStream dos = new DataOutputStream(baos);
-            serializationHandle.serialize(DataOutputSerializationAdapter.INSTANCE, dos, object, Versions.getLatest());
-            byte[] bytes = baos.toByteArray();
-
-            ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
-            DataInputStream input = new DataInputStream(bais);
-            T deserialized = (T) serializationHandle.deserialize(DataOutputSerializationAdapter.INSTANCE, input, Versions.getLatest());
-            if (input.available() > 0) {
-                throw new IllegalStateException("Input stream was npt read to the end fo class " + object.getClass());
-            }
-            return deserialized;
+            Map<String, Object> snapshot = serializationHandle.toJsonCompatibleSnapshot(object, Versions.getLatest());
+            return (T) serializationHandle.fromJsonCompatibleSnapshot(snapshot, Versions.getLatest());
         } catch (Exception e) {
             throw new IllegalStateException(e);
         }

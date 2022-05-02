@@ -28,6 +28,8 @@ import io.github.bucket4j.distributed.versioning.Versions;
 import io.github.bucket4j.util.ComparableByContent;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import static io.github.bucket4j.distributed.versioning.Versions.v_7_0_0;
 
@@ -68,7 +70,7 @@ public class VerboseCommand<T> implements RemoteCommand<RemoteVerboseResult<T>>,
             Versions.check(formatNumber, v_7_0_0, v_7_0_0);
 
             RemoteCommand<?> targetCommand  = RemoteCommand.deserialize(adapter, input, backwardCompatibilityVersion);
-            return new VerboseCommand(targetCommand);
+            return new VerboseCommand<>(targetCommand);
         }
 
         @Override
@@ -86,6 +88,28 @@ public class VerboseCommand<T> implements RemoteCommand<RemoteVerboseResult<T>>,
         @Override
         public Class<VerboseCommand<?>> getSerializedType() {
             return (Class) VerboseCommand.class;
+        }
+
+        @Override
+        public VerboseCommand<?> fromJsonCompatibleSnapshot(Map<String, Object> snapshot, Version backwardCompatibilityVersion) throws IOException {
+            int formatNumber = readIntValue(snapshot, "version");
+            Versions.check(formatNumber, v_7_0_0, v_7_0_0);
+
+            RemoteCommand<?> targetCommand = RemoteCommand.fromJsonCompatibleSnapshot((Map<String, Object>) snapshot.get("targetCommand"), backwardCompatibilityVersion);
+            return new VerboseCommand<>(targetCommand);
+        }
+
+        @Override
+        public Map<String, Object> toJsonCompatibleSnapshot(VerboseCommand<?> command, Version backwardCompatibilityVersion) throws IOException {
+            Map<String, Object> result = new HashMap<>();
+            result.put("version", v_7_0_0.getNumber());
+            result.put("targetCommand", RemoteCommand.toJsonCompatibleSnapshot(command.targetCommand, backwardCompatibilityVersion));
+            return result;
+        }
+
+        @Override
+        public String getTypeName() {
+            return "VerboseCommand";
         }
     };
 

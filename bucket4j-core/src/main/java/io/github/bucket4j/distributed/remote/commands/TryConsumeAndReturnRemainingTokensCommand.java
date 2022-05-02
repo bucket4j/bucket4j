@@ -26,6 +26,9 @@ import io.github.bucket4j.distributed.serialization.SerializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.MutableBucketEntry;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
@@ -67,6 +70,28 @@ public class TryConsumeAndReturnRemainingTokensCommand implements RemoteCommand<
         @Override
         public Class<TryConsumeAndReturnRemainingTokensCommand> getSerializedType() {
             return TryConsumeAndReturnRemainingTokensCommand.class;
+        }
+
+        @Override
+        public TryConsumeAndReturnRemainingTokensCommand fromJsonCompatibleSnapshot(Map<String, Object> snapshot, Version backwardCompatibilityVersion) throws IOException {
+            int formatNumber = readIntValue(snapshot, "version");
+            Versions.check(formatNumber, v_7_0_0, v_7_0_0);
+
+            long tokensToConsume = readLongValue(snapshot, "tokensToConsume");
+            return new TryConsumeAndReturnRemainingTokensCommand(tokensToConsume);
+        }
+
+        @Override
+        public Map<String, Object> toJsonCompatibleSnapshot(TryConsumeAndReturnRemainingTokensCommand command, Version backwardCompatibilityVersion) throws IOException {
+            Map<String, Object> result = new HashMap<>();
+            result.put("version", v_7_0_0.getNumber());
+            result.put("tokensToConsume", command.tokensToConsume);
+            return result;
+        }
+
+        @Override
+        public String getTypeName() {
+            return "TryConsumeAndReturnRemainingTokensCommand";
         }
 
     };

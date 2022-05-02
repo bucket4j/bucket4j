@@ -22,6 +22,7 @@ package io.github.bucket4j.distributed.serialization;
 import io.github.bucket4j.*;
 import io.github.bucket4j.distributed.remote.*;
 import io.github.bucket4j.distributed.remote.commands.*;
+import io.github.bucket4j.distributed.versioning.UnsupportedNamedTypeException;
 import io.github.bucket4j.distributed.versioning.UnsupportedTypeException;
 import io.github.bucket4j.local.LockFreeBucket;
 import io.github.bucket4j.local.SynchronizedBucket;
@@ -48,6 +49,7 @@ public class SerializationHandles {
             UnsupportedTypeError.SERIALIZATION_HANDLE, // 16
             UsageOfObsoleteApiError.SERIALIZATION_HANDLE, // 17
             UsageOfUnsupportedApiError.SERIALIZATION_HANDLE, // 18
+            UnsupportedNamedTypeError.SERIALIZATION_HANDLE, // 19
 
             CreateInitialStateCommand.SERIALIZATION_HANDLE, // 20
             CreateInitialStateAndExecuteCommand.SERIALIZATION_HANDLE, // 21
@@ -76,9 +78,12 @@ public class SerializationHandles {
 
     private final Collection<SerializationHandle<?>> allHandles;
     private final SerializationHandle[] handlesById;
+    private final Map<String, SerializationHandle<?>> handlesByName;
 
 
     public SerializationHandles(Collection<SerializationHandle<?>> allHandles) {
+        this.handlesByName = new HashMap<>();
+
         Map<Integer, SerializationHandle<?>> serializersById = new HashMap<>();
         int maxTypeId = 0;
 
@@ -96,7 +101,32 @@ public class SerializationHandles {
                 throw new IllegalArgumentException(msg);
             }
             serializersById.put(typeId, handle);
+
+            String typeName = handle.getTypeName();
+            if (typeName == null || typeName.isEmpty()) {
+                throw new IllegalArgumentException("null typeName detected for " + handle);
+            }
+            conflictingHandle = handlesByName.get(typeName);
+            if (conflictingHandle != null) {
+                String msg = "Serialization typeName " + typeName + " duplicated for " + handle + " and " + conflictingHandle;
+                throw new IllegalArgumentException(msg);
+            }
+            handlesByName.put(typeName, handle);
         }
+
+        for (SerializationHandle<?> handle : PrimitiveSerializationHandles.primitiveHandlesById) {
+            String typeName = handle.getTypeName();
+            if (typeName == null || typeName.isEmpty()) {
+                throw new IllegalArgumentException("null typeName detected for " + handle);
+            }
+            SerializationHandle<?> conflictingHandle = handlesByName.get(typeName);
+            if (conflictingHandle != null) {
+                String msg = "Serialization typeName " + typeName + " duplicated for " + handle + " and " + conflictingHandle;
+                throw new IllegalArgumentException(msg);
+            }
+            handlesByName.put(typeName, handle);
+        }
+
         this.allHandles = Collections.unmodifiableCollection(allHandles);
 
         this.handlesById = new SerializationHandle[maxTypeId + 1];
@@ -130,6 +160,14 @@ public class SerializationHandles {
 
     public Collection<SerializationHandle<?>> getAllHandles() {
         return allHandles;
+    }
+
+    public SerializationHandle<?> getHandleByTypeName(String typeName) {
+        SerializationHandle<?> handle = handlesByName.get(typeName);
+        if (handle == null) {
+            throw new UnsupportedNamedTypeException(typeName);
+        }
+        return handle;
     }
 
 }

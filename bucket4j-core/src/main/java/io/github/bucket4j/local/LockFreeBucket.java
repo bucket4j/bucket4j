@@ -30,6 +30,8 @@ import io.github.bucket4j.util.ComparableByContent;
 
 import java.io.IOException;
 import java.io.NotSerializableException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static io.github.bucket4j.distributed.versioning.Versions.v_7_0_0;
@@ -531,6 +533,33 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket, Compa
         @Override
         public Class<LockFreeBucket> getSerializedType() {
             return LockFreeBucket.class;
+        }
+
+        @Override
+        public LockFreeBucket fromJsonCompatibleSnapshot(Map<String, Object> snapshot, Version backwardCompatibilityVersion) throws IOException {
+            int formatNumber = readIntValue(snapshot, "version");
+            Versions.check(formatNumber, v_7_0_0, v_7_0_0);
+
+            Map<String, Object> stateSnapshot = (Map<String, Object>) snapshot.get("state");
+            BucketState state = BucketState.fromJsonCompatibleSnapshot(stateSnapshot, backwardCompatibilityVersion);
+
+            return new LockFreeBucket(new AtomicReference<>(state), TimeMeter.SYSTEM_MILLISECONDS, BucketListener.NOPE);
+        }
+
+        @Override
+        public Map<String, Object> toJsonCompatibleSnapshot(LockFreeBucket bucket, Version backwardCompatibilityVersion) throws IOException {
+            if (bucket.timeMeter != TimeMeter.SYSTEM_MILLISECONDS) {
+                throw new NotSerializableException("Only TimeMeter.SYSTEM_MILLISECONDS can be serialized safely");
+            }
+            Map<String, Object> result = new HashMap<>();
+            result.put("version", v_7_0_0.getNumber());
+            result.put("state", BucketState.toJsonCompatibleSnapshot(bucket.stateRef.get(), backwardCompatibilityVersion));
+            return result;
+        }
+
+        @Override
+        public String getTypeName() {
+            return "LockFreeBucket";
         }
 
     };

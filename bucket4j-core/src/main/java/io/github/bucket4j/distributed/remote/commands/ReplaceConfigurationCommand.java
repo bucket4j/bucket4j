@@ -35,6 +35,8 @@ import io.github.bucket4j.distributed.versioning.Versions;
 import io.github.bucket4j.util.ComparableByContent;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import static io.github.bucket4j.distributed.versioning.Versions.v_7_0_0;
 
@@ -71,6 +73,31 @@ public class ReplaceConfigurationCommand implements RemoteCommand<Nothing>, Comp
         @Override
         public Class<ReplaceConfigurationCommand> getSerializedType() {
             return ReplaceConfigurationCommand.class;
+        }
+
+        @Override
+        public ReplaceConfigurationCommand fromJsonCompatibleSnapshot(Map<String, Object> snapshot, Version backwardCompatibilityVersion) throws IOException {
+            int formatNumber = readIntValue(snapshot, "version");
+            Versions.check(formatNumber, v_7_0_0, v_7_0_0);
+
+            TokensInheritanceStrategy tokensInheritanceStrategy = TokensInheritanceStrategy.valueOf((String) snapshot.get("tokensInheritanceStrategy"));
+            BucketConfiguration newConfiguration = BucketConfiguration.SERIALIZATION_HANDLE
+                    .fromJsonCompatibleSnapshot((Map<String, Object>) snapshot.get("newConfiguration"), backwardCompatibilityVersion);
+            return new ReplaceConfigurationCommand(newConfiguration, tokensInheritanceStrategy);
+        }
+
+        @Override
+        public Map<String, Object> toJsonCompatibleSnapshot(ReplaceConfigurationCommand command, Version backwardCompatibilityVersion) throws IOException {
+            Map<String, Object> result = new HashMap<>();
+            result.put("version", v_7_0_0.getNumber());
+            result.put("tokensInheritanceStrategy", command.tokensInheritanceStrategy.toString());
+            result.put("newConfiguration", BucketConfiguration.SERIALIZATION_HANDLE.toJsonCompatibleSnapshot(command.newConfiguration, backwardCompatibilityVersion));
+            return result;
+        }
+
+        @Override
+        public String getTypeName() {
+            return "ReplaceConfigurationCommand";
         }
 
     };

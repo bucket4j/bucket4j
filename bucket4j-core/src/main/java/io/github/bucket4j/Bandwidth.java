@@ -28,6 +28,8 @@ import io.github.bucket4j.util.ComparableByContent;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
 
 import static io.github.bucket4j.distributed.versioning.Versions.v_7_0_0;
 
@@ -239,6 +241,47 @@ public class Bandwidth implements ComparableByContent<Bandwidth> {
         @Override
         public Class<Bandwidth> getSerializedType() {
             return Bandwidth.class;
+        }
+
+        @Override
+        public Bandwidth fromJsonCompatibleSnapshot(Map<String, Object> snapshot, Version backwardCompatibilityVersion) throws IOException {
+            int formatNumber = readIntValue(snapshot, "version");
+            Versions.check(formatNumber, v_7_0_0, v_7_0_0);
+
+            long capacity = readLongValue(snapshot, "capacity");
+            long initialTokens = readLongValue(snapshot, "initialTokens");
+            long refillPeriodNanos = readLongValue(snapshot, "refillPeriodNanos");
+            long refillTokens = readLongValue(snapshot, "refillTokens");
+            boolean refillIntervally = (boolean) snapshot.get("refillIntervally");
+            long timeOfFirstRefillMillis = readLongValue(snapshot, "timeOfFirstRefillMillis");
+            boolean useAdaptiveInitialTokens = (boolean) snapshot.get("useAdaptiveInitialTokens");
+            String id = (String) snapshot.get("id");
+
+            return new Bandwidth(capacity, refillPeriodNanos, refillTokens, initialTokens, refillIntervally,
+                    timeOfFirstRefillMillis, useAdaptiveInitialTokens, id);
+        }
+
+        @Override
+        public Map<String, Object> toJsonCompatibleSnapshot(Bandwidth bandwidth, Version backwardCompatibilityVersion) throws IOException {
+            Map<String, Object> result = new HashMap<>();
+            result.put("version", v_7_0_0.getNumber());
+
+            result.put("capacity", bandwidth.capacity);
+            result.put("initialTokens", bandwidth.initialTokens);
+            result.put("refillPeriodNanos", bandwidth.refillPeriodNanos);
+            result.put("refillTokens", bandwidth.refillTokens);
+            result.put("refillIntervally", bandwidth.refillIntervally);
+            result.put("timeOfFirstRefillMillis", bandwidth.timeOfFirstRefillMillis);
+            result.put("useAdaptiveInitialTokens", bandwidth.useAdaptiveInitialTokens);
+            if (bandwidth.id != null) {
+                result.put("id", bandwidth.id);
+            }
+            return result;
+        }
+
+        @Override
+        public String getTypeName() {
+            return "Bandwidth";
         }
 
     };

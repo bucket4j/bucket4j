@@ -32,6 +32,8 @@ import io.github.bucket4j.distributed.versioning.Versions;
 import io.github.bucket4j.util.ComparableByContent;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import static io.github.bucket4j.distributed.serialization.PrimitiveSerializationHandles.LONG_HANDLE;
 import static io.github.bucket4j.distributed.versioning.Versions.v_7_0_0;
@@ -66,6 +68,28 @@ public class ConsumeIgnoringRateLimitsCommand implements RemoteCommand<Long>, Co
         @Override
         public Class<ConsumeIgnoringRateLimitsCommand> getSerializedType() {
             return ConsumeIgnoringRateLimitsCommand.class;
+        }
+
+        @Override
+        public ConsumeIgnoringRateLimitsCommand fromJsonCompatibleSnapshot(Map<String, Object> snapshot, Version backwardCompatibilityVersion) throws IOException {
+            int formatNumber = readIntValue(snapshot, "version");
+            Versions.check(formatNumber, v_7_0_0, v_7_0_0);
+
+            long tokensToConsume = readLongValue(snapshot, "tokensToConsume");
+            return new ConsumeIgnoringRateLimitsCommand(tokensToConsume);
+        }
+
+        @Override
+        public Map<String, Object> toJsonCompatibleSnapshot(ConsumeIgnoringRateLimitsCommand command, Version backwardCompatibilityVersion) throws IOException {
+            Map<String, Object> result = new HashMap<>();
+            result.put("version", v_7_0_0.getNumber());
+            result.put("tokensToConsume", command.tokensToConsume);
+            return result;
+        }
+
+        @Override
+        public String getTypeName() {
+            return "ConsumeIgnoringRateLimitsCommand";
         }
 
     };
