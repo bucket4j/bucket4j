@@ -62,7 +62,7 @@
         <infinispan.latest.version>11.0.1.Final</infinispan.latest.version>
         <ehcache.version>3.8.1</ehcache.version>
 
-        <testcontainers.version>1.15.1</testcontainers.version>
+        <testcontainers.version>1.17.1</testcontainers.version>
         <lettuce-version>5.0.2.RELEASE</lettuce-version>
         <jedis.version>2.9.0</jedis.version>
         <redisson.version>3.16.8</redisson.version>
