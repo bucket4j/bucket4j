@@ -17,10 +17,10 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package io.github.bucket4j;
+package io.github.bucket4j.benchmark;
 
-import io.github.bucket4j.state.LocalUnsafeState;
-import io.github.bucket4j.state.LocalUnsafeState_ieee754;
+import io.github.bucket4j.benchmark.state.LocalUnsafeState;
+import io.github.bucket4j.benchmark.state.LocalUnsafeState_ieee754;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Mode;

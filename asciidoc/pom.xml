@@ -123,8 +123,8 @@
             </activation>
             <properties>
                 <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-                <maven.compiler.source>1.8</maven.compiler.source>
-                <maven.compiler.target>1.8</maven.compiler.target>
+                <maven.compiler.source>1.11</maven.compiler.source>
+                <maven.compiler.target>1.11</maven.compiler.target>
                 <asciidoctor.maven.plugin.version>2.2.1</asciidoctor.maven.plugin.version>
                 <asciidoctorj.pdf.version>1.6.0</asciidoctorj.pdf.version>
                 <asciidoctorj.version>2.5.1</asciidoctorj.version>

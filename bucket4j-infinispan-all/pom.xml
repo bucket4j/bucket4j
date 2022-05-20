@@ -15,7 +15,6 @@
     <artifactId>bucket4j-infinispan-all</artifactId>
     <modules>
         <module>bucket4j-infinispan</module>
-        <module>bucket4j-infinispan-8</module>
     </modules>
 
 </project>

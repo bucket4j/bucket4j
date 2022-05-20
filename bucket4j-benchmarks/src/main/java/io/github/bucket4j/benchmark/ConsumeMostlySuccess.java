@@ -17,9 +17,10 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package io.github.bucket4j;
+package io.github.bucket4j.benchmark;
 
-import io.github.bucket4j.state.*;
+import io.github.bucket4j.UninterruptibleBlockingStrategy;
+import io.github.bucket4j.benchmark.state.*;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Mode;

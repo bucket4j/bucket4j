@@ -17,12 +17,11 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package io.github.bucket4j.state;
+package io.github.bucket4j.benchmark.state;
 
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.Bucket4j;
-import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.local.SynchronizationStrategy;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.State;
@@ -30,35 +29,18 @@ import org.openjdk.jmh.annotations.State;
 import java.time.Duration;
 
 @State(Scope.Benchmark)
-public class LocalUnsafeState {
+public class LocalSynchronizedState {
 
-    public final Bucket bucket = Bucket.builder()
+    public final Bucket unlimitedBucket = Bucket.builder()
             .withMillisecondPrecision()
             .addLimit(
                     Bandwidth.simple(Long.MAX_VALUE / 2, Duration.ofNanos(Long.MAX_VALUE / 2))
             )
-            .withSynchronizationStrategy(SynchronizationStrategy.NONE)
+            .withSynchronizationStrategy(SynchronizationStrategy.SYNCHRONIZED)
             .build();
 
-
-    public final Bucket bucketWithoutRefill = Bucket.builder()
-            .withMillisecondPrecision()
-            .withCustomTimePrecision(new TimeMeter() {
-                @Override
-                public long currentTimeNanos() {
-                    return 0;
-                }
-
-                @Override
-                public boolean isWallClockBased() {
-                    return false;
-                }
-            })
-            .addLimit(
-                    Bandwidth.simple(Long.MAX_VALUE / 2, Duration.ofNanos(Long.MAX_VALUE / 2))
-            )
-            .withSynchronizationStrategy(SynchronizationStrategy.NONE)
+    public final Bucket _10_milion_rps_Bucket = Bucket.builder()
+            .addLimit(Bandwidth.simple(10_000_000, Duration.ofSeconds(1)).withInitialTokens(0))
+            .withSynchronizationStrategy(SynchronizationStrategy.SYNCHRONIZED)
             .build();
-
-
 }
