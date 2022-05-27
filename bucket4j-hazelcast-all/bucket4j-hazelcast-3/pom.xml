@@ -7,11 +7,11 @@
 
     <parent>
         <groupId>com.github.vladimir-bukhtoyarov</groupId>
-        <artifactId>bucket4j-hazelcast-all</artifactId>
-        <version>7.5.0</version>
+        <artifactId>bucket4j_jdk8-hazelcast-all</artifactId>
+        <version>8.0.0</version>
         <relativePath>../../bucket4j-hazelcast-all</relativePath>
     </parent>
-    <artifactId>bucket4j-hazelcast-3</artifactId>
+    <artifactId>bucket4j_jdk8-hazelcast-3</artifactId>
     <name>bucket4j-hazelcast-3</name>
     <description>Bucket4j integration with Hazelcast 3.x branch</description>
 
@@ -22,17 +22,17 @@
     <dependencies>
         <dependency>
             <groupId>com.github.vladimir-bukhtoyarov</groupId>
-            <artifactId>bucket4j-core</artifactId>
+            <artifactId>bucket4j_jdk8-core</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.github.vladimir-bukhtoyarov</groupId>
-            <artifactId>bucket4j-jcache</artifactId>
+            <artifactId>bucket4j_jdk8-jcache</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.github.vladimir-bukhtoyarov</groupId>
-            <artifactId>bucket4j-core</artifactId>
+            <artifactId>bucket4j_jdk8-core</artifactId>
             <version>${project.version}</version>
             <type>test-jar</type>
             <scope>test</scope>

@@ -6,12 +6,12 @@
 
     <parent>
         <groupId>com.github.vladimir-bukhtoyarov</groupId>
-        <artifactId>bucket4j-parent</artifactId>
-        <version>7.5.0</version>
+        <artifactId>bucket4j_jdk8-parent</artifactId>
+        <version>8.0.0</version>
         <relativePath>../bucket4j-parent</relativePath>
     </parent>
 
-    <artifactId>bucket4j-dynamodb-sdk-v1</artifactId>
+    <artifactId>bucket4j_jdk8-dynamodb-sdk-v1</artifactId>
     <name>bucket4j-dynamodb-sdk-v1</name>
 
     <repositories>
@@ -40,7 +40,7 @@
     <dependencies>
         <dependency>
             <groupId>com.github.vladimir-bukhtoyarov</groupId>
-            <artifactId>bucket4j-core</artifactId>
+            <artifactId>bucket4j_jdk8-core</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
@@ -49,7 +49,7 @@
         </dependency>
         <dependency>
             <groupId>com.github.vladimir-bukhtoyarov</groupId>
-            <artifactId>bucket4j-core</artifactId>
+            <artifactId>bucket4j_jdk8-core</artifactId>
             <version>${project.version}</version>
             <type>test-jar</type>
             <scope>test</scope>

@@ -7,12 +7,12 @@
 
     <parent>
         <groupId>com.github.vladimir-bukhtoyarov</groupId>
-        <artifactId>bucket4j-infinispan-all</artifactId>
-        <version>7.5.0</version>
+        <artifactId>bucket4j_jdk8-infinispan-all</artifactId>
+        <version>8.0.0</version>
         <relativePath>../../bucket4j-infinispan-all</relativePath>
     </parent>
     
-    <artifactId>bucket4j-infinispan-8</artifactId>
+    <artifactId>bucket4j_jdk8-infinispan-8</artifactId>
     <name>bucket4j-infinispan-8</name>
     <description>Bucket4j integration with Infinispan 8.x</description>
 
@@ -24,19 +24,19 @@
     <dependencies>
         <dependency>
             <groupId>com.github.vladimir-bukhtoyarov</groupId>
-            <artifactId>bucket4j-core</artifactId>
+            <artifactId>bucket4j_jdk8-core</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.github.vladimir-bukhtoyarov</groupId>
-            <artifactId>bucket4j-core</artifactId>
+            <artifactId>bucket4j_jdk8-core</artifactId>
             <version>${project.version}</version>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.github.vladimir-bukhtoyarov</groupId>
-            <artifactId>bucket4j-jcache</artifactId>
+            <artifactId>bucket4j_jdk8-jcache</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>

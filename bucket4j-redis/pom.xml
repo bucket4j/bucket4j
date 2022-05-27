@@ -7,11 +7,11 @@
 
     <parent>
         <groupId>com.github.vladimir-bukhtoyarov</groupId>
-        <artifactId>bucket4j-parent</artifactId>
-        <version>7.5.0</version>
+        <artifactId>bucket4j_jdk8-parent</artifactId>
+        <version>8.0.0</version>
         <relativePath>../bucket4j-parent</relativePath>
     </parent>
-    <artifactId>bucket4j-redis</artifactId>
+    <artifactId>bucket4j_jdk8-redis</artifactId>
     <name>bucket4j-redis</name>
 
     <properties>
@@ -33,12 +33,12 @@
     <dependencies>
         <dependency>
             <groupId>com.github.vladimir-bukhtoyarov</groupId>
-            <artifactId>bucket4j-core</artifactId>
+            <artifactId>bucket4j_jdk8-core</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.github.vladimir-bukhtoyarov</groupId>
-            <artifactId>bucket4j-core</artifactId>
+            <artifactId>bucket4j_jdk8-core</artifactId>
             <version>${project.version}</version>
             <type>test-jar</type>
             <scope>test</scope>
@@ -70,14 +70,14 @@
         </dependency>
         <dependency>
             <groupId>com.github.vladimir-bukhtoyarov</groupId>
-            <artifactId>bucket4j-core</artifactId>
+            <artifactId>bucket4j_jdk8-core</artifactId>
             <version>${project.version}</version>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
 <!--        <dependency>-->
 <!--            <groupId>com.github.vladimir-bukhtoyarov</groupId>-->
-<!--            <artifactId>bucket4j-lua</artifactId>-->
+<!--            <artifactId>bucket4j_jdk8-lua</artifactId>-->
 <!--            <version>${project.version}</version>-->
 <!--            <type>test-jar</type>-->
 <!--            <scope>test</scope>-->
