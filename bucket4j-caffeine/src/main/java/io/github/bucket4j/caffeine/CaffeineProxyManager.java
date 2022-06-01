@@ -36,7 +36,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * The extension of Bucket4j library addressed to support <a href="https://hazelcast.com//">Hazelcast</a> in-memory data grid.
+ * The extension of Bucket4j library addressed to support <a href="https://github.com/ben-manes/caffeine">Caffeine</a> caching library.
  */
 public class CaffeineProxyManager<K> extends AbstractProxyManager<K> {
 
