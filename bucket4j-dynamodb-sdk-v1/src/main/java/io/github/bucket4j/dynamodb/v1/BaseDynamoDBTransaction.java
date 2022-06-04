@@ -26,6 +26,7 @@ import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException;
 import com.amazonaws.services.dynamodbv2.model.GetItemRequest;
 import com.amazonaws.services.dynamodbv2.model.PutItemRequest;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.CompareAndSwapOperation;
+import io.github.bucket4j.distributed.remote.RemoteBucketState;
 
 import java.nio.ByteBuffer;
 import java.util.Collections;
@@ -81,7 +82,7 @@ abstract class BaseDynamoDBTransaction implements CompareAndSwapOperation {
     }
 
     @Override
-    public final boolean compareAndSwap(byte[] originalData, byte[] newData) {
+    public final boolean compareAndSwap(byte[] originalData, byte[] newData, RemoteBucketState newState) {
         Map<String, AttributeValue> item = new HashMap<>();
         item.put(keyAttr, getKeyAttributeValue());
         item.put(stateAttr, new AttributeValue().withB(ByteBuffer.wrap(newData)));

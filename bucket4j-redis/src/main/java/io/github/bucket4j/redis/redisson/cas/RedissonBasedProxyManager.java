@@ -24,6 +24,7 @@ import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AbstractCompareAndSwapBasedProxyManager;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AsyncCompareAndSwapOperation;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.CompareAndSwapOperation;
+import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.netty.buffer.ByteBuf;
 import org.redisson.api.RFuture;
 import org.redisson.client.codec.ByteArrayCodec;
@@ -42,7 +43,7 @@ import java.util.concurrent.CompletableFuture;
 
 public class RedissonBasedProxyManager extends AbstractCompareAndSwapBasedProxyManager<String> {
 
-    public static RedisCommand<Boolean> SETPXNX_WORK_ARROUND = new RedisCommand<Boolean>("SET", new BooleanNotNullReplayConvertor());
+    public static RedisCommand<Boolean> SETPXNX_WORK_ARROUND = new RedisCommand<>("SET", new BooleanNotNullReplayConvertor());
 
     private final CommandExecutor commandExecutor;
     private final long ttlMillis;
@@ -67,7 +68,7 @@ public class RedissonBasedProxyManager extends AbstractCompareAndSwapBasedProxyM
                 return Optional.ofNullable(persistedState);
             }
             @Override
-            public boolean compareAndSwap(byte[] originalData, byte[] newData) {
+            public boolean compareAndSwap(byte[] originalData, byte[] newData, RemoteBucketState newState) {
                 if (originalData == null) {
                     // Redisson prohibits the usage null as values, so "replace" must not be used in such cases
                     RFuture<Boolean> redissonFuture = commandExecutor.writeAsync(key, ByteArrayCodec.INSTANCE, SETPXNX_WORK_ARROUND, key, encodeByteArray(newData), "PX", ttlMillis, "NX");
@@ -101,7 +102,7 @@ public class RedissonBasedProxyManager extends AbstractCompareAndSwapBasedProxyM
                     .thenApply((byte[] resultBytes) -> Optional.ofNullable(resultBytes));
             }
             @Override
-            public CompletableFuture<Boolean> compareAndSwap(byte[] originalData, byte[] newData) {
+            public CompletableFuture<Boolean> compareAndSwap(byte[] originalData, byte[] newData, RemoteBucketState newState) {
                 if (originalData == null) {
                     RFuture<Boolean> redissonFuture = commandExecutor.writeAsync(key, ByteArrayCodec.INSTANCE, SETPXNX_WORK_ARROUND, key, encodeByteArray(newData), "PX", ttlMillis, "NX");
                     return convertFuture(redissonFuture);

@@ -25,6 +25,7 @@ import io.github.bucket4j.distributed.jdbc.SQLProxyConfiguration;
 import io.github.bucket4j.distributed.jdbc.SQLProxyConfigurationBuilder;
 import io.github.bucket4j.distributed.proxy.generic.pessimistic_locking.AbstractLockBasedProxyManager;
 import io.github.bucket4j.distributed.proxy.generic.pessimistic_locking.LockBasedTransaction;
+import io.github.bucket4j.distributed.remote.RemoteBucketState;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -116,7 +117,7 @@ public class PostgreSQLadvisoryLockBasedProxyManager extends AbstractLockBasedPr
             }
 
             @Override
-            public void update(byte[] data) {
+            public void update(byte[] data, RemoteBucketState newState) {
                 try {
                     try (PreparedStatement updateStatement = connection.prepareStatement(updateSqlQuery)) {
                         updateStatement.setBytes(1, data);
@@ -138,7 +139,7 @@ public class PostgreSQLadvisoryLockBasedProxyManager extends AbstractLockBasedPr
             }
 
             @Override
-            public void create(byte[] data) {
+            public void create(byte[] data, RemoteBucketState newState) {
                 try {
                     try (PreparedStatement insertStatement = connection.prepareStatement(insertSqlQuery)) {
                         insertStatement.setLong(1, key);

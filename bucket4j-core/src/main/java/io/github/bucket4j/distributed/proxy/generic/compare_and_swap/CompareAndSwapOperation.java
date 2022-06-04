@@ -20,6 +20,8 @@
 
 package io.github.bucket4j.distributed.proxy.generic.compare_and_swap;
 
+import io.github.bucket4j.distributed.remote.RemoteBucketState;
+
 import java.util.Optional;
 
 public interface CompareAndSwapOperation {
@@ -36,9 +38,10 @@ public interface CompareAndSwapOperation {
      *
      * @param originalData previous bucket state(can be null).
      * @param newData new bucket state
+     * @param newState new state of bucket - can be used to extract additional data is useful for persistence or logging.
      *
      * @return {@code true} if data changed, {@code false} if another parallel transaction achieved success instead of current transaction
      */
-    boolean compareAndSwap(byte[] originalData, byte[] newData);
+    boolean compareAndSwap(byte[] originalData, byte[] newData, RemoteBucketState newState);
 
 }
