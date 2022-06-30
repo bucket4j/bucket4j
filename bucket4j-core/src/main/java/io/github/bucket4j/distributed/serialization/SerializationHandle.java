@@ -38,6 +38,8 @@ public interface SerializationHandle<T> {
 
     Class<T> getSerializedType();
 
+    Version getEffectiveVersion(T serializableObject);
+
     T fromJsonCompatibleSnapshot(Map<String, Object> snapshot, Version backwardCompatibilityVersion) throws IOException;
 
     Map<String, Object> toJsonCompatibleSnapshot(T serializableObject, Version backwardCompatibilityVersion) throws IOException;
@@ -92,6 +94,19 @@ public interface SerializationHandle<T> {
 
     default Long readLongValue(Map<String, Object> snapshot, String fieldName) {
         Object object = snapshot.get(fieldName);
+        if (object instanceof Long) {
+            return (Long) object;
+        } else {
+            Number number = (Number) object;
+            return number.longValue();
+        }
+    }
+
+    default Long readOptionalLongValue(Map<String, Object> snapshot, String fieldName) {
+        Object object = snapshot.get(fieldName);
+        if (object == null) {
+            return null;
+        }
         if (object instanceof Long) {
             return (Long) object;
         } else {

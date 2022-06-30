@@ -20,7 +20,9 @@
 package io.github.bucket4j.distributed;
 
 import io.github.bucket4j.Bucket;
+import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.BucketListener;
+import io.github.bucket4j.TokensInheritanceStrategy;
 import io.github.bucket4j.distributed.proxy.RemoteBucketBuilder;
 import io.github.bucket4j.distributed.proxy.optimization.Optimization;
 
@@ -30,6 +32,16 @@ import java.time.Duration;
  * Provides a light-weight proxy to bucket which state actually stored in external storage, like in-memory jvm or relational database.
  */
 public interface BucketProxy extends Bucket {
+
+    /**
+     * TODO
+     *
+     * @param newConfiguration
+     * @param tokensInheritanceStrategy
+     * @param configurationVersion
+     * @return
+     */
+    long tryReplaceConfiguration(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy, long configurationVersion);
 
     @Override
     BucketProxy toListenable(BucketListener listener);

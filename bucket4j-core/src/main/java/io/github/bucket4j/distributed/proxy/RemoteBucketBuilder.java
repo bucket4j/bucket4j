@@ -21,6 +21,7 @@
 package io.github.bucket4j.distributed.proxy;
 
 import io.github.bucket4j.BucketConfiguration;
+import io.github.bucket4j.TokensInheritanceStrategy;
 import io.github.bucket4j.distributed.BucketProxy;
 import io.github.bucket4j.distributed.proxy.optimization.Optimization;
 
@@ -89,5 +90,65 @@ public interface RemoteBucketBuilder<K> {
      * @return new instance of {@link BucketProxy} created in lazy mode.
      */
     BucketProxy build(K key, Supplier<BucketConfiguration> configurationSupplier);
+
+    /**
+     * Builds the {@link BucketProxy}. Proxy is being created in lazy mode, its state is not persisted in external storage until first interaction,
+     * so if you want to save bucket state immediately then just call {@link BucketProxy#getAvailableTokens()}.
+     *
+     * <p>
+     *     If you had not used {@link #withOptimization(Optimization)} during construction then created proxy can be treated as cheap object,
+     *     feel free just build, use and forget as many proxies under the same key as you need, do not cache the built instances.
+     * </p>
+     *
+     * @param key the key that used in external storage to distinguish one bucket from another.
+     * @param configuration limits configuration
+     * @param configurationVersion specifies required configuration version
+     * @param tokensInheritanceStrategy the strategy that will be used for token migration if configurationVersion of persisted bucket is less that provided configurationVersion
+     *
+     * @return new instance of {@link BucketProxy} created in lazy mode.
+     */
+    BucketProxy build(K key, BucketConfiguration configuration, long configurationVersion, TokensInheritanceStrategy tokensInheritanceStrategy);
+
+    /**
+     * Has the same semantic with {@link #build(Object, BucketConfiguration, long, TokensInheritanceStrategy)},
+     * but additionally provides ability to provide configuration lazily, that can be helpful when figuring-out the right configuration parameters
+     * is costly, for example because parameters for particular {@code key} are stored in external database,
+     * {@code configurationSupplier} will be called if and only if bucket has not been persisted before.
+     *
+     *
+     * @param key the key that used in external storage to distinguish one bucket from another.
+     * @param configurationSupplier provider for bucket configuration
+     * @param configurationVersion specifies required configuration version
+     * @param tokensInheritanceStrategy the strategy that will be used for token migration if configurationVersion of persisted bucket is less that provided configurationVersion
+     *
+     * @return new instance of {@link BucketProxy} created in lazy mode.
+     */
+    BucketProxy build(K key, Supplier<BucketConfiguration> configurationSupplier, long configurationVersion, TokensInheritanceStrategy tokensInheritanceStrategy);
+
+    /**
+     * The overloaded version of {@link #build(Object, BucketConfiguration, long, TokensInheritanceStrategy)} that uses {@link TokensInheritanceStrategy#PROPORTIONALLY} as tokensInheritanceStrategy.
+     *
+     * @param key the key that used in external storage to distinguish one bucket from another.
+     * @param configuration limits configuration
+     * @param configurationVersion specifies required configuration version
+     *
+     * @return new instance of {@link BucketProxy} created in lazy mode.
+     */
+    default BucketProxy build(K key, BucketConfiguration configuration, long configurationVersion) {
+        return build(key, configuration, configurationVersion, TokensInheritanceStrategy.PROPORTIONALLY);
+    }
+
+    /**
+     * The overloaded version of {@link #build(Object, BucketConfiguration, long, TokensInheritanceStrategy)} that uses {@link TokensInheritanceStrategy#PROPORTIONALLY} as tokensInheritanceStrategy.
+     *
+     * @param key the key that used in external storage to distinguish one bucket from another.
+     * @param configurationSupplier provider for bucket configuration
+     * @param configurationVersion specifies required configuration version
+     *
+     * @return new instance of {@link BucketProxy} created in lazy mode.
+     */
+    default BucketProxy build(K key, Supplier<BucketConfiguration> configurationSupplier, long configurationVersion) {
+        return build(key, configurationSupplier, configurationVersion, TokensInheritanceStrategy.PROPORTIONALLY);
+    }
 
 }
