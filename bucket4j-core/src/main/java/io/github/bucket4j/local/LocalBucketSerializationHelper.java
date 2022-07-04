@@ -20,6 +20,7 @@
 package io.github.bucket4j.local;
 
 import io.github.bucket4j.distributed.serialization.DataOutputSerializationAdapter;
+import io.github.bucket4j.distributed.serialization.Scope;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
 import io.github.bucket4j.distributed.versioning.Versions;
 
@@ -35,7 +36,7 @@ public class LocalBucketSerializationHelper {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         DataOutputStream output = new DataOutputStream(baos);
         adapter.writeInt(output, serializationHandle.getTypeId());
-        serializationHandle.serialize(adapter, output, localBucket, Versions.getLatest());
+        serializationHandle.serialize(adapter, output, localBucket, Versions.getLatest(), Scope.PERSISTED_STATE);
         return baos.toByteArray();
     }
 
@@ -44,12 +45,12 @@ public class LocalBucketSerializationHelper {
         DataInputStream input = new DataInputStream(bais);
         int typeId = adapter.readInt(input);
         SerializationHandle<LocalBucket> serializationHandle = getSerializationHandle(typeId);
-        return serializationHandle.deserialize(adapter, input, Versions.getLatest());
+        return serializationHandle.deserialize(adapter, input);
     }
 
     static Map<String, Object> toJsonCompatibleSnapshot(LocalBucket bucket) throws IOException {
         SerializationHandle<LocalBucket> serializationHandle = getSerializationHandle(bucket);
-        Map<String, Object> jsonMap = serializationHandle.toJsonCompatibleSnapshot(bucket, Versions.getLatest());
+        Map<String, Object> jsonMap = serializationHandle.toJsonCompatibleSnapshot(bucket, Versions.getLatest(), Scope.PERSISTED_STATE);
         jsonMap.put("type", serializationHandle.getTypeName());
         return jsonMap;
     }
@@ -57,7 +58,7 @@ public class LocalBucketSerializationHelper {
     static LocalBucket fromJsonCompatibleSnapshot(Map<String, Object> snapshot) throws IOException {
         String typeName = (String) snapshot.get("type");
         SerializationHandle<LocalBucket> serializationHandle = getSerializationHandle(typeName);
-        return serializationHandle.fromJsonCompatibleSnapshot(snapshot, Versions.getLatest());
+        return serializationHandle.fromJsonCompatibleSnapshot(snapshot);
     }
 
     private static SerializationHandle<LocalBucket> getSerializationHandle(LocalBucket localBucket) throws IOException {

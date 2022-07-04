@@ -24,6 +24,7 @@ import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.BucketState;
 import io.github.bucket4j.TokensInheritanceStrategy;
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
+import io.github.bucket4j.distributed.serialization.Scope;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
 import io.github.bucket4j.distributed.serialization.SerializationAdapter;
 import io.github.bucket4j.distributed.versioning.Version;
@@ -35,33 +36,62 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static io.github.bucket4j.distributed.versioning.Versions.v_7_0_0;
+import static io.github.bucket4j.distributed.versioning.Versions.v_7_6_0;
 
 
 public class RemoteBucketState implements ComparableByContent<RemoteBucketState> {
 
     private BucketState state;
     private RemoteStat stat;
+    private Long configurationVersion;
 
     public static final SerializationHandle<RemoteBucketState> SERIALIZATION_HANDLE = new SerializationHandle<RemoteBucketState>() {
         @Override
-        public <S> RemoteBucketState deserialize(DeserializationAdapter<S> adapter, S input, Version backwardCompatibilityVersion) throws IOException {
+        public <S> RemoteBucketState deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             int formatNumber = adapter.readInt(input);
-            Versions.check(formatNumber, v_7_0_0, v_7_0_0);
+            Versions.check(formatNumber, v_7_0_0, v_7_6_0);
 
-            BucketConfiguration bucketConfiguration = BucketConfiguration.SERIALIZATION_HANDLE.deserialize(adapter, input, backwardCompatibilityVersion);
-            BucketState bucketState = BucketState.deserialize(adapter, input, backwardCompatibilityVersion);
+            BucketConfiguration bucketConfiguration = BucketConfiguration.SERIALIZATION_HANDLE.deserialize(adapter, input);
+            BucketState bucketState = BucketState.deserialize(adapter, input);
             bucketState.setConfiguration(bucketConfiguration);
-            RemoteStat stat = RemoteStat.SERIALIZATION_HANDLE.deserialize(adapter, input, backwardCompatibilityVersion);
-            return new RemoteBucketState(bucketState, stat);
+            RemoteStat stat = RemoteStat.SERIALIZATION_HANDLE.deserialize(adapter, input);
+
+            Long configurationVersion = null;
+            if (formatNumber >= v_7_6_0.getNumber()) {
+                boolean hasConfigurationVersion = adapter.readBoolean(input);
+                if (hasConfigurationVersion) {
+                    configurationVersion = adapter.readLong(input);
+                }
+            }
+            return new RemoteBucketState(bucketState, stat, configurationVersion);
         }
 
         @Override
-        public <O> void serialize(SerializationAdapter<O> adapter, O output, RemoteBucketState gridState, Version backwardCompatibilityVersion) throws IOException {
-            adapter.writeInt(output, v_7_0_0.getNumber());
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, RemoteBucketState remoteState, Version backwardCompatibilityVersion, Scope scope) throws IOException {
+            Version serializationVersion;
+            if (remoteState.configurationVersion == null) {
+                serializationVersion = v_7_0_0;
+            } else if (backwardCompatibilityVersion.getNumber() >= v_7_6_0.getNumber()) {
+                serializationVersion = v_7_6_0;
+            } else if (scope == Scope.RESPONSE) {
+                serializationVersion = v_7_0_0;
+            } else {
+                throw new IllegalStateException("configurationVersion is not supported in format number " + backwardCompatibilityVersion.getNumber());
+            }
+            adapter.writeInt(output, serializationVersion.getNumber());
 
-            BucketConfiguration.SERIALIZATION_HANDLE.serialize(adapter, output, gridState.getConfiguration(), backwardCompatibilityVersion);
-            BucketState.serialize(adapter, output, gridState.state, backwardCompatibilityVersion);
-            RemoteStat.SERIALIZATION_HANDLE.serialize(adapter, output, gridState.stat, backwardCompatibilityVersion);
+            BucketConfiguration.SERIALIZATION_HANDLE.serialize(adapter, output, remoteState.getConfiguration(), backwardCompatibilityVersion, scope);
+            BucketState.serialize(adapter, output, remoteState.state, backwardCompatibilityVersion, scope);
+            RemoteStat.SERIALIZATION_HANDLE.serialize(adapter, output, remoteState.stat, backwardCompatibilityVersion, scope);
+
+            if (serializationVersion == v_7_6_0) {
+                if (remoteState.configurationVersion != null) {
+                    adapter.writeBoolean(output, true);
+                    adapter.writeLong(output, remoteState.configurationVersion);
+                } else {
+                    adapter.writeBoolean(output, false);
+                }
+            }
         }
 
         @Override
@@ -75,21 +105,40 @@ public class RemoteBucketState implements ComparableByContent<RemoteBucketState>
         }
 
         @Override
-        public RemoteBucketState fromJsonCompatibleSnapshot(Map<String, Object> snapshot, Version backwardCompatibilityVersion) throws IOException {
+        public RemoteBucketState fromJsonCompatibleSnapshot(Map<String, Object> snapshot) throws IOException {
             int formatNumber = readIntValue(snapshot, "version");
-            Versions.check(formatNumber, v_7_0_0, v_7_0_0);
+            Versions.check(formatNumber, v_7_0_0, v_7_6_0);
 
-            BucketState state = BucketState.fromJsonCompatibleSnapshot((Map<String, Object>) snapshot.get("state"), backwardCompatibilityVersion);
-            RemoteStat stat = RemoteStat.SERIALIZATION_HANDLE.fromJsonCompatibleSnapshot((Map<String, Object>) snapshot.get("stat"), backwardCompatibilityVersion);
-            return new RemoteBucketState(state, stat);
+            BucketState state = BucketState.fromJsonCompatibleSnapshot((Map<String, Object>) snapshot.get("state"));
+            RemoteStat stat = RemoteStat.SERIALIZATION_HANDLE.fromJsonCompatibleSnapshot((Map<String, Object>) snapshot.get("stat"));
+
+            Long configurationVersion = null;
+            if (formatNumber >= v_7_6_0.getNumber()) {
+                configurationVersion = readOptionalLongValue(snapshot, "configurationVersion");
+            }
+
+            return new RemoteBucketState(state, stat, configurationVersion);
         }
 
         @Override
-        public Map<String, Object> toJsonCompatibleSnapshot(RemoteBucketState remoteState, Version backwardCompatibilityVersion) throws IOException {
+        public Map<String, Object> toJsonCompatibleSnapshot(RemoteBucketState remoteState, Version backwardCompatibilityVersion, Scope scope) throws IOException {
             Map<String, Object> result = new HashMap<>();
-            result.put("version", v_7_0_0.getNumber());
-            result.put("state", BucketState.toJsonCompatibleSnapshot(remoteState.state, backwardCompatibilityVersion));
-            result.put("stat", RemoteStat.SERIALIZATION_HANDLE.toJsonCompatibleSnapshot(remoteState.stat, backwardCompatibilityVersion));
+            Version serializationVersion;
+            if (remoteState.configurationVersion == null) {
+                serializationVersion = v_7_0_0;
+            } else if (backwardCompatibilityVersion.getNumber() >= v_7_6_0.getNumber()) {
+                serializationVersion = v_7_6_0;
+            } else if (scope == Scope.RESPONSE) {
+                serializationVersion = v_7_0_0;
+            } else {
+                throw new IllegalStateException("configurationVersion is not supported in format number " + backwardCompatibilityVersion.getNumber());
+            }
+            result.put("version", serializationVersion.getNumber());
+            result.put("state", BucketState.toJsonCompatibleSnapshot(remoteState.state, backwardCompatibilityVersion, scope));
+            result.put("stat", RemoteStat.SERIALIZATION_HANDLE.toJsonCompatibleSnapshot(remoteState.stat, backwardCompatibilityVersion, scope));
+            if (serializationVersion == v_7_6_0) {
+                result.put("configurationVersion", remoteState.configurationVersion);
+            }
             return result;
         }
 
@@ -100,9 +149,10 @@ public class RemoteBucketState implements ComparableByContent<RemoteBucketState>
 
     };
 
-    public RemoteBucketState(BucketState state, RemoteStat stat) {
+    public RemoteBucketState(BucketState state, RemoteStat stat, Long configurationVersion) {
         this.state = state;
         this.stat = stat;
+        this.configurationVersion = configurationVersion;
     }
 
     public void refillAllBandwidth(long currentTimeNanos) {
@@ -158,6 +208,10 @@ public class RemoteBucketState implements ComparableByContent<RemoteBucketState>
         return state;
     }
 
+    public Long getConfigurationVersion() {
+        return configurationVersion;
+    }
+
     @Override
     public boolean equalsByContent(RemoteBucketState other) {
         return ComparableByContent.equals(state, other.state) &&
@@ -166,15 +220,15 @@ public class RemoteBucketState implements ComparableByContent<RemoteBucketState>
     }
 
     public RemoteBucketState copy() {
-        return new RemoteBucketState(state.copy(), stat.copy());
+        return new RemoteBucketState(state.copy(), stat.copy(), configurationVersion);
     }
 
     @Override
     public String toString() {
         return "RemoteBucketState{" +
-                "configuration=" + state.getConfiguration() +
-                ", state=" + state +
+                "state=" + state +
                 ", stat=" + stat +
+                ", configurationVersion=" + configurationVersion +
                 '}';
     }
 

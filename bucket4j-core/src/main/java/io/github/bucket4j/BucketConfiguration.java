@@ -20,6 +20,7 @@
 package io.github.bucket4j;
 
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
+import io.github.bucket4j.distributed.serialization.Scope;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
 import io.github.bucket4j.distributed.serialization.SerializationAdapter;
 import io.github.bucket4j.distributed.versioning.Version;
@@ -87,26 +88,26 @@ public final class BucketConfiguration implements ComparableByContent<BucketConf
 
     public static final SerializationHandle<BucketConfiguration> SERIALIZATION_HANDLE = new SerializationHandle<BucketConfiguration>() {
         @Override
-        public <S> BucketConfiguration deserialize(DeserializationAdapter<S> adapter, S input, Version backwardCompatibilityVersion) throws IOException {
+        public <S> BucketConfiguration deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             int formatNumber = adapter.readInt(input);
             Versions.check(formatNumber, v_7_0_0, v_7_0_0);
 
             int bandwidthAmount = adapter.readInt(input);
             List<Bandwidth> bandwidths = new ArrayList<>(bandwidthAmount);
             for (int ii = 0; ii < bandwidthAmount; ii++) {
-                Bandwidth bandwidth = Bandwidth.SERIALIZATION_HANDLE.deserialize(adapter, input, backwardCompatibilityVersion);
+                Bandwidth bandwidth = Bandwidth.SERIALIZATION_HANDLE.deserialize(adapter, input);
                 bandwidths.add(bandwidth);
             }
             return new BucketConfiguration(bandwidths);
         }
 
         @Override
-        public <O> void serialize(SerializationAdapter<O> adapter, O output, BucketConfiguration configuration, Version backwardCompatibilityVersion) throws IOException {
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, BucketConfiguration configuration, Version backwardCompatibilityVersion, Scope scope) throws IOException {
             adapter.writeInt(output, v_7_0_0.getNumber());
 
             adapter.writeInt(output, configuration.bandwidths.length);
             for (Bandwidth bandwidth : configuration.bandwidths) {
-                Bandwidth.SERIALIZATION_HANDLE.serialize(adapter, output, bandwidth, backwardCompatibilityVersion);
+                Bandwidth.SERIALIZATION_HANDLE.serialize(adapter, output, bandwidth, backwardCompatibilityVersion, scope);
             }
         }
 
@@ -121,26 +122,26 @@ public final class BucketConfiguration implements ComparableByContent<BucketConf
         }
 
         @Override
-        public BucketConfiguration fromJsonCompatibleSnapshot(Map<String, Object> snapshot, Version backwardCompatibilityVersion) throws IOException {
+        public BucketConfiguration fromJsonCompatibleSnapshot(Map<String, Object> snapshot) throws IOException {
             int formatNumber = readIntValue(snapshot, "version");
             Versions.check(formatNumber, v_7_0_0, v_7_0_0);
 
             List<Map<String, Object>> bandwidthSnapshots = (List<Map<String, Object>>) snapshot.get("bandwidths");
             List<Bandwidth> bandwidths = new ArrayList<>(bandwidthSnapshots.size());
             for (Map<String, Object> bandwidthSnapshot : bandwidthSnapshots) {
-                Bandwidth bandwidth = Bandwidth.SERIALIZATION_HANDLE.fromJsonCompatibleSnapshot(bandwidthSnapshot, backwardCompatibilityVersion);
+                Bandwidth bandwidth = Bandwidth.SERIALIZATION_HANDLE.fromJsonCompatibleSnapshot(bandwidthSnapshot);
                 bandwidths.add(bandwidth);
             }
             return new BucketConfiguration(bandwidths);
         }
 
         @Override
-        public Map<String, Object> toJsonCompatibleSnapshot(BucketConfiguration configuration, Version backwardCompatibilityVersion) throws IOException {
+        public Map<String, Object> toJsonCompatibleSnapshot(BucketConfiguration configuration, Version backwardCompatibilityVersion, Scope scope) throws IOException {
             Map<String, Object> result = new HashMap<>();
             result.put("version", v_7_0_0.getNumber());
             List<Map<String, Object>> bandwidthList = new ArrayList<>(configuration.bandwidths.length);
             for (Bandwidth bandwidth : configuration.bandwidths) {
-                bandwidthList.add(Bandwidth.SERIALIZATION_HANDLE.toJsonCompatibleSnapshot(bandwidth, backwardCompatibilityVersion));
+                bandwidthList.add(Bandwidth.SERIALIZATION_HANDLE.toJsonCompatibleSnapshot(bandwidth, backwardCompatibilityVersion, scope));
             }
             result.put("bandwidths", bandwidthList);
             return result;

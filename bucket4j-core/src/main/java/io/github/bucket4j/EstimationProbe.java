@@ -22,6 +22,7 @@ package io.github.bucket4j;
 import io.github.bucket4j.distributed.proxy.DefaultAsyncBucketProxy;
 
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
+import io.github.bucket4j.distributed.serialization.Scope;
 import io.github.bucket4j.distributed.serialization.SerializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
 import io.github.bucket4j.distributed.versioning.Version;
@@ -48,7 +49,7 @@ public class EstimationProbe implements ComparableByContent<EstimationProbe> {
 
     public static final SerializationHandle<EstimationProbe> SERIALIZATION_HANDLE = new SerializationHandle<EstimationProbe>() {
         @Override
-        public <S> EstimationProbe deserialize(DeserializationAdapter<S> adapter, S input, Version backwardCompatibilityVersion) throws IOException {
+        public <S> EstimationProbe deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             int formatNumber = adapter.readInt(input);
             Versions.check(formatNumber, v_7_0_0, v_7_0_0);
 
@@ -60,7 +61,7 @@ public class EstimationProbe implements ComparableByContent<EstimationProbe> {
         }
 
         @Override
-        public <O> void serialize(SerializationAdapter<O> adapter, O output, EstimationProbe probe, Version backwardCompatibilityVersion) throws IOException {
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, EstimationProbe probe, Version backwardCompatibilityVersion, Scope scope) throws IOException {
             adapter.writeInt(output, v_7_0_0.getNumber());
 
             adapter.writeBoolean(output, probe.canBeConsumed);
@@ -79,7 +80,7 @@ public class EstimationProbe implements ComparableByContent<EstimationProbe> {
         }
 
         @Override
-        public EstimationProbe fromJsonCompatibleSnapshot(Map<String, Object> snapshot, Version backwardCompatibilityVersion) {
+        public EstimationProbe fromJsonCompatibleSnapshot(Map<String, Object> snapshot) {
             int formatNumber = readIntValue(snapshot, "version");
             Versions.check(formatNumber, v_7_0_0, v_7_0_0);
 
@@ -91,7 +92,7 @@ public class EstimationProbe implements ComparableByContent<EstimationProbe> {
         }
 
         @Override
-        public Map<String, Object> toJsonCompatibleSnapshot(EstimationProbe state, Version backwardCompatibilityVersion) {
+        public Map<String, Object> toJsonCompatibleSnapshot(EstimationProbe state, Version backwardCompatibilityVersion, Scope scope) {
             Map<String, Object> result = new HashMap<>();
             result.put("version", v_7_0_0.getNumber());
             result.put("canBeConsumed", state.canBeConsumed);

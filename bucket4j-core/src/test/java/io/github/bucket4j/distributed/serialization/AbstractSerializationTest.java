@@ -28,11 +28,13 @@ import static org.junit.Assert.assertTrue;
 public abstract class AbstractSerializationTest {
 
     protected void testSerialization(Object object) {
-        Object object2 = serializeAndDeserialize(object);
-        assertTrue(ComparableByContent.equals(object, object2));
+        for (Scope scope : Scope.values()) {
+            Object object2 = serializeAndDeserialize(object, scope);
+            assertTrue(ComparableByContent.equals(object, object2));
+        }
     }
 
-    protected abstract <T> T serializeAndDeserialize(T object);
+    protected abstract <T> T serializeAndDeserialize(T object, Scope scope);
 
 
     @Test
@@ -138,9 +140,9 @@ public abstract class AbstractSerializationTest {
             };
             BucketConfiguration bucketConfiguration = new BucketConfiguration(Arrays.asList(bandwidths));
             BucketState bucketState = BucketState.createInitialState(bucketConfiguration, mathType, System.nanoTime());
-            RemoteBucketState gridBucketState = new RemoteBucketState(bucketState, new RemoteStat(14));
 
-            testSerialization(gridBucketState);
+            testSerialization(new RemoteBucketState(bucketState, new RemoteStat(14), null));
+            testSerialization(new RemoteBucketState(bucketState, new RemoteStat(14), 0L));
         }
     }
 
@@ -154,9 +156,10 @@ public abstract class AbstractSerializationTest {
             BucketState bucketState = BucketState.createInitialState(bucketConfiguration, mathType, System.nanoTime());
 
             bucketState.addTokens(300);
-            RemoteBucketState gridBucketState = new RemoteBucketState(bucketState, new RemoteStat(666));
 
-            testSerialization(gridBucketState);
+
+            testSerialization(new RemoteBucketState(bucketState, new RemoteStat(666), null));
+            testSerialization(new RemoteBucketState(bucketState, new RemoteStat(666), 1L));
         }
     }
 
@@ -172,9 +175,9 @@ public abstract class AbstractSerializationTest {
             BucketState bucketState = BucketState.createInitialState(bucketConfiguration, mathType, System.nanoTime());
 
             bucketState.addTokens(42);
-            RemoteBucketState gridBucketState = new RemoteBucketState(bucketState, new RemoteStat(66));
 
-            testSerialization(gridBucketState);
+            testSerialization(new RemoteBucketState(bucketState, new RemoteStat(66), null));
+            testSerialization(new RemoteBucketState(bucketState, new RemoteStat(66), 1L));
         }
     }
 
@@ -234,7 +237,7 @@ public abstract class AbstractSerializationTest {
         )));
         // verbose results
         RemoteStat remoteStat = new RemoteStat(42);
-        RemoteBucketState remoteBucketState = new RemoteBucketState(bucketState, remoteStat);
+        RemoteBucketState remoteBucketState = new RemoteBucketState(bucketState, remoteStat, null);
         testSerialization(new RemoteVerboseResult<>(323L, NULL_HANDLE.getTypeId(), null, remoteBucketState));
         testSerialization(new RemoteVerboseResult<>(323L, BOOLEAN_HANDLE.getTypeId(), true, remoteBucketState));
         testSerialization(new RemoteVerboseResult<>(323L, LONG_HANDLE.getTypeId(), 6666666L, remoteBucketState));
@@ -292,8 +295,10 @@ public abstract class AbstractSerializationTest {
         testSerialization(new SyncCommand(20, 10000000));
         testSerialization(new ResetCommand());
 
-        testSerialization(new Request(new GetAvailableTokensCommand(), Versions.getLatest(), null));
-        testSerialization(new Request(new GetAvailableTokensCommand(), Versions.getLatest(), 0L));
+        testSerialization(new Request(new GetAvailableTokensCommand(), Versions.getLatest(), null, null));
+        testSerialization(new Request(new GetAvailableTokensCommand(), Versions.getLatest(), 0L, null));
+        testSerialization(new Request(new GetAvailableTokensCommand(), Versions.getLatest(), null, 0L));
+        testSerialization(new Request(new GetAvailableTokensCommand(), Versions.getLatest(), System.currentTimeMillis(), 0L));
     }
 
     @Test

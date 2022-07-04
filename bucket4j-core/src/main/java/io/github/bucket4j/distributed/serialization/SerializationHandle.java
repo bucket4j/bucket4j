@@ -27,9 +27,9 @@ import java.util.Map;
 
 public interface SerializationHandle<T> {
 
-    <I> T deserialize(DeserializationAdapter<I> adapter, I input, Version backwardCompatibilityVersion) throws IOException;
+    <I> T deserialize(DeserializationAdapter<I> adapter, I input) throws IOException;
 
-    <O> void serialize(SerializationAdapter<O> adapter, O output, T serializableObject, Version backwardCompatibilityVersion) throws IOException;
+    <O> void serialize(SerializationAdapter<O> adapter, O output, T serializableObject, Version backwardCompatibilityVersion, Scope scope) throws IOException;
 
     /**
      * @return the type identifier that is unique across all Bucket4j classes
@@ -38,11 +38,9 @@ public interface SerializationHandle<T> {
 
     Class<T> getSerializedType();
 
-    Version getEffectiveVersion(T serializableObject);
+    T fromJsonCompatibleSnapshot(Map<String, Object> snapshot) throws IOException;
 
-    T fromJsonCompatibleSnapshot(Map<String, Object> snapshot, Version backwardCompatibilityVersion) throws IOException;
-
-    Map<String, Object> toJsonCompatibleSnapshot(T serializableObject, Version backwardCompatibilityVersion) throws IOException;
+    Map<String, Object> toJsonCompatibleSnapshot(T serializableObject, Version backwardCompatibilityVersion, Scope scope) throws IOException;
 
     /**
      * @return the type identifier that is unique across all Bucket4j classes
@@ -115,8 +113,11 @@ public interface SerializationHandle<T> {
         }
     }
 
-    default Integer readIntegerValue(Map<String, Object> snapshot, String fieldName) {
+    default Integer readOptionalIntValue(Map<String, Object> snapshot, String fieldName) {
         Object object = snapshot.get(fieldName);
+        if (object == null) {
+            return null;
+        }
         if (object instanceof Integer) {
             return (Integer) object;
         } else {

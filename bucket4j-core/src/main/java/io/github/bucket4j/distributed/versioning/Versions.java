@@ -22,7 +22,8 @@ package io.github.bucket4j.distributed.versioning;
 public enum Versions implements Version {
 
     v_7_0_0(1),
-    v_7_6_0(2);
+    v_7_6_0(2)
+    ;
 
     private final int number;
 
@@ -43,6 +44,12 @@ public enum Versions implements Version {
         return first.getNumber() >= second.getNumber()? first: second;
     }
 
+    public static Version max(Version first, Version second, Version third) {
+        Version max = first.getNumber() >= second.getNumber() ? first : second;
+        max = third.getNumber() >= max.getNumber() ? third : max;
+        return max;
+    }
+
     public static void checkMin(int formatNumber, Versions min) {
         if (formatNumber < min.getNumber()) {
             throw new UsageOfObsoleteApiException(formatNumber, min.number);
@@ -61,7 +68,7 @@ public enum Versions implements Version {
     }
 
     public static Version getLatest() {
-        return v_7_6_0;
+        return v_7_0_0;
     }
 
     public static Version getOldest() {

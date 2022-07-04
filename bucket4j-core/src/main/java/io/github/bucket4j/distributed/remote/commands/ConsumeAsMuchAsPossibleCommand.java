@@ -26,6 +26,7 @@ import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
+import io.github.bucket4j.distributed.serialization.Scope;
 import io.github.bucket4j.distributed.serialization.SerializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
 import io.github.bucket4j.distributed.versioning.Version;
@@ -45,7 +46,7 @@ public class ConsumeAsMuchAsPossibleCommand implements RemoteCommand<Long>, Comp
 
     public static final SerializationHandle<ConsumeAsMuchAsPossibleCommand> SERIALIZATION_HANDLE = new SerializationHandle<ConsumeAsMuchAsPossibleCommand>() {
         @Override
-        public <S> ConsumeAsMuchAsPossibleCommand deserialize(DeserializationAdapter<S> adapter, S input, Version backwardCompatibilityVersion) throws IOException {
+        public <S> ConsumeAsMuchAsPossibleCommand deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             int formatNumber = adapter.readInt(input);
             Versions.check(formatNumber, v_7_0_0, v_7_0_0);
 
@@ -55,7 +56,7 @@ public class ConsumeAsMuchAsPossibleCommand implements RemoteCommand<Long>, Comp
         }
 
         @Override
-        public <O> void serialize(SerializationAdapter<O> adapter, O output, ConsumeAsMuchAsPossibleCommand command, Version backwardCompatibilityVersion) throws IOException {
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, ConsumeAsMuchAsPossibleCommand command, Version backwardCompatibilityVersion, Scope scope) throws IOException {
             adapter.writeInt(output, v_7_0_0.getNumber());
 
             adapter.writeLong(output, command.limit);
@@ -72,7 +73,7 @@ public class ConsumeAsMuchAsPossibleCommand implements RemoteCommand<Long>, Comp
         }
 
         @Override
-        public ConsumeAsMuchAsPossibleCommand fromJsonCompatibleSnapshot(Map<String, Object> snapshot, Version backwardCompatibilityVersion) throws IOException {
+        public ConsumeAsMuchAsPossibleCommand fromJsonCompatibleSnapshot(Map<String, Object> snapshot) throws IOException {
             int formatNumber = readIntValue(snapshot, "version");
             Versions.check(formatNumber, v_7_0_0, v_7_0_0);
 
@@ -81,7 +82,7 @@ public class ConsumeAsMuchAsPossibleCommand implements RemoteCommand<Long>, Comp
         }
 
         @Override
-        public Map<String, Object> toJsonCompatibleSnapshot(ConsumeAsMuchAsPossibleCommand command, Version backwardCompatibilityVersion) throws IOException {
+        public Map<String, Object> toJsonCompatibleSnapshot(ConsumeAsMuchAsPossibleCommand command, Version backwardCompatibilityVersion, Scope scope) throws IOException {
             Map<String, Object> result = new HashMap<>();
             result.put("version", v_7_0_0.getNumber());
             result.put("limit", command.limit);

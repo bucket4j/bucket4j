@@ -15,14 +15,14 @@ public class HashMapOutputSerializationTest extends AbstractSerializationTest {
     }};
 
     @Override
-    protected <T> T serializeAndDeserialize(T object) {
+    protected <T> T serializeAndDeserialize(T object, Scope scope) {
         SerializationHandle serializationHandle = allHandles.get(object.getClass());
         if (serializationHandle == null) {
             throw new IllegalArgumentException("Serializer for class " + serializationHandle + " is not specified");
         }
         try {
-            Map<String, Object> snapshot = serializationHandle.toJsonCompatibleSnapshot(object, Versions.getLatest());
-            return (T) serializationHandle.fromJsonCompatibleSnapshot(snapshot, Versions.getLatest());
+            Map<String, Object> snapshot = serializationHandle.toJsonCompatibleSnapshot(object, Versions.getLatest(), scope);
+            return (T) serializationHandle.fromJsonCompatibleSnapshot(snapshot);
         } catch (Exception e) {
             throw new IllegalStateException(e);
         }

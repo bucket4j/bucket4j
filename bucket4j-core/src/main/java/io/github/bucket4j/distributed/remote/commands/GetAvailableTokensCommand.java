@@ -26,6 +26,7 @@ import io.github.bucket4j.distributed.remote.MutableBucketEntry;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
+import io.github.bucket4j.distributed.serialization.Scope;
 import io.github.bucket4j.distributed.serialization.SerializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
 import io.github.bucket4j.distributed.versioning.Version;
@@ -43,7 +44,7 @@ public class GetAvailableTokensCommand implements RemoteCommand<Long>, Comparabl
 
     public static final SerializationHandle<GetAvailableTokensCommand> SERIALIZATION_HANDLE = new SerializationHandle<GetAvailableTokensCommand>() {
         @Override
-        public <S> GetAvailableTokensCommand deserialize(DeserializationAdapter<S> adapter, S input, Version backwardCompatibilityVersion) throws IOException {
+        public <S> GetAvailableTokensCommand deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             int formatNumber = adapter.readInt(input);
             Versions.check(formatNumber, v_7_0_0, v_7_0_0);
 
@@ -51,7 +52,7 @@ public class GetAvailableTokensCommand implements RemoteCommand<Long>, Comparabl
         }
 
         @Override
-        public <O> void serialize(SerializationAdapter<O> adapter, O output, GetAvailableTokensCommand command, Version backwardCompatibilityVersion) throws IOException {
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, GetAvailableTokensCommand command, Version backwardCompatibilityVersion, Scope scope) throws IOException {
             adapter.writeInt(output, v_7_0_0.getNumber());
 
             // do nothing
@@ -68,7 +69,7 @@ public class GetAvailableTokensCommand implements RemoteCommand<Long>, Comparabl
         }
 
         @Override
-        public GetAvailableTokensCommand fromJsonCompatibleSnapshot(Map<String, Object> snapshot, Version backwardCompatibilityVersion) throws IOException {
+        public GetAvailableTokensCommand fromJsonCompatibleSnapshot(Map<String, Object> snapshot) throws IOException {
             int formatNumber = readIntValue(snapshot, "version");
             Versions.check(formatNumber, v_7_0_0, v_7_0_0);
 
@@ -76,7 +77,7 @@ public class GetAvailableTokensCommand implements RemoteCommand<Long>, Comparabl
         }
 
         @Override
-        public Map<String, Object> toJsonCompatibleSnapshot(GetAvailableTokensCommand command, Version backwardCompatibilityVersion) throws IOException {
+        public Map<String, Object> toJsonCompatibleSnapshot(GetAvailableTokensCommand command, Version backwardCompatibilityVersion, Scope scope) throws IOException {
             Map<String, Object> result = new HashMap<>();
             result.put("version", v_7_0_0.getNumber());
             return result;

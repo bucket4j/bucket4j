@@ -21,13 +21,13 @@ public class JsonOutputSerializationTest extends AbstractSerializationTest {
     }};
 
     @Override
-    protected <T> T serializeAndDeserialize(T object) {
+    protected <T> T serializeAndDeserialize(T object, Scope scope) {
         SerializationHandle serializationHandle = allHandles.get(object.getClass());
         if (serializationHandle == null) {
             throw new IllegalArgumentException("Serializer for class " + serializationHandle + " is not specified");
         }
         try {
-            Map<String, Object> snapshot = serializationHandle.toJsonCompatibleSnapshot(object, Versions.getLatest());
+            Map<String, Object> snapshot = serializationHandle.toJsonCompatibleSnapshot(object, Versions.getLatest(), scope);
             ObjectMapper mapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);;
             String snapshotString = mapper.writeValueAsString(snapshot);
             logger.info("----------------------------------------------------------");
@@ -35,7 +35,7 @@ public class JsonOutputSerializationTest extends AbstractSerializationTest {
             logger.info("----------------------------------------------------------");
 
             Map<String, Object> deserializedSnapshot = mapper.readValue(snapshotString, Map.class);
-            return (T) serializationHandle.fromJsonCompatibleSnapshot(deserializedSnapshot, Versions.getLatest());
+            return (T) serializationHandle.fromJsonCompatibleSnapshot(deserializedSnapshot);
         } catch (Exception e) {
             throw new IllegalStateException(e);
         }

@@ -23,6 +23,7 @@ package io.github.bucket4j.distributed.remote.commands;
 import io.github.bucket4j.*;
 import io.github.bucket4j.distributed.remote.*;
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
+import io.github.bucket4j.distributed.serialization.Scope;
 import io.github.bucket4j.distributed.serialization.SerializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
 import io.github.bucket4j.distributed.versioning.Version;
@@ -41,20 +42,20 @@ public class CreateInitialStateCommand implements RemoteCommand<Nothing>, Compar
 
     public static SerializationHandle<CreateInitialStateCommand> SERIALIZATION_HANDLE = new SerializationHandle<CreateInitialStateCommand>() {
         @Override
-        public <S> CreateInitialStateCommand deserialize(DeserializationAdapter<S> adapter, S input, Version backwardCompatibilityVersion) throws IOException {
+        public <S> CreateInitialStateCommand deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             int formatNumber = adapter.readInt(input);
             Versions.check(formatNumber, v_7_0_0, v_7_0_0);
 
-            BucketConfiguration configuration = BucketConfiguration.SERIALIZATION_HANDLE.deserialize(adapter, input, backwardCompatibilityVersion);
+            BucketConfiguration configuration = BucketConfiguration.SERIALIZATION_HANDLE.deserialize(adapter, input);
 
             return new CreateInitialStateCommand(configuration);
         }
 
         @Override
-        public <O> void serialize(SerializationAdapter<O> adapter, O output, CreateInitialStateCommand command, Version backwardCompatibilityVersion) throws IOException {
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, CreateInitialStateCommand command, Version backwardCompatibilityVersion, Scope scope) throws IOException {
             adapter.writeInt(output, v_7_0_0.getNumber());
 
-            BucketConfiguration.SERIALIZATION_HANDLE.serialize(adapter, output, command.configuration, backwardCompatibilityVersion);
+            BucketConfiguration.SERIALIZATION_HANDLE.serialize(adapter, output, command.configuration, backwardCompatibilityVersion, scope);
         }
 
         @Override
@@ -68,20 +69,20 @@ public class CreateInitialStateCommand implements RemoteCommand<Nothing>, Compar
         }
 
         @Override
-        public CreateInitialStateCommand fromJsonCompatibleSnapshot(Map<String, Object> snapshot, Version backwardCompatibilityVersion) throws IOException {
+        public CreateInitialStateCommand fromJsonCompatibleSnapshot(Map<String, Object> snapshot) throws IOException {
             int formatNumber = readIntValue(snapshot, "version");
             Versions.check(formatNumber, v_7_0_0, v_7_0_0);
 
             BucketConfiguration configuration = BucketConfiguration.SERIALIZATION_HANDLE
-                    .fromJsonCompatibleSnapshot((Map<String, Object>) snapshot.get("configuration"), backwardCompatibilityVersion);
+                    .fromJsonCompatibleSnapshot((Map<String, Object>) snapshot.get("configuration"));
             return new CreateInitialStateCommand(configuration);
         }
 
         @Override
-        public Map<String, Object> toJsonCompatibleSnapshot(CreateInitialStateCommand command, Version backwardCompatibilityVersion) throws IOException {
+        public Map<String, Object> toJsonCompatibleSnapshot(CreateInitialStateCommand command, Version backwardCompatibilityVersion, Scope scope) throws IOException {
             Map<String, Object> result = new HashMap<>();
             result.put("version", v_7_0_0.getNumber());
-            result.put("configuration", BucketConfiguration.SERIALIZATION_HANDLE.toJsonCompatibleSnapshot(command.configuration, backwardCompatibilityVersion));
+            result.put("configuration", BucketConfiguration.SERIALIZATION_HANDLE.toJsonCompatibleSnapshot(command.configuration, backwardCompatibilityVersion, scope));
             return result;
         }
 
@@ -103,7 +104,7 @@ public class CreateInitialStateCommand implements RemoteCommand<Nothing>, Compar
         }
 
         BucketState bucketState = BucketState.createInitialState(configuration, MathType.INTEGER_64_BITS, currentTimeNanos);
-        RemoteBucketState remoteBucketState = new RemoteBucketState(bucketState, new RemoteStat(0L));
+        RemoteBucketState remoteBucketState = new RemoteBucketState(bucketState, new RemoteStat(0L), null);
         mutableEntry.set(remoteBucketState);
         return CommandResult.NOTHING;
     }

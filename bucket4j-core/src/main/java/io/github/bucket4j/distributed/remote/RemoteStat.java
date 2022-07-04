@@ -20,6 +20,7 @@
 package io.github.bucket4j.distributed.remote;
 
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
+import io.github.bucket4j.distributed.serialization.Scope;
 import io.github.bucket4j.distributed.serialization.SerializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
 import io.github.bucket4j.distributed.versioning.Version;
@@ -50,7 +51,7 @@ public class RemoteStat implements ComparableByContent<RemoteStat> {
 
     public static final SerializationHandle<RemoteStat> SERIALIZATION_HANDLE = new SerializationHandle<RemoteStat>() {
         @Override
-        public <S> RemoteStat deserialize(DeserializationAdapter<S> adapter, S input, Version backwardCompatibilityVersion) throws IOException {
+        public <S> RemoteStat deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             int formatNumber = adapter.readInt(input);
             Versions.check(formatNumber, v_7_0_0, v_7_0_0);
 
@@ -59,7 +60,7 @@ public class RemoteStat implements ComparableByContent<RemoteStat> {
         }
 
         @Override
-        public <O> void serialize(SerializationAdapter<O> adapter, O output, RemoteStat stat, Version backwardCompatibilityVersion) throws IOException {
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, RemoteStat stat, Version backwardCompatibilityVersion, Scope scope) throws IOException {
             adapter.writeInt(output, v_7_0_0.getNumber());
 
             adapter.writeLong(output, stat.consumedTokens);
@@ -76,7 +77,7 @@ public class RemoteStat implements ComparableByContent<RemoteStat> {
         }
 
         @Override
-        public RemoteStat fromJsonCompatibleSnapshot(Map<String, Object> snapshot, Version backwardCompatibilityVersion) throws IOException {
+        public RemoteStat fromJsonCompatibleSnapshot(Map<String, Object> snapshot) throws IOException {
             int formatNumber = readIntValue(snapshot, "version");
             Versions.check(formatNumber, v_7_0_0, v_7_0_0);
 
@@ -85,7 +86,7 @@ public class RemoteStat implements ComparableByContent<RemoteStat> {
         }
 
         @Override
-        public Map<String, Object> toJsonCompatibleSnapshot(RemoteStat stat, Version backwardCompatibilityVersion) throws IOException {
+        public Map<String, Object> toJsonCompatibleSnapshot(RemoteStat stat, Version backwardCompatibilityVersion, Scope scope) throws IOException {
             Map<String, Object> result = new HashMap<>();
             result.put("version", v_7_0_0.getNumber());
             result.put("consumedTokens", stat.consumedTokens);

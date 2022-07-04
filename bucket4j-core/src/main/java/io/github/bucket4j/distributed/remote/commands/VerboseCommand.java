@@ -21,6 +21,7 @@ package io.github.bucket4j.distributed.remote.commands;
 
 import io.github.bucket4j.distributed.remote.*;
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
+import io.github.bucket4j.distributed.serialization.Scope;
 import io.github.bucket4j.distributed.serialization.SerializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
 import io.github.bucket4j.distributed.versioning.Version;
@@ -65,19 +66,19 @@ public class VerboseCommand<T> implements RemoteCommand<RemoteVerboseResult<T>>,
     public static final SerializationHandle<VerboseCommand<?>> SERIALIZATION_HANDLE = new SerializationHandle<VerboseCommand<?>>() {
 
         @Override
-        public <I> VerboseCommand<?> deserialize(DeserializationAdapter<I> adapter, I input, Version backwardCompatibilityVersion) throws IOException {
+        public <I> VerboseCommand<?> deserialize(DeserializationAdapter<I> adapter, I input) throws IOException {
             int formatNumber = adapter.readInt(input);
             Versions.check(formatNumber, v_7_0_0, v_7_0_0);
 
-            RemoteCommand<?> targetCommand  = RemoteCommand.deserialize(adapter, input, backwardCompatibilityVersion);
+            RemoteCommand<?> targetCommand  = RemoteCommand.deserialize(adapter, input);
             return new VerboseCommand<>(targetCommand);
         }
 
         @Override
-        public <O> void serialize(SerializationAdapter<O> adapter, O output, VerboseCommand<?> command, Version backwardCompatibilityVersion) throws IOException {
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, VerboseCommand<?> command, Version backwardCompatibilityVersion, Scope scope) throws IOException {
             adapter.writeInt(output, v_7_0_0.getNumber());
 
-            RemoteCommand.serialize(adapter, output, command.targetCommand, backwardCompatibilityVersion);
+            RemoteCommand.serialize(adapter, output, command.targetCommand, backwardCompatibilityVersion, scope);
         }
 
         @Override
@@ -91,19 +92,19 @@ public class VerboseCommand<T> implements RemoteCommand<RemoteVerboseResult<T>>,
         }
 
         @Override
-        public VerboseCommand<?> fromJsonCompatibleSnapshot(Map<String, Object> snapshot, Version backwardCompatibilityVersion) throws IOException {
+        public VerboseCommand<?> fromJsonCompatibleSnapshot(Map<String, Object> snapshot) throws IOException {
             int formatNumber = readIntValue(snapshot, "version");
             Versions.check(formatNumber, v_7_0_0, v_7_0_0);
 
-            RemoteCommand<?> targetCommand = RemoteCommand.fromJsonCompatibleSnapshot((Map<String, Object>) snapshot.get("targetCommand"), backwardCompatibilityVersion);
+            RemoteCommand<?> targetCommand = RemoteCommand.fromJsonCompatibleSnapshot((Map<String, Object>) snapshot.get("targetCommand"));
             return new VerboseCommand<>(targetCommand);
         }
 
         @Override
-        public Map<String, Object> toJsonCompatibleSnapshot(VerboseCommand<?> command, Version backwardCompatibilityVersion) throws IOException {
+        public Map<String, Object> toJsonCompatibleSnapshot(VerboseCommand<?> command, Version backwardCompatibilityVersion, Scope scope) throws IOException {
             Map<String, Object> result = new HashMap<>();
             result.put("version", v_7_0_0.getNumber());
-            result.put("targetCommand", RemoteCommand.toJsonCompatibleSnapshot(command.targetCommand, backwardCompatibilityVersion));
+            result.put("targetCommand", RemoteCommand.toJsonCompatibleSnapshot(command.targetCommand, backwardCompatibilityVersion, scope));
             return result;
         }
 

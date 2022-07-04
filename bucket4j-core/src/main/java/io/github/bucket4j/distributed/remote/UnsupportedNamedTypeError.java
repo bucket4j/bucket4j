@@ -20,6 +20,7 @@
 package io.github.bucket4j.distributed.remote;
 
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
+import io.github.bucket4j.distributed.serialization.Scope;
 import io.github.bucket4j.distributed.serialization.SerializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
 import io.github.bucket4j.distributed.versioning.UnsupportedNamedTypeException;
@@ -57,7 +58,7 @@ public class UnsupportedNamedTypeError implements CommandError, ComparableByCont
 
     public static SerializationHandle<UnsupportedNamedTypeError> SERIALIZATION_HANDLE = new SerializationHandle<UnsupportedNamedTypeError>() {
         @Override
-        public <S> UnsupportedNamedTypeError deserialize(DeserializationAdapter<S> adapter, S input, Version backwardCompatibilityVersion) throws IOException {
+        public <S> UnsupportedNamedTypeError deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             int formatNumber = adapter.readInt(input);
             Versions.check(formatNumber, v_7_0_0, v_7_0_0);
 
@@ -66,7 +67,7 @@ public class UnsupportedNamedTypeError implements CommandError, ComparableByCont
         }
 
         @Override
-        public <O> void serialize(SerializationAdapter<O> adapter, O output, UnsupportedNamedTypeError error, Version backwardCompatibilityVersion) throws IOException {
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, UnsupportedNamedTypeError error, Version backwardCompatibilityVersion, Scope scope) throws IOException {
             adapter.writeInt(output, v_7_0_0.getNumber());
             adapter.writeString(output, error.typeName);
         }
@@ -82,7 +83,7 @@ public class UnsupportedNamedTypeError implements CommandError, ComparableByCont
         }
 
         @Override
-        public UnsupportedNamedTypeError fromJsonCompatibleSnapshot(Map<String, Object> snapshot, Version backwardCompatibilityVersion) throws IOException {
+        public UnsupportedNamedTypeError fromJsonCompatibleSnapshot(Map<String, Object> snapshot) throws IOException {
             int formatNumber = readIntValue(snapshot, "version");
             Versions.check(formatNumber, v_7_0_0, v_7_0_0);
             String typeName = (String) snapshot.get("typeName");
@@ -90,7 +91,7 @@ public class UnsupportedNamedTypeError implements CommandError, ComparableByCont
         }
 
         @Override
-        public Map<String, Object> toJsonCompatibleSnapshot(UnsupportedNamedTypeError error, Version backwardCompatibilityVersion) throws IOException {
+        public Map<String, Object> toJsonCompatibleSnapshot(UnsupportedNamedTypeError error, Version backwardCompatibilityVersion, Scope scope) throws IOException {
             Map<String, Object> result = new HashMap<>();
             result.put("version", v_7_0_0.getNumber());
             result.put("typeName", error.typeName);
