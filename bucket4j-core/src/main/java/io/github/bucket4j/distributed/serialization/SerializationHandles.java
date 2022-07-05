@@ -70,6 +70,7 @@ public class SerializationHandles {
             Request.SERIALIZATION_HANDLE, // 37
             ForceAddTokensCommand.SERIALIZATION_HANDLE, // 38
             ResetCommand.SERIALIZATION_HANDLE, // 39
+            ConfigurationVersionNotMatchedError.SERIALIZATION_HANDLE, // 40
 
             LockFreeBucket.SERIALIZATION_HANDLE, // 60
             SynchronizedBucket.SERIALIZATION_HANDLE, // 61

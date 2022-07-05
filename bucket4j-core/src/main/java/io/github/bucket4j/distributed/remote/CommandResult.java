@@ -43,6 +43,7 @@ public class CommandResult<T> implements ComparableByContent<CommandResult> {
     public static final CommandResult<Boolean> FALSE = CommandResult.success(false, BOOLEAN_HANDLE);
 
     private static final CommandResult<?> NOT_FOUND = new CommandResult<>(new BucketNotFoundError(), BucketNotFoundError.SERIALIZATION_HANDLE.getTypeId());
+    private static final CommandResult<?> CONFIGURATION_NOT_MATCHED = new CommandResult<>(new ConfigurationVersionNotMatchedError(), ConfigurationVersionNotMatchedError.SERIALIZATION_HANDLE.getTypeId());
     private static final CommandResult<?> NULL = new CommandResult<>(null, NULL_HANDLE.getTypeId());
 
     private T data;
@@ -126,6 +127,10 @@ public class CommandResult<T> implements ComparableByContent<CommandResult> {
 
     public static <R> CommandResult<R> bucketNotFound() {
         return (CommandResult<R>) NOT_FOUND;
+    }
+
+    public static <R> CommandResult<R> configurationVersionDoesNotMatch() {
+        return (CommandResult<R>) CONFIGURATION_NOT_MATCHED;
     }
 
     public static <R> CommandResult<R> empty() {
