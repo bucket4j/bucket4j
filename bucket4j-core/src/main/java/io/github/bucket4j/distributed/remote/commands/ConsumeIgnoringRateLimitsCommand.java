@@ -146,4 +146,9 @@ public class ConsumeIgnoringRateLimitsCommand implements RemoteCommand<Long>, Co
         return result == Long.MAX_VALUE? 0l: tokensToConsume;
     }
 
+    @Override
+    public Version getRequiredVersion() {
+        return v_7_0_0;
+    }
+
 }

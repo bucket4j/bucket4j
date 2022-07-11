@@ -143,4 +143,9 @@ public class CreateInitialStateCommand implements RemoteCommand<Nothing>, Compar
         return 0;
     }
 
+    @Override
+    public Version getRequiredVersion() {
+        return v_7_0_0;
+    }
+
 }

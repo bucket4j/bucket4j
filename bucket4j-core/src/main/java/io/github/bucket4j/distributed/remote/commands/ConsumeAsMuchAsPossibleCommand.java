@@ -147,4 +147,9 @@ public class ConsumeAsMuchAsPossibleCommand implements RemoteCommand<Long>, Comp
         return result;
     }
 
+    @Override
+    public Version getRequiredVersion() {
+        return v_7_0_0;
+    }
+
 }

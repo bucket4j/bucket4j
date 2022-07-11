@@ -155,4 +155,9 @@ public class ReplaceConfigurationCommand implements RemoteCommand<Nothing>, Comp
         return 0;
     }
 
+    @Override
+    public Version getRequiredVersion() {
+        return v_7_0_0;
+    }
+
 }

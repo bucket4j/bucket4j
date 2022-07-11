@@ -139,6 +139,11 @@ public class ForceAddTokensCommand implements RemoteCommand<Nothing>, Comparable
     }
 
     @Override
+    public Version getRequiredVersion() {
+        return v_7_0_0;
+    }
+
+    @Override
     public boolean equalsByContent(ForceAddTokensCommand other) {
         return tokensToAdd == other.tokensToAdd;
     }

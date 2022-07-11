@@ -147,4 +147,9 @@ public class EstimateAbilityToConsumeCommand implements RemoteCommand<Estimation
         return 0;
     }
 
+    @Override
+    public Version getRequiredVersion() {
+        return v_7_0_0;
+    }
+
 }

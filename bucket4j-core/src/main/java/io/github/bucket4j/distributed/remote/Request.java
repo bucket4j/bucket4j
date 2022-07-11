@@ -40,13 +40,11 @@ public class Request<T> implements ComparableByContent<Request<T>> {
     private final Version backwardCompatibilityVersion;
     private final RemoteCommand<T> command;
     private final Long clientSideTime;
-    private final Long minimumConfigurationVersion;
 
-    public Request(RemoteCommand<T> command, Version backwardCompatibilityVersion, Long clientSideTime, Long minimumConfigurationVersion) {
+    public Request(RemoteCommand<T> command, Version backwardCompatibilityVersion, Long clientSideTime) {
         this.command = command;
-        this.backwardCompatibilityVersion = calculateBackwardCompatibilityVersion(backwardCompatibilityVersion, minimumConfigurationVersion);
         this.clientSideTime = clientSideTime;
-        this.minimumConfigurationVersion = minimumConfigurationVersion;
+        this.backwardCompatibilityVersion = backwardCompatibilityVersion;
     }
 
     public RemoteCommand<T> getCommand() {
@@ -61,15 +59,11 @@ public class Request<T> implements ComparableByContent<Request<T>> {
         return clientSideTime;
     }
 
-    public Long getMinimumConfigurationVersion() {
-        return minimumConfigurationVersion;
-    }
-
     public static SerializationHandle<Request<?>> SERIALIZATION_HANDLE = new SerializationHandle<Request<?>>() {
         @Override
         public <S> Request<?> deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             int formatNumber = adapter.readInt(input);
-            Versions.check(formatNumber, v_7_0_0, v_7_6_0);
+            Versions.check(formatNumber, v_7_0_0, v_7_0_0);
 
             int backwardCompatibilityNumber = adapter.readInt(input);
             Version requestBackwardCompatibilityVersion = Versions.byNumber(backwardCompatibilityNumber);
@@ -82,24 +76,16 @@ public class Request<T> implements ComparableByContent<Request<T>> {
                 clientTime = adapter.readLong(input);
             }
 
-            Long minimumConfigurationVersion = null;
-            if (formatNumber >= v_7_6_0.getNumber()) {
-                boolean minimumConfigurationVersionProvided = adapter.readBoolean(input);
-                if (minimumConfigurationVersionProvided) {
-                    minimumConfigurationVersion = adapter.readLong(input);
-                }
-            }
-
-            return new Request<>(command, requestBackwardCompatibilityVersion, clientTime, minimumConfigurationVersion);
+            return new Request<>(command, requestBackwardCompatibilityVersion, clientTime);
         }
 
         @Override
         public <O> void serialize(SerializationAdapter<O> adapter, O output, Request<?> request, Version backwardCompatibilityVersion, Scope scope) throws IOException {
-            Version effectiveVersion = getEffectiveVersion(request);
-            Versions.check(effectiveVersion.getNumber(), v_7_0_0, backwardCompatibilityVersion);
+            Version effectiveVersion = request.command.getRequiredVersion();
+            Versions.check(effectiveVersion.getNumber(), v_7_0_0, request.backwardCompatibilityVersion);
 
+            adapter.writeInt(output, v_7_0_0.getNumber());
             adapter.writeInt(output, effectiveVersion.getNumber());
-            adapter.writeInt(output, backwardCompatibilityVersion.getNumber());
 
             RemoteCommand.serialize(adapter, output, request.command, backwardCompatibilityVersion, scope);
 
@@ -108,15 +94,6 @@ public class Request<T> implements ComparableByContent<Request<T>> {
                 adapter.writeLong(output, request.clientSideTime);
             } else {
                 adapter.writeBoolean(output, false);
-            }
-
-            if (effectiveVersion.getNumber() >= v_7_6_0.getNumber()) {
-                if (request.minimumConfigurationVersion != null) {
-                    adapter.writeBoolean(output, true);
-                    adapter.writeLong(output, request.minimumConfigurationVersion);
-                } else {
-                    adapter.writeBoolean(output, false);
-                }
             }
         }
 
@@ -145,39 +122,22 @@ public class Request<T> implements ComparableByContent<Request<T>> {
                 clientTime = readLongValue(snapshot, "clientTime");
             }
 
-            Long minimumConfigurationVersion = null;
-            if (formatNumber >= v_7_6_0.getNumber()) {
-                minimumConfigurationVersion = readOptionalLongValue(snapshot, "minimumConfigurationVersion");
-            }
-
-            return new Request<>(command, requestBackwardCompatibilityVersion, clientTime, minimumConfigurationVersion);
+            return new Request<>(command, requestBackwardCompatibilityVersion, clientTime);
         }
 
         @Override
         public Map<String, Object> toJsonCompatibleSnapshot(Request<?> request, Version backwardCompatibilityVersion, Scope scope) throws IOException {
-            Version effectiveVersion = getEffectiveVersion(request);
-            Versions.check(effectiveVersion.getNumber(), v_7_0_0, backwardCompatibilityVersion);
+            Version effectiveVersion = request.command.getRequiredVersion();
+            Versions.check(effectiveVersion.getNumber(), v_7_0_0, request.backwardCompatibilityVersion);
 
             Map<String, Object> result = new HashMap<>();
             result.put("version", v_7_0_0.getNumber());
-            result.put("backwardCompatibilityNumber", request.backwardCompatibilityVersion.getNumber());
+            result.put("backwardCompatibilityNumber", effectiveVersion.getNumber());
             result.put("command", RemoteCommand.toJsonCompatibleSnapshot(request.command, backwardCompatibilityVersion, scope));
             if (request.clientSideTime != null) {
                 result.put("clientTime", request.clientSideTime);
             }
-
-            if (effectiveVersion.getNumber() >= v_7_6_0.getNumber()) {
-                if (request.minimumConfigurationVersion != null) {
-                    result.put("minimumConfigurationVersion", request.minimumConfigurationVersion);
-                } else {
-                    result.put("minimumConfigurationVersion", null);
-                }
-            }
             return result;
-        }
-
-        private Version getEffectiveVersion(Request<?> request) {
-            return request.minimumConfigurationVersion != null ? v_7_6_0 : v_7_0_0;
         }
 
         @Override

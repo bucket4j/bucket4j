@@ -134,4 +134,9 @@ public class VerboseCommand<T> implements RemoteCommand<RemoteVerboseResult<T>>,
         return targetCommand.getConsumedTokens(result.getValue());
     }
 
+    @Override
+    public Version getRequiredVersion() {
+        return Versions.max(v_7_0_0, targetCommand.getRequiredVersion());
+    }
+
 }

@@ -205,4 +205,13 @@ public class MultiCommand implements RemoteCommand<MultiResult>, ComparableByCon
         return sum;
     }
 
+    @Override
+    public Version getRequiredVersion() {
+        Version max = v_7_0_0;
+        for (RemoteCommand<?> command : commands) {
+            max = Versions.max(max, command.getRequiredVersion());
+        }
+        return max;
+    }
+
 }

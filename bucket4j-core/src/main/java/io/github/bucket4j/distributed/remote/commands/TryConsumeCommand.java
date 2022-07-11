@@ -144,4 +144,9 @@ public class TryConsumeCommand implements RemoteCommand<Boolean>, ComparableByCo
         return result ? tokensToConsume : 0;
     }
 
+    @Override
+    public Version getRequiredVersion() {
+        return v_7_0_0;
+    }
+
 }

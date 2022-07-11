@@ -160,6 +160,11 @@ public class CreateInitialStateAndExecuteCommand<T> implements RemoteCommand<T>,
         return targetCommand.getConsumedTokens(result);
     }
 
+    @Override
+    public Version getRequiredVersion() {
+        return Versions.max(v_7_0_0, targetCommand.getRequiredVersion());
+    }
+
     private static class BucketEntryWrapper implements MutableBucketEntry {
 
         private RemoteBucketState state;

@@ -204,7 +204,7 @@ public class DefaultBucketProxy extends AbstractBucket implements BucketProxy, O
             return result.getData();
         }
 
-        // the bucket was removed or lost, or not initialized yet, it is need to apply recovery strategy
+        // the bucket was removed or lost, or not initialized yet, it needs to apply recovery strategy
         if (recoveryStrategy == RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION && wasInitializedBeforeExecution) {
             throw new BucketNotFoundException();
         }

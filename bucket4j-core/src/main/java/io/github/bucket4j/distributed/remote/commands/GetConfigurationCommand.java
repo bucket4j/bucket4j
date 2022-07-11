@@ -125,5 +125,10 @@ public class GetConfigurationCommand implements RemoteCommand<BucketConfiguratio
         return 0;
     }
 
+    @Override
+    public Version getRequiredVersion() {
+        return v_7_0_0;
+    }
+
 
 }

@@ -63,6 +63,8 @@ public interface RemoteCommand<T> {
 
     long getConsumedTokens(T result);
 
+    Version getRequiredVersion();
+
     static <O> void serialize(SerializationAdapter<O> adapter, O output, RemoteCommand<?> command, Version backwardCompatibilityVersion, Scope scope) throws IOException {
         SerializationHandle<RemoteCommand<?>> serializer = command.getSerializationHandle();
         adapter.writeInt(output, serializer.getTypeId());

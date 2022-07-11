@@ -124,4 +124,9 @@ public class CreateSnapshotCommand implements RemoteCommand<RemoteBucketState>, 
         return 0;
     }
 
+    @Override
+    public Version getRequiredVersion() {
+        return v_7_0_0;
+    }
+
 }

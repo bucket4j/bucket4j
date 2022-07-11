@@ -159,4 +159,9 @@ public class SyncCommand implements RemoteCommand<Nothing>, ComparableByContent<
         return 0L;
     }
 
+    @Override
+    public Version getRequiredVersion() {
+        return v_7_0_0;
+    }
+
 }

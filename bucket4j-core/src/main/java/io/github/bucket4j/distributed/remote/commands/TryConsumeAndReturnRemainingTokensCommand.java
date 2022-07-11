@@ -154,4 +154,9 @@ public class TryConsumeAndReturnRemainingTokensCommand implements RemoteCommand<
         return result.isConsumed() ? tokensToConsume : 0L;
     }
 
+    @Override
+    public Version getRequiredVersion() {
+        return v_7_0_0;
+    }
+
 }

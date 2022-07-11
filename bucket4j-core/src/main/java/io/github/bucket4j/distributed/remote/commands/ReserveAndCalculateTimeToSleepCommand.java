@@ -159,4 +159,9 @@ public class ReserveAndCalculateTimeToSleepCommand implements RemoteCommand<Long
         return result;
     }
 
+    @Override
+    public Version getRequiredVersion() {
+        return v_7_0_0;
+    }
+
 }

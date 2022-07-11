@@ -23,7 +23,6 @@ import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.distributed.remote.Request;
 import io.github.bucket4j.distributed.versioning.Version;
-import io.github.bucket4j.distributed.versioning.Versions;
 
 import java.io.*;
 
@@ -48,7 +47,7 @@ public class InternalSerializationHelper {
     public static RemoteBucketState deserializeState(byte[] bytes) {
         try {
             try (DataInputStream inputSteam = new DataInputStream(new ByteArrayInputStream(bytes))) {
-                return RemoteBucketState.SERIALIZATION_HANDLE.deserialize(DataOutputSerializationAdapter.INSTANCE, inputSteam, Versions.getLatest(), Scope.PERSISTED_STATE);
+                return RemoteBucketState.SERIALIZATION_HANDLE.deserialize(DataOutputSerializationAdapter.INSTANCE, inputSteam);
             }
         } catch (Exception e) {
             throw new IllegalStateException(e);
@@ -74,7 +73,7 @@ public class InternalSerializationHelper {
     public static <T> Request<T> deserializeRequest(byte[] bytes) {
         try {
             try (DataInputStream inputSteam = new DataInputStream(new ByteArrayInputStream(bytes))) {
-                return (Request<T>) Request.SERIALIZATION_HANDLE.deserialize(DataOutputSerializationAdapter.INSTANCE, inputSteam, Versions.getLatest(), Scope.REQUEST);
+                return (Request<T>) Request.SERIALIZATION_HANDLE.deserialize(DataOutputSerializationAdapter.INSTANCE, inputSteam);
             }
         } catch (Exception e) {
             throw new IllegalStateException(e);
@@ -100,7 +99,7 @@ public class InternalSerializationHelper {
     public static <T> CommandResult<T> deserializeResult(byte[] bytes, Version backwardCompatibilityVersion) {
         try {
             try (DataInputStream inputSteam = new DataInputStream(new ByteArrayInputStream(bytes))) {
-                return (CommandResult<T>) CommandResult.SERIALIZATION_HANDLE.deserialize(DataOutputSerializationAdapter.INSTANCE, inputSteam, backwardCompatibilityVersion, Scope.RESPONSE);
+                return (CommandResult<T>) CommandResult.SERIALIZATION_HANDLE.deserialize(DataOutputSerializationAdapter.INSTANCE, inputSteam);
             }
         } catch (Exception e) {
             throw new IllegalStateException(e);
