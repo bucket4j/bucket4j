@@ -24,7 +24,6 @@ import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AbstractCompareAndSwapBasedProxyManager;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AsyncCompareAndSwapOperation;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.CompareAndSwapOperation;
-import org.springframework.data.redis.RedisSystemException;
 import org.springframework.data.redis.connection.RedisCommands;
 import org.springframework.data.redis.connection.ReturnType;
 
@@ -33,7 +32,6 @@ import java.time.Duration;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 
 public class SpringBasedProxyManager extends AbstractCompareAndSwapBasedProxyManager<byte[]> {
 
