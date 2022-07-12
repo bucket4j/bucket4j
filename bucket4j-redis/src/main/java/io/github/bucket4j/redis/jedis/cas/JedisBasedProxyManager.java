@@ -98,11 +98,11 @@ public class JedisBasedProxyManager extends AbstractCompareAndSwapBasedProxyMana
     private final byte[] scriptSetNx = "return redis.call('set', KEYS[1], ARGV[1], 'nx', 'px', ARGV[2])".getBytes(StandardCharsets.UTF_8);
     private final byte[] scriptCompareAndSwap = (
             "if redis.call('get', KEYS[1]) == ARGV[1] then " +
-                    "redis.call('psetex', KEYS[1], ARGV[3], ARGV[2]); " +
-                    "return 1; " +
-                    "else " +
-                    "return 0; " +
-                    "end").getBytes(StandardCharsets.UTF_8);
+            "redis.call('psetex', KEYS[1], ARGV[3], ARGV[2]); " +
+                "return 1; " +
+            "else " +
+                "return 0; " +
+            "end").getBytes(StandardCharsets.UTF_8);
 
     private Boolean compareAndSwapFuture(byte[] key, byte[] originalData, byte[] newData) {
         if (originalData == null) {
