@@ -60,7 +60,7 @@ public class JedisBasedProxyManager extends AbstractCompareAndSwapBasedProxyMana
 
             @Override
             public boolean compareAndSwap(byte[] originalData, byte[] newData) {
-                return compareAndSwapFuture(key, originalData, newData);
+                return JedisBasedProxyManager.this.compareAndSwap(key, originalData, newData);
             }
         };
     }
@@ -75,7 +75,7 @@ public class JedisBasedProxyManager extends AbstractCompareAndSwapBasedProxyMana
 
             @Override
             public CompletableFuture<Boolean> compareAndSwap(byte[] originalData, byte[] newData) {
-                return CompletableFuture.supplyAsync(() -> compareAndSwapFuture(key, originalData, newData));
+                return CompletableFuture.supplyAsync(() -> JedisBasedProxyManager.this.compareAndSwap(key, originalData, newData));
             }
         };
     }
@@ -104,7 +104,7 @@ public class JedisBasedProxyManager extends AbstractCompareAndSwapBasedProxyMana
                 "return 0; " +
             "end").getBytes(StandardCharsets.UTF_8);
 
-    private Boolean compareAndSwapFuture(byte[] key, byte[] originalData, byte[] newData) {
+    private Boolean compareAndSwap(byte[] key, byte[] originalData, byte[] newData) {
         if (originalData == null) {
             // nulls are prohibited as values, so "replace" must not be used in such cases
             byte[][] keysAndArgs = {key, newData, encodeLong(ttlMillis)};
