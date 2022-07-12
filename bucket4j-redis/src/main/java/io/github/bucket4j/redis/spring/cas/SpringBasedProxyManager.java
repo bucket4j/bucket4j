@@ -37,12 +37,18 @@ public class SpringBasedProxyManager extends AbstractCompareAndSwapBasedProxyMan
 
     private final RedisCommands commands;
     private final long ttlMillis;
+    private final boolean isAsyncModeSupported;
 
-    public SpringBasedProxyManager(RedisCommands redisCommands, ClientSideConfig clientSideConfig, Duration ttl) {
+    public SpringBasedProxyManager(RedisCommands redisCommands, ClientSideConfig clientSideConfig, Duration ttl, boolean isAsyncModeSupported) {
         super(clientSideConfig);
         Objects.requireNonNull(redisCommands);
         this.commands = redisCommands;
         this.ttlMillis = ttl.toMillis();
+        this.isAsyncModeSupported = isAsyncModeSupported;
+    }
+
+    public SpringBasedProxyManager(RedisCommands redisCommands, ClientSideConfig clientSideConfig, Duration ttl) {
+        this(redisCommands, clientSideConfig, ttl, true);
     }
 
     public SpringBasedProxyManager(RedisCommands redisCommands, Duration ttl) {
@@ -91,7 +97,7 @@ public class SpringBasedProxyManager extends AbstractCompareAndSwapBasedProxyMan
 
     @Override
     public boolean isAsyncModeSupported() {
-        return true;
+        return isAsyncModeSupported;
     }
 
     private final byte[] scriptSetNx = "return redis.call('set', KEYS[1], ARGV[1], 'nx', 'px', ARGV[2])".getBytes(StandardCharsets.UTF_8);

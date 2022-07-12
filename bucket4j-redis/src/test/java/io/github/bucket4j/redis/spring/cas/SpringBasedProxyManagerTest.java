@@ -51,7 +51,7 @@ public class SpringBasedProxyManagerTest extends AbstractDistributedBucketTest<b
 
     @Override
     protected ProxyManager<byte[]> getProxyManager() {
-        return new SpringBasedProxyManager(redisCommands, ClientSideConfig.getDefault(), Duration.ofMinutes(10));
+        return new SpringBasedProxyManager(redisCommands, Duration.ofMinutes(10));
     }
 
     @Override
