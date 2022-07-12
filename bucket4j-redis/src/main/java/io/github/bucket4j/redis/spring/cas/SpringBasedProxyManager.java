@@ -116,19 +116,6 @@ public class SpringBasedProxyManager extends AbstractCompareAndSwapBasedProxyMan
         }
     }
 
-    private <V> V getFutureValue(CompletableFuture<V> value) {
-        try {
-            return value.get();
-        } catch (InterruptedException e) {
-            value.cancel(true);
-            Thread.currentThread().interrupt();
-            throw new RedisSystemException("Redis command interrupted", e);
-        } catch (ExecutionException e) {
-            throw e.getCause() instanceof RedisSystemException ? (RedisSystemException) e.getCause() :
-                    new RedisSystemException("Unexpected exception while processing command", e.getCause());
-        }
-    }
-
     private byte[] encodeLong(Long value) {
         return ("" + value).getBytes(StandardCharsets.UTF_8);
     }
