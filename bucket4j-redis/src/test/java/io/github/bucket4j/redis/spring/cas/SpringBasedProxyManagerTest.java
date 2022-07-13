@@ -1,6 +1,5 @@
 package io.github.bucket4j.redis.spring.cas;
 
-import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
 import io.lettuce.core.RedisClient;
@@ -51,7 +50,7 @@ public class SpringBasedProxyManagerTest extends AbstractDistributedBucketTest<b
 
     @Override
     protected ProxyManager<byte[]> getProxyManager() {
-        return new SpringBasedProxyManager(redisCommands, Duration.ofMinutes(10));
+        return new SpringDataRedisBasedProxyManager(redisCommands, Duration.ofMinutes(10));
     }
 
     @Override

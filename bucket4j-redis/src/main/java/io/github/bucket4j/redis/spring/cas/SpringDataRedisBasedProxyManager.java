@@ -20,10 +20,12 @@
 
 package io.github.bucket4j.redis.spring.cas;
 
+import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AbstractCompareAndSwapBasedProxyManager;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AsyncCompareAndSwapOperation;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.CompareAndSwapOperation;
+import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import org.springframework.data.redis.connection.RedisCommands;
 import org.springframework.data.redis.connection.ReturnType;
 
@@ -33,26 +35,43 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-public class SpringBasedProxyManager extends AbstractCompareAndSwapBasedProxyManager<byte[]> {
+public class SpringDataRedisBasedProxyManager extends AbstractCompareAndSwapBasedProxyManager<byte[]> {
 
     private final RedisCommands commands;
-    private final long ttlMillis;
+    private final long keepAfterRefillDurationMillis;
     private final boolean isAsyncModeSupported;
 
-    public SpringBasedProxyManager(RedisCommands redisCommands, ClientSideConfig clientSideConfig, Duration ttl, boolean isAsyncModeSupported) {
+    /**
+     *
+     * @param redisCommands
+     * @param clientSideConfig
+     * @param keepAfterRefillDuration
+     * @param isAsyncModeSupported specifies how long bucket should be held in the cache after all consumed tokens have been refilled.
+     */
+    public SpringDataRedisBasedProxyManager(RedisCommands redisCommands, ClientSideConfig clientSideConfig, Duration keepAfterRefillDuration, boolean isAsyncModeSupported) {
         super(clientSideConfig);
         Objects.requireNonNull(redisCommands);
         this.commands = redisCommands;
-        this.ttlMillis = ttl.toMillis();
+        this.keepAfterRefillDurationMillis = keepAfterRefillDuration.toMillis();
         this.isAsyncModeSupported = isAsyncModeSupported;
     }
 
-    public SpringBasedProxyManager(RedisCommands redisCommands, ClientSideConfig clientSideConfig, Duration ttl) {
-        this(redisCommands, clientSideConfig, ttl, true);
+    /**
+     *
+     * @param redisCommands
+     * @param clientSideConfig
+     * @param keepAfterRefillDuration specifies how long bucket should be held in the cache after all consumed tokens have been refilled.
+     */
+    public SpringDataRedisBasedProxyManager(RedisCommands redisCommands, ClientSideConfig clientSideConfig, Duration keepAfterRefillDuration) {
+        this(redisCommands, clientSideConfig, keepAfterRefillDuration, true);
     }
 
-    public SpringBasedProxyManager(RedisCommands redisCommands, Duration ttl) {
-        this(redisCommands, ClientSideConfig.getDefault(), ttl);
+    /**
+     * @param redisCommands
+     * @param keepAfterRefillDuration specifies how long bucket should be held in the cache after all consumed tokens have been refilled.
+     */
+    public SpringDataRedisBasedProxyManager(RedisCommands redisCommands, Duration keepAfterRefillDuration) {
+        this(redisCommands, ClientSideConfig.getDefault(), keepAfterRefillDuration);
     }
 
     @Override
@@ -64,8 +83,8 @@ public class SpringBasedProxyManager extends AbstractCompareAndSwapBasedProxyMan
             }
 
             @Override
-            public boolean compareAndSwap(byte[] originalData, byte[] newData) {
-                return SpringBasedProxyManager.this.compareAndSwap(key, originalData, newData);
+            public boolean compareAndSwap(byte[] originalData, byte[] newData, RemoteBucketState newState) {
+                return SpringDataRedisBasedProxyManager.this.compareAndSwap(key, originalData, newData, newState);
             }
         };
     }
@@ -79,8 +98,8 @@ public class SpringBasedProxyManager extends AbstractCompareAndSwapBasedProxyMan
             }
 
             @Override
-            public CompletableFuture<Boolean> compareAndSwap(byte[] originalData, byte[] newData) {
-                return CompletableFuture.supplyAsync(() -> SpringBasedProxyManager.this.compareAndSwap(key, originalData, newData));
+            public CompletableFuture<Boolean> compareAndSwap(byte[] originalData, byte[] newData, RemoteBucketState newState) {
+                return CompletableFuture.supplyAsync(() -> SpringDataRedisBasedProxyManager.this.compareAndSwap(key, originalData, newData, newState));
             }
         };
     }
@@ -109,18 +128,25 @@ public class SpringBasedProxyManager extends AbstractCompareAndSwapBasedProxyMan
                 "return 0; " +
             "end").getBytes(StandardCharsets.UTF_8);
 
-    private Boolean compareAndSwap(byte[] key, byte[] originalData, byte[] newData) {
+    private Boolean compareAndSwap(byte[] key, byte[] originalData, byte[] newData, RemoteBucketState newState) {
         if (originalData == null) {
             // nulls are prohibited as values, so "replace" must not be used in such cases
-            byte[][] keysAndArgs = {key, newData, encodeLong(ttlMillis)};
+            byte[][] keysAndArgs = {key, newData, encodeLong(calculateTtlMillis(newState))};
             return commands.eval(scriptSetNx, ReturnType.BOOLEAN, 1, keysAndArgs);
         } else {
-            byte[][] keysAndArgs = {key, originalData, newData, encodeLong(ttlMillis)};
+            byte[][] keysAndArgs = {key, originalData, newData, encodeLong(calculateTtlMillis(newState))};
             return commands.eval(scriptCompareAndSwap, ReturnType.BOOLEAN, 1, keysAndArgs);
         }
     }
 
     private byte[] encodeLong(Long value) {
         return ("" + value).getBytes(StandardCharsets.UTF_8);
+    }
+
+    private long calculateTtlMillis(RemoteBucketState state) {
+        Optional<TimeMeter> clock = getClientSideConfig().getClientSideClock();
+        long currentTimeNanos = clock.isPresent() ? clock.get().currentTimeNanos() : System.currentTimeMillis() * 1_000_000;
+        long millisToFullRefill = state.calculateFullRefillingTime(currentTimeNanos) / 1_000_000;
+        return keepAfterRefillDurationMillis + millisToFullRefill;
     }
 }
