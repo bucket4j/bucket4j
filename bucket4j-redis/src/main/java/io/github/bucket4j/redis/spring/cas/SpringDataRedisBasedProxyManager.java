@@ -39,22 +39,6 @@ public class SpringDataRedisBasedProxyManager extends AbstractCompareAndSwapBase
 
     private final RedisCommands commands;
     private final long keepAfterRefillDurationMillis;
-    private final boolean isAsyncModeSupported;
-
-    /**
-     *
-     * @param redisCommands
-     * @param clientSideConfig
-     * @param keepAfterRefillDuration
-     * @param isAsyncModeSupported specifies how long bucket should be held in the cache after all consumed tokens have been refilled.
-     */
-    public SpringDataRedisBasedProxyManager(RedisCommands redisCommands, ClientSideConfig clientSideConfig, Duration keepAfterRefillDuration, boolean isAsyncModeSupported) {
-        super(clientSideConfig);
-        Objects.requireNonNull(redisCommands);
-        this.commands = redisCommands;
-        this.keepAfterRefillDurationMillis = keepAfterRefillDuration.toMillis();
-        this.isAsyncModeSupported = isAsyncModeSupported;
-    }
 
     /**
      *
@@ -63,7 +47,10 @@ public class SpringDataRedisBasedProxyManager extends AbstractCompareAndSwapBase
      * @param keepAfterRefillDuration specifies how long bucket should be held in the cache after all consumed tokens have been refilled.
      */
     public SpringDataRedisBasedProxyManager(RedisCommands redisCommands, ClientSideConfig clientSideConfig, Duration keepAfterRefillDuration) {
-        this(redisCommands, clientSideConfig, keepAfterRefillDuration, true);
+        super(clientSideConfig);
+        Objects.requireNonNull(redisCommands);
+        this.commands = redisCommands;
+        this.keepAfterRefillDurationMillis = keepAfterRefillDuration.toMillis();
     }
 
     /**
@@ -91,17 +78,7 @@ public class SpringDataRedisBasedProxyManager extends AbstractCompareAndSwapBase
 
     @Override
     protected AsyncCompareAndSwapOperation beginAsyncCompareAndSwapOperation(byte[] key) {
-        return new AsyncCompareAndSwapOperation() {
-            @Override
-            public CompletableFuture<Optional<byte[]>> getStateData() {
-                return CompletableFuture.supplyAsync(() -> Optional.ofNullable(commands.get(key)));
-            }
-
-            @Override
-            public CompletableFuture<Boolean> compareAndSwap(byte[] originalData, byte[] newData, RemoteBucketState newState) {
-                return CompletableFuture.supplyAsync(() -> SpringDataRedisBasedProxyManager.this.compareAndSwap(key, originalData, newData, newState));
-            }
-        };
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -116,7 +93,7 @@ public class SpringDataRedisBasedProxyManager extends AbstractCompareAndSwapBase
 
     @Override
     public boolean isAsyncModeSupported() {
-        return isAsyncModeSupported;
+        return false;
     }
 
     private final byte[] scriptSetNx = "return redis.call('set', KEYS[1], ARGV[1], 'nx', 'px', ARGV[2])".getBytes(StandardCharsets.UTF_8);

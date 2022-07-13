@@ -80,17 +80,7 @@ public class JedisBasedProxyManager extends AbstractCompareAndSwapBasedProxyMana
 
     @Override
     protected AsyncCompareAndSwapOperation beginAsyncCompareAndSwapOperation(byte[] key) {
-        return new AsyncCompareAndSwapOperation() {
-            @Override
-            public CompletableFuture<Optional<byte[]>> getStateData() {
-                return withResource(jedis -> CompletableFuture.supplyAsync(() -> Optional.ofNullable(jedis.get(key))));
-            }
-
-            @Override
-            public CompletableFuture<Boolean> compareAndSwap(byte[] originalData, byte[] newData, RemoteBucketState newState) {
-                return CompletableFuture.supplyAsync(() -> JedisBasedProxyManager.this.compareAndSwap(key, originalData, newData, newState));
-            }
-        };
+        throw new UnsupportedOperationException();
     }
 
     @Override
