@@ -76,7 +76,7 @@ public abstract class AbstractCompareAndSwapBasedProxyManager<K> extends Abstrac
         }
 
         byte[] newStateBytes = entry.getModifiedStateBytes();
-        if (operation.compareAndSwap(originalStateBytes, newStateBytes)) {
+        if (operation.compareAndSwap(originalStateBytes, newStateBytes, entry.getModifiedState())) {
             return result;
         } else {
             return null;
@@ -104,7 +104,7 @@ public abstract class AbstractCompareAndSwapBasedProxyManager<K> extends Abstrac
                 }
 
                 byte[] newStateBytes = entry.getModifiedStateBytes();
-                return operation.compareAndSwap(originalStateBytes, newStateBytes).thenApply((casWasSuccessful) -> casWasSuccessful? result : null);
+                return operation.compareAndSwap(originalStateBytes, newStateBytes, entry.getModifiedState()).thenApply((casWasSuccessful) -> casWasSuccessful? result : null);
             });
     }
 

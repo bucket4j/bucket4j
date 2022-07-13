@@ -7,7 +7,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.github.vladimir-bukhtoyarov</groupId>
-    <version>7.5.0</version>
+    <version>7.6.0</version>
     <artifactId>bucket4j-parent</artifactId>
     <packaging>pom</packaging>
     <name>bucket4j-parent</name>
@@ -64,7 +64,7 @@
 
         <testcontainers.version>1.17.1</testcontainers.version>
         <lettuce-version>5.0.2.RELEASE</lettuce-version>
-        <jedis.version>2.9.0</jedis.version>
+        <jedis.version>4.2.3</jedis.version>
         <redisson.version>3.16.8</redisson.version>
         <lettuce.version>6.1.8.RELEASE</lettuce.version>
         <spring-data-redis.version>2.6.4</spring-data-redis.version>
