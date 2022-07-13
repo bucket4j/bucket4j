@@ -20,10 +20,12 @@
 
 package io.github.bucket4j.redis.jedis.cas;
 
+import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AbstractCompareAndSwapBasedProxyManager;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AsyncCompareAndSwapOperation;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.CompareAndSwapOperation;
+import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 
@@ -37,17 +39,28 @@ import java.util.function.Function;
 public class JedisBasedProxyManager extends AbstractCompareAndSwapBasedProxyManager<byte[]> {
 
     private final JedisPool jedisPool;
-    private final long ttlMillis;
+    private final long keepAfterRefillDurationMillis;
 
-    public JedisBasedProxyManager(JedisPool jedisPool, ClientSideConfig clientSideConfig, Duration ttl) {
+    /**
+     *
+     * @param jedisPool
+     * @param clientSideConfig
+     * @param keepAfterRefillDuration specifies how long bucket should be held in the cache after all consumed tokens have been refilled.
+     */
+    public JedisBasedProxyManager(JedisPool jedisPool, ClientSideConfig clientSideConfig, Duration keepAfterRefillDuration) {
         super(clientSideConfig);
         Objects.requireNonNull(jedisPool);
         this.jedisPool = jedisPool;
-        this.ttlMillis = ttl.toMillis();
+        this.keepAfterRefillDurationMillis = keepAfterRefillDuration.toMillis();
     }
 
-    public JedisBasedProxyManager(JedisPool jedisPool, Duration ttl) {
-        this(jedisPool, ClientSideConfig.getDefault(), ttl);
+    /**
+     *
+     * @param jedisPool
+     * @param keepAfterRefillDuration specifies how long bucket should be held in the cache after all consumed tokens have been refilled.
+     */
+    public JedisBasedProxyManager(JedisPool jedisPool, Duration keepAfterRefillDuration) {
+        this(jedisPool, ClientSideConfig.getDefault(), keepAfterRefillDuration);
     }
 
     @Override
@@ -59,8 +72,8 @@ public class JedisBasedProxyManager extends AbstractCompareAndSwapBasedProxyMana
             }
 
             @Override
-            public boolean compareAndSwap(byte[] originalData, byte[] newData) {
-                return JedisBasedProxyManager.this.compareAndSwap(key, originalData, newData);
+            public boolean compareAndSwap(byte[] originalData, byte[] newData, RemoteBucketState newState) {
+                return JedisBasedProxyManager.this.compareAndSwap(key, originalData, newData, newState);
             }
         };
     }
@@ -74,8 +87,8 @@ public class JedisBasedProxyManager extends AbstractCompareAndSwapBasedProxyMana
             }
 
             @Override
-            public CompletableFuture<Boolean> compareAndSwap(byte[] originalData, byte[] newData) {
-                return CompletableFuture.supplyAsync(() -> JedisBasedProxyManager.this.compareAndSwap(key, originalData, newData));
+            public CompletableFuture<Boolean> compareAndSwap(byte[] originalData, byte[] newData, RemoteBucketState newState) {
+                return CompletableFuture.supplyAsync(() -> JedisBasedProxyManager.this.compareAndSwap(key, originalData, newData, newState));
             }
         };
     }
@@ -104,14 +117,14 @@ public class JedisBasedProxyManager extends AbstractCompareAndSwapBasedProxyMana
                 "return 0; " +
             "end").getBytes(StandardCharsets.UTF_8);
 
-    private Boolean compareAndSwap(byte[] key, byte[] originalData, byte[] newData) {
+    private Boolean compareAndSwap(byte[] key, byte[] originalData, byte[] newData, RemoteBucketState newState) {
         if (originalData == null) {
             // nulls are prohibited as values, so "replace" must not be used in such cases
-            byte[][] keysAndArgs = {key, newData, encodeLong(ttlMillis)};
+            byte[][] keysAndArgs = {key, newData, encodeLong(calculateTtlMillis(newState))};
             Object res = withResource(jedis -> jedis.eval(scriptSetNx, 1, keysAndArgs));
             return res != null;
         } else {
-            byte[][] keysAndArgs = {key, originalData, newData, encodeLong(ttlMillis)};
+            byte[][] keysAndArgs = {key, originalData, newData, encodeLong(calculateTtlMillis(newState))};
             Object res = withResource(jedis -> jedis.eval(scriptCompareAndSwap, 1, keysAndArgs));
             return res != null && !res.equals(0L);
         }
@@ -125,5 +138,12 @@ public class JedisBasedProxyManager extends AbstractCompareAndSwapBasedProxyMana
         try (Jedis jedis = jedisPool.getResource()) {
             return fn.apply(jedis);
         }
+    }
+
+    private long calculateTtlMillis(RemoteBucketState state) {
+        Optional<TimeMeter> clock = getClientSideConfig().getClientSideClock();
+        long currentTimeNanos = clock.isPresent() ? clock.get().currentTimeNanos() : System.currentTimeMillis() * 1_000_000;
+        long millisToFullRefill = state.calculateFullRefillingTime(currentTimeNanos) / 1_000_000;
+        return keepAfterRefillDurationMillis + millisToFullRefill;
     }
 }
