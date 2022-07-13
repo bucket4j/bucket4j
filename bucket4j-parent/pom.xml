@@ -7,7 +7,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.github.vladimir-bukhtoyarov</groupId>
-    <version>7.5.0</version>
+    <version>7.6.0</version>
     <artifactId>bucket4j-parent</artifactId>
     <packaging>pom</packaging>
     <name>bucket4j-parent</name>
@@ -66,6 +66,7 @@
         <lettuce-version>5.0.2.RELEASE</lettuce-version>
         <jedis.version>4.2.3</jedis.version>
         <redisson.version>3.16.8</redisson.version>
+        <lettuce.version>6.1.8.RELEASE</lettuce.version>
         <caffeine.version>2.9.3</caffeine.version>
     </properties>
 

@@ -95,9 +95,9 @@ public abstract class AbstractLockBasedProxyManager<K> extends AbstractProxyMana
             if (entry.isModified()) {
                 byte[] bytes = entry.getModifiedStateBytes();
                 if (persistedDataOnBeginOfTransaction == null) {
-                    transaction.create(bytes);
+                    transaction.create(bytes, entry.getModifiedState());
                 } else {
-                    transaction.update(bytes);
+                    transaction.update(bytes, entry.getModifiedState());
                 }
             }
             transaction.unlock();

@@ -135,7 +135,7 @@ public abstract class BaseDynamoDBTransactionTest<K> {
         BaseDynamoDBTransaction transaction = transaction(key);
 
         // when
-        boolean result = transaction.compareAndSwap(original, updated);
+        boolean result = transaction.compareAndSwap(original, updated, null);
         byte[] actual = getState(key);
         
         // then
@@ -155,7 +155,7 @@ public abstract class BaseDynamoDBTransactionTest<K> {
         BaseDynamoDBTransaction transaction = transaction(key);
 
         // when
-        boolean result = transaction.compareAndSwap(original, updated);
+        boolean result = transaction.compareAndSwap(original, updated, null);
         byte[] actual = getState(key);
 
         // then
@@ -176,7 +176,7 @@ public abstract class BaseDynamoDBTransactionTest<K> {
         BaseDynamoDBTransaction transaction = transaction(key);
 
         // when
-        boolean result = transaction.compareAndSwap(original, updated);
+        boolean result = transaction.compareAndSwap(original, updated, null);
         byte[] actual = getState(key);
 
         // then
@@ -197,7 +197,7 @@ public abstract class BaseDynamoDBTransactionTest<K> {
         BaseDynamoDBTransaction transaction = transaction(key);
 
         // when
-        boolean result = transaction.compareAndSwap(original, updated);
+        boolean result = transaction.compareAndSwap(original, updated, null);
         String actual = getState(key);
 
         // then

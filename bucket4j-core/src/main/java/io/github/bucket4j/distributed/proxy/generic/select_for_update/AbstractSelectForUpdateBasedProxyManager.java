@@ -120,7 +120,7 @@ public abstract class AbstractSelectForUpdateBasedProxyManager<K> extends Abstra
             CommandResult<T> result = command.execute(entry, super.getClientSideTime());
             if (entry.isModified()) {
                 byte[] bytes = entry.getModifiedStateBytes();
-                transaction.update(bytes);
+                transaction.update(bytes, entry.getModifiedState());
             }
             transaction.commit();
             return result;
