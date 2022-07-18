@@ -1,5 +1,6 @@
 package io.github.bucket4j.redis.lettuce.cas;
 
+import io.github.bucket4j.distributed.ExpirationStrategy;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
@@ -49,7 +50,7 @@ public class LettuceBasedProxyManagerTest extends AbstractDistributedBucketTest<
 
     @Override
     protected ProxyManager<byte[]> getProxyManager() {
-        return new LettuceBasedProxyManager(redisClient, ClientSideConfig.getDefault(), Duration.ofMinutes(10));
+        return new LettuceBasedProxyManager(redisClient, ClientSideConfig.getDefault(), ExpirationStrategy.none());
     }
 
     @Override

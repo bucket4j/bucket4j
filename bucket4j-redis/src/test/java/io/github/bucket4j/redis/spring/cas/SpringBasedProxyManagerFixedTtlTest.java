@@ -1,44 +1,46 @@
-package io.github.bucket4j.redis.jedis.cas;
+package io.github.bucket4j.redis.spring.cas;
 
 import io.github.bucket4j.distributed.ExpirationStrategy;
-import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
+import io.lettuce.core.RedisClient;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.springframework.data.redis.connection.RedisCommands;
+import org.springframework.data.redis.connection.lettuce.LettuceConnection;
 import org.testcontainers.containers.GenericContainer;
-import redis.clients.jedis.JedisPool;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.UUID;
 
-public class JedisBasedProxyManagerTest extends AbstractDistributedBucketTest<byte[]> {
+public class SpringBasedProxyManagerFixedTtlTest extends AbstractDistributedBucketTest<byte[]> {
 
     private static GenericContainer container;
-    private static JedisPool jedisPool;
+    private static RedisCommands redisCommands;
 
     @BeforeClass
     public static void setup() {
         container = startRedisContainer();
-        jedisPool = createJedisClient(container);
+        redisCommands = createSpringClient(container);
     }
 
     @AfterClass
     public static void shutdown() {
-        if (jedisPool != null) {
-            jedisPool.close();
+        if (redisCommands != null) {
+            redisCommands.shutdown();
         }
         if (container != null) {
             container.close();
         }
     }
 
-    private static JedisPool createJedisClient(GenericContainer container) {
+    private static RedisCommands createSpringClient(GenericContainer container) {
         String redisHost = container.getHost();
         Integer redisPort = container.getMappedPort(6379);
+        String redisUrl = "redis://" + redisHost + ":" + redisPort;
 
-        return new JedisPool(redisHost, redisPort);
+        return new LettuceConnection(2000, RedisClient.create(redisUrl));
     }
 
     private static GenericContainer startRedisContainer() {
@@ -49,7 +51,7 @@ public class JedisBasedProxyManagerTest extends AbstractDistributedBucketTest<by
 
     @Override
     protected ProxyManager<byte[]> getProxyManager() {
-        return new JedisBasedProxyManager(jedisPool, ClientSideConfig.getDefault(), ExpirationStrategy.none());
+        return new SpringDataRedisBasedProxyManager(redisCommands, ExpirationStrategy.fixed(Duration.ofSeconds(10)));
     }
 
     @Override

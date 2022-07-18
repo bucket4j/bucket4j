@@ -1,5 +1,6 @@
 package io.github.bucket4j.redis.spring.cas;
 
+import io.github.bucket4j.distributed.ExpirationStrategy;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
 import io.lettuce.core.RedisClient;
@@ -10,7 +11,6 @@ import org.springframework.data.redis.connection.lettuce.LettuceConnection;
 import org.testcontainers.containers.GenericContainer;
 
 import java.nio.charset.StandardCharsets;
-import java.time.Duration;
 import java.util.UUID;
 
 public class SpringBasedProxyManagerTest extends AbstractDistributedBucketTest<byte[]> {
@@ -50,7 +50,7 @@ public class SpringBasedProxyManagerTest extends AbstractDistributedBucketTest<b
 
     @Override
     protected ProxyManager<byte[]> getProxyManager() {
-        return new SpringDataRedisBasedProxyManager(redisCommands, Duration.ofMinutes(10));
+        return new SpringDataRedisBasedProxyManager(redisCommands, ExpirationStrategy.none());
     }
 
     @Override

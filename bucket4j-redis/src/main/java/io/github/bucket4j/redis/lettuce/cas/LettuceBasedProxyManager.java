@@ -21,6 +21,7 @@
 package io.github.bucket4j.redis.lettuce.cas;
 
 import io.github.bucket4j.TimeMeter;
+import io.github.bucket4j.distributed.ExpirationStrategy;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AbstractCompareAndSwapBasedProxyManager;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AsyncCompareAndSwapOperation;
@@ -35,7 +36,6 @@ import io.lettuce.core.api.async.RedisAsyncCommands;
 import io.lettuce.core.codec.ByteArrayCodec;
 
 import java.nio.charset.StandardCharsets;
-import java.time.Duration;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -44,60 +44,33 @@ import java.util.concurrent.ExecutionException;
 public class LettuceBasedProxyManager extends AbstractCompareAndSwapBasedProxyManager<byte[]> {
 
     private final RedisAsyncCommands<byte[], byte[]> commands;
-    private final long keepAfterRefillDurationMillis;
+    private final ExpirationStrategy expirationStrategy;
 
-    public LettuceBasedProxyManager(RedisAsyncCommands<byte[], byte[]> redisAsyncCommands, ClientSideConfig clientSideConfig, Duration keepAfterRefillDuration) {
+    public LettuceBasedProxyManager(RedisAsyncCommands<byte[], byte[]> redisAsyncCommands, ClientSideConfig clientSideConfig, ExpirationStrategy expirationStrategy) {
         super(clientSideConfig);
         Objects.requireNonNull(redisAsyncCommands);
         this.commands = redisAsyncCommands;
-        this.keepAfterRefillDurationMillis = keepAfterRefillDuration.toMillis();
+        this.expirationStrategy = expirationStrategy;
     }
 
-    /**
-     *
-     * @param redisAsyncCommands
-     * @param keepAfterRefillDuration specifies how long bucket should be held in the cache after all consumed tokens have been refilled.
-     */
-    public LettuceBasedProxyManager(RedisAsyncCommands<byte[], byte[]> redisAsyncCommands, Duration keepAfterRefillDuration) {
-        this(redisAsyncCommands, ClientSideConfig.getDefault(), keepAfterRefillDuration);
+    public LettuceBasedProxyManager(RedisAsyncCommands<byte[], byte[]> redisAsyncCommands, ExpirationStrategy expirationStrategy) {
+        this(redisAsyncCommands, ClientSideConfig.getDefault(), expirationStrategy);
     }
 
-    /**
-     *
-     * @param statefulRedisConnection
-     * @param clientSideConfig
-     * @param keepAfterRefillDuration specifies how long bucket should be held in the cache after all consumed tokens have been refilled.
-     */
-    public LettuceBasedProxyManager(StatefulRedisConnection<byte[], byte[]> statefulRedisConnection, ClientSideConfig clientSideConfig, Duration keepAfterRefillDuration) {
-        this(statefulRedisConnection.async(), clientSideConfig, keepAfterRefillDuration);
+    public LettuceBasedProxyManager(StatefulRedisConnection<byte[], byte[]> statefulRedisConnection, ClientSideConfig clientSideConfig, ExpirationStrategy expirationStrategy) {
+        this(statefulRedisConnection.async(), clientSideConfig, expirationStrategy);
     }
 
-    /**
-     *
-     * @param statefulRedisConnection
-     * @param keepAfterRefillDuration specifies how long bucket should be held in the cache after all consumed tokens have been refilled.
-     */
-    public LettuceBasedProxyManager(StatefulRedisConnection<byte[], byte[]> statefulRedisConnection, Duration keepAfterRefillDuration) {
-        this(statefulRedisConnection, ClientSideConfig.getDefault(), keepAfterRefillDuration);
+    public LettuceBasedProxyManager(StatefulRedisConnection<byte[], byte[]> statefulRedisConnection, ExpirationStrategy expirationStrategy) {
+        this(statefulRedisConnection, ClientSideConfig.getDefault(), expirationStrategy);
     }
 
-    /**
-     *
-     * @param redisClient
-     * @param keepAfterRefillDuration specifies how long bucket should be held in the cache after all consumed tokens have been refilled.
-     */
-    public LettuceBasedProxyManager(RedisClient redisClient, Duration keepAfterRefillDuration) {
-        this(redisClient, ClientSideConfig.getDefault(), keepAfterRefillDuration);
+    public LettuceBasedProxyManager(RedisClient redisClient, ExpirationStrategy expirationStrategy) {
+        this(redisClient, ClientSideConfig.getDefault(), expirationStrategy);
     }
 
-    /**
-     *
-     * @param redisClient
-     * @param clientSideConfig
-     * @param keepAfterRefillDuration specifies how long bucket should be held in the cache after all consumed tokens have been refilled.
-     */
-    public LettuceBasedProxyManager(RedisClient redisClient, ClientSideConfig clientSideConfig, Duration keepAfterRefillDuration) {
-        this(redisClient.connect(ByteArrayCodec.INSTANCE), clientSideConfig, keepAfterRefillDuration);
+    public LettuceBasedProxyManager(RedisClient redisClient, ClientSideConfig clientSideConfig, ExpirationStrategy expirationStrategy) {
+        this(redisClient.connect(ByteArrayCodec.INSTANCE), clientSideConfig, expirationStrategy);
     }
 
     @Override
@@ -153,21 +126,41 @@ public class LettuceBasedProxyManager extends AbstractCompareAndSwapBasedProxyMa
     }
 
     private RedisFuture<Boolean> compareAndSwapFuture(byte[] key, byte[][] keys, byte[] originalData, byte[] newData, RemoteBucketState newState) {
-        if (originalData == null) {
-            // nulls are prohibited as values, so "replace" must not be used in such cases
-            String script = "return redis.call('set', KEYS[1], ARGV[1], 'nx', 'px', ARGV[2])";
-            byte[][] params = {newData, encodeLong(calculateTtlMillis(newState))};
-            return commands.eval(script, ScriptOutputType.BOOLEAN, keys, params);
-        } else {
-            String script =
-                    "if redis.call('get', KEYS[1]) == ARGV[1] then " +
-                            "redis.call('psetex', KEYS[1], ARGV[3], ARGV[2]); " +
-                            "return 1; " +
+        long ttlMillis = calculateTtlMillis(newState);
+        if (ttlMillis > 0) {
+            if (originalData == null) {
+                // nulls are prohibited as values, so "replace" must not be used in such cases
+                String script = "return redis.call('set', KEYS[1], ARGV[1], 'nx', 'px', ARGV[2])";
+                byte[][] params = {newData, encodeLong(ttlMillis)};
+                return commands.eval(script, ScriptOutputType.BOOLEAN, keys, params);
+            } else {
+                String script =
+                        "if redis.call('get', KEYS[1]) == ARGV[1] then " +
+                                "redis.call('psetex', KEYS[1], ARGV[3], ARGV[2]); " +
+                                "return 1; " +
                         "else " +
-                            "return 0; " +
+                                "return 0; " +
                         "end";
-            byte[][] params = {originalData, newData, encodeLong(calculateTtlMillis(newState))};
-            return commands.eval(script, ScriptOutputType.BOOLEAN, keys, params);
+                byte[][] params = {originalData, newData, encodeLong(ttlMillis)};
+                return commands.eval(script, ScriptOutputType.BOOLEAN, keys, params);
+            }
+        } else {
+            if (originalData == null) {
+                // nulls are prohibited as values, so "replace" must not be used in such cases
+                String script = "return redis.call('set', KEYS[1], ARGV[1], 'nx')";
+                byte[][] params = {newData};
+                return commands.eval(script, ScriptOutputType.BOOLEAN, keys, params);
+            } else {
+                String script =
+                        "if redis.call('get', KEYS[1]) == ARGV[1] then " +
+                                "redis.call('set', KEYS[1], ARGV[2]); " +
+                                "return 1; " +
+                        "else " +
+                                "return 0; " +
+                        "end";
+                byte[][] params = {originalData, newData};
+                return commands.eval(script, ScriptOutputType.BOOLEAN, keys, params);
+            }
         }
     }
 
@@ -203,7 +196,6 @@ public class LettuceBasedProxyManager extends AbstractCompareAndSwapBasedProxyMa
     private long calculateTtlMillis(RemoteBucketState state) {
         Optional<TimeMeter> clock = getClientSideConfig().getClientSideClock();
         long currentTimeNanos = clock.isPresent() ? clock.get().currentTimeNanos() : System.currentTimeMillis() * 1_000_000;
-        long millisToFullRefill = state.calculateFullRefillingTime(currentTimeNanos) / 1_000_000;
-        return keepAfterRefillDurationMillis + millisToFullRefill;
+        return expirationStrategy.calculateTimeToLiveMillis(state, currentTimeNanos);
     }
 }

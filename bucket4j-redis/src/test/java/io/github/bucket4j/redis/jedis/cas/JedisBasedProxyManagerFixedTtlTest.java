@@ -13,7 +13,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.UUID;
 
-public class JedisBasedProxyManagerTest extends AbstractDistributedBucketTest<byte[]> {
+public class JedisBasedProxyManagerFixedTtlTest extends AbstractDistributedBucketTest<byte[]> {
 
     private static GenericContainer container;
     private static JedisPool jedisPool;
@@ -49,7 +49,7 @@ public class JedisBasedProxyManagerTest extends AbstractDistributedBucketTest<by
 
     @Override
     protected ProxyManager<byte[]> getProxyManager() {
-        return new JedisBasedProxyManager(jedisPool, ClientSideConfig.getDefault(), ExpirationStrategy.none());
+        return new JedisBasedProxyManager(jedisPool, ClientSideConfig.getDefault(), ExpirationStrategy.fixed(Duration.ofSeconds(10)));
     }
 
     @Override

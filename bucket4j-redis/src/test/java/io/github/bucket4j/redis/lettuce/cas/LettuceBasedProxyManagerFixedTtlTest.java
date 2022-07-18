@@ -1,44 +1,45 @@
-package io.github.bucket4j.redis.jedis.cas;
+package io.github.bucket4j.redis.lettuce.cas;
 
 import io.github.bucket4j.distributed.ExpirationStrategy;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
+import io.lettuce.core.RedisClient;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.testcontainers.containers.GenericContainer;
-import redis.clients.jedis.JedisPool;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.UUID;
 
-public class JedisBasedProxyManagerTest extends AbstractDistributedBucketTest<byte[]> {
+public class LettuceBasedProxyManagerFixedTtlTest extends AbstractDistributedBucketTest<byte[]> {
 
     private static GenericContainer container;
-    private static JedisPool jedisPool;
+    private static RedisClient redisClient;
 
     @BeforeClass
     public static void setup() {
         container = startRedisContainer();
-        jedisPool = createJedisClient(container);
+        redisClient = createLettuceClient(container);
     }
 
     @AfterClass
     public static void shutdown() {
-        if (jedisPool != null) {
-            jedisPool.close();
+        if (redisClient != null) {
+            redisClient.shutdown();
         }
         if (container != null) {
             container.close();
         }
     }
 
-    private static JedisPool createJedisClient(GenericContainer container) {
+    private static RedisClient createLettuceClient(GenericContainer container) {
         String redisHost = container.getHost();
         Integer redisPort = container.getMappedPort(6379);
+        String redisUrl = "redis://" + redisHost + ":" + redisPort;
 
-        return new JedisPool(redisHost, redisPort);
+        return RedisClient.create(redisUrl);
     }
 
     private static GenericContainer startRedisContainer() {
@@ -49,11 +50,12 @@ public class JedisBasedProxyManagerTest extends AbstractDistributedBucketTest<by
 
     @Override
     protected ProxyManager<byte[]> getProxyManager() {
-        return new JedisBasedProxyManager(jedisPool, ClientSideConfig.getDefault(), ExpirationStrategy.none());
+        return new LettuceBasedProxyManager(redisClient, ClientSideConfig.getDefault(), ExpirationStrategy.fixed(Duration.ofSeconds(10)));
     }
 
     @Override
     protected byte[] generateRandomKey() {
         return UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8);
     }
+
 }

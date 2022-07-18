@@ -21,6 +21,7 @@
 package io.github.bucket4j.redis.jedis.cas;
 
 import io.github.bucket4j.TimeMeter;
+import io.github.bucket4j.distributed.ExpirationStrategy;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AbstractCompareAndSwapBasedProxyManager;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AsyncCompareAndSwapOperation;
@@ -30,7 +31,6 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 
 import java.nio.charset.StandardCharsets;
-import java.time.Duration;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -39,28 +39,17 @@ import java.util.function.Function;
 public class JedisBasedProxyManager extends AbstractCompareAndSwapBasedProxyManager<byte[]> {
 
     private final JedisPool jedisPool;
-    private final long keepAfterRefillDurationMillis;
+    private final ExpirationStrategy expirationStrategy;
 
-    /**
-     *
-     * @param jedisPool
-     * @param clientSideConfig
-     * @param keepAfterRefillDuration specifies how long bucket should be held in the cache after all consumed tokens have been refilled.
-     */
-    public JedisBasedProxyManager(JedisPool jedisPool, ClientSideConfig clientSideConfig, Duration keepAfterRefillDuration) {
+    public JedisBasedProxyManager(JedisPool jedisPool, ClientSideConfig clientSideConfig, ExpirationStrategy expirationStrategy) {
         super(clientSideConfig);
         Objects.requireNonNull(jedisPool);
         this.jedisPool = jedisPool;
-        this.keepAfterRefillDurationMillis = keepAfterRefillDuration.toMillis();
+        this.expirationStrategy = expirationStrategy;
     }
 
-    /**
-     *
-     * @param jedisPool
-     * @param keepAfterRefillDuration specifies how long bucket should be held in the cache after all consumed tokens have been refilled.
-     */
-    public JedisBasedProxyManager(JedisPool jedisPool, Duration keepAfterRefillDuration) {
-        this(jedisPool, ClientSideConfig.getDefault(), keepAfterRefillDuration);
+    public JedisBasedProxyManager(JedisPool jedisPool, ExpirationStrategy expirationStrategy) {
+        this(jedisPool, ClientSideConfig.getDefault(), expirationStrategy);
     }
 
     @Override
@@ -98,25 +87,47 @@ public class JedisBasedProxyManager extends AbstractCompareAndSwapBasedProxyMana
         return false;
     }
 
-    private final byte[] scriptSetNx = "return redis.call('set', KEYS[1], ARGV[1], 'nx', 'px', ARGV[2])".getBytes(StandardCharsets.UTF_8);
-    private final byte[] scriptCompareAndSwap = (
+    private final byte[] scriptSetNxPx = "return redis.call('set', KEYS[1], ARGV[1], 'nx', 'px', ARGV[2])".getBytes(StandardCharsets.UTF_8);
+    private final byte[] scriptCompareAndSwapPx = (
             "if redis.call('get', KEYS[1]) == ARGV[1] then " +
-            "redis.call('psetex', KEYS[1], ARGV[3], ARGV[2]); " +
+                "redis.call('psetex', KEYS[1], ARGV[3], ARGV[2]); " +
                 "return 1; " +
             "else " +
                 "return 0; " +
             "end").getBytes(StandardCharsets.UTF_8);
+    private final byte[] scriptSetNx = "return redis.call('set', KEYS[1], ARGV[1], 'nx')".getBytes(StandardCharsets.UTF_8);
+    private final byte[] scriptCompareAndSwap = (
+            "if redis.call('get', KEYS[1]) == ARGV[1] then " +
+                    "redis.call('set', KEYS[1], ARGV[2]); " +
+                    "return 1; " +
+            "else " +
+                    "return 0; " +
+            "end").getBytes(StandardCharsets.UTF_8);
 
     private Boolean compareAndSwap(byte[] key, byte[] originalData, byte[] newData, RemoteBucketState newState) {
-        if (originalData == null) {
-            // nulls are prohibited as values, so "replace" must not be used in such cases
-            byte[][] keysAndArgs = {key, newData, encodeLong(calculateTtlMillis(newState))};
-            Object res = withResource(jedis -> jedis.eval(scriptSetNx, 1, keysAndArgs));
-            return res != null;
+        long ttlMillis = calculateTtlMillis(newState);
+        if (ttlMillis > 0) {
+            if (originalData == null) {
+                // nulls are prohibited as values, so "replace" must not be used in such cases
+                byte[][] keysAndArgs = {key, newData, encodeLong(ttlMillis)};
+                Object res = withResource(jedis -> jedis.eval(scriptSetNxPx, 1, keysAndArgs));
+                return res != null;
+            } else {
+                byte[][] keysAndArgs = {key, originalData, newData, encodeLong(ttlMillis)};
+                Object res = withResource(jedis -> jedis.eval(scriptCompareAndSwapPx, 1, keysAndArgs));
+                return res != null && !res.equals(0L);
+            }
         } else {
-            byte[][] keysAndArgs = {key, originalData, newData, encodeLong(calculateTtlMillis(newState))};
-            Object res = withResource(jedis -> jedis.eval(scriptCompareAndSwap, 1, keysAndArgs));
-            return res != null && !res.equals(0L);
+            if (originalData == null) {
+                // nulls are prohibited as values, so "replace" must not be used in such cases
+                byte[][] keysAndArgs = {key, newData};
+                Object res = withResource(jedis -> jedis.eval(scriptSetNx, 1, keysAndArgs));
+                return res != null;
+            } else {
+                byte[][] keysAndArgs = {key, originalData, newData};
+                Object res = withResource(jedis -> jedis.eval(scriptCompareAndSwap, 1, keysAndArgs));
+                return res != null && !res.equals(0L);
+            }
         }
     }
 
@@ -133,7 +144,7 @@ public class JedisBasedProxyManager extends AbstractCompareAndSwapBasedProxyMana
     private long calculateTtlMillis(RemoteBucketState state) {
         Optional<TimeMeter> clock = getClientSideConfig().getClientSideClock();
         long currentTimeNanos = clock.isPresent() ? clock.get().currentTimeNanos() : System.currentTimeMillis() * 1_000_000;
-        long millisToFullRefill = state.calculateFullRefillingTime(currentTimeNanos) / 1_000_000;
-        return keepAfterRefillDurationMillis + millisToFullRefill;
+        return expirationStrategy.calculateTimeToLiveMillis(state, currentTimeNanos);
     }
+
 }
