@@ -1,6 +1,6 @@
 package io.github.bucket4j.redis.spring.cas;
 
-import io.github.bucket4j.distributed.ExpirationStrategy;
+import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
 import io.lettuce.core.RedisClient;
@@ -51,7 +51,9 @@ public class SpringBasedProxyManagerFixedTtlTest extends AbstractDistributedBuck
 
     @Override
     protected ProxyManager<byte[]> getProxyManager() {
-        return new SpringDataRedisBasedProxyManager(redisCommands, ExpirationStrategy.fixed(Duration.ofSeconds(10)));
+        return SpringDataRedisBasedProxyManager.builderFor(redisCommands)
+                .withExpirationStrategy(ExpirationAfterWriteStrategy.fixedTimeToLive(Duration.ofSeconds(10)))
+                .build();
     }
 
     @Override

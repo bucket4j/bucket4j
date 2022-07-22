@@ -7,7 +7,7 @@ import java.time.Duration;
 /**
  * Represents the strategy for choosing time to live for buckets in the cache.
  */
-public interface ExpirationStrategy {
+public interface ExpirationAfterWriteStrategy {
 
     /**
      * Calculates the time to live for bucket that is going to be persisted to the remote storage
@@ -25,10 +25,10 @@ public interface ExpirationStrategy {
      *
      * @return
      *
-     * @see #fixed(Duration)
+     * @see #fixedTimeToLive(Duration)
      * @see #basedOnTimeForRefillingBucketUpToMax(Duration)
      */
-    static ExpirationStrategy none() {
+    static ExpirationAfterWriteStrategy none() {
         return (state, currentTimeNanos)  -> -1;
     }
 
@@ -45,8 +45,11 @@ public interface ExpirationStrategy {
      * @return
      * @see #basedOnTimeForRefillingBucketUpToMax(Duration)
      */
-    static ExpirationStrategy fixed(Duration ttl) {
+    static ExpirationAfterWriteStrategy fixedTimeToLive(Duration ttl) {
         long ttlMillis = ttl.toMillis();
+        if (ttlMillis <= 0) {
+            throw new IllegalArgumentException("ttl should be positive");
+        }
         return (state, currentTimeNanos) -> ttlMillis;
     }
 
@@ -62,11 +65,15 @@ public interface ExpirationStrategy {
      *
      * @see #basedOnTimeForRefillingBucketUpToMax(Duration)
      */
-    static ExpirationStrategy basedOnTimeForRefillingBucketUpToMax(Duration keepAfterRefillDuration) {
+    static ExpirationAfterWriteStrategy basedOnTimeForRefillingBucketUpToMax(Duration keepAfterRefillDuration) {
         long keepAfterRefillDurationMillis = keepAfterRefillDuration.toMillis();
+        if (keepAfterRefillDurationMillis < 0) {
+            throw new IllegalArgumentException("keepAfterRefillDurationMillis should be positive");
+        }
         return (state, currentTimeNanos) -> {
             long millisToFullRefill = state.calculateFullRefillingTime(currentTimeNanos) / 1_000_000;
-            return keepAfterRefillDurationMillis + millisToFullRefill;
+            long result = keepAfterRefillDurationMillis + millisToFullRefill;
+            return result <= 0 ? 1 : result;
         };
     }
 

@@ -21,12 +21,14 @@
 package io.github.bucket4j.redis.redisson.cas;
 
 import io.github.bucket4j.TimeMeter;
-import io.github.bucket4j.distributed.ExpirationStrategy;
+import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AbstractCompareAndSwapBasedProxyManager;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AsyncCompareAndSwapOperation;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.CompareAndSwapOperation;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
+import io.github.bucket4j.redis.AbstractRedisProxyManagerBuilder;
+import io.github.bucket4j.redis.jedis.cas.JedisBasedProxyManager;
 import io.netty.buffer.ByteBuf;
 import org.redisson.api.RFuture;
 import org.redisson.client.codec.ByteArrayCodec;
@@ -34,6 +36,7 @@ import org.redisson.client.protocol.RedisCommand;
 import org.redisson.client.protocol.RedisCommands;
 import org.redisson.client.protocol.convertor.BooleanNotNullReplayConvertor;
 import org.redisson.command.CommandExecutor;
+import redis.clients.jedis.JedisPool;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -47,16 +50,30 @@ public class RedissonBasedProxyManager extends AbstractCompareAndSwapBasedProxyM
     public static RedisCommand<Boolean> SET = new RedisCommand<>("SET", new BooleanNotNullReplayConvertor());
 
     private final CommandExecutor commandExecutor;
-    private final ExpirationStrategy expirationStrategy;
+    private final ExpirationAfterWriteStrategy expirationStrategy;
 
-    public RedissonBasedProxyManager(CommandExecutor commandExecutor, ExpirationStrategy expirationStrategy) {
-        this(commandExecutor, ClientSideConfig.getDefault(), expirationStrategy);
+    public static RedissonBasedProxyManagerBuilder builderFor(CommandExecutor commandExecutor) {
+        return new RedissonBasedProxyManagerBuilder(commandExecutor);
     }
 
-    public RedissonBasedProxyManager(CommandExecutor commandExecutor, ClientSideConfig clientSideConfig, ExpirationStrategy expirationStrategy) {
-        super(clientSideConfig);
-        this.commandExecutor = Objects.requireNonNull(commandExecutor);
-        this.expirationStrategy = expirationStrategy;
+    public static class RedissonBasedProxyManagerBuilder extends AbstractRedisProxyManagerBuilder<RedissonBasedProxyManagerBuilder> {
+
+        private final CommandExecutor commandExecutor;
+
+        private RedissonBasedProxyManagerBuilder(CommandExecutor commandExecutor) {
+            this.commandExecutor = Objects.requireNonNull(commandExecutor);
+        }
+
+        public RedissonBasedProxyManager build() {
+            return new RedissonBasedProxyManager(this);
+        }
+
+    }
+
+    private RedissonBasedProxyManager(RedissonBasedProxyManagerBuilder builder) {
+        super(builder.getClientSideConfig());
+        this.commandExecutor = builder.commandExecutor;
+        this.expirationStrategy = builder.getNotNullExpirationStrategy();
     }
 
     @Override

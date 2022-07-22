@@ -1,6 +1,6 @@
 package io.github.bucket4j.redis.lettuce.cas;
 
-import io.github.bucket4j.distributed.ExpirationStrategy;
+import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
@@ -50,7 +50,9 @@ public class LettuceBasedProxyManagerFixedTtlTest extends AbstractDistributedBuc
 
     @Override
     protected ProxyManager<byte[]> getProxyManager() {
-        return new LettuceBasedProxyManager(redisClient, ClientSideConfig.getDefault(), ExpirationStrategy.fixed(Duration.ofSeconds(10)));
+        return LettuceBasedProxyManager.builderFor(redisClient)
+                .withExpirationStrategy(ExpirationAfterWriteStrategy.fixedTimeToLive(Duration.ofSeconds(10)))
+                .build();
     }
 
     @Override

@@ -1,6 +1,6 @@
 package io.github.bucket4j.redis.redisson.cas;
 
-import io.github.bucket4j.distributed.ExpirationStrategy;
+import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
@@ -64,7 +64,9 @@ public class RedissonBasedProxyManagerFixedTtlTest extends AbstractDistributedBu
 
     @Override
     protected ProxyManager<String> getProxyManager() {
-        return new RedissonBasedProxyManager(commandExecutor, ClientSideConfig.getDefault(), ExpirationStrategy.fixed(Duration.ofSeconds(10)));
+        return RedissonBasedProxyManager.builderFor(commandExecutor)
+                .withExpirationStrategy(ExpirationAfterWriteStrategy.fixedTimeToLive(Duration.ofSeconds(10)))
+                .build();
     }
 
     @Override

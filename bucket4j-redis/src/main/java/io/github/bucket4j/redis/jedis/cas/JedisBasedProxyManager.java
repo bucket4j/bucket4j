@@ -21,12 +21,12 @@
 package io.github.bucket4j.redis.jedis.cas;
 
 import io.github.bucket4j.TimeMeter;
-import io.github.bucket4j.distributed.ExpirationStrategy;
-import io.github.bucket4j.distributed.proxy.ClientSideConfig;
+import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AbstractCompareAndSwapBasedProxyManager;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AsyncCompareAndSwapOperation;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.CompareAndSwapOperation;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
+import io.github.bucket4j.redis.AbstractRedisProxyManagerBuilder;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 
@@ -39,17 +39,30 @@ import java.util.function.Function;
 public class JedisBasedProxyManager extends AbstractCompareAndSwapBasedProxyManager<byte[]> {
 
     private final JedisPool jedisPool;
-    private final ExpirationStrategy expirationStrategy;
+    private final ExpirationAfterWriteStrategy expirationStrategy;
 
-    public JedisBasedProxyManager(JedisPool jedisPool, ClientSideConfig clientSideConfig, ExpirationStrategy expirationStrategy) {
-        super(clientSideConfig);
-        Objects.requireNonNull(jedisPool);
-        this.jedisPool = jedisPool;
-        this.expirationStrategy = expirationStrategy;
+    public static JedisBasedProxyManagerBuilder builderFor(JedisPool jedisPool) {
+        return new JedisBasedProxyManagerBuilder(jedisPool);
     }
 
-    public JedisBasedProxyManager(JedisPool jedisPool, ExpirationStrategy expirationStrategy) {
-        this(jedisPool, ClientSideConfig.getDefault(), expirationStrategy);
+    public static class JedisBasedProxyManagerBuilder extends AbstractRedisProxyManagerBuilder<JedisBasedProxyManagerBuilder> {
+
+        private final JedisPool jedisPool;
+
+        private JedisBasedProxyManagerBuilder(JedisPool jedisPool) {
+            this.jedisPool = Objects.requireNonNull(jedisPool);
+        }
+
+        public JedisBasedProxyManager build() {
+            return new JedisBasedProxyManager(this);
+        }
+
+    }
+
+    private JedisBasedProxyManager(JedisBasedProxyManagerBuilder builder) {
+        super(builder.getClientSideConfig());
+        this.jedisPool = builder.jedisPool;
+        this.expirationStrategy = builder.getNotNullExpirationStrategy();
     }
 
     @Override

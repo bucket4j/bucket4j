@@ -21,12 +21,15 @@
 package io.github.bucket4j.redis.spring.cas;
 
 import io.github.bucket4j.TimeMeter;
-import io.github.bucket4j.distributed.ExpirationStrategy;
+import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AbstractCompareAndSwapBasedProxyManager;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AsyncCompareAndSwapOperation;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.CompareAndSwapOperation;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
+import io.github.bucket4j.redis.AbstractRedisProxyManagerBuilder;
+import io.github.bucket4j.redis.redisson.cas.RedissonBasedProxyManager;
+import org.redisson.command.CommandExecutor;
 import org.springframework.data.redis.connection.RedisCommands;
 import org.springframework.data.redis.connection.ReturnType;
 
@@ -38,17 +41,30 @@ import java.util.concurrent.CompletableFuture;
 public class SpringDataRedisBasedProxyManager extends AbstractCompareAndSwapBasedProxyManager<byte[]> {
 
     private final RedisCommands commands;
-    private final ExpirationStrategy expirationStrategy;
+    private final ExpirationAfterWriteStrategy expirationStrategy;
 
-    public SpringDataRedisBasedProxyManager(RedisCommands redisCommands, ClientSideConfig clientSideConfig, ExpirationStrategy expirationStrategy) {
-        super(clientSideConfig);
-        Objects.requireNonNull(redisCommands);
-        this.commands = redisCommands;
-        this.expirationStrategy = expirationStrategy;
+    public static SpringDataRedisBasedProxyManagerBuilder builderFor(RedisCommands redisCommands) {
+        return new SpringDataRedisBasedProxyManagerBuilder(redisCommands);
     }
 
-    public SpringDataRedisBasedProxyManager(RedisCommands redisCommands, ExpirationStrategy expirationStrategy) {
-        this(redisCommands, ClientSideConfig.getDefault(), expirationStrategy);
+    public static class SpringDataRedisBasedProxyManagerBuilder extends AbstractRedisProxyManagerBuilder<SpringDataRedisBasedProxyManagerBuilder> {
+
+        private final RedisCommands redisCommands;
+
+        private SpringDataRedisBasedProxyManagerBuilder(RedisCommands redisCommands) {
+            this.redisCommands = Objects.requireNonNull(redisCommands);
+        }
+
+        public SpringDataRedisBasedProxyManager build() {
+            return new SpringDataRedisBasedProxyManager(this);
+        }
+
+    }
+
+    private SpringDataRedisBasedProxyManager(SpringDataRedisBasedProxyManagerBuilder builder) {
+        super(builder.getClientSideConfig());
+        this.commands = builder.redisCommands;
+        this.expirationStrategy = builder.getNotNullExpirationStrategy();
     }
 
     @Override

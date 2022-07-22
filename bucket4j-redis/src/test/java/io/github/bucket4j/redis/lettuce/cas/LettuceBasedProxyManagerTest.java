@@ -1,6 +1,6 @@
 package io.github.bucket4j.redis.lettuce.cas;
 
-import io.github.bucket4j.distributed.ExpirationStrategy;
+import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
@@ -10,7 +10,6 @@ import org.junit.BeforeClass;
 import org.testcontainers.containers.GenericContainer;
 
 import java.nio.charset.StandardCharsets;
-import java.time.Duration;
 import java.util.UUID;
 
 public class LettuceBasedProxyManagerTest extends AbstractDistributedBucketTest<byte[]> {
@@ -50,7 +49,9 @@ public class LettuceBasedProxyManagerTest extends AbstractDistributedBucketTest<
 
     @Override
     protected ProxyManager<byte[]> getProxyManager() {
-        return new LettuceBasedProxyManager(redisClient, ClientSideConfig.getDefault(), ExpirationStrategy.none());
+        return LettuceBasedProxyManager.builderFor(redisClient)
+                .withExpirationStrategy(ExpirationAfterWriteStrategy.none())
+                .build();
     }
 
     @Override

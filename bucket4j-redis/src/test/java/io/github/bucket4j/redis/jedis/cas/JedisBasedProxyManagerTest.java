@@ -1,6 +1,6 @@
 package io.github.bucket4j.redis.jedis.cas;
 
-import io.github.bucket4j.distributed.ExpirationStrategy;
+import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
@@ -10,7 +10,6 @@ import org.testcontainers.containers.GenericContainer;
 import redis.clients.jedis.JedisPool;
 
 import java.nio.charset.StandardCharsets;
-import java.time.Duration;
 import java.util.UUID;
 
 public class JedisBasedProxyManagerTest extends AbstractDistributedBucketTest<byte[]> {
@@ -49,7 +48,9 @@ public class JedisBasedProxyManagerTest extends AbstractDistributedBucketTest<by
 
     @Override
     protected ProxyManager<byte[]> getProxyManager() {
-        return new JedisBasedProxyManager(jedisPool, ClientSideConfig.getDefault(), ExpirationStrategy.none());
+        return JedisBasedProxyManager.builderFor(jedisPool)
+                .withExpirationStrategy(ExpirationAfterWriteStrategy.none())
+                .build();
     }
 
     @Override

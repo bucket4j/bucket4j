@@ -1,6 +1,6 @@
 package io.github.bucket4j.redis.redisson.cas;
 
-import io.github.bucket4j.distributed.ExpirationStrategy;
+import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
@@ -13,7 +13,6 @@ import org.redisson.config.ConfigSupport;
 import org.redisson.connection.ConnectionManager;
 import org.testcontainers.containers.GenericContainer;
 
-import java.time.Duration;
 import java.util.UUID;
 
 public class RedissonBasedProxyManagerTest extends AbstractDistributedBucketTest<String> {
@@ -64,7 +63,9 @@ public class RedissonBasedProxyManagerTest extends AbstractDistributedBucketTest
 
     @Override
     protected ProxyManager<String> getProxyManager() {
-        return new RedissonBasedProxyManager(commandExecutor, ClientSideConfig.getDefault(), ExpirationStrategy.none());
+        return RedissonBasedProxyManager.builderFor(commandExecutor)
+                .withExpirationStrategy(ExpirationAfterWriteStrategy.none())
+                .build();
     }
 
     @Override

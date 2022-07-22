@@ -1,7 +1,6 @@
 package io.github.bucket4j.redis.jedis.cas;
 
-import io.github.bucket4j.distributed.ExpirationStrategy;
-import io.github.bucket4j.distributed.proxy.ClientSideConfig;
+import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
 import org.junit.AfterClass;
@@ -49,7 +48,9 @@ public class JedisBasedProxyManagerFixedTtlTest extends AbstractDistributedBucke
 
     @Override
     protected ProxyManager<byte[]> getProxyManager() {
-        return new JedisBasedProxyManager(jedisPool, ClientSideConfig.getDefault(), ExpirationStrategy.fixed(Duration.ofSeconds(10)));
+        return JedisBasedProxyManager.builderFor(jedisPool)
+                .withExpirationStrategy(ExpirationAfterWriteStrategy.fixedTimeToLive(Duration.ofSeconds(10)))
+                .build();
     }
 
     @Override

@@ -21,12 +21,13 @@
 package io.github.bucket4j.redis.lettuce.cas;
 
 import io.github.bucket4j.TimeMeter;
-import io.github.bucket4j.distributed.ExpirationStrategy;
+import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AbstractCompareAndSwapBasedProxyManager;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AsyncCompareAndSwapOperation;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.CompareAndSwapOperation;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
+import io.github.bucket4j.redis.AbstractRedisProxyManagerBuilder;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.RedisException;
 import io.lettuce.core.RedisFuture;
@@ -44,33 +45,38 @@ import java.util.concurrent.ExecutionException;
 public class LettuceBasedProxyManager extends AbstractCompareAndSwapBasedProxyManager<byte[]> {
 
     private final RedisAsyncCommands<byte[], byte[]> commands;
-    private final ExpirationStrategy expirationStrategy;
+    private final ExpirationAfterWriteStrategy expirationStrategy;
 
-    public LettuceBasedProxyManager(RedisAsyncCommands<byte[], byte[]> redisAsyncCommands, ClientSideConfig clientSideConfig, ExpirationStrategy expirationStrategy) {
-        super(clientSideConfig);
-        Objects.requireNonNull(redisAsyncCommands);
-        this.commands = redisAsyncCommands;
-        this.expirationStrategy = expirationStrategy;
+    public static LettuceBasedProxyManagerBuilder builderFor(RedisAsyncCommands<byte[], byte[]> redisAsyncCommands) {
+        return new LettuceBasedProxyManagerBuilder(redisAsyncCommands);
     }
 
-    public LettuceBasedProxyManager(RedisAsyncCommands<byte[], byte[]> redisAsyncCommands, ExpirationStrategy expirationStrategy) {
-        this(redisAsyncCommands, ClientSideConfig.getDefault(), expirationStrategy);
+    public static LettuceBasedProxyManagerBuilder builderFor(StatefulRedisConnection<byte[], byte[]> statefulRedisConnection) {
+        return new LettuceBasedProxyManagerBuilder(statefulRedisConnection.async());
     }
 
-    public LettuceBasedProxyManager(StatefulRedisConnection<byte[], byte[]> statefulRedisConnection, ClientSideConfig clientSideConfig, ExpirationStrategy expirationStrategy) {
-        this(statefulRedisConnection.async(), clientSideConfig, expirationStrategy);
+    public static LettuceBasedProxyManagerBuilder builderFor(RedisClient redisClient) {
+        return builderFor(redisClient.connect(ByteArrayCodec.INSTANCE));
     }
 
-    public LettuceBasedProxyManager(StatefulRedisConnection<byte[], byte[]> statefulRedisConnection, ExpirationStrategy expirationStrategy) {
-        this(statefulRedisConnection, ClientSideConfig.getDefault(), expirationStrategy);
+    public static class LettuceBasedProxyManagerBuilder extends AbstractRedisProxyManagerBuilder<LettuceBasedProxyManagerBuilder> {
+
+        private final RedisAsyncCommands<byte[], byte[]> commands;
+
+        private LettuceBasedProxyManagerBuilder(RedisAsyncCommands<byte[], byte[]> commands) {
+            this.commands = Objects.requireNonNull(commands);
+        }
+
+        public LettuceBasedProxyManager build() {
+            return new LettuceBasedProxyManager(this);
+        }
+
     }
 
-    public LettuceBasedProxyManager(RedisClient redisClient, ExpirationStrategy expirationStrategy) {
-        this(redisClient, ClientSideConfig.getDefault(), expirationStrategy);
-    }
-
-    public LettuceBasedProxyManager(RedisClient redisClient, ClientSideConfig clientSideConfig, ExpirationStrategy expirationStrategy) {
-        this(redisClient.connect(ByteArrayCodec.INSTANCE), clientSideConfig, expirationStrategy);
+    private LettuceBasedProxyManager(LettuceBasedProxyManagerBuilder builder) {
+        super(builder.getClientSideConfig());
+        this.expirationStrategy = builder.getNotNullExpirationStrategy();
+        this.commands = builder.commands;
     }
 
     @Override
