@@ -2,6 +2,6 @@
 Release `{revnumber}`
 
 .The features in release scope are following:
-* https://github.com/vladimir-bukhtoyarov/bucket4j/discussions/250[#250 Ability to serialize bucket to binary array]
-* https://github.com/vladimir-bukhtoyarov/bucket4j/discussions/255[#255 Ability to serialize bucket to JSON]
-* https://github.com/vladimir-bukhtoyarov/bucket4j/discussions/251[#251 Ability to specify offloadable executor for Hazelcast]
+* https://github.com/bucket4j/bucket4j/pull/273[#273 Add support for Redis/Lettuce]
+* https://github.com/bucket4j/bucket4j/pull/274[#273 Add support for Redis/spring-data-redis]
+* https://github.com/bucket4j/bucket4j/pull/275[#273 Add support for Redis/Jedis]
