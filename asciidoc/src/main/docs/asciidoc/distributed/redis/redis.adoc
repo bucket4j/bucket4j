@@ -79,7 +79,7 @@ BucketConfiguration configuration = BucketConfiguration.builder()
 Bucket bucket = proxyManager.builder().build(key, configuration);
 ----
 
-==== Example of Bucket instantiation via LettuceBasedProxyManager
+==== Example of Bucket instantiation via SpringDataRedisBasedProxyManager
 [source, java]
 ----
 org.springframework.data.redis.connection.RedisCommands redisCommands = ...;

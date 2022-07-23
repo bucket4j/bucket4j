@@ -37,10 +37,10 @@ but for cases where it is not possible Bucket4j provides following integrations 
 In addition to local in-memory buckets, the Bucket4j supports clustered usage scenario on top of following back-ends:
 | Back-end                   |  Async supported | Documentation link      |
 | :---                       | :---:            | :---:                   |
-| ```Redis/Redisson```       |  Yes             | [bucket4j-redis/Redisson](https://github.com/vladimir-bukhtoyarov/bucket4j/blob/master/bucket4j-redis/src/main/java/io/github/bucket4j/redis/redisson/cas/RedissonBasedProxyManager.java)      |
-| ```Redis/Jedis```          |  No              | [bucket4j-redis/Jedis](https://github.com/vladimir-bukhtoyarov/bucket4j/blob/master/bucket4j-redis/src/main/java/io/github/bucket4j/redis/jedis/cas/JedisBasedProxyManager.java)      |
-| ```Redis/Lettuce```        |  Yes             | [bucket4j-redis/Lettuce](https://github.com/vladimir-bukhtoyarov/bucket4j/blob/master/bucket4j-redis/src/main/java/io/github/bucket4j/redis/lettuce/cas/LettuceBasedProxyManager.java)      |
-| ```Redis/SpringData```     |  No              | [bucket4j-redis/SpringData](https://github.com/vladimir-bukhtoyarov/bucket4j/blob/master/bucket4j-redis/src/main/java/io/github/bucket4j/redis/spring/cas/SpringDataRedisBasedProxyManager.java)      |
+| ```Redis/Redisson```       |  Yes             | [bucket4j-redis/Redisson](https://bucket4j.com/7.6.0/toc.html#example-of-bucket-instantiation-via-redissonbasedproxymanager)      |
+| ```Redis/Jedis```          |  No              | [bucket4j-redis/Jedis](https://bucket4j.com/7.6.0/toc.html#example-of-bucket-instantiation-via-jedisbasedproxymanager)      |
+| ```Redis/Lettuce```        |  Yes             | [bucket4j-redis/Lettuce](https://bucket4j.com/7.6.0/toc.html#example-of-bucket-instantiation-via-lettucebasedproxymanager)      |
+| ```Redis/SpringData```     |  No              | [bucket4j-redis/SpringData](https://bucket4j.com/7.6.0/toc.html#example-of-bucket-instantiation-via-springdataredisbasedproxymanager)      |
 | ```MySQL```                |  No              | [bucket4j-mysql](https://bucket4j.com/7.6.0/toc.html#mysql-integration)      |
 | ```PostgreSQL```           |  No              | [bucket4j-postgresql](https://bucket4j.com/7.6.0/toc.html#postgresql-integration) |
 | ```DynamoDb```             |  No              | [bucket4j-dynamodb](https://github.com/vladimir-bukhtoyarov/bucket4j/blob/master/bucket4j-dynamodb-sdk-v1/src/main/java/io/github/bucket4j/dynamodb/v1/LongDynamoDBProxyManager.java) |
