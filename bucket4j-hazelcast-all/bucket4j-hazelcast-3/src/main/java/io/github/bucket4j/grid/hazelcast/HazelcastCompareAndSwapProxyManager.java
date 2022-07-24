@@ -24,6 +24,7 @@ import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AbstractCompareAndSwapBasedProxyManager;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AsyncCompareAndSwapOperation;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.CompareAndSwapOperation;
+import io.github.bucket4j.distributed.remote.RemoteBucketState;
 
 import java.util.Arrays;
 import java.util.Objects;
@@ -69,7 +70,7 @@ public class HazelcastCompareAndSwapProxyManager<K> extends AbstractCompareAndSw
             }
 
             @Override
-            public boolean compareAndSwap(byte[] originalData, byte[] newData) {
+            public boolean compareAndSwap(byte[] originalData, byte[] newData, RemoteBucketState newState) {
                 if (originalData == null) {
                     return map.putIfAbsent(key, newData) == null;
                 } else {

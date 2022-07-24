@@ -6,22 +6,22 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.github.vladimir-bukhtoyarov</groupId>
-    <version>7.5.0</version>
-    <artifactId>bucket4j-parent</artifactId>
+    <groupId>com.bucket4j</groupId>
+    <version>8.0.0</version>
+    <artifactId>bucket4j_jdk8-parent</artifactId>
     <packaging>pom</packaging>
     <name>bucket4j-parent</name>
 
     <description>bucket4j - is a java implementation of token bucket algorithm for rate limiting</description>
-    <url>http://github.com/vladimir-bukhtoyarov/bucket4j</url>
+    <url>http://github.com/bucket4j/bucket4j</url>
 
     <distributionManagement>
         <snapshotRepository>
-            <id>ossrh</id>
+            <id>bucket4j-ossrh</id>
             <url>https://oss.sonatype.org/content/repositories/snapshots</url>
         </snapshotRepository>
         <repository>
-            <id>ossrh</id>
+            <id>bucket4j-ossrh</id>
             <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
         </repository>
     </distributionManagement>
@@ -57,15 +57,17 @@
 
         <testcontainers.version>1.17.1</testcontainers.version>
         <lettuce-version>5.0.2.RELEASE</lettuce-version>
-        <jedis.version>2.9.0</jedis.version>
+        <jedis.version>4.2.3</jedis.version>
         <redisson.version>3.16.8</redisson.version>
+        <lettuce.version>6.1.8.RELEASE</lettuce.version>
+        <spring-data-redis.version>2.6.4</spring-data-redis.version>
         <caffeine.version>2.9.3</caffeine.version>
     </properties>
 
     <scm>
-        <url>http://github.com/vladimir-bukhtoyarov/bucket4j</url>
-        <connection>scm:git:git@github.com:vladimir-bukhtoyarov/bucket4j</connection>
-        <developerConnection>scm:git:git@github.com:vladimir-bukhtoyarov/bucket4j.git</developerConnection>
+        <url>http://github.com/bucket4j/bucket4j</url>
+        <connection>scm:git:git@github.com:bucket4j/bucket4j</connection>
+        <developerConnection>scm:git:git@github.com:bucket4j/bucket4j.git</developerConnection>
     </scm>
 
     <developers>
@@ -239,8 +241,8 @@
                         <version>1.6.8</version>
                         <extensions>true</extensions>
                         <configuration>
-                            <serverId>ossrh</serverId>
-                            <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                            <serverId>ossrh-bucket4j</serverId>
+                            <nexusUrl>https://s01.oss.sonatype.org/</nexusUrl>
                             <autoReleaseAfterClose>false</autoReleaseAfterClose>
                             <stagingProgressTimeoutMinutes>120</stagingProgressTimeoutMinutes>
                         </configuration>
@@ -316,7 +318,6 @@
                     </plugin>
                 </plugins>
             </build>
-
             <reporting>
                 <plugins>
                     <plugin>

@@ -26,6 +26,7 @@ import io.github.bucket4j.distributed.jdbc.SQLProxyConfigurationBuilder;
 import io.github.bucket4j.distributed.proxy.generic.select_for_update.AbstractSelectForUpdateBasedProxyManager;
 import io.github.bucket4j.distributed.proxy.generic.select_for_update.LockAndGetResult;
 import io.github.bucket4j.distributed.proxy.generic.select_for_update.SelectForUpdateBasedTransaction;
+import io.github.bucket4j.distributed.remote.RemoteBucketState;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -140,7 +141,7 @@ public class PostgreSQLSelectForUpdateBasedProxyManager extends AbstractSelectFo
             }
 
             @Override
-            public void update(byte[] data) {
+            public void update(byte[] data, RemoteBucketState newState) {
                 try {
                     try (PreparedStatement updateStatement = connection.prepareStatement(updateSqlQuery)) {
                         updateStatement.setBytes(1, data);

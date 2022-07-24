@@ -23,6 +23,7 @@ import com.hazelcast.core.IMap;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.generic.pessimistic_locking.AbstractLockBasedProxyManager;
 import io.github.bucket4j.distributed.proxy.generic.pessimistic_locking.LockBasedTransaction;
+import io.github.bucket4j.distributed.remote.RemoteBucketState;
 
 import java.util.Objects;
 
@@ -81,12 +82,12 @@ public class HazelcastLockBasedProxyManager<K> extends AbstractLockBasedProxyMan
             }
 
             @Override
-            public void create(byte[] data) {
+            public void create(byte[] data, RemoteBucketState newState) {
                 map.put(key, data);
             }
 
             @Override
-            public void update(byte[] data) {
+            public void update(byte[] data, RemoteBucketState newState) {
                 map.put(key, data);
             }
 

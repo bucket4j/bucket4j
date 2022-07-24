@@ -8,7 +8,7 @@ To use the JCache extension you also need to add the following dependency:
 [source, xml, subs=attributes+]
 ----
 <dependency>
-    <groupId>com.github.vladimir-bukhtoyarov</groupId>
+    <groupId>com.bucket4j</groupId>
     <artifactId>bucket4j-jcache</artifactId>
     <version>{revnumber}</version>
 </dependency>

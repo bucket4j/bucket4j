@@ -1,13 +1,13 @@
 === Quick start examples
 ==== How to dependency to Bucket4j
-The Bucket4j is distributed through https://mvnrepository.com/artifact/com.github.vladimir-bukhtoyarov/bucket4j-core[Maven Central].
+The Bucket4j is distributed through https://mvnrepository.com/artifact/com.bucket4j/bucket4j-core[Maven Central].
 You need to add the dependency to your project as described below in order to be able to compile and run examples
 
 .Maven dependency
 [source, xml, subs=attributes+]
 ----
 <dependency>
-    <groupId>com.github.vladimir-bukhtoyarov</groupId>
+    <groupId>com.bucket4j</groupId>
     <artifactId>bucket4j-core</artifactId>
     <version>{revnumber}</version>
 </dependency>
@@ -16,7 +16,7 @@ You need to add the dependency to your project as described below in order to be
 .Gradle dependency
 [source, groovy, subs=attributes+]
 ----
-implementation 'com.github.vladimir-bukhtoyarov:bucket4j-core:{revnumber}'
+implementation 'com.bucket4j:bucket4j-core:{revnumber}'
 ----
 
 ==== Create your first Bucket, limiting the rate of heavy work

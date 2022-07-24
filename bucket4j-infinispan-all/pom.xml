@@ -4,15 +4,15 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <parent>
-        <artifactId>bucket4j-parent</artifactId>
-        <groupId>com.github.vladimir-bukhtoyarov</groupId>
-        <version>7.5.0</version>
+        <artifactId>bucket4j_jdk8-parent</artifactId>
+        <groupId>com.bucket4j</groupId>
+        <version>8.0.0</version>
         <relativePath>../bucket4j-parent</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <packaging>pom</packaging>
 
-    <artifactId>bucket4j-infinispan-all</artifactId>
+    <artifactId>bucket4j_jdk8-infinispan-all</artifactId>
     <modules>
         <module>bucket4j-infinispan</module>
     </modules>

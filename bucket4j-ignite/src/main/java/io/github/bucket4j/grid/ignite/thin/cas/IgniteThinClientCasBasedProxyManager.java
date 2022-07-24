@@ -24,6 +24,7 @@ import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AbstractCompareAndSwapBasedProxyManager;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AsyncCompareAndSwapOperation;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.CompareAndSwapOperation;
+import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.grid.ignite.thin.ThinClientUtils;
 import org.apache.ignite.client.ClientCache;
 import org.apache.ignite.client.IgniteClientFuture;
@@ -59,7 +60,7 @@ public class IgniteThinClientCasBasedProxyManager<K> extends AbstractCompareAndS
                 return Optional.of(persistedStateBytes);
             }
             @Override
-            public boolean compareAndSwap(byte[] originalDataBytes, byte[] newDataBytes) {
+            public boolean compareAndSwap(byte[] originalDataBytes, byte[] newDataBytes, RemoteBucketState newState) {
                 ByteBuffer newData = ByteBuffer.wrap(newDataBytes);
                 if (originalDataBytes == null) {
                     return cache.putIfAbsent(key, newData);
@@ -86,7 +87,7 @@ public class IgniteThinClientCasBasedProxyManager<K> extends AbstractCompareAndS
                 });
             }
             @Override
-            public CompletableFuture<Boolean> compareAndSwap(byte[] originalDataBytes, byte[] newDataBytes) {
+            public CompletableFuture<Boolean> compareAndSwap(byte[] originalDataBytes, byte[] newDataBytes, RemoteBucketState newState) {
                 ByteBuffer newData = ByteBuffer.wrap(newDataBytes);
                 if (originalDataBytes == null) {
                     IgniteClientFuture<Boolean> igniteFuture = cache.putIfAbsentAsync(key, newData);

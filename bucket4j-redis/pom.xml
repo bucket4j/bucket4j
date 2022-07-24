@@ -6,12 +6,12 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.github.vladimir-bukhtoyarov</groupId>
-        <artifactId>bucket4j-parent</artifactId>
-        <version>7.5.0</version>
+        <groupId>com.bucket4j</groupId>
+        <artifactId>bucket4j_jdk8-parent</artifactId>
+        <version>8.0.0</version>
         <relativePath>../bucket4j-parent</relativePath>
     </parent>
-    <artifactId>bucket4j-redis</artifactId>
+    <artifactId>bucket4j_jdk8-redis</artifactId>
     <name>bucket4j-redis</name>
 
     <properties>
@@ -32,36 +32,41 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.github.vladimir-bukhtoyarov</groupId>
-            <artifactId>bucket4j-core</artifactId>
+            <groupId>com.bucket4j</groupId>
+            <artifactId>bucket4j_jdk8-core</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.github.vladimir-bukhtoyarov</groupId>
-            <artifactId>bucket4j-core</artifactId>
+            <groupId>com.bucket4j</groupId>
+            <artifactId>bucket4j_jdk8-core</artifactId>
             <version>${project.version}</version>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>io.lettuce</groupId>-->
-<!--            <artifactId>lettuce-core</artifactId>-->
-<!--            <version>${lettuce-version}</version>-->
-<!--            <scope>provided</scope>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>redis.clients</groupId>-->
-<!--            <artifactId>jedis</artifactId>-->
-<!--            <version>${jedis.version}</version>-->
-<!--            <scope>provided</scope>-->
-<!--        </dependency>-->
+        <dependency>
+            <groupId>io.lettuce</groupId>
+            <artifactId>lettuce-core</artifactId>
+            <version>${lettuce.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>redis.clients</groupId>
+            <artifactId>jedis</artifactId>
+            <version>${jedis.version}</version>
+            <scope>provided</scope>
+        </dependency>
         <dependency>
             <groupId>org.redisson</groupId>
             <artifactId>redisson</artifactId>
             <version>${redisson.version}</version>
             <scope>provided</scope>
         </dependency>
-
+        <dependency>
+            <groupId>org.springframework.data</groupId>
+            <artifactId>spring-data-redis</artifactId>
+            <version>${spring-data-redis.version}</version>
+            <scope>provided</scope>
+        </dependency>
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>testcontainers</artifactId>
@@ -69,15 +74,15 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.github.vladimir-bukhtoyarov</groupId>
-            <artifactId>bucket4j-core</artifactId>
+            <groupId>com.bucket4j</groupId>
+            <artifactId>bucket4j_jdk8-core</artifactId>
             <version>${project.version}</version>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
 <!--        <dependency>-->
-<!--            <groupId>com.github.vladimir-bukhtoyarov</groupId>-->
-<!--            <artifactId>bucket4j-lua</artifactId>-->
+<!--            <groupId>com.bucket4j</groupId>-->
+<!--            <artifactId>bucket4j_jdk8-lua</artifactId>-->
 <!--            <version>${project.version}</version>-->
 <!--            <type>test-jar</type>-->
 <!--            <scope>test</scope>-->

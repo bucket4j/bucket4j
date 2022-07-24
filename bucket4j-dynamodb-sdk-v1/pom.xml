@@ -5,13 +5,13 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.github.vladimir-bukhtoyarov</groupId>
-        <artifactId>bucket4j-parent</artifactId>
-        <version>7.5.0</version>
+        <groupId>com.bucket4j</groupId>
+        <artifactId>bucket4j_jdk8-parent</artifactId>
+        <version>8.0.0</version>
         <relativePath>../bucket4j-parent</relativePath>
     </parent>
 
-    <artifactId>bucket4j-dynamodb-sdk-v1</artifactId>
+    <artifactId>bucket4j_jdk8-dynamodb-sdk-v1</artifactId>
     <name>bucket4j-dynamodb-sdk-v1</name>
 
     <repositories>
@@ -39,8 +39,8 @@
     </dependencyManagement>
     <dependencies>
         <dependency>
-            <groupId>com.github.vladimir-bukhtoyarov</groupId>
-            <artifactId>bucket4j-core</artifactId>
+            <groupId>com.bucket4j</groupId>
+            <artifactId>bucket4j_jdk8-core</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
@@ -48,8 +48,8 @@
             <artifactId>aws-java-sdk-dynamodb</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.github.vladimir-bukhtoyarov</groupId>
-            <artifactId>bucket4j-core</artifactId>
+            <groupId>com.bucket4j</groupId>
+            <artifactId>bucket4j_jdk8-core</artifactId>
             <version>${project.version}</version>
             <type>test-jar</type>
             <scope>test</scope>

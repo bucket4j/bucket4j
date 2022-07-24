@@ -14,7 +14,6 @@
         <skipNexusStagingDeployMojo>true</skipNexusStagingDeployMojo>
         <maven.deploy.skip>true</maven.deploy.skip>
         <revapi.skip>true</revapi.skip>
-        <sonar.skip>true</sonar.skip>
         <experimentalCoroutines>enable</experimentalCoroutines>
         <kotlin.version>1.4.0</kotlin.version>
         <lincheck.version>2.14.1</lincheck.version>
@@ -25,7 +24,7 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>lincheck-tests</artifactId>
+    <artifactId>lincheck_jdk8-tests</artifactId>
 
     <build>
 <!--        <sourceDirectory>${project.basedir}/src/main/kotlin</sourceDirectory>-->
@@ -101,13 +100,13 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.github.vladimir-bukhtoyarov</groupId>
-            <artifactId>bucket4j-core</artifactId>
+            <groupId>com.bucket4j</groupId>
+            <artifactId>bucket4j_jdk8-core</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.github.vladimir-bukhtoyarov</groupId>
-            <artifactId>bucket4j-core</artifactId>
+            <groupId>com.bucket4j</groupId>
+            <artifactId>bucket4j_jdk8-core</artifactId>
             <version>${project.version}</version>
             <type>test-jar</type>
             <scope>test</scope>
