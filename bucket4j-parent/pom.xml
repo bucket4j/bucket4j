@@ -8,7 +8,7 @@
 
     <groupId>com.bucket4j</groupId>
     <version>8.0.0</version>
-    <artifactId>bucket4j_jdk8-parent</artifactId>
+    <artifactId>bucket4j-parent</artifactId>
     <packaging>pom</packaging>
     <name>bucket4j-parent</name>
 

@@ -23,11 +23,11 @@
 
     <parent>
         <groupId>com.bucket4j</groupId>
-        <artifactId>bucket4j_jdk8-parent</artifactId>
+        <artifactId>bucket4j-parent</artifactId>
         <version>8.0.0</version>
         <relativePath>../../bucket4j-parent</relativePath>
     </parent>
-    <artifactId>bucket4j_jdk8-lua</artifactId>
+    <artifactId>bucket4j-lua</artifactId>
 
     <properties>
         <maven.deploy.skip>true</maven.deploy.skip>
@@ -38,12 +38,12 @@
     <dependencies>
         <dependency>
             <groupId>com.bucket4j</groupId>
-            <artifactId>bucket4j_jdk8-core</artifactId>
+            <artifactId>bucket4j-core</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.bucket4j</groupId>
-            <artifactId>bucket4j_jdk8-core</artifactId>
+            <artifactId>bucket4j-core</artifactId>
             <version>${project.version}</version>
             <type>test-jar</type>
             <scope>test</scope>

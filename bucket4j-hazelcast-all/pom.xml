@@ -3,7 +3,7 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>bucket4j_jdk8-parent</artifactId>
+        <artifactId>bucket4j-parent</artifactId>
         <groupId>com.bucket4j</groupId>
         <version>8.0.0</version>
         <relativePath>../bucket4j-parent</relativePath>
@@ -11,7 +11,7 @@
     <packaging>pom</packaging>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>bucket4j_jdk8-hazelcast-all</artifactId>
+    <artifactId>bucket4j-hazelcast-all</artifactId>
 
     <modules>
         <module>bucket4j-hazelcast</module>
