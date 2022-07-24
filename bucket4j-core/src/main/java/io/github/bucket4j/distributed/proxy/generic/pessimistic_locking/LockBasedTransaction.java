@@ -20,7 +20,7 @@
 
 package io.github.bucket4j.distributed.proxy.generic.pessimistic_locking;
 
-import io.github.bucket4j.distributed.proxy.generic.select_for_update.LockAndGetResult;
+import io.github.bucket4j.distributed.remote.RemoteBucketState;
 
 /**
  * Describes the set of operations that {@link AbstractLockBasedProxyManager} typically performs in reaction to user request.
@@ -28,7 +28,7 @@ import io.github.bucket4j.distributed.proxy.generic.select_for_update.LockAndGet
  * <ol>
  *     <li>begin - {@link #begin()}</li>
  *     <li>lock - {@link #lockAndGet()}</li>
- *     <li>update - {@link #update(byte[])}</li>
+ *     <li>update - {@link #update(byte[], RemoteBucketState)}</li>
  *     <li>unlock - {@link #unlock()}</li>
  *     <li>commit - {@link #commit()}</li>
  *     <li>release - {@link #release()}</li>
@@ -69,15 +69,17 @@ public interface LockBasedTransaction {
      * Creates the data by the key associated with this transaction.
      *
      * @param data bucket state to persists
+     * @param state of bucket - can be used to extract additional data is useful for persistence or logging.
      */
-    void create(byte[] data);
+    void create(byte[] data, RemoteBucketState state);
 
     /**
      * Updates the data by the key associated with this transaction.
      *
      * @param data bucket state to persists
+     * @param newState new state of bucket - can be used to extract additional data is useful for persistence or logging.
      */
-    void update(byte[] data);
+    void update(byte[] data, RemoteBucketState newState);
 
     /**
      * Frees resources associated with this transaction

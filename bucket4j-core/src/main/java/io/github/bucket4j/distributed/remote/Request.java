@@ -64,7 +64,6 @@ public class Request<T> implements ComparableByContent<Request<T>> {
             Versions.check(formatNumber, v_7_0_0, v_7_0_0);
 
             int backwardCompatibilityNumber = adapter.readInt(input);
-            Versions.check(backwardCompatibilityNumber, v_7_0_0, v_7_0_0);
             backwardCompatibilityVersion = Versions.byNumber(backwardCompatibilityNumber);
 
             RemoteCommand<?> command = RemoteCommand.deserialize(adapter, input, backwardCompatibilityVersion);

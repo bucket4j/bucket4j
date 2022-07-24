@@ -21,6 +21,7 @@ import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AbstractCompareAndSwapBasedProxyManager;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AsyncCompareAndSwapOperation;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.CompareAndSwapOperation;
+import io.github.bucket4j.distributed.remote.RemoteBucketState;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -50,7 +51,7 @@ public class CompareAndSwapBasedProxyManagerMock<K> extends AbstractCompareAndSw
                 return Optional.ofNullable(backup);
             }
             @Override
-            public boolean compareAndSwap(byte[] originalData, byte[] newData) {
+            public boolean compareAndSwap(byte[] originalData, byte[] newData, RemoteBucketState newState) {
                 stateMap.put(key, newData);
                 return true;
             }
@@ -66,7 +67,7 @@ public class CompareAndSwapBasedProxyManagerMock<K> extends AbstractCompareAndSw
                 return CompletableFuture.completedFuture(Optional.ofNullable(backup));
             }
             @Override
-            public CompletableFuture<Boolean> compareAndSwap(byte[] originalData, byte[] newData) {
+            public CompletableFuture<Boolean> compareAndSwap(byte[] originalData, byte[] newData, RemoteBucketState newState) {
                 stateMap.put(key, newData);
                 return CompletableFuture.completedFuture(true);
             }

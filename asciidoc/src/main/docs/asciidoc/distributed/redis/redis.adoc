@@ -1,0 +1,95 @@
+[[bucket4j-redis, Bucket4j-Redis]]
+=== Bucket4j-Redis integration
+Bucket4j provides integration with four Redis libraries:
+[cols="1,1,1"]
+|===
+|Library | Async supported | Proxy manager class
+
+|``Redisson``
+| Yes
+| RedissonBasedProxyManager
+
+|``Lettuce``
+| Yes
+| LettuceBasedProxyManager
+
+|``Jedis``
+| No
+| JedisBasedProxyManager
+
+|``Spring Data Redis``
+| No
+| SpringDataRedisBasedProxyManager
+|===
+IMPORTANT: For all libraries mentioned above concurrent access to Redis is solved by Compare&Swap pattern, this can be improved in the future via switching to Lua stored procedures.
+
+==== Dependencies
+To use ``bucket4j-redis`` extension you need to add following dependency:
+[source, xml, subs=attributes+]
+----
+<dependency>
+    <groupId>com.github.vladimir-bukhtoyarov</groupId>
+    <artifactId>bucket4j-redis</artifactId>
+    <version>{revnumber}</version>
+</dependency>
+----
+
+==== Example of Bucket instantiation via RedissonBasedProxyManager
+[source, java]
+----
+org.redisson.command.CommandExecutor commandExecutor = ...;
+RedissonBasedProxyManager proxyManager = RedissonBasedProxyManager.builderFor(commandExecutor)
+    .withExpirationStrategy(ExpirationAfterWriteStrategy.basedOnTimeForRefillingBucketUpToMax(Duration.ofSeconds(10)))
+    .build();
+...
+
+BucketConfiguration configuration = BucketConfiguration.builder()
+    .addLimit(Bandwidth.simple(1_000, Duration.ofMinutes(1)))
+    .build();
+Bucket bucket = proxyManager.builder().build(key, configuration);
+----
+
+==== Example of Bucket instantiation via LettuceBasedProxyManager
+[source, java]
+----
+io.lettuce.core.RedisClient redisClient = ...;
+LettuceBasedProxyManager proxyManager = LettuceBasedProxyManager.builderFor(redisClient)
+    .withExpirationStrategy(ExpirationAfterWriteStrategy.basedOnTimeForRefillingBucketUpToMax(Duration.ofSeconds(10)))
+    .build();
+...
+
+BucketConfiguration configuration = BucketConfiguration.builder()
+    .addLimit(Bandwidth.simple(1_000, Duration.ofMinutes(1)))
+    .build();
+Bucket bucket = proxyManager.builder().build(key, configuration);
+----
+
+==== Example of Bucket instantiation via JedisBasedProxyManager
+[source, java]
+----
+redis.clients.jedis.JedisPool jedisPool = ...;
+LettuceBasedProxyManager proxyManager = JedisBasedProxyManager.builderFor(jedisPool)
+    .withExpirationStrategy(ExpirationAfterWriteStrategy.basedOnTimeForRefillingBucketUpToMax(Duration.ofSeconds(10)))
+    .build();
+...
+
+BucketConfiguration configuration = BucketConfiguration.builder()
+    .addLimit(Bandwidth.simple(1_000, Duration.ofMinutes(1)))
+    .build();
+Bucket bucket = proxyManager.builder().build(key, configuration);
+----
+
+==== Example of Bucket instantiation via SpringDataRedisBasedProxyManager
+[source, java]
+----
+org.springframework.data.redis.connection.RedisCommands redisCommands = ...;
+SpringDataRedisBasedProxyManager proxyManager = SpringDataRedisBasedProxyManager.builderFor(redisCommands)
+    .withExpirationStrategy(ExpirationAfterWriteStrategy.basedOnTimeForRefillingBucketUpToMax(Duration.ofSeconds(10)))
+    .build();
+...
+
+BucketConfiguration configuration = BucketConfiguration.builder()
+    .addLimit(Bandwidth.simple(1_000, Duration.ofMinutes(1)))
+    .build();
+Bucket bucket = proxyManager.builder().build(key, configuration);
+----

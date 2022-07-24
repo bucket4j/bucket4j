@@ -20,13 +20,15 @@
 
 package io.github.bucket4j.distributed.proxy.generic.select_for_update;
 
+import io.github.bucket4j.distributed.remote.RemoteBucketState;
+
 /**
  * Describes the set of operations that {@link AbstractSelectForUpdateBasedProxyManager} typically performs in reaction to user request.
  * The typical flow is following:
  * <ol>
  *     <li>begin - {@link #begin()}</li>
  *     <li>lock - {@link #tryLockAndGet()}</li>
- *     <li>update - {@link #update(byte[])}</li>
+ *     <li>update - {@link #update(byte[], RemoteBucketState)}</li>
  *     <li>commit - {@link #commit()}</li>
  *     <li>release - {@link #release()}</li>
  * </ol>
@@ -68,8 +70,9 @@ public interface SelectForUpdateBasedTransaction {
      * Updates the data by the key associated with this transaction.
      *
      * @param data bucket state to persists
+     * @param newState new state of bucket - can be used to extract additional data is useful for persistence or logging.
      */
-    void update(byte[] data);
+    void update(byte[] data, RemoteBucketState newState);
 
     /**
      * Frees resources associated with this transaction

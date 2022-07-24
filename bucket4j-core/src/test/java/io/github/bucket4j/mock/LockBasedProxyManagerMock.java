@@ -20,6 +20,7 @@ package io.github.bucket4j.mock;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.generic.pessimistic_locking.AbstractLockBasedProxyManager;
 import io.github.bucket4j.distributed.proxy.generic.pessimistic_locking.LockBasedTransaction;
+import io.github.bucket4j.distributed.remote.RemoteBucketState;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -44,7 +45,7 @@ public class LockBasedProxyManagerMock<K> extends AbstractLockBasedProxyManager<
             }
 
             @Override
-            public void update(byte[] data) {
+            public void update(byte[] data, RemoteBucketState newState) {
                 if (backup == null) {
                     throw new IllegalStateException();
                 }
@@ -57,7 +58,7 @@ public class LockBasedProxyManagerMock<K> extends AbstractLockBasedProxyManager<
             }
 
             @Override
-            public void create(byte[] data) {
+            public void create(byte[] data, RemoteBucketState newState) {
                 if (backup != null) {
                     throw new IllegalStateException();
                 }

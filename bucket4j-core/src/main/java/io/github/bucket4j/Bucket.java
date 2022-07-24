@@ -167,7 +167,7 @@ public interface Bucket {
      *             buyCocaCola();
      *         } catch(NoCocaColaException e) {
      *             // return money to wallet
-     *             wallet.addTokens(50);
+     *             wallet.forceAddTokens(50);
      *         }
      *      };
      * }</pre>

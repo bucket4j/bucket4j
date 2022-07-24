@@ -23,6 +23,7 @@ import io.github.bucket4j.distributed.proxy.generic.pessimistic_locking.LockBase
 import io.github.bucket4j.distributed.proxy.generic.select_for_update.AbstractSelectForUpdateBasedProxyManager;
 import io.github.bucket4j.distributed.proxy.generic.select_for_update.LockAndGetResult;
 import io.github.bucket4j.distributed.proxy.generic.select_for_update.SelectForUpdateBasedTransaction;
+import io.github.bucket4j.distributed.remote.RemoteBucketState;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -48,7 +49,7 @@ public class SelectForUpdateBasedProxyManagerMock<K> extends AbstractSelectForUp
             }
 
             @Override
-            public void update(byte[] data) {
+            public void update(byte[] data, RemoteBucketState newState) {
                 if (backup == null) {
                     throw new IllegalStateException();
                 }
