@@ -27,6 +27,6 @@
 //
 //**Question:** should I always work with JCache through ProxyManager?
 //**Answer:** It depends. When you have deal with potentially huge and unpredictable amount of buckets, it is always better to use ProxyManager.
-//ProxyManager protects you from common performance pitfalls(like described in https://github.com/vladimir-bukhtoyarov/bucket4j/issues/26[this issue]).
+//ProxyManager protects you from common performance pitfalls(like described in https://github.com/bucket4j/bucket4j/issues/26[this issue]).
 //But when you have deal with one or few buckets which well known at development time, then it would be better to avoid ProxyManager
-//and work directly with [GridBucket](https://github.com/vladimir-bukhtoyarov/bucket4j/blob/2.0/bucket4j-core/src/main/java/io/github/bucket4j/grid/GridBucket.java) as described in the next example.
+//and work directly with [GridBucket](https://github.com/bucket4j/bucket4j/blob/2.0/bucket4j-core/src/main/java/io/github/bucket4j/grid/GridBucket.java) as described in the next example.

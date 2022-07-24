@@ -29,7 +29,7 @@ import java.time.Duration
 
 class HandlingArithmeticOverflowSpecification extends Specification {
 
-    def "regression test for https://github.com/vladimir-bukhtoyarov/bucket4j/issues/51"() {
+    def "regression test for https://github.com/bucket4j/bucket4j/issues/51"() {
         setup:
             Bandwidth limit1 = Bandwidth.simple(700000, Duration.ofHours(1))
             Bandwidth limit2 = Bandwidth.simple(14500, Duration.ofMinutes(1))

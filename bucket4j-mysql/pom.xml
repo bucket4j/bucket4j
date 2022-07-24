@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.github.vladimir-bukhtoyarov</groupId>
+        <groupId>com.bucket4j</groupId>
         <artifactId>bucket4j_jdk8-parent</artifactId>
         <version>8.0.0</version>
         <relativePath>../bucket4j-parent</relativePath>
@@ -27,12 +27,12 @@
     </repositories>
     <dependencies>
         <dependency>
-            <groupId>com.github.vladimir-bukhtoyarov</groupId>
+            <groupId>com.bucket4j</groupId>
             <artifactId>bucket4j_jdk8-core</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.github.vladimir-bukhtoyarov</groupId>
+            <groupId>com.bucket4j</groupId>
             <artifactId>bucket4j_jdk8-core</artifactId>
             <version>${project.version}</version>
             <type>test-jar</type>

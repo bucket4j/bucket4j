@@ -28,7 +28,7 @@ To use ``bucket4j-redis`` extension you need to add following dependency:
 [source, xml, subs=attributes+]
 ----
 <dependency>
-    <groupId>com.github.vladimir-bukhtoyarov</groupId>
+    <groupId>com.bucket4j</groupId>
     <artifactId>bucket4j-redis</artifactId>
     <version>{revnumber}</version>
 </dependency>

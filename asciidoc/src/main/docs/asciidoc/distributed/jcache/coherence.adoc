@@ -5,7 +5,7 @@ To use ``bucket4j-coherence`` extension you need to add the following dependency
 [source, xml, subs=attributes+]
 ----
 <dependency>
-    <groupId>com.github.vladimir-bukhtoyarov</groupId>
+    <groupId>com.bucket4j</groupId>
     <artifactId>bucket4j-coherence</artifactId>
     <version>{revnumber}</version>
 </dependency>

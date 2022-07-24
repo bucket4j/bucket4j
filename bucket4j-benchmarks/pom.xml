@@ -6,7 +6,7 @@
 
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>com.github.vladimir-bukhtoyarov</groupId>
+        <groupId>com.bucket4j</groupId>
         <artifactId>bucket4j_jdk8-parent</artifactId>
         <version>8.0.0</version>
         <relativePath>../bucket4j-parent</relativePath>
@@ -19,12 +19,11 @@
         <maven.deploy.skip>true</maven.deploy.skip>
         <revapi.skip>true</revapi.skip>
         <skipNexusStagingDeployMojo>true</skipNexusStagingDeployMojo>
-        <sonar.skip>true</sonar.skip>
     </properties>
 
     <dependencies>
         <dependency>
-            <groupId>com.github.vladimir-bukhtoyarov</groupId>
+            <groupId>com.bucket4j</groupId>
             <artifactId>bucket4j_jdk8-core</artifactId>
             <version>${project.version}</version>
         </dependency>

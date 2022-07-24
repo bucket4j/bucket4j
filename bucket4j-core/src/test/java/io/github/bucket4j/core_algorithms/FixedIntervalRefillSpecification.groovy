@@ -89,7 +89,7 @@ class FixedIntervalRefillSpecification extends Specification {
 
     }
 
-    def "Test for refill time estimation https://github.com/vladimir-bukhtoyarov/bucket4j/issues/71"() {
+    def "Test for refill time estimation https://github.com/bucket4j/bucket4j/issues/71"() {
         setup:
             Refill refill = Refill.intervally(10, Duration.ofMinutes(1))
             Bandwidth bandwidth = Bandwidth.classic(10, refill)

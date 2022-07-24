@@ -5,7 +5,7 @@
 
     <parent>
         <artifactId>bucket4j_jdk8-parent</artifactId>
-        <groupId>com.github.vladimir-bukhtoyarov</groupId>
+        <groupId>com.bucket4j</groupId>
         <version>8.0.0</version>
         <relativePath>../bucket4j-parent</relativePath>
     </parent>

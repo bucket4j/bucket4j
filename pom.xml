@@ -3,13 +3,13 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.github.vladimir-bukhtoyarov</groupId>
-    <artifactId>bucket4j</artifactId>
+    <groupId>com.bucket4j</groupId>
+    <artifactId>bucket4j_jdk8</artifactId>
     <version>8.0.0</version>
     <packaging>pom</packaging>
 
     <parent>
-        <groupId>com.github.vladimir-bukhtoyarov</groupId>
+        <groupId>com.bucket4j</groupId>
         <artifactId>bucket4j_jdk8-parent</artifactId>
         <version>8.0.0</version>
         <relativePath>./bucket4j-parent</relativePath>

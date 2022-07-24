@@ -2,7 +2,7 @@
 
 # Java rate-limiting library based on token-bucket algorithm.
 
-[![Licence](https://img.shields.io/hexpm/l/plug.svg)](https://github.com/vladimir-bukhtoyarov/bucket4j/blob/master/LICENSE)
+[![Licence](https://img.shields.io/hexpm/l/plug.svg)](https://github.com/bucket4j/bucket4j/blob/master/LICENSE)
 
 ## Bucket4j basic features
 * *Absolutely non-compromise precision* - Bucket4j does not operate with floats or doubles, all calculation are performed in the integer arithmetic, this feature protects end users from calculation errors involved by rounding.
@@ -43,13 +43,13 @@ In addition to local in-memory buckets, the Bucket4j supports clustered usage sc
 | ```Redis/SpringData```     |  No              | [bucket4j-redis/SpringData](https://bucket4j.com/7.6.0/toc.html#example-of-bucket-instantiation-via-springdataredisbasedproxymanager)      |
 | ```MySQL```                |  No              | [bucket4j-mysql](https://bucket4j.com/7.6.0/toc.html#mysql-integration)      |
 | ```PostgreSQL```           |  No              | [bucket4j-postgresql](https://bucket4j.com/7.6.0/toc.html#postgresql-integration) |
-| ```DynamoDb```             |  No              | [bucket4j-dynamodb](https://github.com/vladimir-bukhtoyarov/bucket4j/blob/master/bucket4j-dynamodb-sdk-v1/src/main/java/io/github/bucket4j/dynamodb/v1/LongDynamoDBProxyManager.java) |
+| ```DynamoDb```             |  No              | [bucket4j-dynamodb](https://github.com/bucket4j/bucket4j/blob/master/bucket4j-dynamodb-sdk-v1/src/main/java/io/github/bucket4j/dynamodb/v1/LongDynamoDBProxyManager.java) |
 
 ### Local caches support
 Sometimes you are having deal with bucket per key scenarios but distributed synchronization is unnecessary, for example where request stickiness is provided by a load balancer, or other use-cases where stickiness can be achieved by the application itself, for example, Kafka consumer. For such scenarios Bucket4j provides support for following list of local caching libraries:
 | Back-end                      | Documentation link      |
 | :---                          | :---:                   |
-| ```Caffeine```                | [bucket4j-caffeine](https://github.com/vladimir-bukhtoyarov/bucket4j/blob/7.3/bucket4j-caffeine/src/main/java/io/github/bucket4j/caffeine/CaffeineProxyManager.java)      |
+| ```Caffeine```                | [bucket4j-caffeine](https://github.com/bucket4j/bucket4j/blob/7.3/bucket4j-caffeine/src/main/java/io/github/bucket4j/caffeine/CaffeineProxyManager.java)      |
 
 ## [Documentation](https://bucket4j.com)
 * [Official reference](https://bucket4j.com/7.6.0/toc.html)
@@ -61,22 +61,22 @@ Sometimes you are having deal with bucket per key scenarios but distributed sync
 The Bucket4j is distributed through [Maven Central](http://search.maven.org/):
 ```xml
 <dependency>
-    <groupId>com.github.vladimir-bukhtoyarov</groupId>
+    <groupId>com.bucket4j</groupId>
     <artifactId>bucket4j-core</artifactId>
     <version>7.6.0</version>
 </dependency>
 ``` 
 #### You can build Bucket4j from sources
 ```bash
-git clone https://github.com/vladimir-bukhtoyarov/bucket4j.git
+git clone https://github.com/bucket4j/bucket4j.git
 cd bucket4j
 mvn clean install
 ```
 
 ## Have a question?
 Feel free to ask via:
-* [Bucket4j discussions](https://github.com/vladimir-bukhtoyarov/bucket4j/discussions) for questions, feature proposals, sharing of experience.
-* [Bucket4j issue tracker](https://github.com/vladimir-bukhtoyarov/bucket4j/issues/new) to report a bug.
+* [Bucket4j discussions](https://github.com/bucket4j/bucket4j/discussions) for questions, feature proposals, sharing of experience.
+* [Bucket4j issue tracker](https://github.com/bucket4j/bucket4j/issues/new) to report a bug.
 
 ## License
 Copyright 2015-2021 Vladimir Bukhtoyarov
