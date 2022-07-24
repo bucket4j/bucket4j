@@ -21,11 +21,14 @@
 package io.github.bucket4j.redis.redisson.cas;
 
 import io.github.bucket4j.TimeMeter;
+import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AbstractCompareAndSwapBasedProxyManager;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AsyncCompareAndSwapOperation;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.CompareAndSwapOperation;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
+import io.github.bucket4j.redis.AbstractRedisProxyManagerBuilder;
+import io.github.bucket4j.redis.jedis.cas.JedisBasedProxyManager;
 import io.netty.buffer.ByteBuf;
 import org.redisson.api.RFuture;
 import org.redisson.client.codec.ByteArrayCodec;
@@ -33,9 +36,9 @@ import org.redisson.client.protocol.RedisCommand;
 import org.redisson.client.protocol.RedisCommands;
 import org.redisson.client.protocol.convertor.BooleanNotNullReplayConvertor;
 import org.redisson.command.CommandExecutor;
+import redis.clients.jedis.JedisPool;
 
 import java.io.IOException;
-import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -44,25 +47,33 @@ import java.util.concurrent.CompletableFuture;
 
 public class RedissonBasedProxyManager extends AbstractCompareAndSwapBasedProxyManager<String> {
 
-    public static RedisCommand<Boolean> SETPXNX_WORK_ARROUND = new RedisCommand<>("SET", new BooleanNotNullReplayConvertor());
+    public static RedisCommand<Boolean> SET = new RedisCommand<>("SET", new BooleanNotNullReplayConvertor());
 
     private final CommandExecutor commandExecutor;
-    private final long keepAfterRefillDurationMillis;
+    private final ExpirationAfterWriteStrategy expirationStrategy;
 
-    /**
-     * Creates new instance of {@link RedissonBasedProxyManager}
-     *
-     * @param commandExecutor the object is used for access to Redis
-     * @param keepAfterRefillDuration specifies how long bucket should be held in the cache after all consumed tokens have been refilled.
-     */
-    public RedissonBasedProxyManager(CommandExecutor commandExecutor, Duration keepAfterRefillDuration) {
-        this(commandExecutor, ClientSideConfig.getDefault(), keepAfterRefillDuration);
+    public static RedissonBasedProxyManagerBuilder builderFor(CommandExecutor commandExecutor) {
+        return new RedissonBasedProxyManagerBuilder(commandExecutor);
     }
 
-    public RedissonBasedProxyManager(CommandExecutor commandExecutor, ClientSideConfig clientSideConfig, Duration keepAfterRefillDuration) {
-        super(clientSideConfig);
-        this.commandExecutor = Objects.requireNonNull(commandExecutor);
-        this.keepAfterRefillDurationMillis = keepAfterRefillDuration.toMillis();
+    public static class RedissonBasedProxyManagerBuilder extends AbstractRedisProxyManagerBuilder<RedissonBasedProxyManagerBuilder> {
+
+        private final CommandExecutor commandExecutor;
+
+        private RedissonBasedProxyManagerBuilder(CommandExecutor commandExecutor) {
+            this.commandExecutor = Objects.requireNonNull(commandExecutor);
+        }
+
+        public RedissonBasedProxyManager build() {
+            return new RedissonBasedProxyManager(this);
+        }
+
+    }
+
+    private RedissonBasedProxyManager(RedissonBasedProxyManagerBuilder builder) {
+        super(builder.getClientSideConfig());
+        this.commandExecutor = builder.commandExecutor;
+        this.expirationStrategy = builder.getNotNullExpirationStrategy();
     }
 
     @Override
@@ -76,21 +87,41 @@ public class RedissonBasedProxyManager extends AbstractCompareAndSwapBasedProxyM
             }
             @Override
             public boolean compareAndSwap(byte[] originalData, byte[] newData, RemoteBucketState newState) {
-                if (originalData == null) {
-                    // Redisson prohibits the usage null as values, so "replace" must not be used in such cases
-                    RFuture<Boolean> redissonFuture = commandExecutor.writeAsync(key, ByteArrayCodec.INSTANCE, SETPXNX_WORK_ARROUND, key, encodeByteArray(newData), "PX", calculateTtlMillis(newState), "NX");
-                    return commandExecutor.get(redissonFuture);
+                long ttlMillis = calculateTtlMillis(newState);
+                if (ttlMillis > 0) {
+                    if (originalData == null) {
+                        // Redisson prohibits the usage null as values, so "replace" must not be used in such cases
+                        RFuture<Boolean> redissonFuture = commandExecutor.writeAsync(key, ByteArrayCodec.INSTANCE, SET, key, encodeByteArray(newData), "PX", ttlMillis, "NX");
+                        return commandExecutor.get(redissonFuture);
+                    } else {
+                        String script =
+                                "if redis.call('get', KEYS[1]) == ARGV[1] then " +
+                                        "redis.call('psetex', KEYS[1], ARGV[3], ARGV[2]); " +
+                                        "return 1; " +
+                                        "else " +
+                                        "return 0; " +
+                                        "end";
+                        Object[] params = new Object[] {originalData, newData, ttlMillis};
+                        RFuture<Boolean> redissonFuture = commandExecutor.evalWriteAsync(key, ByteArrayCodec.INSTANCE, RedisCommands.EVAL_BOOLEAN, script, keys, params);
+                        return commandExecutor.get(redissonFuture);
+                    }
                 } else {
-                    String script =
-                            "if redis.call('get', KEYS[1]) == ARGV[1] then " +
-                                    "redis.call('psetex', KEYS[1], ARGV[3], ARGV[2]); " +
-                                    "return 1; " +
-                                    "else " +
-                                    "return 0; " +
-                                    "end";
-                    Object[] params = new Object[] {originalData, newData, calculateTtlMillis(newState)};
-                    RFuture<Boolean> redissonFuture = commandExecutor.evalWriteAsync(key, ByteArrayCodec.INSTANCE, RedisCommands.EVAL_BOOLEAN, script, keys, params);
-                    return commandExecutor.get(redissonFuture);
+                    if (originalData == null) {
+                        // Redisson prohibits the usage null as values, so "replace" must not be used in such cases
+                        RFuture<Boolean> redissonFuture = commandExecutor.writeAsync(key, ByteArrayCodec.INSTANCE, SET, key, encodeByteArray(newData), "NX");
+                        return commandExecutor.get(redissonFuture);
+                    } else {
+                        String script =
+                                "if redis.call('get', KEYS[1]) == ARGV[1] then " +
+                                        "redis.call('set', KEYS[1], ARGV[2]); " +
+                                        "return 1; " +
+                                "else " +
+                                        "return 0; " +
+                                "end";
+                        Object[] params = new Object[] {originalData, newData};
+                        RFuture<Boolean> redissonFuture = commandExecutor.evalWriteAsync(key, ByteArrayCodec.INSTANCE, RedisCommands.EVAL_BOOLEAN, script, keys, params);
+                        return commandExecutor.get(redissonFuture);
+                    }
                 }
             }
         };
@@ -110,20 +141,39 @@ public class RedissonBasedProxyManager extends AbstractCompareAndSwapBasedProxyM
             }
             @Override
             public CompletableFuture<Boolean> compareAndSwap(byte[] originalData, byte[] newData, RemoteBucketState newState) {
-                if (originalData == null) {
-                    RFuture<Boolean> redissonFuture = commandExecutor.writeAsync(key, ByteArrayCodec.INSTANCE, SETPXNX_WORK_ARROUND, key, encodeByteArray(newData), "PX", calculateTtlMillis(newState), "NX");
-                    return convertFuture(redissonFuture);
+                long ttlMillis = calculateTtlMillis(newState);
+                if (ttlMillis > 0) {
+                    if (originalData == null) {
+                        RFuture<Boolean> redissonFuture = commandExecutor.writeAsync(key, ByteArrayCodec.INSTANCE, SET, key, encodeByteArray(newData), "PX", ttlMillis, "NX");
+                        return convertFuture(redissonFuture);
+                    } else {
+                        String script =
+                                "if redis.call('get', KEYS[1]) == ARGV[1] then " +
+                                        "redis.call('psetex', KEYS[1], ARGV[3], ARGV[2]); " +
+                                        "return 1; " +
+                                "else " +
+                                        "return 0; " +
+                                "end";
+                        Object[] params = new Object[] {encodeByteArray(originalData), encodeByteArray(newData), ttlMillis};
+                        RFuture<Boolean> redissonFuture = commandExecutor.evalWriteAsync(key, ByteArrayCodec.INSTANCE, RedisCommands.EVAL_BOOLEAN, script, keys, params);
+                        return convertFuture(redissonFuture);
+                    }
                 } else {
-                    String script =
-                            "if redis.call('get', KEYS[1]) == ARGV[1] then " +
-                                    "redis.call('psetex', KEYS[1], ARGV[3], ARGV[2]); " +
-                                    "return 1; " +
-                            "else " +
-                                    "return 0; " +
-                            "end";
-                    Object[] params = new Object[] {encodeByteArray(originalData), encodeByteArray(newData), calculateTtlMillis(newState)};
-                    RFuture<Boolean> redissonFuture = commandExecutor.evalWriteAsync(key, ByteArrayCodec.INSTANCE, RedisCommands.EVAL_BOOLEAN, script, keys, params);
-                    return convertFuture(redissonFuture);
+                    if (originalData == null) {
+                        RFuture<Boolean> redissonFuture = commandExecutor.writeAsync(key, ByteArrayCodec.INSTANCE, SET, key, encodeByteArray(newData), "NX");
+                        return convertFuture(redissonFuture);
+                    } else {
+                        String script =
+                                "if redis.call('get', KEYS[1]) == ARGV[1] then " +
+                                        "redis.call('set', KEYS[1], ARGV[2]); " +
+                                        "return 1; " +
+                                "else " +
+                                        "return 0; " +
+                                "end";
+                        Object[] params = new Object[] {encodeByteArray(originalData), encodeByteArray(newData)};
+                        RFuture<Boolean> redissonFuture = commandExecutor.evalWriteAsync(key, ByteArrayCodec.INSTANCE, RedisCommands.EVAL_BOOLEAN, script, keys, params);
+                        return convertFuture(redissonFuture);
+                    }
                 }
             }
         };
@@ -169,8 +219,7 @@ public class RedissonBasedProxyManager extends AbstractCompareAndSwapBasedProxyM
     private long calculateTtlMillis(RemoteBucketState state) {
         Optional<TimeMeter> clock = getClientSideConfig().getClientSideClock();
         long currentTimeNanos = clock.isPresent() ? clock.get().currentTimeNanos() : System.currentTimeMillis() * 1_000_000;
-        long millisToFullRefill = state.calculateFullRefillingTime(currentTimeNanos) / 1_000_000;
-        return keepAfterRefillDurationMillis + millisToFullRefill;
+        return expirationStrategy.calculateTimeToLiveMillis(state, currentTimeNanos);
     }
 
 }

@@ -3,14 +3,14 @@ image::./images/white-logo.png[]
 endif::[]
 
 == Current version {revnumber} documentation
-Release date: `02 May 2022`
+Release date: `23 July 2022`
 
 * http://bucket4j.com/{revnumber}/release-notes.html[{revnumber} Release notes]
 * http://bucket4j.com/{revnumber}/toc.html[{revnumber} Reference]
 
 == About the authors
 Vladimir Bukhtoyarov::
-Lead Java developer at DINS/RingCentral +
+Lead Java developer at edna +
 Saint-Petersburg, Russia +
 jsecoder@mail.ru +
 Role: maintainer, future vision +
@@ -47,6 +47,11 @@ image:images/Maxim_Bartkov.jpg[80,80] +
 
 == Documentation for previous versions
 === 2022
+==== 7.5.0
+Release date: `02 May 2022`
+* http://bucket4j.com/7.5.0/release-notes.html[7.5.0 Release notes]
+* http://bucket4j.com/7.5.0/toc.html[7.5.0 Reference]
+
 ==== 7.4.0
 `09 April 2022` Method for reset bucket.
 

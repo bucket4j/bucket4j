@@ -12,10 +12,12 @@ include::jcache/infinispan.adoc[]
 
 include::jcache/coherence.adoc[]
 
-include::asynchronous.adoc[]
+include::redis/redis.adoc[]
 
-include::distributed-checklist.adoc[]
+include::jdbc/jdbc-integraions.adoc[]
+
+include::asynchronous.adoc[]
 
 include::implement-custom-database/concept.adoc[]
 
-include::implement-custom-database/jdbc-integraions.adoc[]
+include::distributed-checklist.adoc[]
