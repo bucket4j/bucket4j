@@ -1,44 +1,41 @@
 package io.github.bucket4j.redis.redisson.cas;
 
 import io.github.bucket4j.*;
-import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
-import io.github.bucket4j.distributed.proxy.ClientSideConfig;
+import io.github.bucket4j.grid.jcache.JCacheProxyManager;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.redisson.command.CommandExecutor;
-import org.redisson.command.CommandSyncService;
 import org.redisson.config.Config;
-import org.redisson.config.ConfigSupport;
-import org.redisson.connection.ConnectionManager;
+import org.redisson.jcache.configuration.RedissonConfiguration;
 import org.testcontainers.containers.GenericContainer;
 
+import javax.cache.CacheManager;
+import javax.cache.Caching;
+import javax.cache.configuration.MutableConfiguration;
+import javax.cache.expiry.CreatedExpiryPolicy;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
 
 public class RedissonBasedProxyManagerTest extends AbstractDistributedBucketTest<String> {
 
     private static GenericContainer container;
-    private static ConnectionManager connectionManager;
-    private static CommandExecutor commandExecutor;
+    private static ProxyManager<String> proxyManager;
 
     @BeforeClass
     public static void setup() {
         container = startRedisContainer();
-        connectionManager = createRedissonClient(container);
-        commandExecutor = createRedissonExecutor(connectionManager);
+        proxyManager = createProxyManager(container);
     }
+
 
     @AfterClass
     public static void shutdown() {
-        if (connectionManager != null) {
-            connectionManager.shutdown();
-        }
         if (container != null) {
             container.close();
         }
@@ -46,10 +43,6 @@ public class RedissonBasedProxyManagerTest extends AbstractDistributedBucketTest
 
     @Test
     public void test_Issue_279() {
-        RedissonBasedProxyManager proxyManager = RedissonBasedProxyManager.builderFor(commandExecutor)
-                .withExpirationStrategy(ExpirationAfterWriteStrategy.none())
-                .build();
-
         int MIN_CAPACITY = 4;
         int MAX_CAPACITY = 10;
         BucketConfiguration configuration = BucketConfiguration.builder()
@@ -71,7 +64,7 @@ public class RedissonBasedProxyManagerTest extends AbstractDistributedBucketTest
         }
     }
 
-    private static ConnectionManager createRedissonClient(GenericContainer container) {
+    private static ProxyManager<String> createProxyManager(GenericContainer container) {
         String redisAddress = container.getContainerIpAddress();
         Integer redisPort = container.getMappedPort(6379);
         String redisUrl = "redis://" + redisAddress + ":" + redisPort;
@@ -79,12 +72,27 @@ public class RedissonBasedProxyManagerTest extends AbstractDistributedBucketTest
         Config config = new Config();
         config.useSingleServer().setAddress(redisUrl);
 
-        ConnectionManager connectionManager = ConfigSupport.createConnectionManager(config);
-        return connectionManager;
+        CacheManager cacheManager = cacheManager(config);
+        return createJCacheProxyManager(cacheManager);
     }
 
-    private static CommandExecutor createRedissonExecutor(ConnectionManager connectionManager) {
-        return new CommandSyncService(connectionManager, null);
+    private static CacheManager cacheManager(Config config) {
+        var cacheManager = Caching.getCachingProvider().getCacheManager();
+
+        var jcacheConfig = new MutableConfiguration<>();
+
+        jcacheConfig.setExpiryPolicyFactory(
+                CreatedExpiryPolicy.factoryOf(new javax.cache.expiry.Duration(TimeUnit.MINUTES, 60)));
+
+        var redissonConfig = RedissonConfiguration.fromConfig(config, jcacheConfig);
+
+        cacheManager.createCache("bucket", redissonConfig);
+
+        return cacheManager;
+    }
+
+    private static ProxyManager<String> createJCacheProxyManager(CacheManager cacheManager) {
+        return new JCacheProxyManager<>(cacheManager.getCache("bucket"));
     }
 
     private static GenericContainer startRedisContainer() {
@@ -96,9 +104,7 @@ public class RedissonBasedProxyManagerTest extends AbstractDistributedBucketTest
 
     @Override
     protected ProxyManager<String> getProxyManager() {
-        return RedissonBasedProxyManager.builderFor(commandExecutor)
-                .withExpirationStrategy(ExpirationAfterWriteStrategy.none())
-                .build();
+        return proxyManager;
     }
 
     @Override
