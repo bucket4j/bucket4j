@@ -10,6 +10,7 @@ import io.github.bucket4j.util.ConsumptionScenario;
 import org.junit.Test;
 
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.concurrent.*;
 import java.util.function.Function;
@@ -291,6 +292,31 @@ public abstract class AbstractDistributedBucketTest<K> {
         Bucket bucket = proxyManager.builder().build(key, configuration);
         assertTrue(bucket.tryConsume(10));
         assertFalse(bucket.tryConsume(1));
+    }
+
+    // https://github.com/bucket4j/bucket4j/issues/279
+    @Test
+    public void testVerboseBucket() {
+        int MIN_CAPACITY = 4;
+        int MAX_CAPACITY = 10;
+        BucketConfiguration configuration = BucketConfiguration.builder()
+                .addLimit(Bandwidth.classic(MIN_CAPACITY, Refill.intervally(4, Duration.ofMinutes(20))))
+                .addLimit(Bandwidth.classic(MAX_CAPACITY, Refill.intervally(10, Duration.ofMinutes(60))))
+                .build();
+
+        K key = generateRandomKey();
+        Bucket bucket = proxyManager.builder().build(key, configuration);
+
+        for (int i = 1; i <= 4; i++) {
+            VerboseResult<ConsumptionProbe> verboseResult = bucket.asVerbose().tryConsumeAndReturnRemaining(1);
+            ConsumptionProbe probe = verboseResult.getValue();
+            long[] availableTokensPerEachBandwidth = verboseResult.getDiagnostics().getAvailableTokensPerEachBandwidth();
+            System.out.println("Remaining tokens = " + probe.getRemainingTokens());
+            System.out.println("Tokens per bandwidth = " + Arrays.toString(availableTokensPerEachBandwidth));
+            assertEquals(MIN_CAPACITY - i, probe.getRemainingTokens());
+            assertEquals(MIN_CAPACITY - i, availableTokensPerEachBandwidth[0]);
+            assertEquals(MAX_CAPACITY - i, availableTokensPerEachBandwidth[1]);
+        }
     }
 
 }
