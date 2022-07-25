@@ -33,6 +33,7 @@ To use ``bucket4j-redis`` extension you need to add following dependency:
     <version>{revnumber}</version>
 </dependency>
 ----
+NOTE: see https://github.com/bucket4j/bucket4j/tree/8.0#java-compatibility-matrix[Java compatibility matrix] if you need for build that is compatible with Java 8
 
 ==== Example of Bucket instantiation via RedissonBasedProxyManager
 [source, java]
