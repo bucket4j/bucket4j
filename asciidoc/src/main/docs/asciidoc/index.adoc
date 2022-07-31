@@ -47,6 +47,11 @@ image:images/Maxim_Bartkov.jpg[80,80] +
 
 == Documentation for previous versions
 === 2022
+==== 7.6.0
+Release date: `23 July 2022`
+* http://bucket4j.com/7.6.0/release-notes.html[7.6.0 Release notes]
+* http://bucket4j.com/7.6.0/toc.html[7.6.0 Reference]
+
 ==== 7.5.0
 Release date: `02 May 2022`
 * http://bucket4j.com/7.5.0/release-notes.html[7.5.0 Release notes]
