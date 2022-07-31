@@ -6,12 +6,12 @@
 
     <parent>
         <groupId>com.bucket4j</groupId>
-        <artifactId>bucket4j-parent</artifactId>
+        <artifactId>bucket4j_jdk8-parent</artifactId>
         <version>8.0.1</version>
         <relativePath>../bucket4j-parent</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>bucket4j-jcache</artifactId>
+    <artifactId>bucket4j_jdk8-jcache</artifactId>
     <name>bucket4j-jcache</name>
     <description>Bucket4j integration with JCache</description>
 
@@ -22,12 +22,12 @@
     <dependencies>
         <dependency>
             <groupId>com.bucket4j</groupId>
-            <artifactId>bucket4j-core</artifactId>
+            <artifactId>bucket4j_jdk8-core</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.bucket4j</groupId>
-            <artifactId>bucket4j-core</artifactId>
+            <artifactId>bucket4j_jdk8-core</artifactId>
             <version>${project.version}</version>
             <type>test-jar</type>
             <scope>test</scope>

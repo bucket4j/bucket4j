@@ -8,7 +8,7 @@
 
     <groupId>com.bucket4j</groupId>
     <version>8.0.1</version>
-    <artifactId>bucket4j-parent</artifactId>
+    <artifactId>bucket4j_jdk8-parent</artifactId>
     <packaging>pom</packaging>
     <name>bucket4j-parent</name>
 
@@ -38,8 +38,8 @@
         <modular-name>parent</modular-name>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <maven.compiler.source>11</maven.compiler.source>
-        <maven.compiler.target>11</maven.compiler.target>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
         <VERSION-FOR-REVAPI-COMPARISION>4.10.0</VERSION-FOR-REVAPI-COMPARISION>
 
         <benchmark.jar.name>benchmarks</benchmark.jar.name>
@@ -137,8 +137,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.8.1</version>
                 <configuration>
-                    <source>11</source>
-                    <target>11</target>
+                    <source>1.8</source>
+                    <target>1.8</target>
                     <compilerArgument>-parameters</compilerArgument>
                 </configuration>
             </plugin>
@@ -379,19 +379,19 @@
         <dependency>
             <groupId>org.spockframework</groupId>
             <artifactId>spock-core</artifactId>
-            <version>2.1-groovy-2.5</version>
+            <version>1.0-groovy-2.4</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.codehaus.groovy</groupId>
-            <artifactId>groovy</artifactId>
-            <version>2.5.15</version>
+            <artifactId>groovy-all</artifactId>
+            <version>2.4.1</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>cglib</groupId>
             <artifactId>cglib-nodep</artifactId>
-            <version>3.3.0</version>
+            <version>3.1</version>
             <scope>test</scope>
         </dependency>
         <dependency>

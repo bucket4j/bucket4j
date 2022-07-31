@@ -7,18 +7,20 @@
 
     <parent>
         <groupId>com.bucket4j</groupId>
-        <artifactId>bucket4j_jdk8-hazelcast-all</artifactId>
+        <artifactId>bucket4j_jdk8-infinispan-all</artifactId>
         <version>8.0.1</version>
-        <relativePath>../../bucket4j-hazelcast-all</relativePath>
+        <relativePath>../../bucket4j-infinispan-all</relativePath>
     </parent>
-    <artifactId>bucket4j_jdk8-hazelcast</artifactId>
-    <name>bucket4j-hazelcast</name>
-    <description>Bucket4j integration with Hazelcast 4.x branch</description>
+    
+    <artifactId>bucket4j_jdk8-infinispan-8</artifactId>
+    <name>bucket4j-infinispan-8</name>
+    <description>Bucket4j integration with Infinispan 8.x</description>
 
     <properties>
-        <modular-name>hazelcast</modular-name>
+        <modular-name>infinispan8</modular-name>
     </properties>
 
+    <!-- https://mvnrepository.com/artifact/org.infinispan/infinispan-core -->
     <dependencies>
         <dependency>
             <groupId>com.bucket4j</groupId>
@@ -33,17 +35,29 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>com.bucket4j</groupId>
+            <artifactId>bucket4j_jdk8-jcache</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>javax.cache</groupId>
             <artifactId>cache-api</artifactId>
             <version>${jcache.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.hazelcast</groupId>
-            <artifactId>hazelcast</artifactId>
-            <version>${hazelcast.latest.version}</version>
+            <groupId>org.infinispan</groupId>
+            <artifactId>infinispan-core</artifactId>
+            <version>${infinispan-8.version}</version>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>org.infinispan</groupId>
+            <artifactId>infinispan-jcache</artifactId>
+            <version>${infinispan-8.version}</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
-    
+
 </project>
