@@ -23,7 +23,7 @@
         <asciidoctorj.pdf.version>2.1.6</asciidoctorj.pdf.version>
         <jruby.version>9.3.4.0</jruby.version>
         <asciidoc.sources.directory>${project.basedir}/src/main/docs/asciidoc</asciidoc.sources.directory>
-        <asciidoc.generated.directory>${project.basedir}/target/docs/asciidoc/html/${project.version}</asciidoc.generated.directory>
+        <asciidoc.generated.directory>${project.basedir}/target/docs/asciidoc/${project.version}</asciidoc.generated.directory>
     </properties>
 
     <profiles>
@@ -54,7 +54,7 @@
                             <backend>html</backend>
                             <doctype>book</doctype>
                             <sourceDirectory>${asciidoc.sources.directory}</sourceDirectory>
-                            <outputDirectory>${asciidoc.generated.directory}</outputDirectory>
+                            <outputDirectory>${asciidoc.generated.directory}/html</outputDirectory>
                             <attributes>
                                 <toc>left</toc>
                                 <sectnums>true</sectnums>
@@ -132,7 +132,7 @@
                         </dependencies>
                         <configuration>
                             <sourceDirectory>${asciidoc.sources.directory}</sourceDirectory>
-                            <outputDirectory>${asciidoc.generated.directory}</outputDirectory>
+                            <outputDirectory>${asciidoc.generated.directory}/plain-html-without-toc</outputDirectory>
                             <backend>html</backend>
                             <doctype>inline</doctype>
                             <attributes>
@@ -220,7 +220,7 @@
                             <backend>pdf</backend>
                             <sourceDocumentName>toc.adoc</sourceDocumentName>
                             <sourceDirectory>${asciidoc.sources.directory}</sourceDirectory>
-                            <outputDirectory>${asciidoc.generated.directory}</outputDirectory>
+                            <outputDirectory>${asciidoc.generated.directory}/pdf</outputDirectory>
                             <outputFile>reference.pdf</outputFile>
                             <resources>
                                 <resource>
