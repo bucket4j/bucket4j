@@ -15,8 +15,15 @@
     <name>Bucket4j Documentation</name>
 
     <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.deploy.skip>true</maven.deploy.skip>
         <skipNexusStagingDeployMojo>true</skipNexusStagingDeployMojo>
+        <asciidoctor.maven.plugin.version>2.2.2</asciidoctor.maven.plugin.version>
+        <asciidoctorj.version>2.5.5</asciidoctorj.version>
+        <asciidoctorj.pdf.version>2.1.6</asciidoctorj.pdf.version>
+        <jruby.version>9.3.4.0</jruby.version>
+        <asciidoc.sources.directory>${project.basedir}/src/main/docs/asciidoc</asciidoc.sources.directory>
+        <asciidoc.generated.directory>${project.basedir}/target/docs/asciidoc/html/${project.version}</asciidoc.generated.directory>
     </properties>
 
     <profiles>
@@ -30,36 +37,69 @@
                     <plugin>
                         <groupId>org.asciidoctor</groupId>
                         <artifactId>asciidoctor-maven-plugin</artifactId>
-                        <version>1.6.0</version>
+                        <version>${asciidoctor.maven.plugin.version}</version>
+                        <dependencies>
+                            <dependency>
+                                <groupId>org.asciidoctor</groupId>
+                                <artifactId>asciidoctorj</artifactId>
+                                <version>${asciidoctorj.version}</version>
+                            </dependency>
+                            <dependency>
+                                <groupId>org.jruby</groupId>
+                                <artifactId>jruby-complete</artifactId>
+                                <version>${jruby.version}</version>
+                            </dependency>
+                        </dependencies>
+                        <configuration>
+                            <backend>html</backend>
+                            <doctype>book</doctype>
+                            <sourceDirectory>${asciidoc.sources.directory}</sourceDirectory>
+                            <outputDirectory>${asciidoc.generated.directory}</outputDirectory>
+                            <attributes>
+                                <toc>left</toc>
+                                <sectnums>true</sectnums>
+                                <toclevels>5</toclevels>
+                                <source-highlighter>highlight.js</source-highlighter>
+                                <linkcss>false</linkcss>
+                                <revnumber>${project.version}</revnumber>
+                                <revdate>${maven.build.timestamp}</revdate>
+                                <organization>${project.organization.name}</organization>
+                                <minor-number>7.0</minor-number>
+                                <sectanchors>true</sectanchors>
+                                <idprefix/>
+                                <idseparator>-</idseparator>
+                                <docinfo1>true</docinfo1>
+                            </attributes>
+                        </configuration>
                         <executions>
                             <execution>
-                                <id>output-html</id>
+                                <id>generate-index-html</id>
                                 <phase>generate-resources</phase>
                                 <goals>
                                     <goal>process-asciidoc</goal>
                                 </goals>
                                 <configuration>
-                                    <sourceDirectory>${project.basedir}/src/main/docs/asciidoc</sourceDirectory>
-                                    <outputDirectory>${project.basedir}/target/docs/asciidoc/html/${project.version}</outputDirectory>
-                                    <backend>html</backend>
-                                    <doctype>book</doctype>
-                                    <attributes>
-                                        <source-highlighter>highlight.js</source-highlighter>
-                                        <project-version>${project.version}</project-version>
-                                        <toc>left</toc>
-                                        <linkcss>false</linkcss>
-                                        <sectnums>true</sectnums>
-                                        <toclevels>5</toclevels>
-                                        <revnumber>${project.version}</revnumber>
-                                        <revdate>${maven.build.timestamp}</revdate>
-                                        <organization>${project.organization.name}</organization>
-                                        <minor-number>7.0</minor-number>
-                                        <imagesdir>.</imagesdir>
-                                        <sectanchors>true</sectanchors>
-                                        <idprefix/>
-                                        <idseparator>-</idseparator>
-                                        <docinfo1>true</docinfo1>
-                                    </attributes>
+                                    <sourceDocumentName>index.adoc</sourceDocumentName>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>generate-toc-html</id>
+                                <phase>generate-resources</phase>
+                                <goals>
+                                    <goal>process-asciidoc</goal>
+                                </goals>
+                                <configuration>
+                                    <sourceDocumentName>toc.adoc</sourceDocumentName>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>generate-release-notes-html</id>
+                                <phase>generate-resources</phase>
+                                <goals>
+                                    <goal>process-asciidoc</goal>
+                                </goals>
+                                <configuration>
+                                    <sourceDocumentName>release-notes.adoc</sourceDocumentName>
                                 </configuration>
                             </execution>
                         </executions>
@@ -77,37 +117,70 @@
                     <plugin>
                         <groupId>org.asciidoctor</groupId>
                         <artifactId>asciidoctor-maven-plugin</artifactId>
-                        <version>1.6.0</version>
+                        <version>${asciidoctor.maven.plugin.version}</version>
+                        <dependencies>
+                            <dependency>
+                                <groupId>org.asciidoctor</groupId>
+                                <artifactId>asciidoctorj</artifactId>
+                                <version>${asciidoctorj.version}</version>
+                            </dependency>
+                            <dependency>
+                                <groupId>org.jruby</groupId>
+                                <artifactId>jruby-complete</artifactId>
+                                <version>${jruby.version}</version>
+                            </dependency>
+                        </dependencies>
+                        <configuration>
+                            <sourceDirectory>${asciidoc.sources.directory}</sourceDirectory>
+                            <outputDirectory>${asciidoc.generated.directory}</outputDirectory>
+                            <backend>html</backend>
+                            <doctype>inline</doctype>
+                            <attributes>
+<!--                                        <toc>left</toc>-->
+<!--                                        <sectnums>true</sectnums>-->
+<!--                                        <toclevels>4</toclevels>-->
+                                <source-highlighter>highlight.js</source-highlighter>
+                                <project-version>${project.version}</project-version>
+                                <linkcss>false</linkcss>
+                                <revnumber>${project.version}</revnumber>
+                                <revdate>${maven.build.timestamp}</revdate>
+                                <organization>${project.organization.name}</organization>
+                                <minor-number>7.0</minor-number>
+                                <sectanchors>true</sectanchors>
+                                <idprefix/>
+                                <idseparator>-</idseparator>
+                                <docinfo1>true</docinfo1>
+                            </attributes>
+                        </configuration>
                         <executions>
                             <execution>
-                                <id>output-html</id>
+                                <id>generate-index-html</id>
                                 <phase>generate-resources</phase>
                                 <goals>
                                     <goal>process-asciidoc</goal>
                                 </goals>
                                 <configuration>
-                                    <sourceDirectory>${project.basedir}/src/main/docs/asciidoc</sourceDirectory>
-                                    <outputDirectory>${project.basedir}/target/docs/asciidoc/html/${project.version}</outputDirectory>
-                                    <backend>html</backend>
-                                    <doctype>Inline</doctype>
-                                    <attributes>
-                                        <source-highlighter>highlight.js</source-highlighter>
-
-                                        <project-version>${project.version}</project-version>
-<!--                                        <toc>left</toc>-->
-                                        <linkcss>false</linkcss>
-<!--                                        <sectnums>true</sectnums>-->
-<!--                                        <toclevels>4</toclevels>-->
-                                        <revnumber>${project.version}</revnumber>
-                                        <revdate>${maven.build.timestamp}</revdate>
-                                        <organization>${project.organization.name}</organization>
-                                        <minor-number>7.0</minor-number>
-                                        <imagesdir>.</imagesdir>
-                                        <sectanchors>true</sectanchors>
-                                        <idprefix/>
-                                        <idseparator>-</idseparator>
-                                        <docinfo1>true</docinfo1>
-                                    </attributes>
+                                    <sourceDocumentName>index.adoc</sourceDocumentName>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>generate-toc-html</id>
+                                <phase>generate-resources</phase>
+                                <goals>
+                                    <goal>process-asciidoc</goal>
+                                </goals>
+                                <configuration>
+                                    <sourceDocumentName>toc.adoc</sourceDocumentName>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>generate-release-notes-html</id>
+                                <phase>generate-resources</phase>
+                                <goals>
+                                    <goal>process-asciidoc</goal>
+                                </goals>
+                                <configuration>
+                                    <sourceDocumentName>release-notes.adoc</sourceDocumentName>
                                 </configuration>
                             </execution>
                         </executions>
@@ -120,15 +193,6 @@
             <activation>
                 <activeByDefault>false</activeByDefault>
             </activation>
-            <properties>
-                <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-                <maven.compiler.source>1.11</maven.compiler.source>
-                <maven.compiler.target>1.11</maven.compiler.target>
-                <asciidoctor.maven.plugin.version>2.2.1</asciidoctor.maven.plugin.version>
-                <asciidoctorj.pdf.version>1.6.0</asciidoctorj.pdf.version>
-                <asciidoctorj.version>2.5.1</asciidoctorj.version>
-                <jruby.version>9.2.17.0</jruby.version>
-            </properties>
             <build>
                 <plugins>
                     <plugin>
@@ -141,13 +205,11 @@
                                 <artifactId>asciidoctorj-pdf</artifactId>
                                 <version>${asciidoctorj.pdf.version}</version>
                             </dependency>
-                            <!-- Comment this section to use the default jruby artifact provided by the plugin -->
                             <dependency>
                                 <groupId>org.jruby</groupId>
                                 <artifactId>jruby-complete</artifactId>
                                 <version>${jruby.version}</version>
                             </dependency>
-                            <!-- Comment this section to use the default AsciidoctorJ artifact provided by the plugin -->
                             <dependency>
                                 <groupId>org.asciidoctor</groupId>
                                 <artifactId>asciidoctorj</artifactId>
@@ -155,8 +217,32 @@
                             </dependency>
                         </dependencies>
                         <configuration>
-                            <sourceDirectory>${project.basedir}/src/main/docs/asciidoc</sourceDirectory>
-                            <outputDirectory>${project.basedir}/target/docs/asciidoc/pdf/${project.version}</outputDirectory>
+                            <backend>pdf</backend>
+                            <sourceDocumentName>toc.adoc</sourceDocumentName>
+                            <sourceDirectory>${asciidoc.sources.directory}</sourceDirectory>
+                            <outputDirectory>${asciidoc.generated.directory}</outputDirectory>
+                            <outputFile>reference.pdf</outputFile>
+                            <resources>
+                                <resource>
+                                    <directory>${asciidoc.sources.directory}</directory>
+                                    <excludes>
+                                        <exclude>**/*.*</exclude>
+                                    </excludes>
+                                </resource>
+                            </resources>
+                            <attributes>
+                                <source-highlighter>rouge</source-highlighter>
+                                <icons>font</icons>
+                                <pagenums/>
+                                <toc/>
+                                <idprefix/>
+                                <idseparator>-</idseparator>
+                                <revnumber>${project.version}</revnumber>
+                                <revdate>${maven.build.timestamp}</revdate>
+                                <organization>${project.organization.name}</organization>
+                                <generate-pdf/>
+                                <allow-uri-read/>
+                            </attributes>
                         </configuration>
                         <executions>
                             <execution>
@@ -165,30 +251,6 @@
                                 <goals>
                                     <goal>process-asciidoc</goal>
                                 </goals>
-                                <configuration>
-                                    <backend>pdf</backend>
-                                    <!-- Since 1.5.0-alpha.9 PDF back-end can use 'rouge' as well as 'coderay'
-                                    for source highlighting -->
-                                    <!-- Due to a known issue on windows, it is recommended to use 'coderay' until an new version of 'rouge' is released.
-                                            see discussions: https://github.com/asciidoctor/asciidoctor-maven-examples/pull/58
-                                                             https://github.com/asciidoctor/asciidoctorj-pdf/issues/3
-                                                             https://github.com/jneen/rouge/issues/661
-                                    -->
-                                    <attributes>
-                                        <source-highlighter>coderay</source-highlighter>
-                                        <icons>font</icons>
-                                        <pagenums/>
-                                        <toc/>
-                                        <idprefix/>
-                                        <idseparator>-</idseparator>
-                                        <revnumber>${project.version}</revnumber>
-                                        <revdate>${maven.build.timestamp}</revdate>
-                                        <organization>${project.organization.name}</organization>
-                                        <imagesdir>${project.basedir}/target/docs/asciidoc/pdf/${project.version}</imagesdir>
-                                        <generate-pdf/>
-                                        <allow-uri-read/>
-                                    </attributes>
-                                </configuration>
                             </execution>
                         </executions>
                     </plugin>
