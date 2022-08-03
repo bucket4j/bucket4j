@@ -52,13 +52,9 @@
                         </dependencies>
                         <configuration>
                             <backend>html</backend>
-                            <doctype>book</doctype>
                             <sourceDirectory>${asciidoc.sources.directory}</sourceDirectory>
                             <outputDirectory>${asciidoc.generated.directory}/html</outputDirectory>
                             <attributes>
-                                <toc>left</toc>
-                                <sectnums>true</sectnums>
-                                <toclevels>5</toclevels>
                                 <source-highlighter>highlight.js</source-highlighter>
                                 <linkcss>false</linkcss>
                                 <revnumber>${project.version}</revnumber>
@@ -72,16 +68,7 @@
                             </attributes>
                         </configuration>
                         <executions>
-                            <execution>
-                                <id>generate-index-html</id>
-                                <phase>generate-resources</phase>
-                                <goals>
-                                    <goal>process-asciidoc</goal>
-                                </goals>
-                                <configuration>
-                                    <sourceDocumentName>index.adoc</sourceDocumentName>
-                                </configuration>
-                            </execution>
+                            <!-- Single page reference documentation -->
                             <execution>
                                 <id>generate-toc-html</id>
                                 <phase>generate-resources</phase>
@@ -90,8 +77,14 @@
                                 </goals>
                                 <configuration>
                                     <sourceDocumentName>toc.adoc</sourceDocumentName>
+                                    <attributes>
+                                        <toc>left</toc>
+                                        <toclevels>5</toclevels>
+                                        <sectnums>true</sectnums>
+                                    </attributes>
                                 </configuration>
                             </execution>
+                            <!-- Release notes for current version -->
                             <execution>
                                 <id>generate-release-notes-html</id>
                                 <phase>generate-resources</phase>
@@ -102,57 +95,7 @@
                                     <sourceDocumentName>release-notes.adoc</sourceDocumentName>
                                 </configuration>
                             </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
-            <id>generate-html-plain</id>
-            <activation>
-                <activeByDefault>false</activeByDefault>
-            </activation>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.asciidoctor</groupId>
-                        <artifactId>asciidoctor-maven-plugin</artifactId>
-                        <version>${asciidoctor.maven.plugin.version}</version>
-                        <dependencies>
-                            <dependency>
-                                <groupId>org.asciidoctor</groupId>
-                                <artifactId>asciidoctorj</artifactId>
-                                <version>${asciidoctorj.version}</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>org.jruby</groupId>
-                                <artifactId>jruby-complete</artifactId>
-                                <version>${jruby.version}</version>
-                            </dependency>
-                        </dependencies>
-                        <configuration>
-                            <sourceDirectory>${asciidoc.sources.directory}</sourceDirectory>
-                            <outputDirectory>${asciidoc.generated.directory}/plain-html-without-toc</outputDirectory>
-                            <backend>html</backend>
-                            <doctype>inline</doctype>
-                            <attributes>
-<!--                                        <toc>left</toc>-->
-<!--                                        <sectnums>true</sectnums>-->
-<!--                                        <toclevels>4</toclevels>-->
-                                <source-highlighter>highlight.js</source-highlighter>
-                                <project-version>${project.version}</project-version>
-                                <linkcss>false</linkcss>
-                                <revnumber>${project.version}</revnumber>
-                                <revdate>${maven.build.timestamp}</revdate>
-                                <organization>${project.organization.name}</organization>
-                                <minor-number>7.0</minor-number>
-                                <sectanchors>true</sectanchors>
-                                <idprefix/>
-                                <idseparator>-</idseparator>
-                                <docinfo1>true</docinfo1>
-                            </attributes>
-                        </configuration>
-                        <executions>
+                            <!-- Root site page -->
                             <execution>
                                 <id>generate-index-html</id>
                                 <phase>generate-resources</phase>
@@ -161,26 +104,6 @@
                                 </goals>
                                 <configuration>
                                     <sourceDocumentName>index.adoc</sourceDocumentName>
-                                </configuration>
-                            </execution>
-                            <execution>
-                                <id>generate-toc-html</id>
-                                <phase>generate-resources</phase>
-                                <goals>
-                                    <goal>process-asciidoc</goal>
-                                </goals>
-                                <configuration>
-                                    <sourceDocumentName>toc.adoc</sourceDocumentName>
-                                </configuration>
-                            </execution>
-                            <execution>
-                                <id>generate-release-notes-html</id>
-                                <phase>generate-resources</phase>
-                                <goals>
-                                    <goal>process-asciidoc</goal>
-                                </goals>
-                                <configuration>
-                                    <sourceDocumentName>release-notes.adoc</sourceDocumentName>
                                 </configuration>
                             </execution>
                         </executions>
