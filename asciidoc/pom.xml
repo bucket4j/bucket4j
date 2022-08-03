@@ -66,6 +66,15 @@
                                 <idseparator>-</idseparator>
                                 <docinfo1>true</docinfo1>
                             </attributes>
+                            <resources>
+                                <resource>
+                                    <directory>${asciidoc.sources.directory}</directory>
+                                    <!-- Avoid empty folders in output -->
+                                    <excludes>
+                                        <exclude>**/**</exclude>
+                                    </excludes>
+                                </resource>
+                            </resources>
                         </configuration>
                         <executions>
                             <!-- Single page reference documentation -->
@@ -104,6 +113,18 @@
                                 </goals>
                                 <configuration>
                                     <sourceDocumentName>index.adoc</sourceDocumentName>
+                                    <outputDirectory>${asciidoc.generated.directory}</outputDirectory>
+                                    <resources>
+                                        <resource>
+                                            <directory>${asciidoc.sources.directory}</directory>
+                                            <includes>
+                                                <include>images/*.*</include>
+                                            </includes>
+                                            <excludes>
+                                                <exclude>basic</exclude>
+                                            </excludes>
+                                        </resource>
+                                    </resources>
                                 </configuration>
                             </execution>
                         </executions>
