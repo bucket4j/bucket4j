@@ -14,7 +14,7 @@ include::jcache/coherence.adoc[]
 
 include::redis/redis.adoc[]
 
-include::jdbc/jdbc-integraions.adoc[]
+include::jdbc/jdbc-integrations.adoc[]
 
 include::asynchronous.adoc[]
 
