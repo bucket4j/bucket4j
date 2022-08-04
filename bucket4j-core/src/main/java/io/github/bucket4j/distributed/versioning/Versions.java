@@ -22,7 +22,7 @@ package io.github.bucket4j.distributed.versioning;
 public enum Versions implements Version {
 
     v_7_0_0(1),
-    v_7_6_0(2)
+    v_8_1_0(2)
     ;
 
     private final int number;

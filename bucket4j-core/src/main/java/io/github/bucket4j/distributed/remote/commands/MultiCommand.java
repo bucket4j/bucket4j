@@ -196,7 +196,7 @@ public class MultiCommand implements RemoteCommand<MultiResult>, ComparableByCon
         for (int i = 0; i < count; i++) {
             RemoteCommand command = commands.get(i);
             CommandResult result = multiResult.getResults().get(i);
-            sum += result.isBucketNotFound()? 0: command.getConsumedTokens(result.getData());
+            sum += result.isError()? 0: command.getConsumedTokens(result.getData());
             if (sum < 0l) {
                 // math overflow
                 return Long.MAX_VALUE;

@@ -76,7 +76,7 @@ public interface RemoteAsyncBucketBuilder<K> {
      *
      * @return {@code this}
      */
-    RemoteBucketBuilder<K> activateImplicitConfigurationReplacement(long desiredConfigurationVersion, TokensInheritanceStrategy tokensInheritanceStrategy);
+    RemoteAsyncBucketBuilder<K> activateImplicitConfigurationReplacement(long desiredConfigurationVersion, TokensInheritanceStrategy tokensInheritanceStrategy);
 
     /**
      * Builds the {@link AsyncBucketProxy}. Proxy is being created in lazy mode, its state is not persisted in external storage until first interaction,

@@ -172,7 +172,7 @@ class DelayedCommandExecutor implements CommandExecutor, AsyncCommandExecutor {
         postponedToConsumeTokens = 0;
         lastSyncTimeNanos = timeMeter.currentTimeNanos();
         CommandResult<?> snapshotResult = multiResult.getResults().get(GET_SNAPSHOT_COMMAND_INDEX);
-        if (snapshotResult.isBucketNotFound()) {
+        if (snapshotResult.isError()) {
             state = null;
             return;
         }

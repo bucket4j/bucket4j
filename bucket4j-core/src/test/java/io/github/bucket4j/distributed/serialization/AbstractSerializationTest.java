@@ -189,6 +189,7 @@ public abstract class AbstractSerializationTest {
         testSerialization(CommandResult.usageOfUnsupportedApiException(10, 9));
         testSerialization(CommandResult.usageOfObsoleteApiException(1, 9));
         testSerialization(CommandResult.unsupportedNamedType("something"));
+        testSerialization(CommandResult.configurationNeedToBeReplaced());
 
 
         // with long payload
@@ -250,9 +251,9 @@ public abstract class AbstractSerializationTest {
                 .addLimit(simple(10, ofSeconds(1)))
                 .build();
 
-        testSerialization(new CreateInitialStateCommand(configuration));
-
+        testSerialization(new CreateInitialStateWithVersionOrReplaceConfigurationAndExecuteCommand<>(configuration, new ConsumeAsMuchAsPossibleCommand(13), 1, TokensInheritanceStrategy.AS_IS));
         testSerialization(new CreateInitialStateAndExecuteCommand<>(configuration, new ConsumeAsMuchAsPossibleCommand(13)));
+        testSerialization(new CheckConfigurationVersionAndExecuteCommand<>(new ConsumeAsMuchAsPossibleCommand(13), 1));
 
         testSerialization(
             new MultiCommand(
@@ -295,10 +296,9 @@ public abstract class AbstractSerializationTest {
         testSerialization(new SyncCommand(20, 10000000));
         testSerialization(new ResetCommand());
 
-        testSerialization(new Request(new GetAvailableTokensCommand(), Versions.getLatest(), null, null));
-        testSerialization(new Request(new GetAvailableTokensCommand(), Versions.getLatest(), 0L, null));
-        testSerialization(new Request(new GetAvailableTokensCommand(), Versions.getLatest(), null, 0L));
-        testSerialization(new Request(new GetAvailableTokensCommand(), Versions.getLatest(), System.currentTimeMillis(), 0L));
+        testSerialization(new Request<>(new GetAvailableTokensCommand(), Versions.getLatest(), null));
+        testSerialization(new Request<>(new GetAvailableTokensCommand(), Versions.getLatest(), 0L));
+        testSerialization(new Request<>(new GetAvailableTokensCommand(), Versions.getLatest(), System.currentTimeMillis()));
     }
 
     @Test

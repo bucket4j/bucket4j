@@ -37,12 +37,12 @@ public class DefaultBucketProxy extends AbstractBucket implements BucketProxy, O
     private final CommandExecutor commandExecutor;
     private final RecoveryStrategy recoveryStrategy;
     private final Supplier<BucketConfiguration> configurationSupplier;
-    private final Long desiredConfigurationVersion;
+    private final ImplicitConfigurationReplacement implicitConfigurationReplacement;
     private final AtomicBoolean wasInitialized;
 
     @Override
     public BucketProxy toListenable(BucketListener listener) {
-        return new DefaultBucketProxy(configurationSupplier, commandExecutor, recoveryStrategy, wasInitialized, listener);
+        return new DefaultBucketProxy(configurationSupplier, commandExecutor, recoveryStrategy, wasInitialized, implicitConfigurationReplacement, listener);
     }
 
     @Override
@@ -55,11 +55,11 @@ public class DefaultBucketProxy extends AbstractBucket implements BucketProxy, O
         execute(new SyncCommand(unsynchronizedTokens, timeSinceLastSync.toNanos()));
     }
 
-    public DefaultBucketProxy(Supplier<BucketConfiguration> configurationSupplier, CommandExecutor commandExecutor, RecoveryStrategy recoveryStrategy, Long desiredConfigurationVersion) {
-        this(configurationSupplier, commandExecutor, recoveryStrategy, new AtomicBoolean(false), desiredConfigurationVersion, BucketListener.NOPE);
+    public DefaultBucketProxy(Supplier<BucketConfiguration> configurationSupplier, CommandExecutor commandExecutor, RecoveryStrategy recoveryStrategy, ImplicitConfigurationReplacement implicitConfigurationReplacement) {
+        this(configurationSupplier, commandExecutor, recoveryStrategy, new AtomicBoolean(false), implicitConfigurationReplacement, BucketListener.NOPE);
     }
 
-    private DefaultBucketProxy(Supplier<BucketConfiguration> configurationSupplier, CommandExecutor commandExecutor, RecoveryStrategy recoveryStrategy, AtomicBoolean wasInitialized, Long desiredConfigurationVersion, BucketListener listener) {
+    private DefaultBucketProxy(Supplier<BucketConfiguration> configurationSupplier, CommandExecutor commandExecutor, RecoveryStrategy recoveryStrategy, AtomicBoolean wasInitialized, ImplicitConfigurationReplacement implicitConfigurationReplacement, BucketListener listener) {
         super(listener);
 
         this.commandExecutor = Objects.requireNonNull(commandExecutor);
@@ -69,7 +69,7 @@ public class DefaultBucketProxy extends AbstractBucket implements BucketProxy, O
             throw BucketExceptions.nullConfigurationSupplier();
         }
         this.configurationSupplier = configurationSupplier;
-        this.desiredConfigurationVersion = desiredConfigurationVersion;
+        this.implicitConfigurationReplacement = implicitConfigurationReplacement;
         this.wasInitialized = wasInitialized;
     }
 
@@ -200,19 +200,25 @@ public class DefaultBucketProxy extends AbstractBucket implements BucketProxy, O
     }
 
     private <T> T execute(RemoteCommand<T> command) {
+        if (implicitConfigurationReplacement != null) {
+            command = new CheckConfigurationVersionAndExecuteCommand<T>(command, implicitConfigurationReplacement.getDesiredConfigurationVersion());
+        }
+
         boolean wasInitializedBeforeExecution = wasInitialized.get();
         CommandResult<T> result = commandExecutor.execute(command);
-        if (!result.isBucketNotFound()) {
+        if (!result.isBucketNotFound() && !result.isConfigurationNeedToBeReplaced()) {
             return result.getData();
         }
 
-        // the bucket was removed or lost, or not initialized yet, it needs to apply recovery strategy
-        if (recoveryStrategy == RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION && wasInitializedBeforeExecution) {
+        // the bucket was removed or lost, or not initialized yet, or needs to upgrade configuration
+        if (result.isBucketNotFound() && recoveryStrategy == RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION && wasInitializedBeforeExecution) {
             throw new BucketNotFoundException();
         }
 
         // retry command execution
-        CreateInitialStateAndExecuteCommand<T> initAndExecuteCommand = new CreateInitialStateAndExecuteCommand<>(getConfiguration(), command);
+        RemoteCommand<T> initAndExecuteCommand = implicitConfigurationReplacement == null?
+                new CreateInitialStateAndExecuteCommand<>(getConfiguration(), command) :
+                new CreateInitialStateWithVersionOrReplaceConfigurationAndExecuteCommand<>(getConfiguration(), command, implicitConfigurationReplacement.getDesiredConfigurationVersion(), implicitConfigurationReplacement.getTokensInheritanceStrategy());
         CommandResult<T> resultAfterInitialization = commandExecutor.execute(initAndExecuteCommand);
         if (resultAfterInitialization.isBucketNotFound()) {
             throw new IllegalStateException("Bucket is not initialized properly");

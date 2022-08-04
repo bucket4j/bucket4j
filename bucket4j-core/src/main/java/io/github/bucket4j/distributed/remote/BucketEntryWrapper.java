@@ -19,9 +19,6 @@
  */
 package io.github.bucket4j.distributed.remote;
 
-import io.github.bucket4j.distributed.remote.MutableBucketEntry;
-import io.github.bucket4j.distributed.remote.RemoteBucketState;
-
 import java.util.Objects;
 
 public class BucketEntryWrapper implements MutableBucketEntry {
@@ -40,6 +37,10 @@ public class BucketEntryWrapper implements MutableBucketEntry {
 
     public boolean isStateModified() {
         return stateModified;
+    }
+
+    public void setStateModified(boolean stateModified) {
+        this.stateModified = stateModified;
     }
 
     @Override

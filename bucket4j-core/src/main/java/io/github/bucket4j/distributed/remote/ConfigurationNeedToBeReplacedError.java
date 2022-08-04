@@ -32,28 +32,28 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import static io.github.bucket4j.distributed.versioning.Versions.v_7_6_0;
+import static io.github.bucket4j.distributed.versioning.Versions.v_8_1_0;
 
-public class ConfigurationVersionNotMatchedError implements CommandError, ComparableByContent<ConfigurationVersionNotMatchedError> {
+public class ConfigurationNeedToBeReplacedError implements CommandError, ComparableByContent<ConfigurationNeedToBeReplacedError> {
 
-    private static final ConfigurationVersionNotMatchedError INSTANCE = new ConfigurationVersionNotMatchedError();
+    private static final ConfigurationNeedToBeReplacedError INSTANCE = new ConfigurationNeedToBeReplacedError();
 
     @Override
     public RuntimeException asException() {
         return new BucketNotFoundException();
     }
 
-    public static SerializationHandle<ConfigurationVersionNotMatchedError> SERIALIZATION_HANDLE = new SerializationHandle<ConfigurationVersionNotMatchedError>() {
+    public static SerializationHandle<ConfigurationNeedToBeReplacedError> SERIALIZATION_HANDLE = new SerializationHandle<ConfigurationNeedToBeReplacedError>() {
         @Override
-        public <S> ConfigurationVersionNotMatchedError deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
+        public <S> ConfigurationNeedToBeReplacedError deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             int formatNumber = adapter.readInt(input);
-            Versions.check(formatNumber, v_7_6_0, v_7_6_0);
+            Versions.check(formatNumber, v_8_1_0, v_8_1_0);
             return INSTANCE;
         }
 
         @Override
-        public <O> void serialize(SerializationAdapter<O> adapter, O output, ConfigurationVersionNotMatchedError error, Version backwardCompatibilityVersion, Scope scope) throws IOException {
-            adapter.writeInt(output, v_7_6_0.getNumber());
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, ConfigurationNeedToBeReplacedError error, Version backwardCompatibilityVersion, Scope scope) throws IOException {
+            adapter.writeInt(output, v_8_1_0.getNumber());
         }
 
         @Override
@@ -62,33 +62,33 @@ public class ConfigurationVersionNotMatchedError implements CommandError, Compar
         }
 
         @Override
-        public Class<ConfigurationVersionNotMatchedError> getSerializedType() {
-            return (Class) ConfigurationVersionNotMatchedError.class;
+        public Class<ConfigurationNeedToBeReplacedError> getSerializedType() {
+            return (Class) ConfigurationNeedToBeReplacedError.class;
         }
 
         @Override
-        public ConfigurationVersionNotMatchedError fromJsonCompatibleSnapshot(Map<String, Object> snapshot) throws IOException {
+        public ConfigurationNeedToBeReplacedError fromJsonCompatibleSnapshot(Map<String, Object> snapshot) throws IOException {
             int formatNumber = readIntValue(snapshot, "version");
-            Versions.check(formatNumber, v_7_6_0, v_7_6_0);
+            Versions.check(formatNumber, v_8_1_0, v_8_1_0);
             return INSTANCE;
         }
 
         @Override
-        public Map<String, Object> toJsonCompatibleSnapshot(ConfigurationVersionNotMatchedError error, Version backwardCompatibilityVersion, Scope scope) throws IOException {
+        public Map<String, Object> toJsonCompatibleSnapshot(ConfigurationNeedToBeReplacedError error, Version backwardCompatibilityVersion, Scope scope) throws IOException {
             Map<String, Object> result = new HashMap<>();
-            result.put("version", v_7_6_0.getNumber());
+            result.put("version", v_8_1_0.getNumber());
             return result;
         }
 
         @Override
         public String getTypeName() {
-            return "ConfigurationVersionNotMatchedError";
+            return "ConfigurationNeedToBeReplacedError";
         }
 
     };
 
     @Override
-    public boolean equalsByContent(ConfigurationVersionNotMatchedError other) {
+    public boolean equalsByContent(ConfigurationNeedToBeReplacedError other) {
         return true;
     }
 

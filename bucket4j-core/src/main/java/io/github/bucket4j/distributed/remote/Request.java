@@ -33,7 +33,7 @@ import java.util.Map;
 import java.util.Objects;
 
 import static io.github.bucket4j.distributed.versioning.Versions.v_7_0_0;
-import static io.github.bucket4j.distributed.versioning.Versions.v_7_6_0;
+import static io.github.bucket4j.distributed.versioning.Versions.v_8_1_0;
 
 public class Request<T> implements ComparableByContent<Request<T>> {
 
@@ -155,7 +155,7 @@ public class Request<T> implements ComparableByContent<Request<T>> {
     }
 
     private Version calculateBackwardCompatibilityVersion(Version backwardCompatibilityVersion, Long minimumConfigurationVersion) {
-        if (backwardCompatibilityVersion == v_7_6_0 && minimumConfigurationVersion == null) {
+        if (backwardCompatibilityVersion == v_8_1_0 && minimumConfigurationVersion == null) {
             return v_7_0_0;
         }
         return backwardCompatibilityVersion;
