@@ -5,9 +5,9 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <parent>
-        <groupId>com.github.vladimir-bukhtoyarov</groupId>
+        <groupId>com.bucket4j</groupId>
         <artifactId>bucket4j-parent</artifactId>
-        <version>7.6.0</version>
+        <version>8.0.1</version>
         <relativePath>../bucket4j-parent</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -17,7 +17,6 @@
 
     <properties>
         <modular-name>core</modular-name>
-        <sonar.coverage.jacoco.xmlReportPaths>${project.basedir}/../bucket4j-core/target/site/jacoco-aggregate/jacoco.xml,${project.basedir}/../bucket4j-hazelcast-all/bucket4j-hazelcast/target/site/jacoco-aggregate/jacoco.xml,${project.basedir}/../bucket4j-hazelcast-all/bucket4j-hazelcast-3/target/site/jacoco-aggregate/jacoco.xml,${project.basedir}/../bucket4j-infinispan-all/bucket4j-infinispan/target/site/jacoco-aggregate/jacoco.xml,${project.basedir}/../bucket4j-infinispan-all/bucket4j-infinispan-8/target/site/jacoco-aggregate/jacoco.xml,${project.basedir}/../bucket4j-ignite/target/site/jacoco-aggregate/jacoco.xml,${project.basedir}/../bucket4j-coherence/target/site/jacoco-aggregate/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
     </properties>
 
     <build>

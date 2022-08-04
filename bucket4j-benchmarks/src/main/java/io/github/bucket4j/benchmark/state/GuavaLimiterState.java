@@ -2,7 +2,7 @@
  * ========================LICENSE_START=================================
  * Bucket4j
  * %%
- * Copyright (C) 2015 - 2022 Vladimir Bukhtoyarov
+ * Copyright (C) 2015 - 2020 Vladimir Bukhtoyarov
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,23 +17,17 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package io.github.bucket4j;
+package io.github.bucket4j.benchmark.state;
 
 import com.google.common.util.concurrent.RateLimiter;
-import io.github.resilience4j.ratelimiter.internal.AtomicRateLimiter;
-import org.openjdk.jol.info.ClassLayout;
+import org.openjdk.jmh.annotations.Scope;
+import org.openjdk.jmh.annotations.State;
 
-public class MemoryBenchmark {
+@State(Scope.Benchmark)
+public class GuavaLimiterState {
 
-    public static void main(String[] args) {
-        System.out.println("Bucket4j: " + ClassLayout.parseClass(Bucket.class).toPrintable());
-        System.out.println("Guava: " + ClassLayout.parseClass(RateLimiter.class).toPrintable());
-        System.out.println("Resilience4j: " + ClassLayout.parseClass(AtomicRateLimiter.class).toPrintable());
-        System.out.println("Resilience4j.semaphoreBasedRateLimiter: " + ClassLayout.parseClass(io.github.resilience4j.ratelimiter.RateLimiter.class).toPrintable());
-    }
+    public final RateLimiter guavaRateLimiter = RateLimiter.create(Long.MAX_VALUE / 2.0);
 
-    public static class Bucket4jLayoutInvestigation {
-
-    }
+    public final RateLimiter _10_milion_rps_RateLimiter = RateLimiter.create(10_000_000);
 
 }

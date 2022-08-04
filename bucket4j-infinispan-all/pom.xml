@@ -5,8 +5,8 @@
 
     <parent>
         <artifactId>bucket4j-parent</artifactId>
-        <groupId>com.github.vladimir-bukhtoyarov</groupId>
-        <version>7.6.0</version>
+        <groupId>com.bucket4j</groupId>
+        <version>8.0.1</version>
         <relativePath>../bucket4j-parent</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -15,7 +15,6 @@
     <artifactId>bucket4j-infinispan-all</artifactId>
     <modules>
         <module>bucket4j-infinispan</module>
-        <module>bucket4j-infinispan-8</module>
     </modules>
 
 </project>

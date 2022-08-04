@@ -6,32 +6,25 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.github.vladimir-bukhtoyarov</groupId>
-    <version>7.6.0</version>
+    <groupId>com.bucket4j</groupId>
+    <version>8.0.1</version>
     <artifactId>bucket4j-parent</artifactId>
     <packaging>pom</packaging>
     <name>bucket4j-parent</name>
 
     <description>bucket4j - is a java implementation of token bucket algorithm for rate limiting</description>
-    <url>http://github.com/vladimir-bukhtoyarov/bucket4j</url>
+    <url>http://github.com/bucket4j/bucket4j</url>
 
     <distributionManagement>
         <snapshotRepository>
-            <id>ossrh</id>
+            <id>bucket4j-ossrh</id>
             <url>https://oss.sonatype.org/content/repositories/snapshots</url>
         </snapshotRepository>
         <repository>
-            <id>ossrh</id>
+            <id>bucket4j-ossrh</id>
             <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
         </repository>
     </distributionManagement>
-
-    <repositories>
-        <repository>
-            <id>jcenter</id>
-            <url>https://jcenter.bintray.com/</url>
-        </repository>
-    </repositories>
 
     <licenses>
         <license>
@@ -45,8 +38,8 @@
         <modular-name>parent</modular-name>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
         <VERSION-FOR-REVAPI-COMPARISION>4.10.0</VERSION-FOR-REVAPI-COMPARISION>
 
         <benchmark.jar.name>benchmarks</benchmark.jar.name>
@@ -58,7 +51,7 @@
         <hazelcast.3.version>3.8</hazelcast.3.version>
         <hazelcast.latest.version>5.0</hazelcast.latest.version>
 
-        <infinispan-8.version>8.2.0.Final</infinispan-8.version>
+        <infinispan-8.version>8.2.12.Final</infinispan-8.version>
         <infinispan.latest.version>11.0.1.Final</infinispan.latest.version>
         <ehcache.version>3.8.1</ehcache.version>
 
@@ -72,9 +65,9 @@
     </properties>
 
     <scm>
-        <url>http://github.com/vladimir-bukhtoyarov/bucket4j</url>
-        <connection>scm:git:git@github.com:vladimir-bukhtoyarov/bucket4j</connection>
-        <developerConnection>scm:git:git@github.com:vladimir-bukhtoyarov/bucket4j.git</developerConnection>
+        <url>http://github.com/bucket4j/bucket4j</url>
+        <connection>scm:git:git@github.com:bucket4j/bucket4j</connection>
+        <developerConnection>scm:git:git@github.com:bucket4j/bucket4j.git</developerConnection>
     </scm>
 
     <developers>
@@ -144,8 +137,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.8.1</version>
                 <configuration>
-                    <source>1.8</source>
-                    <target>1.8</target>
+                    <source>11</source>
+                    <target>11</target>
                     <compilerArgument>-parameters</compilerArgument>
                 </configuration>
             </plugin>
@@ -248,8 +241,8 @@
                         <version>1.6.8</version>
                         <extensions>true</extensions>
                         <configuration>
-                            <serverId>ossrh</serverId>
-                            <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                            <serverId>ossrh-bucket4j</serverId>
+                            <nexusUrl>https://s01.oss.sonatype.org/</nexusUrl>
                             <autoReleaseAfterClose>false</autoReleaseAfterClose>
                             <stagingProgressTimeoutMinutes>120</stagingProgressTimeoutMinutes>
                         </configuration>
@@ -310,6 +303,7 @@
                     </plugin>
                     <plugin>
                         <artifactId>maven-javadoc-plugin</artifactId>
+                        <version>3.4.0</version>
                         <executions>
                             <execution>
                                 <id>attach-javadocs</id>
@@ -324,7 +318,6 @@
                     </plugin>
                 </plugins>
             </build>
-
             <reporting>
                 <plugins>
                     <plugin>
@@ -386,19 +379,19 @@
         <dependency>
             <groupId>org.spockframework</groupId>
             <artifactId>spock-core</artifactId>
-            <version>1.0-groovy-2.4</version>
+            <version>2.1-groovy-2.5</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.codehaus.groovy</groupId>
-            <artifactId>groovy-all</artifactId>
-            <version>2.4.1</version>
+            <artifactId>groovy</artifactId>
+            <version>2.5.15</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>cglib</groupId>
             <artifactId>cglib-nodep</artifactId>
-            <version>3.1</version>
+            <version>3.3.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>

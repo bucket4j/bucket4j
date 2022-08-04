@@ -3,7 +3,7 @@
 [[bucket, Bucket]]
 ==== Bucket
 `Bucket` is a rate-limiter that is implemented on the top of ideas of well-known https://en.wikipedia.org/wiki/Token_bucket[Token Bucket algorithm].
-In the Bucket4j library code the `Bucket` is represented by interface https://github.com/vladimir-bukhtoyarov/bucket4j/blob/{minor-number}/bucket4j-core/src/main/java/io/github/bucket4j/Bucket.java[io.github.bucket4j.Bucket].
+In the Bucket4j library code the `Bucket` is represented by interface https://github.com/bucket4j/bucket4j/blob/{minor-number}/bucket4j-core/src/main/java/io/github/bucket4j/Bucket.java[io.github.bucket4j.Bucket].
 
 .Bucket aggregates the following parts:
 * <<bucket-bonfiguration>> specifies an immutable collection of limitation rules that are used by the bucket during its work.
@@ -20,7 +20,7 @@ Bucket bucket = Bucket.builder()
 [[bucket-bonfiguration, BucketConfiguration]]
 ==== BucketConfiguration
 `BucketConfiguration` can be described as collection of <<bandwidth, limits>> that are used by <<bucket>> during its job. Configuration
-In the Bucket4j library code the `BucketConfiguration` is represented by class https://github.com/vladimir-bukhtoyarov/bucket4j/blob/{minor-number}/bucket4j-core/src/main/java/io/github/bucket4j/BucketConfiguration.java[io.github.bucket4j.BucketConfiguration]. Configuration is immutable, there is no way to add or remove a limit to already created configuration. However, you can replace the configuration of the bucket via creating a new configuration instance and calling `bucket.replaceConfiguration(newConfiguration)`.
+In the Bucket4j library code the `BucketConfiguration` is represented by class https://github.com/bucket4j/bucket4j/blob/{minor-number}/bucket4j-core/src/main/java/io/github/bucket4j/BucketConfiguration.java[io.github.bucket4j.BucketConfiguration]. Configuration is immutable, there is no way to add or remove a limit to already created configuration. However, you can replace the configuration of the bucket via creating a new configuration instance and calling `bucket.replaceConfiguration(newConfiguration)`.
 
 Usually, you should not create BucketConfiguration directly(excepting the case with configuration replacement) because <<local-bucket-builder>> does for you behind the scene, for rare cases when you need to create configuration directly you have to use `ConfigurationBuilder` that is available by factory method:
 [source, java]
@@ -123,7 +123,7 @@ BucketState is the place where bucket stores own mutable state like:
 * Amount of currently available tokens.
 * Timestamp when the last refill was happen.
 
-`BucketState` is represented by interface https://github.com/vladimir-bukhtoyarov/bucket4j/blob/{minor-number}/bucket4j-core/src/main/java/io/github/bucket4j/Bucket.java[io.github.bucket4j.BucketState]. Usually you never interact with this interface, excepting the cases when you want to get access to low-level diagnostic API that is described in
+`BucketState` is represented by interface https://github.com/bucket4j/bucket4j/blob/{minor-number}/bucket4j-core/src/main/java/io/github/bucket4j/Bucket.java[io.github.bucket4j.BucketState]. Usually you never interact with this interface, excepting the cases when you want to get access to low-level diagnostic API that is described in
 
 
 [[local-bucket-builder, BucketBuilder]]

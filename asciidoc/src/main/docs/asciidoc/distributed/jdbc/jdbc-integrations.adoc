@@ -6,22 +6,24 @@ General principles to use each JDBC integration:
 * You should create a table, which includes the next required columns: BIGINT as a PRIMARY KEY, BYTEA as a state. By default, Bucket4j works with the next structure:
 
 .PostgreSQL
+[,sql]
 ----
 CREATE TABLE IF NOT EXISTS buckets(id BIGINT PRIMARY KEY, state BYTEA);
 ----
 
 .MySQL
+[,sql]
 ----
 CREATE TABLE IF NOT EXISTS buckets(id BIGINT PRIMARY KEY, state BLOB);
 ----
 
-[[listener]]
-===== Configuring custom settings of SQLProxyManager
+==== Configuring custom settings of SQLProxyManager
 
 * Each proxy manager takes `SQLProxyConfiguration` to customize work with database
 
 * To do that, you should use `SQLProxyConfigurationBuilder`, which includes the next parameters:
 
+[source, java]
 ----
     /**
      * @param clientSideConfig {@link ClientSideConfig} client-side configuration for proxy-manager.
@@ -44,8 +46,7 @@ CREATE TABLE IF NOT EXISTS buckets(id BIGINT PRIMARY KEY, state BLOB);
     }
 ----
 
-[[listener]]
-===== Overriding table configuration
+==== Overriding table configuration
 You can override the names of the columns to set your custom name of columns, to do that, you should use `BucketTableSettings` to set into `SQLProxyConfigurationBuilder` of your JDBC implementation.
 
 * `SQLProxyConfigurationBuilder` Takes `BucketTableSettings` - is the class to define a configuration of the table to use as a buckets store. By default, under the hood uses `BucketTableSettings.getDefault()`
@@ -60,24 +61,25 @@ Parameters:
 
 By default, uses: "buckets" as a `tableName`; "id" as a `idName`; "state" as a `stateName`
 
-====== addTableSettings
-Takes `BucketTableSettings` - See <<listener, Overriding table configuration>>.
+===== addTableSettings
+Takes `BucketTableSettings` - See <<Overriding table configuration>>.
 
-====== addClientSideConfig
+===== addClientSideConfig
 Takes `ClientSideConfig` - is a client-side configuration for proxy-manager. By default, under the hood uses `ClientSideConfig.getDefault()`
 
 
 ==== PostgreSQL integration
 ===== Dependencies
 To use Bucket4j extension for PostgreSQL you need to add following dependency:
-[source, xml, subs=attributes+]
+[,xml,subs=attributes+]
 ----
 <dependency>
-    <groupId>com.github.vladimir-bukhtoyarov</groupId>
+    <groupId>com.bucket4j</groupId>
     <artifactId>bucket4j-postgresql</artifactId>
     <version>{revnumber}</version>
 </dependency>
 ----
+NOTE: see https://github.com/bucket4j/bucket4j/tree/8.0#java-compatibility-matrix[Java compatibility matrix] if you need for build that is compatible with Java 8
 
 ===== Example of Bucket instantiation
 ----
@@ -117,16 +119,18 @@ Within a SERIALIZABLE transaction, however, an error will be thrown if a row to 
 ==== MySQL integration
 ===== Dependencies
 To use Bucket4j extension for MySQL you need to add following dependency:
-[source, xml, subs=attributes+]
+
+[,xml,subs=attributes+]
 ----
 <dependency>
-    <groupId>com.github.vladimir-bukhtoyarov</groupId>
+    <groupId>com.bucket4j</groupId>
     <artifactId>bucket4j-mysql</artifactId>
     <version>{revnumber}</version>
 </dependency>
 ----
 
 ===== Example of Bucket instantiation
+
 ----
         Long key = 1L;
         MySQLSelectForUpdateBasedProxyManager proxyManager = new MySQLSelectForUpdateBasedProxyManager(new SQLProxyConfiguration(dataSource));
