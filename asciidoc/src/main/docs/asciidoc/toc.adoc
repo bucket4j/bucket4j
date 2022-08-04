@@ -1,5 +1,6 @@
 = Bucket4j {revnumber} Reference
 :front-cover-image: images/white-logo.png
+:source-language: java
 
 include::about.adoc[]
 

@@ -4,7 +4,7 @@ The Bucket4j is distributed through https://mvnrepository.com/artifact/com.bucke
 You need to add the dependency to your project as described below in order to be able to compile and run examples
 
 .Maven dependency
-[source, xml, subs=attributes+]
+[,xml,subs=attributes+]
 ----
 <dependency>
     <groupId>com.bucket4j</groupId>

@@ -14,7 +14,7 @@ developing the dedicated module ``bucket4j-ignite`` was the only way to provide 
 
 ==== Dependencies
 To use ``bucket4j-ignite`` extension you need to add following dependency:
-[source, xml, subs=attributes+]
+[,xml,subs=attributes+]
 ----
 <dependency>
     <groupId>com.bucket4j</groupId>
