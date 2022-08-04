@@ -37,6 +37,7 @@ public class DefaultBucketProxy extends AbstractBucket implements BucketProxy, O
     private final CommandExecutor commandExecutor;
     private final RecoveryStrategy recoveryStrategy;
     private final Supplier<BucketConfiguration> configurationSupplier;
+    private final Long desiredConfigurationVersion;
     private final AtomicBoolean wasInitialized;
 
     @Override
@@ -54,11 +55,11 @@ public class DefaultBucketProxy extends AbstractBucket implements BucketProxy, O
         execute(new SyncCommand(unsynchronizedTokens, timeSinceLastSync.toNanos()));
     }
 
-    public DefaultBucketProxy(Supplier<BucketConfiguration> configurationSupplier, CommandExecutor commandExecutor, RecoveryStrategy recoveryStrategy) {
-        this(configurationSupplier, commandExecutor, recoveryStrategy, new AtomicBoolean(false), BucketListener.NOPE);
+    public DefaultBucketProxy(Supplier<BucketConfiguration> configurationSupplier, CommandExecutor commandExecutor, RecoveryStrategy recoveryStrategy, Long desiredConfigurationVersion) {
+        this(configurationSupplier, commandExecutor, recoveryStrategy, new AtomicBoolean(false), desiredConfigurationVersion, BucketListener.NOPE);
     }
 
-    private DefaultBucketProxy(Supplier<BucketConfiguration> configurationSupplier, CommandExecutor commandExecutor, RecoveryStrategy recoveryStrategy, AtomicBoolean wasInitialized, BucketListener listener) {
+    private DefaultBucketProxy(Supplier<BucketConfiguration> configurationSupplier, CommandExecutor commandExecutor, RecoveryStrategy recoveryStrategy, AtomicBoolean wasInitialized, Long desiredConfigurationVersion, BucketListener listener) {
         super(listener);
 
         this.commandExecutor = Objects.requireNonNull(commandExecutor);
@@ -68,6 +69,7 @@ public class DefaultBucketProxy extends AbstractBucket implements BucketProxy, O
             throw BucketExceptions.nullConfigurationSupplier();
         }
         this.configurationSupplier = configurationSupplier;
+        this.desiredConfigurationVersion = desiredConfigurationVersion;
         this.wasInitialized = wasInitialized;
     }
 

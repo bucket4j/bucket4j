@@ -33,17 +33,6 @@ import java.time.Duration;
  */
 public interface BucketProxy extends Bucket {
 
-    /**
-     * TODO
-     *
-     * @param newConfiguration
-     * @param tokensInheritanceStrategy
-     * @param configurationVersion
-     *
-     * @return
-     */
-    boolean tryReplaceConfiguration(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy, long configurationVersion);
-
     @Override
     BucketProxy toListenable(BucketListener listener);
 

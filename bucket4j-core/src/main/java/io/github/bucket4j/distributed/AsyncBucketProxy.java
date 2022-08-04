@@ -286,16 +286,6 @@ public interface AsyncBucketProxy {
     CompletableFuture<Void> replaceConfiguration(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy);
 
     /**
-     * TODO
-     *
-     * @param newConfiguration
-     * @param tokensInheritanceStrategy
-     * @param configurationVersion
-     * @return
-     */
-    CompletableFuture<Boolean> tryReplaceConfiguration(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy, long configurationVersion);
-
-    /**
      * Returns new copy of this bucket instance decorated by {@code listener}.
      * The created bucket will share same tokens with source bucket and vice versa.
      *

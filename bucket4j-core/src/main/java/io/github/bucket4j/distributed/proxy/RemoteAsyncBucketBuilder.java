@@ -39,7 +39,7 @@ public interface RemoteAsyncBucketBuilder<K> {
     /**
      * Configures custom recovery strategy instead of {@link RecoveryStrategy#RECONSTRUCT} that is used by default.
      *
-     * @param recoveryStrategy specifies the reaction which should be applied in case of previously saved state of bucket has been lost.
+     * @param recoveryStrategy specifies the reaction which should be applied in case of previously saved state of bucket has been lost, explicitly removed or expired.
      *
      * @return {@code this}
      */
@@ -59,6 +59,24 @@ public interface RemoteAsyncBucketBuilder<K> {
      * @return {@code this}
      */
     RemoteAsyncBucketBuilder<K> withOptimization(Optimization optimization);
+
+    /**
+     * Activates implicit configuration replacement.
+     *
+     * <p> By default distributed bucket operates with configuration that was provided at the time of its first creation.
+     * Providing the new configuration via {@link RemoteBucketBuilder} takes no effect if bucket is already persisted in the storage, because configuration is stored together with state of bucket.
+     * Without implicit configuration replacement, there is only one way to replace configuration of bucket - is explicit calling of {@link AsyncBucketProxy#replaceConfiguration(BucketConfiguration, TokensInheritanceStrategy)}.
+     *
+     * <p>
+     * When implicit configuration replacement is activated, bucket will check that version of configuration in the storage >= than provided {@code desiredConfigurationVersion},
+     * and automatically replace persisted configuration using provided {@code tokensInheritanceStrategy} in case of persisted configuration is obsolete.
+     *
+     * @param desiredConfigurationVersion specifies desired configuration version
+     * @param tokensInheritanceStrategy the strategy that will be used for token migration if {@code desiredConfigurationVersion of persisted bucket} is less that provided desiredConfigurationVersion
+     *
+     * @return {@code this}
+     */
+    RemoteBucketBuilder<K> activateImplicitConfigurationReplacement(long desiredConfigurationVersion, TokensInheritanceStrategy tokensInheritanceStrategy);
 
     /**
      * Builds the {@link AsyncBucketProxy}. Proxy is being created in lazy mode, its state is not persisted in external storage until first interaction,
@@ -89,65 +107,5 @@ public interface RemoteAsyncBucketBuilder<K> {
      * @return new instance of {@link AsyncBucketProxy} created in lazy mode.
      */
     AsyncBucketProxy build(K key, Supplier<CompletableFuture<BucketConfiguration>> configurationSupplier);
-
-    /**
-     * Builds the {@link AsyncBucketProxy}. Proxy is being created in lazy mode, its state is not persisted in external storage until first interaction,
-     * so if you want to save bucket state immediately then just call {@link AsyncBucketProxy#getAvailableTokens()}.
-     *
-     * <p>
-     *     If you had not used {@link #withOptimization(Optimization)} during construction then created proxy can be treated as cheap object,
-     *     feel free just build, use and forget as many proxies under the same key as you need, do not cache the built instances.
-     * </p>
-     *
-     * @param key the key that used in external storage to distinguish one bucket from another.
-     * @param configuration limits configuration
-     * @param configurationVersion specifies required configuration version
-     * @param tokensInheritanceStrategy the strategy that will be used for token migration if configurationVersion of persisted bucket is less that provided configurationVersion
-     *
-     * @return new instance of {@link AsyncBucketProxy} created in lazy mode.
-     */
-    AsyncBucketProxy build(K key, BucketConfiguration configuration, long configurationVersion, TokensInheritanceStrategy tokensInheritanceStrategy);
-
-    /**
-     * Has the same semantic with {@link #build(Object, BucketConfiguration, long, TokensInheritanceStrategy)},
-     * but additionally provides ability to provide configuration lazily, that can be helpful when figuring-out the right configuration parameters
-     * is costly, for example because parameters for particular {@code key} are stored in external database,
-     * {@code configurationSupplier} will be called if and only if bucket has not been persisted before.
-     *
-     *
-     * @param key the key that used in external storage to distinguish one bucket from another.
-     * @param configurationSupplier provider for bucket configuration
-     * @param configurationVersion specifies required configuration version
-     * @param tokensInheritanceStrategy the strategy that will be used for token migration if configurationVersion of persisted bucket is less that provided configurationVersion
-     *
-     * @return new instance of {@link AsyncBucketProxy} created in lazy mode.
-     */
-    AsyncBucketProxy build(K key, Supplier<BucketConfiguration> configurationSupplier, long configurationVersion, TokensInheritanceStrategy tokensInheritanceStrategy);
-
-    /**
-     * The overloaded version of {@link #build(Object, BucketConfiguration, long, TokensInheritanceStrategy)} that uses {@link TokensInheritanceStrategy#PROPORTIONALLY} as tokensInheritanceStrategy.
-     *
-     * @param key the key that used in external storage to distinguish one bucket from another.
-     * @param configuration limits configuration
-     * @param configurationVersion specifies required configuration version
-     *
-     * @return new instance of {@link AsyncBucketProxy} created in lazy mode.
-     */
-    default AsyncBucketProxy build(K key, BucketConfiguration configuration, long configurationVersion) {
-        return build(key, configuration, configurationVersion, TokensInheritanceStrategy.PROPORTIONALLY);
-    }
-
-    /**
-     * The overloaded version of {@link #build(Object, BucketConfiguration, long, TokensInheritanceStrategy)} that uses {@link TokensInheritanceStrategy#PROPORTIONALLY} as tokensInheritanceStrategy.
-     *
-     * @param key the key that used in external storage to distinguish one bucket from another.
-     * @param configurationSupplier provider for bucket configuration
-     * @param configurationVersion specifies required configuration version
-     *
-     * @return new instance of {@link AsyncBucketProxy} created in lazy mode.
-     */
-    default AsyncBucketProxy build(K key, Supplier<BucketConfiguration> configurationSupplier, long configurationVersion) {
-        return build(key, configurationSupplier, configurationVersion, TokensInheritanceStrategy.PROPORTIONALLY);
-    }
 
 }
