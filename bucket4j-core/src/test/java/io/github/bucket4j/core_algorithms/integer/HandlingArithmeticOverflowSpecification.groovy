@@ -54,7 +54,7 @@ class HandlingArithmeticOverflowSpecification extends Specification {
 
     def "Should firstly do refill by completed periods"() {
         setup:
-            Bandwidth limit = Bandwidth.simple((long) Long.MAX_VALUE / 16, Duration.ofNanos((long) Long.MAX_VALUE / 8))
+            Bandwidth limit = Bandwidth.simple((long) (Long.MAX_VALUE / 16), Duration.ofNanos((long) (Long.MAX_VALUE / 8)))
                     .withInitialTokens(7)
             TimeMeterMock meter = new TimeMeterMock(0)
             Bucket bucket = Bucket.builder()
@@ -63,9 +63,9 @@ class HandlingArithmeticOverflowSpecification extends Specification {
                 .build()
         when:
             // emulate time shift which equal of 3 refill periods
-            meter.addTime((long) Long.MAX_VALUE / 8 * 3)
+            meter.addTime((long) (Long.MAX_VALUE / 8 * 3))
         then:
-            bucket.tryConsume((long) Long.MAX_VALUE / 16)
+            bucket.tryConsume((long) (Long.MAX_VALUE / 16))
             !bucket.tryConsume(1)
     }
 
@@ -90,7 +90,7 @@ class HandlingArithmeticOverflowSpecification extends Specification {
     def "Should down to floating point arithmetic if necessary during refill"() {
         setup:
             Bandwidth limit = Bandwidth
-                    .simple((long) Long.MAX_VALUE / 16, Duration.ofNanos((long) Long.MAX_VALUE / 8))
+                    .simple((long) (Long.MAX_VALUE / 16), Duration.ofNanos((long) (Long.MAX_VALUE / 8)))
                     .withInitialTokens(0)
             TimeMeterMock meter = new TimeMeterMock(0)
             Bucket bucket = Bucket.builder()
@@ -99,10 +99,10 @@ class HandlingArithmeticOverflowSpecification extends Specification {
                 .build()
         when:
             // emulate time shift which little bit less then one refill period
-            meter.addTime((long) Long.MAX_VALUE / 16 - 1)
+            meter.addTime((long) (Long.MAX_VALUE / 16 - 1))
         then:
             // should down into floating point arithmetic and successfully refill
-            bucket.tryConsume((long) Long.MAX_VALUE / 32)
+            bucket.tryConsume((long) (Long.MAX_VALUE / 32))
             bucket.tryConsumeAsMuchAsPossible() == 1
     }
 
@@ -127,7 +127,7 @@ class HandlingArithmeticOverflowSpecification extends Specification {
     def "Should down to floating point arithmetic when having deal with big number during deficit calculation"() {
         setup:
             Bandwidth limit = Bandwidth
-                    .simple((long) Long.MAX_VALUE / 2, Duration.ofNanos((long) Long.MAX_VALUE / 2))
+                    .simple((long) (Long.MAX_VALUE / 2), Duration.ofNanos((long) (Long.MAX_VALUE / 2)))
                     .withInitialTokens(0)
             TimeMeterMock meter = new TimeMeterMock(0)
             Bucket bucket = Bucket.builder()
@@ -151,9 +151,9 @@ class HandlingArithmeticOverflowSpecification extends Specification {
     def "Should detect overflow during deficit calculation for interval refill"() {
         setup:
             long bandwidthPeriodNanos = (long) Long.MAX_VALUE / 2
-            Refill refill = Refill.intervally((long) Long.MAX_VALUE / 4, Duration.ofNanos(bandwidthPeriodNanos))
+            Refill refill = Refill.intervally((long) (Long.MAX_VALUE / 4), Duration.ofNanos(bandwidthPeriodNanos))
             Bandwidth limit = Bandwidth
-                    .classic((long) Long.MAX_VALUE / 2, refill)
+                    .classic((long) (Long.MAX_VALUE / 2), refill)
                     .withInitialTokens(0)
             TimeMeterMock meter = new TimeMeterMock(0)
             Bucket bucket = Bucket.builder()
@@ -172,7 +172,7 @@ class HandlingArithmeticOverflowSpecification extends Specification {
         then:
             state.getAvailableTokens() == -1
             state.calculateDelayNanosAfterWillBePossibleToConsume(Long.MAX_VALUE, meter.currentTimeNanos(), false) == Long.MAX_VALUE
-            state.calculateDelayNanosAfterWillBePossibleToConsume((long)Long.MAX_VALUE/2, meter.currentTimeNanos(), false) == Long.MAX_VALUE
+            state.calculateDelayNanosAfterWillBePossibleToConsume((long)(Long.MAX_VALUE/2), meter.currentTimeNanos(), false) == Long.MAX_VALUE
 
         when:
             state.addTokens(1)
