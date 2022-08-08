@@ -2,13 +2,13 @@
 
 # Java rate-limiting library based on token-bucket algorithm.
 
-[![Licence](https://img.shields.io/hexpm/l/plug.svg)](https://github.com/bucket4j/bucket4j/blob/master/LICENSE)
+[![Licence](https://img.shields.io/hexpm/l/plug.svg)](https://github.com/bucket4j/bucket4j/blob/master/LICENSE.txt)
 
 ## Bucket4j basic features
 * *Absolutely non-compromise precision* - Bucket4j does not operate with floats or doubles, all calculation are performed in the integer arithmetic, this feature protects end users from calculation errors involved by rounding.
 * *Effective implementation in terms of concurrency*:
-- Bucket4j is good scalable for multi-threading case it by defaults uses lock-free implementation.
-- In same time, library provides different concurrency strategies that can be chosen when default lock-free strategy is not desired.
+  - Bucket4j is good scalable for multi-threading case it by defaults uses lock-free implementation.
+  - In same time, library provides different concurrency strategies that can be chosen when default lock-free strategy is not desired.
 * *Effective API in terms of garbage collector footprint*: Bucket4j API tries to use primitive types as much as it is possible in order to avoid boxing and other types of floating garbage.
 * *Pluggable listener API* that allows to implement monitoring and logging.
 * *Rich diagnostic API* that allows to investigate internal state.
