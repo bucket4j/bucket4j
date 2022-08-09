@@ -68,7 +68,7 @@ public enum Versions implements Version {
     }
 
     public static Version getLatest() {
-        return v_7_0_0;
+        return v_8_1_0;
     }
 
     public static Version getOldest() {

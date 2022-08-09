@@ -149,16 +149,9 @@ public class Request<T> implements ComparableByContent<Request<T>> {
 
     @Override
     public boolean equalsByContent(Request<T> other) {
-        return backwardCompatibilityVersion.equals(other.backwardCompatibilityVersion)
-            && ComparableByContent.equals(command, other.command)
+        return // backwardCompatibilityVersion.equals(other.backwardCompatibilityVersion) &&
+                ComparableByContent.equals(command, other.command)
             && Objects.equals(clientSideTime, other.clientSideTime);
-    }
-
-    private Version calculateBackwardCompatibilityVersion(Version backwardCompatibilityVersion, Long minimumConfigurationVersion) {
-        if (backwardCompatibilityVersion == v_8_1_0 && minimumConfigurationVersion == null) {
-            return v_7_0_0;
-        }
-        return backwardCompatibilityVersion;
     }
 
 }

@@ -78,7 +78,7 @@ public interface RemoteBucketBuilder<K> {
      *
      * @return {@code this}
      */
-    RemoteBucketBuilder<K> activateImplicitConfigurationReplacement(long desiredConfigurationVersion, TokensInheritanceStrategy tokensInheritanceStrategy);
+    RemoteBucketBuilder<K> withImplicitConfigurationReplacement(long desiredConfigurationVersion, TokensInheritanceStrategy tokensInheritanceStrategy);
 
     /**
      * Has the same semantic with {@link #build(Object, BucketConfiguration)},

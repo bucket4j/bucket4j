@@ -119,7 +119,7 @@ public abstract class AbstractProxyManager<K> implements ProxyManager<K> {
         }
 
         @Override
-        public DefaultAsyncRemoteBucketBuilder activateImplicitConfigurationReplacement(long desiredConfigurationVersion, TokensInheritanceStrategy tokensInheritanceStrategy) {
+        public DefaultAsyncRemoteBucketBuilder withImplicitConfigurationReplacement(long desiredConfigurationVersion, TokensInheritanceStrategy tokensInheritanceStrategy) {
             this.implicitConfigurationReplacement = new ImplicitConfigurationReplacement(desiredConfigurationVersion, requireNonNull(tokensInheritanceStrategy));
             return this;
         }
@@ -171,7 +171,7 @@ public abstract class AbstractProxyManager<K> implements ProxyManager<K> {
         }
 
         @Override
-        public RemoteBucketBuilder<K> activateImplicitConfigurationReplacement(long desiredConfigurationVersion, TokensInheritanceStrategy tokensInheritanceStrategy) {
+        public RemoteBucketBuilder<K> withImplicitConfigurationReplacement(long desiredConfigurationVersion, TokensInheritanceStrategy tokensInheritanceStrategy) {
             this.implicitConfigurationReplacement = new ImplicitConfigurationReplacement(desiredConfigurationVersion, requireNonNull(tokensInheritanceStrategy));
             return this;
         }

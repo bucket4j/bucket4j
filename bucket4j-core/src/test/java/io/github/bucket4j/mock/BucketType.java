@@ -5,6 +5,7 @@ import io.github.bucket4j.*;
 import io.github.bucket4j.distributed.AsyncBucketProxy;
 import io.github.bucket4j.distributed.AsyncBucketProxyAdapter;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
+import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.distributed.proxy.optimization.Optimizations;
 import io.github.bucket4j.local.LocalBucketBuilder;
 import io.github.bucket4j.local.SynchronizationStrategy;
@@ -25,6 +26,11 @@ public enum BucketType {
                     .build();
         }
 
+        @Override
+        public ProxyManager<Integer> createProxyManager(TimeMeter timeMeter) {
+            throw new UnsupportedOperationException();
+        }
+
     },
     LOCAL_SYNCHRONIZED {
         @Override
@@ -37,6 +43,11 @@ public enum BucketType {
                     .withCustomTimePrecision(timeMeter)
                     .withSynchronizationStrategy(SynchronizationStrategy.SYNCHRONIZED)
                     .build();
+        }
+
+        @Override
+        public ProxyManager<Integer> createProxyManager(TimeMeter timeMeter) {
+            throw new UnsupportedOperationException();
         }
 
     },
@@ -52,6 +63,11 @@ public enum BucketType {
                     .withSynchronizationStrategy(SynchronizationStrategy.NONE)
                     .build();
         }
+
+        @Override
+        public ProxyManager<Integer> createProxyManager(TimeMeter timeMeter) {
+            throw new UnsupportedOperationException();
+        }
     },
     GRID {
         @Override
@@ -60,6 +76,11 @@ public enum BucketType {
             return proxyManager.builder()
                     .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
                     .build(42, configuration);
+        }
+
+        @Override
+        public ProxyManager<Integer> createProxyManager(TimeMeter timeMeter) {
+            return new ProxyManagerMock<>(timeMeter);
         }
 
         @Override
@@ -81,6 +102,11 @@ public enum BucketType {
         }
 
         @Override
+        public ProxyManager<Integer> createProxyManager(TimeMeter timeMeter) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
         public AsyncBucketProxy createAsyncBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
             ProxyManagerMock<Integer> proxyManager = new ProxyManagerMock<>(timeMeter);
             return proxyManager.asAsync().builder()
@@ -96,6 +122,11 @@ public enum BucketType {
             return proxyManager.builder()
                     .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
                     .build(42, configuration);
+        }
+
+        @Override
+        public ProxyManager<Integer> createProxyManager(TimeMeter timeMeter) {
+            return new CompareAndSwapBasedProxyManagerMock<>(ClientSideConfig.getDefault().withClientClock(timeMeter));
         }
 
         @Override
@@ -115,6 +146,11 @@ public enum BucketType {
                     .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
                     .build(42, configuration);
         }
+
+        @Override
+        public ProxyManager<Integer> createProxyManager(TimeMeter timeMeter) {
+            return new LockBasedProxyManagerMock<>(ClientSideConfig.getDefault().withClientClock(timeMeter));
+        }
     },
 
     SELECT_FOR_UPDATE {
@@ -125,9 +161,16 @@ public enum BucketType {
                     .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
                     .build(42, configuration);
         }
+
+        @Override
+        public ProxyManager<Integer> createProxyManager(TimeMeter timeMeter) {
+            return new LockBasedProxyManagerMock<>(ClientSideConfig.getDefault().withClientClock(timeMeter));
+        }
     };
 
     abstract public Bucket createBucket(BucketConfiguration configuration, TimeMeter timeMeter);
+
+    abstract public ProxyManager<Integer> createProxyManager(TimeMeter timeMeter);
 
     public Bucket createBucket(BucketConfiguration configuration) {
         return createBucket(configuration, TimeMeter.SYSTEM_MILLISECONDS);
