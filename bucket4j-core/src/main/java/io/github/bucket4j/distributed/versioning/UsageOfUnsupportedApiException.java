@@ -41,7 +41,7 @@ public class UsageOfUnsupportedApiException extends BackwardCompatibilityExcepti
     }
 
     private static String formatMessage(int formatNumber, int maxFormatNumber) {
-        String fmt = "Command cannot be executed, because it encoded in {} format number, when maximum supported by backend is {}";
+        String fmt = "Command cannot be executed, because it encoded in {0} format number, when maximum supported by backend is {1}";
         return MessageFormat.format(fmt, formatNumber, maxFormatNumber);
     }
 

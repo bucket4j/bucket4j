@@ -150,7 +150,11 @@ public class SerializationHandles {
             if (typeId >= handlesById.length) {
                 throw new UnsupportedTypeException(typeId);
             }
-            return handlesById[typeId];
+            SerializationHandle<T> serializationHandle = handlesById[typeId];
+            if (serializationHandle == null) {
+                throw new UnsupportedTypeException(typeId);
+            }
+            return serializationHandle;
         } else {
             typeId = -typeId;
             if (typeId >= PrimitiveSerializationHandles.primitiveHandlesById.length) {
