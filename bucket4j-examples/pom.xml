@@ -28,6 +28,13 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
+    <repositories>
+        <repository>
+            <id>spring</id>
+            <url>https://repo.spring.io/milestone</url>
+        </repository>
+    </repositories>
+
     <artifactId>bucket4j-examples</artifactId>
     <build>
         <plugins>
@@ -101,6 +108,12 @@
             <artifactId>hazelcast</artifactId>
             <version>${hazelcast.latest.version}</version>
             <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>io.projectreactor</groupId>
+            <artifactId>reactor-core</artifactId>
+            <version>3.5.0-M5</version>
         </dependency>
 
         <!-- For benchmarking -->
