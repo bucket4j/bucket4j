@@ -1,11 +1,17 @@
 == Basic functionality
 
-include::quick-start.adoc[]
-
 include::concepts.adoc[]
 
-include::limitations.adoc[]
+include::quick-start.adoc[]
 
 include::api-reference.adoc[]
 
+include::listener.adoc[]
+
+include::verbose-api.adoc[]
+
+include::configuration-replacement.adoc[]
+
 include::production-generic-checklist.adoc[]
+
+include::limitations.adoc[]

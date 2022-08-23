@@ -16,8 +16,4 @@ include::redis/redis.adoc[]
 
 include::jdbc/jdbc-integrations.adoc[]
 
-include::asynchronous.adoc[]
-
-include::implement-custom-database/concept.adoc[]
-
 include::distributed-checklist.adoc[]

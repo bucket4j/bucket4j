@@ -8,4 +8,4 @@ include::basic/basic-functionality-index.adoc[]
 
 include::distributed/distributed-index.adoc[]
 
-include::advanced/advanced-features-index.adoc[]
+include::distributed-advanced/advanced-index.adoc[]
