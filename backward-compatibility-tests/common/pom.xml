@@ -7,11 +7,11 @@
 
     <parent>
         <groupId>com.bucket4j</groupId>
-        <artifactId>backward-compatibility-tests</artifactId>
+        <artifactId>backward-compatibility-tests_jdk8</artifactId>
         <version>8.1.0</version>
         <relativePath>../../backward-compatibility-tests</relativePath>
     </parent>
-    <artifactId>backward-compatibility-tests-common</artifactId>
+    <artifactId>backward-compatibility-tests-common_jdk8</artifactId>
     <name>backward-compatibility-tests-common</name>
 
     <properties>
@@ -23,7 +23,7 @@
     <dependencies>
         <dependency>
             <groupId>com.bucket4j</groupId>
-            <artifactId>bucket4j-core</artifactId>
+            <artifactId>bucket4j_jdk8-core</artifactId>
             <version>8.1.0</version>
             <scope>compile</scope>
         </dependency>
