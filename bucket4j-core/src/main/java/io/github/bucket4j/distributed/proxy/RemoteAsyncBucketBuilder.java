@@ -21,6 +21,7 @@
 package io.github.bucket4j.distributed.proxy;
 
 import io.github.bucket4j.BucketConfiguration;
+import io.github.bucket4j.TokensInheritanceStrategy;
 import io.github.bucket4j.distributed.AsyncBucketProxy;
 import io.github.bucket4j.distributed.proxy.optimization.Optimization;
 import io.github.bucket4j.distributed.proxy.optimization.Optimizations;
@@ -38,7 +39,7 @@ public interface RemoteAsyncBucketBuilder<K> {
     /**
      * Configures custom recovery strategy instead of {@link RecoveryStrategy#RECONSTRUCT} that is used by default.
      *
-     * @param recoveryStrategy specifies the reaction which should be applied in case of previously saved state of bucket has been lost.
+     * @param recoveryStrategy specifies the reaction which should be applied in case of previously saved state of bucket has been lost, explicitly removed or expired.
      *
      * @return {@code this}
      */
@@ -58,6 +59,24 @@ public interface RemoteAsyncBucketBuilder<K> {
      * @return {@code this}
      */
     RemoteAsyncBucketBuilder<K> withOptimization(Optimization optimization);
+
+    /**
+     * Activates implicit configuration replacement.
+     *
+     * <p> By default distributed bucket operates with configuration that was provided at the time of its first creation.
+     * Providing the new configuration via {@link RemoteBucketBuilder} takes no effect if bucket is already persisted in the storage, because configuration is stored together with state of bucket.
+     * Without implicit configuration replacement, there is only one way to replace configuration of bucket - is explicit calling of {@link AsyncBucketProxy#replaceConfiguration(BucketConfiguration, TokensInheritanceStrategy)}.
+     *
+     * <p>
+     * When implicit configuration replacement is activated, bucket will check that version of configuration in the storage >= than provided {@code desiredConfigurationVersion},
+     * and automatically replace persisted configuration using provided {@code tokensInheritanceStrategy} in case of persisted configuration is obsolete.
+     *
+     * @param desiredConfigurationVersion specifies desired configuration version
+     * @param tokensInheritanceStrategy the strategy that will be used for token migration if {@code desiredConfigurationVersion of persisted bucket} is less that provided desiredConfigurationVersion
+     *
+     * @return {@code this}
+     */
+    RemoteAsyncBucketBuilder<K> withImplicitConfigurationReplacement(long desiredConfigurationVersion, TokensInheritanceStrategy tokensInheritanceStrategy);
 
     /**
      * Builds the {@link AsyncBucketProxy}. Proxy is being created in lazy mode, its state is not persisted in external storage until first interaction,

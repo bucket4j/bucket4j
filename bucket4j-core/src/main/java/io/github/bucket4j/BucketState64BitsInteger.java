@@ -21,6 +21,7 @@
 package io.github.bucket4j;
 
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
+import io.github.bucket4j.distributed.serialization.Scope;
 import io.github.bucket4j.distributed.serialization.SerializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
 import io.github.bucket4j.distributed.versioning.Version;
@@ -45,7 +46,7 @@ public class BucketState64BitsInteger implements BucketState, ComparableByConten
 
     public static SerializationHandle<BucketState64BitsInteger> SERIALIZATION_HANDLE = new SerializationHandle<BucketState64BitsInteger>() {
         @Override
-        public <S> BucketState64BitsInteger deserialize(DeserializationAdapter<S> adapter, S input, Version backwardCompatibilityVersion) throws IOException {
+        public <S> BucketState64BitsInteger deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             int formatNumber = adapter.readInt(input);
             Versions.check(formatNumber, v_7_0_0, v_7_0_0);
 
@@ -54,7 +55,7 @@ public class BucketState64BitsInteger implements BucketState, ComparableByConten
         }
 
         @Override
-        public <O> void serialize(SerializationAdapter<O> adapter, O output, BucketState64BitsInteger state, Version backwardCompatibilityVersion) throws IOException {
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, BucketState64BitsInteger state, Version backwardCompatibilityVersion, Scope scope) throws IOException {
             adapter.writeInt(output, v_7_0_0.getNumber());
 
             adapter.writeLongArray(output, state.stateData);
@@ -71,24 +72,24 @@ public class BucketState64BitsInteger implements BucketState, ComparableByConten
         }
 
         @Override
-        public BucketState64BitsInteger fromJsonCompatibleSnapshot(Map<String, Object> snapshot, Version backwardCompatibilityVersion) throws IOException {
+        public BucketState64BitsInteger fromJsonCompatibleSnapshot(Map<String, Object> snapshot) throws IOException {
             int formatNumber = readIntValue(snapshot, "version");
             Versions.check(formatNumber, v_7_0_0, v_7_0_0);
 
             long[] stateDate = readLongArray(snapshot, "stateData");
             Map<String, Object> configurationSnapshot = (Map<String, Object>) snapshot.get("configuration");
-            BucketConfiguration configuration = BucketConfiguration.SERIALIZATION_HANDLE.fromJsonCompatibleSnapshot(configurationSnapshot, backwardCompatibilityVersion);
+            BucketConfiguration configuration = BucketConfiguration.SERIALIZATION_HANDLE.fromJsonCompatibleSnapshot(configurationSnapshot);
             BucketState64BitsInteger state = new BucketState64BitsInteger(stateDate);
             state.setConfiguration(configuration);
             return state;
         }
 
         @Override
-        public Map<String, Object> toJsonCompatibleSnapshot(BucketState64BitsInteger state, Version backwardCompatibilityVersion) throws IOException {
+        public Map<String, Object> toJsonCompatibleSnapshot(BucketState64BitsInteger state, Version backwardCompatibilityVersion, Scope scope) throws IOException {
             Map<String, Object> result = new HashMap<>();
             result.put("version", v_7_0_0.getNumber());
             result.put("stateData", state.stateData);
-            result.put("configuration", BucketConfiguration.SERIALIZATION_HANDLE.toJsonCompatibleSnapshot(state.configuration, backwardCompatibilityVersion));
+            result.put("configuration", BucketConfiguration.SERIALIZATION_HANDLE.toJsonCompatibleSnapshot(state.configuration, backwardCompatibilityVersion, scope));
             return result;
         }
 

@@ -17,10 +17,7 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package io.github.bucket4j.distributed.remote.commands;
-
-import io.github.bucket4j.distributed.remote.MutableBucketEntry;
-import io.github.bucket4j.distributed.remote.RemoteBucketState;
+package io.github.bucket4j.distributed.remote;
 
 import java.util.Objects;
 
@@ -40,6 +37,10 @@ public class BucketEntryWrapper implements MutableBucketEntry {
 
     public boolean isStateModified() {
         return stateModified;
+    }
+
+    public void setStateModified(boolean stateModified) {
+        this.stateModified = stateModified;
     }
 
     @Override

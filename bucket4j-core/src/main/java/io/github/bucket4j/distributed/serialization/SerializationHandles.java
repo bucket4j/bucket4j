@@ -51,7 +51,6 @@ public class SerializationHandles {
             UsageOfUnsupportedApiError.SERIALIZATION_HANDLE, // 18
             UnsupportedNamedTypeError.SERIALIZATION_HANDLE, // 19
 
-            CreateInitialStateCommand.SERIALIZATION_HANDLE, // 20
             CreateInitialStateAndExecuteCommand.SERIALIZATION_HANDLE, // 21
             MultiCommand.SERIALIZATION_HANDLE, // 22
             ReserveAndCalculateTimeToSleepCommand.SERIALIZATION_HANDLE, // 23
@@ -70,6 +69,9 @@ public class SerializationHandles {
             Request.SERIALIZATION_HANDLE, // 37
             ForceAddTokensCommand.SERIALIZATION_HANDLE, // 38
             ResetCommand.SERIALIZATION_HANDLE, // 39
+            ConfigurationNeedToBeReplacedError.SERIALIZATION_HANDLE, // 40
+            CreateInitialStateWithVersionOrReplaceConfigurationAndExecuteCommand.SERIALIZATION_HANDLE, // 41
+            CheckConfigurationVersionAndExecuteCommand.SERIALIZATION_HANDLE, // 42
 
             LockFreeBucket.SERIALIZATION_HANDLE, // 60
             SynchronizedBucket.SERIALIZATION_HANDLE, // 61
@@ -148,7 +150,11 @@ public class SerializationHandles {
             if (typeId >= handlesById.length) {
                 throw new UnsupportedTypeException(typeId);
             }
-            return handlesById[typeId];
+            SerializationHandle<T> serializationHandle = handlesById[typeId];
+            if (serializationHandle == null) {
+                throw new UnsupportedTypeException(typeId);
+            }
+            return serializationHandle;
         } else {
             typeId = -typeId;
             if (typeId >= PrimitiveSerializationHandles.primitiveHandlesById.length) {

@@ -22,6 +22,7 @@ package io.github.bucket4j.distributed.remote.commands;
 
 import io.github.bucket4j.ConsumptionProbe;
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
+import io.github.bucket4j.distributed.serialization.Scope;
 import io.github.bucket4j.distributed.serialization.SerializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
 
@@ -46,7 +47,7 @@ public class TryConsumeAndReturnRemainingTokensCommand implements RemoteCommand<
 
     public static final SerializationHandle<TryConsumeAndReturnRemainingTokensCommand> SERIALIZATION_HANDLE = new SerializationHandle<TryConsumeAndReturnRemainingTokensCommand>() {
         @Override
-        public <S> TryConsumeAndReturnRemainingTokensCommand deserialize(DeserializationAdapter<S> adapter, S input, Version backwardCompatibilityVersion) throws IOException {
+        public <S> TryConsumeAndReturnRemainingTokensCommand deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             int formatNumber = adapter.readInt(input);
             Versions.check(formatNumber, v_7_0_0, v_7_0_0);
 
@@ -56,7 +57,7 @@ public class TryConsumeAndReturnRemainingTokensCommand implements RemoteCommand<
         }
 
         @Override
-        public <O> void serialize(SerializationAdapter<O> adapter, O output, TryConsumeAndReturnRemainingTokensCommand command, Version backwardCompatibilityVersion) throws IOException {
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, TryConsumeAndReturnRemainingTokensCommand command, Version backwardCompatibilityVersion, Scope scope) throws IOException {
             adapter.writeInt(output, v_7_0_0.getNumber());
 
             adapter.writeLong(output, command.tokensToConsume);
@@ -73,7 +74,7 @@ public class TryConsumeAndReturnRemainingTokensCommand implements RemoteCommand<
         }
 
         @Override
-        public TryConsumeAndReturnRemainingTokensCommand fromJsonCompatibleSnapshot(Map<String, Object> snapshot, Version backwardCompatibilityVersion) throws IOException {
+        public TryConsumeAndReturnRemainingTokensCommand fromJsonCompatibleSnapshot(Map<String, Object> snapshot) throws IOException {
             int formatNumber = readIntValue(snapshot, "version");
             Versions.check(formatNumber, v_7_0_0, v_7_0_0);
 
@@ -82,7 +83,7 @@ public class TryConsumeAndReturnRemainingTokensCommand implements RemoteCommand<
         }
 
         @Override
-        public Map<String, Object> toJsonCompatibleSnapshot(TryConsumeAndReturnRemainingTokensCommand command, Version backwardCompatibilityVersion) throws IOException {
+        public Map<String, Object> toJsonCompatibleSnapshot(TryConsumeAndReturnRemainingTokensCommand command, Version backwardCompatibilityVersion, Scope scope) throws IOException {
             Map<String, Object> result = new HashMap<>();
             result.put("version", v_7_0_0.getNumber());
             result.put("tokensToConsume", command.tokensToConsume);
@@ -151,6 +152,11 @@ public class TryConsumeAndReturnRemainingTokensCommand implements RemoteCommand<
     @Override
     public long getConsumedTokens(ConsumptionProbe result) {
         return result.isConsumed() ? tokensToConsume : 0L;
+    }
+
+    @Override
+    public Version getRequiredVersion() {
+        return v_7_0_0;
     }
 
 }

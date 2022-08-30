@@ -20,6 +20,7 @@
 package io.github.bucket4j.distributed.remote;
 
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
+import io.github.bucket4j.distributed.serialization.Scope;
 import io.github.bucket4j.distributed.serialization.SerializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
 import io.github.bucket4j.distributed.versioning.UsageOfObsoleteApiException;
@@ -64,7 +65,7 @@ public class UsageOfObsoleteApiError implements ComparableByContent<UsageOfObsol
 
     public static SerializationHandle<UsageOfObsoleteApiError> SERIALIZATION_HANDLE = new SerializationHandle<UsageOfObsoleteApiError>() {
         @Override
-        public <S> UsageOfObsoleteApiError deserialize(DeserializationAdapter<S> adapter, S input, Version backwardCompatibilityVersion) throws IOException {
+        public <S> UsageOfObsoleteApiError deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             int formatNumber = adapter.readInt(input);
             Versions.check(formatNumber, v_7_0_0, v_7_0_0);
 
@@ -74,7 +75,7 @@ public class UsageOfObsoleteApiError implements ComparableByContent<UsageOfObsol
         }
 
         @Override
-        public <O> void serialize(SerializationAdapter<O> adapter, O output, UsageOfObsoleteApiError error, Version backwardCompatibilityVersion) throws IOException {
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, UsageOfObsoleteApiError error, Version backwardCompatibilityVersion, Scope scope) throws IOException {
             adapter.writeInt(output, v_7_0_0.getNumber());
             adapter.writeInt(output, error.requestedFormatNumber);
             adapter.writeInt(output, error.minSupportedFormatNumber);
@@ -91,7 +92,7 @@ public class UsageOfObsoleteApiError implements ComparableByContent<UsageOfObsol
         }
 
         @Override
-        public UsageOfObsoleteApiError fromJsonCompatibleSnapshot(Map<String, Object> snapshot, Version backwardCompatibilityVersion) throws IOException {
+        public UsageOfObsoleteApiError fromJsonCompatibleSnapshot(Map<String, Object> snapshot) throws IOException {
             int formatNumber = readIntValue(snapshot, "version");
             Versions.check(formatNumber, v_7_0_0, v_7_0_0);
 
@@ -102,7 +103,7 @@ public class UsageOfObsoleteApiError implements ComparableByContent<UsageOfObsol
         }
 
         @Override
-        public Map<String, Object> toJsonCompatibleSnapshot(UsageOfObsoleteApiError error, Version backwardCompatibilityVersion) throws IOException {
+        public Map<String, Object> toJsonCompatibleSnapshot(UsageOfObsoleteApiError error, Version backwardCompatibilityVersion, Scope scope) throws IOException {
             Map<String, Object> result = new HashMap<>();
             result.put("version", v_7_0_0.getNumber());
             result.put("requestedFormatNumber", error.requestedFormatNumber);

@@ -33,7 +33,7 @@ public class InternalSerializationHelper {
             ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
             DataOutputStream output = new DataOutputStream(byteStream);
 
-            RemoteBucketState.SERIALIZATION_HANDLE.serialize(DataOutputSerializationAdapter.INSTANCE, output, state, backwardCompatibilityVersion);
+            RemoteBucketState.SERIALIZATION_HANDLE.serialize(DataOutputSerializationAdapter.INSTANCE, output, state, backwardCompatibilityVersion, Scope.PERSISTED_STATE);
 
             output.close();
             byteStream.close();
@@ -47,7 +47,7 @@ public class InternalSerializationHelper {
     public static RemoteBucketState deserializeState(byte[] bytes) {
         try {
             try (DataInputStream inputSteam = new DataInputStream(new ByteArrayInputStream(bytes))) {
-                return RemoteBucketState.SERIALIZATION_HANDLE.deserialize(DataOutputSerializationAdapter.INSTANCE, inputSteam, null);
+                return RemoteBucketState.SERIALIZATION_HANDLE.deserialize(DataOutputSerializationAdapter.INSTANCE, inputSteam);
             }
         } catch (Exception e) {
             throw new IllegalStateException(e);
@@ -59,7 +59,7 @@ public class InternalSerializationHelper {
             ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
             DataOutputStream output = new DataOutputStream(byteStream);
 
-            Request.SERIALIZATION_HANDLE.serialize(DataOutputSerializationAdapter.INSTANCE, output, request, request.getBackwardCompatibilityVersion());
+            Request.SERIALIZATION_HANDLE.serialize(DataOutputSerializationAdapter.INSTANCE, output, request, request.getBackwardCompatibilityVersion(), Scope.REQUEST);
             
             output.close();
             byteStream.close();
@@ -73,7 +73,7 @@ public class InternalSerializationHelper {
     public static <T> Request<T> deserializeRequest(byte[] bytes) {
         try {
             try (DataInputStream inputSteam = new DataInputStream(new ByteArrayInputStream(bytes))) {
-                return (Request<T>) Request.SERIALIZATION_HANDLE.deserialize(DataOutputSerializationAdapter.INSTANCE, inputSteam, null);
+                return (Request<T>) Request.SERIALIZATION_HANDLE.deserialize(DataOutputSerializationAdapter.INSTANCE, inputSteam);
             }
         } catch (Exception e) {
             throw new IllegalStateException(e);
@@ -85,7 +85,7 @@ public class InternalSerializationHelper {
             ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
             DataOutputStream output = new DataOutputStream(byteStream);
 
-            CommandResult.SERIALIZATION_HANDLE.serialize(DataOutputSerializationAdapter.INSTANCE, output, result, backwardCompatibilityVersion);
+            CommandResult.SERIALIZATION_HANDLE.serialize(DataOutputSerializationAdapter.INSTANCE, output, result, backwardCompatibilityVersion, Scope.RESPONSE);
 
             output.close();
             byteStream.close();
@@ -99,7 +99,7 @@ public class InternalSerializationHelper {
     public static <T> CommandResult<T> deserializeResult(byte[] bytes, Version backwardCompatibilityVersion) {
         try {
             try (DataInputStream inputSteam = new DataInputStream(new ByteArrayInputStream(bytes))) {
-                return (CommandResult<T>) CommandResult.SERIALIZATION_HANDLE.deserialize(DataOutputSerializationAdapter.INSTANCE, inputSteam, backwardCompatibilityVersion);
+                return (CommandResult<T>) CommandResult.SERIALIZATION_HANDLE.deserialize(DataOutputSerializationAdapter.INSTANCE, inputSteam);
             }
         } catch (Exception e) {
             throw new IllegalStateException(e);

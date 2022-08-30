@@ -28,6 +28,7 @@ import io.github.bucket4j.distributed.remote.MutableBucketEntry;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
+import io.github.bucket4j.distributed.serialization.Scope;
 import io.github.bucket4j.distributed.serialization.SerializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
 import io.github.bucket4j.distributed.versioning.Version;
@@ -48,20 +49,20 @@ public class ReplaceConfigurationCommand implements RemoteCommand<Nothing>, Comp
 
     public static final SerializationHandle<ReplaceConfigurationCommand> SERIALIZATION_HANDLE = new SerializationHandle<ReplaceConfigurationCommand>() {
         @Override
-        public <S> ReplaceConfigurationCommand deserialize(DeserializationAdapter<S> adapter, S input, Version backwardCompatibilityVersion) throws IOException {
+        public <S> ReplaceConfigurationCommand deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             int formatNumber = adapter.readInt(input);
             Versions.check(formatNumber, v_7_0_0, v_7_0_0);
 
-            BucketConfiguration newConfiguration = BucketConfiguration.SERIALIZATION_HANDLE.deserialize(adapter, input, backwardCompatibilityVersion);
+            BucketConfiguration newConfiguration = BucketConfiguration.SERIALIZATION_HANDLE.deserialize(adapter, input);
             TokensInheritanceStrategy tokensInheritanceStrategy = TokensInheritanceStrategy.getById(adapter.readByte(input));
             return new ReplaceConfigurationCommand(newConfiguration, tokensInheritanceStrategy);
         }
 
         @Override
-        public <O> void serialize(SerializationAdapter<O> adapter, O output, ReplaceConfigurationCommand command, Version backwardCompatibilityVersion) throws IOException {
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, ReplaceConfigurationCommand command, Version backwardCompatibilityVersion, Scope scope) throws IOException {
             adapter.writeInt(output, v_7_0_0.getNumber());
 
-            BucketConfiguration.SERIALIZATION_HANDLE.serialize(adapter, output, command.newConfiguration, backwardCompatibilityVersion);
+            BucketConfiguration.SERIALIZATION_HANDLE.serialize(adapter, output, command.newConfiguration, backwardCompatibilityVersion, scope);
             adapter.writeByte(output, command.tokensInheritanceStrategy.getId());
         }
 
@@ -76,22 +77,22 @@ public class ReplaceConfigurationCommand implements RemoteCommand<Nothing>, Comp
         }
 
         @Override
-        public ReplaceConfigurationCommand fromJsonCompatibleSnapshot(Map<String, Object> snapshot, Version backwardCompatibilityVersion) throws IOException {
+        public ReplaceConfigurationCommand fromJsonCompatibleSnapshot(Map<String, Object> snapshot) throws IOException {
             int formatNumber = readIntValue(snapshot, "version");
             Versions.check(formatNumber, v_7_0_0, v_7_0_0);
 
             TokensInheritanceStrategy tokensInheritanceStrategy = TokensInheritanceStrategy.valueOf((String) snapshot.get("tokensInheritanceStrategy"));
             BucketConfiguration newConfiguration = BucketConfiguration.SERIALIZATION_HANDLE
-                    .fromJsonCompatibleSnapshot((Map<String, Object>) snapshot.get("newConfiguration"), backwardCompatibilityVersion);
+                    .fromJsonCompatibleSnapshot((Map<String, Object>) snapshot.get("newConfiguration"));
             return new ReplaceConfigurationCommand(newConfiguration, tokensInheritanceStrategy);
         }
 
         @Override
-        public Map<String, Object> toJsonCompatibleSnapshot(ReplaceConfigurationCommand command, Version backwardCompatibilityVersion) throws IOException {
+        public Map<String, Object> toJsonCompatibleSnapshot(ReplaceConfigurationCommand command, Version backwardCompatibilityVersion, Scope scope) throws IOException {
             Map<String, Object> result = new HashMap<>();
             result.put("version", v_7_0_0.getNumber());
             result.put("tokensInheritanceStrategy", command.tokensInheritanceStrategy.toString());
-            result.put("newConfiguration", BucketConfiguration.SERIALIZATION_HANDLE.toJsonCompatibleSnapshot(command.newConfiguration, backwardCompatibilityVersion));
+            result.put("newConfiguration", BucketConfiguration.SERIALIZATION_HANDLE.toJsonCompatibleSnapshot(command.newConfiguration, backwardCompatibilityVersion, scope));
             return result;
         }
 
@@ -152,6 +153,11 @@ public class ReplaceConfigurationCommand implements RemoteCommand<Nothing>, Comp
     @Override
     public long getConsumedTokens(Nothing result) {
         return 0;
+    }
+
+    @Override
+    public Version getRequiredVersion() {
+        return v_7_0_0;
     }
 
 }

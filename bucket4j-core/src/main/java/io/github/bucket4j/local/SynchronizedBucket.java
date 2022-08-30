@@ -23,6 +23,7 @@ package io.github.bucket4j.local;
 
 import io.github.bucket4j.*;
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
+import io.github.bucket4j.distributed.serialization.Scope;
 import io.github.bucket4j.distributed.serialization.SerializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
 import io.github.bucket4j.distributed.versioning.Version;
@@ -33,7 +34,6 @@ import java.io.IOException;
 import java.io.NotSerializableException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -429,25 +429,25 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket, C
 
     public static final SerializationHandle<SynchronizedBucket> SERIALIZATION_HANDLE = new SerializationHandle<SynchronizedBucket>() {
         @Override
-        public <S> SynchronizedBucket deserialize(DeserializationAdapter<S> adapter, S input, Version backwardCompatibilityVersion) throws IOException {
+        public <S> SynchronizedBucket deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             int formatNumber = adapter.readInt(input);
             Versions.check(formatNumber, v_7_0_0, v_7_0_0);
 
-            BucketConfiguration bucketConfiguration = BucketConfiguration.SERIALIZATION_HANDLE.deserialize(adapter, input, backwardCompatibilityVersion);
-            BucketState bucketState = BucketState.deserialize(adapter, input, backwardCompatibilityVersion);
+            BucketConfiguration bucketConfiguration = BucketConfiguration.SERIALIZATION_HANDLE.deserialize(adapter, input);
+            BucketState bucketState = BucketState.deserialize(adapter, input);
             bucketState.setConfiguration(bucketConfiguration);
 
             return new SynchronizedBucket(BucketListener.NOPE, TimeMeter.SYSTEM_MILLISECONDS, new ReentrantLock(), bucketState);
         }
 
         @Override
-        public <O> void serialize(SerializationAdapter<O> adapter, O output, SynchronizedBucket bucket, Version backwardCompatibilityVersion) throws IOException {
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, SynchronizedBucket bucket, Version backwardCompatibilityVersion, Scope scope) throws IOException {
             if (bucket.timeMeter != TimeMeter.SYSTEM_MILLISECONDS) {
                 throw new NotSerializableException("Only TimeMeter.SYSTEM_MILLISECONDS can be serialized safely");
             }
             adapter.writeInt(output, v_7_0_0.getNumber());
-            BucketConfiguration.SERIALIZATION_HANDLE.serialize(adapter, output, bucket.state.getConfiguration(), backwardCompatibilityVersion);
-            BucketState.serialize(adapter, output, bucket.state, backwardCompatibilityVersion);
+            BucketConfiguration.SERIALIZATION_HANDLE.serialize(adapter, output, bucket.state.getConfiguration(), backwardCompatibilityVersion, scope);
+            BucketState.serialize(adapter, output, bucket.state, backwardCompatibilityVersion, scope);
         }
 
         @Override
@@ -461,24 +461,24 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket, C
         }
 
         @Override
-        public SynchronizedBucket fromJsonCompatibleSnapshot(Map<String, Object> snapshot, Version backwardCompatibilityVersion) throws IOException {
+        public SynchronizedBucket fromJsonCompatibleSnapshot(Map<String, Object> snapshot) throws IOException {
             int formatNumber = readIntValue(snapshot, "version");
             Versions.check(formatNumber, v_7_0_0, v_7_0_0);
 
             Map<String, Object> stateSnapshot = (Map<String, Object>) snapshot.get("state");
-            BucketState state = BucketState.fromJsonCompatibleSnapshot(stateSnapshot, backwardCompatibilityVersion);
+            BucketState state = BucketState.fromJsonCompatibleSnapshot(stateSnapshot);
 
             return new SynchronizedBucket(BucketListener.NOPE, TimeMeter.SYSTEM_MILLISECONDS, new ReentrantLock(), state);
         }
 
         @Override
-        public Map<String, Object> toJsonCompatibleSnapshot(SynchronizedBucket bucket, Version backwardCompatibilityVersion) throws IOException {
+        public Map<String, Object> toJsonCompatibleSnapshot(SynchronizedBucket bucket, Version backwardCompatibilityVersion, Scope scope) throws IOException {
             if (bucket.timeMeter != TimeMeter.SYSTEM_MILLISECONDS) {
                 throw new NotSerializableException("Only TimeMeter.SYSTEM_MILLISECONDS can be serialized safely");
             }
             Map<String, Object> result = new HashMap<>();
             result.put("version", v_7_0_0.getNumber());
-            result.put("state", BucketState.toJsonCompatibleSnapshot(bucket.state, backwardCompatibilityVersion));
+            result.put("state", BucketState.toJsonCompatibleSnapshot(bucket.state, backwardCompatibilityVersion, scope));
             return result;
         }
 

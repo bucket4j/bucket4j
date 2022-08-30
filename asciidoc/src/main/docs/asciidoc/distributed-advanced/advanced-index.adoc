@@ -1,0 +1,7 @@
+== Distributed facilities advanced topics
+
+include::asynchronous.adoc[]
+
+include::implicit-configuration-replacement.adoc[]
+
+include::implement-custom-database.adoc[]

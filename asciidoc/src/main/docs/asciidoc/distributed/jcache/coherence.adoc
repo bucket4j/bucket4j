@@ -2,7 +2,7 @@
 === Oracle Coherence integration
 ==== Dependencies
 To use ``bucket4j-coherence`` extension you need to add the following dependency:
-[source, xml, subs=attributes+]
+[,xml,subs=attributes+]
 ----
 <dependency>
     <groupId>com.bucket4j</groupId>
@@ -35,7 +35,7 @@ To let Coherence know about POF serializers you should register three serializer
 ====
 
 .Example of POF serialization config:
-[source, xml]
+[,xml]
 ----
 <pof-config xmlns="http://xmlns.oracle.com/coherence/coherence-pof-config"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"

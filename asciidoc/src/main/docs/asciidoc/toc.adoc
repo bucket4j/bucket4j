@@ -1,5 +1,6 @@
 = Bucket4j {revnumber} Reference
 :front-cover-image: images/white-logo.png
+:source-language: java
 
 include::about.adoc[]
 
@@ -7,4 +8,4 @@ include::basic/basic-functionality-index.adoc[]
 
 include::distributed/distributed-index.adoc[]
 
-include::advanced/advanced-features-index.adoc[]
+include::distributed-advanced/advanced-index.adoc[]

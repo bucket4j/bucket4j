@@ -37,10 +37,7 @@
 package io.github.bucket4j.distributed.remote;
 
 import io.github.bucket4j.distributed.remote.commands.VerboseCommand;
-import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
-import io.github.bucket4j.distributed.serialization.SerializationAdapter;
-import io.github.bucket4j.distributed.serialization.SerializationHandle;
-import io.github.bucket4j.distributed.serialization.SerializationHandles;
+import io.github.bucket4j.distributed.serialization.*;
 import io.github.bucket4j.distributed.versioning.Version;
 
 import java.io.IOException;
@@ -66,27 +63,29 @@ public interface RemoteCommand<T> {
 
     long getConsumedTokens(T result);
 
-    static <O> void serialize(SerializationAdapter<O> adapter, O output, RemoteCommand<?> command, Version backwardCompatibilityVersion) throws IOException {
+    Version getRequiredVersion();
+
+    static <O> void serialize(SerializationAdapter<O> adapter, O output, RemoteCommand<?> command, Version backwardCompatibilityVersion, Scope scope) throws IOException {
         SerializationHandle<RemoteCommand<?>> serializer = command.getSerializationHandle();
         adapter.writeInt(output, serializer.getTypeId());
-        serializer.serialize(adapter, output, command, backwardCompatibilityVersion);
+        serializer.serialize(adapter, output, command, backwardCompatibilityVersion, scope);
     }
 
-    static <I> RemoteCommand<?> deserialize(DeserializationAdapter<I> adapter, I input, Version backwardCompatibilityVersion) throws IOException {
+    static <I> RemoteCommand<?> deserialize(DeserializationAdapter<I> adapter, I input) throws IOException {
         int typeId = adapter.readInt(input);
         SerializationHandle<?> serializer = SerializationHandles.CORE_HANDLES.getHandleByTypeId(typeId);
-        return (RemoteCommand<?>) serializer.deserialize(adapter, input, backwardCompatibilityVersion);
+        return (RemoteCommand<?>) serializer.deserialize(adapter, input);
     }
 
-    static RemoteCommand<?> fromJsonCompatibleSnapshot(Map<String, Object> snapshot, Version backwardCompatibilityVersion) throws IOException {
+    static RemoteCommand<?> fromJsonCompatibleSnapshot(Map<String, Object> snapshot) throws IOException {
         String typeName = (String) snapshot.get("type");
         SerializationHandle<?> serializer = SerializationHandles.CORE_HANDLES.getHandleByTypeName(typeName);
-        return (RemoteCommand<?>) serializer.fromJsonCompatibleSnapshot(snapshot, backwardCompatibilityVersion);
+        return (RemoteCommand<?>) serializer.fromJsonCompatibleSnapshot(snapshot);
     }
 
-    static Map<String, Object> toJsonCompatibleSnapshot(RemoteCommand<?> command, Version backwardCompatibilityVersion) throws IOException {
+    static Map<String, Object> toJsonCompatibleSnapshot(RemoteCommand<?> command, Version backwardCompatibilityVersion, Scope scope) throws IOException {
         SerializationHandle<RemoteCommand<?>> serializer = command.getSerializationHandle();
-        Map<String, Object> result = command.getSerializationHandle().toJsonCompatibleSnapshot(command, backwardCompatibilityVersion);
+        Map<String, Object> result = command.getSerializationHandle().toJsonCompatibleSnapshot(command, backwardCompatibilityVersion, scope);
         result.put("type", serializer.getTypeName());
         return result;
     }

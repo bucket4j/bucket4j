@@ -23,6 +23,7 @@ import io.github.bucket4j.distributed.proxy.AbstractProxyManager;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.remote.*;
 import io.github.bucket4j.distributed.serialization.DataOutputSerializationAdapter;
+import io.github.bucket4j.distributed.serialization.Scope;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
 import io.github.bucket4j.distributed.serialization.SerializationHandles;
 import io.github.bucket4j.distributed.versioning.Version;
@@ -63,7 +64,7 @@ public class ProxyManagerMock<K> extends AbstractProxyManager<K> {
             throw new RuntimeException();
         }
         RemoteCommand<T> command = request.getCommand();
-        command = emulateDataSerialization(command, request.getBackwardCompatibilityVersion());
+        command = emulateDataSerialization(command, request.getBackwardCompatibilityVersion(), Scope.REQUEST);
 
         MutableBucketEntry entry = new MutableBucketEntry() {
             @Override
@@ -72,18 +73,18 @@ public class ProxyManagerMock<K> extends AbstractProxyManager<K> {
             }
             @Override
             public void set(RemoteBucketState state) {
-                ProxyManagerMock.this.stateMap.put(key, emulateDataSerialization(state, request.getBackwardCompatibilityVersion()));
+                ProxyManagerMock.this.stateMap.put(key, emulateDataSerialization(state, request.getBackwardCompatibilityVersion(), Scope.PERSISTED_STATE));
             }
             @Override
             public RemoteBucketState get() {
                 RemoteBucketState state = stateMap.get(key);
                 Objects.requireNonNull(state);
-                return emulateDataSerialization(state, request.getBackwardCompatibilityVersion());
+                return emulateDataSerialization(state, request.getBackwardCompatibilityVersion(), Scope.PERSISTED_STATE);
             }
         };
 
         CommandResult<T> result = command.execute(entry, getClientSideTime());
-        return emulateDataSerialization(result, request.getBackwardCompatibilityVersion());
+        return emulateDataSerialization(result, request.getBackwardCompatibilityVersion(), Scope.RESPONSE);
     }
 
     @Override
@@ -112,7 +113,7 @@ public class ProxyManagerMock<K> extends AbstractProxyManager<K> {
         return CompletableFuture.completedFuture(null);
     }
 
-    protected <T> T emulateDataSerialization(T object, Version version) {
+    protected <T> T emulateDataSerialization(T object, Version version, Scope scope) {
         SerializationHandle serializationHandle = allHandles.get(object.getClass());
         if (serializationHandle == null) {
             throw new IllegalArgumentException("Serializer for class " + serializationHandle + " is not specified");
@@ -120,12 +121,12 @@ public class ProxyManagerMock<K> extends AbstractProxyManager<K> {
         try {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             DataOutputStream dos = new DataOutputStream(baos);
-            serializationHandle.serialize(DataOutputSerializationAdapter.INSTANCE, dos, object, version);
+            serializationHandle.serialize(DataOutputSerializationAdapter.INSTANCE, dos, object, version, scope);
             byte[] bytes = baos.toByteArray();
 
             ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
             DataInputStream dis = new DataInputStream(bais);
-            return (T) serializationHandle.deserialize(DataOutputSerializationAdapter.INSTANCE, dis, version);
+            return (T) serializationHandle.deserialize(DataOutputSerializationAdapter.INSTANCE, dis);
         } catch (Exception e) {
             throw new IllegalStateException(e);
         }

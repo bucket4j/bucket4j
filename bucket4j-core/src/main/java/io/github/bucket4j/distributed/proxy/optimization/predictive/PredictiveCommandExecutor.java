@@ -191,7 +191,7 @@ class PredictiveCommandExecutor implements CommandExecutor, AsyncCommandExecutor
         postponedToConsumeTokens = 0;
         speculativelyConsumedByPredictionTokens = 0;
         CommandResult<?> snapshotResult = multiResult.getResults().get(GET_SNAPSHOT_COMMAND_INDEX);
-        if (snapshotResult.isBucketNotFound()) {
+        if (snapshotResult.isError()) {
             state = null;
             sampling.clear();
             return;

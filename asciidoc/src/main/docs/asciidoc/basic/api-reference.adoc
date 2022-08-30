@@ -308,7 +308,7 @@ See <<verbose-api, Verbose API>> section for more details.
      */
     Bucket toListenable(BucketListener listener);
 ----
-See <<listener, Listening bucket events>> section for more details.
+See <<listening-for-bucket-events>> section for more details.
 
 [[blocking-bucket]]
 ==== io.github.bucket4j.BlockingBucket

@@ -21,6 +21,7 @@
 package io.github.bucket4j;
 
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
+import io.github.bucket4j.distributed.serialization.Scope;
 import io.github.bucket4j.distributed.serialization.SerializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
 import io.github.bucket4j.distributed.versioning.Version;
@@ -47,7 +48,7 @@ public class BucketStateIEEE754 implements BucketState, ComparableByContent<Buck
     public static SerializationHandle<BucketStateIEEE754> SERIALIZATION_HANDLE = new SerializationHandle<BucketStateIEEE754>() {
 
         @Override
-        public <S> BucketStateIEEE754 deserialize(DeserializationAdapter<S> adapter, S input, Version backwardCompatibilityVersion) throws IOException {
+        public <S> BucketStateIEEE754 deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             int formatNumber = adapter.readInt(input);
             Versions.check(formatNumber, v_7_0_0, v_7_0_0);
 
@@ -57,7 +58,7 @@ public class BucketStateIEEE754 implements BucketState, ComparableByContent<Buck
         }
 
         @Override
-        public <O> void serialize(SerializationAdapter<O> adapter, O output, BucketStateIEEE754 state, Version backwardCompatibilityVersion) throws IOException {
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, BucketStateIEEE754 state, Version backwardCompatibilityVersion, Scope scope) throws IOException {
             adapter.writeInt(output, v_7_0_0.getNumber());
 
             adapter.writeDoubleArray(output, state.tokens);
@@ -75,26 +76,26 @@ public class BucketStateIEEE754 implements BucketState, ComparableByContent<Buck
         }
 
         @Override
-        public BucketStateIEEE754 fromJsonCompatibleSnapshot(Map<String, Object> snapshot, Version backwardCompatibilityVersion) throws IOException {
+        public BucketStateIEEE754 fromJsonCompatibleSnapshot(Map<String, Object> snapshot) throws IOException {
             int formatNumber = readIntValue(snapshot, "version");
             Versions.check(formatNumber, v_7_0_0, v_7_0_0);
 
             double[] tokens = readDoubleArray(snapshot, "tokens");
             long[] lastRefillTime = readLongArray(snapshot, "lastRefillTime");
             Map<String, Object> configurationSnapshot = (Map<String, Object>) snapshot.get("configuration");
-            BucketConfiguration configuration = BucketConfiguration.SERIALIZATION_HANDLE.fromJsonCompatibleSnapshot(configurationSnapshot, backwardCompatibilityVersion);
+            BucketConfiguration configuration = BucketConfiguration.SERIALIZATION_HANDLE.fromJsonCompatibleSnapshot(configurationSnapshot);
             BucketStateIEEE754 state = new BucketStateIEEE754(tokens, lastRefillTime);
             state.setConfiguration(configuration);
             return state;
         }
 
         @Override
-        public Map<String, Object> toJsonCompatibleSnapshot(BucketStateIEEE754 state, Version backwardCompatibilityVersion) throws IOException {
+        public Map<String, Object> toJsonCompatibleSnapshot(BucketStateIEEE754 state, Version backwardCompatibilityVersion, Scope scope) throws IOException {
             Map<String, Object> result = new HashMap<>();
             result.put("version", v_7_0_0.getNumber());
             result.put("tokens", state.tokens);
             result.put("lastRefillTime", state.lastRefillTime);
-            result.put("configuration", BucketConfiguration.SERIALIZATION_HANDLE.toJsonCompatibleSnapshot(state.configuration, backwardCompatibilityVersion));
+            result.put("configuration", BucketConfiguration.SERIALIZATION_HANDLE.toJsonCompatibleSnapshot(state.configuration, backwardCompatibilityVersion, scope));
             return result;
         }
 

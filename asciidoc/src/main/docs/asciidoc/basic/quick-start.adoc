@@ -4,7 +4,7 @@ The Bucket4j is distributed through https://mvnrepository.com/artifact/com.bucke
 You need to add the dependency to your project as described below in order to be able to compile and run examples
 
 .Maven dependency
-[source, xml, subs=attributes+]
+[,xml,subs=attributes+]
 ----
 <dependency>
     <groupId>com.bucket4j</groupId>
@@ -45,7 +45,7 @@ try {
 }
 ----
 
-==== Using bucket as scheduler
+==== Using bucket as throttler
 Suppose you need to have a fresh exchange rate between dollars and euros.
 To get the rate you continuously poll the third-party provider,
 and by contract with the provider you should poll not often than 100 times per 1 minute, else provider will block your IP:

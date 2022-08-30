@@ -27,7 +27,7 @@ import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.MultiResult;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
-import io.github.bucket4j.distributed.remote.commands.BucketEntryWrapper;
+import io.github.bucket4j.distributed.remote.BucketEntryWrapper;
 import io.github.bucket4j.distributed.remote.commands.ConsumeIgnoringRateLimitsCommand;
 import io.github.bucket4j.distributed.remote.commands.CreateSnapshotCommand;
 import io.github.bucket4j.distributed.remote.commands.MultiCommand;
@@ -172,7 +172,7 @@ class DelayedCommandExecutor implements CommandExecutor, AsyncCommandExecutor {
         postponedToConsumeTokens = 0;
         lastSyncTimeNanos = timeMeter.currentTimeNanos();
         CommandResult<?> snapshotResult = multiResult.getResults().get(GET_SNAPSHOT_COMMAND_INDEX);
-        if (snapshotResult.isBucketNotFound()) {
+        if (snapshotResult.isError()) {
             state = null;
             return;
         }

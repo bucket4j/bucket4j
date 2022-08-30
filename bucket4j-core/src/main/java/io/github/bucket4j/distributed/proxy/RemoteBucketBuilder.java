@@ -21,6 +21,7 @@
 package io.github.bucket4j.distributed.proxy;
 
 import io.github.bucket4j.BucketConfiguration;
+import io.github.bucket4j.TokensInheritanceStrategy;
 import io.github.bucket4j.distributed.BucketProxy;
 import io.github.bucket4j.distributed.proxy.optimization.Optimization;
 
@@ -39,7 +40,7 @@ public interface RemoteBucketBuilder<K> {
     /**
      * Configures custom recovery strategy instead of {@link RecoveryStrategy#RECONSTRUCT} that is used by default.
      *
-     * @param recoveryStrategy specifies the reaction which should be applied in case of previously saved state of bucket has been lost.
+     * @param recoveryStrategy specifies the reaction which should be applied in case of previously saved state of bucket has been lost, explicitly removed or expired.
      *
      * @return {@code this}
      */
@@ -49,7 +50,8 @@ public interface RemoteBucketBuilder<K> {
      * Configures the optimization strategy that will be applied for buckets that are built by this builder.
      *
      * <p>
-     * It is worth mentioning that optimization will take effect only if you reuse the bucket, so you need to store a reference to the bucket anywhere in order to reuse it later. In other words, if any request optimization strategy has been applied to the bucket proxy then proxy can not be treated as a cheap object.
+     * It is worth mentioning that optimization will take effect only if you reuse the bucket, so you need to store a reference to the bucket anywhere in order to reuse it later.
+     * In other words, if any request optimization strategy has been applied to the bucket proxy then proxy can not be treated as a cheap object.
      *
      * <p>
  *   * The full list of built-in optimizations can be found there {@link io.github.bucket4j.distributed.proxy.optimization.Optimizations}
@@ -61,20 +63,22 @@ public interface RemoteBucketBuilder<K> {
     RemoteBucketBuilder<K> withOptimization(Optimization optimization);
 
     /**
-     * Builds the {@link BucketProxy}. Proxy is being created in lazy mode, its state is not persisted in external storage until first interaction,
-     * so if you want to save bucket state immediately then just call {@link BucketProxy#getAvailableTokens()}.
+     * Activates implicit configuration replacement.
+     *
+     * <p> By default distributed bucket operates with configuration that was provided at the time of its first creation.
+     * Providing the new configuration via {@link RemoteBucketBuilder} takes no effect if bucket is already persisted in the storage, because configuration is stored together with state of bucket.
+     * Without implicit configuration replacement, there is only one way to replace configuration of bucket - is explicit calling of {@link io.github.bucket4j.Bucket#replaceConfiguration(BucketConfiguration, TokensInheritanceStrategy)}.
      *
      * <p>
-     *     If you had not used {@link #withOptimization(Optimization)} during construction then created proxy can be treated as cheap object,
-     *     feel free just build, use and forget as many proxies under the same key as you need, do not cache the built instances.
-     * </p>
+     * When implicit configuration replacement is activated, bucket will check that version of configuration in the storage >= than provided {@code desiredConfigurationVersion},
+     * and automatically replace persisted configuration using provided {@code tokensInheritanceStrategy} in case of persisted configuration is obsolete.
      *
-     * @param key the key that used in external storage to distinguish one bucket from another.
-     * @param configuration limits configuration
+     * @param desiredConfigurationVersion specifies desired configuration version
+     * @param tokensInheritanceStrategy the strategy that will be used for token migration if {@code desiredConfigurationVersion of persisted bucket} is less that provided desiredConfigurationVersion
      *
-     * @return new instance of {@link BucketProxy} created in lazy mode.
+     * @return {@code this}
      */
-    BucketProxy build(K key, BucketConfiguration configuration);
+    RemoteBucketBuilder<K> withImplicitConfigurationReplacement(long desiredConfigurationVersion, TokensInheritanceStrategy tokensInheritanceStrategy);
 
     /**
      * Has the same semantic with {@link #build(Object, BucketConfiguration)},
@@ -89,5 +93,23 @@ public interface RemoteBucketBuilder<K> {
      * @return new instance of {@link BucketProxy} created in lazy mode.
      */
     BucketProxy build(K key, Supplier<BucketConfiguration> configurationSupplier);
+
+    /**
+     * Builds the {@link BucketProxy}. Proxy is being created in lazy mode, its state is not persisted in external storage until first interaction,
+     * so if you want to save bucket state immediately then just call {@link BucketProxy#getAvailableTokens()}.
+     *
+     * <p>
+     *     If you had not used {@link #withOptimization(Optimization)} during construction then created proxy can be treated as cheap object,
+     *     feel free just build, use and forget as many proxies under the same key as you need, do not cache the built instances.
+     * </p>
+     *
+     * @param key the key that used in external storage to distinguish one bucket from another.
+     * @param configuration limits configuration
+     *
+     *
+     *
+     * @return new instance of {@link BucketProxy} created in lazy mode.
+     */
+    BucketProxy build(K key, BucketConfiguration configuration);
 
 }

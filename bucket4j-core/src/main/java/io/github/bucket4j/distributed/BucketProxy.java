@@ -20,7 +20,9 @@
 package io.github.bucket4j.distributed;
 
 import io.github.bucket4j.Bucket;
+import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.BucketListener;
+import io.github.bucket4j.TokensInheritanceStrategy;
 import io.github.bucket4j.distributed.proxy.RemoteBucketBuilder;
 import io.github.bucket4j.distributed.proxy.optimization.Optimization;
 

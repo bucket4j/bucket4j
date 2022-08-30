@@ -20,6 +20,7 @@
 package io.github.bucket4j.distributed.remote;
 
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
+import io.github.bucket4j.distributed.serialization.Scope;
 import io.github.bucket4j.distributed.serialization.SerializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
 import io.github.bucket4j.distributed.versioning.Version;
@@ -32,6 +33,7 @@ import java.util.Map;
 import java.util.Objects;
 
 import static io.github.bucket4j.distributed.versioning.Versions.v_7_0_0;
+import static io.github.bucket4j.distributed.versioning.Versions.v_8_1_0;
 
 public class Request<T> implements ComparableByContent<Request<T>> {
 
@@ -41,8 +43,8 @@ public class Request<T> implements ComparableByContent<Request<T>> {
 
     public Request(RemoteCommand<T> command, Version backwardCompatibilityVersion, Long clientSideTime) {
         this.command = command;
-        this.backwardCompatibilityVersion = backwardCompatibilityVersion;
         this.clientSideTime = clientSideTime;
+        this.backwardCompatibilityVersion = backwardCompatibilityVersion;
     }
 
     public RemoteCommand<T> getCommand() {
@@ -57,17 +59,16 @@ public class Request<T> implements ComparableByContent<Request<T>> {
         return clientSideTime;
     }
 
-    public static SerializationHandle<Request> SERIALIZATION_HANDLE = new SerializationHandle<Request>() {
+    public static SerializationHandle<Request<?>> SERIALIZATION_HANDLE = new SerializationHandle<Request<?>>() {
         @Override
-        public <S> Request<?> deserialize(DeserializationAdapter<S> adapter, S input, Version backwardCompatibilityVersion) throws IOException {
+        public <S> Request<?> deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             int formatNumber = adapter.readInt(input);
             Versions.check(formatNumber, v_7_0_0, v_7_0_0);
 
             int backwardCompatibilityNumber = adapter.readInt(input);
-            backwardCompatibilityVersion = Versions.byNumber(backwardCompatibilityNumber);
+            Version requestBackwardCompatibilityVersion = Versions.byNumber(backwardCompatibilityNumber);
 
-            RemoteCommand<?> command = RemoteCommand.deserialize(adapter, input, backwardCompatibilityVersion);
-            backwardCompatibilityVersion = Versions.byNumber(backwardCompatibilityNumber);
+            RemoteCommand<?> command = RemoteCommand.deserialize(adapter, input);
 
             Long clientTime = null;
             boolean clientTimeProvided = adapter.readBoolean(input);
@@ -75,15 +76,18 @@ public class Request<T> implements ComparableByContent<Request<T>> {
                 clientTime = adapter.readLong(input);
             }
 
-            return new Request<>(command, backwardCompatibilityVersion, clientTime);
+            return new Request<>(command, requestBackwardCompatibilityVersion, clientTime);
         }
 
         @Override
-        public <O> void serialize(SerializationAdapter<O> adapter, O output, Request request, Version backwardCompatibilityVersion) throws IOException {
-            adapter.writeInt(output, v_7_0_0.getNumber());
-            adapter.writeInt(output, backwardCompatibilityVersion.getNumber());
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, Request<?> request, Version backwardCompatibilityVersion, Scope scope) throws IOException {
+            Version effectiveVersion = request.command.getRequiredVersion();
+            Versions.check(effectiveVersion.getNumber(), v_7_0_0, request.backwardCompatibilityVersion);
 
-            RemoteCommand.serialize(adapter, output, request.command, backwardCompatibilityVersion);
+            adapter.writeInt(output, v_7_0_0.getNumber());
+            adapter.writeInt(output, effectiveVersion.getNumber());
+
+            RemoteCommand.serialize(adapter, output, request.command, backwardCompatibilityVersion, scope);
 
             if (request.clientSideTime != null) {
                 adapter.writeBoolean(output, true);
@@ -99,35 +103,37 @@ public class Request<T> implements ComparableByContent<Request<T>> {
         }
 
         @Override
-        public Class<Request> getSerializedType() {
-            return Request.class;
+        public Class<Request<?>> getSerializedType() {
+            return (Class) Request.class;
         }
 
         @Override
-        public Request<?> fromJsonCompatibleSnapshot(Map<String, Object> snapshot, Version backwardCompatibilityVersion) throws IOException {
+        public Request<?> fromJsonCompatibleSnapshot(Map<String, Object> snapshot) throws IOException {
             int formatNumber = readIntValue(snapshot, "version");
             Versions.check(formatNumber, v_7_0_0, v_7_0_0);
 
             int backwardCompatibilityNumber = readIntValue(snapshot, "backwardCompatibilityNumber");
-            Versions.check(backwardCompatibilityNumber, v_7_0_0, v_7_0_0);
-            backwardCompatibilityVersion = Versions.byNumber(backwardCompatibilityNumber);
+            Version requestBackwardCompatibilityVersion = Versions.byNumber(backwardCompatibilityNumber);
 
-            RemoteCommand<?> command = RemoteCommand.fromJsonCompatibleSnapshot((Map<String, Object>) snapshot.get("command"), backwardCompatibilityVersion);
+            RemoteCommand<?> command = RemoteCommand.fromJsonCompatibleSnapshot((Map<String, Object>) snapshot.get("command"));
 
             Long clientTime = null;
             if (snapshot.containsKey("clientTime")) {
                 clientTime = readLongValue(snapshot, "clientTime");
             }
 
-            return new Request<>(command, backwardCompatibilityVersion, clientTime);
+            return new Request<>(command, requestBackwardCompatibilityVersion, clientTime);
         }
 
         @Override
-        public Map<String, Object> toJsonCompatibleSnapshot(Request request, Version backwardCompatibilityVersion) throws IOException {
+        public Map<String, Object> toJsonCompatibleSnapshot(Request<?> request, Version backwardCompatibilityVersion, Scope scope) throws IOException {
+            Version effectiveVersion = request.command.getRequiredVersion();
+            Versions.check(effectiveVersion.getNumber(), v_7_0_0, request.backwardCompatibilityVersion);
+
             Map<String, Object> result = new HashMap<>();
             result.put("version", v_7_0_0.getNumber());
-            result.put("backwardCompatibilityNumber", request.backwardCompatibilityVersion.getNumber());
-            result.put("command", RemoteCommand.toJsonCompatibleSnapshot(request.command, backwardCompatibilityVersion));
+            result.put("backwardCompatibilityNumber", effectiveVersion.getNumber());
+            result.put("command", RemoteCommand.toJsonCompatibleSnapshot(request.command, backwardCompatibilityVersion, scope));
             if (request.clientSideTime != null) {
                 result.put("clientTime", request.clientSideTime);
             }
@@ -143,8 +149,8 @@ public class Request<T> implements ComparableByContent<Request<T>> {
 
     @Override
     public boolean equalsByContent(Request<T> other) {
-        return backwardCompatibilityVersion.equals(other.backwardCompatibilityVersion)
-            && ComparableByContent.equals(command, other.command)
+        return // backwardCompatibilityVersion.equals(other.backwardCompatibilityVersion) &&
+                ComparableByContent.equals(command, other.command)
             && Objects.equals(clientSideTime, other.clientSideTime);
     }
 

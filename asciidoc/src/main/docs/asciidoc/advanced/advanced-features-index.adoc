@@ -1,9 +1,0 @@
-== Advanced features
-
-include::listener.adoc[]
-
-include::verbose-api.adoc[]
-
-include::configuration-replacement.adoc[]
-
-

@@ -25,7 +25,7 @@ IMPORTANT: For all libraries mentioned above concurrent access to Redis is solve
 
 ==== Dependencies
 To use ``bucket4j-redis`` extension you need to add following dependency:
-[source, xml, subs=attributes+]
+[,xml,subs=attributes+]
 ----
 <dependency>
     <groupId>com.bucket4j</groupId>

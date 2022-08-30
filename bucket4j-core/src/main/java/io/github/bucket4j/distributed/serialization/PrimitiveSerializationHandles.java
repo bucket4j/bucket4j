@@ -31,12 +31,12 @@ public class PrimitiveSerializationHandles {
     public static SerializationHandle<Nothing> NULL_HANDLE = new SerializationHandle<Nothing>() {
 
         @Override
-        public <I> Nothing deserialize(DeserializationAdapter<I> adapter, I input, Version backwardCompatibilityVersion) throws IOException {
+        public <I> Nothing deserialize(DeserializationAdapter<I> adapter, I input) throws IOException {
             return null;
         }
 
         @Override
-        public <O> void serialize(SerializationAdapter<O> adapter, O output, Nothing serializableObject, Version backwardCompatibilityVersion) throws IOException {
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, Nothing serializableObject, Version backwardCompatibilityVersion, Scope scope) throws IOException {
 
         }
 
@@ -51,12 +51,12 @@ public class PrimitiveSerializationHandles {
         }
 
         @Override
-        public Nothing fromJsonCompatibleSnapshot(Map<String, Object> snapshot, Version backwardCompatibilityVersion) {
+        public Nothing fromJsonCompatibleSnapshot(Map<String, Object> snapshot) {
             return Nothing.INSTANCE;
         }
 
         @Override
-        public Map<String, Object> toJsonCompatibleSnapshot(Nothing serializableObject, Version backwardCompatibilityVersion) {
+        public Map<String, Object> toJsonCompatibleSnapshot(Nothing serializableObject, Version backwardCompatibilityVersion, Scope scope) {
             return new HashMap<>();
         }
 
@@ -68,12 +68,12 @@ public class PrimitiveSerializationHandles {
 
     public static SerializationHandle<Long> LONG_HANDLE = new SerializationHandle<Long>() {
         @Override
-        public <I> Long deserialize(DeserializationAdapter<I> adapter, I input, Version backwardCompatibilityVersion) throws IOException {
+        public <I> Long deserialize(DeserializationAdapter<I> adapter, I input) throws IOException {
             return adapter.readLong(input);
         }
 
         @Override
-        public <O> void serialize(SerializationAdapter<O> adapter, O output, Long value, Version backwardCompatibilityVersion) throws IOException {
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, Long value, Version backwardCompatibilityVersion, Scope scope) throws IOException {
             adapter.writeLong(output, value);
         }
 
@@ -88,12 +88,12 @@ public class PrimitiveSerializationHandles {
         }
 
         @Override
-        public Long fromJsonCompatibleSnapshot(Map<String, Object> snapshot, Version backwardCompatibilityVersion) {
+        public Long fromJsonCompatibleSnapshot(Map<String, Object> snapshot) {
             return readLongValue(snapshot, "value");
         }
 
         @Override
-        public Map<String, Object> toJsonCompatibleSnapshot(Long serializableObject, Version backwardCompatibilityVersion) {
+        public Map<String, Object> toJsonCompatibleSnapshot(Long serializableObject, Version backwardCompatibilityVersion, Scope scope) {
             Map<String, Object> result = new HashMap<>();
             result.put("value", serializableObject);
             return result;
@@ -107,12 +107,12 @@ public class PrimitiveSerializationHandles {
 
     public static SerializationHandle<Boolean> BOOLEAN_HANDLE = new SerializationHandle<Boolean>() {
         @Override
-        public <I> Boolean deserialize(DeserializationAdapter<I> adapter, I input, Version backwardCompatibilityVersion) throws IOException {
+        public <I> Boolean deserialize(DeserializationAdapter<I> adapter, I input) throws IOException {
             return adapter.readBoolean(input);
         }
 
         @Override
-        public <O> void serialize(SerializationAdapter<O> adapter, O output, Boolean value, Version backwardCompatibilityVersion) throws IOException {
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, Boolean value, Version backwardCompatibilityVersion, Scope scope) throws IOException {
             adapter.writeBoolean(output, value);
         }
 
@@ -127,12 +127,12 @@ public class PrimitiveSerializationHandles {
         }
 
         @Override
-        public Boolean fromJsonCompatibleSnapshot(Map<String, Object> snapshot, Version backwardCompatibilityVersion) {
+        public Boolean fromJsonCompatibleSnapshot(Map<String, Object> snapshot) {
             return (Boolean) snapshot.get("value");
         }
 
         @Override
-        public Map<String, Object> toJsonCompatibleSnapshot(Boolean serializableObject, Version backwardCompatibilityVersion) {
+        public Map<String, Object> toJsonCompatibleSnapshot(Boolean serializableObject, Version backwardCompatibilityVersion, Scope scope) {
             Map<String, Object> result = new HashMap<>();
             result.put("value", serializableObject);
             return result;

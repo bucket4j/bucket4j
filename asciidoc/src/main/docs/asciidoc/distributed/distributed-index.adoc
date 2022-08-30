@@ -14,10 +14,6 @@ include::jcache/coherence.adoc[]
 
 include::redis/redis.adoc[]
 
-include::jdbc/jdbc-integraions.adoc[]
-
-include::asynchronous.adoc[]
-
-include::implement-custom-database/concept.adoc[]
+include::jdbc/jdbc-integrations.adoc[]
 
 include::distributed-checklist.adoc[]

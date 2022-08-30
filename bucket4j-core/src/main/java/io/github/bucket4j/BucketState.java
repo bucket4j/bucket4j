@@ -20,6 +20,7 @@
 package io.github.bucket4j;
 
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
+import io.github.bucket4j.distributed.serialization.Scope;
 import io.github.bucket4j.distributed.serialization.SerializationAdapter;
 import io.github.bucket4j.distributed.versioning.Version;
 
@@ -68,52 +69,52 @@ public interface BucketState {
         }
     }
 
-    static <S> BucketState deserialize(DeserializationAdapter<S> adapter, S input, Version backwardCompatibilityVersion) throws IOException {
+    static <S> BucketState deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
         int typeId = adapter.readInt(input);
         if (typeId == BucketState64BitsInteger.SERIALIZATION_HANDLE.getTypeId()) {
-            return BucketState64BitsInteger.SERIALIZATION_HANDLE.deserialize(adapter, input, backwardCompatibilityVersion);
+            return BucketState64BitsInteger.SERIALIZATION_HANDLE.deserialize(adapter, input);
         } else if (typeId == BucketStateIEEE754.SERIALIZATION_HANDLE.getTypeId()) {
-            return BucketStateIEEE754.SERIALIZATION_HANDLE.deserialize(adapter, input, backwardCompatibilityVersion);
+            return BucketStateIEEE754.SERIALIZATION_HANDLE.deserialize(adapter, input);
         } else {
             throw new IOException("Unknown typeId=" + typeId);
         }
     }
 
-    static <O> void serialize(SerializationAdapter<O> adapter, O output, BucketState state, Version backwardCompatibilityVersion) throws IOException {
+    static <O> void serialize(SerializationAdapter<O> adapter, O output, BucketState state, Version backwardCompatibilityVersion, Scope scope) throws IOException {
         switch (state.getMathType()) {
             case INTEGER_64_BITS:
                 adapter.writeInt(output, BucketState64BitsInteger.SERIALIZATION_HANDLE.getTypeId());
-                BucketState64BitsInteger.SERIALIZATION_HANDLE.serialize(adapter, output, (BucketState64BitsInteger) state, backwardCompatibilityVersion);
+                BucketState64BitsInteger.SERIALIZATION_HANDLE.serialize(adapter, output, (BucketState64BitsInteger) state, backwardCompatibilityVersion, scope);
                 break;
             case IEEE_754:
                 adapter.writeInt(output, BucketStateIEEE754.SERIALIZATION_HANDLE.getTypeId());
-                BucketStateIEEE754.SERIALIZATION_HANDLE.serialize(adapter, output, (BucketStateIEEE754) state, backwardCompatibilityVersion);
+                BucketStateIEEE754.SERIALIZATION_HANDLE.serialize(adapter, output, (BucketStateIEEE754) state, backwardCompatibilityVersion, scope);
                 break;
             default:
                 throw new IOException("Unknown mathType=" + state.getMathType());
         }
     }
 
-    static BucketState fromJsonCompatibleSnapshot(Map<String, Object> snapshot, Version backwardCompatibilityVersion) throws IOException {
+    static BucketState fromJsonCompatibleSnapshot(Map<String, Object> snapshot) throws IOException {
         String type = (String) snapshot.get("type");
         if (BucketState64BitsInteger.SERIALIZATION_HANDLE.getTypeName().equals(type)) {
-            return BucketState64BitsInteger.SERIALIZATION_HANDLE.fromJsonCompatibleSnapshot(snapshot, backwardCompatibilityVersion);
+            return BucketState64BitsInteger.SERIALIZATION_HANDLE.fromJsonCompatibleSnapshot(snapshot);
         } else if (BucketStateIEEE754.SERIALIZATION_HANDLE.getTypeName().equals(type)) {
-            return BucketStateIEEE754.SERIALIZATION_HANDLE.fromJsonCompatibleSnapshot(snapshot, backwardCompatibilityVersion);
+            return BucketStateIEEE754.SERIALIZATION_HANDLE.fromJsonCompatibleSnapshot(snapshot);
         } else {
             throw new IOException("Unknown typeName=" + type);
         }
     }
 
-    static Object toJsonCompatibleSnapshot(BucketState state, Version backwardCompatibilityVersion) throws IOException {
+    static Object toJsonCompatibleSnapshot(BucketState state, Version backwardCompatibilityVersion, Scope scope) throws IOException {
         switch (state.getMathType()) {
             case INTEGER_64_BITS: {
-                Map<String, Object> result = BucketState64BitsInteger.SERIALIZATION_HANDLE.toJsonCompatibleSnapshot((BucketState64BitsInteger) state, backwardCompatibilityVersion);
+                Map<String, Object> result = BucketState64BitsInteger.SERIALIZATION_HANDLE.toJsonCompatibleSnapshot((BucketState64BitsInteger) state, backwardCompatibilityVersion, scope);
                 result.put("type", BucketState64BitsInteger.SERIALIZATION_HANDLE.getTypeName());
                 return result;
             }
             case IEEE_754: {
-                Map<String, Object> result = BucketStateIEEE754.SERIALIZATION_HANDLE.toJsonCompatibleSnapshot((BucketStateIEEE754) state, backwardCompatibilityVersion);
+                Map<String, Object> result = BucketStateIEEE754.SERIALIZATION_HANDLE.toJsonCompatibleSnapshot((BucketStateIEEE754) state, backwardCompatibilityVersion, scope);
                 result.put("type", BucketStateIEEE754.SERIALIZATION_HANDLE.getTypeName());
                 return result;
             }

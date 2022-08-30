@@ -2,6 +2,4 @@
 Release `{revnumber}`
 
 .The features in release scope are following:
-* https://github.com/bucket4j/bucket4j/pull/273[#273 Add support for Redis/Lettuce]
-* https://github.com/bucket4j/bucket4j/pull/274[#273 Add support for Redis/spring-data-redis]
-* https://github.com/bucket4j/bucket4j/pull/275[#273 Add support for Redis/Jedis]
+* https://github.com/bucket4j/bucket4j/issues/261[#261 Implicit configuration replacement]

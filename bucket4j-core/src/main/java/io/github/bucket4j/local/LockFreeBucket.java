@@ -22,6 +22,7 @@ package io.github.bucket4j.local;
 
 import io.github.bucket4j.*;
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
+import io.github.bucket4j.distributed.serialization.Scope;
 import io.github.bucket4j.distributed.serialization.SerializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
 import io.github.bucket4j.distributed.versioning.Version;
@@ -502,12 +503,12 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket, Compa
 
     public static final SerializationHandle<LockFreeBucket> SERIALIZATION_HANDLE = new SerializationHandle<LockFreeBucket>() {
         @Override
-        public <S> LockFreeBucket deserialize(DeserializationAdapter<S> adapter, S input, Version backwardCompatibilityVersion) throws IOException {
+        public <S> LockFreeBucket deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             int formatNumber = adapter.readInt(input);
             Versions.check(formatNumber, v_7_0_0, v_7_0_0);
 
-            BucketConfiguration bucketConfiguration = BucketConfiguration.SERIALIZATION_HANDLE.deserialize(adapter, input, backwardCompatibilityVersion);
-            BucketState bucketState = BucketState.deserialize(adapter, input, backwardCompatibilityVersion);
+            BucketConfiguration bucketConfiguration = BucketConfiguration.SERIALIZATION_HANDLE.deserialize(adapter, input);
+            BucketState bucketState = BucketState.deserialize(adapter, input);
             bucketState.setConfiguration(bucketConfiguration);
 
             AtomicReference<BucketState> stateRef = new AtomicReference<>(bucketState);
@@ -515,14 +516,14 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket, Compa
         }
 
         @Override
-        public <O> void serialize(SerializationAdapter<O> adapter, O output, LockFreeBucket bucket, Version backwardCompatibilityVersion) throws IOException {
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, LockFreeBucket bucket, Version backwardCompatibilityVersion, Scope scope) throws IOException {
             if (bucket.timeMeter != TimeMeter.SYSTEM_MILLISECONDS) {
                 throw new NotSerializableException("Only TimeMeter.SYSTEM_MILLISECONDS can be serialized safely");
             }
             adapter.writeInt(output, v_7_0_0.getNumber());
             BucketState state = bucket.stateRef.get();
-            BucketConfiguration.SERIALIZATION_HANDLE.serialize(adapter, output, state.getConfiguration(), backwardCompatibilityVersion);
-            BucketState.serialize(adapter, output, state, backwardCompatibilityVersion);
+            BucketConfiguration.SERIALIZATION_HANDLE.serialize(adapter, output, state.getConfiguration(), backwardCompatibilityVersion, scope);
+            BucketState.serialize(adapter, output, state, backwardCompatibilityVersion, scope);
         }
 
         @Override
@@ -536,24 +537,24 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket, Compa
         }
 
         @Override
-        public LockFreeBucket fromJsonCompatibleSnapshot(Map<String, Object> snapshot, Version backwardCompatibilityVersion) throws IOException {
+        public LockFreeBucket fromJsonCompatibleSnapshot(Map<String, Object> snapshot) throws IOException {
             int formatNumber = readIntValue(snapshot, "version");
             Versions.check(formatNumber, v_7_0_0, v_7_0_0);
 
             Map<String, Object> stateSnapshot = (Map<String, Object>) snapshot.get("state");
-            BucketState state = BucketState.fromJsonCompatibleSnapshot(stateSnapshot, backwardCompatibilityVersion);
+            BucketState state = BucketState.fromJsonCompatibleSnapshot(stateSnapshot);
 
             return new LockFreeBucket(new AtomicReference<>(state), TimeMeter.SYSTEM_MILLISECONDS, BucketListener.NOPE);
         }
 
         @Override
-        public Map<String, Object> toJsonCompatibleSnapshot(LockFreeBucket bucket, Version backwardCompatibilityVersion) throws IOException {
+        public Map<String, Object> toJsonCompatibleSnapshot(LockFreeBucket bucket, Version backwardCompatibilityVersion, Scope scope) throws IOException {
             if (bucket.timeMeter != TimeMeter.SYSTEM_MILLISECONDS) {
                 throw new NotSerializableException("Only TimeMeter.SYSTEM_MILLISECONDS can be serialized safely");
             }
             Map<String, Object> result = new HashMap<>();
             result.put("version", v_7_0_0.getNumber());
-            result.put("state", BucketState.toJsonCompatibleSnapshot(bucket.stateRef.get(), backwardCompatibilityVersion));
+            result.put("state", BucketState.toJsonCompatibleSnapshot(bucket.stateRef.get(), backwardCompatibilityVersion, scope));
             return result;
         }
 

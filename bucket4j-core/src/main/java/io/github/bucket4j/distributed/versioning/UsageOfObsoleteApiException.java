@@ -41,7 +41,7 @@ public class UsageOfObsoleteApiException extends BackwardCompatibilityException 
     }
 
     private static String formatMessage(int formatNumber, int minFormatNumber) {
-        String fmt = "Command cannot be executed, because it encoded in {} format number, when minimum supported by backend is {}";
+        String fmt = "Command cannot be executed, because it encoded in {0} format number, when minimum supported by backend is {1}";
         return MessageFormat.format(fmt, formatNumber, minFormatNumber);
     }
 

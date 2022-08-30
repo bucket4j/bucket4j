@@ -22,10 +22,7 @@ package io.github.bucket4j.distributed.remote;
 
 import io.github.bucket4j.Nothing;
 
-import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
-import io.github.bucket4j.distributed.serialization.SerializationHandle;
-import io.github.bucket4j.distributed.serialization.SerializationAdapter;
-import io.github.bucket4j.distributed.serialization.SerializationHandles;
+import io.github.bucket4j.distributed.serialization.*;
 import io.github.bucket4j.distributed.versioning.Version;
 import io.github.bucket4j.distributed.versioning.Versions;
 import io.github.bucket4j.util.ComparableByContent;
@@ -46,6 +43,7 @@ public class CommandResult<T> implements ComparableByContent<CommandResult> {
     public static final CommandResult<Boolean> FALSE = CommandResult.success(false, BOOLEAN_HANDLE);
 
     private static final CommandResult<?> NOT_FOUND = new CommandResult<>(new BucketNotFoundError(), BucketNotFoundError.SERIALIZATION_HANDLE.getTypeId());
+    private static final CommandResult<?> CONFIGURATION_NEED_TO_BE_REPLACED = new CommandResult<>(new ConfigurationNeedToBeReplacedError(), ConfigurationNeedToBeReplacedError.SERIALIZATION_HANDLE.getTypeId());
     private static final CommandResult<?> NULL = new CommandResult<>(null, NULL_HANDLE.getTypeId());
 
     private T data;
@@ -53,24 +51,24 @@ public class CommandResult<T> implements ComparableByContent<CommandResult> {
 
     public static SerializationHandle<CommandResult<?>> SERIALIZATION_HANDLE = new SerializationHandle<CommandResult<?>>() {
         @Override
-        public <S> CommandResult<?> deserialize(DeserializationAdapter<S> adapter, S input, Version backwardCompatibilityVersion) throws IOException {
+        public <S> CommandResult<?> deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             int formatNumber = adapter.readInt(input);
             Versions.check(formatNumber, v_7_0_0, v_7_0_0);
 
             int typeId = adapter.readInt(input);
             SerializationHandle handle = SerializationHandles.CORE_HANDLES.getHandleByTypeId(typeId);
-            Object resultData = handle.deserialize(adapter, input, backwardCompatibilityVersion);
+            Object resultData = handle.deserialize(adapter, input);
 
             return CommandResult.success(resultData, typeId);
         }
 
         @Override
-        public <O> void serialize(SerializationAdapter<O> adapter, O output, CommandResult<?> result, Version backwardCompatibilityVersion) throws IOException {
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, CommandResult<?> result, Version backwardCompatibilityVersion, Scope scope) throws IOException {
             adapter.writeInt(output, v_7_0_0.getNumber());
 
             adapter.writeInt(output, result.resultTypeId);
             SerializationHandle handle = SerializationHandles.CORE_HANDLES.getHandleByTypeId(result.resultTypeId);
-            handle.serialize(adapter, output, result.data, backwardCompatibilityVersion);
+            handle.serialize(adapter, output, result.data, backwardCompatibilityVersion, scope);
         }
 
         @Override
@@ -84,24 +82,24 @@ public class CommandResult<T> implements ComparableByContent<CommandResult> {
         }
 
         @Override
-        public CommandResult<?> fromJsonCompatibleSnapshot(Map<String, Object> snapshot, Version backwardCompatibilityVersion) throws IOException {
+        public CommandResult<?> fromJsonCompatibleSnapshot(Map<String, Object> snapshot) throws IOException {
             int formatNumber = readIntValue(snapshot, "version");
             Versions.check(formatNumber, v_7_0_0, v_7_0_0);
 
             Map<String, Object> dataSnapshot = (Map<String, Object>) snapshot.get("data");
             String typeName = (String) dataSnapshot.get("type");
             SerializationHandle handle = SerializationHandles.CORE_HANDLES.getHandleByTypeName(typeName);
-            Object resultData = handle.fromJsonCompatibleSnapshot(dataSnapshot, backwardCompatibilityVersion);
+            Object resultData = handle.fromJsonCompatibleSnapshot(dataSnapshot);
 
             return CommandResult.success(resultData, handle.getTypeId());
         }
 
         @Override
-        public Map<String, Object> toJsonCompatibleSnapshot(CommandResult<?> result, Version backwardCompatibilityVersion) throws IOException {
+        public Map<String, Object> toJsonCompatibleSnapshot(CommandResult<?> result, Version backwardCompatibilityVersion, Scope scope) throws IOException {
             Map<String, Object> snapshot = new HashMap<>();
             snapshot.put("version", v_7_0_0.getNumber());
             SerializationHandle<Object> handle = SerializationHandles.CORE_HANDLES.getHandleByTypeId(result.resultTypeId);
-            Map<String, Object> valueSnapshot = handle.toJsonCompatibleSnapshot(result.data, backwardCompatibilityVersion);
+            Map<String, Object> valueSnapshot = handle.toJsonCompatibleSnapshot(result.data, backwardCompatibilityVersion, scope);
             valueSnapshot.put("type", handle.getTypeName());
             snapshot.put("data", valueSnapshot);
             return snapshot;
@@ -129,6 +127,10 @@ public class CommandResult<T> implements ComparableByContent<CommandResult> {
 
     public static <R> CommandResult<R> bucketNotFound() {
         return (CommandResult<R>) NOT_FOUND;
+    }
+
+    public static <R> CommandResult<R> configurationNeedToBeReplaced() {
+        return (CommandResult<R>) CONFIGURATION_NEED_TO_BE_REPLACED;
     }
 
     public static <R> CommandResult<R> empty() {
@@ -165,6 +167,14 @@ public class CommandResult<T> implements ComparableByContent<CommandResult> {
 
     public boolean isBucketNotFound() {
         return data instanceof BucketNotFoundError;
+    }
+
+    public boolean isConfigurationNeedToBeReplaced() {
+        return data instanceof ConfigurationNeedToBeReplacedError;
+    }
+
+    public boolean isError() {
+        return data instanceof CommandError;
     }
 
     public int getResultTypeId() {

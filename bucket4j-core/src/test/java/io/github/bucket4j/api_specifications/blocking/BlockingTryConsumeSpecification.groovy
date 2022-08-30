@@ -71,7 +71,7 @@ class BlockingTryConsumeSpecification extends Specification {
 
     @Timeout(value = 2, unit = TimeUnit.SECONDS)
     @Unroll
-    def "#n Should sleep #requiredSleep and return #requiredResult when trying to synchronous consume #toConsume tokens with limit #sleepLimit from Bucket #builder"(
+    def "#n Should sleep #requiredSleep and return #requiredResult when trying to synchronous consume #toConsume tokens with limit #sleepLimit"(
             int n, long requiredSleep, boolean requiredResult, long toConsume, long sleepLimit, BucketConfiguration configuration) {
         expect:
         for (BucketType type : BucketType.values()) {

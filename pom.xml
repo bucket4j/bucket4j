@@ -5,13 +5,13 @@
 
     <groupId>com.bucket4j</groupId>
     <artifactId>bucket4j_jdk8</artifactId>
-    <version>8.0.1</version>
+    <version>8.1.0</version>
     <packaging>pom</packaging>
 
     <parent>
         <groupId>com.bucket4j</groupId>
         <artifactId>bucket4j_jdk8-parent</artifactId>
-        <version>8.0.1</version>
+        <version>8.1.0</version>
         <relativePath>./bucket4j-parent</relativePath>
     </parent>
 
@@ -34,6 +34,7 @@
         <module>bucket4j-postgresql</module>
         <module>bucket4j-mysql</module>
         <module>bucket4j-caffeine</module>
+        <module>backward-compatibility-tests</module>
         <module>asciidoc</module>
     </modules>
 

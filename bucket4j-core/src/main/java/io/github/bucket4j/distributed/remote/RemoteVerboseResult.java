@@ -22,10 +22,7 @@ package io.github.bucket4j.distributed.remote;
 import io.github.bucket4j.VerboseBucket;
 import io.github.bucket4j.VerboseResult;
 import io.github.bucket4j.distributed.AsyncVerboseBucket;
-import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
-import io.github.bucket4j.distributed.serialization.SerializationAdapter;
-import io.github.bucket4j.distributed.serialization.SerializationHandle;
-import io.github.bucket4j.distributed.serialization.SerializationHandles;
+import io.github.bucket4j.distributed.serialization.*;
 import io.github.bucket4j.distributed.versioning.Version;
 import io.github.bucket4j.distributed.versioning.Versions;
 import io.github.bucket4j.util.ComparableByContent;
@@ -86,29 +83,29 @@ public class RemoteVerboseResult<T> implements ComparableByContent<RemoteVerbose
     public static final SerializationHandle<RemoteVerboseResult<?>> SERIALIZATION_HANDLE = new SerializationHandle<RemoteVerboseResult<?>>() {
 
         @Override
-        public <I> RemoteVerboseResult<?> deserialize(DeserializationAdapter<I> adapter, I input, Version backwardCompatibilityVersion) throws IOException {
+        public <I> RemoteVerboseResult<?> deserialize(DeserializationAdapter<I> adapter, I input) throws IOException {
             int formatNumber = adapter.readInt(input);
             Versions.check(formatNumber, v_7_0_0, v_7_0_0);
 
             long operationTimeNanos = adapter.readLong(input);
 
             int typeId = adapter.readInt(input);
-            SerializationHandle handle = SerializationHandles.CORE_HANDLES.getHandleByTypeId(typeId);
-            Object result = handle.deserialize(adapter, input, backwardCompatibilityVersion);
-            RemoteBucketState state = RemoteBucketState.SERIALIZATION_HANDLE.deserialize(adapter, input, backwardCompatibilityVersion);
-            return new RemoteVerboseResult(operationTimeNanos, typeId, result, state);
+            SerializationHandle<?> handle = SerializationHandles.CORE_HANDLES.getHandleByTypeId(typeId);
+            Object result = handle.deserialize(adapter, input);
+            RemoteBucketState state = RemoteBucketState.SERIALIZATION_HANDLE.deserialize(adapter, input);
+            return new RemoteVerboseResult<>(operationTimeNanos, typeId, result, state);
         }
 
         @Override
-        public <O> void serialize(SerializationAdapter<O> adapter, O output, RemoteVerboseResult<?> result, Version backwardCompatibilityVersion) throws IOException {
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, RemoteVerboseResult<?> result, Version backwardCompatibilityVersion, Scope scope) throws IOException {
             adapter.writeInt(output, v_7_0_0.getNumber());
 
             adapter.writeLong(output, result.operationTimeNanos);
 
             adapter.writeInt(output, result.resultTypeId);
             SerializationHandle handle = SerializationHandles.CORE_HANDLES.getHandleByTypeId(result.resultTypeId);
-            handle.serialize(adapter, output, result.value, backwardCompatibilityVersion);
-            RemoteBucketState.SERIALIZATION_HANDLE.serialize(adapter, output, result.state, backwardCompatibilityVersion);
+            handle.serialize(adapter, output, result.value, backwardCompatibilityVersion, scope);
+            RemoteBucketState.SERIALIZATION_HANDLE.serialize(adapter, output, result.state, backwardCompatibilityVersion, scope);
         }
 
         @Override
@@ -122,7 +119,7 @@ public class RemoteVerboseResult<T> implements ComparableByContent<RemoteVerbose
         }
 
         @Override
-        public RemoteVerboseResult<?> fromJsonCompatibleSnapshot(Map<String, Object> snapshot, Version backwardCompatibilityVersion) throws IOException {
+        public RemoteVerboseResult<?> fromJsonCompatibleSnapshot(Map<String, Object> snapshot) throws IOException {
             int formatNumber = readIntValue(snapshot, "version");
             Versions.check(formatNumber, v_7_0_0, v_7_0_0);
 
@@ -131,25 +128,25 @@ public class RemoteVerboseResult<T> implements ComparableByContent<RemoteVerbose
             Map<String, Object> valueSnapshot = (Map<String, Object>) snapshot.get("result");
             String valueTypeName = (String) valueSnapshot.get("type");
             SerializationHandle valueHandle = SerializationHandles.CORE_HANDLES.getHandleByTypeName(valueTypeName);
-            Object result = valueHandle.fromJsonCompatibleSnapshot(valueSnapshot, backwardCompatibilityVersion);
+            Object result = valueHandle.fromJsonCompatibleSnapshot(valueSnapshot);
 
             Map<String, Object> stateSnapshot = (Map<String, Object>) snapshot.get("remoteState");
-            RemoteBucketState state = RemoteBucketState.SERIALIZATION_HANDLE.fromJsonCompatibleSnapshot(stateSnapshot, backwardCompatibilityVersion);
+            RemoteBucketState state = RemoteBucketState.SERIALIZATION_HANDLE.fromJsonCompatibleSnapshot(stateSnapshot);
             return new RemoteVerboseResult(operationTimeNanos, valueHandle.getTypeId(), result, state);
         }
 
         @Override
-        public Map<String, Object> toJsonCompatibleSnapshot(RemoteVerboseResult<?> verboseResult, Version backwardCompatibilityVersion) throws IOException {
+        public Map<String, Object> toJsonCompatibleSnapshot(RemoteVerboseResult<?> verboseResult, Version backwardCompatibilityVersion, Scope scope) throws IOException {
             Map<String, Object> result = new HashMap<>();
             result.put("version", v_7_0_0.getNumber());
             result.put("operationTimeNanos", verboseResult.operationTimeNanos);
 
             SerializationHandle<Object> valueHandle = SerializationHandles.CORE_HANDLES.getHandleByTypeId(verboseResult.resultTypeId);
-            Map<String, Object> valueSnapshot = valueHandle.toJsonCompatibleSnapshot(verboseResult.value, backwardCompatibilityVersion);
+            Map<String, Object> valueSnapshot = valueHandle.toJsonCompatibleSnapshot(verboseResult.value, backwardCompatibilityVersion, scope);
             valueSnapshot.put("type", valueHandle.getTypeName());
             result.put("result", valueSnapshot);
 
-            Map<String, Object> stateSnapshot = RemoteBucketState.SERIALIZATION_HANDLE.toJsonCompatibleSnapshot(verboseResult.state, backwardCompatibilityVersion);
+            Map<String, Object> stateSnapshot = RemoteBucketState.SERIALIZATION_HANDLE.toJsonCompatibleSnapshot(verboseResult.state, backwardCompatibilityVersion, scope);
             result.put("remoteState", stateSnapshot);
             return result;
         }

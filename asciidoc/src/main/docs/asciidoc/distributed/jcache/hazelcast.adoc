@@ -35,9 +35,9 @@ private static final HazelcastProxyManager<K> proxyManager = new HazelcastProxyM
 ...
 BucketConfiguration configuration = BucketConfiguration.builder()
     .addLimit(Bandwidth.simple(1_000, Duration.ofMinutes(1)))
-    .build(key, configuration);
+    .build();
 
-Bucket bucket = proxyManager.builder().build(configuration);
+Bucket bucket = proxyManager.builder().build(key, configuration);
 ----
 
 ==== Configuring Custom Serialization for Bucket4j library classes

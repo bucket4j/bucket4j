@@ -21,6 +21,7 @@ package io.github.bucket4j.distributed.remote.commands;
 
 import io.github.bucket4j.distributed.remote.*;
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
+import io.github.bucket4j.distributed.serialization.Scope;
 import io.github.bucket4j.distributed.serialization.SerializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
 import io.github.bucket4j.distributed.versioning.Version;
@@ -41,26 +42,26 @@ public class MultiCommand implements RemoteCommand<MultiResult>, ComparableByCon
 
     public static SerializationHandle<MultiCommand> SERIALIZATION_HANDLE = new SerializationHandle<MultiCommand>() {
         @Override
-        public <S> MultiCommand deserialize(DeserializationAdapter<S> adapter, S input, Version backwardCompatibilityVersion) throws IOException {
+        public <S> MultiCommand deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             int formatNumber = adapter.readInt(input);
             Versions.check(formatNumber, v_7_0_0, v_7_0_0);
 
             int size = adapter.readInt(input);
             List<RemoteCommand<?>> results = new ArrayList<>(size);
             for (int i = 0; i < size; i++) {
-                RemoteCommand<?> result = RemoteCommand.deserialize(adapter, input, backwardCompatibilityVersion);
+                RemoteCommand<?> result = RemoteCommand.deserialize(adapter, input);
                 results.add(result);
             }
             return new MultiCommand(results);
         }
 
         @Override
-        public <O> void serialize(SerializationAdapter<O> adapter, O output, MultiCommand multiCommand, Version backwardCompatibilityVersion) throws IOException {
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, MultiCommand multiCommand, Version backwardCompatibilityVersion, Scope scope) throws IOException {
             adapter.writeInt(output, v_7_0_0.getNumber());
 
             adapter.writeInt(output, multiCommand.commands.size());
             for (RemoteCommand<?> command : multiCommand.commands) {
-                RemoteCommand.serialize(adapter, output, command, backwardCompatibilityVersion);
+                RemoteCommand.serialize(adapter, output, command, backwardCompatibilityVersion, scope);
             }
         }
 
@@ -75,14 +76,14 @@ public class MultiCommand implements RemoteCommand<MultiResult>, ComparableByCon
         }
 
         @Override
-        public MultiCommand fromJsonCompatibleSnapshot(Map<String, Object> snapshot, Version backwardCompatibilityVersion) throws IOException {
+        public MultiCommand fromJsonCompatibleSnapshot(Map<String, Object> snapshot) throws IOException {
             int formatNumber = readIntValue(snapshot, "version");
             Versions.check(formatNumber, v_7_0_0, v_7_0_0);
 
             List<Map<String, Object>> commandSnapshots = (List<Map<String, Object>>) snapshot.get("commands");
             List<RemoteCommand<?>> commands = new ArrayList<>(commandSnapshots.size());
             for (Map<String, Object> commandSnapshot : commandSnapshots) {
-                RemoteCommand<?> targetCommand = RemoteCommand.fromJsonCompatibleSnapshot(commandSnapshot, backwardCompatibilityVersion);
+                RemoteCommand<?> targetCommand = RemoteCommand.fromJsonCompatibleSnapshot(commandSnapshot);
                 commands.add(targetCommand);
             }
 
@@ -90,13 +91,13 @@ public class MultiCommand implements RemoteCommand<MultiResult>, ComparableByCon
         }
 
         @Override
-        public Map<String, Object> toJsonCompatibleSnapshot(MultiCommand command, Version backwardCompatibilityVersion) throws IOException {
+        public Map<String, Object> toJsonCompatibleSnapshot(MultiCommand command, Version backwardCompatibilityVersion, Scope scope) throws IOException {
             Map<String, Object> result = new HashMap<>();
             result.put("version", v_7_0_0.getNumber());
 
             List<Map<String, Object>> commandSnapshots = new ArrayList<>(command.commands.size());
             for (RemoteCommand<?> remoteCommand : command.commands) {
-                commandSnapshots.add(RemoteCommand.toJsonCompatibleSnapshot(remoteCommand, backwardCompatibilityVersion));
+                commandSnapshots.add(RemoteCommand.toJsonCompatibleSnapshot(remoteCommand, backwardCompatibilityVersion, scope));
             }
 
             result.put("commands", commandSnapshots);
@@ -195,13 +196,22 @@ public class MultiCommand implements RemoteCommand<MultiResult>, ComparableByCon
         for (int i = 0; i < count; i++) {
             RemoteCommand command = commands.get(i);
             CommandResult result = multiResult.getResults().get(i);
-            sum += result.isBucketNotFound()? 0: command.getConsumedTokens(result.getData());
+            sum += result.isError()? 0: command.getConsumedTokens(result.getData());
             if (sum < 0l) {
                 // math overflow
                 return Long.MAX_VALUE;
             }
         }
         return sum;
+    }
+
+    @Override
+    public Version getRequiredVersion() {
+        Version max = v_7_0_0;
+        for (RemoteCommand<?> command : commands) {
+            max = Versions.max(max, command.getRequiredVersion());
+        }
+        return max;
     }
 
 }

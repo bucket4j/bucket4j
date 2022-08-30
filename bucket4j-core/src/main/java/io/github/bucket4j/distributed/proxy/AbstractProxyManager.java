@@ -22,6 +22,7 @@ package io.github.bucket4j.distributed.proxy;
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.BucketExceptions;
 import io.github.bucket4j.TimeMeter;
+import io.github.bucket4j.TokensInheritanceStrategy;
 import io.github.bucket4j.distributed.AsyncBucketProxy;
 import io.github.bucket4j.distributed.BucketProxy;
 import io.github.bucket4j.distributed.proxy.optimization.Optimization;
@@ -36,6 +37,8 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
+import static java.util.Objects.requireNonNull;
+
 public abstract class AbstractProxyManager<K> implements ProxyManager<K> {
 
     private static final RecoveryStrategy DEFAULT_RECOVERY_STRATEGY = RecoveryStrategy.RECONSTRUCT;
@@ -44,7 +47,7 @@ public abstract class AbstractProxyManager<K> implements ProxyManager<K> {
     private final ClientSideConfig clientSideConfig;
 
     protected AbstractProxyManager(ClientSideConfig clientSideConfig) {
-        this.clientSideConfig = Objects.requireNonNull(clientSideConfig);
+        this.clientSideConfig = requireNonNull(clientSideConfig);
     }
 
     private AsyncProxyManager<K> asyncView = new AsyncProxyManager<K>() {
@@ -101,16 +104,23 @@ public abstract class AbstractProxyManager<K> implements ProxyManager<K> {
 
         private RecoveryStrategy recoveryStrategy = DEFAULT_RECOVERY_STRATEGY;
         private Optimization asyncRequestOptimizer = DEFAULT_REQUEST_OPTIMIZER;
+        private ImplicitConfigurationReplacement implicitConfigurationReplacement;
 
         @Override
         public DefaultAsyncRemoteBucketBuilder withRecoveryStrategy(RecoveryStrategy recoveryStrategy) {
-            this.recoveryStrategy = Objects.requireNonNull(recoveryStrategy);
+            this.recoveryStrategy = requireNonNull(recoveryStrategy);
             return this;
         }
 
         @Override
         public DefaultAsyncRemoteBucketBuilder withOptimization(Optimization requestOptimizer) {
-            this.asyncRequestOptimizer = Objects.requireNonNull(requestOptimizer);
+            this.asyncRequestOptimizer = requireNonNull(requestOptimizer);
+            return this;
+        }
+
+        @Override
+        public DefaultAsyncRemoteBucketBuilder withImplicitConfigurationReplacement(long desiredConfigurationVersion, TokensInheritanceStrategy tokensInheritanceStrategy) {
+            this.implicitConfigurationReplacement = new ImplicitConfigurationReplacement(desiredConfigurationVersion, requireNonNull(tokensInheritanceStrategy));
             return this;
         }
 
@@ -137,7 +147,7 @@ public abstract class AbstractProxyManager<K> implements ProxyManager<K> {
             };
             commandExecutor = asyncRequestOptimizer.apply(commandExecutor);
 
-            return new DefaultAsyncBucketProxy(commandExecutor, recoveryStrategy, configurationSupplier);
+            return new DefaultAsyncBucketProxy(commandExecutor, recoveryStrategy, configurationSupplier, implicitConfigurationReplacement);
         }
 
     }
@@ -146,16 +156,23 @@ public abstract class AbstractProxyManager<K> implements ProxyManager<K> {
 
         private RecoveryStrategy recoveryStrategy = DEFAULT_RECOVERY_STRATEGY;
         private Optimization requestOptimizer = DEFAULT_REQUEST_OPTIMIZER;
+        private ImplicitConfigurationReplacement implicitConfigurationReplacement;
 
         @Override
         public RemoteBucketBuilder<K> withRecoveryStrategy(RecoveryStrategy recoveryStrategy) {
-            this.recoveryStrategy = Objects.requireNonNull(recoveryStrategy);
+            this.recoveryStrategy = requireNonNull(recoveryStrategy);
             return this;
         }
 
         @Override
         public RemoteBucketBuilder<K> withOptimization(Optimization optimization) {
-            this.requestOptimizer = Objects.requireNonNull(optimization);
+            this.requestOptimizer = requireNonNull(optimization);
+            return this;
+        }
+
+        @Override
+        public RemoteBucketBuilder<K> withImplicitConfigurationReplacement(long desiredConfigurationVersion, TokensInheritanceStrategy tokensInheritanceStrategy) {
+            this.implicitConfigurationReplacement = new ImplicitConfigurationReplacement(desiredConfigurationVersion, requireNonNull(tokensInheritanceStrategy));
             return this;
         }
 
@@ -182,7 +199,7 @@ public abstract class AbstractProxyManager<K> implements ProxyManager<K> {
             };
             commandExecutor = requestOptimizer.apply(commandExecutor);
 
-            return new DefaultBucketProxy(configurationSupplier, commandExecutor, recoveryStrategy);
+            return new DefaultBucketProxy(configurationSupplier, commandExecutor, recoveryStrategy, implicitConfigurationReplacement);
         }
 
     }

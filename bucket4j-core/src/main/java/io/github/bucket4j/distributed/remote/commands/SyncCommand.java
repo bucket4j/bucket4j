@@ -28,6 +28,7 @@ import io.github.bucket4j.distributed.remote.MutableBucketEntry;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
+import io.github.bucket4j.distributed.serialization.Scope;
 import io.github.bucket4j.distributed.serialization.SerializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
 import io.github.bucket4j.distributed.versioning.Version;
@@ -48,7 +49,7 @@ public class SyncCommand implements RemoteCommand<Nothing>, ComparableByContent<
 
     public static final SerializationHandle<SyncCommand> SERIALIZATION_HANDLE = new SerializationHandle<SyncCommand>() {
         @Override
-        public <S> SyncCommand deserialize(DeserializationAdapter<S> adapter, S input, Version backwardCompatibilityVersion) throws IOException {
+        public <S> SyncCommand deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             int formatNumber = adapter.readInt(input);
             Versions.check(formatNumber, v_7_0_0, v_7_0_0);
 
@@ -58,7 +59,7 @@ public class SyncCommand implements RemoteCommand<Nothing>, ComparableByContent<
         }
 
         @Override
-        public <O> void serialize(SerializationAdapter<O> adapter, O output, SyncCommand command, Version backwardCompatibilityVersion) throws IOException {
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, SyncCommand command, Version backwardCompatibilityVersion, Scope scope) throws IOException {
             adapter.writeInt(output, v_7_0_0.getNumber());
 
             adapter.writeLong(output, command.unsynchronizedTokens);
@@ -76,7 +77,7 @@ public class SyncCommand implements RemoteCommand<Nothing>, ComparableByContent<
         }
 
         @Override
-        public SyncCommand fromJsonCompatibleSnapshot(Map<String, Object> snapshot, Version backwardCompatibilityVersion) throws IOException {
+        public SyncCommand fromJsonCompatibleSnapshot(Map<String, Object> snapshot) throws IOException {
             int formatNumber = readIntValue(snapshot, "version");
             Versions.check(formatNumber, v_7_0_0, v_7_0_0);
 
@@ -86,7 +87,7 @@ public class SyncCommand implements RemoteCommand<Nothing>, ComparableByContent<
         }
 
         @Override
-        public Map<String, Object> toJsonCompatibleSnapshot(SyncCommand command, Version backwardCompatibilityVersion) throws IOException {
+        public Map<String, Object> toJsonCompatibleSnapshot(SyncCommand command, Version backwardCompatibilityVersion, Scope scope) throws IOException {
             Map<String, Object> result = new HashMap<>();
             result.put("version", v_7_0_0.getNumber());
             result.put("unsynchronizedTokens", command.unsynchronizedTokens);
@@ -156,6 +157,11 @@ public class SyncCommand implements RemoteCommand<Nothing>, ComparableByContent<
     @Override
     public long getConsumedTokens(Nothing result) {
         return 0L;
+    }
+
+    @Override
+    public Version getRequiredVersion() {
+        return v_7_0_0;
     }
 
 }

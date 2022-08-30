@@ -23,7 +23,7 @@ class ConsumeAsMuchAsPossibleSpecification extends Specification {
             .build()
 
     @Unroll
-    def "#n Should return #requiredResult when consumeAsMuchAsPossible tokens from Bucket #builder"(int n, long requiredResult, BucketConfiguration configuration) {
+    def "#n Should return #requiredResult when consumeAsMuchAsPossible tokens from Bucket #configuration"(int n, long requiredResult, BucketConfiguration configuration) {
         expect:
         for (BucketType bucketType : BucketType.values()) {
             TimeMeterMock timeMeter = new TimeMeterMock(0)
