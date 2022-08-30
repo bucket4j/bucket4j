@@ -3,7 +3,7 @@ image::./images/white-logo.png[]
 endif::[]
 
 == Current version {revnumber} documentation
-Release date: `23 July 2022`
+Release date: `30 August 2022`
 
 * http://bucket4j.com/{revnumber}/release-notes.html[{revnumber} Release notes]
 * http://bucket4j.com/{revnumber}/toc.html[{revnumber} Reference]
@@ -47,6 +47,12 @@ image:images/Maxim_Bartkov.jpg[80,80] +
 
 == Documentation for previous versions
 === 2022
+==== 8.0.1
+Release date: `31 July 2022`
+
+* http://bucket4j.com/8.0.1/release-notes.html[8.0.1 Release notes]
+* http://bucket4j.com/8.0.1/toc.html[8.0.1 Reference]
+
 ==== 7.6.0
 Release date: `23 July 2022`
 * http://bucket4j.com/7.6.0/release-notes.html[7.6.0 Release notes]

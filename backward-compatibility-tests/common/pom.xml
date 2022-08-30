@@ -15,7 +15,7 @@
     <name>backward-compatibility-tests-common</name>
 
     <properties>
-        <modular-name>backward-compatibility-tests-common</modular-name>
+        <modular-name>backward_compatibility_tests_common</modular-name>
         <maven.deploy.skip>true</maven.deploy.skip>
         <skipNexusStagingDeployMojo>true</skipNexusStagingDeployMojo>
     </properties>

@@ -15,7 +15,7 @@
     <name>backward-compatibility-tests-current</name>
 
     <properties>
-        <modular-name>backward-compatibility-tests-current</modular-name>
+        <modular-name>backward_compatibility_tests_current</modular-name>
         <current.version>8.1.0</current.version>
         <maven.deploy.skip>true</maven.deploy.skip>
         <skipNexusStagingDeployMojo>true</skipNexusStagingDeployMojo>
