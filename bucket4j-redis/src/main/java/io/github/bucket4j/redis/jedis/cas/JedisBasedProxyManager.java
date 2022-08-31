@@ -28,7 +28,7 @@ import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.CompareAndS
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.redis.AbstractRedisProxyManagerBuilder;
 import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.util.Pool;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
@@ -38,18 +38,18 @@ import java.util.function.Function;
 
 public class JedisBasedProxyManager extends AbstractCompareAndSwapBasedProxyManager<byte[]> {
 
-    private final JedisPool jedisPool;
+    private final Pool<Jedis> jedisPool;
     private final ExpirationAfterWriteStrategy expirationStrategy;
 
-    public static JedisBasedProxyManagerBuilder builderFor(JedisPool jedisPool) {
+    public static JedisBasedProxyManagerBuilder builderFor(Pool<Jedis> jedisPool) {
         return new JedisBasedProxyManagerBuilder(jedisPool);
     }
 
     public static class JedisBasedProxyManagerBuilder extends AbstractRedisProxyManagerBuilder<JedisBasedProxyManagerBuilder> {
 
-        private final JedisPool jedisPool;
+        private final Pool<Jedis> jedisPool;
 
-        private JedisBasedProxyManagerBuilder(JedisPool jedisPool) {
+        private JedisBasedProxyManagerBuilder(Pool<Jedis> jedisPool) {
             this.jedisPool = Objects.requireNonNull(jedisPool);
         }
 
