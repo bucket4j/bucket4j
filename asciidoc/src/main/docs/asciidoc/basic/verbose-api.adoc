@@ -50,7 +50,7 @@ long capacity = Arrays.stream(bucketConfiguration.getBandwidths())
                 .max().getAsLong();
 response.addHeader("RateLimit-Limit", "" + capacity));
 
-VerboseResult.Diagnostics diagnostics = result.getDiagnostics()
+VerboseResult.Diagnostics diagnostics = verboseResult.getDiagnostics()
 response.addHeader("RateLimit-Remaining", "" + diagnostics.getAvailableTokens());
 response.addHeader("RateLimit-Reset", "" + TimeUnit.NANOSECONDS.toSeconds(diagnostics.calculateFullRefillingTime()));
 
