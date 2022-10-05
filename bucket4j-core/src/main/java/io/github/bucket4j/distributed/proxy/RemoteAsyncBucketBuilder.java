@@ -68,8 +68,9 @@ public interface RemoteAsyncBucketBuilder<K> {
      * Without implicit configuration replacement, there is only one way to replace configuration of bucket - is explicit calling of {@link AsyncBucketProxy#replaceConfiguration(BucketConfiguration, TokensInheritanceStrategy)}.
      *
      * <p>
-     * When implicit configuration replacement is activated, bucket will check that version of configuration in the storage >= than provided {@code desiredConfigurationVersion},
-     * and automatically replace persisted configuration using provided {@code tokensInheritanceStrategy} in case of persisted configuration is obsolete.
+     * When implicit configuration replacement is activated,
+     * bucket will automatically replace persisted configuration using provided {@code tokensInheritanceStrategy}
+     * in case of persisted version of configuration in the storage < than provided {@code desiredConfigurationVersion}.
      *
      * @param desiredConfigurationVersion specifies desired configuration version
      * @param tokensInheritanceStrategy the strategy that will be used for token migration if {@code desiredConfigurationVersion of persisted bucket} is less that provided desiredConfigurationVersion

@@ -11,33 +11,13 @@ distributed bucket operates with configuration that was provided at the time of 
 .Implicit configuration replacement solution:
 
 `Implicit configuration replacement feature` is addressed to solve the awkwards described above. It works based on configuration version,
-when bucket detects that persisted configuration version is less that provided through builder API then persisted configuration is being replaced automatically without disturbing the client. Both `RemoteBucketBuilder` and `RemoteAsyncBucketBuilder` contains the API to configure desired configuration version:
-[source, java]
-----
-/**
-     * Activates implicit configuration replacement.
-     *
-     * <p> By default distributed bucket operates with configuration that was provided at the time of its first creation.
-     * Providing the new configuration via {@link RemoteBucketBuilder} takes no effect if bucket is already persisted in the storage, because configuration is stored together with state of bucket.
-     * Without implicit configuration replacement, there is only one way to replace configuration of bucket - is explicit calling of {@link io.github.bucket4j.Bucket#replaceConfiguration(BucketConfiguration, TokensInheritanceStrategy)}.
-     *
-     * <p>
-     * When implicit configuration replacement is activated, bucket will check that version of configuration in the storage >= than provided {@code desiredConfigurationVersion},
-     * and automatically replace persisted configuration using provided {@code tokensInheritanceStrategy} in case of persisted configuration is obsolete.
-     *
-     * @param desiredConfigurationVersion specifies desired configuration version
-     * @param tokensInheritanceStrategy the strategy that will be used for token migration if {@code desiredConfigurationVersion of persisted bucket} is less that provided desiredConfigurationVersion
-     *
-     * @return {@code this}
-     */
-    RemoteBucketBuilder<K> withImplicitConfigurationReplacement(long desiredConfigurationVersion, TokensInheritanceStrategy tokensInheritanceStrategy);
-----
+when bucket detects that persisted configuration version is less that provided through builder API then persisted configuration is being replaced automatically without disturbing the client. Both `RemoteBucketBuilder` and `RemoteAsyncBucketBuilder` contains the API to configure desired configuration version.
 
 .Example of usage
 [source, java]
 ----
 BucketConfiguration config = ...;
 BucketProxy bucket = proxyManager.builder()
-    .withImplicitConfigurationReplacement(1, TokensInheritanceStrategy.AS_IS)
+    .withImplicitConfigurationReplacement(1, TokensInheritanceStrategy.PROPORTIONALLY)
     .build(666L, config);
 ----
