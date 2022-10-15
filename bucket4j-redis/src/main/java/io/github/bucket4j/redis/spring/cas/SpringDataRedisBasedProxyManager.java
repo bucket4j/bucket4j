@@ -29,7 +29,6 @@ import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.CompareAndS
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.redis.AbstractRedisProxyManagerBuilder;
 import io.github.bucket4j.redis.redisson.cas.RedissonBasedProxyManager;
-import org.redisson.command.CommandExecutor;
 import org.springframework.data.redis.connection.RedisCommands;
 import org.springframework.data.redis.connection.ReturnType;
 
