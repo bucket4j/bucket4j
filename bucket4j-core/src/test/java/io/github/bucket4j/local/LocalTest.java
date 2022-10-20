@@ -24,46 +24,47 @@ public class LocalTest {
     public void testTryConsume_lockFree() throws Throwable {
         int threadCount = 4;
         Function<Bucket, Long> action = b -> b.tryConsume(1)? 1L : 0L;
-        test5Seconds(() -> builder.build(), threadCount, action);
+        testScenario(() -> builder.build(), threadCount, action);
     }
 
     @Test
     public void testTryConsume_lockFree_Limited() throws Throwable {
         int threadCount = 4;
         Function<Bucket, Long> action = b -> b.asBlocking().tryConsumeUninterruptibly(1, Duration.ofMillis(50))? 1L : 0L;
-        test5Seconds(() -> builder.build(), threadCount, action);
+        testScenario(() -> builder.build(), threadCount, action);
     }
 
     @Test
     public void testTryConsume_Synchronized() throws Throwable {
         int threadCount = 4;
         Function<Bucket, Long> action = b -> b.tryConsume(1)? 1L : 0L;
-        test5Seconds(() -> builder.withSynchronizationStrategy(SynchronizationStrategy.SYNCHRONIZED).build(), threadCount, action);
+        testScenario(() -> builder.withSynchronizationStrategy(SynchronizationStrategy.SYNCHRONIZED).build(), threadCount, action);
     }
 
     @Test
     public void testTryConsume_SynchronizedLimited() throws Throwable {
         int threadCount = 4;
         Function<Bucket, Long> action = b -> b.asBlocking().tryConsumeUninterruptibly(1, Duration.ofMillis(50), UninterruptibleBlockingStrategy.PARKING)? 1L : 0L;
-        test5Seconds(() -> builder.withSynchronizationStrategy(SynchronizationStrategy.SYNCHRONIZED).build(), threadCount, action);
+        testScenario(() -> builder.withSynchronizationStrategy(SynchronizationStrategy.SYNCHRONIZED).build(), threadCount, action);
     }
 
     @Test
     public void testTryConsume_Unsafe() throws Throwable {
         int threadCount = 1;
         Function<Bucket, Long> action = b -> b.tryConsume(1)? 1L : 0L;
-        test5Seconds(() -> builder.withSynchronizationStrategy(SynchronizationStrategy.NONE).build(), threadCount, action);
+        testScenario(() -> builder.withSynchronizationStrategy(SynchronizationStrategy.NONE).build(), threadCount, action);
     }
 
     @Test
     public void testTryConsume_UnsafeLimited() throws Throwable {
         int threadCount = 1;
         Function<Bucket, Long> action = b -> b.asBlocking().tryConsumeUninterruptibly(1, TimeUnit.MILLISECONDS.toNanos(50))? 1L: 0L;
-        test5Seconds(() -> builder.withSynchronizationStrategy(SynchronizationStrategy.NONE).build(), threadCount, action);
+        testScenario(() -> builder.withSynchronizationStrategy(SynchronizationStrategy.NONE).build(), threadCount, action);
     }
 
-    private void test5Seconds(Supplier<Bucket> bucket, int threadCount, Function<Bucket, Long> action) throws Throwable {
-        ConsumptionScenario scenario = new ConsumptionScenario(threadCount, TimeUnit.SECONDS.toNanos(5), bucket, action, permittedRatePerSecond);
+    private void testScenario(Supplier<Bucket> bucket, int threadCount, Function<Bucket, Long> action) throws Throwable {
+        int durationSeconds = System.getenv("CI") == null ? 5 : 1;
+        ConsumptionScenario scenario = new ConsumptionScenario(threadCount, TimeUnit.SECONDS.toNanos(durationSeconds), bucket, action, permittedRatePerSecond);
         scenario.executeAndValidateRate();
     }
 

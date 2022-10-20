@@ -213,7 +213,8 @@ public abstract class AbstractDistributedBucketTest<K> {
         Supplier<Bucket> bucketSupplier = () -> proxyManager.builder()
                 .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
                 .build(key, configurationForLongRunningTests);
-        ConsumptionScenario scenario = new ConsumptionScenario(4, TimeUnit.SECONDS.toNanos(5), bucketSupplier, action, permittedRatePerSecond);
+        int durationSeconds = System.getenv("CI") == null ? 5 : 1;
+        ConsumptionScenario scenario = new ConsumptionScenario(4, TimeUnit.SECONDS.toNanos(durationSeconds), bucketSupplier, action, permittedRatePerSecond);
         scenario.executeAndValidateRate();
     }
 
@@ -223,7 +224,8 @@ public abstract class AbstractDistributedBucketTest<K> {
         Supplier<Bucket> bucketSupplier = () -> proxyManager.builder()
                 .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
                 .build(key, configurationForLongRunningTests);
-        ConsumptionScenario scenario = new ConsumptionScenario(4, TimeUnit.SECONDS.toNanos(5), bucketSupplier, action, permittedRatePerSecond);
+        int durationSeconds = System.getenv("CI") == null ? 5 : 1;
+        ConsumptionScenario scenario = new ConsumptionScenario(4, TimeUnit.SECONDS.toNanos(durationSeconds), bucketSupplier, action, permittedRatePerSecond);
         scenario.executeAndValidateRate();
     }
 
@@ -243,7 +245,8 @@ public abstract class AbstractDistributedBucketTest<K> {
         Supplier<AsyncBucketProxy> bucketSupplier = () -> proxyManager.asAsync().builder()
                 .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
                 .build(key, configurationForLongRunningTests);
-        AsyncConsumptionScenario scenario = new AsyncConsumptionScenario(4, TimeUnit.SECONDS.toNanos(5), bucketSupplier, action, permittedRatePerSecond);
+        int durationSeconds = System.getenv("CI") == null ? 5 : 1;
+        AsyncConsumptionScenario scenario = new AsyncConsumptionScenario(4, TimeUnit.SECONDS.toNanos(durationSeconds), bucketSupplier, action, permittedRatePerSecond);
         scenario.executeAndValidateRate();
     }
 
@@ -264,7 +267,8 @@ public abstract class AbstractDistributedBucketTest<K> {
         Supplier<AsyncBucketProxy> bucketSupplier = () -> proxyManager.asAsync().builder()
                 .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
                 .build(key, configurationForLongRunningTests);
-        AsyncConsumptionScenario scenario = new AsyncConsumptionScenario(4, TimeUnit.SECONDS.toNanos(5), bucketSupplier, action, permittedRatePerSecond);
+        int durationSeconds = System.getenv("CI") == null ? 5 : 1;
+        AsyncConsumptionScenario scenario = new AsyncConsumptionScenario(4, TimeUnit.SECONDS.toNanos(durationSeconds), bucketSupplier, action, permittedRatePerSecond);
         scenario.executeAndValidateRate();
     }
 
