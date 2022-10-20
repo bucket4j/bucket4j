@@ -22,13 +22,12 @@ package io.github.bucket4j.redis.spring.cas;
 
 import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
-import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AbstractCompareAndSwapBasedProxyManager;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AsyncCompareAndSwapOperation;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.CompareAndSwapOperation;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.redis.AbstractRedisProxyManagerBuilder;
-import io.github.bucket4j.redis.redisson.cas.RedissonBasedProxyManager;
+import io.github.bucket4j.redis.consts.LunaScripts;
 import org.springframework.data.redis.connection.RedisCommands;
 import org.springframework.data.redis.connection.ReturnType;
 
@@ -101,22 +100,6 @@ public class SpringDataRedisBasedProxyManager extends AbstractCompareAndSwapBase
         return false;
     }
 
-    private final byte[] scriptSetNxPx = "return redis.call('set', KEYS[1], ARGV[1], 'nx', 'px', ARGV[2])".getBytes(StandardCharsets.UTF_8);
-    private final byte[] scriptSetNx = "return redis.call('set', KEYS[1], ARGV[1], 'nx')".getBytes(StandardCharsets.UTF_8);
-    private final byte[] scriptCompareAndSwapPx = (
-            "if redis.call('get', KEYS[1]) == ARGV[1] then " +
-                "redis.call('psetex', KEYS[1], ARGV[3], ARGV[2]); " +
-                "return 1; " +
-            "else " +
-                "return 0; " +
-            "end").getBytes(StandardCharsets.UTF_8);
-    private final byte[] scriptCompareAndSwap = (
-            "if redis.call('get', KEYS[1]) == ARGV[1] then " +
-                "redis.call('set', KEYS[1], ARGV[2]); " +
-                "return 1; " +
-            "else " +
-                "return 0; " +
-            "end").getBytes(StandardCharsets.UTF_8);
 
     private Boolean compareAndSwap(byte[] key, byte[] originalData, byte[] newData, RemoteBucketState newState) {
         long ttlMillis = calculateTtlMillis(newState);
@@ -124,19 +107,19 @@ public class SpringDataRedisBasedProxyManager extends AbstractCompareAndSwapBase
             if (originalData == null) {
                 // nulls are prohibited as values, so "replace" must not be used in such cases
                 byte[][] keysAndArgs = {key, newData, encodeLong(ttlMillis)};
-                return commands.eval(scriptSetNxPx, ReturnType.BOOLEAN, 1, keysAndArgs);
+                return commands.eval(LunaScripts.SCRIPT_SET_NX_PX.getBytes(StandardCharsets.UTF_8), ReturnType.BOOLEAN, 1, keysAndArgs);
             } else {
                 byte[][] keysAndArgs = {key, originalData, newData, encodeLong(ttlMillis)};
-                return commands.eval(scriptCompareAndSwapPx, ReturnType.BOOLEAN, 1, keysAndArgs);
+                return commands.eval(LunaScripts.SCRIPT_COMPARE_AND_SWAP_PX.getBytes(StandardCharsets.UTF_8), ReturnType.BOOLEAN, 1, keysAndArgs);
             }
         } else {
             if (originalData == null) {
                 // nulls are prohibited as values, so "replace" must not be used in such cases
                 byte[][] keysAndArgs = {key, newData};
-                return commands.eval(scriptSetNx, ReturnType.BOOLEAN, 1, keysAndArgs);
+                return commands.eval(LunaScripts.SCRIPT_SET_NX.getBytes(StandardCharsets.UTF_8), ReturnType.BOOLEAN, 1, keysAndArgs);
             } else {
                 byte[][] keysAndArgs = {key, originalData, newData};
-                return commands.eval(scriptCompareAndSwap, ReturnType.BOOLEAN, 1, keysAndArgs);
+                return commands.eval(LunaScripts.SCRIPT_COMPARE_AND_SWAP.getBytes(StandardCharsets.UTF_8), ReturnType.BOOLEAN, 1, keysAndArgs);
             }
         }
     }
