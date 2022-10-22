@@ -110,7 +110,7 @@ public class JedisBasedProxyManager extends AbstractCompareAndSwapBasedProxyMana
                 // nulls are prohibited as values, so "replace" must not be used in such cases
                 byte[][] keysAndArgs = {key, newData, encodeLong(ttlMillis)};
                 Object res = withResource(jedis -> jedis.eval(LuaScripts.SCRIPT_SET_NX_PX.getBytes(StandardCharsets.UTF_8), 1, keysAndArgs));
-                return res != null;
+                return res != null && !res.equals(0L);
             } else {
                 byte[][] keysAndArgs = {key, originalData, newData, encodeLong(ttlMillis)};
                 Object res = withResource(jedis -> jedis.eval(LuaScripts.SCRIPT_COMPARE_AND_SWAP_PX.getBytes(StandardCharsets.UTF_8), 1, keysAndArgs));
@@ -121,7 +121,7 @@ public class JedisBasedProxyManager extends AbstractCompareAndSwapBasedProxyMana
                 // nulls are prohibited as values, so "replace" must not be used in such cases
                 byte[][] keysAndArgs = {key, newData};
                 Object res = withResource(jedis -> jedis.eval(LuaScripts.SCRIPT_SET_NX.getBytes(StandardCharsets.UTF_8), 1, keysAndArgs));
-                return res != null;
+                return res != null && !res.equals(0L);
             } else {
                 byte[][] keysAndArgs = {key, originalData, newData};
                 Object res = withResource(jedis -> jedis.eval(LuaScripts.SCRIPT_COMPARE_AND_SWAP.getBytes(StandardCharsets.UTF_8), 1, keysAndArgs));
