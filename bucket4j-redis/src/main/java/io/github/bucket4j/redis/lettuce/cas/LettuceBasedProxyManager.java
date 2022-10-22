@@ -22,12 +22,12 @@ package io.github.bucket4j.redis.lettuce.cas;
 
 import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
-import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AbstractCompareAndSwapBasedProxyManager;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AsyncCompareAndSwapOperation;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.CompareAndSwapOperation;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.redis.AbstractRedisProxyManagerBuilder;
+import io.github.bucket4j.redis.consts.LunaScripts;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.RedisException;
 import io.lettuce.core.RedisFuture;
@@ -136,36 +136,20 @@ public class LettuceBasedProxyManager extends AbstractCompareAndSwapBasedProxyMa
         if (ttlMillis > 0) {
             if (originalData == null) {
                 // nulls are prohibited as values, so "replace" must not be used in such cases
-                String script = "return redis.call('set', KEYS[1], ARGV[1], 'nx', 'px', ARGV[2])";
                 byte[][] params = {newData, encodeLong(ttlMillis)};
-                return commands.eval(script, ScriptOutputType.BOOLEAN, keys, params);
+                return commands.eval(LunaScripts.SCRIPT_SET_NX_PX, ScriptOutputType.BOOLEAN, keys, params);
             } else {
-                String script =
-                        "if redis.call('get', KEYS[1]) == ARGV[1] then " +
-                                "redis.call('psetex', KEYS[1], ARGV[3], ARGV[2]); " +
-                                "return 1; " +
-                        "else " +
-                                "return 0; " +
-                        "end";
                 byte[][] params = {originalData, newData, encodeLong(ttlMillis)};
-                return commands.eval(script, ScriptOutputType.BOOLEAN, keys, params);
+                return commands.eval(LunaScripts.SCRIPT_COMPARE_AND_SWAP_PX, ScriptOutputType.BOOLEAN, keys, params);
             }
         } else {
             if (originalData == null) {
                 // nulls are prohibited as values, so "replace" must not be used in such cases
-                String script = "return redis.call('set', KEYS[1], ARGV[1], 'nx')";
                 byte[][] params = {newData};
-                return commands.eval(script, ScriptOutputType.BOOLEAN, keys, params);
+                return commands.eval(LunaScripts.SCRIPT_SET_NX, ScriptOutputType.BOOLEAN, keys, params);
             } else {
-                String script =
-                        "if redis.call('get', KEYS[1]) == ARGV[1] then " +
-                                "redis.call('set', KEYS[1], ARGV[2]); " +
-                                "return 1; " +
-                        "else " +
-                                "return 0; " +
-                        "end";
                 byte[][] params = {originalData, newData};
-                return commands.eval(script, ScriptOutputType.BOOLEAN, keys, params);
+                return commands.eval(LunaScripts.SCRIPT_COMPARE_AND_SWAP, ScriptOutputType.BOOLEAN, keys, params);
             }
         }
     }

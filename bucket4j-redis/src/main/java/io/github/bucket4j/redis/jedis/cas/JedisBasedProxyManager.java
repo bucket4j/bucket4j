@@ -27,8 +27,9 @@ import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AsyncCompar
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.CompareAndSwapOperation;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.redis.AbstractRedisProxyManagerBuilder;
+import io.github.bucket4j.redis.consts.LunaScripts;
 import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.util.Pool;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
@@ -38,18 +39,18 @@ import java.util.function.Function;
 
 public class JedisBasedProxyManager extends AbstractCompareAndSwapBasedProxyManager<byte[]> {
 
-    private final JedisPool jedisPool;
+    private final Pool<Jedis> jedisPool;
     private final ExpirationAfterWriteStrategy expirationStrategy;
 
-    public static JedisBasedProxyManagerBuilder builderFor(JedisPool jedisPool) {
+    public static JedisBasedProxyManagerBuilder builderFor(Pool<Jedis> jedisPool) {
         return new JedisBasedProxyManagerBuilder(jedisPool);
     }
 
     public static class JedisBasedProxyManagerBuilder extends AbstractRedisProxyManagerBuilder<JedisBasedProxyManagerBuilder> {
 
-        private final JedisPool jedisPool;
+        private final Pool<Jedis> jedisPool;
 
-        private JedisBasedProxyManagerBuilder(JedisPool jedisPool) {
+        private JedisBasedProxyManagerBuilder(Pool<Jedis> jedisPool) {
             this.jedisPool = Objects.requireNonNull(jedisPool);
         }
 
@@ -100,22 +101,7 @@ public class JedisBasedProxyManager extends AbstractCompareAndSwapBasedProxyMana
         return false;
     }
 
-    private final byte[] scriptSetNxPx = "return redis.call('set', KEYS[1], ARGV[1], 'nx', 'px', ARGV[2])".getBytes(StandardCharsets.UTF_8);
-    private final byte[] scriptCompareAndSwapPx = (
-            "if redis.call('get', KEYS[1]) == ARGV[1] then " +
-                "redis.call('psetex', KEYS[1], ARGV[3], ARGV[2]); " +
-                "return 1; " +
-            "else " +
-                "return 0; " +
-            "end").getBytes(StandardCharsets.UTF_8);
-    private final byte[] scriptSetNx = "return redis.call('set', KEYS[1], ARGV[1], 'nx')".getBytes(StandardCharsets.UTF_8);
-    private final byte[] scriptCompareAndSwap = (
-            "if redis.call('get', KEYS[1]) == ARGV[1] then " +
-                    "redis.call('set', KEYS[1], ARGV[2]); " +
-                    "return 1; " +
-            "else " +
-                    "return 0; " +
-            "end").getBytes(StandardCharsets.UTF_8);
+
 
     private Boolean compareAndSwap(byte[] key, byte[] originalData, byte[] newData, RemoteBucketState newState) {
         long ttlMillis = calculateTtlMillis(newState);
@@ -123,22 +109,22 @@ public class JedisBasedProxyManager extends AbstractCompareAndSwapBasedProxyMana
             if (originalData == null) {
                 // nulls are prohibited as values, so "replace" must not be used in such cases
                 byte[][] keysAndArgs = {key, newData, encodeLong(ttlMillis)};
-                Object res = withResource(jedis -> jedis.eval(scriptSetNxPx, 1, keysAndArgs));
+                Object res = withResource(jedis -> jedis.eval(LunaScripts.SCRIPT_SET_NX_PX.getBytes(StandardCharsets.UTF_8), 1, keysAndArgs));
                 return res != null;
             } else {
                 byte[][] keysAndArgs = {key, originalData, newData, encodeLong(ttlMillis)};
-                Object res = withResource(jedis -> jedis.eval(scriptCompareAndSwapPx, 1, keysAndArgs));
+                Object res = withResource(jedis -> jedis.eval(LunaScripts.SCRIPT_COMPARE_AND_SWAP_PX.getBytes(StandardCharsets.UTF_8), 1, keysAndArgs));
                 return res != null && !res.equals(0L);
             }
         } else {
             if (originalData == null) {
                 // nulls are prohibited as values, so "replace" must not be used in such cases
                 byte[][] keysAndArgs = {key, newData};
-                Object res = withResource(jedis -> jedis.eval(scriptSetNx, 1, keysAndArgs));
+                Object res = withResource(jedis -> jedis.eval(LunaScripts.SCRIPT_SET_NX.getBytes(StandardCharsets.UTF_8), 1, keysAndArgs));
                 return res != null;
             } else {
                 byte[][] keysAndArgs = {key, originalData, newData};
-                Object res = withResource(jedis -> jedis.eval(scriptCompareAndSwap, 1, keysAndArgs));
+                Object res = withResource(jedis -> jedis.eval(LunaScripts.SCRIPT_COMPARE_AND_SWAP.getBytes(StandardCharsets.UTF_8), 1, keysAndArgs));
                 return res != null && !res.equals(0L);
             }
         }
