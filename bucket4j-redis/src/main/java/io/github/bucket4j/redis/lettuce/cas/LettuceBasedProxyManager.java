@@ -27,7 +27,7 @@ import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AsyncCompar
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.CompareAndSwapOperation;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.redis.AbstractRedisProxyManagerBuilder;
-import io.github.bucket4j.redis.consts.LunaScripts;
+import io.github.bucket4j.redis.consts.LuaScripts;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.RedisException;
 import io.lettuce.core.RedisFuture;
@@ -137,19 +137,19 @@ public class LettuceBasedProxyManager extends AbstractCompareAndSwapBasedProxyMa
             if (originalData == null) {
                 // nulls are prohibited as values, so "replace" must not be used in such cases
                 byte[][] params = {newData, encodeLong(ttlMillis)};
-                return commands.eval(LunaScripts.SCRIPT_SET_NX_PX, ScriptOutputType.BOOLEAN, keys, params);
+                return commands.eval(LuaScripts.SCRIPT_SET_NX_PX, ScriptOutputType.BOOLEAN, keys, params);
             } else {
                 byte[][] params = {originalData, newData, encodeLong(ttlMillis)};
-                return commands.eval(LunaScripts.SCRIPT_COMPARE_AND_SWAP_PX, ScriptOutputType.BOOLEAN, keys, params);
+                return commands.eval(LuaScripts.SCRIPT_COMPARE_AND_SWAP_PX, ScriptOutputType.BOOLEAN, keys, params);
             }
         } else {
             if (originalData == null) {
                 // nulls are prohibited as values, so "replace" must not be used in such cases
                 byte[][] params = {newData};
-                return commands.eval(LunaScripts.SCRIPT_SET_NX, ScriptOutputType.BOOLEAN, keys, params);
+                return commands.eval(LuaScripts.SCRIPT_SET_NX, ScriptOutputType.BOOLEAN, keys, params);
             } else {
                 byte[][] params = {originalData, newData};
-                return commands.eval(LunaScripts.SCRIPT_COMPARE_AND_SWAP, ScriptOutputType.BOOLEAN, keys, params);
+                return commands.eval(LuaScripts.SCRIPT_COMPARE_AND_SWAP, ScriptOutputType.BOOLEAN, keys, params);
             }
         }
     }

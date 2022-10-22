@@ -27,7 +27,7 @@ import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AsyncCompar
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.CompareAndSwapOperation;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.redis.AbstractRedisProxyManagerBuilder;
-import io.github.bucket4j.redis.consts.LunaScripts;
+import io.github.bucket4j.redis.consts.LuaScripts;
 import org.springframework.data.redis.connection.RedisCommands;
 import org.springframework.data.redis.connection.ReturnType;
 
@@ -107,19 +107,19 @@ public class SpringDataRedisBasedProxyManager extends AbstractCompareAndSwapBase
             if (originalData == null) {
                 // nulls are prohibited as values, so "replace" must not be used in such cases
                 byte[][] keysAndArgs = {key, newData, encodeLong(ttlMillis)};
-                return commands.eval(LunaScripts.SCRIPT_SET_NX_PX.getBytes(StandardCharsets.UTF_8), ReturnType.BOOLEAN, 1, keysAndArgs);
+                return commands.eval(LuaScripts.SCRIPT_SET_NX_PX.getBytes(StandardCharsets.UTF_8), ReturnType.BOOLEAN, 1, keysAndArgs);
             } else {
                 byte[][] keysAndArgs = {key, originalData, newData, encodeLong(ttlMillis)};
-                return commands.eval(LunaScripts.SCRIPT_COMPARE_AND_SWAP_PX.getBytes(StandardCharsets.UTF_8), ReturnType.BOOLEAN, 1, keysAndArgs);
+                return commands.eval(LuaScripts.SCRIPT_COMPARE_AND_SWAP_PX.getBytes(StandardCharsets.UTF_8), ReturnType.BOOLEAN, 1, keysAndArgs);
             }
         } else {
             if (originalData == null) {
                 // nulls are prohibited as values, so "replace" must not be used in such cases
                 byte[][] keysAndArgs = {key, newData};
-                return commands.eval(LunaScripts.SCRIPT_SET_NX.getBytes(StandardCharsets.UTF_8), ReturnType.BOOLEAN, 1, keysAndArgs);
+                return commands.eval(LuaScripts.SCRIPT_SET_NX.getBytes(StandardCharsets.UTF_8), ReturnType.BOOLEAN, 1, keysAndArgs);
             } else {
                 byte[][] keysAndArgs = {key, originalData, newData};
-                return commands.eval(LunaScripts.SCRIPT_COMPARE_AND_SWAP.getBytes(StandardCharsets.UTF_8), ReturnType.BOOLEAN, 1, keysAndArgs);
+                return commands.eval(LuaScripts.SCRIPT_COMPARE_AND_SWAP.getBytes(StandardCharsets.UTF_8), ReturnType.BOOLEAN, 1, keysAndArgs);
             }
         }
     }

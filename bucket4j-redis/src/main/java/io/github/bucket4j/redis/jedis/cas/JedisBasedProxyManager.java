@@ -27,7 +27,7 @@ import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AsyncCompar
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.CompareAndSwapOperation;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.redis.AbstractRedisProxyManagerBuilder;
-import io.github.bucket4j.redis.consts.LunaScripts;
+import io.github.bucket4j.redis.consts.LuaScripts;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.util.Pool;
 
@@ -109,22 +109,22 @@ public class JedisBasedProxyManager extends AbstractCompareAndSwapBasedProxyMana
             if (originalData == null) {
                 // nulls are prohibited as values, so "replace" must not be used in such cases
                 byte[][] keysAndArgs = {key, newData, encodeLong(ttlMillis)};
-                Object res = withResource(jedis -> jedis.eval(LunaScripts.SCRIPT_SET_NX_PX.getBytes(StandardCharsets.UTF_8), 1, keysAndArgs));
+                Object res = withResource(jedis -> jedis.eval(LuaScripts.SCRIPT_SET_NX_PX.getBytes(StandardCharsets.UTF_8), 1, keysAndArgs));
                 return res != null;
             } else {
                 byte[][] keysAndArgs = {key, originalData, newData, encodeLong(ttlMillis)};
-                Object res = withResource(jedis -> jedis.eval(LunaScripts.SCRIPT_COMPARE_AND_SWAP_PX.getBytes(StandardCharsets.UTF_8), 1, keysAndArgs));
+                Object res = withResource(jedis -> jedis.eval(LuaScripts.SCRIPT_COMPARE_AND_SWAP_PX.getBytes(StandardCharsets.UTF_8), 1, keysAndArgs));
                 return res != null && !res.equals(0L);
             }
         } else {
             if (originalData == null) {
                 // nulls are prohibited as values, so "replace" must not be used in such cases
                 byte[][] keysAndArgs = {key, newData};
-                Object res = withResource(jedis -> jedis.eval(LunaScripts.SCRIPT_SET_NX.getBytes(StandardCharsets.UTF_8), 1, keysAndArgs));
+                Object res = withResource(jedis -> jedis.eval(LuaScripts.SCRIPT_SET_NX.getBytes(StandardCharsets.UTF_8), 1, keysAndArgs));
                 return res != null;
             } else {
                 byte[][] keysAndArgs = {key, originalData, newData};
-                Object res = withResource(jedis -> jedis.eval(LunaScripts.SCRIPT_COMPARE_AND_SWAP.getBytes(StandardCharsets.UTF_8), 1, keysAndArgs));
+                Object res = withResource(jedis -> jedis.eval(LuaScripts.SCRIPT_COMPARE_AND_SWAP.getBytes(StandardCharsets.UTF_8), 1, keysAndArgs));
                 return res != null && !res.equals(0L);
             }
         }

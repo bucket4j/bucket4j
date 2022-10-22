@@ -27,7 +27,7 @@ import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AsyncCompar
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.CompareAndSwapOperation;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.redis.AbstractRedisProxyManagerBuilder;
-import io.github.bucket4j.redis.consts.LunaScripts;
+import io.github.bucket4j.redis.consts.LuaScripts;
 import io.netty.buffer.ByteBuf;
 import org.redisson.api.RFuture;
 import org.redisson.client.codec.ByteArrayCodec;
@@ -93,7 +93,7 @@ public class RedissonBasedProxyManager extends AbstractCompareAndSwapBasedProxyM
                         return commandExecutor.get(redissonFuture);
                     } else {
                         Object[] params = new Object[] {originalData, newData, ttlMillis};
-                        RFuture<Boolean> redissonFuture = commandExecutor.evalWriteAsync(key, ByteArrayCodec.INSTANCE, RedisCommands.EVAL_BOOLEAN, LunaScripts.SCRIPT_COMPARE_AND_SWAP_PX, keys, params);
+                        RFuture<Boolean> redissonFuture = commandExecutor.evalWriteAsync(key, ByteArrayCodec.INSTANCE, RedisCommands.EVAL_BOOLEAN, LuaScripts.SCRIPT_COMPARE_AND_SWAP_PX, keys, params);
                         return commandExecutor.get(redissonFuture);
                     }
                 } else {
@@ -103,7 +103,7 @@ public class RedissonBasedProxyManager extends AbstractCompareAndSwapBasedProxyM
                         return commandExecutor.get(redissonFuture);
                     } else {
                         Object[] params = new Object[] {originalData, newData};
-                        RFuture<Boolean> redissonFuture = commandExecutor.evalWriteAsync(key, ByteArrayCodec.INSTANCE, RedisCommands.EVAL_BOOLEAN, LunaScripts.SCRIPT_COMPARE_AND_SWAP, keys, params);
+                        RFuture<Boolean> redissonFuture = commandExecutor.evalWriteAsync(key, ByteArrayCodec.INSTANCE, RedisCommands.EVAL_BOOLEAN, LuaScripts.SCRIPT_COMPARE_AND_SWAP, keys, params);
                         return commandExecutor.get(redissonFuture);
                     }
                 }
@@ -133,7 +133,7 @@ public class RedissonBasedProxyManager extends AbstractCompareAndSwapBasedProxyM
                     } else {
                         Object[] params = new Object[] {encodeByteArray(originalData), encodeByteArray(newData), ttlMillis};
                         RFuture<Boolean> redissonFuture = commandExecutor.evalWriteAsync(key, ByteArrayCodec.INSTANCE,
-                                RedisCommands.EVAL_BOOLEAN, LunaScripts.SCRIPT_COMPARE_AND_SWAP_PX, keys, params);
+                                RedisCommands.EVAL_BOOLEAN, LuaScripts.SCRIPT_COMPARE_AND_SWAP_PX, keys, params);
                         return convertFuture(redissonFuture);
                     }
                 } else {
@@ -143,7 +143,7 @@ public class RedissonBasedProxyManager extends AbstractCompareAndSwapBasedProxyM
                     } else {
                         Object[] params = new Object[] {encodeByteArray(originalData), encodeByteArray(newData)};
                         RFuture<Boolean> redissonFuture = commandExecutor.evalWriteAsync(key, ByteArrayCodec.INSTANCE,
-                                RedisCommands.EVAL_BOOLEAN, LunaScripts.SCRIPT_COMPARE_AND_SWAP, keys, params);
+                                RedisCommands.EVAL_BOOLEAN, LuaScripts.SCRIPT_COMPARE_AND_SWAP, keys, params);
                         return convertFuture(redissonFuture);
                     }
                 }

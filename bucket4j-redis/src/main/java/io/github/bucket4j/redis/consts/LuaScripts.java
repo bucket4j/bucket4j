@@ -24,35 +24,35 @@ package io.github.bucket4j.redis.consts;
  *
  *
  */
-public class LunaScripts {
+public class LuaScripts {
 
     public final static String SCRIPT_SET_NX_PX =
             "if redis.call('set', KEYS[1], ARGV[1], 'nx', 'px', ARGV[2]) then " +
                 "return 1; " +
-                "else " +
+            "else " +
                 "return 0; " +
-                "end";
+            "end";
     public final static String SCRIPT_SET_NX =
             "if redis.call('set', KEYS[1], ARGV[1], 'nx') then " +
                 "return 1; " +
-                "else " +
+            "else " +
                 "return 0; " +
-                "end";
+            "end";
 
     public final static String SCRIPT_COMPARE_AND_SWAP_PX =
             "if redis.call('get', KEYS[1]) == ARGV[1] then " +
-                    "redis.call('psetex', KEYS[1], ARGV[3], ARGV[2]); " +
-                    "return 1; " +
-                    "else " +
-                    "return 0; " +
-                    "end";
+                "redis.call('psetex', KEYS[1], ARGV[3], ARGV[2]); " +
+                "return 1; " +
+            "else " +
+                "return 0; " +
+            "end";
 
-    public final static String SCRIPT_COMPARE_AND_SWAP = (
+    public final static String SCRIPT_COMPARE_AND_SWAP =
             "if redis.call('get', KEYS[1]) == ARGV[1] then " +
-                    "redis.call('set', KEYS[1], ARGV[2]); " +
-                    "return 1; " +
-                    "else " +
-                    "return 0; " +
-                    "end");
+                "redis.call('set', KEYS[1], ARGV[2]); " +
+                "return 1; " +
+            "else " +
+                "return 0; " +
+            "end";
 
 }
