@@ -1,5 +1,5 @@
 === Bucket4j {revnumber} release notes
 Release `{revnumber}`
 
-.The features in release scope are following:
-* https://github.com/bucket4j/bucket4j/issues/261[#261 Implicit configuration replacement]
+.The bugfixes in release scope are following:
+* https://github.com/bucket4j/bucket4j/issues/317[#317 Bug Report At MySpringDataRedisBasedProxyManager]
