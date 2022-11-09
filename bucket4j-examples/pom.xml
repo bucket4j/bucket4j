@@ -102,6 +102,13 @@
             <version>${hazelcast.latest.version}</version>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>com.bucket4j</groupId>
+            <artifactId>bucket4j-core</artifactId>
+            <version>${project.version}</version>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
 
         <!-- For benchmarking -->
         <dependency>

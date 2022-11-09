@@ -59,7 +59,7 @@ public class ProxyManagerMock<K> extends AbstractProxyManager<K> {
     }
 
     @Override
-    public <T> CommandResult<T> execute(K key, Request<T> request) {
+    synchronized public <T> CommandResult<T> execute(K key, Request<T> request) {
         if (exception != null) {
             throw new RuntimeException();
         }
@@ -98,7 +98,7 @@ public class ProxyManagerMock<K> extends AbstractProxyManager<K> {
     }
 
     @Override
-    public <T> CompletableFuture<CommandResult<T>> executeAsync(K key, Request<T> request) {
+    synchronized public <T> CompletableFuture<CommandResult<T>> executeAsync(K key, Request<T> request) {
         if (exception != null) {
             CompletableFuture future = new CompletableFuture();
             future.completeExceptionally(new RuntimeException());
