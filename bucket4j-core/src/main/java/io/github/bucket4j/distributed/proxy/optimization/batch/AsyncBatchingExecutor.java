@@ -26,7 +26,7 @@ import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.remote.commands.MultiCommand;
 import io.github.bucket4j.distributed.remote.MultiResult;
-import io.github.bucket4j.util.concurrent.BatchHelper;
+import io.github.bucket4j.util.concurrent.batch.AsyncBatchHelper;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -34,7 +34,7 @@ import java.util.function.Function;
 
 public class AsyncBatchingExecutor implements AsyncCommandExecutor {
 
-    private final BatchHelper<RemoteCommand<?>, CommandResult<?>, MultiCommand, CommandResult<MultiResult>> batchingHelper;
+    private final AsyncBatchHelper<RemoteCommand<?>, CommandResult<?>, MultiCommand, CommandResult<MultiResult>> batchingHelper;
     private final AsyncCommandExecutor wrappedExecutor;
     private final OptimizationListener listener;
 
@@ -72,7 +72,7 @@ public class AsyncBatchingExecutor implements AsyncCommandExecutor {
     public AsyncBatchingExecutor(AsyncCommandExecutor originalExecutor, OptimizationListener listener) {
         this.wrappedExecutor = originalExecutor;
         this.listener = listener;
-        this.batchingHelper = BatchHelper.async(taskCombiner, combinedTaskExecutor, taskExecutor, combinedResultSplitter);
+        this.batchingHelper = AsyncBatchHelper.create(taskCombiner, combinedTaskExecutor, taskExecutor, combinedResultSplitter);
     }
 
 

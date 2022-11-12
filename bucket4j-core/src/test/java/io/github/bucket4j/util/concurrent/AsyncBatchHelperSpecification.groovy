@@ -9,31 +9,31 @@ import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ExecutionException
 
-class BatchHelperSpecification extends Specification {
+class AsyncBatchHelperSpecification extends Specification {
 
     MockBatchExecutor executor = new MockBatchExecutor()
 
     @Timeout(10)
-    def "test success sync case"() {
+    def "test success async case"() {
         expect:
-            executor.getSyncBatchHelper().execute(new SingleMockCommand(4)) == 4
-            executor.getSyncBatchHelper().execute(new SingleMockCommand(6)) == 10
-            executor.getSyncBatchHelper().execute(new SingleMockCommand(5)) == 15
+            executor.getAsyncBatchHelper().executeAsync(new SingleMockCommand(4)).get() == 4
+            executor.getAsyncBatchHelper().executeAsync(new SingleMockCommand(6)).get() == 10
+            executor.getAsyncBatchHelper().executeAsync(new SingleMockCommand(5)).get() == 15
     }
 
     @Timeout(10)
-    def "test sync batching"() {
+    def "test async batching"() {
         setup:
             def cmd1 = new SingleMockCommand(1, true)
-            def cmd2 = new SingleMockCommand(2, true)
-            def cmd3 = new SingleMockCommand(3, true)
-            def cmd4 = new SingleMockCommand(4, true)
+            def cmd2 = new SingleMockCommand(1, true)
+            def cmd3 = new SingleMockCommand(1, true)
+            def cmd4 = new SingleMockCommand(1, true)
 
         when:
-            CompletableFuture<Long> future1 = runBlockingInNewThread(cmd1);
+            def future1 = executor.getAsyncBatchHelper().executeAsync(cmd1)
             cmd1.arriveSignal.await()
-            CompletableFuture<Long> future2 = runBlockingInNewThread(cmd2);
-            CompletableFuture<Long> future3 = runBlockingInNewThread(cmd3);
+            def future2 = executor.getAsyncBatchHelper().executeAsync(cmd2)
+            def future3 = executor.getAsyncBatchHelper().executeAsync(cmd3)
         then:
             cmd2.arriveSignal.count == 1
             cmd3.arriveSignal.count == 1
@@ -41,7 +41,7 @@ class BatchHelperSpecification extends Specification {
         when:
             cmd1.executePermit.countDown()
             cmd2.arriveSignal.await()
-            CompletableFuture<Long> future4 = runBlockingInNewThread(cmd4);
+            def future4 = executor.getAsyncBatchHelper().executeAsync(cmd4)
         then:
             future1.get() == 1L
             cmd4.arriveSignal.count == 1
@@ -56,27 +56,27 @@ class BatchHelperSpecification extends Specification {
             cmd3.executePermit.countDown()
             cmd4.arriveSignal.await()
         then:
-            future2.get() == 3L
-            future3.get() == 6L
+            future2.get() == 2L
+            future3.get() == 3L
 
         when:
             cmd4.executePermit.countDown()
         then:
-            future4.get() == 10L
+            future4.get() == 4L
     }
 
     @Timeout(10)
-    def "test that fail of single task does not prevent to start next batch in sync execution"() {
+    def "test that fail of single task does not prevent to start next batch in async execution"() {
         setup:
             def cmd1 = new SingleMockCommand(new IllegalStateException(), true)
             def cmd2 = new SingleMockCommand(1, true)
             def cmd3 = new SingleMockCommand(1, true)
 
         when:
-            CompletableFuture<Long> future1 = runBlockingInNewThread(cmd1);
+            CompletableFuture<Long> future1 = executor.getAsyncBatchHelper().executeAsync(cmd1)
             cmd1.arriveSignal.await()
-            CompletableFuture<Long> future2 = runBlockingInNewThread(cmd2);
-            CompletableFuture<Long> future3 = runBlockingInNewThread(cmd3);
+            CompletableFuture<Long> future2 = executor.getAsyncBatchHelper().executeAsync(cmd2)
+            CompletableFuture<Long> future3 = executor.getAsyncBatchHelper().executeAsync(cmd3)
             cmd1.executePermit.countDown()
             cmd2.arriveSignal.await()
             future1.get()
@@ -93,21 +93,21 @@ class BatchHelperSpecification extends Specification {
     }
 
     @Timeout(10)
-    def "test that fail of batch of tasks does not prevent to start next batch in sync execution"() {
+    def "test that fail of batch of tasks does not prevent to start next batch in async execution"() {
         setup:
             def cmd1 = new SingleMockCommand(1, true)
             def cmd2 = new SingleMockCommand(new IllegalStateException(), true)
-            def cmd3 = new SingleMockCommand(3, true)
-            def cmd4 = new SingleMockCommand(4, true)
+            def cmd3 = new SingleMockCommand(1, true)
+            def cmd4 = new SingleMockCommand(1, true)
 
         when:
-            CompletableFuture<Long> future1 = runBlockingInNewThread(cmd1);
+            CompletableFuture<Long> future1 = executor.getAsyncBatchHelper().executeAsync(cmd1)
             cmd1.arriveSignal.await()
-            CompletableFuture<Long> future2 = runBlockingInNewThread(cmd2);
-            CompletableFuture<Long> future3 = runBlockingInNewThread(cmd3);
+            CompletableFuture<Long> future2 = executor.getAsyncBatchHelper().executeAsync(cmd2)
+            CompletableFuture<Long> future3 = executor.getAsyncBatchHelper().executeAsync(cmd3)
             cmd1.executePermit.countDown()
             cmd2.arriveSignal.await()
-            CompletableFuture<Long> future4 = runBlockingInNewThread(cmd4);
+            CompletableFuture<Long> future4 = executor.getAsyncBatchHelper().executeAsync(cmd4)
         then:
             future1.get() == 1L
 
@@ -122,7 +122,7 @@ class BatchHelperSpecification extends Specification {
         when:
             cmd4.executePermit.countDown()
         then:
-            future4.get() == 5L
+            future4.get() == 2L
     }
 
     CompletableFuture<Long> runBlockingInNewThread(SingleMockCommand cmd) {

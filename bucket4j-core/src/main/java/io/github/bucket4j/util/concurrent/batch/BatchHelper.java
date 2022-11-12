@@ -1,23 +1,4 @@
-/*-
- * ========================LICENSE_START=================================
- * Bucket4j
- * %%
- * Copyright (C) 2015 - 2021 Vladimir Bukhtoyarov
- * %%
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- * =========================LICENSE_END==================================
- */
-package io.github.bucket4j.util.concurrent;
+package io.github.bucket4j.util.concurrent.batch;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -39,35 +20,27 @@ import static java.util.Objects.requireNonNull;
  */
 public class BatchHelper<T, R, CT, CR> {
 
-    private static final Function UNSUPPORTED = new Function() {
-        @Override
-        public Object apply(Object o) {
-            throw new UnsupportedOperationException();
-        }
-    };
-
     private static final Object NEED_TO_EXECUTE_NEXT_BATCH = new Object();
-    private static final WaitingTask QUEUE_EMPTY_BUT_EXECUTION_IN_PROGRESS = new WaitingTask(null);
-    private static final WaitingTask QUEUE_EMPTY = new WaitingTask(null);
+    private static final WaitingTask<?, ?> QUEUE_EMPTY_BUT_EXECUTION_IN_PROGRESS = new WaitingTask<>(null);
+    private static final WaitingTask<?, ?> QUEUE_EMPTY = new WaitingTask<>(null);
 
     private final Function<List<T>, CT> taskCombiner;
     private final Function<CT, CR> combinedTaskExecutor;
     private final Function<T, R> taskExecutor;
-    private final Function<CT, CompletableFuture<CR>> asyncCombinedTaskExecutor;
-    private final Function<T, CompletableFuture<R>> asyncTaskExecutor;
+
     private final Function<CR, List<R>> combinedResultSplitter;
 
     private final AtomicReference<WaitingTask> headReference = new AtomicReference<>(QUEUE_EMPTY);
 
-    public static <T, R, CT, CR> BatchHelper<T, R, CT, CR> sync(
+    public static <T, R, CT, CR> BatchHelper<T, R, CT, CR> create(
             Function<List<T>, CT> taskCombiner,
             Function<CT, CR> combinedTaskExecutor,
             Function<T, R> taskExecutor,
             Function<CR, List<R>> combinedResultSplitter) {
-        return new BatchHelper<T, R, CT, CR>(taskCombiner, combinedTaskExecutor, taskExecutor, UNSUPPORTED, UNSUPPORTED, combinedResultSplitter);
+        return new BatchHelper<>(taskCombiner, combinedTaskExecutor, taskExecutor, combinedResultSplitter);
     }
 
-    public static <T, R, CT, CR> BatchHelper<T, R, CT, CR> sync(
+    public static <T, R, CT, CR> BatchHelper<T, R, CT, CR> create(
             Function<List<T>, CT> taskCombiner,
             Function<CT, CR> combinedTaskExecutor,
             Function<CR, List<R>> combinedResultSplitter) {
@@ -80,47 +53,16 @@ public class BatchHelper<T, R, CT, CR> {
                 return results.get(0);
             }
         };
-        return new BatchHelper<T, R, CT, CR>(taskCombiner, UNSUPPORTED, UNSUPPORTED, UNSUPPORTED, UNSUPPORTED, combinedResultSplitter);
-    }
-
-    public static <T, R, CT, CR> BatchHelper<T, R, CT, CR> async(
-            Function<List<T>, CT> taskCombiner,
-            Function<CT, CompletableFuture<CR>> asyncCombinedTaskExecutor,
-            Function<T, CompletableFuture<R>> asyncTaskExecutor,
-            Function<CR, List<R>> combinedResultSplitter) {
-        return new BatchHelper<T, R, CT, CR>(taskCombiner, UNSUPPORTED, UNSUPPORTED, asyncCombinedTaskExecutor, asyncTaskExecutor, combinedResultSplitter);
-    }
-
-    public static <T, R, CT, CR> BatchHelper<T, R, CT, CR> async(
-            Function<List<T>, CT> taskCombiner,
-            Function<CT, CompletableFuture<CR>> asyncCombinedTaskExecutor,
-            Function<CR, List<R>> combinedResultSplitter
-    ) {
-        Function<T, CompletableFuture<R>> asyncTaskExecutor = new Function<T, CompletableFuture<R>>() {
-            @Override
-            public CompletableFuture<R> apply(T task) {
-                CT combinedTask = taskCombiner.apply(Collections.singletonList(task));
-                CompletableFuture<CR> resultFuture = asyncCombinedTaskExecutor.apply(combinedTask);
-                return resultFuture.thenApply((CR combinedResult) -> {
-                    List<R> results = combinedResultSplitter.apply(combinedResult);
-                    return results.get(0);
-                });
-            }
-        };
-        return new BatchHelper<T, R, CT, CR>(taskCombiner, UNSUPPORTED, UNSUPPORTED, asyncCombinedTaskExecutor, asyncTaskExecutor, combinedResultSplitter);
+        return new BatchHelper<>(taskCombiner, combinedTaskExecutor, taskExecutor, combinedResultSplitter);
     }
 
     private BatchHelper(Function<List<T>, CT> taskCombiner,
                         Function<CT, CR> combinedTaskExecutor,
                         Function<T, R> taskExecutor,
-                        Function<CT, CompletableFuture<CR>> asyncCombinedTaskExecutor,
-                        Function<T, CompletableFuture<R>> asyncTaskExecutor,
                         Function<CR, List<R>> combinedResultSplitter) {
         this.taskCombiner = requireNonNull(taskCombiner);
         this.combinedTaskExecutor = requireNonNull(combinedTaskExecutor);
         this.taskExecutor = requireNonNull(taskExecutor);
-        this.asyncCombinedTaskExecutor = requireNonNull(asyncCombinedTaskExecutor);
-        this.asyncTaskExecutor = requireNonNull(asyncTaskExecutor);
         this.combinedResultSplitter = requireNonNull(combinedResultSplitter);
     }
 
@@ -146,72 +88,6 @@ public class BatchHelper<T, R, CT, CR> {
             return executeBatch(waitingNode);
         } finally {
             wakeupAnyThreadFromNextBatchOrFreeLock();
-        }
-    }
-
-    public CompletableFuture<R> executeAsync(T task) {
-        WaitingTask<T, R> waitingTask = lockExclusivelyOrEnqueue(task);
-
-        if (waitingTask != null) {
-            // there is another request is in progress, our request will be scheduled later
-            return waitingTask.future;
-        }
-
-        try {
-            return asyncTaskExecutor.apply(task)
-                    .whenComplete((result, error) -> scheduleNextBatchAsync());
-        } catch (Throwable error) {
-            CompletableFuture<R> failedFuture = new CompletableFuture<>();
-            failedFuture.completeExceptionally(error);
-            return failedFuture;
-        }
-    }
-
-    private void scheduleNextBatchAsync() {
-        List<WaitingTask<T, R>> waitingNodes = takeAllWaitingTasksOrFreeLock();
-        if (waitingNodes.isEmpty()) {
-            return;
-        }
-
-        try {
-            List<T> commandsInBatch = new ArrayList<>(waitingNodes.size());
-            for (WaitingTask<T, R> waitingNode : waitingNodes) {
-                commandsInBatch.add(waitingNode.wrappedTask);
-            }
-            CT multiCommand = taskCombiner.apply(commandsInBatch);
-            CompletableFuture<CR> combinedFuture = asyncCombinedTaskExecutor.apply(multiCommand);
-            combinedFuture
-                .whenComplete((multiResult, error) -> completeWaitingFutures(waitingNodes, multiResult, error))
-                .whenComplete((multiResult, error) -> scheduleNextBatchAsync());
-        } catch (Throwable e) {
-            try {
-                for (WaitingTask waitingNode : waitingNodes) {
-                    waitingNode.future.completeExceptionally(e);
-                }
-            } finally {
-                scheduleNextBatchAsync();
-            }
-        }
-    }
-
-    private void completeWaitingFutures(List<WaitingTask<T, R>> waitingNodes, CR multiResult, Throwable error) {
-        if (error != null) {
-            for (WaitingTask waitingNode : waitingNodes) {
-                try {
-                    waitingNode.future.completeExceptionally(error);
-                } catch (Throwable t) {
-                    waitingNode.future.completeExceptionally(t);
-                }
-            }
-        } else {
-            List<R> singleResults = combinedResultSplitter.apply(multiResult);
-            for (int i = 0; i < waitingNodes.size(); i++) {
-                try {
-                    waitingNodes.get(i).future.complete(singleResults.get(i));
-                } catch (Throwable t) {
-                    waitingNodes.get(i).future.completeExceptionally(t);
-                }
-            }
         }
     }
 
@@ -252,7 +128,7 @@ public class BatchHelper<T, R, CT, CR> {
     }
 
     private WaitingTask<T, R> lockExclusivelyOrEnqueue(T command) {
-        WaitingTask<T, R> waitingTask = new WaitingTask<>(command);
+        WaitingTask<T, R> currentTask = new WaitingTask<>(command);
 
         while (true) {
             WaitingTask<T, R> previous = headReference.get();
@@ -264,18 +140,18 @@ public class BatchHelper<T, R, CT, CR> {
                 }
             }
 
-            waitingTask.previous = previous;
-            if (headReference.compareAndSet(previous, waitingTask)) {
-                return waitingTask;
+            currentTask.previous = previous;
+            if (headReference.compareAndSet(previous, currentTask)) {
+                return currentTask;
             } else {
-                waitingTask.previous = null;
+                currentTask.previous = null;
             }
         }
     }
 
     private void wakeupAnyThreadFromNextBatchOrFreeLock() {
         while (true) {
-            WaitingTask previous = headReference.get();
+            WaitingTask<T, R> previous = headReference.get();
             if (previous == QUEUE_EMPTY_BUT_EXECUTION_IN_PROGRESS) {
                 if (headReference.compareAndSet(QUEUE_EMPTY_BUT_EXECUTION_IN_PROGRESS, QUEUE_EMPTY)) {
                     return;
@@ -283,7 +159,7 @@ public class BatchHelper<T, R, CT, CR> {
                     continue;
                 }
             } else if (previous != QUEUE_EMPTY) {
-                previous.future.complete(NEED_TO_EXECUTE_NEXT_BATCH);
+                previous.future.complete((R) NEED_TO_EXECUTE_NEXT_BATCH);
                 return;
             } else {
                 // should never come there
@@ -326,6 +202,7 @@ public class BatchHelper<T, R, CT, CR> {
 
         public final T wrappedTask;
         public final CompletableFuture<R> future = new CompletableFuture<>();
+        public final Thread thread = Thread.currentThread();
 
         public WaitingTask<T, R> previous;
 
