@@ -44,24 +44,21 @@ public class LettuceClusterProxyManager extends AbstractCompareAndSwapBasedProxy
 	
 	private static final String SET_KEY_NOT_ALREADY_EXIST_SCRIPT = "return redis.call('SET', KEYS[1], ARGV[1], 'NX', 'PX', ARGV[2])";
 	
-	
 	private static final String UPDATE_DATA_AND_EXPIRE_IF_KEY_EXIST = "if redis.call('GET', KEYS[1]) == ARGV[1] then " +
-																			  "redis.call('PSETEX', KEYS[1], ARGV[3], ARGV[2]); " +
-																			  "return 1; " +
-																			  "else " +
-																			  "return 0; " +
-																			  "end";
-	
+		"redis.call('PSETEX', KEYS[1], ARGV[3], ARGV[2]); " +
+		"return 1; " +
+		"else " +
+		"return 0; " +
+		"end";
 	
 	private static final String LIMITLESS_SET_DATA_IF_KEY_EXIST = "return redis.call('SET', KEYS[1], ARGV[1], 'NX')";
 	
-	
 	private static final String LIMITLESS_SET_KEY_NOT_ALREADY_EXIST = "if redis.call('GET', KEYS[1]) == ARGV[1] then " +
-																			  "redis.call('SET', KEYS[1], ARGV[2]); " +
-																			  "return 1; " +
-																			  "else " +
-																			  "return 0; " +
-																			  "end";
+		"redis.call('SET', KEYS[1], ARGV[2]); " +
+		"return 1; " +
+		"else " +
+		"return 0; " +
+		"end";
 	
 	protected LettuceClusterProxyManager(LettuceClusterProxyManagerBuilder builder) {
 		super(builder.getClientSideConfig());
