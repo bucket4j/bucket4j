@@ -31,6 +31,7 @@
             <groupId>com.oracle.coherence.ce</groupId>
             <artifactId>coherence</artifactId>
             <version>21.06</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>javax.cache</groupId>
