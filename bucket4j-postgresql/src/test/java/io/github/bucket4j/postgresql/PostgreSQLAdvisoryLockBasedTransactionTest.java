@@ -23,7 +23,7 @@ public class PostgreSQLAdvisoryLockBasedTransactionTest extends AbstractDistribu
 
     private static PostgreSQLContainer container;
     private static DataSource dataSource;
-    private static PostgreSQLadvisoryLockBasedProxyManager proxyManager;
+    private static PostgreSQLadvisoryLockBasedProxyManager<Long> proxyManager;
 
     @BeforeClass
     public static void initializeInstance() throws SQLException {
@@ -37,11 +37,11 @@ public class PostgreSQLAdvisoryLockBasedTransactionTest extends AbstractDistribu
                 statement.execute(query);
             }
         }
-        SQLProxyConfiguration configuration = SQLProxyConfigurationBuilder.builder()
+        SQLProxyConfiguration<Long> configuration = SQLProxyConfigurationBuilder.builder()
                 .withClientSideConfig(ClientSideConfig.getDefault())
                 .withTableSettings(tableSettings)
                 .build(dataSource);
-        proxyManager = new PostgreSQLadvisoryLockBasedProxyManager(configuration);
+        proxyManager = new PostgreSQLadvisoryLockBasedProxyManager<>(configuration);
     }
 
     @Override

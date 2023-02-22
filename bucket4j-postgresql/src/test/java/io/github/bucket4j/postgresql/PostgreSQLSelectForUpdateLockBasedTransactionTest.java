@@ -23,7 +23,7 @@ public class PostgreSQLSelectForUpdateLockBasedTransactionTest extends AbstractD
 
     private static PostgreSQLContainer container;
     private static DataSource dataSource;
-    private static PostgreSQLSelectForUpdateBasedProxyManager proxyManager;
+    private static PostgreSQLSelectForUpdateBasedProxyManager<Long> proxyManager;
 
     @BeforeClass
     public static void initializeInstance() throws SQLException {
@@ -37,11 +37,11 @@ public class PostgreSQLSelectForUpdateLockBasedTransactionTest extends AbstractD
                 statement.execute(query);
             }
         }
-        SQLProxyConfiguration configuration = SQLProxyConfigurationBuilder.builder()
+        SQLProxyConfiguration<Long> configuration = SQLProxyConfigurationBuilder.builder()
                 .withClientSideConfig(ClientSideConfig.getDefault())
                 .withTableSettings(tableSettings)
                 .build(dataSource);
-        proxyManager = new PostgreSQLSelectForUpdateBasedProxyManager(configuration);
+        proxyManager = new PostgreSQLSelectForUpdateBasedProxyManager<>(configuration);
         Long key = 1L;
     }
 

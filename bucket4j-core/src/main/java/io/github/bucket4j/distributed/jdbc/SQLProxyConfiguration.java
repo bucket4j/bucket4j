@@ -23,20 +23,25 @@ import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 
 import javax.sql.DataSource;
 
-public class SQLProxyConfiguration {
+public class SQLProxyConfiguration<K> {
 
     private final DataSource dataSource;
     private final ClientSideConfig clientSideConfig;
     private final BucketTableSettings tableSettings;
+    private final PrimaryKeyMapper<K> primaryKeyMapper;
 
-    public SQLProxyConfiguration(DataSource dataSource) {
-        this(dataSource, ClientSideConfig.getDefault(), BucketTableSettings.getDefault());
+    /**
+     * @return the new instance of {@link SQLProxyConfigurationBuilder} configured with {@link PrimaryKeyMapper#LONG} primary key mapper
+     */
+    public static SQLProxyConfigurationBuilder<Long> builder() {
+        return new SQLProxyConfigurationBuilder<>(PrimaryKeyMapper.LONG);
     }
 
-    public SQLProxyConfiguration(DataSource dataSource, ClientSideConfig clientSideConfig, BucketTableSettings tableSettings) {
+    SQLProxyConfiguration(SQLProxyConfigurationBuilder<K> builder, DataSource dataSource) {
         this.dataSource = dataSource;
-        this.clientSideConfig = clientSideConfig;
-        this.tableSettings = tableSettings;
+        this.clientSideConfig = builder.clientSideConfig;
+        this.tableSettings = builder.tableSettings;
+        this.primaryKeyMapper = builder.primaryKeyMapper;
     }
 
     public String getIdName() {
@@ -58,4 +63,9 @@ public class SQLProxyConfiguration {
     public ClientSideConfig getClientSideConfig() {
         return clientSideConfig;
     }
+
+    public PrimaryKeyMapper<K> getPrimaryKeyMapper() {
+        return primaryKeyMapper;
+    }
+
 }
