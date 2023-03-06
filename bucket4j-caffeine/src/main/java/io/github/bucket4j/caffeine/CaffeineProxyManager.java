@@ -48,11 +48,11 @@ public class CaffeineProxyManager<K> extends AbstractProxyManager<K> {
      * @param builder the builder that will be used for cache creation
      * @param keepAfterRefillDuration specifies how long bucket should be held in the cache after all consumed tokens have been refilled.
      */
-    public CaffeineProxyManager(Caffeine<K, RemoteBucketState> builder, Duration keepAfterRefillDuration) {
+    public CaffeineProxyManager(Caffeine<? super K, ? super RemoteBucketState> builder, Duration keepAfterRefillDuration) {
         this(builder, keepAfterRefillDuration, ClientSideConfig.getDefault());
     }
 
-    public CaffeineProxyManager(Caffeine<K, RemoteBucketState> builder, Duration keepAfterRefillDuration, ClientSideConfig clientSideConfig) {
+    public CaffeineProxyManager(Caffeine<? super K, ? super RemoteBucketState> builder, Duration keepAfterRefillDuration, ClientSideConfig clientSideConfig) {
         super(clientSideConfig);
         this.cache = builder
             .expireAfter(new Expiry<K, RemoteBucketState>() {
