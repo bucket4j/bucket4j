@@ -23,20 +23,30 @@ import io.github.bucket4j.BucketExceptions;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 
 import javax.sql.DataSource;
+import java.util.Objects;
 
 /**
  * @author Maxim Bartkov
  * The class to build {@link SQLProxyConfiguration}
  */
-public final class SQLProxyConfigurationBuilder {
-    private ClientSideConfig clientSideConfig;
-    private BucketTableSettings tableSettings;
+public final class SQLProxyConfigurationBuilder<K> {
+    ClientSideConfig clientSideConfig;
+    BucketTableSettings tableSettings;
+    PrimaryKeyMapper<K> primaryKeyMapper;
 
-    private SQLProxyConfigurationBuilder() {
+    SQLProxyConfigurationBuilder(PrimaryKeyMapper<K> primaryKeyMapper) {
+        this.primaryKeyMapper = primaryKeyMapper;
+        this.tableSettings = BucketTableSettings.getDefault();
+        this.clientSideConfig = ClientSideConfig.getDefault();
     }
 
-    public static SQLProxyConfigurationBuilder builder() {
-        return new SQLProxyConfigurationBuilder();
+    /**
+     * @deprecated use {@link SQLProxyConfiguration#builder()}
+     *
+     * @return the new instance of {@link SQLProxyConfigurationBuilder} configured with {@link PrimaryKeyMapper#LONG} primary key mapper
+     */
+    public static SQLProxyConfigurationBuilder<Long> builder() {
+        return new SQLProxyConfigurationBuilder<>(PrimaryKeyMapper.LONG);
     }
 
     /**
@@ -44,8 +54,8 @@ public final class SQLProxyConfigurationBuilder {
      *                         By default, under the hood uses {@link ClientSideConfig#getDefault}
      * @return {@link SQLProxyConfigurationBuilder}
      */
-    public SQLProxyConfigurationBuilder withClientSideConfig(ClientSideConfig clientSideConfig) {
-        this.clientSideConfig = clientSideConfig;
+    public SQLProxyConfigurationBuilder<K> withClientSideConfig(ClientSideConfig clientSideConfig) {
+        this.clientSideConfig = Objects.requireNonNull(clientSideConfig);
         return this;
     }
 
@@ -54,9 +64,19 @@ public final class SQLProxyConfigurationBuilder {
      *                      By default, under the hood uses {@link BucketTableSettings#getDefault}
      * @return {@link SQLProxyConfigurationBuilder}
      */
-    public SQLProxyConfigurationBuilder withTableSettings(BucketTableSettings tableSettings) {
-        this.tableSettings = tableSettings;
+    public SQLProxyConfigurationBuilder<K> withTableSettings(BucketTableSettings tableSettings) {
+        this.tableSettings = Objects.requireNonNull(tableSettings);
         return this;
+    }
+
+    /**
+     * @param primaryKeyMapper Specifies the type of primary key.
+     *                         By default, under the hood uses {@link PrimaryKeyMapper#LONG}
+     * @return {@link SQLProxyConfigurationBuilder}
+     */
+    public <T> SQLProxyConfigurationBuilder<T> withPrimaryKeyMapper(PrimaryKeyMapper<T> primaryKeyMapper) {
+        this.primaryKeyMapper = (PrimaryKeyMapper<K>) Objects.requireNonNull(primaryKeyMapper);
+        return (SQLProxyConfigurationBuilder<T>) this;
     }
 
     /**
@@ -65,16 +85,10 @@ public final class SQLProxyConfigurationBuilder {
      * @param dataSource - a database configuration
      * @return {@link SQLProxyConfiguration}
      */
-    public SQLProxyConfiguration build(DataSource dataSource) {
+    public SQLProxyConfiguration<K> build(DataSource dataSource) {
         if (dataSource == null) {
             throw new BucketExceptions.BucketExecutionException("DataSource cannot be null");
         }
-        if (tableSettings == null) {
-            this.tableSettings = BucketTableSettings.getDefault();
-        }
-        if (clientSideConfig == null) {
-            this.clientSideConfig = ClientSideConfig.getDefault();
-        }
-        return new SQLProxyConfiguration(dataSource, clientSideConfig, tableSettings);
+        return new SQLProxyConfiguration<>(this, dataSource);
     }
 }

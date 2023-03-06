@@ -43,11 +43,13 @@ import java.util.Objects;
  * In order to do this, your table should include the next columns: id as a PRIMARY KEY (BIGINT) and state (BYTEA)
  * To define column names, {@link SQLProxyConfiguration} include {@link io.github.bucket4j.distributed.jdbc.BucketTableSettings} which takes settings for the table to work with Bucket4j
  * @see {@link SQLProxyConfigurationBuilder} to get more information how to build {@link SQLProxyConfiguration}
+ *
+ * @param <K> type of primary key
  */
-public class MySQLSelectForUpdateBasedProxyManager extends AbstractSelectForUpdateBasedProxyManager<Long> {
+public class MySQLSelectForUpdateBasedProxyManager<K> extends AbstractSelectForUpdateBasedProxyManager<K> {
 
     private final DataSource dataSource;
-    private final SQLProxyConfiguration configuration;
+    private final SQLProxyConfiguration<K> configuration;
     private final String removeSqlQuery;
     private final String updateSqlQuery;
     private final String insertSqlQuery;
@@ -57,7 +59,7 @@ public class MySQLSelectForUpdateBasedProxyManager extends AbstractSelectForUpda
      *
      * @param configuration {@link SQLProxyConfiguration} configuration.
      */
-    public MySQLSelectForUpdateBasedProxyManager(SQLProxyConfiguration configuration) {
+    public MySQLSelectForUpdateBasedProxyManager(SQLProxyConfiguration<K> configuration) {
         super(configuration.getClientSideConfig());
         this.dataSource = Objects.requireNonNull(configuration.getDataSource());
         this.configuration = configuration;
@@ -69,7 +71,7 @@ public class MySQLSelectForUpdateBasedProxyManager extends AbstractSelectForUpda
     }
 
     @Override
-    protected SelectForUpdateBasedTransaction allocateTransaction(Long key) {
+    protected SelectForUpdateBasedTransaction allocateTransaction(K key) {
         Connection connection;
         try {
             connection = dataSource.getConnection();
@@ -92,7 +94,7 @@ public class MySQLSelectForUpdateBasedProxyManager extends AbstractSelectForUpda
                 try {
                     try (PreparedStatement updateStatement = connection.prepareStatement(updateSqlQuery)) {
                         updateStatement.setBytes(1, data);
-                        updateStatement.setLong(2, key);
+                        configuration.getPrimaryKeyMapper().set(updateStatement, 2, key);
                         updateStatement.executeUpdate();
                     }
                 } catch (SQLException e) {
@@ -130,7 +132,7 @@ public class MySQLSelectForUpdateBasedProxyManager extends AbstractSelectForUpda
             @Override
             public LockAndGetResult tryLockAndGet() {
                 try (PreparedStatement selectStatement = connection.prepareStatement(selectSqlQuery)) {
-                    selectStatement.setLong(1, key);
+                    configuration.getPrimaryKeyMapper().set(selectStatement, 1, key);
                     try (ResultSet rs = selectStatement.executeQuery()) {
                         if (!rs.next()) {
                             return LockAndGetResult.notLocked();
@@ -146,7 +148,7 @@ public class MySQLSelectForUpdateBasedProxyManager extends AbstractSelectForUpda
             @Override
             public boolean tryInsertEmptyData() {
                 try (PreparedStatement insertStatement = connection.prepareStatement(insertSqlQuery)) {
-                    insertStatement.setLong(1, key);
+                    configuration.getPrimaryKeyMapper().set(insertStatement, 1, key);
                     insertStatement.executeUpdate();
                     return true;
                 } catch (MySQLTransactionRollbackException conflict) {
@@ -161,10 +163,10 @@ public class MySQLSelectForUpdateBasedProxyManager extends AbstractSelectForUpda
     }
 
     @Override
-    public void removeProxy(Long key) {
+    public void removeProxy(K key) {
         try (Connection connection = dataSource.getConnection()) {
             try(PreparedStatement removeStatement = connection.prepareStatement(removeSqlQuery)) {
-                removeStatement.setLong(1, key);
+                configuration.getPrimaryKeyMapper().set(removeStatement, 1, key);
                 removeStatement.executeUpdate();
             }
         } catch (SQLException e) {

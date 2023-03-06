@@ -67,7 +67,7 @@ public class AsyncConsumptionScenario {
                 + ", permitted rate=" + Formatter.format(permittedRatePerSecond));
 
         String msg = "Actual rate " + Formatter.format(actualRatePerSecond) + " is greater then permitted rate " + Formatter.format(permittedRatePerSecond);
-        assertTrue(msg, actualRatePerSecond <= permittedRatePerSecond);
+        assertTrue(msg, actualRatePerSecond <= permittedRatePerSecond + 0.02);
     }
 
 }

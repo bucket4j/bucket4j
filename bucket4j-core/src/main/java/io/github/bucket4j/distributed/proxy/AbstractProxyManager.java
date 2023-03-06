@@ -32,7 +32,6 @@ import io.github.bucket4j.distributed.remote.Request;
 import io.github.bucket4j.distributed.remote.commands.GetConfigurationCommand;
 import io.github.bucket4j.distributed.versioning.Version;
 
-import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
@@ -142,7 +141,8 @@ public abstract class AbstractProxyManager<K> implements ProxyManager<K> {
                 @Override
                 public <T> CompletableFuture<CommandResult<T>> executeAsync(RemoteCommand<T> command) {
                     Request<T> request = new Request<>(command, getBackwardCompatibilityVersion(), getClientSideTime());
-                    return AbstractProxyManager.this.executeAsync(key, request);
+                    Supplier<CompletableFuture<CommandResult<T>>> futureSupplier = () -> AbstractProxyManager.this.executeAsync(key, request);
+                    return clientSideConfig.getExecutionStrategy().executeAsync(futureSupplier);
                 }
             };
             commandExecutor = asyncRequestOptimizer.apply(commandExecutor);
@@ -194,7 +194,8 @@ public abstract class AbstractProxyManager<K> implements ProxyManager<K> {
                 @Override
                 public <T> CommandResult<T> execute(RemoteCommand<T> command) {
                     Request<T> request = new Request<>(command, getBackwardCompatibilityVersion(), getClientSideTime());
-                    return AbstractProxyManager.this.execute(key, request);
+                    Supplier<CommandResult<T>> resultSupplier = () -> AbstractProxyManager.this.execute(key, request);
+                    return clientSideConfig.getExecutionStrategy().execute(resultSupplier);
                 }
             };
             commandExecutor = requestOptimizer.apply(commandExecutor);

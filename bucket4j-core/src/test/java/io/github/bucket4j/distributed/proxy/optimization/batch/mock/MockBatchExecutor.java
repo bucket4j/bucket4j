@@ -1,6 +1,7 @@
 package io.github.bucket4j.distributed.proxy.optimization.batch.mock;
 
-import io.github.bucket4j.util.concurrent.BatchHelper;
+import io.github.bucket4j.util.concurrent.batch.AsyncBatchHelper;
+import io.github.bucket4j.util.concurrent.batch.BatchHelper;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -19,14 +20,14 @@ public class MockBatchExecutor {
         }
     });
 
-    private BatchHelper<MockCommand, Long, CombinedMockCommand, CombinedResult> syncBatchHelper = BatchHelper.sync(
+    private BatchHelper<MockCommand, Long, CombinedMockCommand, CombinedResult> syncBatchHelper = BatchHelper.create(
             CombinedMockCommand::new,
             this::executeSync,
             (cmd) -> (Long) this.executeSync(cmd),
             CombinedResult::getResults
     );
 
-    private BatchHelper<MockCommand, Long, CombinedMockCommand, CombinedResult> asyncBatchHelper = BatchHelper.async(
+    private AsyncBatchHelper<MockCommand, Long, CombinedMockCommand, CombinedResult> asyncBatchHelper = AsyncBatchHelper.create(
             CombinedMockCommand::new,
             this::executeAsync,
             (cmd) -> (CompletableFuture<Long>) this.executeAsync(cmd),
@@ -43,7 +44,7 @@ public class MockBatchExecutor {
         return syncBatchHelper;
     }
 
-    public BatchHelper<MockCommand, Long, CombinedMockCommand, CombinedResult> getAsyncBatchHelper() {
+    public AsyncBatchHelper<MockCommand, Long, CombinedMockCommand, CombinedResult> getAsyncBatchHelper() {
         return asyncBatchHelper;
     }
 

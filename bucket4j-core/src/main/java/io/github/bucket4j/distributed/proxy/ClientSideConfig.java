@@ -35,14 +35,17 @@ import java.util.Optional;
  */
 public class ClientSideConfig {
 
-    private static ClientSideConfig defaultConfig = new ClientSideConfig(Versions.getLatest(), Optional.empty());
+    private static ClientSideConfig defaultConfig = new ClientSideConfig(Versions.getLatest(), Optional.empty(), ExecutionStrategy.SAME_TREAD);
 
     private final Version backwardCompatibilityVersion;
     private final Optional<TimeMeter> clientSideClock;
 
-    protected ClientSideConfig(Version backwardCompatibilityVersion, Optional<TimeMeter> clientSideClock) {
+    private final ExecutionStrategy executionStrategy;
+
+    protected ClientSideConfig(Version backwardCompatibilityVersion, Optional<TimeMeter> clientSideClock, ExecutionStrategy executionStrategy) {
         this.backwardCompatibilityVersion = Objects.requireNonNull(backwardCompatibilityVersion);
         this.clientSideClock = Objects.requireNonNull(clientSideClock);
+        this.executionStrategy = executionStrategy;
     }
 
     /**
@@ -72,7 +75,7 @@ public class ClientSideConfig {
      * @return new instance of {@link ClientSideConfig} with configured {@code backwardCompatibilityVersion}.
      */
     public ClientSideConfig backwardCompatibleWith(Version backwardCompatibilityVersion) {
-        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock);
+        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy);
     }
 
     /**
@@ -90,7 +93,21 @@ public class ClientSideConfig {
      * @return new instance of {@link ClientSideConfig} with configured {@code clientClock}.
      */
     public ClientSideConfig withClientClock(TimeMeter clientClock) {
-        return new ClientSideConfig(backwardCompatibilityVersion, Optional.of(clientClock));
+        return new ClientSideConfig(backwardCompatibilityVersion, Optional.of(clientClock), executionStrategy);
+    }
+
+    /**
+     * Returns new instance of {@link ClientSideConfig} with configured {@code executionStrategy}.
+     *
+     * <p>
+     * The default executionStrategy is {@link ExecutionStrategy#SAME_TREAD}.
+     *
+     * @param executionStrategy the strategy for request execution.
+     *
+     * @return new instance of {@link ClientSideConfig} with configured {@code clientClock}.
+     */
+    public ClientSideConfig withExecutionStrategy(ExecutionStrategy executionStrategy) {
+        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy);
     }
 
     /**
@@ -113,6 +130,15 @@ public class ClientSideConfig {
      */
     public Version getBackwardCompatibilityVersion() {
         return backwardCompatibilityVersion;
+    }
+
+    /**
+     * Returns the strategy for request execution
+     *
+     * @return the strategy for request execution
+     */
+    public ExecutionStrategy getExecutionStrategy() {
+        return executionStrategy;
     }
 
 }

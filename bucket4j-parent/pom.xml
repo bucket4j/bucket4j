@@ -7,7 +7,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.bucket4j</groupId>
-    <version>8.1.1</version>
+    <version>8.2.0</version>
     <artifactId>bucket4j-parent</artifactId>
     <packaging>pom</packaging>
     <name>bucket4j-parent</name>
@@ -60,7 +60,6 @@
         <jedis.version>4.2.3</jedis.version>
         <redisson.version>3.16.8</redisson.version>
         <lettuce.version>6.1.8.RELEASE</lettuce.version>
-        <spring-data-redis.version>2.6.4</spring-data-redis.version>
         <caffeine.version>2.9.3</caffeine.version>
     </properties>
 
@@ -150,6 +149,9 @@
                         <include>**/*Test.class</include>
                         <include>**/*Specification.class</include>
                     </includes>
+                    <systemPropertyVariables>
+                        <logback.configurationFile>${basedir}/src/test/resources/logback-test.xml</logback.configurationFile>
+                    </systemPropertyVariables>
                     <!-- Travis build workaround -->
                     <argLine>-Xms1024m -Xmx2048m</argLine>
                 </configuration>

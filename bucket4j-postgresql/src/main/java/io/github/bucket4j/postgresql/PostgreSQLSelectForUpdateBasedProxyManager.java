@@ -51,11 +51,13 @@ import java.util.Objects;
  * Within a SERIALIZABLE transaction, however, an error will be thrown if a row to be locked has changed since the transaction started.
  *
  * @see {@link SQLProxyConfigurationBuilder} to get more information how to build {@link SQLProxyConfiguration}
+ *
+ * @param <K> type of primary key
  */
-public class PostgreSQLSelectForUpdateBasedProxyManager extends AbstractSelectForUpdateBasedProxyManager<Long> {
+public class PostgreSQLSelectForUpdateBasedProxyManager<K> extends AbstractSelectForUpdateBasedProxyManager<K> {
 
     private final DataSource dataSource;
-    private final SQLProxyConfiguration configuration;
+    private final SQLProxyConfiguration<K> configuration;
     private final String removeSqlQuery;
     private final String updateSqlQuery;
     private final String insertSqlQuery;
@@ -65,7 +67,7 @@ public class PostgreSQLSelectForUpdateBasedProxyManager extends AbstractSelectFo
      *
      * @param configuration {@link SQLProxyConfiguration} configuration.
      */
-    public PostgreSQLSelectForUpdateBasedProxyManager(SQLProxyConfiguration configuration) {
+    public PostgreSQLSelectForUpdateBasedProxyManager(SQLProxyConfiguration<K> configuration) {
         super(configuration.getClientSideConfig());
         this.dataSource = Objects.requireNonNull(configuration.getDataSource());
         this.configuration = configuration;
@@ -77,7 +79,7 @@ public class PostgreSQLSelectForUpdateBasedProxyManager extends AbstractSelectFo
     }
 
     @Override
-    protected SelectForUpdateBasedTransaction allocateTransaction(Long key) {
+    protected SelectForUpdateBasedTransaction allocateTransaction(K key) {
         Connection connection;
         try {
             connection = dataSource.getConnection();
@@ -116,7 +118,7 @@ public class PostgreSQLSelectForUpdateBasedProxyManager extends AbstractSelectFo
             @Override
             public LockAndGetResult tryLockAndGet() {
                 try (PreparedStatement selectStatement = connection.prepareStatement(selectSqlQuery)) {
-                    selectStatement.setLong(1, key);
+                    configuration.getPrimaryKeyMapper().set(selectStatement, 1, key);
                     try (ResultSet rs = selectStatement.executeQuery()) {
                         if (rs.next()) {
                             byte[] data = rs.getBytes(configuration.getStateName());
@@ -133,7 +135,7 @@ public class PostgreSQLSelectForUpdateBasedProxyManager extends AbstractSelectFo
             @Override
             public boolean tryInsertEmptyData() {
                 try (PreparedStatement insertStatement = connection.prepareStatement(insertSqlQuery)) {
-                    insertStatement.setLong(1, key);
+                    configuration.getPrimaryKeyMapper().set(insertStatement, 1, key);
                     return insertStatement.executeUpdate() > 0;
                 } catch (SQLException e) {
                     throw new BucketExceptions.BucketExecutionException(e);
@@ -145,7 +147,7 @@ public class PostgreSQLSelectForUpdateBasedProxyManager extends AbstractSelectFo
                 try {
                     try (PreparedStatement updateStatement = connection.prepareStatement(updateSqlQuery)) {
                         updateStatement.setBytes(1, data);
-                        updateStatement.setLong(2, key);
+                        configuration.getPrimaryKeyMapper().set(updateStatement, 2, key);
                         updateStatement.executeUpdate();
                     }
                 } catch (SQLException e) {
@@ -167,10 +169,10 @@ public class PostgreSQLSelectForUpdateBasedProxyManager extends AbstractSelectFo
     }
 
     @Override
-    public void removeProxy(Long key) {
+    public void removeProxy(K key) {
         try (Connection connection = dataSource.getConnection()) {
             try(PreparedStatement removeStatement = connection.prepareStatement(removeSqlQuery)) {
-                removeStatement.setLong(1, key);
+                configuration.getPrimaryKeyMapper().set(removeStatement, 1, key);
                 removeStatement.executeUpdate();
             }
         } catch (SQLException e) {

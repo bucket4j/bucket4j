@@ -8,7 +8,7 @@
     <parent>
         <groupId>com.bucket4j</groupId>
         <artifactId>bucket4j-parent</artifactId>
-        <version>8.1.1</version>
+        <version>8.2.0</version>
         <relativePath>../bucket4j-parent</relativePath>
     </parent>
     <artifactId>asciidoc</artifactId>
@@ -102,6 +102,18 @@
                                 </goals>
                                 <configuration>
                                     <sourceDocumentName>release-notes.adoc</sourceDocumentName>
+                                </configuration>
+                            </execution>
+                            <!-- Release notes for current version -->
+                            <execution>
+                                <id>generate-previous-versions-archive</id>
+                                <phase>generate-resources</phase>
+                                <goals>
+                                    <goal>process-asciidoc</goal>
+                                </goals>
+                                <configuration>
+                                    <sourceDocumentName>previos-releases.adoc</sourceDocumentName>
+                                    <outputDirectory>${asciidoc.generated.directory}</outputDirectory>
                                 </configuration>
                             </execution>
                             <!-- Root site page -->

@@ -49,11 +49,13 @@ import java.util.Objects;
  * Multiple lock requests stack so that if the same resource is locked three times it must then be unlocked three times to be released for other sessions use.
  * The lock is automatically released at the end of the current transaction and cannot be released explicitly.
  * @see {@link SQLProxyConfigurationBuilder} to get more information how to build {@link SQLProxyConfiguration}
+ *
+ * @param <K> type of primary key
  */
-public class PostgreSQLadvisoryLockBasedProxyManager extends AbstractLockBasedProxyManager<Long> {
+public class PostgreSQLadvisoryLockBasedProxyManager<K> extends AbstractLockBasedProxyManager<K> {
 
     private final DataSource dataSource;
-    private final SQLProxyConfiguration configuration;
+    private final SQLProxyConfiguration<K> configuration;
     private final String removeSqlQuery;
     private final String updateSqlQuery;
     private final String insertSqlQuery;
@@ -63,7 +65,7 @@ public class PostgreSQLadvisoryLockBasedProxyManager extends AbstractLockBasedPr
      *
      * @param configuration {@link SQLProxyConfiguration} configuration.
      */
-    public PostgreSQLadvisoryLockBasedProxyManager(SQLProxyConfiguration configuration) {
+    public <T extends Object> PostgreSQLadvisoryLockBasedProxyManager(SQLProxyConfiguration<K> configuration) {
         super(configuration.getClientSideConfig());
         this.dataSource = Objects.requireNonNull(configuration.getDataSource());
         this.configuration = configuration;
@@ -74,7 +76,7 @@ public class PostgreSQLadvisoryLockBasedProxyManager extends AbstractLockBasedPr
     }
 
     @Override
-    protected LockBasedTransaction allocateTransaction(Long key) {
+    protected LockBasedTransaction allocateTransaction(K key) {
         Connection connection;
         try {
             connection = dataSource.getConnection();
@@ -97,12 +99,12 @@ public class PostgreSQLadvisoryLockBasedProxyManager extends AbstractLockBasedPr
                 try {
                     String lockSQL = "SELECT pg_advisory_xact_lock(?)";
                     try (PreparedStatement lockStatement = connection.prepareStatement(lockSQL)) {
-                        lockStatement.setLong(1, key);
+                        configuration.getPrimaryKeyMapper().set(lockStatement, 1, key);
                         lockStatement.executeQuery();
                     }
 
                     try (PreparedStatement selectStatement = connection.prepareStatement(selectSqlQuery)) {
-                        selectStatement.setLong(1, key);
+                        configuration.getPrimaryKeyMapper().set(selectStatement, 1, key);
                         try (ResultSet rs = selectStatement.executeQuery()) {
                             if (rs.next()) {
                                 return rs.getBytes(configuration.getStateName());
@@ -121,7 +123,7 @@ public class PostgreSQLadvisoryLockBasedProxyManager extends AbstractLockBasedPr
                 try {
                     try (PreparedStatement updateStatement = connection.prepareStatement(updateSqlQuery)) {
                         updateStatement.setBytes(1, data);
-                        updateStatement.setLong(2, key);
+                        configuration.getPrimaryKeyMapper().set(updateStatement, 2, key);
                         updateStatement.executeUpdate();
                     }
                 } catch (SQLException e) {
@@ -142,7 +144,7 @@ public class PostgreSQLadvisoryLockBasedProxyManager extends AbstractLockBasedPr
             public void create(byte[] data, RemoteBucketState newState) {
                 try {
                     try (PreparedStatement insertStatement = connection.prepareStatement(insertSqlQuery)) {
-                        insertStatement.setLong(1, key);
+                        configuration.getPrimaryKeyMapper().set(insertStatement, 1, key);
                         insertStatement.setBytes(2, data);
                         insertStatement.executeUpdate();
                     }
@@ -177,10 +179,10 @@ public class PostgreSQLadvisoryLockBasedProxyManager extends AbstractLockBasedPr
     }
 
     @Override
-    public void removeProxy(Long key) {
+    public void removeProxy(K key) {
         try (Connection connection = dataSource.getConnection()) {
             try(PreparedStatement removeStatement = connection.prepareStatement(removeSqlQuery)) {
-                removeStatement.setLong(1, key);
+                configuration.getPrimaryKeyMapper().set(removeStatement, 1, key);
                 removeStatement.executeUpdate();
             }
         } catch (SQLException e) {

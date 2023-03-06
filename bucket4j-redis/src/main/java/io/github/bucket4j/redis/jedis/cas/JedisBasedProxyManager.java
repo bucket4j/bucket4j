@@ -29,29 +29,69 @@ import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.redis.AbstractRedisProxyManagerBuilder;
 import io.github.bucket4j.redis.consts.LuaScripts;
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisCluster;
 import redis.clients.jedis.util.Pool;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Function;
 
 public class JedisBasedProxyManager extends AbstractCompareAndSwapBasedProxyManager<byte[]> {
 
-    private final Pool<Jedis> jedisPool;
+    private final RedisApi redisApi;
     private final ExpirationAfterWriteStrategy expirationStrategy;
 
     public static JedisBasedProxyManagerBuilder builderFor(Pool<Jedis> jedisPool) {
-        return new JedisBasedProxyManagerBuilder(jedisPool);
+        Objects.requireNonNull(jedisPool);
+        RedisApi redisApi = new RedisApi() {
+            @Override
+            public Object eval(byte[] script, int keyCount, byte[]... params) {
+                try (Jedis jedis = jedisPool.getResource()) {
+                    return jedis.eval(script, 1, params);
+                }
+            }
+            @Override
+            public byte[] get(byte[] key) {
+                try (Jedis jedis = jedisPool.getResource()) {
+                    return jedis.get(key);
+                }
+            }
+            @Override
+            public void delete(byte[] key) {
+                try (Jedis jedis = jedisPool.getResource()) {
+                    jedis.del(key);
+                }
+            }
+        };
+        return new JedisBasedProxyManagerBuilder(redisApi);
+    }
+
+    public static JedisBasedProxyManagerBuilder builderFor(JedisCluster jedisCluster) {
+        Objects.requireNonNull(jedisCluster);
+        RedisApi redisApi = new RedisApi() {
+            @Override
+            public Object eval(byte[] script, int keyCount, byte[]... params) {
+                return jedisCluster.eval(script, keyCount, params);
+            }
+            @Override
+            public byte[] get(byte[] key) {
+                return jedisCluster.get(key);
+            }
+            @Override
+            public void delete(byte[] key) {
+                jedisCluster.del(key);
+            }
+        };
+        return new JedisBasedProxyManagerBuilder(redisApi);
     }
 
     public static class JedisBasedProxyManagerBuilder extends AbstractRedisProxyManagerBuilder<JedisBasedProxyManagerBuilder> {
 
-        private final Pool<Jedis> jedisPool;
+        private final RedisApi redisApi;
 
-        private JedisBasedProxyManagerBuilder(Pool<Jedis> jedisPool) {
-            this.jedisPool = Objects.requireNonNull(jedisPool);
+        private JedisBasedProxyManagerBuilder(RedisApi redisApi) {
+            this.redisApi = Objects.requireNonNull(redisApi);
         }
 
         public JedisBasedProxyManager build() {
@@ -62,7 +102,7 @@ public class JedisBasedProxyManager extends AbstractCompareAndSwapBasedProxyMana
 
     private JedisBasedProxyManager(JedisBasedProxyManagerBuilder builder) {
         super(builder.getClientSideConfig());
-        this.jedisPool = builder.jedisPool;
+        this.redisApi = builder.redisApi;
         this.expirationStrategy = builder.getNotNullExpirationStrategy();
     }
 
@@ -71,7 +111,7 @@ public class JedisBasedProxyManager extends AbstractCompareAndSwapBasedProxyMana
         return new CompareAndSwapOperation() {
             @Override
             public Optional<byte[]> getStateData() {
-                return withResource(jedis -> Optional.ofNullable(jedis.get(key)));
+                return Optional.ofNullable(redisApi.get(key));
             }
 
             @Override
@@ -88,12 +128,12 @@ public class JedisBasedProxyManager extends AbstractCompareAndSwapBasedProxyMana
 
     @Override
     public void removeProxy(byte[] key) {
-        withResource(jedis -> jedis.del(key));
+        redisApi.delete(key);
     }
 
     @Override
     protected CompletableFuture<Void> removeAsync(byte[] key) {
-        return withResource(jedis -> CompletableFuture.runAsync(() -> jedis.del(key)));
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -101,30 +141,28 @@ public class JedisBasedProxyManager extends AbstractCompareAndSwapBasedProxyMana
         return false;
     }
 
-
-
     private Boolean compareAndSwap(byte[] key, byte[] originalData, byte[] newData, RemoteBucketState newState) {
         long ttlMillis = calculateTtlMillis(newState);
         if (ttlMillis > 0) {
             if (originalData == null) {
                 // nulls are prohibited as values, so "replace" must not be used in such cases
                 byte[][] keysAndArgs = {key, newData, encodeLong(ttlMillis)};
-                Object res = withResource(jedis -> jedis.eval(LuaScripts.SCRIPT_SET_NX_PX.getBytes(StandardCharsets.UTF_8), 1, keysAndArgs));
+                Object res = redisApi.eval(LuaScripts.SCRIPT_SET_NX_PX.getBytes(StandardCharsets.UTF_8), 1, keysAndArgs);
                 return res != null && !res.equals(0L);
             } else {
                 byte[][] keysAndArgs = {key, originalData, newData, encodeLong(ttlMillis)};
-                Object res = withResource(jedis -> jedis.eval(LuaScripts.SCRIPT_COMPARE_AND_SWAP_PX.getBytes(StandardCharsets.UTF_8), 1, keysAndArgs));
+                Object res = redisApi.eval(LuaScripts.SCRIPT_COMPARE_AND_SWAP_PX.getBytes(StandardCharsets.UTF_8), 1, keysAndArgs);
                 return res != null && !res.equals(0L);
             }
         } else {
             if (originalData == null) {
                 // nulls are prohibited as values, so "replace" must not be used in such cases
                 byte[][] keysAndArgs = {key, newData};
-                Object res = withResource(jedis -> jedis.eval(LuaScripts.SCRIPT_SET_NX.getBytes(StandardCharsets.UTF_8), 1, keysAndArgs));
+                Object res = redisApi.eval(LuaScripts.SCRIPT_SET_NX.getBytes(StandardCharsets.UTF_8), 1, keysAndArgs);
                 return res != null && !res.equals(0L);
             } else {
                 byte[][] keysAndArgs = {key, originalData, newData};
-                Object res = withResource(jedis -> jedis.eval(LuaScripts.SCRIPT_COMPARE_AND_SWAP.getBytes(StandardCharsets.UTF_8), 1, keysAndArgs));
+                Object res = redisApi.eval(LuaScripts.SCRIPT_COMPARE_AND_SWAP.getBytes(StandardCharsets.UTF_8), 1, keysAndArgs);
                 return res != null && !res.equals(0L);
             }
         }
@@ -134,16 +172,20 @@ public class JedisBasedProxyManager extends AbstractCompareAndSwapBasedProxyMana
         return ("" + value).getBytes(StandardCharsets.UTF_8);
     }
 
-    private <V> V withResource(Function<Jedis, V> fn) {
-        try (Jedis jedis = jedisPool.getResource()) {
-            return fn.apply(jedis);
-        }
-    }
-
     private long calculateTtlMillis(RemoteBucketState state) {
         Optional<TimeMeter> clock = getClientSideConfig().getClientSideClock();
         long currentTimeNanos = clock.isPresent() ? clock.get().currentTimeNanos() : System.currentTimeMillis() * 1_000_000;
         return expirationStrategy.calculateTimeToLiveMillis(state, currentTimeNanos);
+    }
+
+    private interface RedisApi {
+
+        Object eval(final byte[] script, final int keyCount, final byte[]... params);
+
+        byte[] get(byte[] key);
+
+        void delete(byte[] key);
+
     }
 
 }
