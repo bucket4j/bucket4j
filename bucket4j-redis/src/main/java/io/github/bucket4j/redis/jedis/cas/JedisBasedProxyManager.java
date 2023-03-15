@@ -26,6 +26,7 @@ import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AbstractCom
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AsyncCompareAndSwapOperation;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.CompareAndSwapOperation;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
+import io.github.bucket4j.distributed.serialization.Mapper;
 import io.github.bucket4j.redis.AbstractRedisProxyManagerBuilder;
 import io.github.bucket4j.redis.consts.LuaScripts;
 import redis.clients.jedis.Jedis;
@@ -37,12 +38,13 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-public class JedisBasedProxyManager extends AbstractCompareAndSwapBasedProxyManager<byte[]> {
+public class JedisBasedProxyManager<K> extends AbstractCompareAndSwapBasedProxyManager<K> {
 
     private final RedisApi redisApi;
     private final ExpirationAfterWriteStrategy expirationStrategy;
+    private final Mapper<K> keyMapper;
 
-    public static JedisBasedProxyManagerBuilder builderFor(Pool<Jedis> jedisPool) {
+    public static JedisBasedProxyManagerBuilder<byte[]> builderFor(Pool<Jedis> jedisPool) {
         Objects.requireNonNull(jedisPool);
         RedisApi redisApi = new RedisApi() {
             @Override
@@ -64,10 +66,10 @@ public class JedisBasedProxyManager extends AbstractCompareAndSwapBasedProxyMana
                 }
             }
         };
-        return new JedisBasedProxyManagerBuilder(redisApi);
+        return new JedisBasedProxyManagerBuilder<>(Mapper.BYTES, redisApi);
     }
 
-    public static JedisBasedProxyManagerBuilder builderFor(JedisCluster jedisCluster) {
+    public static JedisBasedProxyManagerBuilder<byte[]> builderFor(JedisCluster jedisCluster) {
         Objects.requireNonNull(jedisCluster);
         RedisApi redisApi = new RedisApi() {
             @Override
@@ -83,56 +85,65 @@ public class JedisBasedProxyManager extends AbstractCompareAndSwapBasedProxyMana
                 jedisCluster.del(key);
             }
         };
-        return new JedisBasedProxyManagerBuilder(redisApi);
+        return new JedisBasedProxyManagerBuilder<>(Mapper.BYTES, redisApi);
     }
 
-    public static class JedisBasedProxyManagerBuilder extends AbstractRedisProxyManagerBuilder<JedisBasedProxyManagerBuilder> {
+    public static class JedisBasedProxyManagerBuilder<K> extends AbstractRedisProxyManagerBuilder<JedisBasedProxyManagerBuilder<K>> {
 
         private final RedisApi redisApi;
+        private Mapper<K> keyMapper;
 
-        private JedisBasedProxyManagerBuilder(RedisApi redisApi) {
+        public <Key> JedisBasedProxyManagerBuilder<Key> withKeyMapper(Mapper<Key> keyMapper) {
+            this.keyMapper = (Mapper) Objects.requireNonNull(keyMapper);
+            return (JedisBasedProxyManagerBuilder) this;
+        }
+
+        private JedisBasedProxyManagerBuilder(Mapper<K> keyMapper, RedisApi redisApi) {
+            this.keyMapper = Objects.requireNonNull(keyMapper);
             this.redisApi = Objects.requireNonNull(redisApi);
         }
 
-        public JedisBasedProxyManager build() {
-            return new JedisBasedProxyManager(this);
+        public JedisBasedProxyManager<K> build() {
+            return new JedisBasedProxyManager<K>(this);
         }
 
     }
 
-    private JedisBasedProxyManager(JedisBasedProxyManagerBuilder builder) {
+    private JedisBasedProxyManager(JedisBasedProxyManagerBuilder<K> builder) {
         super(builder.getClientSideConfig());
         this.redisApi = builder.redisApi;
         this.expirationStrategy = builder.getNotNullExpirationStrategy();
+        this.keyMapper = builder.keyMapper;
     }
 
     @Override
-    protected CompareAndSwapOperation beginCompareAndSwapOperation(byte[] key) {
+    protected CompareAndSwapOperation beginCompareAndSwapOperation(K key) {
+        byte[] keyBytes = keyMapper.toBytes(key);
         return new CompareAndSwapOperation() {
             @Override
             public Optional<byte[]> getStateData() {
-                return Optional.ofNullable(redisApi.get(key));
+                return Optional.ofNullable(redisApi.get(keyBytes));
             }
 
             @Override
             public boolean compareAndSwap(byte[] originalData, byte[] newData, RemoteBucketState newState) {
-                return JedisBasedProxyManager.this.compareAndSwap(key, originalData, newData, newState);
+                return JedisBasedProxyManager.this.compareAndSwap(keyBytes, originalData, newData, newState);
             }
         };
     }
 
     @Override
-    protected AsyncCompareAndSwapOperation beginAsyncCompareAndSwapOperation(byte[] key) {
+    protected AsyncCompareAndSwapOperation beginAsyncCompareAndSwapOperation(K key) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void removeProxy(byte[] key) {
-        redisApi.delete(key);
+    public void removeProxy(K key) {
+        redisApi.delete(keyMapper.toBytes(key));
     }
 
     @Override
-    protected CompletableFuture<Void> removeAsync(byte[] key) {
+    protected CompletableFuture<Void> removeAsync(K key) {
         throw new UnsupportedOperationException();
     }
 
