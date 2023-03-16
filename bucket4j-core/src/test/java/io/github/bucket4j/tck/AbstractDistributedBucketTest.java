@@ -323,4 +323,51 @@ public abstract class AbstractDistributedBucketTest<K> {
         }
     }
 
+    @Test
+    public void testWithMapper() {
+        BucketConfiguration configuration = BucketConfiguration.builder()
+                .addLimit(Bandwidth.simple(10, Duration.ofDays(1)))
+                .build();
+
+        ProxyManager<String> mappedProxyManager = proxyManager.withMapper(dummy -> key);
+        Bucket unmappedBucket = proxyManager.builder().build(key, configuration);
+        Bucket mappedBucket = mappedProxyManager.builder().build("dummy", configuration);
+        Bucket mappedBucket2 = mappedProxyManager.builder().build("dummy2", configuration);
+
+        assertTrue(unmappedBucket.tryConsume(10));
+        assertFalse(mappedBucket.tryConsume(1));
+        assertFalse(mappedBucket2.tryConsume(1));
+
+        unmappedBucket.reset();
+
+        assertTrue(mappedBucket.tryConsume(5));
+        assertTrue(mappedBucket2.tryConsume(5));
+        assertFalse(unmappedBucket.tryConsume(1));
+    }
+
+    @Test
+    public void testWithMapperAsync() throws Exception {
+        if (!proxyManager.isAsyncModeSupported()) {
+            return;
+        }
+
+        BucketConfiguration configuration = BucketConfiguration.builder()
+                .addLimit(Bandwidth.simple(10, Duration.ofDays(1)))
+                .build();
+
+        ProxyManager<String> mappedProxyManager = proxyManager.withMapper(dummy -> key);
+        AsyncBucketProxy unmappedBucket = proxyManager.asAsync().builder().build(key, configuration);
+        AsyncBucketProxy mappedBucket = mappedProxyManager.asAsync().builder().build("dummy", configuration);
+        AsyncBucketProxy mappedBucket2 = mappedProxyManager.asAsync().builder().build("dummy2", configuration);
+
+        assertTrue(unmappedBucket.tryConsume(10).get());
+        assertFalse(mappedBucket.tryConsume(1).get());
+        assertFalse(mappedBucket2.tryConsume(1).get());
+
+        unmappedBucket.reset().get();
+
+        assertTrue(mappedBucket.tryConsume(5).get());
+        assertTrue(mappedBucket2.tryConsume(5).get());
+        assertFalse(unmappedBucket.tryConsume(1).get());
+    }
 }

@@ -26,6 +26,7 @@ import io.github.bucket4j.distributed.BucketProxy;
 import io.github.bucket4j.distributed.proxy.optimization.Optimization;
 
 
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
@@ -87,7 +88,6 @@ public interface RemoteBucketBuilder<K> {
      * is costly, for example because parameters for particular {@code key} are stored in external database,
      * {@code configurationSupplier} will be called if and only if bucket has not been persisted before.
      *
-     *
      * @param key the key that used in external storage to distinguish one bucket from another.
      * @param configurationSupplier provider for bucket configuration
      *
@@ -107,10 +107,52 @@ public interface RemoteBucketBuilder<K> {
      * @param key the key that used in external storage to distinguish one bucket from another.
      * @param configuration limits configuration
      *
-     *
-     *
      * @return new instance of {@link BucketProxy} created in lazy mode.
      */
     BucketProxy build(K key, BucketConfiguration configuration);
 
+
+    /**
+     * Returns a proxy object that wraps this RemoteBucketBuilder such that keys are first mapped using the specified mapping function
+     * before being sent to the remote store. The returned RemoteBucketBuilder shares the same underlying store as the original,
+     * and keys that map to the same value will share the same remote state.
+     *
+     * @param mapper the mapper function to apply to keys
+     * @return a proxy object that wraps this RemoteBucketBuilder
+     * @param <K1> the type of key accepted by returned RemoteBucketBuilder
+     */
+    default <K1> RemoteBucketBuilder<K1> withMapper(Function<? super K1, ? extends K> mapper) {
+        return new RemoteBucketBuilder<>() {
+            @Override
+            public RemoteBucketBuilder<K1> withRecoveryStrategy(RecoveryStrategy recoveryStrategy) {
+                return RemoteBucketBuilder.this.withRecoveryStrategy(recoveryStrategy).withMapper(mapper);
+            }
+
+            @Override
+            public RemoteBucketBuilder<K1> withOptimization(Optimization optimization) {
+                return RemoteBucketBuilder.this.withOptimization(optimization).withMapper(mapper);
+            }
+
+            @Override
+            public RemoteBucketBuilder<K1> withImplicitConfigurationReplacement(long desiredConfigurationVersion, TokensInheritanceStrategy tokensInheritanceStrategy) {
+                return RemoteBucketBuilder.this.withImplicitConfigurationReplacement(desiredConfigurationVersion, tokensInheritanceStrategy).withMapper(mapper);
+            }
+
+            @Override
+            public BucketProxy build(K1 key, Supplier<BucketConfiguration> configurationSupplier) {
+                return RemoteBucketBuilder.this.build(mapper.apply(key), configurationSupplier);
+            }
+
+            @Override
+            public BucketProxy build(K1 key, BucketConfiguration configuration) {
+                return RemoteBucketBuilder.this.build(mapper.apply(key), configuration);
+            }
+
+            // To prevent nesting of anonymous class instances, directly map the original instance.
+            @Override
+            public <K2> RemoteBucketBuilder<K2> withMapper(Function<? super K2, ? extends K1> innerMapper) {
+                return RemoteBucketBuilder.this.withMapper(mapper.compose(innerMapper));
+            }
+        };
+    }
 }
