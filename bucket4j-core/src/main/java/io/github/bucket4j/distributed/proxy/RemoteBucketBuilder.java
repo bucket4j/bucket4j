@@ -125,17 +125,20 @@ public interface RemoteBucketBuilder<K> {
         return new RemoteBucketBuilder<>() {
             @Override
             public RemoteBucketBuilder<K1> withRecoveryStrategy(RecoveryStrategy recoveryStrategy) {
-                return RemoteBucketBuilder.this.withRecoveryStrategy(recoveryStrategy).withMapper(mapper);
+                RemoteBucketBuilder.this.withRecoveryStrategy(recoveryStrategy);
+                return this;
             }
 
             @Override
             public RemoteBucketBuilder<K1> withOptimization(Optimization optimization) {
-                return RemoteBucketBuilder.this.withOptimization(optimization).withMapper(mapper);
+                RemoteBucketBuilder.this.withOptimization(optimization);
+                return this;
             }
 
             @Override
             public RemoteBucketBuilder<K1> withImplicitConfigurationReplacement(long desiredConfigurationVersion, TokensInheritanceStrategy tokensInheritanceStrategy) {
-                return RemoteBucketBuilder.this.withImplicitConfigurationReplacement(desiredConfigurationVersion, tokensInheritanceStrategy).withMapper(mapper);
+                RemoteBucketBuilder.this.withImplicitConfigurationReplacement(desiredConfigurationVersion, tokensInheritanceStrategy);
+                return this;
             }
 
             @Override
