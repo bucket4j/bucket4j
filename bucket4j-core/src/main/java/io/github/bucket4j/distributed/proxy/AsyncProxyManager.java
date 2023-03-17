@@ -24,6 +24,7 @@ import io.github.bucket4j.distributed.AsyncBucketProxy;
 
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
 
 /**
  * The asynchronous equivalent of {@link ProxyManager}.
@@ -59,4 +60,37 @@ public interface AsyncProxyManager<K> {
      */
     CompletableFuture<Optional<BucketConfiguration>> getProxyConfiguration(K key);
 
+    /**
+     * Returns a proxy object that wraps this AsyncProxyManager such that keys are first mapped using the specified mapping function
+     * before being sent to the remote store. The returned AsyncProxyManager shares the same underlying store as the original,
+     * and keys that map to the same value will share the same remote state.
+     *
+     * @param mapper the mapper function to apply to keys
+     * @return a proxy object that wraps this AsyncProxyManager
+     * @param <K1> the type of key accepted by returned AsyncProxyManager
+     */
+    default <K1> AsyncProxyManager<K1> withMapper(Function<? super K1, ? extends K> mapper) {
+        return new AsyncProxyManager<>() {
+            @Override
+            public RemoteAsyncBucketBuilder<K1> builder() {
+                return AsyncProxyManager.this.builder().withMapper(mapper);
+            }
+
+            @Override
+            public CompletableFuture<Void> removeProxy(K1 key) {
+                return AsyncProxyManager.this.removeProxy(mapper.apply(key));
+            }
+
+            @Override
+            public CompletableFuture<Optional<BucketConfiguration>> getProxyConfiguration(K1 key) {
+                return AsyncProxyManager.this.getProxyConfiguration(mapper.apply(key));
+            }
+
+            // To prevent nesting of anonymous class instances, directly map the original instance.
+            @Override
+            public <K2> AsyncProxyManager<K2> withMapper(Function<? super K2, ? extends K1> innerMapper) {
+                return AsyncProxyManager.this.withMapper(mapper.compose(innerMapper));
+            }
+        };
+    }
 }
