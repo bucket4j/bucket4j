@@ -15,7 +15,7 @@
         <maven.deploy.skip>true</maven.deploy.skip>
         <revapi.skip>true</revapi.skip>
         <experimentalCoroutines>enable</experimentalCoroutines>
-        <kotlin.version>1.4.0</kotlin.version>
+        <kotlin.version>1.6.0</kotlin.version>
         <lincheck.version>2.14.1</lincheck.version>
         <asm.version>9.0</asm.version>
         <maven.compiler.source>11</maven.compiler.source>
