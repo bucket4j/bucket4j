@@ -58,7 +58,7 @@
         <testcontainers.version>1.17.1</testcontainers.version>
         <lettuce-version>5.0.2.RELEASE</lettuce-version>
         <jedis.version>4.2.3</jedis.version>
-        <redisson.version>3.16.8</redisson.version>
+        <redisson.version>3.21.0</redisson.version>
         <lettuce.version>6.1.8.RELEASE</lettuce.version>
         <caffeine.version>2.9.3</caffeine.version>
     </properties>

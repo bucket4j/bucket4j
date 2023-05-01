@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -35,7 +35,7 @@ import org.redisson.client.codec.ByteArrayCodec;
 import org.redisson.client.protocol.RedisCommand;
 import org.redisson.client.protocol.RedisCommands;
 import org.redisson.client.protocol.convertor.BooleanNotNullReplayConvertor;
-import org.redisson.command.CommandExecutor;
+import org.redisson.command.CommandAsyncExecutor;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -48,21 +48,21 @@ public class RedissonBasedProxyManager<K> extends AbstractCompareAndSwapBasedPro
 
     public static RedisCommand<Boolean> SET = new RedisCommand<>("SET", new BooleanNotNullReplayConvertor());
 
-    private final CommandExecutor commandExecutor;
+    private final CommandAsyncExecutor commandExecutor;
     private final ExpirationAfterWriteStrategy expirationStrategy;
 
     private final Mapper<K> keyMapper;
 
-    public static RedissonBasedProxyManagerBuilder<String> builderFor(CommandExecutor commandExecutor) {
+    public static RedissonBasedProxyManagerBuilder<String> builderFor(CommandAsyncExecutor commandExecutor) {
         return new RedissonBasedProxyManagerBuilder<>(Mapper.STRING, commandExecutor);
     }
 
     public static class RedissonBasedProxyManagerBuilder<K> extends AbstractRedisProxyManagerBuilder<RedissonBasedProxyManagerBuilder<K>> {
 
-        private final CommandExecutor commandExecutor;
+        private final CommandAsyncExecutor commandExecutor;
         private Mapper<K> keyMapper;
 
-        private RedissonBasedProxyManagerBuilder(Mapper<K> keyMapper, CommandExecutor commandExecutor) {
+        private RedissonBasedProxyManagerBuilder(Mapper<K> keyMapper, CommandAsyncExecutor commandExecutor) {
             this.keyMapper = Objects.requireNonNull(keyMapper);
             this.commandExecutor = Objects.requireNonNull(commandExecutor);
         }
@@ -92,8 +92,8 @@ public class RedissonBasedProxyManager<K> extends AbstractCompareAndSwapBasedPro
         return new CompareAndSwapOperation() {
             @Override
             public Optional<byte[]> getStateData() {
-                byte[] persistedState = commandExecutor.read(stringKey, ByteArrayCodec.INSTANCE, RedisCommands.GET, stringKey);
-                return Optional.ofNullable(persistedState);
+                RFuture<byte[]> persistedState = commandExecutor.readAsync(stringKey, ByteArrayCodec.INSTANCE, RedisCommands.GET, stringKey);
+                return Optional.ofNullable(commandExecutor.get(persistedState));
             }
             @Override
             public boolean compareAndSwap(byte[] originalData, byte[] newData, RemoteBucketState newState) {
