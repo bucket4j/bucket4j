@@ -6,11 +6,12 @@ import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.redisson.command.CommandExecutor;
-import org.redisson.command.CommandSyncService;
+import org.redisson.command.CommandAsyncExecutor;
+import org.redisson.command.CommandAsyncService;
 import org.redisson.config.Config;
 import org.redisson.config.ConfigSupport;
 import org.redisson.connection.ConnectionManager;
+import org.redisson.liveobject.core.RedissonObjectBuilder;
 import org.testcontainers.containers.GenericContainer;
 
 import java.time.Duration;
@@ -20,7 +21,7 @@ public class RedissonBasedProxyManagerFixedTtlTest extends AbstractDistributedBu
 
     private static GenericContainer container;
     private static ConnectionManager connectionManager;
-    private static CommandExecutor commandExecutor;
+    private static CommandAsyncExecutor commandExecutor;
 
     @BeforeClass
     public static void setup() {
@@ -51,8 +52,8 @@ public class RedissonBasedProxyManagerFixedTtlTest extends AbstractDistributedBu
         return connectionManager;
     }
 
-    private static CommandExecutor createRedissonExecutor(ConnectionManager connectionManager) {
-        return new CommandSyncService(connectionManager, null);
+    private static CommandAsyncExecutor createRedissonExecutor(ConnectionManager connectionManager) {
+        return new CommandAsyncService(connectionManager, null, RedissonObjectBuilder.ReferenceType.DEFAULT);
     }
 
     private static GenericContainer startRedisContainer() {
