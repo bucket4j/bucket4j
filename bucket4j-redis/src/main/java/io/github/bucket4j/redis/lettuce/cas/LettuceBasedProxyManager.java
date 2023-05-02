@@ -68,7 +68,7 @@ public class LettuceBasedProxyManager<K> extends AbstractCompareAndSwapBasedProx
                 return (RedisFuture) redisAsyncCommands.del(key);
             }
         };
-        return new LettuceBasedProxyManagerBuilder(redisApi);
+        return new LettuceBasedProxyManagerBuilder(Mapper.BYTES, redisApi);
     }
 
     public static LettuceBasedProxyManagerBuilder<byte[]> builderFor(StatefulRedisConnection<byte[], byte[]> statefulRedisConnection) {
@@ -103,7 +103,7 @@ public class LettuceBasedProxyManager<K> extends AbstractCompareAndSwapBasedProx
                 return (RedisFuture) redisAsyncCommands.del(key);
             }
         };
-        return new LettuceBasedProxyManagerBuilder<>(redisApi);
+        return new LettuceBasedProxyManagerBuilder<>(Mapper.BYTES, redisApi);
     }
 
     public static class LettuceBasedProxyManagerBuilder<K> extends AbstractRedisProxyManagerBuilder<LettuceBasedProxyManagerBuilder<K>> {
@@ -111,8 +111,9 @@ public class LettuceBasedProxyManager<K> extends AbstractCompareAndSwapBasedProx
         private final RedisApi redisApi;
         private Mapper<K> keyMapper;
 
-        private LettuceBasedProxyManagerBuilder(RedisApi redisApi) {
+        private LettuceBasedProxyManagerBuilder(Mapper<K> keyMapper, RedisApi redisApi) {
             this.redisApi = Objects.requireNonNull(redisApi);
+            this.keyMapper = keyMapper;
         }
 
         public <Key> LettuceBasedProxyManagerBuilder<Key> withKeyMapper(Mapper<Key> keyMapper) {
