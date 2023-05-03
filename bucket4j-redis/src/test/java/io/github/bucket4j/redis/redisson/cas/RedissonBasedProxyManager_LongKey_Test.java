@@ -1,9 +1,10 @@
 package io.github.bucket4j.redis.redisson.cas;
 
 import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
-import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
+import io.github.bucket4j.distributed.serialization.Mapper;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
+import io.netty.util.internal.ThreadLocalRandom;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.redisson.command.CommandAsyncExecutor;
@@ -14,10 +15,7 @@ import org.redisson.connection.ConnectionManager;
 import org.redisson.liveobject.core.RedissonObjectBuilder;
 import org.testcontainers.containers.GenericContainer;
 
-import java.time.Duration;
-import java.util.UUID;
-
-public class RedissonBasedProxyManagerFixedTtlTest extends AbstractDistributedBucketTest<String> {
+public class RedissonBasedProxyManager_LongKey_Test extends AbstractDistributedBucketTest<Long> {
 
     private static GenericContainer container;
     private static ConnectionManager connectionManager;
@@ -64,15 +62,16 @@ public class RedissonBasedProxyManagerFixedTtlTest extends AbstractDistributedBu
     }
 
     @Override
-    protected ProxyManager<String> getProxyManager() {
+    protected ProxyManager<Long> getProxyManager() {
         return RedissonBasedProxyManager.builderFor(commandExecutor)
-                .withExpirationStrategy(ExpirationAfterWriteStrategy.fixedTimeToLive(Duration.ofSeconds(10)))
+                .withExpirationStrategy(ExpirationAfterWriteStrategy.none())
+                .withKeyMapper(Mapper.LONG)
                 .build();
     }
 
     @Override
-    protected String generateRandomKey() {
-        return UUID.randomUUID().toString();
+    protected Long generateRandomKey() {
+        return ThreadLocalRandom.current().nextLong();
     }
 
 }

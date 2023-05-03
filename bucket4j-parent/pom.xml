@@ -7,7 +7,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.bucket4j</groupId>
-    <version>8.2.0</version>
+    <version>8.3.0</version>
     <artifactId>bucket4j-parent</artifactId>
     <packaging>pom</packaging>
     <name>bucket4j-parent</name>
@@ -58,7 +58,7 @@
         <testcontainers.version>1.17.1</testcontainers.version>
         <lettuce-version>5.0.2.RELEASE</lettuce-version>
         <jedis.version>4.2.3</jedis.version>
-        <redisson.version>3.16.8</redisson.version>
+        <redisson.version>3.21.0</redisson.version>
         <lettuce.version>6.1.8.RELEASE</lettuce.version>
         <caffeine.version>2.9.3</caffeine.version>
     </properties>
@@ -102,6 +102,10 @@
                 <version>3.2.0</version>
                 <configuration>
                     <archive>
+                        <manifest>
+                            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+                            <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+                        </manifest>
                         <manifestEntries>
                             <Automatic-Module-Name>io.github.bucket4j.${modular-name}</Automatic-Module-Name>
                         </manifestEntries>
