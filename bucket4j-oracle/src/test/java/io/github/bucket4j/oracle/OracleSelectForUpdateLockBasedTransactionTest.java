@@ -30,7 +30,7 @@ public class OracleSelectForUpdateLockBasedTransactionTest extends AbstractDistr
         container = startOracleXeContainer();
         dataSource = createJdbcDataSource(container);
         BucketTableSettings tableSettings = BucketTableSettings.getDefault();
-        final String INIT_TABLE_SCRIPT = "CREATE TABLE bucket ( id NUMBER NOT NULL PRIMARY KEY, state RAW(255) )";
+        final String INIT_TABLE_SCRIPT = "CREATE TABLE {0} ( {1} NUMBER NOT NULL PRIMARY KEY, {2} RAW(255) )";
         try (Connection connection = dataSource.getConnection()) {
             try (Statement statement = connection.createStatement()) {
                 String query = MessageFormat.format(INIT_TABLE_SCRIPT, tableSettings.getTableName(), tableSettings.getIdName(), tableSettings.getStateName());
