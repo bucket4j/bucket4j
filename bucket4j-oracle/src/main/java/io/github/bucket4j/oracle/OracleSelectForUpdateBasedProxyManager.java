@@ -40,19 +40,6 @@ import java.util.Objects;
 /**
  * @author Vladimir Bukhtoyarov
  *
- * The extension of Bucket4j library addressed to support Oracle Database.
- * To start work with the PostgreSQL extension you must create a table, which will include the possibility to work with buckets
- * In order to do this, your table should include the next columns: id as a PRIMARY KEY (BIGINT) and state (BYTEA)
- * To define column names, {@link SQLProxyConfiguration} include {@link BucketTableSettings} which takes settings for the table to work with Bucket4j.
- *
- * <p>This implementation solves transaction related problems via Based on SELECT FOR UPDATE SQL syntax.
- * This prevents them from being modified or deleted by other transactions until the current transaction ends.
- * That is, other transactions that attempt UPDATE, DELETE, or SELECT FOR UPDATE of these rows will be blocked until the current transaction ends.
- * Also, if an UPDATE, DELETE, or SELECT FOR UPDATE from another transaction has already locked a selected row or rows, SELECT FOR UPDATE will wait for the other transaction to complete, and will then lock and return the updated row (or no row, if the row was deleted).
- * Within a SERIALIZABLE transaction, however, an error will be thrown if a row to be locked has changed since the transaction started.
- *
- * @see {@link SQLProxyConfigurationBuilder} to get more information how to build {@link SQLProxyConfiguration}
- *
  * @param <K> type of primary key
  */
 public class OracleSelectForUpdateBasedProxyManager<K> extends AbstractSelectForUpdateBasedProxyManager<K> {
