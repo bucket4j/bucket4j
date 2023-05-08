@@ -6,7 +6,7 @@
     <parent>
         <artifactId>bucket4j-parent</artifactId>
         <groupId>com.bucket4j</groupId>
-        <version>8.3.0</version>
+        <version>8.4.0</version>
         <relativePath>../bucket4j-parent</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
