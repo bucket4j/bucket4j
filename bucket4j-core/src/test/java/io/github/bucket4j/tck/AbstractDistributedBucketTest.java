@@ -7,7 +7,7 @@ import io.github.bucket4j.distributed.proxy.BucketNotFoundException;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.util.AsyncConsumptionScenario;
 import io.github.bucket4j.util.ConsumptionScenario;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
 import java.util.Arrays;
@@ -17,7 +17,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static io.github.bucket4j.distributed.proxy.RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public abstract class AbstractDistributedBucketTest<K> {
 

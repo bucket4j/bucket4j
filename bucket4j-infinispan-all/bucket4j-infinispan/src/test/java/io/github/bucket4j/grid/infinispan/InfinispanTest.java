@@ -2,8 +2,8 @@
 
 package io.github.bucket4j.grid.infinispan;
 
-import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
+import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.grid.infinispan.serialization.Bucket4jProtobufContextInitializer;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
 import org.infinispan.Cache;
@@ -15,8 +15,8 @@ import org.infinispan.functional.FunctionalMap.ReadWriteMap;
 import org.infinispan.functional.impl.FunctionalMapImpl;
 import org.infinispan.functional.impl.ReadWriteMapImpl;
 import org.infinispan.manager.DefaultCacheManager;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -31,7 +31,7 @@ public class InfinispanTest extends AbstractDistributedBucketTest<String> {
     private static DefaultCacheManager cacheManager1;
     private static DefaultCacheManager cacheManager2;
 
-    @BeforeClass
+    @BeforeAll
     public static void init() throws MalformedURLException, URISyntaxException {
         cacheManager1 = new DefaultCacheManager(getGlobalConfiguration());
         cacheManager1.defineConfiguration("my-cache",
@@ -62,7 +62,7 @@ public class InfinispanTest extends AbstractDistributedBucketTest<String> {
         return globalConfigurationBuilder.build();
     }
 
-    @AfterClass
+    @AfterAll
     public static void destroy() throws IOException {
         cacheManager1.close();
         cacheManager2.close();

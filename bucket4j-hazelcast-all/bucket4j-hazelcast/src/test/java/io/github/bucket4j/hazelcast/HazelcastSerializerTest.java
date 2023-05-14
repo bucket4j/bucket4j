@@ -16,14 +16,14 @@ import io.github.bucket4j.grid.hazelcast.SimpleBackupProcessor;
 import io.github.bucket4j.grid.hazelcast.serialization.HazelcastEntryProcessorSerializer;
 import io.github.bucket4j.grid.hazelcast.serialization.SimpleBackupProcessorSerializer;
 import io.github.bucket4j.util.ComparableByContent;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 public class HazelcastSerializerTest {
@@ -31,7 +31,7 @@ public class HazelcastSerializerTest {
     private InternalSerializationService serializationService;
     private Map<Class<?>, StreamSerializer<?>> serializerByClass = new HashMap<>();
 
-    @Before
+    @BeforeEach
     public void setup() {
         SerializationConfig serializationConfig = new SerializationConfig();
 

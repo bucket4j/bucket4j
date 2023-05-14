@@ -3,7 +3,6 @@ package io.github.bucket4j.distributed.serialization;
 import io.github.bucket4j.distributed.versioning.Versions;
 
 import java.io.*;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 

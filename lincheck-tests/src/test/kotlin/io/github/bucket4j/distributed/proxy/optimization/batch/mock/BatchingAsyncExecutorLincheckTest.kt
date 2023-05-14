@@ -10,7 +10,7 @@ import org.jetbrains.kotlinx.lincheck.strategy.stress.StressCTest
 import org.jetbrains.kotlinx.lincheck.strategy.stress.StressOptions
 import org.jetbrains.kotlinx.lincheck.verifier.VerifierState
 import org.jetbrains.kotlinx.lincheck.verifier.linearizability.LinearizabilityVerifier
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import java.util.concurrent.CompletableFuture
 
 @StressCTest(verifier = LinearizabilityVerifier::class)

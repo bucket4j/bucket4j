@@ -8,8 +8,8 @@ import io.github.bucket4j.distributed.jdbc.SQLProxyConfigurationBuilder;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.testcontainers.containers.OracleContainer;
 
 import javax.sql.DataSource;
@@ -25,7 +25,7 @@ public class OracleSelectForUpdateLockBasedTransactionTest extends AbstractDistr
     private static DataSource dataSource;
     private static OracleSelectForUpdateBasedProxyManager<Long> proxyManager;
 
-    @BeforeClass
+    @BeforeAll
     public static void initializeInstance() throws SQLException {
         container = startOracleXeContainer();
         dataSource = createJdbcDataSource(container);
@@ -55,7 +55,7 @@ public class OracleSelectForUpdateLockBasedTransactionTest extends AbstractDistr
         return ThreadLocalRandom.current().nextLong(1_000_000_000);
     }
 
-    @AfterClass
+    @AfterAll
     public static void shutdown() {
         if (container != null) {
             container.stop();
