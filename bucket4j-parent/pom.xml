@@ -55,7 +55,7 @@
         <infinispan.latest.version>11.0.1.Final</infinispan.latest.version>
         <ehcache.version>3.8.1</ehcache.version>
 
-        <testcontainers.version>1.18.0</testcontainers.version>
+        <testcontainers.version>1.18.1</testcontainers.version>
         <lettuce-version>5.0.2.RELEASE</lettuce-version>
         <jedis.version>4.2.3</jedis.version>
         <redisson.version>3.21.0</redisson.version>
@@ -147,7 +147,7 @@
             </plugin>
             <plugin>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>2.20</version>
+                <version>3.1.0</version>
                 <configuration>
                     <includes>
                         <include>**/*Test.class</include>
@@ -159,6 +159,13 @@
                     <!-- Travis build workaround -->
                     <argLine>-Xms1024m -Xmx2048m</argLine>
                 </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.junit.jupiter</groupId>
+                        <artifactId>junit-jupiter-engine</artifactId>
+                        <version>5.9.3</version>
+                    </dependency>
+                </dependencies>
             </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
@@ -364,7 +371,7 @@
                     </plugin>
                     <plugin>
                         <artifactId>maven-surefire-plugin</artifactId>
-                        <version>2.20</version>
+                        <version>3.1.0</version>
                         <configuration>
                             <argLine>@{argLine} -Xms1024m -Xmx2048m</argLine>
                         </configuration>
@@ -377,9 +384,15 @@
     <dependencies>
         <!-- Test dependencies -->
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>4.13.1</version>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>5.9.3</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <version>5.9.3</version>
             <scope>test</scope>
         </dependency>
         <dependency>

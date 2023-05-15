@@ -2,9 +2,9 @@ package io.github.bucket4j.grid.jcache.infinispan;
 
 
 import io.github.bucket4j.grid.jcache.CompatibilityTest;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import javax.cache.Cache;
 import javax.cache.CacheManager;
@@ -32,7 +32,7 @@ public class InfinispanCompatibilityInvestigationTest {
     private static Cache<String, Integer> cache2;
     private static CacheManager cacheManager2;
 
-    @BeforeClass
+    @BeforeAll
     public static void setup() {
         CachingProvider cachingProvider = Caching.getCachingProvider("org.infinispan.jcache.embedded.JCachingProvider");
         cacheManager1 = cachingProvider.getCacheManager(configurationUri, CLASS_LOADER_1);
@@ -42,7 +42,7 @@ public class InfinispanCompatibilityInvestigationTest {
         cache2 = cacheManager2.getCache("my_buckets");
     }
 
-    @AfterClass
+    @AfterAll
     public static void shutdown() {
         if (cacheManager1 != null) {
             cacheManager1.close();

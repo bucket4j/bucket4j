@@ -1,7 +1,7 @@
 package io.github.bucket4j.grid.ignite;
 
-import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
+import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.grid.ignite.thin.cas.IgniteThinClientCasBasedProxyManager;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
 import org.apache.ignite.Ignite;
@@ -15,11 +15,10 @@ import org.gridkit.nanocloud.Cloud;
 import org.gridkit.nanocloud.CloudFactory;
 import org.gridkit.nanocloud.VX;
 import org.gridkit.vicluster.ViNode;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 
 import java.io.Serializable;
-import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.util.Collections;
 import java.util.UUID;
@@ -35,8 +34,8 @@ public class IgniteCasBasedClientTest extends AbstractDistributedBucketTest<Stri
 
     private static IgniteClient igniteClient;
 
-    @BeforeClass
-    public static void setup() throws UnknownHostException {
+    @BeforeAll
+    public static void setup() {
         // start separated JVM on current host
         cloud = CloudFactory.createCloud();
         cloud.node("**").x(VX.TYPE).setLocal();
@@ -79,7 +78,7 @@ public class IgniteCasBasedClientTest extends AbstractDistributedBucketTest<Stri
         cache = igniteClient.cache(CACHE_NAME);
     }
 
-    @AfterClass
+    @AfterAll
     public static void shutdown() throws Exception {
         if (igniteClient != null) {
             igniteClient.close();

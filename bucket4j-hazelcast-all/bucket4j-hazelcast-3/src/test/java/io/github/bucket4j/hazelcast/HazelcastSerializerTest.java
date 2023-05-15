@@ -7,23 +7,23 @@ import com.hazelcast.internal.serialization.impl.DefaultSerializationServiceBuil
 import com.hazelcast.nio.BufferObjectDataInput;
 import com.hazelcast.nio.BufferObjectDataOutput;
 import com.hazelcast.nio.serialization.StreamSerializer;
-import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.remote.Request;
 import io.github.bucket4j.distributed.remote.commands.AddTokensCommand;
 import io.github.bucket4j.distributed.versioning.Versions;
 import io.github.bucket4j.grid.hazelcast.HazelcastEntryProcessor;
 import io.github.bucket4j.grid.hazelcast.SimpleBackupProcessor;
-import io.github.bucket4j.grid.hazelcast.serialization.*;
+import io.github.bucket4j.grid.hazelcast.serialization.HazelcastEntryProcessorSerializer;
+import io.github.bucket4j.grid.hazelcast.serialization.SimpleBackupProcessorSerializer;
 import io.github.bucket4j.util.ComparableByContent;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 public class HazelcastSerializerTest {
@@ -31,7 +31,7 @@ public class HazelcastSerializerTest {
     private InternalSerializationService serializationService;
     private Map<Class<?>, StreamSerializer<?>> serializerByClass = new HashMap<>();
 
-    @Before
+    @BeforeEach
     public void setup() {
         SerializationConfig serializationConfig = new SerializationConfig();
 

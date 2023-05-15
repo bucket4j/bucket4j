@@ -2,18 +2,22 @@ package io.github.bucket4j.grid.jcache;
 
 
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
-import io.github.bucket4j.tck.AbstractDistributedBucketTest;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
-import org.junit.Test;
+import io.github.bucket4j.tck.AbstractDistributedBucketTest;
+import org.junit.jupiter.api.Test;
 
 import javax.cache.Cache;
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
 public abstract class AbstractJCacheTest extends AbstractDistributedBucketTest<String> {
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test
     public void testThatAsyncNotSupported() {
-        getProxyManager().asAsync();
+        assertThrows(UnsupportedOperationException.class, () -> {
+            getProxyManager().asAsync();
+        });
     }
 
     @Override

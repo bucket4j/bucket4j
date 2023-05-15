@@ -5,7 +5,7 @@ import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.UninterruptibleBlockingStrategy;
 import io.github.bucket4j.util.ConsumptionScenario;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;

@@ -23,7 +23,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class AsyncConsumptionScenario {
 
@@ -67,7 +67,7 @@ public class AsyncConsumptionScenario {
                 + ", permitted rate=" + Formatter.format(permittedRatePerSecond));
 
         String msg = "Actual rate " + Formatter.format(actualRatePerSecond) + " is greater then permitted rate " + Formatter.format(permittedRatePerSecond);
-        assertTrue(msg, actualRatePerSecond <= permittedRatePerSecond + 0.02);
+        assertTrue(actualRatePerSecond <= permittedRatePerSecond + 0.02, msg);
     }
 
 }
