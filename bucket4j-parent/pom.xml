@@ -55,7 +55,7 @@
         <infinispan.latest.version>11.0.1.Final</infinispan.latest.version>
         <ehcache.version>3.8.1</ehcache.version>
 
-        <testcontainers.version>1.18.0</testcontainers.version>
+        <testcontainers.version>1.18.1</testcontainers.version>
         <lettuce-version>5.0.2.RELEASE</lettuce-version>
         <jedis.version>4.2.3</jedis.version>
         <redisson.version>3.21.0</redisson.version>
@@ -147,7 +147,7 @@
             </plugin>
             <plugin>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>2.22.2</version>
+                <version>3.1.0</version>
                 <configuration>
                     <includes>
                         <include>**/*Test.class</include>
@@ -371,7 +371,7 @@
                     </plugin>
                     <plugin>
                         <artifactId>maven-surefire-plugin</artifactId>
-                        <version>2.22.2</version>
+                        <version>3.1.0</version>
                         <configuration>
                             <argLine>@{argLine} -Xms1024m -Xmx2048m</argLine>
                         </configuration>
