@@ -221,6 +221,7 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket, Scheduli
         listener.onConsumed(tokensToConsume);
         if (nanosToSleep > 0L) {
             try {
+                listener.beforeParking(nanosToSleep);
                 blockingStrategy.park(nanosToSleep);
             } catch (InterruptedException e) {
                 listener.onInterrupted(e);
@@ -245,6 +246,7 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket, Scheduli
 
         listener.onConsumed(tokensToConsume);
         if (nanosToSleep > 0L) {
+            listener.beforeParking(nanosToSleep);
             blockingStrategy.parkUninterruptibly(nanosToSleep);
             listener.onParked(nanosToSleep);
         }
@@ -264,6 +266,7 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket, Scheduli
         listener.onConsumed(tokensToConsume);
         if (nanosToSleep > 0L) {
             try {
+                listener.beforeParking(nanosToSleep);
                 blockingStrategy.park(nanosToSleep);
             } catch (InterruptedException e) {
                 listener.onInterrupted(e);
@@ -284,6 +287,7 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket, Scheduli
 
         listener.onConsumed(tokensToConsume);
         if (nanosToSleep > 0L) {
+            listener.beforeParking(nanosToSleep);
             blockingStrategy.parkUninterruptibly(nanosToSleep);
             listener.onParked(nanosToSleep);
         }

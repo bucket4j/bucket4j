@@ -51,6 +51,11 @@ public class SimpleBucketListener implements BucketListener {
     }
 
     @Override
+    public void beforeParking(long nanos) {
+        // do nothing
+    }
+
+    @Override
     public void onInterrupted(InterruptedException e) {
         interrupted.incrementAndGet();
     }

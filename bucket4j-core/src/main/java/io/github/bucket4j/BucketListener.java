@@ -67,6 +67,14 @@ public interface BucketListener {
     void onParked(long nanos);
 
     /**
+     * This method is called each time when thread is going to be parked for wait of tokens refill
+     * in result of interaction with {@link BlockingBucket}
+     *
+     * @param nanos amount of nanoseconds for which thread will be parked
+     */
+    void beforeParking(long nanos);
+
+    /**
      * This method is called each time when thread was interrupted during the wait of tokens refill
      * in result of interaction with {@link BlockingBucket}
      *
@@ -104,6 +112,11 @@ public interface BucketListener {
         @Override
         public void onParked(long nanos) {
             // do nothing
+        }
+
+        @Override
+        public void beforeParking(long nanos) {
+
         }
 
         @Override
