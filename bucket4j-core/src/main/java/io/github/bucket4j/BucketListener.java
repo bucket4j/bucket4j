@@ -72,7 +72,7 @@ public interface BucketListener {
      *
      * @param nanos amount of nanoseconds for which thread will be parked
      */
-    void beforeParking(long nanos);
+    default void beforeParking(long nanos) {};
 
     /**
      * This method is called each time when thread was interrupted during the wait of tokens refill
