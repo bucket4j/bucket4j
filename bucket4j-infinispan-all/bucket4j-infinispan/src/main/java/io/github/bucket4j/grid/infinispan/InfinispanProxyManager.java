@@ -90,12 +90,11 @@ public class InfinispanProxyManager<K> extends AbstractProxyManager<K> {
     }
 
     @Override
-    protected CompletableFuture<Void> removeAsync(K key) {
+    protected CompletableFuture<?> removeAsync(K key) {
         try {
-            CompletableFuture<byte[]> resultFuture = readWriteMap.eval(key, REMOVE_BUCKET_ENTRY_PROCESSOR);
-            return resultFuture.thenApply(resultBytes -> null);
+            return readWriteMap.eval(key, REMOVE_BUCKET_ENTRY_PROCESSOR);
         } catch (Throwable t) {
-            CompletableFuture<Void> fail = new CompletableFuture<>();
+            CompletableFuture<?> fail = new CompletableFuture<>();
             fail.completeExceptionally(t);
             return fail;
         }

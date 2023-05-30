@@ -64,8 +64,8 @@ public class LettuceBasedProxyManager<K> extends AbstractCompareAndSwapBasedProx
                 return redisAsyncCommands.get(key);
             }
             @Override
-            public RedisFuture<Void> delete(byte[] key) {
-                return (RedisFuture) redisAsyncCommands.del(key);
+            public RedisFuture<?> delete(byte[] key) {
+                return redisAsyncCommands.del(key);
             }
         };
         return new LettuceBasedProxyManagerBuilder(Mapper.BYTES, redisApi);
@@ -99,8 +99,8 @@ public class LettuceBasedProxyManager<K> extends AbstractCompareAndSwapBasedProx
                 return redisAsyncCommands.get(key);
             }
             @Override
-            public RedisFuture<Void> delete(byte[] key) {
-                return (RedisFuture) redisAsyncCommands.del(key);
+            public RedisFuture<?> delete(byte[] key) {
+                return redisAsyncCommands.del(key);
             }
         };
         return new LettuceBasedProxyManagerBuilder<>(Mapper.BYTES, redisApi);
@@ -178,9 +178,9 @@ public class LettuceBasedProxyManager<K> extends AbstractCompareAndSwapBasedProx
     }
 
     @Override
-    protected CompletableFuture<Void> removeAsync(K key) {
+    protected CompletableFuture<?> removeAsync(K key) {
         RedisFuture<?> future = redisApi.delete(keyMapper.toBytes(key));
-        return convertToCompletableFuture(future).thenApply(bytes -> null);
+        return convertToCompletableFuture(future);
     }
 
     @Override
@@ -252,7 +252,7 @@ public class LettuceBasedProxyManager<K> extends AbstractCompareAndSwapBasedProx
 
         RedisFuture<byte[]> get(byte[] key);
 
-        RedisFuture<Void> delete(byte[] key);
+        RedisFuture<?> delete(byte[] key);
 
     }
 

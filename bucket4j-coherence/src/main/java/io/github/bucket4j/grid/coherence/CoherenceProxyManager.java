@@ -110,8 +110,8 @@ public class CoherenceProxyManager<K> extends AbstractProxyManager<K> {
     }
 
     @Override
-    protected CompletableFuture<Void> removeAsync(K key) {
-        return cache.async().remove(key).thenApply(oldState -> null);
+    protected CompletableFuture<?> removeAsync(K key) {
+        return cache.async().remove(key);
     }
 
 }

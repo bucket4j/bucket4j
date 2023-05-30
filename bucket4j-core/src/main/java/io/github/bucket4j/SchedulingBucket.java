@@ -111,6 +111,6 @@ public interface SchedulingBucket {
      * @param scheduler used to delayed future completion
      *
      */
-    CompletableFuture<Void> consume(long numTokens, ScheduledExecutorService scheduler);
+    CompletableFuture<?> consume(long numTokens, ScheduledExecutorService scheduler);
 
 }

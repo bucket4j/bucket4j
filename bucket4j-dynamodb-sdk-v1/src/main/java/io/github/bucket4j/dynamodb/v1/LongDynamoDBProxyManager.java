@@ -61,7 +61,7 @@ final class LongDynamoDBProxyManager extends BaseDynamoDBProxyManager<Long> {
     }
 
     @Override
-    protected CompletableFuture<Void> removeAsync(Long key) {
+    protected CompletableFuture<?> removeAsync(Long key) {
         throw new UnsupportedOperationException();
     }
 }

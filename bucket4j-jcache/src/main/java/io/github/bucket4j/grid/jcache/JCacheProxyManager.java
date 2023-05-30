@@ -100,7 +100,7 @@ public class JCacheProxyManager<K> extends AbstractProxyManager<K> {
     }
 
     @Override
-    protected CompletableFuture<Void> removeAsync(K key) {
+    protected CompletableFuture<?> removeAsync(K key) {
         // because JCache does not specify async API
         throw new UnsupportedOperationException();
     }

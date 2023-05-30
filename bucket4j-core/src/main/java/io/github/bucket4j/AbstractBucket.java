@@ -388,7 +388,7 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket, Scheduli
     }
 
     @Override
-    public CompletableFuture<Void> consume(long tokensToConsume, ScheduledExecutorService scheduler) {
+    public CompletableFuture<?> consume(long tokensToConsume, ScheduledExecutorService scheduler) {
         checkTokensToConsume(tokensToConsume);
         checkScheduler(scheduler);
 
@@ -404,7 +404,7 @@ public abstract class AbstractBucket implements Bucket, BlockingBucket, Scheduli
 
             listener.onConsumed(tokensToConsume);
             listener.onDelayed(nanosToSleep);
-            CompletableFuture<Void> resultFuture = new CompletableFuture<>();
+            CompletableFuture<?> resultFuture = new CompletableFuture<>();
             Runnable delayedCompletion = () -> resultFuture.complete(null);
             scheduler.schedule(delayedCompletion, nanosToSleep, TimeUnit.NANOSECONDS);
             return resultFuture;

@@ -35,7 +35,7 @@ AsyncVerboseBucket verboseBucket = bucket.asVerbose();
 NOTE: BlockingBucket and ScheduledBucket do not provide the verbose analogs. VerboseResult has no sense for this kind of buckets because interactions with them can be followed by thread sleep or delayed execution, so VerboseResult can be stale and irrelevant to the moment when control over execution is being returned to your code.
 
 ==== Principles of result decoration
-* void return type always decorated by `VerboseResult<Void>`
+* void return type always decorated by `VerboseResult<?>`
 * A primitive result type like long, boolean always decorated by correspondent boxed type for example `VerboseResult<Boolean>`
 * Non-primitive result type always decorated as is, for example, `VerboseResult<EstimationProbe>`
 

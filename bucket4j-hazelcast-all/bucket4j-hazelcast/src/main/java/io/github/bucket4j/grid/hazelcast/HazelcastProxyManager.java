@@ -110,9 +110,9 @@ public class HazelcastProxyManager<K> extends AbstractProxyManager<K> {
     }
 
     @Override
-    protected CompletableFuture<Void> removeAsync(K key) {
+    protected CompletableFuture<?> removeAsync(K key) {
         CompletionStage<byte[]> hazelcastFuture = map.removeAsync(key);
-        CompletableFuture<Void> resultFuture = new CompletableFuture<>();
+        CompletableFuture<?> resultFuture = new CompletableFuture<>();
         hazelcastFuture.whenComplete((oldState, error) -> {
           if (error == null) {
               resultFuture.complete(null);

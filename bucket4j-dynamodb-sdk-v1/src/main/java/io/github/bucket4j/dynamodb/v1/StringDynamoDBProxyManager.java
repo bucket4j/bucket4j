@@ -61,7 +61,7 @@ final class StringDynamoDBProxyManager extends BaseDynamoDBProxyManager<String> 
     }
 
     @Override
-    protected CompletableFuture<Void> removeAsync(String key) {
+    protected CompletableFuture<?> removeAsync(String key) {
         throw new UnsupportedOperationException();
     }
 

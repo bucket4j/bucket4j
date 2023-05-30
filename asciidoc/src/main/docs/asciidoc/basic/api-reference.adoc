@@ -633,5 +633,5 @@ CompletableFuture<Boolean> tryConsume(long numTokens, long maxWaitNanos, Schedul
      * @param scheduler used to delayed future completion
      *
      */
-    CompletableFuture<Void> consume(long numTokens, ScheduledExecutorService scheduler);
+    CompletableFuture<?> consume(long numTokens, ScheduledExecutorService scheduler);
 ----

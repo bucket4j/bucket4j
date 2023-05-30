@@ -104,9 +104,9 @@ public class IgniteThinClientProxyManager<K> extends AbstractProxyManager<K> {
     }
 
     @Override
-    protected CompletableFuture<Void> removeAsync(K key) {
+    protected CompletableFuture<?> removeAsync(K key) {
         IgniteClientFuture<Boolean> igniteFuture = cache.removeAsync(key);
-        return ThinClientUtils.convertFuture(igniteFuture).thenApply(result -> null);
+        return ThinClientUtils.convertFuture(igniteFuture);
     }
 
 }

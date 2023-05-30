@@ -171,9 +171,9 @@ public class RedissonBasedProxyManager<K> extends AbstractCompareAndSwapBasedPro
     }
 
     @Override
-    protected CompletableFuture<Void> removeAsync(K key) {
+    protected CompletableFuture<?> removeAsync(K key) {
         RFuture<?> redissonFuture = commandExecutor.writeAsync(keyMapper.toString(key), RedisCommands.DEL_VOID, key);
-        return convertFuture(redissonFuture).thenApply(bytes -> null);
+        return convertFuture(redissonFuture);
     }
 
     @Override

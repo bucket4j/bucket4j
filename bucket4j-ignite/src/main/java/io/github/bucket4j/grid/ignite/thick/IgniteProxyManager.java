@@ -106,9 +106,9 @@ public class IgniteProxyManager<K> extends AbstractProxyManager<K> {
     }
 
     @Override
-    protected CompletableFuture<Void> removeAsync(K key) {
+    protected CompletableFuture<?> removeAsync(K key) {
         IgniteFuture<Boolean> igniteFuture = cache.removeAsync(key);
-        CompletableFuture<Void> completableFuture = new CompletableFuture<>();
+        CompletableFuture<?> completableFuture = new CompletableFuture<>();
         igniteFuture.listen((IgniteInClosure<IgniteFuture<Boolean>>) completedIgniteFuture -> {
             try {
                 completedIgniteFuture.get();

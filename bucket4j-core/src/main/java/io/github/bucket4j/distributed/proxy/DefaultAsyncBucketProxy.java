@@ -298,10 +298,10 @@ public class DefaultAsyncBucketProxy implements AsyncBucketProxy, AsyncOptimizat
     }
 
     @Override
-    public CompletableFuture<Void> consume(long tokensToConsume, ScheduledExecutorService scheduler) {
+    public CompletableFuture<?> consume(long tokensToConsume, ScheduledExecutorService scheduler) {
         checkTokensToConsume(tokensToConsume);
         checkScheduler(scheduler);
-        CompletableFuture<Void> resultFuture = new CompletableFuture<>();
+        CompletableFuture<?> resultFuture = new CompletableFuture<>();
         ReserveAndCalculateTimeToSleepCommand consumeCommand = new ReserveAndCalculateTimeToSleepCommand(tokensToConsume, INFINITY_DURATION);
         CompletableFuture<Long> reservationFuture = execute(consumeCommand);
         reservationFuture.whenComplete((nanosToSleep, exception) -> {
@@ -331,32 +331,28 @@ public class DefaultAsyncBucketProxy implements AsyncBucketProxy, AsyncOptimizat
     }
 
     @Override
-    public CompletableFuture<Void> replaceConfiguration(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy) {
+    public CompletableFuture<?> replaceConfiguration(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy) {
         checkConfiguration(newConfiguration);
         checkMigrationMode(tokensInheritanceStrategy);
         ReplaceConfigurationCommand replaceConfigCommand = new ReplaceConfigurationCommand(newConfiguration, tokensInheritanceStrategy);
-        CompletableFuture<Nothing> result = execute(replaceConfigCommand);
-        return result.thenApply(nothing -> null);
+        return execute(replaceConfigCommand);
     }
 
     @Override
-    public CompletableFuture<Void> addTokens(long tokensToAdd) {
+    public CompletableFuture<?> addTokens(long tokensToAdd) {
         checkTokensToAdd(tokensToAdd);
-        CompletableFuture<Nothing> future = execute(new AddTokensCommand(tokensToAdd));
-        return future.thenApply(nothing -> null);
+        return execute(new AddTokensCommand(tokensToAdd));
     }
 
     @Override
-    public CompletableFuture<Void> forceAddTokens(long tokensToAdd) {
+    public CompletableFuture<?> forceAddTokens(long tokensToAdd) {
         checkTokensToAdd(tokensToAdd);
-        CompletableFuture<Nothing> future = execute(new ForceAddTokensCommand(tokensToAdd));
-        return future.thenApply(nothing -> null);
+        return execute(new ForceAddTokensCommand(tokensToAdd));
     }
 
     @Override
-    public CompletableFuture<Void> reset() {
-        CompletableFuture<Nothing> future = execute(new ResetCommand());
-        return future.thenApply(nothing -> null);
+    public CompletableFuture<?> reset() {
+        return execute(new ResetCommand());
     }
 
     @Override
@@ -370,8 +366,8 @@ public class DefaultAsyncBucketProxy implements AsyncBucketProxy, AsyncOptimizat
     }
 
     @Override
-    public CompletableFuture<Void> syncByCondition(long unsynchronizedTokens, Duration timeSinceLastSync) {
-        return execute(new SyncCommand(unsynchronizedTokens, timeSinceLastSync.toNanos())).thenApply(nothing -> null);
+    public CompletableFuture<?> syncByCondition(long unsynchronizedTokens, Duration timeSinceLastSync) {
+        return execute(new SyncCommand(unsynchronizedTokens, timeSinceLastSync.toNanos()));
     }
 
     private <T> CompletableFuture<T> execute(RemoteCommand<T> command) {

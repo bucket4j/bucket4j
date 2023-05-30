@@ -45,7 +45,7 @@ public class HazelcastCompareAndSwapProxyManager<K> extends AbstractCompareAndSw
     }
 
     @Override
-    protected CompletableFuture<Void> removeAsync(K key) {
+    protected CompletableFuture<?> removeAsync(K key) {
         throw new UnsupportedOperationException();
     }
 

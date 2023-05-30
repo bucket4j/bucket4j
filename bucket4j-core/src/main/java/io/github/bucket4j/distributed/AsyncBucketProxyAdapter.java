@@ -146,7 +146,7 @@ public class AsyncBucketProxyAdapter implements AsyncBucketProxy, AsyncOptimizat
     }
 
     @Override
-    public CompletableFuture<Void> addTokens(long tokensToAdd) {
+    public CompletableFuture<?> addTokens(long tokensToAdd) {
         return completedFuture(() -> {
             target.addTokens(tokensToAdd);
             return null;
@@ -154,7 +154,7 @@ public class AsyncBucketProxyAdapter implements AsyncBucketProxy, AsyncOptimizat
     }
 
     @Override
-    public CompletableFuture<Void> forceAddTokens(long tokensToAdd) {
+    public CompletableFuture<?> forceAddTokens(long tokensToAdd) {
         return completedFuture(() -> {
             target.forceAddTokens(tokensToAdd);
             return null;
@@ -162,7 +162,7 @@ public class AsyncBucketProxyAdapter implements AsyncBucketProxy, AsyncOptimizat
     }
 
     @Override
-    public CompletableFuture<Void> reset() {
+    public CompletableFuture<?> reset() {
         return completedFuture(() -> {
             target.reset();
             return null;
@@ -170,7 +170,7 @@ public class AsyncBucketProxyAdapter implements AsyncBucketProxy, AsyncOptimizat
     }
 
     @Override
-    public CompletableFuture<Void> replaceConfiguration(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy) {
+    public CompletableFuture<?> replaceConfiguration(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy) {
         LimitChecker.checkConfiguration(newConfiguration);
         LimitChecker.checkMigrationMode(tokensInheritanceStrategy);
         return completedFuture(() -> {
@@ -190,12 +190,12 @@ public class AsyncBucketProxyAdapter implements AsyncBucketProxy, AsyncOptimizat
     }
 
     @Override
-    public CompletableFuture<Void> syncImmediately() {
+    public CompletableFuture<?> syncImmediately() {
         return CompletableFuture.completedFuture(null);
     }
 
     @Override
-    public CompletableFuture<Void> syncByCondition(long unsynchronizedTokens, Duration timeSinceLastSync) {
+    public CompletableFuture<?> syncByCondition(long unsynchronizedTokens, Duration timeSinceLastSync) {
         return CompletableFuture.completedFuture(null);
     }
 

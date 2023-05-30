@@ -240,7 +240,7 @@ public interface AsyncBucketProxy {
      *
      * @see Bucket#addTokens(long)
      */
-    CompletableFuture<Void> addTokens(long tokensToAdd);
+    CompletableFuture<?> addTokens(long tokensToAdd);
 
     /**
      * Asynchronous version of {@link Bucket#forceAddTokens(long)}, follows the same semantic.
@@ -273,17 +273,17 @@ public interface AsyncBucketProxy {
      *
      * @see Bucket#addTokens(long)
      */
-    CompletableFuture<Void> forceAddTokens(long tokensToAdd);
+    CompletableFuture<?> forceAddTokens(long tokensToAdd);
 
     /**
      * Reset all tokens up to maximum capacity.
      */
-    CompletableFuture<Void> reset();
+    CompletableFuture<?> reset();
 
     /**
      * Has the same semantic with {@link Bucket#replaceConfiguration(BucketConfiguration, TokensInheritanceStrategy)}
      */
-    CompletableFuture<Void> replaceConfiguration(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy);
+    CompletableFuture<?> replaceConfiguration(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy);
 
     /**
      * Returns new copy of this bucket instance decorated by {@code listener}.

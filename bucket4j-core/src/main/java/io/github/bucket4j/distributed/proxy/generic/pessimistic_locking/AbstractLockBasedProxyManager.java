@@ -64,7 +64,7 @@ public abstract class AbstractLockBasedProxyManager<K> extends AbstractProxyMana
     }
 
     @Override
-    protected CompletableFuture<Void> removeAsync(Object key) {
+    protected CompletableFuture<?> removeAsync(Object key) {
         return null;
     }
 

@@ -69,7 +69,7 @@ public abstract class AbstractProxyManager<K> implements ProxyManager<K> {
         }
 
         @Override
-        public CompletableFuture<Void> removeProxy(K key) {
+        public CompletableFuture<?> removeProxy(K key) {
             return removeAsync(key);
         }
     };
@@ -209,7 +209,7 @@ public abstract class AbstractProxyManager<K> implements ProxyManager<K> {
 
     abstract protected <T> CompletableFuture<CommandResult<T>> executeAsync(K key, Request<T> request);
 
-    abstract protected CompletableFuture<Void> removeAsync(K key);
+    abstract protected CompletableFuture<?> removeAsync(K key);
 
     protected ClientSideConfig getClientSideConfig() {
         return clientSideConfig;

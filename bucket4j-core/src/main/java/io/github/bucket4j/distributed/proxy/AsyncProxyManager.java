@@ -49,7 +49,7 @@ public interface AsyncProxyManager<K> {
      * @param key the primary key of bucket which state need to be removed from underlying storage.
      * @return the future that will be completed after deletion
      */
-    CompletableFuture<Void> removeProxy(K key);
+    CompletableFuture<?> removeProxy(K key);
 
     /**
      * Asynchronously locates configuration of bucket which actually stored in the underlying storage.
@@ -77,7 +77,7 @@ public interface AsyncProxyManager<K> {
             }
 
             @Override
-            public CompletableFuture<Void> removeProxy(K1 key) {
+            public CompletableFuture<?> removeProxy(K1 key) {
                 return AsyncProxyManager.this.removeProxy(mapper.apply(key));
             }
 

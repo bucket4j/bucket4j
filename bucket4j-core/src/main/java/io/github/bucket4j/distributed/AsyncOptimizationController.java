@@ -40,7 +40,7 @@ public interface AsyncOptimizationController {
      * @return future that will be completed when local copy of bucket will be synchronized with remote storage,
      * or immediately completed future in case of this synchronization is not required.
      */
-    default CompletableFuture<Void> syncImmediately() {
+    default CompletableFuture<?> syncImmediately() {
         return syncByCondition(0L, Duration.ZERO);
     }
 
@@ -57,6 +57,6 @@ public interface AsyncOptimizationController {
      * @return future that will be completed when local copy of bucket will be synchronized with remote storage,
      * or immediately completed future in case of this synchronization is not required.
      */
-    CompletableFuture<Void> syncByCondition(long unsynchronizedTokens, Duration timeSinceLastSync);
+    CompletableFuture<?> syncByCondition(long unsynchronizedTokens, Duration timeSinceLastSync);
 
 }

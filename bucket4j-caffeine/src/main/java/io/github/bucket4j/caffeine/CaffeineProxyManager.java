@@ -137,7 +137,7 @@ public class CaffeineProxyManager<K> extends AbstractProxyManager<K> {
     }
 
     @Override
-    protected CompletableFuture<Void> removeAsync(K key) {
+    protected CompletableFuture<?> removeAsync(K key) {
         cache.asMap().remove(key);
         return CompletableFuture.completedFuture(null);
     }

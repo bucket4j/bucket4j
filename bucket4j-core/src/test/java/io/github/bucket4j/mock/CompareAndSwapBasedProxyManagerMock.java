@@ -37,7 +37,7 @@ public class CompareAndSwapBasedProxyManagerMock<K> extends AbstractCompareAndSw
     }
 
     @Override
-    protected CompletableFuture<Void> removeAsync(K key) {
+    protected CompletableFuture<?> removeAsync(K key) {
         stateMap.remove(key);
         return CompletableFuture.completedFuture(null);
     }
