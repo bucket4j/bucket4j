@@ -99,8 +99,9 @@ public class HazelcastSkipSyncOnZeroExample {
 
         AtomicLong totalMergedRequestCount = new AtomicLong();
         AtomicLong totalSkippedRequestCount = new AtomicLong();
+
         DefaultOptimizationListener optimizationListener = new DefaultOptimizationListener();
-        Optimization optimization = new SkipSyncOnZeroOptimization(NopeOptimizationListener.INSTANCE, TimeMeter.SYSTEM_NANOTIME)
+        Optimization optimization = new SkipSyncOnZeroOptimization(optimizationListener, TimeMeter.SYSTEM_NANOTIME)
             .withListener(optimizationListener);
 
         Bucket bucket = proxyManager.builder()
@@ -164,7 +165,7 @@ public class HazelcastSkipSyncOnZeroExample {
         AtomicLong totalMergedRequestCount = new AtomicLong();
         AtomicLong totalSkippedRequestCount = new AtomicLong();
         DefaultOptimizationListener optimizationListener = new DefaultOptimizationListener();
-        Optimization optimization = new SkipSyncOnZeroOptimization(NopeOptimizationListener.INSTANCE, TimeMeter.SYSTEM_NANOTIME)
+        Optimization optimization = new SkipSyncOnZeroOptimization(optimizationListener, TimeMeter.SYSTEM_NANOTIME)
             .withListener(optimizationListener);
 
         AsyncBucketProxy bucket = proxyManager.asAsync().builder()
