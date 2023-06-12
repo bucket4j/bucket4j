@@ -101,7 +101,7 @@ public class HazelcastSkipSyncOnZeroExample {
         AtomicLong totalSkippedRequestCount = new AtomicLong();
 
         DefaultOptimizationListener optimizationListener = new DefaultOptimizationListener();
-        Optimization optimization = new SkipSyncOnZeroOptimization(optimizationListener, TimeMeter.SYSTEM_NANOTIME)
+        Optimization optimization = new SkipSyncOnZeroOptimization(optimizationListener, TimeMeter.SYSTEM_MILLISECONDS)
             .withListener(optimizationListener);
 
         Bucket bucket = proxyManager.builder()
@@ -113,6 +113,7 @@ public class HazelcastSkipSyncOnZeroExample {
             @Override
             public void run() {
                 System.out.println("Consumption rate " + consumptionRate.getOneMinuteRate() + " tokens/sec");
+                System.out.println("Consumed since start " + consumptionRate.getCount() + " tokens");
                 System.out.println("Operations with bucket rate " + latencyTimer.getOneMinuteRate() + " ops/sec");
                 long skippedRequestCountSnapshot = optimizationListener.getSkipCount();
                 long mergedRequestCountSnapshot = optimizationListener.getMergeCount();
@@ -165,7 +166,7 @@ public class HazelcastSkipSyncOnZeroExample {
         AtomicLong totalMergedRequestCount = new AtomicLong();
         AtomicLong totalSkippedRequestCount = new AtomicLong();
         DefaultOptimizationListener optimizationListener = new DefaultOptimizationListener();
-        Optimization optimization = new SkipSyncOnZeroOptimization(optimizationListener, TimeMeter.SYSTEM_NANOTIME)
+        Optimization optimization = new SkipSyncOnZeroOptimization(optimizationListener, TimeMeter.SYSTEM_MILLISECONDS)
             .withListener(optimizationListener);
 
         AsyncBucketProxy bucket = proxyManager.asAsync().builder()
@@ -181,6 +182,7 @@ public class HazelcastSkipSyncOnZeroExample {
             @Override
             public void run() {
                 System.out.println("Consumption rate " + consumptionRate.getOneMinuteRate() + " tokens/sec");
+                System.out.println("Consumed since start " + consumptionRate.getCount() + " tokens");
                 System.out.println("Operations with bucket rate " + latencyTimer.getOneMinuteRate() + " ops/sec");
                 long skippedRequestCountSnapshot = optimizationListener.getSkipCount();
                 long mergedRequestCountSnapshot = optimizationListener.getMergeCount();
