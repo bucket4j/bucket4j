@@ -132,8 +132,34 @@ To use Bucket4j extension for MySQL you need to add following dependency:
 ===== Example of Bucket instantiation
 
 ----
-        Long key = 1L;
         MySQLSelectForUpdateBasedProxyManager proxyManager = new MySQLSelectForUpdateBasedProxyManager(new SQLProxyConfiguration(dataSource));
+
+        ...
+        Long key = 1L;
+        BucketConfiguration bucketConfiguration = BucketConfiguration.builder()
+                .addLimit(Bandwidth.simple(10, Duration.ofSeconds(1)))
+                .build();
+        BucketProxy bucket = proxyManager.builder().build(key, bucketConfiguration);
+----
+
+==== Oracle integration
+===== Dependencies
+To use Bucket4j extension for MySQL you need to add following dependency:
+
+[,xml,subs=attributes+]
+----
+<dependency>
+    <groupId>com.bucket4j</groupId>
+    <artifactId>bucket4j-oracle</artifactId>
+    <version>{revnumber}</version>
+</dependency>
+----
+
+===== Example of Bucket instantiation
+
+----
+        OracleSelectForUpdateBasedProxyManager proxyManager = new OracleSelectForUpdateBasedProxyManager(new SQLProxyConfiguration(dataSource));
+        ...
         BucketConfiguration bucketConfiguration = BucketConfiguration.builder()
                 .addLimit(Bandwidth.simple(10, Duration.ofSeconds(1)))
                 .build();

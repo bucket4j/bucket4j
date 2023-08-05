@@ -43,7 +43,7 @@ In addition to local in-memory buckets, the Bucket4j supports clustered usage sc
 | :---                       |:---------------------------------------------------------------------------------:|
 | ```MySQL```                |      [bucket4j-mysql](https://bucket4j.com/8.4.0/toc.html#mysql-integration)      |
 | ```PostgreSQL```           | [bucket4j-postgresql](https://bucket4j.com/8.4.0/toc.html#postgresql-integration) |
-| ```Oracle```               | [bucket4j-postgresql](https://bucket4j.com/8.4.0/toc.html#postgresql-integration) |
+| ```Oracle```               |     [bucket4j-oracle](https://bucket4j.com/8.4.0/toc.html#oracle-integration)     |
 
 
 ### Local caches support
