@@ -37,8 +37,7 @@ public class OracleSelectForUpdateLockBasedTransactionTest extends AbstractDistr
                 statement.execute(query);
             }
         }
-        SQLProxyConfiguration<Long> configuration = SQLProxyConfigurationBuilder.builder()
-                .withClientSideConfig(ClientSideConfig.getDefault())
+        SQLProxyConfiguration<Long> configuration = SQLProxyConfiguration.builder()
                 .withTableSettings(tableSettings)
                 .build(dataSource);
         proxyManager = new OracleSelectForUpdateBasedProxyManager<>(configuration);

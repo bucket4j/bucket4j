@@ -83,8 +83,12 @@ NOTE: see https://github.com/bucket4j/bucket4j/tree/8.0#java-compatibility-matri
 
 ===== Example of Bucket instantiation
 ----
+        SQLProxyConfiguration<Long> sqlProxyConfiguration = SQLProxyConfiguration.builder()
+                .withTableSettings(tableSettings)
+                .build(dataSource);
+        PostgreSQLadvisoryLockBasedProxyManager proxyManager = new PostgreSQLadvisoryLockBasedProxyManager(sqlProxyConfiguration);
+        ...
         Long key = 1L;
-        PostgreSQLadvisoryLockBasedProxyManager proxyManager = new PostgreSQLadvisoryLockBasedProxyManager(new SQLProxyConfiguration(dataSource));
         BucketConfiguration bucketConfiguration = BucketConfiguration.builder()
                 .addLimit(Bandwidth.simple(10, Duration.ofSeconds(1)))
                 .build();
@@ -110,7 +114,7 @@ The lock is exclusive.
 Multiple lock requests stack so that if the same resource is locked three times it must then be unlocked three times to be released for other sessions use.
 The lock is automatically released at the end of the current transaction and cannot be released explicitly.
 
-`PostgreSQLSelectForUpdateLockBasedTransactionTest` - Based on Select For Update
+`PostgreSQLSelectForUpdateBasedProxyManager` - Based on Select For Update
 This prevents them from being modified or deleted by other transactions until the current transaction ends.
 That is, other transactions that attempt UPDATE, DELETE, or SELECT FOR UPDATE of these rows will be blocked until the current transaction ends.
 Also, if an UPDATE, DELETE, or SELECT FOR UPDATE from another transaction has already locked a selected row or rows, SELECT FOR UPDATE will wait for the other transaction to complete, and will then lock and return the updated row (or no row, if the row was deleted).
@@ -132,7 +136,10 @@ To use Bucket4j extension for MySQL you need to add following dependency:
 ===== Example of Bucket instantiation
 
 ----
-        MySQLSelectForUpdateBasedProxyManager proxyManager = new MySQLSelectForUpdateBasedProxyManager(new SQLProxyConfiguration(dataSource));
+        SQLProxyConfiguration<Long> sqlProxyConfiguration = SQLProxyConfiguration.builder()
+                .withTableSettings(tableSettings)
+                .build(dataSource);
+        MySQLSelectForUpdateBasedProxyManager proxyManager = new MySQLSelectForUpdateBasedProxyManager(sqlProxyConfiguration);
 
         ...
         Long key = 1L;
@@ -158,7 +165,10 @@ To use Bucket4j extension for MySQL you need to add following dependency:
 ===== Example of Bucket instantiation
 
 ----
-        OracleSelectForUpdateBasedProxyManager proxyManager = new OracleSelectForUpdateBasedProxyManager(new SQLProxyConfiguration(dataSource));
+        SQLProxyConfiguration<Long> sqlProxyConfiguration = SQLProxyConfiguration.builder()
+                .withTableSettings(tableSettings)
+                .build(dataSource);
+        OracleSelectForUpdateBasedProxyManager proxyManager = new OracleSelectForUpdateBasedProxyManager(sqlProxyConfiguration);
         ...
         BucketConfiguration bucketConfiguration = BucketConfiguration.builder()
                 .addLimit(Bandwidth.simple(10, Duration.ofSeconds(1)))
