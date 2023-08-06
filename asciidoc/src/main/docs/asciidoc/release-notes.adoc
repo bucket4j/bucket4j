@@ -1,9 +1,10 @@
 === Bucket4j {revnumber} release notes
 Release `{revnumber}`
 
-.The features in release scope are following:
-* https://github.com/bucket4j/bucket4j/issues/351[#322 Add support for Redis cluster]
-* https://github.com/bucket4j/bucket4j/issues/351[#351 Support non-integer primary keys for JDBC inegrations]
+.The features/enhancements in release scope are following:
+* https://github.com/bucket4j/bucket4j/pull/356[#356 Contravariant arguments for CaffeineProxyManager by]
+* https://github.com/bucket4j/bucket4j/pull/360[#360 Add key mapping capability to ProxyManager]
+* https://github.com/bucket4j/bucket4j/pull/370[#370 Update redisson proxy manager to support redisson]
 
 .Special migration notes:
-Support for `Spring-Data-Redis` has been stopped. It is recommended to switch to one of direct integrations like `bucket4j-lettuce`, `bucket4j-jedis` or `bucket4j-redisson`.
+You should update to fresh Redisson dependency if you use integration with this backend.
