@@ -50,7 +50,7 @@ public class SelectForUpdateBasedProxyManagerMock<K> extends AbstractSelectForUp
 
             @Override
             public void update(byte[] data, RemoteBucketState newState) {
-                if (backup == null) {
+                if (!existBeforeTransaction) {
                     throw new IllegalStateException();
                 }
                 stateMap.put(key, data);
@@ -81,7 +81,7 @@ public class SelectForUpdateBasedProxyManagerMock<K> extends AbstractSelectForUp
 
             @Override
             public boolean tryInsertEmptyData() {
-                if (backup != null) {
+                if (existBeforeTransaction) {
                     throw new IllegalStateException();
                 }
                 stateMap.put(key, null);

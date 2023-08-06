@@ -2,7 +2,6 @@ package io.github.bucket4j.distributed.proxy.optimization
 
 import io.github.bucket4j.Bandwidth
 import io.github.bucket4j.BucketConfiguration
-import io.github.bucket4j.distributed.AsyncBucketProxy
 import io.github.bucket4j.distributed.BucketProxy
 import io.github.bucket4j.distributed.proxy.ClientSideConfig
 import io.github.bucket4j.distributed.proxy.optimization.delay.DelayOptimization
@@ -19,12 +18,8 @@ import spock.lang.Specification
 import spock.lang.Unroll
 
 import java.time.Duration
-import java.util.concurrent.CompletableFuture
 
-import static io.github.bucket4j.TimeMeter.SYSTEM_MILLISECONDS
-import static io.github.bucket4j.distributed.proxy.RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION
-
-class OptimizationCornerCases extends Specification {
+class OptimizationCornerCasesSpecification extends Specification {
 
     private static final DelayParameters delayParameters = new DelayParameters(1, Duration.ofNanos(1));
 
@@ -54,6 +49,12 @@ class OptimizationCornerCases extends Specification {
         then:
             bucket.forceAddTokens(90)
             bucket.getAvailableTokens() == 100
+
+        when:
+            proxyManagerMock.removeProxy("66")
+        then:
+            bucket.asVerbose().forceAddTokens(90)
+            bucket.asVerbose().getAvailableTokens().getValue() == 100
 
         where:
             [testNumber, optimization] << [
@@ -88,6 +89,12 @@ class OptimizationCornerCases extends Specification {
             bucket.forceAddTokens(90)
             bucket.getAvailableTokens() == 100
 
+        when:
+            proxyManagerMock.removeProxy("66")
+        then:
+            bucket.asVerbose().forceAddTokens(90)
+            bucket.asVerbose().getAvailableTokens().getValue() == 100
+
         where:
         [testNumber, optimization] << [
                 [1, Optimizations.batching()],
@@ -121,6 +128,12 @@ class OptimizationCornerCases extends Specification {
             bucket.forceAddTokens(90)
             bucket.getAvailableTokens() == 100
 
+        when:
+            proxyManagerMock.removeProxy("66")
+        then:
+            bucket.asVerbose().forceAddTokens(90)
+            bucket.asVerbose().getAvailableTokens().getValue() == 100
+
         where:
             [testNumber, optimization] << [
                     [1, Optimizations.batching()],
@@ -152,6 +165,12 @@ class OptimizationCornerCases extends Specification {
         then:
             bucket.forceAddTokens(90)
             bucket.getAvailableTokens() == 100
+
+        when:
+            proxyManagerMock.removeProxy("66")
+        then:
+            bucket.asVerbose().forceAddTokens(90)
+            bucket.asVerbose().getAvailableTokens().getValue() == 100
 
         where:
             [testNumber, optimization] << [

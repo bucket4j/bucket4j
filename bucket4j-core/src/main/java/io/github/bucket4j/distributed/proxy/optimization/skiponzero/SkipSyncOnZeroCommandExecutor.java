@@ -73,9 +73,11 @@ class SkipSyncOnZeroCommandExecutor implements CommandExecutor, AsyncCommandExec
         }
 
         MultiCommand remoteCommand = prepareRemoteCommand(command);
-        MultiResult multiResult = originalExecutor.execute(remoteCommand).getData();
-        rememberRemoteCommandResult(multiResult);
-        return (CommandResult<T>) multiResult.getResults().get(ORIGINAL_COMMAND_INDEX);
+        CommandResult<MultiResult> remoteResult = originalExecutor.execute(remoteCommand);
+        rememberRemoteCommandResult(remoteResult);
+        return remoteResult.isError() ?
+            (CommandResult<T>) remoteResult :
+            (CommandResult<T>) remoteResult.getData().getResults().get(ORIGINAL_COMMAND_INDEX);
     }
 
     @Override
@@ -89,10 +91,11 @@ class SkipSyncOnZeroCommandExecutor implements CommandExecutor, AsyncCommandExec
 
         MultiCommand remoteCommand = prepareRemoteCommand(command);
         CompletableFuture<CommandResult<MultiResult>> resultFuture = originalAsyncExecutor.executeAsync(remoteCommand);
-        return resultFuture.thenApply(remoteResult -> {
-            MultiResult multiResult = remoteResult.getData();
-            rememberRemoteCommandResult(multiResult);
-            return (CommandResult<T>) multiResult.getResults().get(ORIGINAL_COMMAND_INDEX);
+        return resultFuture.thenApply((CommandResult<MultiResult> remoteResult) -> {
+            rememberRemoteCommandResult(remoteResult);
+            return remoteResult.isError() ?
+                (CommandResult<T>) remoteResult :
+                (CommandResult<T>) remoteResult.getData().getResults().get(ORIGINAL_COMMAND_INDEX);
         });
     }
 
@@ -164,9 +167,9 @@ class SkipSyncOnZeroCommandExecutor implements CommandExecutor, AsyncCommandExec
         return new MultiCommand(commands);
     }
 
-    private void rememberRemoteCommandResult(MultiResult multiResult) {
+    private void rememberRemoteCommandResult(CommandResult<MultiResult> remoteResult) {
         lastSyncTimeNanos = timeMeter.currentTimeNanos();
-        CommandResult<?> snapshotResult = multiResult.getResults().get(GET_SNAPSHOT_COMMAND_INDEX);
+        CommandResult<?> snapshotResult = remoteResult.isError() ? remoteResult : remoteResult.getData().getResults().get(GET_SNAPSHOT_COMMAND_INDEX);
         if (snapshotResult.isError()) {
             state = null;
             return;
