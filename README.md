@@ -50,6 +50,11 @@ Sometimes you are having deal with bucket per key scenarios but distributed sync
 | :---                          | :---:                   |
 | ```Caffeine```                | [bucket4j-caffeine](https://github.com/bucket4j/bucket4j/blob/7.3/bucket4j-caffeine/src/main/java/io/github/bucket4j/caffeine/CaffeineProxyManager.java)      |
 
+### Third-party integrations
+| Back-end                      |                               Project page                               |
+| :---                          |:------------------------------------------------------------------------:|
+| ```Datomic Database```        | [clj-bucket4j-datomic](https://github.com/fr33m0nk/clj-bucket4j-datomic) |
+
 ## [Documentation](https://bucket4j.com)
 * [Official reference](https://bucket4j.com/8.3.0/toc.html)
 * [Quick start examples](https://bucket4j.com/8.3.0/toc.html#quick-start-examples)
