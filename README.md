@@ -25,25 +25,25 @@ In addition to local in-memory buckets, the Bucket4j supports clustered usage sc
 
 | Back-end                   |  Async supported | Optimized serialization | Thin-client support |                               Documentation link                               |
 | :---                       | :---:            | :---:                   |:-------------------:|:------------------------------------------------------------------------------:|
-| ```JCache API (JSR 107)``` |  No              | No                      |         No          |     [bucket4j-jcache](https://bucket4j.com/8.4.RC1/toc.html#bucket4j-jcache)     |
-| ```Hazelcast```            |  Yes             | Yes                     |         No          |  [bucket4j-hazelcast](https://bucket4j.com/8.4.RC1/toc.html#bucket4j-hazelcast)  |
-| ```Apache Ignite```        |  Yes             | n/a                     |         Yes         |     [bucket4j-ignite](https://bucket4j.com/8.4.RC1/toc.html#bucket4j-ignite)     |
-| ```Inifinispan```          |  Yes             | Yes                     |         No          | [bucket4j-infinispan](https://bucket4j.com/8.4.RC1/toc.html#bucket4j-infinispan) |
-| ```Oracle Coherence```     |  Yes             | Yes                     |         No          |  [bucket4j-coherence](https://bucket4j.com/8.4.RC1/toc.html#bucket4j-coherence)  |
+| ```JCache API (JSR 107)``` |  No              | No                      |         No          |     [bucket4j-jcache](https://bucket4j.com/8.4.0/toc.html#bucket4j-jcache)     |
+| ```Hazelcast```            |  Yes             | Yes                     |         No          |  [bucket4j-hazelcast](https://bucket4j.com/8.4.0/toc.html#bucket4j-hazelcast)  |
+| ```Apache Ignite```        |  Yes             | n/a                     |         Yes         |     [bucket4j-ignite](https://bucket4j.com/8.4.0/toc.html#bucket4j-ignite)     |
+| ```Inifinispan```          |  Yes             | Yes                     |         No          | [bucket4j-infinispan](https://bucket4j.com/8.4.0/toc.html#bucket4j-infinispan) |
+| ```Oracle Coherence```     |  Yes             | Yes                     |         No          |  [bucket4j-coherence](https://bucket4j.com/8.4.0/toc.html#bucket4j-coherence)  |
 
 ### Redis back-ends
 | Back-end                   |  Async supported | Redis cluster supported |                                                      Documentation link                                                      |
 | :---                       | :---:            |:-----------------------:|:----------------------------------------------------------------------------------------------------------------------------:|
-| ```Redis/Redisson```       |  Yes             |           No            | [bucket4j-redis/Redisson](https://bucket4j.com/8.4.RC1/toc.html#example-of-bucket-instantiation-via-redissonbasedproxymanager) |
-| ```Redis/Jedis```          |  No              |           Yes           |    [bucket4j-redis/Jedis](https://bucket4j.com/8.4.RC1/toc.html#example-of-bucket-instantiation-via-jedisbasedproxymanager)    |
-| ```Redis/Lettuce```        |  Yes             |           Yes           |   [bucket4j-redis/Lettuce](https://bucket4j.com/8.4.RC1/toc.html#example-of-bucket-instantiation-via-lettucebasedproxymanager) |
+| ```Redis/Redisson```       |  Yes             |           No            | [bucket4j-redis/Redisson](https://bucket4j.com/8.4.0/toc.html#example-of-bucket-instantiation-via-redissonbasedproxymanager) |
+| ```Redis/Jedis```          |  No              |           Yes           |    [bucket4j-redis/Jedis](https://bucket4j.com/8.4.0/toc.html#example-of-bucket-instantiation-via-jedisbasedproxymanager)    |
+| ```Redis/Lettuce```        |  Yes             |           Yes           |   [bucket4j-redis/Lettuce](https://bucket4j.com/8.4.0/toc.html#example-of-bucket-instantiation-via-lettucebasedproxymanager) |
 
 ### JDBC back-ends
 | Back-end                   |                                Documentation link                                 |
 | :---                       |:---------------------------------------------------------------------------------:|
-| ```MySQL```                |      [bucket4j-mysql](https://bucket4j.com/8.4.RC1/toc.html#mysql-integration)      |
-| ```PostgreSQL```           | [bucket4j-postgresql](https://bucket4j.com/8.4.RC1/toc.html#postgresql-integration) |
-| ```Oracle```               |     [bucket4j-oracle](https://bucket4j.com/8.4.RC1/toc.html#oracle-integration)     |
+| ```MySQL```                |      [bucket4j-mysql](https://bucket4j.com/8.4.0/toc.html#mysql-integration)      |
+| ```PostgreSQL```           | [bucket4j-postgresql](https://bucket4j.com/8.4.0/toc.html#postgresql-integration) |
+| ```Oracle```               |     [bucket4j-oracle](https://bucket4j.com/8.4.0/toc.html#oracle-integration)     |
 
 
 ### Local caches support
@@ -58,8 +58,8 @@ Sometimes you are having deal with bucket per key scenarios but distributed sync
 | ```Datomic Database```        | [clj-bucket4j-datomic](https://github.com/fr33m0nk/clj-bucket4j-datomic) |
 
 ## [Documentation](https://bucket4j.com)
-* [Official reference](https://bucket4j.com/8.4.RC1/toc.html)
-* [Quick start examples](https://bucket4j.com/8.4.RC1/toc.html#quick-start-examples)
+* [Official reference](https://bucket4j.com/8.4.0/toc.html)
+* [Quick start examples](https://bucket4j.com/8.4.0/toc.html#quick-start-examples)
 * [Third-party articles](https://bucket4j.com/#third-party-articles)
 
 ## Get Bucket4j library
@@ -70,14 +70,14 @@ The Bucket4j is distributed through [Maven Central](http://search.maven.org/):
 <dependency>
     <groupId>com.bucket4j</groupId>
     <artifactId>bucket4j-core</artifactId>
-    <version>8.4.RC1</version>
+    <version>8.4.0</version>
 </dependency>
 
 <!-- For java 8 -->
 <dependency>
     <groupId>com.bucket4j</groupId>
     <artifactId>bucket4j_jdk8-core</artifactId>
-    <version>8.4.RC1</version>
+    <version>8.4.0</version>
 </dependency>
 ``` 
 #### You can build Bucket4j from sources
