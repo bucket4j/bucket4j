@@ -219,7 +219,7 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
     @Unroll
     def "#type should detect that all bandwidth has unique id"(BucketType type) {
         when:
-            Bucket4j.builder()
+            Bucket.builder()
                 .addLimit(Bandwidth.simple(1, Duration.ofSeconds(10)).withId("xyz"))
                 .addLimit(Bandwidth.simple(100, Duration.ofSeconds(3600)).withId("xyz"))
                 .build()
@@ -265,7 +265,7 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
     @Unroll
     def "Should check that #tokens tokens is not positive to force add"(long tokens) {
         setup:
-            def bucket = Bucket4j.builder().addLimit(
+            def bucket = Bucket.builder().addLimit(
                     Bandwidth.simple(VALID_CAPACITY, VALID_PERIOD)
             ).build()
         when:

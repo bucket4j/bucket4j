@@ -82,7 +82,7 @@ Constructing the bucket to satisfy the requirements above is a little bit more c
 because we have to deal with overdraft, but it is not rocket science:
 [source, java]
 ----
-import io.github.bucket4j.Bucket4j;
+import io.github.bucket4j.Bucket;
 
 public class ThrottlingFilter implements javax.servlet.Filter {
 

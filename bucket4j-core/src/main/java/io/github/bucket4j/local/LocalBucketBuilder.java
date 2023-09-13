@@ -21,8 +21,11 @@
 package io.github.bucket4j.local;
 
 import io.github.bucket4j.*;
+import io.github.bucket4j.Bandwidth.BandwidthBuilderBuildStage;
+import io.github.bucket4j.Bandwidth.BandwidthBuilderCapacityStage;
 
 import java.util.Objects;
+import java.util.function.Function;
 
 /**
  * This builder creates in-memory buckets ({@link LockFreeBucket}).
@@ -44,6 +47,12 @@ public class LocalBucketBuilder {
     public LocalBucketBuilder addLimit(Bandwidth bandwidth) {
         configurationBuilder.addLimit(bandwidth);
         return this;
+    }
+
+    public LocalBucketBuilder addLimit(Function<BandwidthBuilderCapacityStage, BandwidthBuilderBuildStage> bandwidthConfigurator) {
+        BandwidthBuilderBuildStage builder = bandwidthConfigurator.apply(Bandwidth.builder());
+        Bandwidth bandwidth = builder.build();
+        return addLimit(bandwidth);
     }
 
     private TimeMeter timeMeter = TimeMeter.SYSTEM_MILLISECONDS;

@@ -21,6 +21,10 @@ package io.github.bucket4j;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
+
+import io.github.bucket4j.Bandwidth.BandwidthBuilderBuildStage;
+import io.github.bucket4j.Bandwidth.BandwidthBuilderCapacityStage;
 
 /**
  * The builder for {@link BucketConfiguration}
@@ -61,6 +65,12 @@ public class ConfigurationBuilder {
         }
         bandwidths.add(bandwidth);
         return this;
+    }
+
+    public ConfigurationBuilder addLimit(Function<BandwidthBuilderCapacityStage, BandwidthBuilderBuildStage> bandwidthConfigurator) {
+        BandwidthBuilderBuildStage builder = bandwidthConfigurator.apply(Bandwidth.builder());
+        Bandwidth bandwidth = builder.build();
+        return addLimit(bandwidth);
     }
 
     @Override

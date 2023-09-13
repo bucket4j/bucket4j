@@ -72,13 +72,27 @@ The Bucket4j is distributed through [Maven Central](http://search.maven.org/):
     <artifactId>bucket4j_jdk8-core</artifactId>
     <version>8.3.0</version>
 </dependency>
-``` 
-#### You can build Bucket4j from sources
-```bash
-git clone https://github.com/bucket4j/bucket4j.git
-cd bucket4j
-mvn clean install
 ```
+
+#### Quick start
+```java
+import io.github.bucket4j.Bucket;
+
+...
+// bucket with capacity 10 tokens and with refilling speed 1 token per each 6 second
+private static Bucket bucket = Bucket.builder()
+        .addLimit(limit -> limit.capacity(10).refillGreedy(10, Duration.ofMinutes(1)))
+        .build();
+
+private void doSomethingProtected() {
+   if (bucket.tryConsume(1)) {
+      doSomething();    
+   } else {
+      throw new SomeRateLimitingException();
+   }
+}
+```
+More examples [can be found there](https://bucket4j.com/8.3.0/toc.html#quick-start-examples)
 
 ## Have a question?
 Feel free to ask via:

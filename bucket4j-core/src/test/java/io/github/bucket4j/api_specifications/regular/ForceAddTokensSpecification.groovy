@@ -2,7 +2,6 @@ package io.github.bucket4j.api_specifications.regular
 
 import io.github.bucket4j.Bandwidth
 import io.github.bucket4j.Bucket
-import io.github.bucket4j.Bucket4j
 import io.github.bucket4j.BucketConfiguration
 import io.github.bucket4j.distributed.AsyncBucketProxy
 import io.github.bucket4j.mock.BucketType
@@ -59,7 +58,7 @@ class ForceAddTokensSpecification extends Specification {
     def "Tokens that was added over capacity should not be lost"() {
         setup:
             TimeMeterMock timeMeter = new TimeMeterMock(0)
-            Bucket bucket = Bucket4j.builder()
+            Bucket bucket = Bucket.builder()
                     .addLimit(Bandwidth.simple(100, Duration.ofNanos(100)))
                     .withCustomTimePrecision(timeMeter)
                     .build()
