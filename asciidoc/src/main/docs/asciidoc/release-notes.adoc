@@ -2,9 +2,7 @@
 Release `{revnumber}`
 
 .The features/enhancements in release scope are following:
-* https://github.com/bucket4j/bucket4j/pull/356[#356 Contravariant arguments for CaffeineProxyManager by]
-* https://github.com/bucket4j/bucket4j/pull/360[#360 Add key mapping capability to ProxyManager]
-* https://github.com/bucket4j/bucket4j/pull/370[#370 Update redisson proxy manager to support redisson]
-
-.Special migration notes:
-You should update to fresh Redisson dependency if you use integration with this backend.
+* https://github.com/bucket4j/bucket4j/issues/372[#372 Bucket4J for OracleSql]
+* https://github.com/bucket4j/bucket4j/issues/400[#400 PostgreSQLadvisoryLockBasedProxyManager does not work with String keys]
+* https://github.com/bucket4j/bucket4j/issues/381[#381 Add Listener hook before the thread is parked]
+* https://github.com/bucket4j/bucket4j/issues/398[#398 BucketNotFoundException when using Predictive Optimization]

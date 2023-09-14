@@ -1,5 +1,10 @@
 == Documentation for previous versions
 === 2023
+Release date: `02 May 2023`
+
+* http://bucket4j.com/8.3.0/release-notes.html[8.3.0 Release notes]
+* http://bucket4j.com/8.3.0/toc.html[8.3.0 Reference]
+
 ==== 8.2.0
 Release date: `05 March 2023`
 
