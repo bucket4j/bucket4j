@@ -72,7 +72,7 @@ public class Optimizations {
      * @see DelayParameters
      */
     public static Optimization predicting(DelayParameters delayParameters, PredictionParameters predictionParameters) {
-        return new PredictiveOptimization(predictionParameters, delayParameters, NopeOptimizationListener.INSTANCE, TimeMeter.SYSTEM_NANOTIME);
+        return new PredictiveOptimization(predictionParameters, delayParameters, NopeOptimizationListener.INSTANCE, TimeMeter.SYSTEM_MILLISECONDS);
     }
 
     /**
@@ -87,7 +87,7 @@ public class Optimizations {
      */
     public static Optimization predicting(DelayParameters delayParameters) {
         PredictionParameters defaultPrediction = PredictionParameters.createDefault(delayParameters);
-        return new PredictiveOptimization(defaultPrediction, delayParameters, NopeOptimizationListener.INSTANCE, TimeMeter.SYSTEM_NANOTIME);
+        return new PredictiveOptimization(defaultPrediction, delayParameters, NopeOptimizationListener.INSTANCE, TimeMeter.SYSTEM_MILLISECONDS);
     }
 
 }

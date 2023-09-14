@@ -2,8 +2,8 @@
 package io.github.bucket4j.grid.jcache.infinispan;
 
 import io.github.bucket4j.grid.jcache.AbstractJCacheTest;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 
 import javax.cache.Cache;
 import javax.cache.CacheManager;
@@ -33,7 +33,7 @@ public class InfinispanJCacheTest extends AbstractJCacheTest {
     private static TestClassLoader1 classLoader1 = new TestClassLoader1(InfinispanJCacheTest.class.getClassLoader());
     private static TestClassLoader2 classLoader2 = new TestClassLoader2(InfinispanJCacheTest.class.getClassLoader());
 
-    @BeforeClass
+    @BeforeAll
     public static void setup() {
         CachingProvider cachingProvider = Caching.getCachingProvider("org.infinispan.jcache.embedded.JCachingProvider");
 
@@ -44,7 +44,7 @@ public class InfinispanJCacheTest extends AbstractJCacheTest {
         cache2 = cacheManager2.getCache("my_buckets");
     }
 
-    @AfterClass
+    @AfterAll
     public static void shutdown() {
         if (cacheManager1 != null) {
             cacheManager1.close();

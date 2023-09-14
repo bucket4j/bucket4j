@@ -2,7 +2,6 @@
 package io.github.bucket4j.distributed.serialization;
 
 import io.github.bucket4j.*;
-import io.github.bucket4j.distributed.remote.commands.ForceAddTokensCommand;
 import io.github.bucket4j.distributed.remote.*;
 import io.github.bucket4j.distributed.remote.commands.*;
 import io.github.bucket4j.distributed.versioning.Versions;
@@ -11,7 +10,7 @@ import io.github.bucket4j.local.SynchronizationStrategy;
 import io.github.bucket4j.local.SynchronizedBucket;
 import io.github.bucket4j.local.ThreadUnsafeBucket;
 import io.github.bucket4j.util.ComparableByContent;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -23,7 +22,7 @@ import static io.github.bucket4j.Bandwidth.simple;
 import static io.github.bucket4j.Refill.*;
 import static io.github.bucket4j.distributed.serialization.PrimitiveSerializationHandles.*;
 import static java.time.Duration.*;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public abstract class AbstractSerializationTest {
 

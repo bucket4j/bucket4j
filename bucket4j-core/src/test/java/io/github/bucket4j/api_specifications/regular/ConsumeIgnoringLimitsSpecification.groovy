@@ -15,8 +15,8 @@ import java.time.Duration
 import java.util.concurrent.ExecutionException
 
 import static io.github.bucket4j.util.PackageAccessor.getState
-import static org.junit.Assert.assertNotSame
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertNotSame
+import static org.junit.jupiter.api.Assertions.fail;
 
 class ConsumeIgnoringLimitsSpecification extends Specification {
 

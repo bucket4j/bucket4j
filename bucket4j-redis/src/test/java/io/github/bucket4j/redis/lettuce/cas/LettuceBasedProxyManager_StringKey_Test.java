@@ -2,14 +2,15 @@ package io.github.bucket4j.redis.lettuce.cas;
 
 import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
-import io.github.bucket4j.distributed.serialization.Mapper;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
 import io.lettuce.core.RedisClient;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import io.lettuce.core.codec.ByteArrayCodec;
+import io.lettuce.core.codec.RedisCodec;
+import io.lettuce.core.codec.StringCodec;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.testcontainers.containers.GenericContainer;
 
-import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
 public class LettuceBasedProxyManager_StringKey_Test extends AbstractDistributedBucketTest<String> {
@@ -17,13 +18,13 @@ public class LettuceBasedProxyManager_StringKey_Test extends AbstractDistributed
     private static GenericContainer container;
     private static RedisClient redisClient;
 
-    @BeforeClass
+    @BeforeAll
     public static void setup() {
         container = startRedisContainer();
         redisClient = createLettuceClient(container);
     }
 
-    @AfterClass
+    @AfterAll
     public static void shutdown() {
         if (redisClient != null) {
             redisClient.shutdown();
@@ -49,9 +50,8 @@ public class LettuceBasedProxyManager_StringKey_Test extends AbstractDistributed
 
     @Override
     protected ProxyManager<String> getProxyManager() {
-        return LettuceBasedProxyManager.builderFor(redisClient)
+        return LettuceBasedProxyManager.builderFor(redisClient.connect(RedisCodec.of(StringCodec.UTF8, ByteArrayCodec.INSTANCE)))
                 .withExpirationStrategy(ExpirationAfterWriteStrategy.none())
-                .withKeyMapper(Mapper.STRING)
                 .build();
     }
 

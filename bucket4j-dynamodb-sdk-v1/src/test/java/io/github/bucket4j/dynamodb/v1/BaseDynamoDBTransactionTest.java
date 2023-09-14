@@ -5,61 +5,48 @@ import com.amazonaws.services.dynamodbv2.document.ItemUtils;
 import com.amazonaws.services.dynamodbv2.local.embedded.DynamoDBEmbedded;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 public abstract class BaseDynamoDBTransactionTest<K> {
     protected static final AmazonDynamoDB db = DynamoDBEmbedded.create().amazonDynamoDB();
     protected static final String table = "buckets";
 
-    @Rule
-    public final ExpectedException thrown = ExpectedException.none();
 
-    @Before
+    @BeforeEach
     public void createStateTable() {
         Utils.createStateTable(db, table, keyType());
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         db.deleteTable(table);
     }
 
     @Test
     public void ctorThrowsIfDynamoDBIsNull() {
-        thrown.expect(NullPointerException.class);
-        thrown.expectMessage("DynamoDB is null");
-
-        new NoopDynamoDBTransaction(null, "buckets");
+        Exception e = assertThrows(NullPointerException.class, () -> new NoopDynamoDBTransaction(null, "buckets"));
+        assertEquals("DynamoDB is null", e.getMessage());
     }
 
     @Test
     public void ctorThrowsIfTableNameIsNull() {
-        thrown.expect(NullPointerException.class);
-        thrown.expectMessage("table name is null");
-
-        new NoopDynamoDBTransaction(db, null);
+        Exception e = assertThrows(NullPointerException.class, () -> new NoopDynamoDBTransaction(db, null));
+        assertEquals("table name is null", e.getMessage());
     }
 
     @Test
     public void ctorThrowsIfKeyIsNull() {
-        thrown.expect(NullPointerException.class);
-        thrown.expectMessage("key is null");
-
-        transaction(null);
+        Exception e = assertThrows(NullPointerException.class, () -> transaction(null));
+        assertEquals("key is null", e.getMessage());
     }
 
     @Test
@@ -97,15 +84,12 @@ public abstract class BaseDynamoDBTransactionTest<K> {
         BaseDynamoDBTransaction transaction = transaction(key);
 
         // then
-        thrown.expect(IllegalStateException.class);
-        thrown.expectMessage(
-                "state (attribute: state) value is corrupted for key " +
+        Exception e = assertThrows(IllegalStateException.class, transaction::getStateData);
+
+        assertEquals("state (attribute: state) value is corrupted for key " +
                 ItemUtils.toAttributeValue(key) +
                 ". It is present but value type is different from Binary (B) type. " +
-                "Current state value is " + ItemUtils.toAttributeValue(state)
-        );
-
-        transaction.getStateData();
+                "Current state value is " + ItemUtils.toAttributeValue(state), e.getMessage());
     }
 
     @Test

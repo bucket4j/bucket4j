@@ -1,12 +1,11 @@
 package io.github.bucket4j.redis.lettuce.cas;
 
 import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
-import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
 import io.lettuce.core.RedisClient;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.testcontainers.containers.GenericContainer;
 
 import java.nio.charset.StandardCharsets;
@@ -17,13 +16,13 @@ public class LettuceBasedProxyManagerTest extends AbstractDistributedBucketTest<
     private static GenericContainer container;
     private static RedisClient redisClient;
 
-    @BeforeClass
+    @BeforeAll
     public static void setup() {
         container = startRedisContainer();
         redisClient = createLettuceClient(container);
     }
 
-    @AfterClass
+    @AfterAll
     public static void shutdown() {
         if (redisClient != null) {
             redisClient.shutdown();

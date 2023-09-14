@@ -8,7 +8,7 @@
     <parent>
         <groupId>com.bucket4j</groupId>
         <artifactId>backward-compatibility-tests</artifactId>
-        <version>8.3.0</version>
+        <version>8.4.0</version>
         <relativePath>../../backward-compatibility-tests</relativePath>
     </parent>
     <artifactId>backward-compatibility-tests-current</artifactId>
@@ -16,7 +16,7 @@
 
     <properties>
         <modular-name>backward_compatibility_tests_current</modular-name>
-        <current.version>8.3.0</current.version>
+        <current.version>8.4.0</current.version>
         <maven.deploy.skip>true</maven.deploy.skip>
         <skipNexusStagingDeployMojo>true</skipNexusStagingDeployMojo>
     </properties>

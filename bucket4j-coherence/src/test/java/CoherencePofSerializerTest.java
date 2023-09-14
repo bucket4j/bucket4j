@@ -1,26 +1,26 @@
-
 import com.tangosol.io.Serializer;
 import com.tangosol.io.pof.ConfigurablePofContext;
 import com.tangosol.util.Binary;
 import com.tangosol.util.ExternalizableHelper;
-import io.github.bucket4j.*;
+import io.github.bucket4j.Bucket4j;
+import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.distributed.remote.Request;
 import io.github.bucket4j.distributed.remote.commands.AddTokensCommand;
 import io.github.bucket4j.distributed.versioning.Versions;
 import io.github.bucket4j.grid.coherence.CoherenceProcessor;
 import io.github.bucket4j.util.ComparableByContent;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import static io.github.bucket4j.Bandwidth.simple;
-import static java.time.Duration.*;
-import static org.junit.Assert.assertTrue;
+import static java.time.Duration.ofSeconds;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class CoherencePofSerializerTest {
 
     private static Serializer pofSerializer;
 
-    @BeforeClass
+    @BeforeAll
     public static void initializeSerializer() {
         pofSerializer = new ConfigurablePofContext("bucket4j-pof-config-example.xml");
     }

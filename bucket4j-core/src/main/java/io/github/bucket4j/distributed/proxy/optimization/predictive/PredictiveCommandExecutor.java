@@ -77,10 +77,12 @@ class PredictiveCommandExecutor implements CommandExecutor, AsyncCommandExecutor
         }
 
         MultiCommand remoteCommand = prepareRemoteCommand(command);
-        MultiResult multiResult = originalExecutor.execute(remoteCommand).getData();
-        List<CommandResult<?>> results = multiResult.getResults();
-        rememberRemoteCommandResult(remoteCommand, multiResult);
-        return (CommandResult<T>) results.get(ORIGINAL_COMMAND_INDEX);
+        CommandResult<MultiResult> remoteResult = originalExecutor.execute(remoteCommand);
+
+        rememberRemoteCommandResult(remoteCommand, remoteResult);
+        return remoteResult.isError() ?
+            (CommandResult<T>)remoteResult :
+            (CommandResult<T>) remoteResult.getData().getResults().get(ORIGINAL_COMMAND_INDEX);
     }
 
     @Override
@@ -94,11 +96,11 @@ class PredictiveCommandExecutor implements CommandExecutor, AsyncCommandExecutor
 
         MultiCommand remoteCommand = prepareRemoteCommand(command);
         CompletableFuture<CommandResult<MultiResult>> resultFuture = originalAsyncExecutor.executeAsync(remoteCommand);
-        return resultFuture.thenApply(remoteResult -> {
-            MultiResult multiResult = remoteResult.getData();
-            List<CommandResult<?>> results = multiResult.getResults();
-            rememberRemoteCommandResult(remoteCommand, multiResult);
-            return (CommandResult<T>) results.get(ORIGINAL_COMMAND_INDEX);
+        return resultFuture.thenApply((CommandResult<MultiResult> remoteResult) -> {
+            rememberRemoteCommandResult(remoteCommand, remoteResult);
+            return remoteResult.isError()?
+                (CommandResult<T>) remoteResult :
+                (CommandResult<T>) remoteResult.getData().getResults().get(ORIGINAL_COMMAND_INDEX);
         });
     }
 
@@ -187,10 +189,10 @@ class PredictiveCommandExecutor implements CommandExecutor, AsyncCommandExecutor
         return new MultiCommand(commands);
     }
 
-    private void rememberRemoteCommandResult(MultiCommand multiCommand, MultiResult multiResult) {
+    private void rememberRemoteCommandResult(MultiCommand multiCommand, CommandResult<MultiResult> commandResult) {
         postponedToConsumeTokens = 0;
         speculativelyConsumedByPredictionTokens = 0;
-        CommandResult<?> snapshotResult = multiResult.getResults().get(GET_SNAPSHOT_COMMAND_INDEX);
+        CommandResult<?> snapshotResult = commandResult.isError() ? commandResult : commandResult.getData().getResults().get(GET_SNAPSHOT_COMMAND_INDEX);
         if (snapshotResult.isError()) {
             state = null;
             sampling.clear();
@@ -198,7 +200,7 @@ class PredictiveCommandExecutor implements CommandExecutor, AsyncCommandExecutor
         }
         state = (RemoteBucketState) snapshotResult.getData();
         long now = timeMeter.currentTimeNanos();
-        long consumedTokens = multiCommand.getConsumedTokens(multiResult);
+        long consumedTokens = multiCommand.getConsumedTokens(commandResult.getData());
         sampling.rememberRemoteCommandResult(consumedTokens, state.getRemoteStat().getConsumedTokens(), now);
     }
 
