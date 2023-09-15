@@ -3,7 +3,7 @@ image::./images/white-logo.png[]
 endif::[]
 
 == Current version {revnumber} documentation
-Release date: `05 March 2023`
+Release date: `14 Sep 2023`
 
 * http://bucket4j.com/{revnumber}/release-notes.html[{revnumber} Release notes]
 * http://bucket4j.com/{revnumber}/toc.html[{revnumber} Reference]
@@ -13,7 +13,7 @@ If you are looking for documentation related to a previous version then http://b
 
 == About the authors
 Vladimir Bukhtoyarov::
-Lead Java developer at edna +
+Lead Java developer at Vkontakte +
 Saint-Petersburg, Russia +
 jsecoder@mail.ru +
 Role: maintainer, future vision +

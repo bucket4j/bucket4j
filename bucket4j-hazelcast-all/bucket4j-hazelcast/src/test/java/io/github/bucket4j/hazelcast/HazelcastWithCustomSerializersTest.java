@@ -5,16 +5,16 @@ import com.hazelcast.config.JoinConfig;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.map.IMap;
-import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
+import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.grid.hazelcast.HazelcastProxyManager;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
 import org.gridkit.nanocloud.Cloud;
 import org.gridkit.nanocloud.CloudFactory;
 import org.gridkit.nanocloud.VX;
 import org.gridkit.vicluster.ViNode;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 
 import java.io.Serializable;
 import java.util.UUID;
@@ -27,7 +27,7 @@ public class HazelcastWithCustomSerializersTest extends AbstractDistributedBucke
 
     private static HazelcastInstance hazelcastInstance;
 
-    @BeforeClass
+    @BeforeAll
     public static void setup() {
         // start separated JVM on current host
         cloud = CloudFactory.createCloud();
@@ -58,7 +58,7 @@ public class HazelcastWithCustomSerializersTest extends AbstractDistributedBucke
         map = hazelcastInstance.getMap("my_buckets");
     }
 
-    @AfterClass
+    @AfterAll
     public static void shutdown() {
         if (hazelcastInstance != null) {
             hazelcastInstance.shutdown();

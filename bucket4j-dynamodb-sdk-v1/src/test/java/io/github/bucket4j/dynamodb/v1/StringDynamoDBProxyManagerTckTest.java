@@ -3,11 +3,11 @@ package io.github.bucket4j.dynamodb.v1;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.local.embedded.DynamoDBEmbedded;
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
-import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
+import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 
 import java.util.UUID;
 
@@ -15,12 +15,12 @@ public class StringDynamoDBProxyManagerTckTest extends AbstractDistributedBucket
     private static final AmazonDynamoDB db = DynamoDBEmbedded.create().amazonDynamoDB();
     private static final String table = "buckets";
 
-    @Before
+    @BeforeEach
     public void createStateTable() {
         Utils.createStateTable(db, table, ScalarAttributeType.S);
     }
 
-    @After
+    @AfterEach
     public void dropStateTable() {
         db.deleteTable(table);
     }

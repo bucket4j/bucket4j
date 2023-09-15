@@ -3,8 +3,8 @@ package io.github.bucket4j.redis.jedis.cas;
 import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
@@ -28,13 +28,13 @@ public class JedisBasedProxyManager_ClusterMode_Test extends AbstractDistributed
 
     private static final Integer[] CONTAINER_CLUSTER_PORTS = {7000, 7001, 7002, 7003, 7004, 7005};
 
-    @BeforeClass
+    @BeforeAll
     public static void setup() {
         container = startRedisContainer();
         jedisCluster = createJedisCluster(container);
     }
 
-    @AfterClass
+    @AfterAll
     public static void shutdown() {
         if (jedisCluster != null) {
             jedisCluster.close();

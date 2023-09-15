@@ -4,12 +4,11 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import io.github.bucket4j.distributed.jdbc.BucketTableSettings;
 import io.github.bucket4j.distributed.jdbc.SQLProxyConfiguration;
-import io.github.bucket4j.distributed.jdbc.SQLProxyConfigurationBuilder;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.testcontainers.containers.PostgreSQLContainer;
 
 import javax.sql.DataSource;
@@ -25,7 +24,7 @@ public class PostgreSQLAdvisoryLockBasedTransactionTest extends AbstractDistribu
     private static DataSource dataSource;
     private static PostgreSQLadvisoryLockBasedProxyManager<Long> proxyManager;
 
-    @BeforeClass
+    @BeforeAll
     public static void initializeInstance() throws SQLException {
         container = startPostgreSQLContainer();
         dataSource = createJdbcDataSource(container);
@@ -37,8 +36,7 @@ public class PostgreSQLAdvisoryLockBasedTransactionTest extends AbstractDistribu
                 statement.execute(query);
             }
         }
-        SQLProxyConfiguration<Long> configuration = SQLProxyConfigurationBuilder.builder()
-                .withClientSideConfig(ClientSideConfig.getDefault())
+        SQLProxyConfiguration<Long> configuration = SQLProxyConfiguration.builder()
                 .withTableSettings(tableSettings)
                 .build(dataSource);
         proxyManager = new PostgreSQLadvisoryLockBasedProxyManager<>(configuration);
@@ -54,7 +52,7 @@ public class PostgreSQLAdvisoryLockBasedTransactionTest extends AbstractDistribu
         return ThreadLocalRandom.current().nextLong(1_000_000_000);
     }
 
-    @AfterClass
+    @AfterAll
     public static void shutdown() {
         if (container != null) {
             container.stop();

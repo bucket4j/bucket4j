@@ -12,13 +12,21 @@ import spock.lang.Specification
 import spock.lang.Unroll
 
 import java.time.Duration
+import java.util.concurrent.atomic.AtomicLong
 
 class BlockingConsumeSpecification extends Specification {
 
     TimeMeterMock clock = new TimeMeterMock()
     BlockingStrategyMock blocker = new BlockingStrategyMock(clock)
-    SimpleBucketListener listener = new SimpleBucketListener()
     SchedulerMock scheduler = new SchedulerMock(clock)
+
+    SimpleBucketListener listener = new SimpleBucketListener() {
+        long beforeParkingNanos;
+        @Override
+        void beforeParking(long nanos) {
+            beforeParkingNanos += nanos
+        }
+    }
 
     @Unroll
     def "#type test for blocking consume"(BucketType type) {
@@ -71,6 +79,7 @@ class BlockingConsumeSpecification extends Specification {
             listener.getConsumed() == 9
             listener.getRejected() == 0
             listener.getParkedNanos() == 0
+            listener.beforeParkingNanos == 0
             listener.getInterrupted() == 0
 
         when:
@@ -79,6 +88,7 @@ class BlockingConsumeSpecification extends Specification {
             listener.getConsumed() == 11
             listener.getRejected() == 0
             listener.getParkedNanos() == 100_000_000
+            listener.beforeParkingNanos == 100_000_000
             listener.getInterrupted() == 0
 
         when:
@@ -89,6 +99,7 @@ class BlockingConsumeSpecification extends Specification {
             listener.getConsumed() == 12
             listener.getRejected() == 0
             listener.getParkedNanos() == 100_000_000
+            listener.beforeParkingNanos == 200_000_000
             listener.getInterrupted() == 1
 
         where:
@@ -144,6 +155,7 @@ class BlockingConsumeSpecification extends Specification {
             listener.getConsumed() == 9
             listener.getRejected() == 0
             listener.getParkedNanos() == 0
+            listener.beforeParkingNanos == 0
             listener.getInterrupted() == 0
 
         when:
@@ -152,6 +164,7 @@ class BlockingConsumeSpecification extends Specification {
             listener.getConsumed() == 11
             listener.getRejected() == 0
             listener.getParkedNanos() == 100_000_000
+            listener.beforeParkingNanos == 100_000_000
             listener.getInterrupted() == 0
 
         when:
@@ -162,6 +175,7 @@ class BlockingConsumeSpecification extends Specification {
             listener.getConsumed() == 12
             listener.getRejected() == 0
             listener.getParkedNanos() == 200_000_000
+            listener.beforeParkingNanos == 200_000_000
             listener.getInterrupted() == 0
 
         where:

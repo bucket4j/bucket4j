@@ -18,7 +18,7 @@ Bucket bucket = Bucket.builder()
     .addLimit(Bandwidth.simple(10000, Duration.ofHours(1)))
     .build();
     ...
-BucketConfiguration newConfiguration = BucketConfiguration.configurationBuilder()
+BucketConfiguration newConfiguration = BucketConfiguration.builder()
     .addLimit(Bandwidth.simple(5000, Duration.ofHours(1)))
     .addLimit(Bandwidth.simple(100, Duration.ofSeconds(10)))
     .build();

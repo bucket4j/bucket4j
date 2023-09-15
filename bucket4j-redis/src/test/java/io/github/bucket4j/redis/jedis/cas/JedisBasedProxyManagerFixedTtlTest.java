@@ -3,8 +3,8 @@ package io.github.bucket4j.redis.jedis.cas;
 import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.testcontainers.containers.GenericContainer;
 import redis.clients.jedis.JedisPool;
 
@@ -17,13 +17,13 @@ public class JedisBasedProxyManagerFixedTtlTest extends AbstractDistributedBucke
     private static GenericContainer container;
     private static JedisPool jedisPool;
 
-    @BeforeClass
+    @BeforeAll
     public static void setup() {
         container = startRedisContainer();
         jedisPool = createJedisClient(container);
     }
 
-    @AfterClass
+    @AfterAll
     public static void shutdown() {
         if (jedisPool != null) {
             jedisPool.close();

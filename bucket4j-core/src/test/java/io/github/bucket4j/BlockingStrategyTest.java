@@ -1,20 +1,26 @@
 package io.github.bucket4j;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class BlockingStrategyTest {
 
-    @Test(expected = InterruptedException.class, timeout = 1000)
+    @Test
+    @Timeout(1)
     public void sleepShouldThrowExceptionWhenThreadInterrupted() throws InterruptedException {
-        Thread.currentThread().interrupt();
-        BlockingStrategy.PARKING.park(TimeUnit.SECONDS.toNanos(10));
+        Assertions.assertThrows(InterruptedException.class, () -> {
+            Thread.currentThread().interrupt();
+            BlockingStrategy.PARKING.park(TimeUnit.SECONDS.toNanos(10));
+        });
     }
 
-    @Test(timeout = 3000)
+    @Test
+    @Timeout(3)
     public void sleepShouldHandleSpuriousWakeup() throws InterruptedException {
         // two lines bellow lead to spurious wakeup at first invocation of park
         Thread.currentThread().interrupt();
@@ -26,7 +32,8 @@ public class BlockingStrategyTest {
         assertTrue(System.nanoTime() - startNanos >= nanosToPark);
     }
 
-    @Test(timeout = 10000)
+    @Test
+    @Timeout(10)
     public void sleepUniterruptibleShouldNotThrowInterruptedException() {
         long nanosToPark = TimeUnit.SECONDS.toNanos(1);
         Thread.currentThread().interrupt();

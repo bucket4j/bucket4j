@@ -1,25 +1,25 @@
 import com.tangosol.net.CacheFactory;
 import com.tangosol.net.NamedCache;
-import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
+import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.grid.coherence.CoherenceProxyManager;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.littlegrid.ClusterMemberGroup;
 import org.littlegrid.ClusterMemberGroupUtils;
 
 import java.util.UUID;
 
-import static junit.framework.TestCase.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class CoherenceWithJdkSerializationTest extends AbstractDistributedBucketTest<String> {
 
     private static ClusterMemberGroup memberGroup;
     private static NamedCache cache;
 
-    @BeforeClass
+    @BeforeAll
     public static void prepareCache() throws InterruptedException {
         if (System.getenv("CI") == null) {
             memberGroup = ClusterMemberGroupUtils.newBuilder().setStorageEnabledCount(2)
@@ -37,7 +37,7 @@ public class CoherenceWithJdkSerializationTest extends AbstractDistributedBucket
         cache = CacheFactory.getCache("my_buckets");
     }
 
-    @AfterClass
+    @AfterAll
     public static void shutdownCache() {
         ClusterMemberGroupUtils.shutdownCacheFactoryThenClusterMemberGroups(memberGroup);
     }

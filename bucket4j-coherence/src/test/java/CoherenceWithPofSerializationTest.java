@@ -4,8 +4,8 @@ import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
 import io.github.bucket4j.grid.coherence.CoherenceProxyManager;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.littlegrid.ClusterMemberGroup;
 import org.littlegrid.ClusterMemberGroupUtils;
 
@@ -17,7 +17,7 @@ public class CoherenceWithPofSerializationTest extends AbstractDistributedBucket
     private static ClusterMemberGroup memberGroup;
     private static NamedCache<String, byte[]> cache;
 
-    @BeforeClass
+    @BeforeAll
     public static void prepareCache() throws InterruptedException {
         if (System.getenv("CI") == null) {
             memberGroup = ClusterMemberGroupUtils.newBuilder().setStorageEnabledCount(2)
@@ -35,7 +35,7 @@ public class CoherenceWithPofSerializationTest extends AbstractDistributedBucket
         cache = CacheFactory.getCache("my_buckets");
     }
 
-    @AfterClass
+    @AfterAll
     public static void shutdownCache() {
         ClusterMemberGroupUtils.shutdownCacheFactoryThenClusterMemberGroups(memberGroup);
     }

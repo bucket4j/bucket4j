@@ -8,7 +8,7 @@
     <parent>
         <groupId>com.bucket4j</groupId>
         <artifactId>bucket4j-parent</artifactId>
-        <version>8.3.0</version>
+        <version>8.4.0</version>
         <relativePath>../bucket4j-parent</relativePath>
     </parent>
     <artifactId>bucket4j-benchmarks</artifactId>
@@ -42,7 +42,7 @@
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>30.0-jre</version>
+            <version>32.0.0-jre</version>
         </dependency>
         <dependency>
             <groupId>io.github.resilience4j</groupId>

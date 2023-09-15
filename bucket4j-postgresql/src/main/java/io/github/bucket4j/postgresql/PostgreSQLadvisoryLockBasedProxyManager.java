@@ -99,7 +99,8 @@ public class PostgreSQLadvisoryLockBasedProxyManager<K> extends AbstractLockBase
                 try {
                     String lockSQL = "SELECT pg_advisory_xact_lock(?)";
                     try (PreparedStatement lockStatement = connection.prepareStatement(lockSQL)) {
-                        configuration.getPrimaryKeyMapper().set(lockStatement, 1, key);
+                        long advisoryLockValue = (key instanceof Number) ? ((Number) key).longValue(): key.hashCode();
+                        lockStatement.setLong(1, advisoryLockValue);
                         lockStatement.executeQuery();
                     }
 

@@ -4,20 +4,15 @@ import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.redis.jedis.cas.JedisBasedProxyManager_ClusterMode_Test;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
-import io.lettuce.core.AbstractRedisClient;
-import io.lettuce.core.RedisClient;
 import io.lettuce.core.RedisURI;
 import io.lettuce.core.cluster.RedisClusterClient;
 import io.lettuce.core.cluster.SlotHash;
 import io.lettuce.core.cluster.api.StatefulRedisClusterConnection;
-import io.lettuce.core.cluster.models.partitions.RedisClusterNode;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
-import redis.clients.jedis.HostAndPort;
-import redis.clients.jedis.JedisCluster;
 
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -33,13 +28,13 @@ public class LettuceBasedProxyManager_ClusterMode_Test extends AbstractDistribut
     private static GenericContainer container;
     private static RedisClusterClient redisClient;
 
-    @BeforeClass
+    @BeforeAll
     public static void setup() {
         container = startRedisContainer();
         redisClient = createLettuceClient(container);
     }
 
-    @AfterClass
+    @AfterAll
     public static void shutdown() {
         if (redisClient != null) {
             redisClient.shutdown();

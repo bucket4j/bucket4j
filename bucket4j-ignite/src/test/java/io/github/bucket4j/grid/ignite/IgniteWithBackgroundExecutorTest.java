@@ -16,8 +16,8 @@ import org.gridkit.nanocloud.Cloud;
 import org.gridkit.nanocloud.CloudFactory;
 import org.gridkit.nanocloud.VX;
 import org.gridkit.vicluster.ViNode;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 
 import java.io.Serializable;
 import java.net.UnknownHostException;
@@ -33,7 +33,7 @@ public class IgniteWithBackgroundExecutorTest extends AbstractDistributedBucketT
 
     private static Ignite ignite;
 
-    @BeforeClass
+    @BeforeAll
     public static void setup() throws UnknownHostException {
         // start separated JVM on current host
         cloud = CloudFactory.createCloud();
@@ -76,7 +76,7 @@ public class IgniteWithBackgroundExecutorTest extends AbstractDistributedBucketT
     }
 
 
-    @AfterClass
+    @AfterAll
     public static void shutdown() {
         if (ignite != null) {
             ignite.close();

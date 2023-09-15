@@ -5,19 +5,29 @@ import io.github.bucket4j.distributed.AsyncBucketProxy;
 import io.github.bucket4j.distributed.BucketProxy;
 import io.github.bucket4j.distributed.proxy.BucketNotFoundException;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
+import io.github.bucket4j.distributed.proxy.optimization.DelayParameters;
+import io.github.bucket4j.distributed.proxy.optimization.NopeOptimizationListener;
+import io.github.bucket4j.distributed.proxy.optimization.Optimization;
+import io.github.bucket4j.distributed.proxy.optimization.Optimizations;
+import io.github.bucket4j.distributed.proxy.optimization.PredictionParameters;
+import io.github.bucket4j.distributed.proxy.optimization.delay.DelayOptimization;
+import io.github.bucket4j.distributed.proxy.optimization.manual.ManuallySyncingOptimization;
+import io.github.bucket4j.distributed.proxy.optimization.predictive.PredictiveOptimization;
+import io.github.bucket4j.distributed.proxy.optimization.skiponzero.SkipSyncOnZeroOptimization;
 import io.github.bucket4j.util.AsyncConsumptionScenario;
 import io.github.bucket4j.util.ConsumptionScenario;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static io.github.bucket4j.distributed.proxy.RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public abstract class AbstractDistributedBucketTest<K> {
 
@@ -110,6 +120,98 @@ public abstract class AbstractDistributedBucketTest<K> {
         assertTrue(proxyManager.getProxyConfiguration(key).isPresent());
         proxyManager.removeProxy(key);
         assertFalse(proxyManager.getProxyConfiguration(key).isPresent());
+    }
+
+    @Test
+    public void testOptimizations() {
+        BucketConfiguration configuration = BucketConfiguration.builder()
+            .addLimit(Bandwidth.simple(10, Duration.ofSeconds (1)))
+            .build();
+
+        TimeMeter clock = TimeMeter.SYSTEM_MILLISECONDS;
+
+        DelayParameters delayParameters = new DelayParameters(1, Duration.ofNanos(1));
+        List<Optimization> optimizations = Arrays.asList(
+            Optimizations.batching(),
+            new DelayOptimization(delayParameters, NopeOptimizationListener.INSTANCE, clock),
+            new PredictiveOptimization(PredictionParameters.createDefault(delayParameters), delayParameters, NopeOptimizationListener.INSTANCE, clock),
+            new SkipSyncOnZeroOptimization(NopeOptimizationListener.INSTANCE, clock),
+            new ManuallySyncingOptimization(NopeOptimizationListener.INSTANCE, clock)
+        );
+
+        for (Optimization optimization : optimizations) {
+            try {
+                K key = generateRandomKey();
+                BucketProxy bucket = proxyManager.builder()
+                    .withOptimization(optimization)
+                    .build(key, configuration);
+
+                assertEquals(10, bucket.getAvailableTokens());
+                for (int i = 0; i < 5; i++) {
+                    assertTrue(bucket.tryConsume(1));
+                }
+                proxyManager.removeProxy(key);
+
+                bucket.forceAddTokens(90);
+                assertEquals(100, bucket.getAvailableTokens());
+
+
+                proxyManager.removeProxy(key);
+                bucket.asVerbose().forceAddTokens(90);
+
+                assertEquals(100, bucket.asVerbose().getAvailableTokens().getValue());
+            } catch (Exception e) {
+                throw new IllegalStateException("Failed to check optimization " + optimization, e);
+            }
+        }
+    }
+
+    @Test
+    public void testOptimizationsAsync() {
+        if (!proxyManager.isAsyncModeSupported()) {
+            return;
+        }
+
+        BucketConfiguration configuration = BucketConfiguration.builder()
+            .addLimit(Bandwidth.simple(10, Duration.ofSeconds (1)))
+            .build();
+
+        TimeMeter clock = TimeMeter.SYSTEM_MILLISECONDS;
+
+        DelayParameters delayParameters = new DelayParameters(1, Duration.ofNanos(1));
+        List<Optimization> optimizations = Arrays.asList(
+            Optimizations.batching(),
+            new DelayOptimization(delayParameters, NopeOptimizationListener.INSTANCE, clock),
+            new PredictiveOptimization(PredictionParameters.createDefault(delayParameters), delayParameters, NopeOptimizationListener.INSTANCE, clock),
+            new SkipSyncOnZeroOptimization(NopeOptimizationListener.INSTANCE, clock),
+            new ManuallySyncingOptimization(NopeOptimizationListener.INSTANCE, clock)
+        );
+
+        for (Optimization optimization : optimizations) {
+            try {
+                K key = generateRandomKey();
+                AsyncBucketProxy bucket = proxyManager.asAsync().builder()
+                    .withOptimization(optimization)
+                    .build(key, configuration);
+
+                assertEquals(10, bucket.getAvailableTokens().get());
+                for (int i = 0; i < 5; i++) {
+                    assertTrue(bucket.tryConsume(1).get());
+                }
+                proxyManager.removeProxy(key);
+
+                bucket.forceAddTokens(90).get();
+                assertEquals(100, bucket.getAvailableTokens().get());
+
+
+                proxyManager.removeProxy(key);
+                bucket.asVerbose().forceAddTokens(90).get();
+
+                assertEquals(100, bucket.asVerbose().getAvailableTokens().get() .getValue());
+            } catch (Exception e) {
+                throw new IllegalStateException("Failed to check optimization " + optimization, e);
+            }
+        }
     }
 
     @Test

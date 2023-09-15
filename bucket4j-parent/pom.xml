@@ -7,7 +7,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.bucket4j</groupId>
-    <version>8.3.0</version>
+    <version>8.4.0</version>
     <artifactId>bucket4j-parent</artifactId>
     <packaging>pom</packaging>
     <name>bucket4j-parent</name>
@@ -49,13 +49,13 @@
         <ignite.version>2.10.0</ignite.version>
 
         <hazelcast.3.version>3.8</hazelcast.3.version>
-        <hazelcast.latest.version>5.1.3</hazelcast.latest.version>
+        <hazelcast.latest.version>5.3.0</hazelcast.latest.version>
 
         <infinispan-8.version>8.2.12.Final</infinispan-8.version>
         <infinispan.latest.version>11.0.1.Final</infinispan.latest.version>
         <ehcache.version>3.8.1</ehcache.version>
 
-        <testcontainers.version>1.17.1</testcontainers.version>
+        <testcontainers.version>1.18.1</testcontainers.version>
         <lettuce-version>5.0.2.RELEASE</lettuce-version>
         <jedis.version>4.2.3</jedis.version>
         <redisson.version>3.21.0</redisson.version>
@@ -147,7 +147,7 @@
             </plugin>
             <plugin>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>2.20</version>
+                <version>3.1.0</version>
                 <configuration>
                     <includes>
                         <include>**/*Test.class</include>
@@ -159,6 +159,13 @@
                     <!-- Travis build workaround -->
                     <argLine>-Xms1024m -Xmx2048m</argLine>
                 </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.junit.jupiter</groupId>
+                        <artifactId>junit-jupiter-engine</artifactId>
+                        <version>5.9.3</version>
+                    </dependency>
+                </dependencies>
             </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
@@ -364,7 +371,7 @@
                     </plugin>
                     <plugin>
                         <artifactId>maven-surefire-plugin</artifactId>
-                        <version>2.20</version>
+                        <version>3.1.0</version>
                         <configuration>
                             <argLine>@{argLine} -Xms1024m -Xmx2048m</argLine>
                         </configuration>
@@ -377,9 +384,15 @@
     <dependencies>
         <!-- Test dependencies -->
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>4.13.1</version>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>5.9.3</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <version>5.9.3</version>
             <scope>test</scope>
         </dependency>
         <dependency>

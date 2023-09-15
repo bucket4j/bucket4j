@@ -27,7 +27,13 @@ class BlockingTryConsumeSpecification extends Specification {
 
     TimeMeterMock clock = new TimeMeterMock()
     BlockingStrategyMock blocker = new BlockingStrategyMock(clock)
-    SimpleBucketListener listener = new SimpleBucketListener()
+    SimpleBucketListener listener = new SimpleBucketListener() {
+        long beforeParkingNanos;
+        @Override
+        void beforeParking(long nanos) {
+            beforeParkingNanos += nanos
+        }
+    }
     SchedulerMock scheduler = new SchedulerMock(clock)
 
     BucketConfiguration configuration = BucketConfiguration.builder()
@@ -195,6 +201,7 @@ class BlockingTryConsumeSpecification extends Specification {
             listener.getConsumed() == 9
             listener.getRejected() == 0
             listener.getParkedNanos() == 0
+            listener.beforeParkingNanos == 0
             listener.getInterrupted() == 0
 
         when:
@@ -203,6 +210,7 @@ class BlockingTryConsumeSpecification extends Specification {
             listener.getConsumed() == 9
             listener.getRejected() == 1000
             listener.getParkedNanos() == 0
+            listener.beforeParkingNanos == 0
             listener.getInterrupted() == 0
 
         when:
@@ -211,6 +219,7 @@ class BlockingTryConsumeSpecification extends Specification {
             listener.getConsumed() == 11
             listener.getRejected() == 1000
             listener.getParkedNanos() == 100_000_000
+            listener.beforeParkingNanos == 100_000_000
             listener.getInterrupted() == 0
 
         when:
@@ -221,6 +230,7 @@ class BlockingTryConsumeSpecification extends Specification {
             listener.getConsumed() == 12
             listener.getRejected() == 1000
             listener.getParkedNanos() == 100_000_000
+            listener.beforeParkingNanos == 200_000_000
             listener.getInterrupted() == 1
 
         where:
@@ -238,6 +248,7 @@ class BlockingTryConsumeSpecification extends Specification {
             listener.getConsumed() == 9
             listener.getRejected() == 0
             listener.getParkedNanos() == 0
+            listener.beforeParkingNanos == 0
             listener.getInterrupted() == 0
 
         when:
@@ -246,6 +257,7 @@ class BlockingTryConsumeSpecification extends Specification {
             listener.getConsumed() == 9
             listener.getRejected() == 1000
             listener.getParkedNanos() == 0
+            listener.beforeParkingNanos == 0
             listener.getInterrupted() == 0
 
         when:
@@ -254,6 +266,7 @@ class BlockingTryConsumeSpecification extends Specification {
             listener.getConsumed() == 11
             listener.getRejected() == 1000
             listener.getParkedNanos() == 100_000_000
+            listener.beforeParkingNanos == 100_000_000
             listener.getInterrupted() == 0
 
         when:
@@ -264,6 +277,7 @@ class BlockingTryConsumeSpecification extends Specification {
             listener.getConsumed() == 12
             listener.getRejected() == 1000
             listener.getParkedNanos() == 200_000_000
+            listener.beforeParkingNanos == 200_000_000
             listener.getInterrupted() == 0
 
         where:

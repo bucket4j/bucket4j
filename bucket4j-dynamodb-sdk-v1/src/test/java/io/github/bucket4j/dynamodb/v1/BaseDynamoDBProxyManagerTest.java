@@ -7,57 +7,46 @@ import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.distributed.BucketProxy;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public abstract class BaseDynamoDBProxyManagerTest<K> {
     private static final AmazonDynamoDB db = DynamoDBEmbedded.create().amazonDynamoDB();
     private static final String table = "buckets";
 
-    @Rule
-    public final ExpectedException thrown = ExpectedException.none();
-
-    @Before
+    @BeforeEach
     public void createStateTable() {
         Utils.createStateTable(db, table, keyType());
     }
 
     protected abstract ScalarAttributeType keyType();
 
-    @After
+    @AfterEach
     public void tearDown() {
         db.deleteTable(table);
     }
 
     @Test
     public void ctorThrowsIfDynamoDBIsNull() {
-        thrown.expect(NullPointerException.class);
-        thrown.expectMessage("DynamoDB is null");
-
-        create(null, table, ClientSideConfig.getDefault());
+        Exception e = assertThrows(NullPointerException.class, () -> create(null, table, ClientSideConfig.getDefault()));
+        assertEquals("DynamoDB is null", e.getMessage());
     }
 
     @Test
     public void ctorThrowsIfTableNameIsNull() {
-        thrown.expect(NullPointerException.class);
-        thrown.expectMessage("table name is null");
-
-        create(db, null, ClientSideConfig.getDefault());
+        Exception e = assertThrows(NullPointerException.class, () -> create(db, null, ClientSideConfig.getDefault()));
+        assertEquals("table name is null", e.getMessage());
     }
 
     @Test
     public void ctorThrowsIfConfigIsNull() {
-        thrown.expect(NullPointerException.class);
-        thrown.expectMessage("config is null");
-
-        create(db, table, null);
+        Exception e = assertThrows(NullPointerException.class, () -> create(db, table, null));
+        assertEquals("config is null", e.getMessage());
     }
 
     @Test
