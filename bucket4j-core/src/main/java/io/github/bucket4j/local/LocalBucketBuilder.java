@@ -21,8 +21,8 @@
 package io.github.bucket4j.local;
 
 import io.github.bucket4j.*;
-import io.github.bucket4j.Bandwidth.BandwidthBuilderBuildStage;
-import io.github.bucket4j.Bandwidth.BandwidthBuilderCapacityStage;
+import io.github.bucket4j.BandwidthBuilder.BandwidthBuilderBuildStage;
+import io.github.bucket4j.BandwidthBuilder.BandwidthBuilderCapacityStage;
 
 import java.util.Objects;
 import java.util.function.Function;

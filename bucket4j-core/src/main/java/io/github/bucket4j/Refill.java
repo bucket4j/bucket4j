@@ -25,6 +25,8 @@ import java.time.Instant;
 
 /**
  * Specifies the speed of tokens regeneration.
+ *
+ * This class is deprecated, you should use {@link Bandwidth#builder()}
  */
 public class Refill {
 

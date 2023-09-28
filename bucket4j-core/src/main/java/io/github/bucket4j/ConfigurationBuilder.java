@@ -23,8 +23,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
-import io.github.bucket4j.Bandwidth.BandwidthBuilderBuildStage;
-import io.github.bucket4j.Bandwidth.BandwidthBuilderCapacityStage;
+import io.github.bucket4j.BandwidthBuilder.BandwidthBuilderBuildStage;
+import io.github.bucket4j.BandwidthBuilder.BandwidthBuilderCapacityStage;
 
 /**
  * The builder for {@link BucketConfiguration}
