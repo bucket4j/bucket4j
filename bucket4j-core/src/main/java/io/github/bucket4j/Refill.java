@@ -23,14 +23,16 @@ package io.github.bucket4j;
 import java.time.Duration;
 import java.time.Instant;
 
+import io.github.bucket4j.BandwidthBuilder.BandwidthBuilderRefillStage;
+
 /**
  * Specifies the speed of tokens regeneration.
  *
  * This class is deprecated, you should use {@link Bandwidth#builder()}
+ * @deprecated
  */
+@Deprecated
 public class Refill {
-
-    static final long UNSPECIFIED_TIME_OF_FIRST_REFILL = Long.MIN_VALUE;
 
     final long periodNanos;
     final long tokens;
@@ -70,28 +72,29 @@ public class Refill {
     }
 
     /**
-     * This method is deprecated, you should use {@link Bandwidth#builder()}
+     * This method is deprecated, you should use {@link BandwidthBuilderRefillStage#refillGreedy(long, Duration)}
      *
      * @deprecated
      */
     @Deprecated
     public static Refill greedy(long tokens, Duration period) {
-        return new Refill(tokens, period, false, UNSPECIFIED_TIME_OF_FIRST_REFILL, false);
+        return new Refill(tokens, period, false, Bandwidth.UNSPECIFIED_TIME_OF_FIRST_REFILL, false);
     }
 
     /**
-     * This method is deprecated, you should use {@link Bandwidth#builder()}
+     * This method is deprecated, you should use {@link BandwidthBuilderRefillStage#refillIntervally(long, Duration)}
      *
      * @deprecated
      */
     @Deprecated
     public static Refill intervally(long tokens, Duration period) {
-        return new Refill(tokens, period, true, UNSPECIFIED_TIME_OF_FIRST_REFILL, false);
+        return new Refill(tokens, period, true, Bandwidth.UNSPECIFIED_TIME_OF_FIRST_REFILL, false);
     }
 
 
     /**
-     * This method is deprecated, you should use {@link Bandwidth#builder()}
+     * This method is deprecated, you should use {@link BandwidthBuilderRefillStage#refillIntervallyAligned(long, Duration, Instant)} or 
+     * {@link BandwidthBuilderRefillStage#refillIntervallyAlignedWithAdaptiveInitialTokens(long, Duration, Instant)}
      *
      * @deprecated
      */

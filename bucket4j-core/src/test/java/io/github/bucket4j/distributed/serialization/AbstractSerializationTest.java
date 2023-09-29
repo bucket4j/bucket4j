@@ -246,7 +246,7 @@ public abstract class AbstractSerializationTest {
 
     @Test
     public void serializationOfCommands() throws IOException {
-        BucketConfiguration configuration = Bucket4j.configurationBuilder()
+        BucketConfiguration configuration = BucketConfiguration.builder()
                 .addLimit(simple(10, ofSeconds(1)))
                 .build();
 

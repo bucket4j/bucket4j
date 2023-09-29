@@ -20,19 +20,16 @@
 package io.github.bucket4j;
 
 import io.github.bucket4j.BandwidthBuilder.BandwidthBuilderCapacityStage;
-import io.github.bucket4j.BandwidthBuilder.BandwidthBuilderImpl;
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
 import io.github.bucket4j.distributed.serialization.Scope;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
 import io.github.bucket4j.distributed.serialization.SerializationAdapter;
 import io.github.bucket4j.distributed.versioning.Version;
 import io.github.bucket4j.distributed.versioning.Versions;
-import io.github.bucket4j.local.LocalBucketBuilder;
 import io.github.bucket4j.util.ComparableByContent;
 
 import java.io.IOException;
 import java.time.Duration;
-import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -44,6 +41,7 @@ import static io.github.bucket4j.distributed.versioning.Versions.v_7_0_0;
 public class Bandwidth implements ComparableByContent<Bandwidth> {
 
     public static final String UNDEFINED_ID = null;
+    public static final long UNSPECIFIED_TIME_OF_FIRST_REFILL = Long.MIN_VALUE;
 
     final long capacity;
     final long initialTokens;
@@ -60,7 +58,7 @@ public class Bandwidth implements ComparableByContent<Bandwidth> {
      * @return a builder for {@link Bandwidth}
      */
     public static BandwidthBuilderCapacityStage builder() {
-        return new BandwidthBuilderImpl();
+        return BandwidthBuilder.builder();
     }
 
     Bandwidth(long capacity, long refillPeriodNanos, long refillTokens, long initialTokens, boolean refillIntervally,
@@ -104,7 +102,7 @@ public class Bandwidth implements ComparableByContent<Bandwidth> {
     }
 
     /**
-     * This method is deprecated, you should use {@link Bandwidth#builder()}
+     * This method is deprecated, you should use {@link BandwidthBuilder.BandwidthBuilderBuildStage#initialTokens(long)} )}
      *
      * @deprecated
      */
@@ -121,7 +119,7 @@ public class Bandwidth implements ComparableByContent<Bandwidth> {
     }
 
     /**
-     * This method is deprecated, you should use {@link Bandwidth#builder()}
+     * This method is deprecated, you should use {@link BandwidthBuilder.BandwidthBuilderBuildStage#id(String)}
      *
      * @deprecated
      */
@@ -132,7 +130,7 @@ public class Bandwidth implements ComparableByContent<Bandwidth> {
     }
 
     public boolean isIntervallyAligned() {
-        return timeOfFirstRefillMillis != Refill.UNSPECIFIED_TIME_OF_FIRST_REFILL;
+        return timeOfFirstRefillMillis != UNSPECIFIED_TIME_OF_FIRST_REFILL;
     }
 
     public long getTimeOfFirstRefillMillis() {

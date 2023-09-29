@@ -5,10 +5,15 @@ import java.time.Instant;
 
 import io.github.bucket4j.local.LocalBucketBuilder;
 
+import static io.github.bucket4j.Bandwidth.UNDEFINED_ID;
+import static io.github.bucket4j.Bandwidth.UNSPECIFIED_TIME_OF_FIRST_REFILL;
+
 /**
+ * Provides API for bandwidth builder
+ *
  * @author Vladimir Bukhtoyarov
  */
-public interface BandwidthBuilder {
+public class BandwidthBuilder {
 
     /**
      * Capacity configuration building stage
@@ -69,17 +74,9 @@ public interface BandwidthBuilder {
          * Configures refill that does refill of tokens in intervally manner.
          * "Intervally" in opposite to "greedy"  will wait until whole {@code period} will be elapsed before regenerate {@code tokens}.
          * <br>
-         * In additional to {@link #refillIntervally(long, Duration)} it is possible to specify the time when first refill should happen via {@code timeOfFirstRefill}.
+         * In additional to {@link #refillIntervally(long, Duration)} this method allows to specify the time when first refill should happen via {@code timeOfFirstRefill}.
          * This option can be used to configure clear interval boundary i.e. start of second, minute, hour, day.
-         *
-         * <p>
-         *     <strong>Special notes about useAdaptiveInitialTokens:</strong>
-         * <br>If {@code useAdaptiveInitialTokens == true} and timeOfFirstRefill is a moment in the future, then initial amount of tokens in the bandwidth will be calculated by following formula:
-         * <br><pre>{@code
-         *     Math.min(capacity, Math.max(0, bandwidthCapacity - refillTokens) + (timeOfFirstRefillMillis - nowMillis)/refillPeriod * refillTokens)
-         * }</pre>
-         * <br>Bellow the list of examples of how does this formula can be applied:
-         * <pre>
+         *  <pre>
          * {@code
          *         // imagine that wall clock is 16:20, the first refill will happen at 17:00
          *         // first refill will happen in the beginning of next hour
@@ -88,39 +85,11 @@ public interface BandwidthBuilder {
          *                 .plus(1, ChronoUnit.HOURS)
          *                 .toInstant();
          *
-         *        // initial tokens 266 will be
-         *        Bandwidth.builder(limit -> limit.capacity().refillIntervallyAligned())
-         *        Bandwidth.classic(400, Refill.intervallyAligned(400, Duration.ofHours(1), firstRefillTime, true));
-         *        // calculated by formula min(400, max(0, 400 - 400) +  40/60*400) = min(400, 0 + 266) = 266
-         *
-         *        // initial tokens will be 300
-         *        Bandwidth.builder(limit -> limit.capacity().refillIntervallyAligned())
-         *        Bandwidth.classic(400, Refill.intervallyAligned(300, Duration.ofHours(1), firstRefillTime, true));
-         *        // calculated by formula min(400, max(0, 400 - 300) +  40/60*300) = min(400, 100 + 200) = 300
-         *
-         *        // initial tokens will be 333
-         *        Bandwidth.builder(limit -> limit.capacity().refillIntervallyAligned())
-         *        Bandwidth.classic(400, Refill.intervallyAligned(200, Duration.ofHours(1), firstRefillTime, true));
-         *        // calculated by formula min(400, max(0, 400 - 200) +  40/60*200) = min(400, 200 + 133) = 333
-         *
-         *        // initial tokens will be 366
-         *        Bandwidth.builder(limit -> limit.capacity().refillIntervallyAligned())
-         *        Bandwidth.classic(400, Refill.intervallyAligned(100, Duration.ofHours(1), firstRefillTime, true));
-         *        // calculated by formula min(400, max(0, 400 - 100) +  40/60*100) = min(400, 300 + 66) = 366
-         * }</pre>
-         *
-         *
-         *     <strong>Restrictions:</strong>
-         *     <ul>
-         *         <li>
-         *             If {@code useAdaptiveInitialTokens} is {@code true} then any attempt to explicitly specify initial amount of tokens via {@link Bandwidth#withInitialTokens(long)} or {@link BandwidthBuilderBuildStage#withInitialTokens(long)}
-         *             will fail with exception, because it is impossible at the same time to specify tokens in explicitly and adaptively manners.
-         *         </li>
-         *         <li>
-         *             It is impossible to use this method together with nanoTime based clock {@link LocalBucketBuilder#withNanosecondPrecision()}, because we need in {@link System#currentTimeMillis()} based clock
-         *             in order to properly measure the distance from {@code timeOfFirstRefill}
-         *         </li>
-         *     </ul>
+         *        Bandwidth.builder(limit ->
+         *             limit.capacity(600)
+         *             .refillIntervallyAligned(400, Duration.ofHours(1), firstRefillTime)
+         *        )
+         *  }</pre>
          *
          *
          * @param tokens amount of tokens
@@ -154,20 +123,32 @@ public interface BandwidthBuilder {
          *                 .plus(1, ChronoUnit.HOURS)
          *                 .toInstant();
          *
-         *        // initial tokens 266 will be
-         *        Bandwidth.classic(400, Refill.intervallyAligned(400, Duration.ofHours(1), firstRefillTime, true));
+         *        // initial tokens will be 266
+         *        Bandwidth.builder(limit ->
+         *             limit.capacity(400)
+         *             .refillIntervallyAlignedWithAdaptiveInitialTokens(400, Duration.ofHours(1), firstRefillTime)
+         *        )
          *        // calculated by formula min(400, max(0, 400 - 400) +  40/60*400) = min(400, 0 + 266) = 266
          *
          *        // initial tokens will be 300
-         *        Bandwidth.classic(400, Refill.intervallyAligned(300, Duration.ofHours(1), firstRefillTime, true));
+         *        Bandwidth.builder(limit ->
+         *              limit.capacity(400)
+         *              .refillIntervallyAlignedWithAdaptiveInitialTokens(300, Duration.ofHours(1), firstRefillTime)
+         *        )
          *        // calculated by formula min(400, max(0, 400 - 300) +  40/60*300) = min(400, 100 + 200) = 300
          *
          *        // initial tokens will be 333
-         *        Bandwidth.classic(400, Refill.intervallyAligned(200, Duration.ofHours(1), firstRefillTime, true));
+         *        Bandwidth.builder(limit ->
+         *               limit.capacity(400)
+         *               .refillIntervallyAlignedWithAdaptiveInitialTokens(200, Duration.ofHours(1), firstRefillTime)
+         *        )
          *        // calculated by formula min(400, max(0, 400 - 200) +  40/60*200) = min(400, 200 + 133) = 333
          *
          *        // initial tokens will be 366
-         *        Bandwidth.classic(400, Refill.intervallyAligned(100, Duration.ofHours(1), firstRefillTime, true));
+         *        Bandwidth.builder(limit ->
+         *                limit.capacity(400)
+         *                .refillIntervallyAlignedWithAdaptiveInitialTokens(100, Duration.ofHours(1), firstRefillTime)
+         *        )
          *        // calculated by formula min(400, max(0, 400 - 100) +  40/60*100) = min(400, 300 + 66) = 366
          * }</pre>
          *
@@ -175,7 +156,7 @@ public interface BandwidthBuilder {
          *  <strong>Restrictions:</strong>
          *  <ul>
          *     <li>
-         *        If {@code useAdaptiveInitialTokens} is {@code true} then any attempt to explicitly specify initial amount of tokens via {@link Bandwidth#withInitialTokens(long)}
+         *        If {@code useAdaptiveInitialTokens} is {@code true} then any attempt to explicitly specify initial amount of tokens via {@link BandwidthBuilderBuildStage#initialTokens(long)}
          *        will fail with exception, because it is impossible at the same time to specify tokens in explicitly and adaptively manners.
          *     </li>
          *     <li>
@@ -195,7 +176,10 @@ public interface BandwidthBuilder {
 
     }
 
-    interface BandwidthBuilderBuildStage {
+    /**
+     * The final build stage with ability to configure optional parameters of bandwidth, like id or initial tokens
+     */
+    public interface BandwidthBuilderBuildStage {
 
         /**
          * Creates the new instance of {@link Bandwidth}
@@ -226,45 +210,107 @@ public interface BandwidthBuilder {
 
     }
 
-    class BandwidthBuilderImpl implements BandwidthBuilderCapacityStage, BandwidthBuilderRefillStage, BandwidthBuilderBuildStage {
+    public static BandwidthBuilderCapacityStage builder() {
+        return new BandwidthBuilderImpl();
+    }
+
+    private final static class BandwidthBuilderImpl implements BandwidthBuilderCapacityStage, BandwidthBuilderRefillStage, BandwidthBuilderBuildStage {
+
+        private long capacity;
+        private long refillPeriodNanos;
+        private long refillTokens;
+        private long initialTokens;
+        private boolean refillIntervally;
+        private long timeOfFirstRefillMillis = UNSPECIFIED_TIME_OF_FIRST_REFILL;
+        private boolean useAdaptiveInitialTokens;
+        private String id = UNDEFINED_ID;
+
         @Override
         public BandwidthBuilderRefillStage capacity(long tokens) {
+            if (tokens <= 0) {
+                throw BucketExceptions.nonPositiveCapacity(capacity);
+            }
+            this.capacity = tokens;
+            this.initialTokens = tokens;
             return this;
         }
 
         @Override
-        public BandwidthBuilderBuildStage refillGreedy(long capacity, Duration period) {
+        public BandwidthBuilderBuildStage refillGreedy(long tokens, Duration period) {
+            setRefill(tokens, period, false);
             return this;
         }
 
         @Override
         public BandwidthBuilderBuildStage refillIntervally(long tokens, Duration period) {
+            setRefill(tokens, period, true);
             return this;
         }
 
         @Override
         public BandwidthBuilderBuildStage refillIntervallyAligned(long tokens, Duration period, Instant timeOfFirstRefill) {
+            long timeOfFirstRefillMillis = timeOfFirstRefill.toEpochMilli();
+            if (timeOfFirstRefillMillis < 0) {
+                throw BucketExceptions.nonPositiveTimeOfFirstRefill(timeOfFirstRefill);
+            }
+            setRefill(tokens, period, true);
+            this.timeOfFirstRefillMillis = timeOfFirstRefillMillis;
             return this;
         }
 
         @Override
         public BandwidthBuilderBuildStage refillIntervallyAlignedWithAdaptiveInitialTokens(long tokens, Duration period, Instant timeOfFirstRefill) {
+            long timeOfFirstRefillMillis = timeOfFirstRefill.toEpochMilli();
+            if (timeOfFirstRefillMillis < 0) {
+                throw BucketExceptions.nonPositiveTimeOfFirstRefill(timeOfFirstRefill);
+            }
+            setRefill(tokens, period, true);
+            this.timeOfFirstRefillMillis = timeOfFirstRefillMillis;
+            this.useAdaptiveInitialTokens = true;
             return this;
         }
 
         @Override
-        public Bandwidth build() {
-            return null;
-        }
-
-        @Override
         public BandwidthBuilderBuildStage id(String id) {
+            this.id = id;
             return this;
         }
 
         @Override
         public BandwidthBuilderBuildStage initialTokens(long initialTokens) {
+            if (initialTokens < 0) {
+                throw BucketExceptions.nonPositiveInitialTokens(initialTokens);
+            }
+            if (timeOfFirstRefillMillis != UNSPECIFIED_TIME_OF_FIRST_REFILL && useAdaptiveInitialTokens) {
+                throw BucketExceptions.intervallyAlignedRefillWithAdaptiveInitialTokensIncompatipleWithManualSpecifiedInitialTokens();
+            }
+            this.initialTokens = initialTokens;
             return this;
+        }
+
+        @Override
+        public Bandwidth build() {
+            return new Bandwidth(capacity, refillPeriodNanos, refillTokens, initialTokens, refillIntervally, timeOfFirstRefillMillis, useAdaptiveInitialTokens, id);
+        }
+
+        private void setRefill(long tokens, Duration period, boolean refillIntervally) {
+            if (period == null) {
+                throw BucketExceptions.nullRefillPeriod();
+            }
+            if (tokens <= 0) {
+                throw BucketExceptions.nonPositivePeriodTokens(tokens);
+            }
+            long refillPeriodNanos = period.toNanos();
+            if (refillPeriodNanos <= 0) {
+                throw BucketExceptions.nonPositivePeriod(refillPeriodNanos);
+            }
+            if (tokens > refillPeriodNanos) {
+                throw BucketExceptions.tooHighRefillRate(refillPeriodNanos, tokens);
+            }
+
+            this.refillPeriodNanos = refillPeriodNanos;
+            this.refillIntervally = refillIntervally;
+            this.refillTokens = tokens;
         }
 
     }
