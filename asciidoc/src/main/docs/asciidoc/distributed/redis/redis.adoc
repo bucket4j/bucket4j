@@ -36,8 +36,9 @@ NOTE: see https://github.com/bucket4j/bucket4j/tree/8.0#java-compatibility-matri
 [source, java]
 ----
 org.redisson.command.CommandExecutor commandExecutor = ...;
-RedissonBasedProxyManager proxyManager = RedissonBasedProxyManager.builderFor(commandExecutor)
+RedissonBasedProxyManager<String> proxyManager = RedissonBasedProxyManager.builderFor(commandExecutor)
     .withExpirationStrategy(ExpirationAfterWriteStrategy.basedOnTimeForRefillingBucketUpToMax(Duration.ofSeconds(10)))
+    .withKeyMapper(Mapper.STRING)
     .build();
 ...
 
@@ -51,8 +52,9 @@ Bucket bucket = proxyManager.builder().build(key, configuration);
 [source, java]
 ----
 io.lettuce.core.RedisClient redisClient = ...;
-LettuceBasedProxyManager proxyManager = LettuceBasedProxyManager.builderFor(redisClient)
+LettuceBasedProxyManager<String> proxyManager = LettuceBasedProxyManager.builderFor(redisClient)
     .withExpirationStrategy(ExpirationAfterWriteStrategy.basedOnTimeForRefillingBucketUpToMax(Duration.ofSeconds(10)))
+    .withKeyMapper(Mapper.STRING)
     .build();
 ...
 
@@ -66,8 +68,9 @@ Bucket bucket = proxyManager.builder().build(key, configuration);
 [source, java]
 ----
 redis.clients.jedis.JedisPool jedisPool = ...;
-LettuceBasedProxyManager proxyManager = JedisBasedProxyManager.builderFor(jedisPool)
+JedisBasedProxyManager<String> proxyManager = JedisBasedProxyManager.builderFor(jedisPool)
     .withExpirationStrategy(ExpirationAfterWriteStrategy.basedOnTimeForRefillingBucketUpToMax(Duration.ofSeconds(10)))
+    .withKeyMapper(Mapper.STRING)
     .build();
 ...
 
