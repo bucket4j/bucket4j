@@ -35,8 +35,8 @@ class ConsumeAsMuchAsPossibleSpecification extends Specification {
         }
         where:
         n | requiredResult | configuration
-        1 |        0       | BucketConfiguration.builder().addLimit(Bandwidth.simple(10, Duration.ofMinutes(100)).withInitialTokens(0)).build()
-        2 |        2       | BucketConfiguration.builder().addLimit(Bandwidth.simple(10, Duration.ofMinutes(100)).withInitialTokens(2)).build()
+        1 |        0       | BucketConfiguration.builder().addLimit({it.capacity(10).refillGreedy(10, Duration.ofMinutes(100)).initialTokens(0)}).build()
+        2 |        2       | BucketConfiguration.builder().addLimit({it.capacity(10).refillGreedy(10, Duration.ofMinutes(100)).initialTokens(2)}).build()
     }
 
     @Unroll

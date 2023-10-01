@@ -6,15 +6,15 @@ The maximum refill rate is limited by ``1 token/ 1 nanosecond``. Following examp
 
 [source, java]
 ----
-Bandwidth.simple(2, Duration.ofNanos(1));
+Bandwidth.builder().capacity(100).refillGreedy(2, ofNanos(1));
 ----
 [source, java]
 ----
-Bandwidth.simple(1001, Duration.ofNanos(1000));
+Bandwidth.builder().capacity(10_000).refillGreedy(1_001, ofNanos(1_000));
 ----
 [source, java]
 ----
-Bandwidth.simple(1_000_001, Duration.ofMillis(1));
+Bandwidth.builder().capacity(1_000_000).refillGreedy(1_000_001, ofMillis(1));
 ----
 
 ==== Limitation for refill period
@@ -26,12 +26,10 @@ Duration.ofNanos(Long.MAX_VALUE);
 Any attempt to specify a period longer than the limit above will fail with an exception. For example, the code below will failed
 [source, java]
 ----
-Bandwidth.simple(42, Duration.ofMinutes(153722867280912930));
+Bandwidth.builder(limit -> limit.capacity(...).refillGreedy(42, Duration.ofMinutes(153722867280912930));
 
 Exception in thread "main" java.lang.ArithmeticException: long overflow
    at java.lang.Math.multiplyExact(Math.java:892)
    at java.time.Duration.toNanos(Duration.java:1186)
-   at io.github.bucket4j.Refill.<init>(Refill.java:48)
-   at io.github.bucket4j.Refill.greedy(Refill.java:100)
-   at io.github.bucket4j.Bandwidth.simple(Bandwidth.java:102)
+   ...
 ----

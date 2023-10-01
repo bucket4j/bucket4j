@@ -35,7 +35,7 @@ ServletFilter would be the obvious place to check limits:
 public class IpThrottlingFilter implements javax.servlet.Filter {
 
     private static final BucketConfiguration configuration = BucketConfiguration.builder()
-          .addLimit(Bandwidth.simple(30, Duration.ofMinutes(1)))
+          .addLimit(limit -> limit.capacity(30).refillGreedy(30, ofMinutes(1)))
           .build();
 
     // cache for storing token buckets, where IP is key.
@@ -130,8 +130,8 @@ public class IpThrottlingFilter implements javax.servlet.Filter {
          return () -> {
              long translationsPerDay = limitProvider.readPerDayLimitFromAgreementsDatabase(userId);
              return BucketConfiguratiion.builder()
-                         .addLimit(Bandwidth.simple(translationsPerDay, Duration.ofDays(1)))
-                         .build();
+                    .addLimit(limit -> limit.capacity(translationsPerDay).refillGreedy(1_000, ofDays(1)))
+                     .build();
          };
     }
 

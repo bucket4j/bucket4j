@@ -90,7 +90,7 @@ NOTE: see https://github.com/bucket4j/bucket4j/tree/8.0#java-compatibility-matri
         ...
         Long key = 1L;
         BucketConfiguration bucketConfiguration = BucketConfiguration.builder()
-                .addLimit(Bandwidth.simple(10, Duration.ofSeconds(1)))
+                .addLimit(limit -> limit.capacity(10).refillGreedy(10, ofSeconds(1)))
                 .build();
         BucketProxy bucket = proxyManager.builder().build(key, bucketConfiguration);
 ----
@@ -144,7 +144,7 @@ To use Bucket4j extension for MySQL you need to add following dependency:
         ...
         Long key = 1L;
         BucketConfiguration bucketConfiguration = BucketConfiguration.builder()
-                .addLimit(Bandwidth.simple(10, Duration.ofSeconds(1)))
+                .addLimit(limit -> limit.capacity(10).refillGreedy(10, ofSeconds(1)))
                 .build();
         BucketProxy bucket = proxyManager.builder().build(key, bucketConfiguration);
 ----
@@ -171,7 +171,7 @@ To use Bucket4j extension for MySQL you need to add following dependency:
         OracleSelectForUpdateBasedProxyManager proxyManager = new OracleSelectForUpdateBasedProxyManager(sqlProxyConfiguration);
         ...
         BucketConfiguration bucketConfiguration = BucketConfiguration.builder()
-                .addLimit(Bandwidth.simple(10, Duration.ofSeconds(1)))
+                .addLimit(limit -> limit.capacity(10).refillGreedy(10, ofSeconds(1)))
                 .build();
         BucketProxy bucket = proxyManager.builder().build(key, bucketConfiguration);
 ----

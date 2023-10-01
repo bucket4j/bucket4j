@@ -26,6 +26,9 @@ import spock.lang.Unroll
 
 import java.time.Duration
 
+import static java.time.Duration.ofNanos
+import static java.time.Duration.ofSeconds
+
 class BucketStateSpecification extends Specification {
 
     @Shared
@@ -46,7 +49,7 @@ class BucketStateSpecification extends Specification {
                         10,
                         Bucket.builder()
                             .withMath(MathType.IEEE_754)
-                            .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)))
+                            .addLimit(Bandwidth.simple(10, ofNanos(100)))
                             .withCustomTimePrecision(timeMeter)
                             .build()
                 ], [
@@ -54,7 +57,7 @@ class BucketStateSpecification extends Specification {
                         0,
                         Bucket.builder()
                             .withMath(MathType.IEEE_754)
-                            .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(0))
+                            .addLimit({limit -> limit.capacity(10).refillGreedy(10, ofNanos(100)).initialTokens(0)})
                             .withCustomTimePrecision(timeMeter)
                             .build()
                 ], [
@@ -62,7 +65,7 @@ class BucketStateSpecification extends Specification {
                         5,
                         Bucket.builder()
                             .withMath(MathType.IEEE_754)
-                            .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(5))
+                            .addLimit({limit -> limit.capacity(10).refillGreedy(10, ofNanos(100)).initialTokens(5)})
                             .withCustomTimePrecision(timeMeter)
                             .build()
                 ], [
@@ -70,8 +73,8 @@ class BucketStateSpecification extends Specification {
                         2,
                         Bucket.builder()
                             .withMath(MathType.IEEE_754)
-                            .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(5))
-                            .addLimit(Bandwidth.simple(2, Duration.ofNanos(100)))
+                            .addLimit({limit -> limit.capacity(10).refillGreedy(10, ofNanos(100)).initialTokens(5)})
+                            .addLimit({limit -> limit.capacity(2).refillGreedy(2, ofNanos(100))})
                             .withCustomTimePrecision(timeMeter)
                             .build()
                 ], [
@@ -79,7 +82,7 @@ class BucketStateSpecification extends Specification {
                         10,
                         Bucket.builder()
                             .withMath(MathType.IEEE_754)
-                            .addLimit(Bandwidth.classic(10, Refill.greedy(1, Duration.ofSeconds(1))))
+                            .addLimit({limit -> limit.capacity(10).refillGreedy(1, ofSeconds(1))})
                             .withCustomTimePrecision(timeMeter)
                             .build()
                 ]
@@ -103,7 +106,7 @@ class BucketStateSpecification extends Specification {
                         10,
                         Bucket.builder()
                                 .withMath(MathType.IEEE_754)
-                                .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(0))
+                                .addLimit(Bandwidth.simple(10, ofNanos(100)).withInitialTokens(0))
                                 .build()
                 ], [
                         "#2",
@@ -111,7 +114,7 @@ class BucketStateSpecification extends Specification {
                         10,
                         Bucket.builder()
                                 .withMath(MathType.IEEE_754)
-                                .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)))
+                                .addLimit(Bandwidth.simple(10, ofNanos(100)))
                                 .build()
                 ], [
                         "#3",
@@ -119,7 +122,7 @@ class BucketStateSpecification extends Specification {
                         10,
                         Bucket.builder()
                                 .withMath(MathType.IEEE_754)
-                                .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(5))
+                                .addLimit(Bandwidth.simple(10, ofNanos(100)).withInitialTokens(5))
                                 .build()
                 ], [
                         "#4",
@@ -127,8 +130,8 @@ class BucketStateSpecification extends Specification {
                         2,
                         Bucket.builder()
                                 .withMath(MathType.IEEE_754)
-                                .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(5))
-                                .addLimit(Bandwidth.simple(2, Duration.ofNanos(100)))
+                                .addLimit(Bandwidth.simple(10, ofNanos(100)).withInitialTokens(5))
+                                .addLimit(Bandwidth.simple(2, ofNanos(100)))
                                 .build()
                 ], [
                         "#5",
@@ -136,7 +139,7 @@ class BucketStateSpecification extends Specification {
                         5,
                         Bucket.builder()
                                 .withMath(MathType.IEEE_754)
-                                .addLimit(Bandwidth.classic(10, Refill.greedy(1, Duration.ofSeconds(1))).withInitialTokens(1))
+                                .addLimit(Bandwidth.classic(10, Refill.greedy(1, ofSeconds(1))).withInitialTokens(1))
                                 .build()
                 ]
         ]
@@ -160,7 +163,7 @@ class BucketStateSpecification extends Specification {
                         Bucket.builder()
                             .withMath(MathType.IEEE_754)
                             .withCustomTimePrecision(new TimeMeterMock(0))
-                            .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(0))
+                            .addLimit(Bandwidth.simple(10, ofNanos(100)).withInitialTokens(0))
                             .build()
                 ], [
                         "#2",
@@ -169,7 +172,7 @@ class BucketStateSpecification extends Specification {
                         Bucket.builder()
                             .withMath(MathType.IEEE_754)
                             .withCustomTimePrecision(new TimeMeterMock(0))
-                            .addLimit(Bandwidth.classic(10, Refill.greedy(10, Duration.ofNanos(100))).withInitialTokens(0))
+                            .addLimit(Bandwidth.classic(10, Refill.greedy(10, ofNanos(100))).withInitialTokens(0))
                             .build()
                 ], [
                         "#3",
@@ -178,7 +181,7 @@ class BucketStateSpecification extends Specification {
                         Bucket.builder()
                             .withMath(MathType.IEEE_754)
                             .withCustomTimePrecision(new TimeMeterMock(0))
-                            .addLimit(Bandwidth.classic(10, Refill.greedy(2, Duration.ofNanos(100))).withInitialTokens(0))
+                            .addLimit(Bandwidth.classic(10, Refill.greedy(2, ofNanos(100))).withInitialTokens(0))
                             .build()
                 ], [
                         "#4",
@@ -187,7 +190,7 @@ class BucketStateSpecification extends Specification {
                         Bucket.builder()
                             .withMath(MathType.IEEE_754)
                             .withCustomTimePrecision(new TimeMeterMock(0))
-                            .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(4))
+                            .addLimit(Bandwidth.simple(10, ofNanos(100)).withInitialTokens(4))
                             .build()
                 ], [
                         "#5",
@@ -196,7 +199,7 @@ class BucketStateSpecification extends Specification {
                         Bucket.builder()
                             .withMath(MathType.IEEE_754)
                             .withCustomTimePrecision(new TimeMeterMock(0))
-                            .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(4))
+                            .addLimit(Bandwidth.simple(10, ofNanos(100)).withInitialTokens(4))
                             .build()
                 ], [
                         "#6",
@@ -205,8 +208,8 @@ class BucketStateSpecification extends Specification {
                         Bucket.builder()
                             .withMath(MathType.IEEE_754)
                             .withCustomTimePrecision(new TimeMeterMock(0))
-                            .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(1))
-                            .addLimit(Bandwidth.simple(5, Duration.ofNanos(10)).withInitialTokens(2))
+                            .addLimit(Bandwidth.simple(10, ofNanos(100)).withInitialTokens(1))
+                            .addLimit(Bandwidth.simple(5, ofNanos(10)).withInitialTokens(2))
                             .build()
                 ], [
                         "#7",
@@ -215,8 +218,8 @@ class BucketStateSpecification extends Specification {
                         Bucket.builder()
                             .withMath(MathType.IEEE_754)
                             .withCustomTimePrecision(new TimeMeterMock(0))
-                            .addLimit(Bandwidth.simple(5, Duration.ofNanos(10)).withInitialTokens(2))
-                            .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(1))
+                            .addLimit(Bandwidth.simple(5, ofNanos(10)).withInitialTokens(2))
+                            .addLimit(Bandwidth.simple(10, ofNanos(100)).withInitialTokens(1))
                             .build()
                 ], [
                         "#8",
@@ -225,8 +228,8 @@ class BucketStateSpecification extends Specification {
                         Bucket.builder()
                             .withMath(MathType.IEEE_754)
                             .withCustomTimePrecision(new TimeMeterMock(0))
-                            .addLimit(Bandwidth.simple(5, Duration.ofNanos(10)).withInitialTokens(5))
-                            .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(3))
+                            .addLimit(Bandwidth.simple(5, ofNanos(10)).withInitialTokens(5))
+                            .addLimit(Bandwidth.simple(10, ofNanos(100)).withInitialTokens(3))
                             .build()
                 ]
             ]
@@ -252,59 +255,59 @@ class BucketStateSpecification extends Specification {
                             0,
                             0,
                             BucketConfiguration.builder()
-                                    .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(1))
+                                    .addLimit(Bandwidth.simple(10, ofNanos(100)).withInitialTokens(1))
                     ], [
                             "#2",
                             100,
                             0,
                             0,
                             BucketConfiguration.builder()
-                                    .addLimit(Bandwidth.classic(10, Refill.intervally(10, Duration.ofNanos(100))).withInitialTokens(1))
+                                    .addLimit(Bandwidth.classic(10, Refill.intervally(10, ofNanos(100))).withInitialTokens(1))
                     ], [
                             "#3",
                             1650,
                             0,
                             23,
                             BucketConfiguration.builder()
-                                    .addLimit(Bandwidth.classic(10, Refill.greedy(2, Duration.ofNanos(100))).withInitialTokens(0))
+                                    .addLimit(Bandwidth.classic(10, Refill.greedy(2, ofNanos(100))).withInitialTokens(0))
                     ], [
                             "#4",
                             1700,
                             0,
                             23,
                             BucketConfiguration.builder()
-                                    .addLimit(Bandwidth.classic(10, Refill.intervally(2, Duration.ofNanos(100))).withInitialTokens(0))
+                                    .addLimit(Bandwidth.classic(10, Refill.intervally(2, ofNanos(100))).withInitialTokens(0))
                     ], [
                             "#5",
                             60,
                             0,
                             0,
                             BucketConfiguration.builder()
-                                    .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(4))
+                                    .addLimit(Bandwidth.simple(10, ofNanos(100)).withInitialTokens(4))
                     ], [
                             "#6",
                             90,
                             0,
                             0,
                             BucketConfiguration.builder()
-                                    .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(1))
-                                    .addLimit(Bandwidth.simple(5, Duration.ofNanos(10)).withInitialTokens(2))
+                                    .addLimit(Bandwidth.simple(10, ofNanos(100)).withInitialTokens(1))
+                                    .addLimit(Bandwidth.simple(5, ofNanos(10)).withInitialTokens(2))
                     ], [
                             "#7",
                             90,
                             0,
                             0,
                             BucketConfiguration.builder()
-                                    .addLimit(Bandwidth.simple(5, Duration.ofNanos(10)).withInitialTokens(2))
-                                    .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(1))
+                                    .addLimit(Bandwidth.simple(5, ofNanos(10)).withInitialTokens(2))
+                                    .addLimit(Bandwidth.simple(10, ofNanos(100)).withInitialTokens(1))
                     ], [
                             "#8",
                             70,
                             0,
                             0,
                             BucketConfiguration.builder()
-                                    .addLimit(Bandwidth.simple(5, Duration.ofNanos(10)).withInitialTokens(5))
-                                    .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(3))
+                                    .addLimit(Bandwidth.simple(5, ofNanos(10)).withInitialTokens(5))
+                                    .addLimit(Bandwidth.simple(10, ofNanos(100)).withInitialTokens(3))
                     ]
             ]
     }
@@ -316,7 +319,7 @@ class BucketStateSpecification extends Specification {
             TimeMeterMock mockTimer = new TimeMeterMock(initTime)
             Bucket bucket = Bucket.builder()
                     .withMath(MathType.IEEE_754)
-                    .addLimit(Bandwidth.simple(capacity, Duration.ofNanos(period)).withInitialTokens(initialTokens))
+                    .addLimit(Bandwidth.simple(capacity, ofNanos(period)).withInitialTokens(initialTokens))
                     .withCustomTimePrecision(mockTimer)
                     .build()
             BucketState state = getState(bucket)
@@ -342,7 +345,7 @@ class BucketStateSpecification extends Specification {
                                                        long initTime, long timeOnRefill, long tokensAfterRefill) {
         setup:
             TimeMeterMock mockTimer = new TimeMeterMock(initTime)
-            def refill = Refill.greedy(refillTokens, Duration.ofNanos(refillPeriod))
+            def refill = Refill.greedy(refillTokens, ofNanos(refillPeriod))
             Bucket bucket = Bucket.builder()
                     .withMath(MathType.IEEE_754)
                     .addLimit(Bandwidth.classic(capacity, refill).withInitialTokens(initialTokens))
@@ -371,7 +374,7 @@ class BucketStateSpecification extends Specification {
                                        long capacity, long toConsume, long requiredSize
                                        ) {
         setup:
-            def bandwidth = Bandwidth.simple(capacity, Duration.ofNanos(period)).withInitialTokens(initialTokens)
+            def bandwidth = Bandwidth.simple(capacity, ofNanos(period)).withInitialTokens(initialTokens)
             Bucket bucket = Bucket.builder()
                 .withMath(MathType.IEEE_754)
                 .addLimit(bandwidth)

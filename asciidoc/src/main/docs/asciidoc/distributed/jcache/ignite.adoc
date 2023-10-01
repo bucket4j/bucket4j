@@ -32,7 +32,7 @@ private static final IgniteProxyManager proxyManager = new IgniteProxyManager(ca
 ...
 
 BucketConfiguration configuration = BucketConfiguration.builder()
-    .addLimit(Bandwidth.simple(1_000, Duration.ofMinutes(1)))
+    .addLimit(limit -> limit.capacity(1_000).refillGreedy(1_000, ofMinutes(1)))
     .build();
 Bucket bucket = proxyManager.builder().build(key, configuration);
 ----
@@ -47,7 +47,7 @@ private static final IgniteThinClientProxyManager<K> proxyManager = new IgniteTh
 ...
 
 BucketConfiguration configuration = BucketConfiguration.builder()
-    .addLimit(Bandwidth.simple(1_000, Duration.ofMinutes(1)))
+    .addLimit(limit -> limit.capacity(1_000).refillGreedy(1_000, ofMinutes(1)))
     .build();
 Bucket bucket = proxyManager.builder().build(key, configuration);
 ----
@@ -61,7 +61,7 @@ private static final IgniteThinClientCasBasedProxyManager<K> proxyManager = new 
 ...
 
 BucketConfiguration configuration = BucketConfiguration.builder()
-    .addLimit(Bandwidth.simple(1_000, Duration.ofMinutes(1)))
+    .addLimit(limit -> limit.capacity(1_000).refillGreedy(1_000, ofMinutes(1)))
     .build();
 Bucket bucket = proxyManager.builder().build(key, configuration);
 ----

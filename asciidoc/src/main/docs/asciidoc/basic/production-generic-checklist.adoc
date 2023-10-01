@@ -15,9 +15,8 @@ To protect from this kind of attack, you should specify multiple limits like bel
 [source, java]
 ----
 Bucket bucket = Bucket.builder()
-    .addLimit(Bandwidth.simple(10000, Duration.ofSeconds(3_600))
-    .addLimit(Bandwidth.simple(20, Duration.ofSeconds(1)) // attacker is unable to achieve 1000RPS and crash service in short time
-    .build();
+    .addLimit(limit -> capacity(10_000).refillGreedy(10_000, ofHours(1)))
+    .addLimit(limit -> capacity(20).refillGreedy(20, ofSeconds(1))) // attacker is unable to achieve 1000RPS and crash service in short time
 ----
 The number of limits specified per bucket does not impact the performance.
 

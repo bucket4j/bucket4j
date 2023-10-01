@@ -55,11 +55,8 @@ public class SmsServlet extends javax.servlet.http.HttpServlet {
         this.buckets = new InfinispanProxyManager(bucketMap).asAsync();
         
         this.configuration = () -> {
-            long overdraft = 20;
-            Refill refill = Refill.greedy(10, Duration.ofMinutes(1));
-            Bandwidth limit = Bandwidth.classic(overdraft, refill);
             return BucketConfiguratiion.builder()
-                .addLimit(limit)
+                .addLimit(limit -> limit.capacity(20).refillGreedy(10, Duration.ofMinutes(1)))
                 .build();
         };
     }

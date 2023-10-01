@@ -38,70 +38,77 @@ can affect your application and if so then think about adding more limits.
 Limitations that are used by bucket can be denoted in terms of bandwidths. Bandwidth is denoted by the following terms:
 
 Capacity::
-Capacity is the term that is directly inherited from the classic interpretation of the token-bucket algorithm, this specifies how many tokens your bucket has.
+`Capacity` is the term that is directly inherited from the classic interpretation of the token-bucket algorithm, this specifies how many tokens your bucket has. Refill must be configured during building stage
+Capacity must be configured during building stage
+[source, java]
+----
+Bucket bucket = Bucket.builder()
+    .addLimit(limit -> limit.capacity(42))
+    .build()
+----
 
 Refill::
-<<refill>> specifies how fast tokens can be refilled after it was consumed from a bucket.
+Refill specifies how fast tokens can be refilled after it was consumed from a bucket.
+Refill must be configured during building stage
+[source, java]
+----
+Bucket bucket = Bucket.builder()
+    .addLimit(limit -> limit.capacity(...).refillXXX(...)) // where XXX - is concrete refill style
+    .build()
+----
+Bucket4j allows to choose different <<refill-types>>.
 
 Initial tokens::
 Bucket4j extends the token-bucket algorithm by allowing to specify the initial amount of tokens for each bandwidth. By default, an initial amount of tokens equal to capacity and can be changed by `withInitialTokens` method: +
 +
 [source, java]
 ----
-Bandwidth bandwidth = Bandwidth.simple(42, Duration.ofMinutes(1))
-                          .withInitialTokens(13);
+Bucket bucket = Bucket.builder()
+    .addLimit(limit -> limit.capacity(42).refillGreedy(1, ofSeconds(1)).initialTokens(13))
+    .build()
 ----
 
-ID::
+Bandwidth ID::
 The identifier is the optional attribute that is null by default. You may prefer to assign identifiers for bandwidths if you use on-the-fly configuration replacement and your buckets have more than one bandwidth per bucket, otherwise, it is better to avoid using identifiers to preserve memory.
-The Identifier for bandwidth can be specified by `withId` method: +
+The Identifier for bandwidth can be specified in following way: +
 +
 [source, java]
 ----
 BucketConfiguration configuration = BucketConfiguration.builder()
-        .addLimit(Bandwidth.simple(1000, Duration.ofMinutes(1)).withId("business-limit"))
-        .addLimit(Bandwidth.simple(100, Duration.ofSeconds(1)).withId("burst-protection"))
-        .build();
+    .addLimit(limit -> limit.capacity(1000).refillGreedy(1000, ofMinutes(1)).id("business-limit"))
+    .addLimit(limit -> limit.capacity(100).refillGreedy(100, ofSeconds(1)).id("burst-protection"))
+    .build();
 ----
 NOTE: Identifiers are critical for on-the-fly configuration replacement functionality because during replacement it needs to decide how correctly propagate information about already consumed tokens from the state before config replacement to the state after replacement. This is not a trivial task especially when the number of limits is changing.
 
-[[refill, Refill]]
-==== Refill
-Specifies the speed of tokens regeneration.
+[[refill-types, Refill types]]
+==== Refill styles
+Bucket4j allows to choose different styles in which consumed tokens are being refilled to bucket
 
-.There are three types of refill:
+.There are four types of refill:
 Greedy::
 This type of refill greedily regenerates tokens manner, it tries to add the tokens to the bucket as soon as possible. For example refill "10 tokens per 1 second" adds 1 token per every 100 milliseconds, in other words, the refill will not wait 1 second to regenerate a whole bunch of 10 tokens. The three refills below do refill of tokens with the same speed: +
 +
 [source, java]
 ----
-Refill.greedy(600, Duration.ofMinutes(1));
-Refill.greedy(10, Duration.ofSeconds(1));
-Refill.greedy(1, Duration.ofMillis(100));
-----
-+
-`Greedy` is the default type of refill that is used when you create `simple` bandwidth +
-+
-[source, java]
-----
-// the two lines of code bellow are fully equivalent
-Bandwidth.simple(100, Duration.ofMinutes(1))
-Bandwidth.classic(100, Refill.greedy(100, Duration.ofMinutes(1)))
+Bucket.builder().addLimit(limit -> limit.capacity(1000).refillGreedy(600, ofMinutes(1)))
+Bucket.builder().addLimit(limit -> limit.capacity(1000).refillGreedy(10, ofSeconds(1)))
+Bucket.builder().addLimit(limit -> limit.capacity(1000).refillGreedy(1, ofMillis(100)))
 ----
 
-Interval::
+Intervally::
 This type of refill regenerates tokens in an interval manner. "Interval" in opposite to "greedy"  will wait until the whole period will be elapsed before regenerating the whole amount of tokens. +
 +
 .Example: +
 +
 [source, java]
 ----
-// generates 100 tokens each minute
-Refill.intervally(100, Duration.ofMinutes(1));
+// refills 100 tokens each minute
+Bucket bucket = Bucket.builder().addLimit(limit -> limit.capacity(1000).refillIntervally(100, ofMinutes(1))).build();
 ----
 
 IntervallyAligned::
-This type of refill regenerates that does refill of tokens in an interval manner. Interval" in opposite to "greedy"  will wait until the whole period will be elapsed before regenerating the whole amount of tokens. In addition to *Interval* it is possible to specify the time when the first refill should happen.  This type can be used to configure clear interval boundary i.e. start of the second, minute, hour, day. To get more details to read javadocs for `Refill#intervallyAligned` method. +
+This type of refill regenerates that does refill of tokens in an interval manner. Interval" in opposite to "greedy"  will wait until the whole period will be elapsed before regenerating the whole amount of tokens. In addition to *Interval* it is possible to specify the time when the first refill should happen.  This type can be used to configure clear interval boundary i.e. start of the second, minute, hour, day.
 +
 .Example:
 [source, java]
@@ -113,8 +120,12 @@ Instant firstRefillTime = ZonedDateTime.now()
   .plus(1, ChronoUnit.HOURS)
   .toInstant();
 
-Bandwidth.classic(400, Refill.intervallyAligned(400, Duration.ofHours(1), firstRefillTime, true));
+Bucket bucket = Bucket.builder().addLimit(limit -> limit.capacity(400).refillIntervallyAligned(400, ofHours(1), firstRefillTime)).build();
 ----
+
+RefillIntervallyAlignedWithAdaptiveInitialTokens::
+See javadocs.
+
 
 [[bucket-state, BucketState]]
 ==== BucketState
@@ -138,7 +149,7 @@ It was explicitly decided by library authors to not provide for end-users to con
 [source, java]
 ----
 Bucket bucket = Bucket.builder()
-    .addLimit(Bandwidth.simple())
+    .addLimit(...)
     .withNanosecondPrecision()
     .withSynchronizationStrategy(SynchronizationStrategy.LOCK_FREE)
     .build()

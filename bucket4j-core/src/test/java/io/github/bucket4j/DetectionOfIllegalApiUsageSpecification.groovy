@@ -38,8 +38,8 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
     @Unroll
     def "Should detect that initialTokens #initialTokens is wrong"(long initialTokens) {
         when:
-            Bandwidth.simple(VALID_CAPACITY, VALID_PERIOD)
-                    .withInitialTokens(initialTokens)
+            Bucket.builder()
+                    .addLimit({it.capacity(VALID_CAPACITY).refillGreedy(VALID_CAPACITY, Duration.ofNanos(initialTokens)).initialTokens(0)})
         then:
             IllegalArgumentException ex = thrown()
             ex.message == nonPositiveInitialTokens(initialTokens).message

@@ -4,8 +4,6 @@ include::concepts.adoc[]
 
 include::quick-start.adoc[]
 
-include::api-reference.adoc[]
-
 include::listener.adoc[]
 
 include::verbose-api.adoc[]

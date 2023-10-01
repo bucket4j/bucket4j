@@ -71,7 +71,7 @@ private static final InfinispanProxyManager<K> proxyManager = new InfinispanProx
 
 ...
 BucketConfiguration configuration = BucketConfiguration.builder()
-    .addLimit(Bandwidth.simple(1_000, Duration.ofMinutes(1)))
+    .addLimit(limit -> limit.capacity(1_000).refillGreedy(1_000, ofMinutes(1)))
     .build(key, configuration);
 
 Bucket bucket = proxyManager.builder().build(configuration);

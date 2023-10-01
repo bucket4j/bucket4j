@@ -37,7 +37,7 @@ class BlockingTryConsumeSpecification extends Specification {
     SchedulerMock scheduler = new SchedulerMock(clock)
 
     BucketConfiguration configuration = BucketConfiguration.builder()
-            .addLimit(Bandwidth.simple(10, Duration.ofSeconds(1)))
+            .addLimit({limit -> limit.capacity(10).refillGreedy(10, Duration.ofSeconds(1))})
             .build()
 
     @Timeout(value = 2, unit = TimeUnit.SECONDS)

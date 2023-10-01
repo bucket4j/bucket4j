@@ -106,10 +106,7 @@ public class BandwidthBuilder {
          * <br>
          * In additional to {@link #refillIntervally(long, Duration)} it is possible to specify the time when first refill should happen via {@code timeOfFirstRefill}.
          * This option can be used to configure clear interval boundary i.e. start of second, minute, hour, day.
-         *
-         * <p>
-         *     <strong>Special notes about useAdaptiveInitialTokens:</strong>
-         * <br>If {@code useAdaptiveInitialTokens == true} and timeOfFirstRefill is a moment in the future, then initial amount of tokens in the bandwidth will be calculated by following formula:
+         * Also for refill type, initial amount of tokens in the bandwidth will be calculated by following formula:
          * <br><pre>{@code
          *     Math.min(capacity, Math.max(0, bandwidthCapacity - refillTokens) + (timeOfFirstRefillMillis - nowMillis)/refillPeriod * refillTokens)
          * }</pre>

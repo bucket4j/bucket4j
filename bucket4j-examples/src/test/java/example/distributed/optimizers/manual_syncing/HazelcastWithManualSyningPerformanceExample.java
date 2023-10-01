@@ -95,8 +95,7 @@ public class HazelcastWithManualSyningPerformanceExample {
         HazelcastProxyManager<String> proxyManager = new HazelcastProxyManager<>(map, ClientSideConfig.getDefault());
 //        ProxyManagerMock<String> proxyManager = new ProxyManagerMock<>(TimeMeter.SYSTEM_MILLISECONDS);
         BucketConfiguration configuration = BucketConfiguration.builder()
-                .addLimit(
-                    Bandwidth.simple(10000, Duration.ofSeconds(1)).withInitialTokens(0))
+                .addLimit(limit -> limit.capacity(10000).refillGreedy(10000, Duration.ofNanos(1)).initialTokens(0))
                 .build();
 
         BucketProxy bucket = proxyManager.builder()

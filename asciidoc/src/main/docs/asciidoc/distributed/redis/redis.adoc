@@ -43,7 +43,7 @@ RedissonBasedProxyManager<String> proxyManager = RedissonBasedProxyManager.build
 ...
 
 BucketConfiguration configuration = BucketConfiguration.builder()
-    .addLimit(Bandwidth.simple(1_000, Duration.ofMinutes(1)))
+    .addLimit(limit -> capacity(1_000).refillGreedy(1_000, ofMinutes(1)))
     .build();
 Bucket bucket = proxyManager.builder().build(key, configuration);
 ----
@@ -52,14 +52,14 @@ Bucket bucket = proxyManager.builder().build(key, configuration);
 [source, java]
 ----
 io.lettuce.core.RedisClient redisClient = ...;
-LettuceBasedProxyManager<String> proxyManager = LettuceBasedProxyManager.builderFor(redisClient)
-    .withExpirationStrategy(ExpirationAfterWriteStrategy.basedOnTimeForRefillingBucketUpToMax(Duration.ofSeconds(10)))
-    .withKeyMapper(Mapper.STRING)
+StatefulRedisConnection<String, byte[]> redisConnection = redisClient.connect(RedisCodec.of(StringCodec.UTF8, ByteArrayCodec.INSTANCE));
+LettuceBasedProxyManager<String> proxyManager = LettuceBasedProxyManager.builderFor(redisConnection)
+    .withExpirationStrategy(ExpirationAfterWriteStrategy.basedOnTimeForRefillingBucketUpToMax(ofSeconds(10)))
     .build();
 ...
 
 BucketConfiguration configuration = BucketConfiguration.builder()
-    .addLimit(Bandwidth.simple(1_000, Duration.ofMinutes(1)))
+    .addLimit(limit -> capacity(1_000).refillGreedy(1_000, ofMinutes(1)))
     .build();
 Bucket bucket = proxyManager.builder().build(key, configuration);
 ----
@@ -69,13 +69,13 @@ Bucket bucket = proxyManager.builder().build(key, configuration);
 ----
 redis.clients.jedis.JedisPool jedisPool = ...;
 JedisBasedProxyManager<String> proxyManager = JedisBasedProxyManager.builderFor(jedisPool)
-    .withExpirationStrategy(ExpirationAfterWriteStrategy.basedOnTimeForRefillingBucketUpToMax(Duration.ofSeconds(10)))
+    .withExpirationStrategy(ExpirationAfterWriteStrategy.basedOnTimeForRefillingBucketUpToMax(ofSeconds(10)))
     .withKeyMapper(Mapper.STRING)
     .build();
 ...
 
 BucketConfiguration configuration = BucketConfiguration.builder()
-    .addLimit(Bandwidth.simple(1_000, Duration.ofMinutes(1)))
+    .addLimit(limit -> capacity(1_000).refillGreedy(1_000, ofMinutes(1)))
     .build();
 Bucket bucket = proxyManager.builder().build(key, configuration);
 ----

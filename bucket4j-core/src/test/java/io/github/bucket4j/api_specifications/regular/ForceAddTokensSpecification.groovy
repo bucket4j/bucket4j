@@ -48,11 +48,11 @@ class ForceAddTokensSpecification extends Specification {
         }
         where:
         n | tokensToAdd | nanosIncrement | requiredResult | configuration
-        1 |     49      |     50         |        99      | BucketConfiguration.builder().addLimit(Bandwidth.simple(100, Duration.ofNanos(100)).withInitialTokens(0)).build()
-        2 |     50      |     50         |       100      | BucketConfiguration.builder().addLimit(Bandwidth.simple(100, Duration.ofNanos(100)).withInitialTokens(0)).build()
-        3 |     50      |     0          |        50      | BucketConfiguration.builder().addLimit(Bandwidth.simple(100, Duration.ofNanos(100)).withInitialTokens(0)).build()
-        4 |     120     |     0          |       120      | BucketConfiguration.builder().addLimit(Bandwidth.simple(100, Duration.ofNanos(100)).withInitialTokens(0)).build()
-        5 |     120     |     110        |       220      | BucketConfiguration.builder().addLimit(Bandwidth.simple(100, Duration.ofNanos(100)).withInitialTokens(0)).build()
+        1 |     49      |     50         |        99      | BucketConfiguration.builder().addLimit({limit -> limit.capacity(100).refillGreedy(100, Duration.ofNanos(100)).initialTokens(0)}).build()
+        2 |     50      |     50         |       100      | BucketConfiguration.builder().addLimit({limit -> limit.capacity(100).refillGreedy(100, Duration.ofNanos(100)).initialTokens(0)}).build()
+        3 |     50      |     0          |        50      | BucketConfiguration.builder().addLimit({limit -> limit.capacity(100).refillGreedy(100, Duration.ofNanos(100)).initialTokens(0)}).build()
+        4 |     120     |     0          |       120      | BucketConfiguration.builder().addLimit({limit -> limit.capacity(100).refillGreedy(100, Duration.ofNanos(100)).initialTokens(0)}).build()
+        5 |     120     |     110        |       220      | BucketConfiguration.builder().addLimit({limit -> limit.capacity(100).refillGreedy(100, Duration.ofNanos(100)).initialTokens(0)}).build()
     }
 
     def "Tokens that was added over capacity should not be lost"() {

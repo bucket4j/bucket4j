@@ -40,9 +40,9 @@ The bucket can be decorated by the listener via the ``toListenable`` method.
 BucketListener listener = new MyListener();
 
 Bucket bucket = Bucket.builder()
-                    .addLimit(Bandwidth.simple(100, Duration.ofMinutes(1)))
-                    .build()
-                    .toListenable(listener);
+    .addLimit(limit -> limit,capacity(100).refillGreedy(100, ofMinutes(1)))
+    .build()
+    .toListenable(listener);
 ----
 
 ==== Example of integration with Dropwizard metrics-core

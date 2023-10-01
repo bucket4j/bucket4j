@@ -298,7 +298,11 @@ class BucketStateSpecification extends Specification {
         setup:
             TimeMeterMock mockTimer = new TimeMeterMock(initTime)
             Bucket bucket = Bucket.builder()
-                    .addLimit(Bandwidth.simple(capacity, Duration.ofNanos(period)).withInitialTokens(initialTokens))
+                    .addLimit({
+                        limit -> limit.capacity(capacity)
+                            .refillGreedy(capacity, Duration.ofNanos(period))
+                            .initialTokens(initialTokens)
+                    })
                     .withCustomTimePrecision(mockTimer)
                     .build()
             BucketState state = bucket.asVerbose().getAvailableTokens().getState()

@@ -20,56 +20,6 @@ implementation 'com.bucket4j:bucket4j-core:{revnumber}'
 ----
 NOTE: see https://github.com/bucket4j/bucket4j/tree/8.0#java-compatibility-matrix[Java compatibility matrix] if you need for build that is compatible with Java 8
 
-==== Create your first Bucket, limiting the rate of heavy work
-Imagine that you have a thread-pool executor and you want to know what your threads are doing at the moment when thread-pool throws RejectedExecutionException.
-Printing stack traces of all threads in the JVM will be the best way to know where are all threads have stuck and why the thread pool is overflown.
-But acquiring stack traces is a very cost operation by itself, and you want to do it not often than 1 time per 10 minutes:
-[source, java]
-----
-// define the limit 1 time per 10 minute
-Bandwidth limit = Bandwidth.simple(1, Duration.ofMinutes(10));
-// construct the bucket
-Bucket bucket = Bucket.builder().addLimit(limit).build();
-
-...
-
-try {
-   executor.execute(anyRunnable);
-} catch (RejectedExecutionException e) {
-    // print stacktraces only if limit is not exceeded
-    if (bucket.tryConsume(1)) {
-        ThreadInfo[] stackTraces = ManagementFactory.getThreadMXBean().dumpAllThreads(true, true);
-        StacktraceUtils.print(stackTraces);
-    }
-    throw e;
-}
-----
-
-==== Using bucket as throttler
-Suppose you need to have a fresh exchange rate between dollars and euros.
-To get the rate you continuously poll the third-party provider,
-and by contract with the provider you should poll not often than 100 times per 1 minute, else provider will block your IP:
-[source, java]
-----
-// define the limit 100 times per 1 minute
-Bandwidth limit = Bandwidth.simple(100, Duration.ofMinutes(1));
-// construct the bucket
-Bucket bucket = Bucket.builder().addLimit(limit).build();
-
-...
-volatile double exchangeRate;
-...
-
-// do polling in infinite loop
-while (true) {
-  // Consume a token from the token bucket.
-  // If a token is not available this method will block until the refill adds one to the bucket.
-  bucket.asBlocking().consume(1);
-
-  exchangeRate = pollExchangeRate();
-}
-----
-
 ==== Limiting the rate of access to REST API
 Imagine that you develop yet another social network and you want to provide REST API for third-party developers.
 To protect your system from overloading you want to introduce the following limitation:
@@ -87,10 +37,9 @@ import io.github.bucket4j.Bucket;
 public class ThrottlingFilter implements javax.servlet.Filter {
 
     private Bucket createNewBucket() {
-         long overdraft = 50;
-         Refill refill = Refill.greedy(10, Duration.ofSeconds(1));
-         Bandwidth limit = Bandwidth.classic(overdraft, refill);
-         return Bucket.builder().addLimit(limit).build();
+         return Bucket.builder()
+            .addLimit(limit -> limit.capacity(50).refillGreedy(10, Duration.ofSeconds(1)))
+            .build();
     }
 
     @Override
@@ -139,31 +88,6 @@ If you want to provide more information to the end-user about the state of the b
         }
 ----
 
-==== Example of multiple bandwidth
-Imagine that you are developing a load testing tool, in order to ensure that a testable system is able to dispatch 1000 requests per 1 minute.
-But you do not want to randomly kill the testable system by generating all 1000 events in one second instead of 1 minute.
-To solve the problem you can construct the following bucket:
-[source, java]
-----
-static final long MAX_WAIT_NANOS = TimeUnit.HOURS.toNanos(1);
-// ...
-
-Bucket bucket = Bucket.builder()
-       // allows 1000 tokens per 1 minute
-       .addLimit(Bandwidth.simple(1000, Duration.ofMinutes(1)))
-       // but not often then 50 tokens per 1 second
-       .addLimit(Bandwidth.simple(50, Duration.ofSeconds(1)))
-       .build();
-
-// ...
-while (true) {
-  // Consume a token from the token bucket.  If a token is not available this method will block until the refill adds one to the bucket.
-  if (bucket.asBlocking().tryConsume(1, MAX_WAIT_NANOS, BlockingStrategy.PARKING)) {
-       workloadExecutor.execute(new LoadTask());
-  };
-}
-----
-
 ==== Specifying initial amount of tokens
 By default initial size of the bucket equals capacity.
 But sometimes, you may want to have a lesser initial size, for example for the case of cold start in order to prevent denial of service:
@@ -171,44 +95,10 @@ But sometimes, you may want to have a lesser initial size, for example for the c
 [source, java]
 ----
 int initialTokens = 42;
-Bandwidth limit = Bandwidth
-    .simple(1000, Duration.ofHours(1))
-    .withInitialTokens(initialTokens);
 Bucket bucket = Bucket.builder()
-    .addLimit(limit)
+    .addLimit(limit -> limit.capacity(1000).refillGreedy(1000, ofHours(1)).initialTokens(initialTokens))
     .build();
 ----
-
-==== Turning-off the refill greediness
-When bandwidth is created via ``Bandwidth#simple`` method it does refill in a greedy manner, because bandwidth tries to add the tokens to the bucket as soon as possible.
-For example bandwidth with refill "10 tokens per 1 second" will add 1 token per every 100 milliseconds,
-in other words, the refill will not wait 1 second to regenerate a whole bunch of 10 tokens.
-
-If greediness is undesired then you should explicitly choose a non-greedy refill.
-For example, the bandwidth bellow will refill 10 tokens per 1 second instead of 1 token per 100 milliseconds:
-[source, java]
-----
-// When refill created via "intervally" factory method then greediness is turned-off.
-Refill refill = Refill.intervally(10, Duration.ofSeconds(1));
-Bandwidth bandwidth = Bandwidth.classic(600, refill);
-----
-
-Also, it is possible to specify the time when the first refill should happen.
-This option can be used to configure clear interval boundary i.e. start of the second, minute, hour, day.
-[source, java]
-----
-   // imagine that wall clock is 16:20, and we need to schedule the first refill to 17:00
-   Instant firstRefillTime = ZonedDateTime.now()
-             .truncatedTo(ChronoUnit.HOURS)
-             .plus(1, ChronoUnit.HOURS)
-             .toInstant();
-
-   // see detailed explanation for useAdaptiveInitialTokens in the javadocs for 'intervallyAligned' method
-   boolean useAdaptiveInitialTokens = false;
-
-   Bandwidth.classic(400, Refill.intervallyAligned(400, Duration.ofHours(1), firstRefillTime, useAdaptiveInitialTokens));
-----
-
 
 ==== Returning tokens back to bucket
 The https://en.wikipedia.org/wiki/Compensating_transaction[compensating transaction] is one of the obvious use cases when you want to return tokens back to the bucket:
@@ -252,9 +142,28 @@ public class ClusteredTimeMeter implements TimeMeter {
 
 }
 
-Bandwidth limit = Bandwidth.simple(100, Duration.ofMinutes(1));
 Bucket bucket = Bucket.builder()
     .withCustomTimePrecision(new ClusteredTimeMeter())
-    .addLimit(limit)
+    .addLimit(limit -> limit.capacity(100).refillGreedy(100, ofMinutes(1)))
     .build();
+----
+
+==== Blocking API example
+Suppose that you implement consumer of messages from a messaging system and want to process message no fastly then desired rate
+[source, java]
+----
+// define the bucket with capacity 100  and refill 100 tokens per 1 minute
+Bucket bucket = Bucket.builder()
+    .addLimit(limit -> limit.capacity(100).refillGreedy(100, ofMinutes(1)))
+    .build();
+
+// do polling in infinite loop
+while (true) {
+    List<Message> messages = consumer.poll();
+    for (Message message : messages) {
+        // Consume a token from the token bucket. If a token is not available this method will block until the refill adds one to the bucket.
+        bucket.asBlocking().consume(1);
+        process(message);
+    }
+}
 ----
