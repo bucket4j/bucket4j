@@ -68,6 +68,9 @@ public class ConfigurationBuilder {
     }
 
     public ConfigurationBuilder addLimit(Function<BandwidthBuilderCapacityStage, BandwidthBuilderBuildStage> bandwidthConfigurator) {
+        if (bandwidthConfigurator == null) {
+            throw BucketExceptions.nullBuilder();
+        }
         BandwidthBuilderBuildStage builder = bandwidthConfigurator.apply(Bandwidth.builder());
         Bandwidth bandwidth = builder.build();
         return addLimit(bandwidth);

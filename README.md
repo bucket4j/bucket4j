@@ -4,6 +4,48 @@
 
 [![Licence](https://img.shields.io/hexpm/l/plug.svg)](https://github.com/bucket4j/bucket4j/blob/master/LICENSE.txt)
 
+#### Get dependency
+The Bucket4j is distributed through [Maven Central](http://search.maven.org/):
+```xml
+<!-- For java 11+ -->
+<dependency>
+    <groupId>com.bucket4j</groupId>
+    <artifactId>bucket4j-core</artifactId>
+    <version>8.5.0</version>
+</dependency>
+
+<!-- For java 8 -->
+<dependency>
+    <groupId>com.bucket4j</groupId>
+    <artifactId>bucket4j_jdk8-core</artifactId>
+    <version>8.5.0</version>
+</dependency>
+```
+#### Quick start
+```java
+import io.github.bucket4j.Bucket;
+
+...
+// bucket with capacity 20 tokens and with refilling speed 1 token per each 6 second
+private static Bucket bucket = Bucket.builder()
+      .addLimit(limit -> limit.capacity(20).refillGreedy(10, Duration.ofMinutes(1)))
+      .build();
+
+private void doSomethingProtected() {
+   if (bucket.tryConsume(1)) {
+      doSomething();    
+   } else {
+      throw new SomeRateLimitingException();
+   }
+}
+```
+More examples [can be found there](https://bucket4j.com/8.3.0/toc.html#quick-start-examples)
+
+## [Documentation](https://bucket4j.com)
+* [Reference](https://bucket4j.com/8.5.0/toc.html)
+* [Quick start examples](https://bucket4j.com/8.5.0/toc.html#quick-start-examples)
+* [Third-party articles](https://bucket4j.com/#third-party-articles)
+
 ## Bucket4j basic features
 * *Absolutely non-compromise precision* - Bucket4j does not operate with floats or doubles, all calculation are performed in the integer arithmetic, this feature protects end users from calculation errors involved by rounding.
 * *Effective implementation in terms of concurrency*:
@@ -56,50 +98,6 @@ Sometimes you are having deal with bucket per key scenarios but distributed sync
 | Back-end                      |                               Project page                               |
 | :---                          |:------------------------------------------------------------------------:|
 | ```Datomic Database```        | [clj-bucket4j-datomic](https://github.com/fr33m0nk/clj-bucket4j-datomic) |
-
-## [Documentation](https://bucket4j.com)
-* [Official reference](https://bucket4j.com/8.5.0/toc.html)
-* [Quick start examples](https://bucket4j.com/8.5.0/toc.html#quick-start-examples)
-* [Third-party articles](https://bucket4j.com/#third-party-articles)
-
-## Get Bucket4j library
-#### You can add Bucket4j to your project as maven dependency
-The Bucket4j is distributed through [Maven Central](http://search.maven.org/):
-```xml
-<!-- For java 11+ -->
-<dependency>
-    <groupId>com.bucket4j</groupId>
-    <artifactId>bucket4j-core</artifactId>
-    <version>8.5.0</version>
-</dependency>
-
-<!-- For java 8 -->
-<dependency>
-    <groupId>com.bucket4j</groupId>
-    <artifactId>bucket4j_jdk8-core</artifactId>
-    <version>8.5.0</version>
-</dependency>
-```
-
-#### Quick start
-```java
-import io.github.bucket4j.Bucket;
-
-...
-// bucket with capacity 20 tokens and with refilling speed 1 token per each 6 second
-private static Bucket bucket = Bucket.builder()
-      .addLimit(limit -> limit.capacity(20).refillGreedy(10, Duration.ofMinutes(1)))
-      .build();
-
-private void doSomethingProtected() {
-   if (bucket.tryConsume(1)) {
-      doSomething();    
-   } else {
-      throw new SomeRateLimitingException();
-   }
-}
-```
-More examples [can be found there](https://bucket4j.com/8.3.0/toc.html#quick-start-examples)
 
 ## Have a question?
 Feel free to ask via:

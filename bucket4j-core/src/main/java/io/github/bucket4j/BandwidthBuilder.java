@@ -225,7 +225,7 @@ public class BandwidthBuilder {
         @Override
         public BandwidthBuilderRefillStage capacity(long tokens) {
             if (tokens <= 0) {
-                throw BucketExceptions.nonPositiveCapacity(capacity);
+                throw BucketExceptions.nonPositiveCapacity(tokens);
             }
             this.capacity = tokens;
             this.initialTokens = tokens;

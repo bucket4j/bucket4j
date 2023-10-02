@@ -18,7 +18,7 @@ class BucketListenerSpecification extends Specification {
             SimpleBucketListener listener = new SimpleBucketListener()
 
             BucketConfiguration configuration = BucketConfiguration.builder()
-                .addLimit(Bandwidth.simple(10, Duration.ofSeconds(1)))
+                .addLimit({it.capacity(10).refillGreedy(10, Duration.ofSeconds(1))})
                 .build()
             Bucket sourceBucket = type.createBucket(configuration, clock);
             Bucket listenableBucket = sourceBucket.toListenable(listener)

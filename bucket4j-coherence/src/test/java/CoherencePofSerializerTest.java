@@ -2,7 +2,6 @@ import com.tangosol.io.Serializer;
 import com.tangosol.io.pof.ConfigurablePofContext;
 import com.tangosol.util.Binary;
 import com.tangosol.util.ExternalizableHelper;
-import io.github.bucket4j.Bucket4j;
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.distributed.remote.Request;
 import io.github.bucket4j.distributed.remote.commands.AddTokensCommand;
@@ -12,7 +11,6 @@ import io.github.bucket4j.util.ComparableByContent;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import static io.github.bucket4j.Bandwidth.simple;
 import static java.time.Duration.ofSeconds;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -27,11 +25,7 @@ public class CoherencePofSerializerTest {
 
     @Test
     public void testSerializationOfEntryProcessors() {
-        BucketConfiguration configuration = Bucket4j.configurationBuilder()
-                .addLimit(simple(10, ofSeconds(1)))
-                .build();
         AddTokensCommand command = new AddTokensCommand(42);
-
         Request request = new Request(command, Versions.getLatest(), null);
         testSerialization(new CoherenceProcessor(request));
     }

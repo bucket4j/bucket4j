@@ -19,10 +19,10 @@ class ConfigurationReplacementSpecification extends Specification {
                 System.err.println("sync: $sync verbose: $verbose")
                 TimeMeterMock clock = new TimeMeterMock(0)
                 BucketConfiguration configuration = BucketConfiguration.builder()
-                        .addLimit(Bandwidth.simple(3, Duration.ofNanos(5)).withInitialTokens(0))
+                        .addLimit({it.capacity(3).refillGreedy(3, Duration.ofNanos(5)).initialTokens(0)})
                         .build()
                 BucketConfiguration newConfiguration = BucketConfiguration.builder()
-                        .addLimit(Bandwidth.simple(60, Duration.ofNanos(1000)))
+                        .addLimit({it.capacity(60).refillGreedy(60, Duration.ofNanos(1000))})
                         .build()
                 if (sync) {
                     Bucket bucket = bucketType.createBucket(configuration, clock)

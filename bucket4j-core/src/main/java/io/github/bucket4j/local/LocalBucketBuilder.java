@@ -27,6 +27,8 @@ import io.github.bucket4j.BandwidthBuilder.BandwidthBuilderCapacityStage;
 import java.util.Objects;
 import java.util.function.Function;
 
+import static io.github.bucket4j.BucketExceptions.nullBuilder;
+
 /**
  * This builder creates in-memory buckets ({@link LockFreeBucket}).
  */
@@ -50,6 +52,9 @@ public class LocalBucketBuilder {
     }
 
     public LocalBucketBuilder addLimit(Function<BandwidthBuilderCapacityStage, BandwidthBuilderBuildStage> bandwidthConfigurator) {
+        if (bandwidthConfigurator == null) {
+            throw BucketExceptions.nullBuilder();
+        }
         BandwidthBuilderBuildStage builder = bandwidthConfigurator.apply(Bandwidth.builder());
         Bandwidth bandwidth = builder.build();
         return addLimit(bandwidth);
