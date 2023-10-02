@@ -2,7 +2,4 @@
 Release `{revnumber}`
 
 .The features/enhancements in release scope are following:
-* https://github.com/bucket4j/bucket4j/issues/372[#372 Bucket4J for OracleSql]
-* https://github.com/bucket4j/bucket4j/issues/400[#400 PostgreSQLadvisoryLockBasedProxyManager does not work with String keys]
-* https://github.com/bucket4j/bucket4j/issues/381[#381 Add Listener hook before the thread is parked]
-* https://github.com/bucket4j/bucket4j/issues/398[#398 BucketNotFoundException when using Predictive Optimization]
+* https://github.com/bucket4j/bucket4j/issues/401[#401 making the builder API to be more close with token-bucket description]
