@@ -2,6 +2,23 @@ local LONG_MAX_VALUE = 9223372036854775807;
 
 local Bucket4j = {};
 
+Bucket4j.createBucketEntryWrapper = function(state)
+    local mutableBucketEntry = {}
+    mutableBucketEntry.stateModified = false;
+    mutableBucketEntry.state = state;
+    mutableBucketEntry.exists = function()
+        return self.state ~= nil;
+    end
+    bucketEntry.set = function(newState)
+        self.stateModified = true;
+        self.state = newState;
+    end
+    bucketEntry.get = function()
+        return self.state;
+    end
+    return mutableBucketEntry;
+end
+
 Bucket4j.createNewState = function(configuration, currentTimeNanos)
     local state = {};
     local tokens = {};
