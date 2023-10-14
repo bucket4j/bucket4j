@@ -24,9 +24,8 @@ import io.github.bucket4j.BucketExceptions;
 import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.proxy.AbstractProxyManager;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
-import io.github.bucket4j.distributed.proxy.generic.GenericEntry;
-import io.github.bucket4j.distributed.proxy.generic.select_for_update.LockAndGetResult;
 import io.github.bucket4j.distributed.remote.CommandResult;
+import io.github.bucket4j.distributed.remote.MutableBucketEntry;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.remote.Request;
 
@@ -90,14 +89,14 @@ public abstract class AbstractLockBasedProxyManager<K> extends AbstractProxyMana
         }
 
         try {
-            GenericEntry entry = new GenericEntry(persistedDataOnBeginOfTransaction, request.getBackwardCompatibilityVersion());
+            MutableBucketEntry entry = new MutableBucketEntry(persistedDataOnBeginOfTransaction);
             CommandResult<T> result = command.execute(entry, super.getClientSideTime());
-            if (entry.isModified()) {
-                byte[] bytes = entry.getModifiedStateBytes();
+            if (entry.isStateModified()) {
+                byte[] bytes = entry.getStateBytes(request.getBackwardCompatibilityVersion());
                 if (persistedDataOnBeginOfTransaction == null) {
-                    transaction.create(bytes, entry.getModifiedState());
+                    transaction.create(bytes, entry.get());
                 } else {
-                    transaction.update(bytes, entry.getModifiedState());
+                    transaction.update(bytes, entry.get());
                 }
             }
             transaction.unlock();

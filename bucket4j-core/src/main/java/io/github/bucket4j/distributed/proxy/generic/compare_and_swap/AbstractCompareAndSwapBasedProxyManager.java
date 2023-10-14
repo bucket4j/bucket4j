@@ -23,8 +23,8 @@ package io.github.bucket4j.distributed.proxy.generic.compare_and_swap;
 import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.proxy.AbstractProxyManager;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
-import io.github.bucket4j.distributed.proxy.generic.GenericEntry;
 import io.github.bucket4j.distributed.remote.CommandResult;
+import io.github.bucket4j.distributed.remote.MutableBucketEntry;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.remote.Request;
 
@@ -69,14 +69,14 @@ public abstract class AbstractCompareAndSwapBasedProxyManager<K> extends Abstrac
     private <T> CommandResult<T> execute(Request<T> request, CompareAndSwapOperation operation) {
         RemoteCommand<T> command = request.getCommand();
         byte[] originalStateBytes = operation.getStateData().orElse(null);
-        GenericEntry entry = new GenericEntry(originalStateBytes, request.getBackwardCompatibilityVersion());
+        MutableBucketEntry entry = new MutableBucketEntry(originalStateBytes);
         CommandResult<T> result = command.execute(entry, getClientSideTime());
-        if (!entry.isModified()) {
+        if (!entry.isStateModified()) {
             return result;
         }
 
-        byte[] newStateBytes = entry.getModifiedStateBytes();
-        if (operation.compareAndSwap(originalStateBytes, newStateBytes, entry.getModifiedState())) {
+        byte[] newStateBytes = entry.getStateBytes(request.getBackwardCompatibilityVersion());
+        if (operation.compareAndSwap(originalStateBytes, newStateBytes, entry.get())) {
             return result;
         } else {
             return null;
@@ -97,14 +97,14 @@ public abstract class AbstractCompareAndSwapBasedProxyManager<K> extends Abstrac
             .thenApply((Optional<byte[]> originalStateBytes) -> originalStateBytes.orElse(null))
             .thenCompose((byte[] originalStateBytes) -> {
                 RemoteCommand<T> command = request.getCommand();
-                GenericEntry entry = new GenericEntry(originalStateBytes, request.getBackwardCompatibilityVersion());
+                MutableBucketEntry entry = new MutableBucketEntry(originalStateBytes);
                 CommandResult<T> result = command.execute(entry, getClientSideTime());
-                if (!entry.isModified()) {
+                if (!entry.isStateModified()) {
                     return CompletableFuture.completedFuture(result);
                 }
 
-                byte[] newStateBytes = entry.getModifiedStateBytes();
-                return operation.compareAndSwap(originalStateBytes, newStateBytes, entry.getModifiedState()).thenApply((casWasSuccessful) -> casWasSuccessful? result : null);
+                byte[] newStateBytes = entry.getStateBytes(request.getBackwardCompatibilityVersion());
+                return operation.compareAndSwap(originalStateBytes, newStateBytes, entry.get()).thenApply((casWasSuccessful) -> casWasSuccessful? result : null);
             });
     }
 

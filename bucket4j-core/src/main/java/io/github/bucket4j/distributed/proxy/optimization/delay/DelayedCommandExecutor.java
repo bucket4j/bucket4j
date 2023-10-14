@@ -25,9 +25,9 @@ import io.github.bucket4j.distributed.proxy.CommandExecutor;
 import io.github.bucket4j.distributed.proxy.optimization.*;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.MultiResult;
+import io.github.bucket4j.distributed.remote.MutableBucketEntry;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
-import io.github.bucket4j.distributed.remote.BucketEntryWrapper;
 import io.github.bucket4j.distributed.remote.commands.ConsumeIgnoringRateLimitsCommand;
 import io.github.bucket4j.distributed.remote.commands.CreateSnapshotCommand;
 import io.github.bucket4j.distributed.remote.commands.MultiCommand;
@@ -111,7 +111,7 @@ class DelayedCommandExecutor implements CommandExecutor, AsyncCommandExecutor {
         }
 
         // execute local command
-        BucketEntryWrapper entry = new BucketEntryWrapper(state.copy());
+        MutableBucketEntry entry = new MutableBucketEntry(state.copy());
         CommandResult<T> result = command.execute(entry, currentTimeNanos);
         long locallyConsumedTokens = command.getConsumedTokens(result.getData());
         if (locallyConsumedTokens == Long.MAX_VALUE) {

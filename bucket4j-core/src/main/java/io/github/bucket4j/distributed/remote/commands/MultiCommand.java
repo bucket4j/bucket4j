@@ -117,18 +117,10 @@ public class MultiCommand implements RemoteCommand<MultiResult>, ComparableByCon
 
     @Override
     public CommandResult<MultiResult> execute(MutableBucketEntry mutableEntry, long currentTimeNanos) {
-        RemoteBucketState startingState = mutableEntry.exists() ? mutableEntry.get() : null;
-        BucketEntryWrapper entryWrapper = new BucketEntryWrapper(startingState);
-
         List<CommandResult<?>> singleResults = new ArrayList<>(commands.size());
         for (RemoteCommand<?> singleCommand : commands) {
-            singleResults.add(singleCommand.execute(entryWrapper, currentTimeNanos));
+            singleResults.add(singleCommand.execute(mutableEntry, currentTimeNanos));
         }
-
-        if (entryWrapper.isStateModified()) {
-            mutableEntry.set(entryWrapper.get());
-        }
-
         return CommandResult.success(new MultiResult(singleResults), MultiResult.SERIALIZATION_HANDLE);
     }
 

@@ -44,11 +44,10 @@ public class CompareAndSwapBasedProxyManagerMock<K> extends AbstractCompareAndSw
 
     @Override
     protected CompareAndSwapOperation beginCompareAndSwapOperation(K key) {
-        byte[] backup = stateMap.get(key);
         return new CompareAndSwapOperation() {
             @Override
             public Optional<byte[]> getStateData() {
-                return Optional.ofNullable(backup);
+                return Optional.ofNullable(stateMap.get(key));
             }
             @Override
             public boolean compareAndSwap(byte[] originalData, byte[] newData, RemoteBucketState newState) {

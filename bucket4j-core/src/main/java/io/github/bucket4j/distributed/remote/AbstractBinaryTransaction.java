@@ -24,7 +24,7 @@ import io.github.bucket4j.distributed.versioning.*;
 
 import static io.github.bucket4j.distributed.serialization.InternalSerializationHelper.*;
 
-public abstract class AbstractBinaryTransaction implements MutableBucketEntry {
+public abstract class AbstractBinaryTransaction {
 
     private final byte[] requestBytes;
     private Version backwardCompatibilityVersion;
@@ -48,9 +48,22 @@ public abstract class AbstractBinaryTransaction implements MutableBucketEntry {
         backwardCompatibilityVersion = request.getBackwardCompatibilityVersion();
 
         try {
+            RemoteBucketState currentState = null;
+            if (exists()) {
+                byte[] stateBytes = getRawState();
+                currentState = deserializeState(stateBytes);
+            }
+            MutableBucketEntry entryWrapper = new MutableBucketEntry(currentState);
+
             long time = request.getClientSideTime() != null? request.getClientSideTime(): System.currentTimeMillis() * 1_000_000;
             RemoteCommand<?> command = request.getCommand();
-            CommandResult<?> result = command.execute(this, time);
+            CommandResult<?> result = command.execute(entryWrapper, time);
+
+            if (entryWrapper.isStateModified()) {
+                RemoteBucketState newState = entryWrapper.get();
+                setRawState(serializeState(newState, backwardCompatibilityVersion));
+            }
+
             return serializeResult(result, request.getBackwardCompatibilityVersion());
         } catch (UnsupportedTypeException e) {
             return serializeResult(CommandResult.unsupportedType(e.getTypeId()), backwardCompatibilityVersion);
@@ -61,22 +74,11 @@ public abstract class AbstractBinaryTransaction implements MutableBucketEntry {
         }
     }
 
-    @Override
-    public void set(RemoteBucketState state) {
-        byte[] stateBytes = serializeState(state, backwardCompatibilityVersion);
-        setRawState(stateBytes);
-    }
-
-    @Override
-    public RemoteBucketState get() {
-        byte[] stateBytes = getRawState();
-        return deserializeState(stateBytes);
-    }
-
     protected abstract byte[] getRawState();
 
     protected abstract void setRawState(byte[] stateBytes);
 
+    public abstract boolean exists();
 
 
 }

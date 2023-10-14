@@ -1,11 +1,29 @@
 package io.github.bucket4j
 
+import io.github.bucket4j.mock.BucketType
+import io.github.bucket4j.mock.TimeMeterMock
 import spock.lang.Specification
 import spock.lang.Unroll
 
 import java.time.Duration
 
 class VerboseApiTest extends Specification {
+
+    @Unroll
+    def "#type test verbose initialization"(BucketType type) {
+        setup:
+            TimeMeterMock clock = new TimeMeterMock()
+            BucketConfiguration configuration = BucketConfiguration.builder()
+                .addLimit({it.capacity(10).refillGreedy(10, Duration.ofSeconds(1))})
+                .build()
+        when:
+            Bucket bucket = type.createBucket(configuration, clock);
+        then:
+            bucket.asVerbose().getAvailableTokens().getValue() == 10
+        where:
+            type << BucketType.values()
+    }
+
 
     @Unroll
     def "calculateFullRefillingTime specification #testNumber"(String testNumber, long requiredTime,

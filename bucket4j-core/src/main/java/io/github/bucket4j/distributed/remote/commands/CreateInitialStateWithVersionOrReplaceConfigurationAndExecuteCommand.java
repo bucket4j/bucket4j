@@ -121,29 +121,21 @@ public class CreateInitialStateWithVersionOrReplaceConfigurationAndExecuteComman
 
     @Override
     public CommandResult<T> execute(MutableBucketEntry mutableEntry, long currentTimeNanos) {
-        BucketEntryWrapper entryWrapper;
         if (mutableEntry.exists()) {
             RemoteBucketState state = mutableEntry.get();
-            entryWrapper = new BucketEntryWrapper(state);
             Long actualConfigurationVersion = state.getConfigurationVersion();
             if (actualConfigurationVersion == null || actualConfigurationVersion < desiredConfigurationVersion) {
                 ReplaceConfigurationCommand replaceConfigurationCommand = new ReplaceConfigurationCommand(configuration, tokensInheritanceStrategy);
-                replaceConfigurationCommand.execute(entryWrapper, currentTimeNanos);
+                replaceConfigurationCommand.execute(mutableEntry, currentTimeNanos);
                 state.setConfigurationVersion(desiredConfigurationVersion);
             }
         } else {
             BucketState bucketState = BucketState.createInitialState(configuration, MathType.INTEGER_64_BITS, currentTimeNanos);
             RemoteBucketState state = new RemoteBucketState(bucketState, new RemoteStat(0), desiredConfigurationVersion);
-            entryWrapper = new BucketEntryWrapper(state);
-            entryWrapper.setStateModified(true);
+            mutableEntry.set(state);
         }
 
-        CommandResult<T> result = targetCommand.execute(entryWrapper, currentTimeNanos);
-        if (entryWrapper.isStateModified()) {
-            mutableEntry.set(entryWrapper.get());
-        }
-        mutableEntry.set(entryWrapper.get());
-        return result;
+        return targetCommand.execute(mutableEntry, currentTimeNanos);
     }
 
     public BucketConfiguration getConfiguration() {

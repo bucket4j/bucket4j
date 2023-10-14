@@ -96,25 +96,9 @@ public class CaffeineProxyManager<K> extends AbstractProxyManager<K> {
         cache.asMap().compute(key, (K k, RemoteBucketState previousState) -> {
             Long clientSideTime = request.getClientSideTime();
             long timeNanos = clientSideTime != null ? clientSideTime : System.currentTimeMillis() * 1_000_000;
-            RemoteBucketState[] stateHolder = new RemoteBucketState[] {
-                previousState == null ? null : previousState.copy()
-            };
-            MutableBucketEntry entry = new MutableBucketEntry() {
-                @Override
-                public boolean exists() {
-                    return stateHolder[0] != null;
-                }
-                @Override
-                public void set(RemoteBucketState state) {
-                    stateHolder[0] = state;
-                }
-                @Override
-                public RemoteBucketState get() {
-                    return stateHolder[0];
-                }
-            };
-            resultHolder[0] = request.getCommand().execute(entry, timeNanos);
-            return stateHolder[0];
+            MutableBucketEntry entryWrapper = new MutableBucketEntry(previousState == null ? null : previousState.copy());
+            resultHolder[0] = request.getCommand().execute(entryWrapper, timeNanos);
+            return entryWrapper.exists() ? entryWrapper.get() : null;
         });
 
         return resultHolder[0];

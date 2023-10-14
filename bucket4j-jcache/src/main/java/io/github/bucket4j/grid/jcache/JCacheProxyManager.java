@@ -173,8 +173,8 @@ public class JCacheProxyManager<K> extends AbstractProxyManager<K> {
 
         private final MutableEntry<?, byte[]> targetEntry;
 
-        private JCacheTransaction(MutableEntry<?, byte[]> targetEntry, byte[] requestBustes) {
-            super(requestBustes);
+        private JCacheTransaction(MutableEntry<?, byte[]> targetEntry, byte[] requestBytes) {
+            super(requestBytes);
             this.targetEntry = targetEntry;
         }
 

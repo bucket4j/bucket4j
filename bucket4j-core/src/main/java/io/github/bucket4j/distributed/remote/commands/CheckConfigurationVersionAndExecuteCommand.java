@@ -64,12 +64,7 @@ public class CheckConfigurationVersionAndExecuteCommand<T> implements RemoteComm
             return CommandResult.configurationNeedToBeReplaced();
         }
 
-        BucketEntryWrapper entryWrapper = new BucketEntryWrapper(state);
-        CommandResult<T> result = targetCommand.execute(entryWrapper, currentTimeNanos);
-        if (entryWrapper.isStateModified()) {
-            mutableEntry.set(entryWrapper.get());
-        }
-        return result;
+        return targetCommand.execute(mutableEntry, currentTimeNanos);
     }
 
     @Override

@@ -51,15 +51,8 @@ public class VerboseCommand<T> implements RemoteCommand<RemoteVerboseResult<T>>,
         if (!mutableEntry.exists()) {
             return CommandResult.bucketNotFound();
         }
-
-        RemoteBucketState state = mutableEntry.get();
-        BucketEntryWrapper entryWrapper = new BucketEntryWrapper(state);
-        CommandResult<T> result = targetCommand.execute(entryWrapper, currentTimeNanos);
-        if (entryWrapper.isStateModified()) {
-            mutableEntry.set(entryWrapper.get());
-        }
-
-        RemoteVerboseResult<T> verboseResult = new RemoteVerboseResult<>(currentTimeNanos, result.getResultTypeId(), result.getData(), entryWrapper.get());
+        CommandResult<T> result = targetCommand.execute(mutableEntry, currentTimeNanos);
+        RemoteVerboseResult<T> verboseResult = new RemoteVerboseResult<>(currentTimeNanos, result.getResultTypeId(), result.getData(), mutableEntry.get());
         return CommandResult.success(verboseResult, RemoteVerboseResult.SERIALIZATION_HANDLE);
     }
 

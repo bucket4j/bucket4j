@@ -20,12 +20,48 @@
 
 package io.github.bucket4j.distributed.remote;
 
-public interface MutableBucketEntry {
+import java.util.Objects;
 
-    boolean exists();
+import io.github.bucket4j.distributed.versioning.Version;
 
-    void set(RemoteBucketState state);
+import static io.github.bucket4j.distributed.serialization.InternalSerializationHelper.deserializeState;
+import static io.github.bucket4j.distributed.serialization.InternalSerializationHelper.serializeState;
 
-    RemoteBucketState get();
+public class MutableBucketEntry {
+
+    private RemoteBucketState state;
+    private boolean stateModified;
+
+    public MutableBucketEntry(RemoteBucketState state) {
+        this.state = state;
+    }
+
+    public MutableBucketEntry(byte[] originalStateBytes) {
+        this.state = originalStateBytes == null? null : deserializeState(originalStateBytes);
+    }
+
+    public boolean exists() {
+        return state != null;
+    }
+
+    public boolean isStateModified() {
+        return stateModified;
+    }
+
+    public void set(RemoteBucketState state) {
+        this.state = Objects.requireNonNull(state);
+        this.stateModified = true;
+    }
+
+    public RemoteBucketState get() {
+        if (state == null) {
+            throw new IllegalStateException("'exists' must be called before 'get'");
+        }
+        return state;
+    }
+
+    public byte[] getStateBytes(Version backwardCompatibilityVersion) {
+        return serializeState(get(), backwardCompatibilityVersion);
+    }
 
 }

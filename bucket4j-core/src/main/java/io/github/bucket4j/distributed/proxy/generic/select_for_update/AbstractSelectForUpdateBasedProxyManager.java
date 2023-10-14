@@ -24,12 +24,14 @@ import io.github.bucket4j.BucketExceptions;
 import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.proxy.AbstractProxyManager;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
-import io.github.bucket4j.distributed.proxy.generic.GenericEntry;
 import io.github.bucket4j.distributed.remote.CommandResult;
+import io.github.bucket4j.distributed.remote.MutableBucketEntry;
+import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.remote.Request;
 
 import java.util.concurrent.CompletableFuture;
+
 
 /**
  * The base class for proxy managers that built on top of idea that underlining storage provide Compare-And-Swap functionality.
@@ -116,11 +118,12 @@ public abstract class AbstractSelectForUpdateBasedProxyManager<K> extends Abstra
         }
 
         try {
-            GenericEntry entry = new GenericEntry(persistedDataOnBeginOfTransaction, request.getBackwardCompatibilityVersion());
+            MutableBucketEntry entry = new MutableBucketEntry(persistedDataOnBeginOfTransaction);
             CommandResult<T> result = command.execute(entry, super.getClientSideTime());
-            if (entry.isModified()) {
-                byte[] bytes = entry.getModifiedStateBytes();
-                transaction.update(bytes, entry.getModifiedState());
+            if (entry.isStateModified()) {
+                RemoteBucketState modifiedState = entry.get();
+                byte[] bytes = entry.getStateBytes(request.getBackwardCompatibilityVersion());
+                transaction.update(bytes, modifiedState);
             }
             transaction.commit();
             return result;

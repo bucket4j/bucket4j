@@ -108,17 +108,12 @@ public class CreateInitialStateAndExecuteCommand<T> implements RemoteCommand<T>,
     @Override
     public CommandResult<T> execute(MutableBucketEntry mutableEntry, long currentTimeNanos) {
         RemoteBucketState state;
-        if (mutableEntry.exists()) {
-            state = mutableEntry.get();
-        } else {
+        if (!mutableEntry.exists()) {
             BucketState bucketState = BucketState.createInitialState(configuration, MathType.INTEGER_64_BITS, currentTimeNanos);
             state = new RemoteBucketState(bucketState, new RemoteStat(0), null);
+            mutableEntry.set(state);
         }
-
-        BucketEntryWrapper entryWrapper = new BucketEntryWrapper(state);
-        CommandResult<T> result = targetCommand.execute(entryWrapper, currentTimeNanos);
-        mutableEntry.set(entryWrapper.get());
-        return result;
+        return targetCommand.execute(mutableEntry, currentTimeNanos);
     }
 
     public BucketConfiguration getConfiguration() {
@@ -163,30 +158,6 @@ public class CreateInitialStateAndExecuteCommand<T> implements RemoteCommand<T>,
     @Override
     public Version getRequiredVersion() {
         return Versions.max(v_7_0_0, targetCommand.getRequiredVersion());
-    }
-
-    private static class BucketEntryWrapper implements MutableBucketEntry {
-
-        private RemoteBucketState state;
-
-        public BucketEntryWrapper(RemoteBucketState state) {
-            this.state = state;
-        }
-
-        @Override
-        public boolean exists() {
-            return true;
-        }
-
-        @Override
-        public void set(RemoteBucketState state) {
-            this.state = state;
-        }
-
-        @Override
-        public RemoteBucketState get() {
-            return state;
-        }
     }
 
 }

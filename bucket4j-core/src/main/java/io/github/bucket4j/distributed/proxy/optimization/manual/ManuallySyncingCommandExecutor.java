@@ -143,7 +143,7 @@ class ManuallySyncingCommandExecutor implements CommandExecutor, AsyncCommandExe
         }
 
         // execute local command
-        BucketEntryWrapper entry = new BucketEntryWrapper(state.copy());
+        MutableBucketEntry entry = new MutableBucketEntry(state.copy());
         CommandResult<T> result = command.execute(entry, currentTimeNanos);
         long locallyConsumedTokens = command.getConsumedTokens(result.getData());
         if (locallyConsumedTokens == Long.MAX_VALUE) {
