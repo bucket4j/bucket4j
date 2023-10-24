@@ -47,16 +47,6 @@ public class ConsumeMostlySuccess {
     }
 
     @Benchmark
-    public void consumeOneToken_mostlySuccess_LockFree_ieee754(LocalLockFreeState_ieee754 state) {
-        state._10_milion_rps_Bucket.asBlocking().tryConsumeUninterruptibly(1, TimeUnit.MILLISECONDS.toNanos(1), UninterruptibleBlockingStrategy.PARKING);
-    }
-
-    @Benchmark
-    public void consumeOneToken_mostlySuccess_Synchronized_ieee754(LocalSynchronizedState_ieee754 state) {
-        state._10_milion_rps_Bucket.asBlocking().tryConsumeUninterruptibly(1, TimeUnit.MILLISECONDS.toNanos(1), UninterruptibleBlockingStrategy.PARKING);
-    }
-
-    @Benchmark
     public void consumeOneToken_mostlySuccess_GuavaLimiter(GuavaLimiterState state) {
         state._10_milion_rps_RateLimiter.acquire();
     }

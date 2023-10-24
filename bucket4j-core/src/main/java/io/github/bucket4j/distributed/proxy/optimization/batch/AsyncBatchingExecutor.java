@@ -38,7 +38,7 @@ public class AsyncBatchingExecutor implements AsyncCommandExecutor {
     private final AsyncCommandExecutor wrappedExecutor;
     private final OptimizationListener listener;
 
-    private final Function<List<RemoteCommand<?>>, MultiCommand> taskCombiner = new Function<List<RemoteCommand<?>>, MultiCommand>() {
+    private final Function<List<RemoteCommand<?>>, MultiCommand> taskCombiner = new Function<>() {
         @Override
         public MultiCommand apply(List<RemoteCommand<?>> commands) {
             listener.incrementMergeCount(commands.size() - 1);
@@ -46,14 +46,14 @@ public class AsyncBatchingExecutor implements AsyncCommandExecutor {
         }
     };
 
-    private final Function<MultiCommand, CompletableFuture<CommandResult<MultiResult>>> combinedTaskExecutor = new Function<MultiCommand, CompletableFuture<CommandResult<MultiResult>>>() {
+    private final Function<MultiCommand, CompletableFuture<CommandResult<MultiResult>>> combinedTaskExecutor = new Function<>() {
         @Override
         public CompletableFuture<CommandResult<MultiResult>> apply(MultiCommand multiCommand) {
             return wrappedExecutor.executeAsync(multiCommand);
         }
     };
 
-    private final Function<RemoteCommand<?>, CompletableFuture<CommandResult<?>>> taskExecutor = new Function<RemoteCommand<?>, CompletableFuture<CommandResult<?>>>() {
+    private final Function<RemoteCommand<?>, CompletableFuture<CommandResult<?>>> taskExecutor = new Function<>() {
         @Override
         public CompletableFuture<CommandResult<?>> apply(RemoteCommand<?> remoteCommand) {
             CompletableFuture<? extends CommandResult<?>> future = wrappedExecutor.executeAsync(remoteCommand);
@@ -61,7 +61,7 @@ public class AsyncBatchingExecutor implements AsyncCommandExecutor {
         }
     };
 
-    private final Function<CommandResult<MultiResult>, List<CommandResult<?>>> combinedResultSplitter = new Function<CommandResult<MultiResult>, List<CommandResult<?>>>() {
+    private final Function<CommandResult<MultiResult>, List<CommandResult<?>>> combinedResultSplitter = new Function<>() {
         @Override
         public List<CommandResult<?>> apply(CommandResult<MultiResult> multiResult) {
             return multiResult.getData().getResults();

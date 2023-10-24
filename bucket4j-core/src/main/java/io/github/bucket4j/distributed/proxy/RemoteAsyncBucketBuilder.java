@@ -93,6 +93,7 @@ public interface RemoteAsyncBucketBuilder<K> {
      * @param configuration limits configuration
      *
      * @return new instance of {@link AsyncBucketProxy} created in lazy mode.
+     * @deprecated use {@link #build(Object, Supplier)} instead. This method will be removed soon
      */
     AsyncBucketProxy build(K key, BucketConfiguration configuration);
 

@@ -108,7 +108,9 @@ public interface RemoteBucketBuilder<K> {
      * @param configuration limits configuration
      *
      * @return new instance of {@link BucketProxy} created in lazy mode.
+     * @deprecated use {@link #build(Object, Supplier)} instead. This method will be removed soon
      */
+    @Deprecated
     BucketProxy build(K key, BucketConfiguration configuration);
 
 

@@ -47,16 +47,6 @@ public class TryConsumeMostlySuccess {
     }
 
     @Benchmark
-    public boolean tryConsumeOneToken_mostlySuccess_LockFree_ieee754(LocalLockFreeState_ieee754 state) {
-        return state.unlimitedBucket.tryConsume(1);
-    }
-
-    @Benchmark
-    public boolean tryConsumeOneToken_mostlySuccess_Synchronized_ieee754(LocalSynchronizedState_ieee754 state) {
-        return state.unlimitedBucket.tryConsume(1);
-    }
-
-    @Benchmark
     public boolean tryConsumeOneToken_mostlySuccess_GuavaLimiter(GuavaLimiterState state) {
         return state.guavaRateLimiter.tryAcquire();
     }
