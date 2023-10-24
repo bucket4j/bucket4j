@@ -64,7 +64,6 @@ public interface BucketState {
     static BucketState createInitialState(BucketConfiguration configuration, MathType mathType, long currentTimeNanos) {
         switch (mathType) {
             case INTEGER_64_BITS: return new BucketState64BitsInteger(configuration, currentTimeNanos);
-            case IEEE_754: return new BucketStateIEEE754(configuration, currentTimeNanos);
             default: throw new IllegalStateException("Unsupported mathType:" + mathType);
         }
     }
@@ -73,8 +72,6 @@ public interface BucketState {
         int typeId = adapter.readInt(input);
         if (typeId == BucketState64BitsInteger.SERIALIZATION_HANDLE.getTypeId()) {
             return BucketState64BitsInteger.SERIALIZATION_HANDLE.deserialize(adapter, input);
-        } else if (typeId == BucketStateIEEE754.SERIALIZATION_HANDLE.getTypeId()) {
-            return BucketStateIEEE754.SERIALIZATION_HANDLE.deserialize(adapter, input);
         } else {
             throw new IOException("Unknown typeId=" + typeId);
         }
@@ -86,10 +83,6 @@ public interface BucketState {
                 adapter.writeInt(output, BucketState64BitsInteger.SERIALIZATION_HANDLE.getTypeId());
                 BucketState64BitsInteger.SERIALIZATION_HANDLE.serialize(adapter, output, (BucketState64BitsInteger) state, backwardCompatibilityVersion, scope);
                 break;
-            case IEEE_754:
-                adapter.writeInt(output, BucketStateIEEE754.SERIALIZATION_HANDLE.getTypeId());
-                BucketStateIEEE754.SERIALIZATION_HANDLE.serialize(adapter, output, (BucketStateIEEE754) state, backwardCompatibilityVersion, scope);
-                break;
             default:
                 throw new IOException("Unknown mathType=" + state.getMathType());
         }
@@ -99,8 +92,6 @@ public interface BucketState {
         String type = (String) snapshot.get("type");
         if (BucketState64BitsInteger.SERIALIZATION_HANDLE.getTypeName().equals(type)) {
             return BucketState64BitsInteger.SERIALIZATION_HANDLE.fromJsonCompatibleSnapshot(snapshot);
-        } else if (BucketStateIEEE754.SERIALIZATION_HANDLE.getTypeName().equals(type)) {
-            return BucketStateIEEE754.SERIALIZATION_HANDLE.fromJsonCompatibleSnapshot(snapshot);
         } else {
             throw new IOException("Unknown typeName=" + type);
         }
@@ -111,11 +102,6 @@ public interface BucketState {
             case INTEGER_64_BITS: {
                 Map<String, Object> result = BucketState64BitsInteger.SERIALIZATION_HANDLE.toJsonCompatibleSnapshot((BucketState64BitsInteger) state, backwardCompatibilityVersion, scope);
                 result.put("type", BucketState64BitsInteger.SERIALIZATION_HANDLE.getTypeName());
-                return result;
-            }
-            case IEEE_754: {
-                Map<String, Object> result = BucketStateIEEE754.SERIALIZATION_HANDLE.toJsonCompatibleSnapshot((BucketStateIEEE754) state, backwardCompatibilityVersion, scope);
-                result.put("type", BucketStateIEEE754.SERIALIZATION_HANDLE.getTypeName());
                 return result;
             }
             default:

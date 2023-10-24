@@ -36,7 +36,7 @@ public class SerializationHandles {
             Bandwidth.SERIALIZATION_HANDLE, // 1
             BucketConfiguration.SERIALIZATION_HANDLE, // 2
             BucketState64BitsInteger.SERIALIZATION_HANDLE, // 3
-            BucketStateIEEE754.SERIALIZATION_HANDLE, // 4
+//            BucketStateIEEE754.SERIALIZATION_HANDLE, // 4
             RemoteBucketState.SERIALIZATION_HANDLE, // 5
             RemoteStat.SERIALIZATION_HANDLE, // 6
 

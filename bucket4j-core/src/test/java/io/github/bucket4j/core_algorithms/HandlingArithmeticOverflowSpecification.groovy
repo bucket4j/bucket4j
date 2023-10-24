@@ -41,7 +41,6 @@ class HandlingArithmeticOverflowSpecification extends Specification {
                 .addLimit(limit2)
                 .addLimit(limit3)
                 .withCustomTimePrecision(customTimeMeter)
-				.withMath(MathType.IEEE_754)
                 .build()
         when:
             // shift time to 12 hours forward
@@ -61,7 +60,6 @@ class HandlingArithmeticOverflowSpecification extends Specification {
             Bucket bucket = Bucket.builder()
                 .addLimit(limit)
                 .withCustomTimePrecision(customTimeMeter)
-				.withMath(MathType.IEEE_754)
                 .build()
         when:
             bucket.addTokens(Long.MAX_VALUE - 1)
@@ -78,7 +76,6 @@ class HandlingArithmeticOverflowSpecification extends Specification {
             Bucket bucket = Bucket.builder()
                 .addLimit(limit)
                 .withCustomTimePrecision(meter)
-				.withMath(MathType.IEEE_754)
                 .build()
         when:
             // emulate time shift which equal of 3 refill periods
@@ -97,7 +94,6 @@ class HandlingArithmeticOverflowSpecification extends Specification {
             Bucket bucket = Bucket.builder()
                 .addLimit(limit)
                 .withCustomTimePrecision(meter)
-				.withMath(MathType.IEEE_754)
                 .build()
         when:
             // add time shift enough to overflow
@@ -109,22 +105,24 @@ class HandlingArithmeticOverflowSpecification extends Specification {
 
     def "Should down to floating point arithmetic if necessary during refill"() {
         setup:
+            long capacity = (Long.MAX_VALUE / 16L).longValue()
+            Duration refillPeriod = Duration.ofNanos((Long.MAX_VALUE / 8L).longValue())
             Bandwidth limit = Bandwidth
-                    .simple((long) (Long.MAX_VALUE / 16), Duration.ofNanos((long) (Long.MAX_VALUE / 8)))
-                    .withInitialTokens(0)
+                .builder().capacity(capacity)
+                .refillGreedy(capacity, refillPeriod)
+                .build()
             TimeMeterMock meter = new TimeMeterMock(0)
             Bucket bucket = Bucket.builder()
                 .addLimit(limit)
                 .withCustomTimePrecision(meter)
-				.withMath(MathType.IEEE_754)
                 .build()
         when:
             // emulate time shift which little bit less then one refill period
-            meter.addTime((long) (Long.MAX_VALUE / 16 - 1))
+            meter.addTime(refillPeriod.toNanos() - 1)
         then:
             // should down into floating point arithmetic and successfully refill
-			bucket.tryConsume((long) (Long.MAX_VALUE / 32))
-			bucket.getAvailableTokens() == 0
+			bucket.tryConsume((capacity / 2).longValue())
+			bucket.getAvailableTokens() == (capacity / 2L).longValue() + 1
     }
 
     def "Should check ArithmeticOverflow when refilling by uncompleted periods"() {
@@ -136,7 +134,6 @@ class HandlingArithmeticOverflowSpecification extends Specification {
             Bucket bucket = Bucket.builder()
                 .addLimit(limit)
                 .withCustomTimePrecision(meter)
-				.withMath(MathType.IEEE_754)
                 .build()
         when:
             // add time shift enough to overflow
@@ -155,7 +152,6 @@ class HandlingArithmeticOverflowSpecification extends Specification {
             Bucket bucket = Bucket.builder()
                 .addLimit(limit)
                 .withCustomTimePrecision(meter)
-				.withMath(MathType.IEEE_754)
                 .build()
 			BucketState state = bucket.asVerbose().getAvailableTokens().getState()
 
@@ -172,22 +168,23 @@ class HandlingArithmeticOverflowSpecification extends Specification {
 
     def "Should detect overflow during deficit calculation for interval refill"() {
         setup:
-            long bandwidthPeriodNanos = (long) Long.MAX_VALUE / 2
-            Refill refill = Refill.intervally((long) (Long.MAX_VALUE / 4), Duration.ofNanos(bandwidthPeriodNanos))
-            Bandwidth limit = Bandwidth
-                    .classic((long) (Long.MAX_VALUE / 2), refill)
-                    .withInitialTokens(0)
+            long refillPeriodNanos = (Long.MAX_VALUE / 2).longValue()
+            long capacity = (Long.MAX_VALUE / 2).longValue()
+            long refillTokens = (Long.MAX_VALUE / 4).longValue()
+            Bandwidth limit = Bandwidth.builder()
+                    .capacity(capacity)
+                    .refillIntervally(refillTokens, Duration.ofNanos(refillPeriodNanos))
+                    .initialTokens(0)
+                    .build()
             TimeMeterMock meter = new TimeMeterMock(0)
             Bucket bucket = Bucket.builder()
                     .addLimit(limit)
                     .withCustomTimePrecision(meter)
-					.withMath(MathType.IEEE_754)
                     .build()
 			BucketState state = bucket.asVerbose().getAvailableTokens().getState()
-            Bandwidth[] limits = bucket.configuration.bandwidths
 
         expect:
-            state.calculateDelayNanosAfterWillBePossibleToConsume(10, meter.currentTimeNanos(), false) == 4611686018427387904
+            state.calculateDelayNanosAfterWillBePossibleToConsume(10, meter.currentTimeNanos(), false) == 4611686018427387903
 
         when:
             state.consume(1)
@@ -199,7 +196,7 @@ class HandlingArithmeticOverflowSpecification extends Specification {
 
         when:
             state.addTokens(1)
-            meter.addTime(bandwidthPeriodNanos - 10)
+            meter.addTime(refillPeriodNanos - 10)
         then:
             state.getAvailableTokens() == 0
             state.calculateDelayNanosAfterWillBePossibleToConsume(Long.MAX_VALUE - 10, meter.currentTimeNanos(), false) == Long.MAX_VALUE

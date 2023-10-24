@@ -28,14 +28,4 @@ public enum MathType {
      */
     INTEGER_64_BITS,
 
-    /**
-     * Experimental math precision that uses IEEE-754 arithmetic.
-     *
-     * <p>
-     * <b>Warning: </b> you should not use this precision in production, because intention of this precision is the testing purpose for backends written in Lua or JS,
-     * in other words for testing backends that do not provide 64-bit integer arithmetic.
-     */
-    @Experimental
-    IEEE_754;
-
 }
