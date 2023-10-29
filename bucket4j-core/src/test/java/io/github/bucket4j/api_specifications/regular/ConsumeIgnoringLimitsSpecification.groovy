@@ -15,6 +15,7 @@ import java.time.Duration
 import java.util.concurrent.ExecutionException
 
 import static io.github.bucket4j.util.PackageAccessor.getState
+import static org.junit.jupiter.api.Assertions.assertFalse
 import static org.junit.jupiter.api.Assertions.assertNotSame
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -139,6 +140,50 @@ class ConsumeIgnoringLimitsSpecification extends Specification {
                 }
             }
         }
+    }
+
+    @Unroll
+    // https://github.com/bucket4j/bucket4j/issues/417
+    def "#type test consumption when amount of tokens became negative after consumeIgnoringRateLimits"(BucketType type) {
+        expect:
+            TimeMeterMock timeMeter = new TimeMeterMock(0)
+            BucketConfiguration configuration = BucketConfiguration.builder()
+                .addLimit({it.capacity(10).refillGreedy(5, Duration.ofSeconds(1))})
+                .build()
+            for (boolean sync : [true, false]) {
+                for (boolean verbose : [false, true]) {
+                    // println("type=$type sync=$sync verbose=$verbose")
+                    if (sync) {
+                        Bucket bucket = type.createBucket(configuration, timeMeter)
+                        if (!verbose) {
+                            bucket.consumeIgnoringRateLimits(15)
+                            assert !bucket.tryConsume(1)
+                            assert bucket.tryConsumeAsMuchAsPossible() == 0
+                            assert bucket.tryConsumeAsMuchAsPossible(2) == 0
+                        } else {
+                            bucket.asVerbose().consumeIgnoringRateLimits(15)
+                            assert !bucket.asVerbose().tryConsume(1).value
+                            assert bucket.asVerbose().tryConsumeAsMuchAsPossible().value == 0
+                            assert bucket.asVerbose().tryConsumeAsMuchAsPossible(2).value == 0
+                        }
+                    } else {
+                        AsyncBucketProxy bucket = type.createAsyncBucket(configuration, timeMeter)
+                        if (!verbose) {
+                            bucket.consumeIgnoringRateLimits(15).get()
+                            assert !bucket.tryConsume(1).get()
+                            assert bucket.tryConsumeAsMuchAsPossible().get() == 0
+                            assert bucket.tryConsumeAsMuchAsPossible(2).get() == 0
+                        } else {
+                            bucket.asVerbose().consumeIgnoringRateLimits(15).get()
+                            assert !bucket.asVerbose().tryConsume(1).get().value
+                            assert bucket.asVerbose().tryConsumeAsMuchAsPossible().get().value == 0
+                            assert bucket.asVerbose().tryConsumeAsMuchAsPossible(2).get().value == 0
+                        }
+                    }
+                }
+            }
+        where:
+            type << BucketType.values()
     }
 
 }

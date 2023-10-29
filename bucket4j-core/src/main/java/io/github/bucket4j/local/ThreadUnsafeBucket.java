@@ -69,7 +69,7 @@ public class ThreadUnsafeBucket extends AbstractBucket implements LocalBucket, C
         state.refillAllBandwidth(currentTimeNanos);
         long availableToConsume = state.getAvailableTokens();
         long toConsume = Math.min(limit, availableToConsume);
-        if (toConsume == 0) {
+        if (toConsume <= 0) {
             return 0;
         }
         state.consume(toConsume);
@@ -149,7 +149,7 @@ public class ThreadUnsafeBucket extends AbstractBucket implements LocalBucket, C
         state.refillAllBandwidth(currentTimeNanos);
         long availableToConsume = state.getAvailableTokens();
         long toConsume = Math.min(limit, availableToConsume);
-        if (toConsume == 0) {
+        if (toConsume <= 0) {
             return new VerboseResult<>(currentTimeNanos, 0L, state.copy());
         }
         state.consume(toConsume);

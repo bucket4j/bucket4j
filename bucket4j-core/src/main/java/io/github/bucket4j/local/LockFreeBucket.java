@@ -68,7 +68,7 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket, Compa
             newState.refillAllBandwidth(currentTimeNanos);
             long availableToConsume = newState.getAvailableTokens();
             long toConsume = Math.min(limit, availableToConsume);
-            if (toConsume == 0) {
+            if (toConsume <= 0) {
                 return 0;
             }
             newState.consume(toConsume);
@@ -282,7 +282,7 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket, Compa
             newState.refillAllBandwidth(currentTimeNanos);
             long availableToConsume = newState.getAvailableTokens();
             long toConsume = Math.min(limit, availableToConsume);
-            if (toConsume == 0) {
+            if (toConsume <= 0) {
                 return new VerboseResult<>(currentTimeNanos, 0L, newState);
             }
             newState.consume(toConsume);
