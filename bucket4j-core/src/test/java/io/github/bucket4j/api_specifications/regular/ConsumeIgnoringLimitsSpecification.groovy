@@ -160,11 +160,15 @@ class ConsumeIgnoringLimitsSpecification extends Specification {
                             assert !bucket.tryConsume(1)
                             assert bucket.tryConsumeAsMuchAsPossible() == 0
                             assert bucket.tryConsumeAsMuchAsPossible(2) == 0
+                            assert !bucket.estimateAbilityToConsume(2).canBeConsumed()
+                            assert !bucket.tryConsumeAndReturnRemaining(2).isConsumed()
                         } else {
                             bucket.asVerbose().consumeIgnoringRateLimits(15)
                             assert !bucket.asVerbose().tryConsume(1).value
                             assert bucket.asVerbose().tryConsumeAsMuchAsPossible().value == 0
                             assert bucket.asVerbose().tryConsumeAsMuchAsPossible(2).value == 0
+                            assert !bucket.asVerbose().estimateAbilityToConsume(2).value.canBeConsumed()
+                            assert !bucket.asVerbose().tryConsumeAndReturnRemaining(2).value.isConsumed()
                         }
                     } else {
                         AsyncBucketProxy bucket = type.createAsyncBucket(configuration, timeMeter)
@@ -173,11 +177,15 @@ class ConsumeIgnoringLimitsSpecification extends Specification {
                             assert !bucket.tryConsume(1).get()
                             assert bucket.tryConsumeAsMuchAsPossible().get() == 0
                             assert bucket.tryConsumeAsMuchAsPossible(2).get() == 0
+                            assert !bucket.estimateAbilityToConsume(2).get().canBeConsumed()
+                            assert !bucket.tryConsumeAndReturnRemaining(2).get().isConsumed()
                         } else {
                             bucket.asVerbose().consumeIgnoringRateLimits(15).get()
                             assert !bucket.asVerbose().tryConsume(1).get().value
                             assert bucket.asVerbose().tryConsumeAsMuchAsPossible().get().value == 0
                             assert bucket.asVerbose().tryConsumeAsMuchAsPossible(2).get().value == 0
+                            assert !bucket.asVerbose().estimateAbilityToConsume(2).get().value.canBeConsumed()
+                            assert !bucket.asVerbose().tryConsumeAndReturnRemaining(2).get().value.isConsumed()
                         }
                     }
                 }
