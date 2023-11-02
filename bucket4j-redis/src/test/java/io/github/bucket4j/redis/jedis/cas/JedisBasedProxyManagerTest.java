@@ -54,7 +54,7 @@ public class JedisBasedProxyManagerTest extends AbstractDistributedBucketTest<by
     @Override
     protected ProxyManager<byte[]> getProxyManager() {
         return JedisBasedProxyManager.builderFor(jedisPool)
-                .withExpirationStrategy(ExpirationAfterWriteStrategy.none())
+                .withExpirationStrategy(ExpirationAfterWriteStrategy.basedOnTimeForRefillingBucketUpToMax(Duration.ofSeconds(10)))
                 .build();
     }
 
@@ -67,16 +67,23 @@ public class JedisBasedProxyManagerTest extends AbstractDistributedBucketTest<by
     public void testConfigurationReplacement() throws InterruptedException {
         ProxyManager<byte[]> jedisBasedProxyManager = getProxyManager();
         for (TokensInheritanceStrategy strategy : TokensInheritanceStrategy.values()) {
+            BucketConfiguration[] configurationRef = new BucketConfiguration[] {
+                BucketConfiguration.builder()
+                    .addLimit(limit -> limit.capacity(5).refillGreedy(5, Duration.ofMinutes(1)))
+                    .build()
+            };
+
             System.out.println("=========================");
             System.out.println("Setting bandwith to 5/min");
             // Bucket bucket = Bucket.builder().addLimit(limit -> limit.capacity(5).refillGreedy(5, Duration.ofMinutes(1))).build();
-            Bucket bucket = jedisBasedProxyManager.builder().build(strategy.name().getBytes(), () -> BucketConfiguration.builder()
-                .addLimit(limit -> limit.capacity(5).refillGreedy(5, Duration.ofMinutes(1))).build());
+            Bucket bucket = jedisBasedProxyManager.builder().build(strategy.name().getBytes(), () -> configurationRef[0]);
             Assertions.assertTrue(bucket.tryConsume(5));
             Assertions.assertFalse(bucket.tryConsume(1));
             System.out.println("Update configuration to 10/min using strategy " + strategy);
             BucketConfiguration newConfig = BucketConfiguration.builder()
                 .addLimit(limit -> limit.capacity(10).refillGreedy(10, Duration.ofMinutes(1))).build();
+            configurationRef[0] = newConfig;
+
             bucket.replaceConfiguration(newConfig, strategy);
             System.out.println("Sleeping 60+ seconds in order to refill all tokens");
             Thread.sleep(61000);
