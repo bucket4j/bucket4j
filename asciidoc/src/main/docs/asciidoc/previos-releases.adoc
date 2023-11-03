@@ -1,5 +1,7 @@
 == Documentation for previous versions
 === 2023
+==== 8.5.0
+Release date: `2 Oct 2023`
 
 ==== 8.4.0
 Release date: `14 Sep 2023`
