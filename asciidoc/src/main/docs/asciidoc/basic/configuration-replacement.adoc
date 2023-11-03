@@ -100,7 +100,7 @@ Instructs to copy available tokens as is, but with one exclusion: if new bandwid
 +
 At the moment of configuration replacement, it was 40 available tokens. +
 +
-After replacing this bandwidth by following `Bandwidth.builder().capacity(100).refillGreedy(200, ofMinutes(1)).build()` 40 available tokens will be copied and added to the difference between old and new configurations, and after replacement, we will have 140 available tokens.
+After replacing this bandwidth by following `Bandwidth.builder().capacity(200).refillGreedy(200, ofMinutes(1)).build()` 40 available tokens will be copied and added to the difference between old and new configurations, and after replacement, we will have 140 available tokens.
 
 ** *Example 2:* imagine bandwidth that was created by `Bandwidth.builder().capacity(100).refillGreedy(10, ofMinutes(1)).build()`. +
 +

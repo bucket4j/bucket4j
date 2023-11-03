@@ -33,12 +33,12 @@ public enum TokensInheritanceStrategy {
      * <p>
      * Let's describe few examples.
      *
-     * <p> <b>Example 1:</b> imagine bandwidth that was created by {@code Bandwidth.classic(100, Refill.gready(10, Duration.ofMinutes(1)))}.
-     * At the moment of config replacement it was 40 available tokens. After replacing this bandwidth by following {@code Bandwidth.classic(200, Refill.gready(10, Duration.ofMinutes(1)))}
+     * <p> <b>Example 1:</b> imagine bandwidth that was created by {@code Bandwidth.builder().capacity(100).refillGreedy(10, ofMinutes(1)).build()}.
+     * At the moment of config replacement it was 40 available tokens. After replacing this bandwidth by following {@code Bandwidth.builder().capacity(200).refillGreedy(10, ofMinutes(1)).build()}
      * 40 available tokens will be multiplied by 2(200/100), and after replacement we will have 80 available tokens.
      *
-     * <p> <b>Example 2:</b> imagine bandwidth that was created by {@code Bandwidth.classic(100, Refill.gready(10, Duration.ofMinutes(1)))}.
-     * At the moment of config replacement it was 40 available tokens. After replacing this bandwidth by following {@code Bandwidth.classic(20, Refill.gready(10, Duration.ofMinutes(1)))}
+     * <p> <b>Example 2:</b> imagine bandwidth that was created by {@code Bandwidth.builder().capacity(100).refillGreedy(10, ofMinutes(1)).build()}.
+     * At the moment of config replacement it was 40 available tokens. After replacing this bandwidth by following {@code Bandwidth.builder().capacity(20).refillGreedy(10, ofMinutes(1)).build()}
      * 40 available tokens will be multiplied by 0.2(20/100), and after replacement we will have 8 available tokens.
      */
     PROPORTIONALLY((byte) 0),
@@ -50,12 +50,12 @@ public enum TokensInheritanceStrategy {
      * <p>
      * Let's describe few examples.
      *
-     * <p> <b>Example 1:</b> imagine bandwidth that was created by {@code Bandwidth.classic(100, Refill.gready(10, Duration.ofMinutes(1)))}.
-     * At the moment of config replacement it was 40 available tokens. After replacing this bandwidth by following {@code Bandwidth.classic(200, Refill.gready(10, Duration.ofMinutes(1)))}
+     * <p> <b>Example 1:</b> imagine bandwidth that was created by {@code Bandwidth.builder().capacity(100).refillGreedy(10, ofMinutes(1)).build()}.
+     * At the moment of config replacement it was 40 available tokens. After replacing this bandwidth by following {@code Bandwidth.builder().capacity(200).refillGreedy(10, ofMinutes(1)).build()}
      * 40 available tokens will be just copied, and after replacement we will have 40 available tokens.
      *
-     * <p> <b>Example 2:</b> imagine bandwidth that was created by {@code Bandwidth.classic(100, Refill.gready(10, Duration.ofMinutes(1)))}.
-     * At the moment of config replacement it was 40 available tokens. After replacing this bandwidth by following {@code Bandwidth.classic(20, Refill.gready(10, Duration.ofMinutes(1)))}
+     * <p> <b>Example 2:</b> imagine bandwidth that was created by {@code Bandwidth.builder().capacity(100).refillGreedy(10, ofMinutes(1)).build()}.
+     * At the moment of config replacement it was 40 available tokens. After replacing this bandwidth by following {@code Bandwidth.builder().capacity(20).refillGreedy(10, ofMinutes(1)).build()}
      * 40 available tokens can not be copied as is, because it is greater then new capacity, so available tokens will be reduced to 20.
      */
     AS_IS((byte) 1),
@@ -77,21 +77,21 @@ public enum TokensInheritanceStrategy {
      * Let's describe few examples.
      *
      * <p>
-     *     <b>Example 1:</b> imagine bandwidth that was created by {@code Bandwidth.classic(100, Refill.gready(10, Duration.ofMinutes(1)))}.
+     *     <b>Example 1:</b> imagine bandwidth that was created by {@code Bandwidth.builder().capacity(100).refillGreedy(10, ofMinutes(1)).build()}.
      *     At the moment of configuration replacement, it was 40 available tokens.
-     *     After replacing this bandwidth by following {@code Bandwidth.classic(200, Refill.gready(10, Duration.ofMinutes(1)))} 40 available tokens will be copied and added to the difference between old and new configuration,
+     *     After replacing this bandwidth by following {@code Bandwidth.builder().capacity(200).refillGreedy(200, ofMinutes(1)).build()} 40 available tokens will be copied and added to the difference between old and new configuration,
      *     and after replacement, we will have 140 available tokens.
      *
      * <p>
-     *     <b>Example 2:</b> imagine bandwidth that was created by {@code Bandwidth.classic(100, Refill.gready(10, Duration.ofMinutes(1)))}.
+     *     <b>Example 2:</b> imagine bandwidth that was created by {@code Bandwidth.builder().capacity(100).refillGreedy(10, ofMinutes(1)).build()}.
      *     At the moment of config replacement it was 40 available tokens.
-     *     After replacing this bandwidth by following {@code Bandwidth.classic(20, Refill.gready(10, Duration.ofMinutes(1))))},
+     *     After replacing this bandwidth by following {@code Bandwidth.builder().capacity(20).refillGreedy(10, ofMinutes(1)).build()},
      *     and after replacement we will have 20 available tokens.
      *
      * <p>
-     *     <b>Example 3:</b> imagine bandwidth that was created by {@code Bandwidth.classic(100, Refill.gready(10, Duration.ofMinutes(1)))}.
+     *     <b>Example 3:</b> imagine bandwidth that was created by {@code Bandwidth.builder().capacity(100).refillGreedy(10, ofMinutes(1)).build()}.
      *     At the moment of config replacement it was 10 available tokens.
-     *     After replacing this bandwidth by following {@code Bandwidth.classic(20, Refill.gready(10, Duration.ofMinutes(1))))},
+     *     After replacing this bandwidth by following {@code Bandwidth.builder().capacity(100).refillGreedy(20, ofMinutes(1)).build()},
      *     and after replacement we will have 10 available tokens.
      */
     ADDITIVE((byte) 3)
