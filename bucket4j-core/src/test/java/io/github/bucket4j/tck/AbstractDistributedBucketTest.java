@@ -18,11 +18,16 @@ import io.github.bucket4j.util.AsyncConsumptionScenario;
 import io.github.bucket4j.util.ConsumptionScenario;
 import org.junit.jupiter.api.Test;
 
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -472,4 +477,105 @@ public abstract class AbstractDistributedBucketTest<K> {
         assertTrue(mappedBucket2.tryConsume(5).get());
         assertFalse(unmappedBucket.tryConsume(1).get());
     }
+
+    @Test
+    public void test_1000_tokens_consumption() throws InterruptedException {
+        int threadCount = 8;
+        int opsCount = 1_000;
+        int capacity = 2_000;
+
+        BucketConfiguration configuration = BucketConfiguration.builder()
+            .addLimit(limit -> limit.capacity(capacity).refillIntervally(1, Duration.ofDays(1)))
+            .build();
+
+        CountDownLatch startLatch = new CountDownLatch(threadCount);
+        CountDownLatch stopLatch = new CountDownLatch(threadCount);
+        AtomicInteger opsCounter = new AtomicInteger(opsCount);
+        ConcurrentHashMap<Integer, Integer> updatesByThread = new ConcurrentHashMap<>();
+        ConcurrentHashMap<Integer, Throwable> errors = new ConcurrentHashMap<>();
+        for (int i = 0; i < threadCount; i++) {
+            Bucket bucket = proxyManager.builder().build(key, () -> configuration);
+            final int threadId = i;
+            new Thread(() -> {
+                try {
+                    startLatch.countDown();
+                    startLatch.await();
+                    while (opsCounter.decrementAndGet() >= 0) {
+                        Integer currenValue = null;
+                        if (bucket.tryConsume(1)) {
+                            updatesByThread.compute(threadId, (key, current) -> current == null ? 1 : current + 1);
+                        } else {
+                            throw new IllegalStateException("Token should be consumed");
+                        }
+                    }
+                } catch (Throwable e) {
+                    errors.put(threadId, e);
+                    e.printStackTrace();
+                } finally {
+                    stopLatch.countDown();
+                }
+            }, "Updater-thread-" + i).start();
+        }
+        stopLatch.await();
+
+        long availableTokens = proxyManager.builder().build(key, () -> configuration).getAvailableTokens();
+        System.out.println("availableTokens " + availableTokens);
+        System.out.println("Failed threads " + errors.keySet());
+        System.out.println("Updates by thread " + updatesByThread);
+        assertTrue(errors.isEmpty());
+        assertEquals(capacity - opsCount, availableTokens);
+    }
+
+    @Test
+    public void test_1000_tokens_consumption_async() throws InterruptedException {
+        if (!proxyManager.isAsyncModeSupported()) {
+            return;
+        }
+
+        int threadCount = 8;
+        int opsCount = 1_000;
+        int capacity = 2_000;
+
+        BucketConfiguration configuration = BucketConfiguration.builder()
+            .addLimit(limit -> limit.capacity(capacity).refillIntervally(1, Duration.ofDays(1)))
+            .build();
+
+        CountDownLatch startLatch = new CountDownLatch(threadCount);
+        CountDownLatch stopLatch = new CountDownLatch(threadCount);
+        AtomicInteger opsCounter = new AtomicInteger(opsCount);
+        ConcurrentHashMap<Integer, Integer> updatesByThread = new ConcurrentHashMap<>();
+        ConcurrentHashMap<Integer, Throwable> errors = new ConcurrentHashMap<>();
+        for (int i = 0; i < threadCount; i++) {
+            AsyncBucketProxy bucket = proxyManager.asAsync().builder().build(key, () -> CompletableFuture.completedFuture(configuration));
+            final int threadId = i;
+            new Thread(() -> {
+                try {
+                    startLatch.countDown();
+                    startLatch.await();
+                    while (opsCounter.decrementAndGet() >= 0) {
+                        Integer currenValue = null;
+                        if (bucket.tryConsume(1).get()) {
+                            updatesByThread.compute(threadId, (key, current) -> current == null ? 1 : current + 1);
+                        } else {
+                            throw new IllegalStateException("Token should be consumed");
+                        }
+                    }
+                } catch (Throwable e) {
+                    errors.put(threadId, e);
+                    e.printStackTrace();
+                } finally {
+                    stopLatch.countDown();
+                }
+            }, "Updater-thread-" + i).start();
+        }
+        stopLatch.await();
+
+        long availableTokens = proxyManager.builder().build(key, () -> configuration).getAvailableTokens();
+        System.out.println("availableTokens " + availableTokens);
+        System.out.println("Failed threads " + errors.keySet());
+        System.out.println("Updates by thread " + updatesByThread);
+        assertTrue(errors.isEmpty());
+        assertEquals(capacity - opsCount, availableTokens);
+    }
+
 }
