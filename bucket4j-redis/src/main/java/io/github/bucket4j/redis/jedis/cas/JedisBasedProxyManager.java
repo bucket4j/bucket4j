@@ -31,6 +31,7 @@ import io.github.bucket4j.redis.AbstractRedisProxyManagerBuilder;
 import io.github.bucket4j.redis.consts.LuaScripts;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisCluster;
+import redis.clients.jedis.UnifiedJedis;
 import redis.clients.jedis.util.Pool;
 
 import java.nio.charset.StandardCharsets;
@@ -67,6 +68,28 @@ public class JedisBasedProxyManager<K> extends AbstractCompareAndSwapBasedProxyM
             }
         };
         return new JedisBasedProxyManagerBuilder<>(Mapper.BYTES, redisApi);
+    }
+
+    public static JedisBasedProxyManagerBuilder<byte[]> builderFor(UnifiedJedis unifiedJedis) {
+        Objects.requireNonNull(unifiedJedis);
+        RedisApi redisApi = new RedisApi() {
+            @Override
+            public Object eval(byte[] script, int keyCount, byte[]... params) {
+                return unifiedJedis.eval(script, keyCount, params);
+            }
+
+            @Override
+            public byte[] get(byte[] key) {
+                return unifiedJedis.get(key);
+            }
+
+            @Override
+            public void delete(byte[] key) {
+                unifiedJedis.del(key);
+            }
+        };
+        return new JedisBasedProxyManagerBuilder<>(Mapper.BYTES, redisApi);
+
     }
 
     public static JedisBasedProxyManagerBuilder<byte[]> builderFor(JedisCluster jedisCluster) {
