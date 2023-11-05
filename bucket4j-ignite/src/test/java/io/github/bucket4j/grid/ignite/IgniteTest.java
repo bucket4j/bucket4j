@@ -1,9 +1,12 @@
 package io.github.bucket4j.grid.ignite;
 
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
+import io.github.bucket4j.distributed.proxy.ExecutionStrategy;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.grid.ignite.thick.IgniteProxyManager;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
+import io.github.bucket4j.tck.ProxyManagerSpec;
+
 import org.apache.ignite.Ignite;
 import org.apache.ignite.IgniteCache;
 import org.apache.ignite.Ignition;
@@ -20,10 +23,15 @@ import org.junit.jupiter.api.BeforeAll;
 
 import java.io.Serializable;
 import java.net.UnknownHostException;
+import java.time.Duration;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.UUID;
+import java.util.concurrent.Executors;
 
-public class IgniteTest extends AbstractDistributedBucketTest<String> {
+import static io.github.bucket4j.distributed.proxy.ExecutionStrategy.backgroundTimeBounded;
+
+public class IgniteTest extends AbstractDistributedBucketTest {
 
     private static IgniteCache<String, byte[]> cache;
     private static Cloud cloud;
@@ -71,6 +79,30 @@ public class IgniteTest extends AbstractDistributedBucketTest<String> {
         ignite = Ignition.start(igniteConfiguration);
         CacheConfiguration cacheConfiguration = new CacheConfiguration("my_buckets");
         cache = ignite.getOrCreateCache(cacheConfiguration);
+
+        specs = Arrays.asList(
+            new ProxyManagerSpec<>(
+                "IgniteProxyManager",
+                () -> UUID.randomUUID().toString(),
+                new IgniteProxyManager<>(cache, ClientSideConfig.getDefault())
+            ),
+            new ProxyManagerSpec<>(
+                "IgniteProxyManager_background",
+                () -> UUID.randomUUID().toString(),
+                new IgniteProxyManager<>(
+                    cache,
+                    ClientSideConfig.getDefault().withExecutionStrategy(ExecutionStrategy.background(Executors.newFixedThreadPool(20)))
+                )
+            ),
+            new ProxyManagerSpec<>(
+                "IgniteProxyManager_backgroundTimeBounded",
+                () -> UUID.randomUUID().toString(),
+                new IgniteProxyManager<>(
+                    cache,
+                    ClientSideConfig.getDefault().withExecutionStrategy(backgroundTimeBounded(Executors.newFixedThreadPool(20), Duration.ofSeconds(5)))
+                )
+            )
+        );
     }
 
 
@@ -82,16 +114,6 @@ public class IgniteTest extends AbstractDistributedBucketTest<String> {
         if (cloud != null) {
             cloud.shutdown();
         }
-    }
-
-    @Override
-    protected ProxyManager<String> getProxyManager() {
-        return new IgniteProxyManager<>(cache, ClientSideConfig.getDefault());
-    }
-
-    @Override
-    protected String generateRandomKey() {
-        return UUID.randomUUID().toString();
     }
 
 }

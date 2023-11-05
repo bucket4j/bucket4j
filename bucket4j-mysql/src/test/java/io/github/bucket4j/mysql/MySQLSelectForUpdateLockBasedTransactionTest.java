@@ -7,6 +7,8 @@ import io.github.bucket4j.distributed.jdbc.SQLProxyConfiguration;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
+import io.github.bucket4j.tck.ProxyManagerSpec;
+
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.testcontainers.containers.MySQLContainer;
@@ -16,9 +18,10 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.MessageFormat;
+import java.util.Arrays;
 import java.util.concurrent.ThreadLocalRandom;
 
-public class MySQLSelectForUpdateLockBasedTransactionTest extends AbstractDistributedBucketTest<Long> {
+public class MySQLSelectForUpdateLockBasedTransactionTest extends AbstractDistributedBucketTest {
 
     private static MySQLContainer container;
     private static DataSource dataSource;
@@ -40,16 +43,14 @@ public class MySQLSelectForUpdateLockBasedTransactionTest extends AbstractDistri
                 .withTableSettings(tableSettings)
                 .build(dataSource);
         proxyManager = new MySQLSelectForUpdateBasedProxyManager<>(configuration);
-    }
 
-    @Override
-    protected ProxyManager<Long> getProxyManager() {
-        return proxyManager;
-    }
-
-    @Override
-    protected Long generateRandomKey() {
-        return ThreadLocalRandom.current().nextLong(1_000_000_000);
+        specs = Arrays.asList(
+            new ProxyManagerSpec<>(
+                "MySQLSelectForUpdateBasedProxyManager",
+                () -> ThreadLocalRandom.current().nextLong(1_000_000_000),
+                proxyManager
+            )
+        );
     }
 
     @AfterAll

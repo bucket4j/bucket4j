@@ -4,8 +4,11 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import io.github.bucket4j.distributed.jdbc.BucketTableSettings;
 import io.github.bucket4j.distributed.jdbc.SQLProxyConfiguration;
+import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
+import io.github.bucket4j.tck.ProxyManagerSpec;
+
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -16,6 +19,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.MessageFormat;
+import java.util.Arrays;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ThreadLocalRandom;
@@ -24,7 +29,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
 
-public class MSSQLSelectForUpdateBasedProxyManagerTest extends AbstractDistributedBucketTest<Long> {
+public class MSSQLSelectForUpdateBasedProxyManagerTest extends AbstractDistributedBucketTest {
 
     private static MSSQLServerContainer container;
     private static HikariDataSource dataSource;
@@ -46,6 +51,14 @@ public class MSSQLSelectForUpdateBasedProxyManagerTest extends AbstractDistribut
                 .withTableSettings(tableSettings)
                 .build(dataSource);
         proxyManager = new MSSQLSelectForUpdateBasedProxyManager<>(configuration);
+
+        specs = Arrays.asList(
+            new ProxyManagerSpec<>(
+                "MSSQLSelectForUpdateBasedProxyManager",
+                () -> ThreadLocalRandom.current().nextLong(1_000_000_000),
+                proxyManager
+            )
+        );
     }
 
     /**
@@ -61,7 +74,6 @@ public class MSSQLSelectForUpdateBasedProxyManagerTest extends AbstractDistribut
                 statement.execute("CREATE TABLE table_with_counter (id INT NOT NULL PRIMARY KEY, some_counter INT)");
             }
         }
-
 
         CountDownLatch startLatch = new CountDownLatch(threadCount);
         CountDownLatch stopLatch = new CountDownLatch(threadCount);
@@ -137,16 +149,6 @@ public class MSSQLSelectForUpdateBasedProxyManagerTest extends AbstractDistribut
         System.out.println("Updates by thread " + updatesByThread);
         assertTrue(errors.isEmpty());
         assertEquals(opsCount, currenValue);
-    }
-
-    @Override
-    protected ProxyManager<Long> getProxyManager() {
-        return proxyManager;
-    }
-
-    @Override
-    protected Long generateRandomKey() {
-        return ThreadLocalRandom.current().nextLong(1_000_000_000);
     }
 
     @AfterAll

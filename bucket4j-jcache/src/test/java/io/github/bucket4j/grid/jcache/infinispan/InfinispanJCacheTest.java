@@ -1,7 +1,11 @@
 
 package io.github.bucket4j.grid.jcache.infinispan;
 
-import io.github.bucket4j.grid.jcache.AbstractJCacheTest;
+import io.github.bucket4j.distributed.proxy.ClientSideConfig;
+import io.github.bucket4j.grid.jcache.JCacheProxyManager;
+import io.github.bucket4j.tck.AbstractDistributedBucketTest;
+import io.github.bucket4j.tck.ProxyManagerSpec;
+
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 
@@ -11,9 +15,11 @@ import javax.cache.Caching;
 import javax.cache.spi.CachingProvider;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Arrays;
+import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
-public class InfinispanJCacheTest extends AbstractJCacheTest {
+public class InfinispanJCacheTest extends AbstractDistributedBucketTest {
 
     static URI configurationUri = null;
 
@@ -42,6 +48,14 @@ public class InfinispanJCacheTest extends AbstractJCacheTest {
 
         cacheManager2 = cachingProvider.getCacheManager(configurationUri, classLoader2);
         cache2 = cacheManager2.getCache("my_buckets");
+
+        specs = Arrays.asList(
+            new ProxyManagerSpec<>(
+                "JCacheProxyManager",
+                () -> UUID.randomUUID().toString(),
+                new JCacheProxyManager<>(getCache(), ClientSideConfig.getDefault())
+            )
+        );
     }
 
     @AfterAll
@@ -54,8 +68,7 @@ public class InfinispanJCacheTest extends AbstractJCacheTest {
         }
     }
 
-    @Override
-    protected Cache<String, byte[]> getCache() {
+    private static Cache<String, byte[]> getCache() {
         return ThreadLocalRandom.current().nextBoolean()? cache1 : cache2;
     }
 

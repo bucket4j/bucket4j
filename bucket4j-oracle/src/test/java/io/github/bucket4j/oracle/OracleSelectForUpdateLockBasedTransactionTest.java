@@ -4,10 +4,9 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import io.github.bucket4j.distributed.jdbc.BucketTableSettings;
 import io.github.bucket4j.distributed.jdbc.SQLProxyConfiguration;
-import io.github.bucket4j.distributed.jdbc.SQLProxyConfigurationBuilder;
-import io.github.bucket4j.distributed.proxy.ClientSideConfig;
-import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
+import io.github.bucket4j.tck.ProxyManagerSpec;
+
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.testcontainers.containers.OracleContainer;
@@ -17,13 +16,13 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.MessageFormat;
+import java.util.Arrays;
 import java.util.concurrent.ThreadLocalRandom;
 
-public class OracleSelectForUpdateLockBasedTransactionTest extends AbstractDistributedBucketTest<Long> {
+public class OracleSelectForUpdateLockBasedTransactionTest extends AbstractDistributedBucketTest {
 
     private static OracleContainer container;
     private static DataSource dataSource;
-    private static OracleSelectForUpdateBasedProxyManager<Long> proxyManager;
 
     @BeforeAll
     public static void initializeInstance() throws SQLException {
@@ -40,18 +39,14 @@ public class OracleSelectForUpdateLockBasedTransactionTest extends AbstractDistr
         SQLProxyConfiguration<Long> configuration = SQLProxyConfiguration.builder()
                 .withTableSettings(tableSettings)
                 .build(dataSource);
-        proxyManager = new OracleSelectForUpdateBasedProxyManager<>(configuration);
-        Long key = 1L;
-    }
 
-    @Override
-    protected ProxyManager<Long> getProxyManager() {
-        return proxyManager;
-    }
-
-    @Override
-    protected Long generateRandomKey() {
-        return ThreadLocalRandom.current().nextLong(1_000_000_000);
+        specs = Arrays.asList(
+            new ProxyManagerSpec<>(
+                "OracleSelectForUpdateBasedProxyManager",
+                () -> ThreadLocalRandom.current().nextLong(1_000_000_000),
+                new OracleSelectForUpdateBasedProxyManager<>(configuration)
+            )
+        );
     }
 
     @AfterAll

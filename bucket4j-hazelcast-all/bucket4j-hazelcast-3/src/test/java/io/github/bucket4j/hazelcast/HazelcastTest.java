@@ -7,8 +7,12 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
+import io.github.bucket4j.grid.hazelcast.HazelcastCompareAndSwapProxyManager;
+import io.github.bucket4j.grid.hazelcast.HazelcastLockBasedProxyManager;
 import io.github.bucket4j.grid.hazelcast.HazelcastProxyManager;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
+import io.github.bucket4j.tck.ProxyManagerSpec;
+
 import org.gridkit.nanocloud.Cloud;
 import org.gridkit.nanocloud.CloudFactory;
 import org.gridkit.nanocloud.VX;
@@ -17,9 +21,10 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.UUID;
 
-public class HazelcastTest extends AbstractDistributedBucketTest<String> {
+public class HazelcastTest extends AbstractDistributedBucketTest {
 
     private static IMap<String, byte[]> map;
     private static Cloud cloud;
@@ -54,6 +59,24 @@ public class HazelcastTest extends AbstractDistributedBucketTest<String> {
         joinConfig.getTcpIpConfig().addMember("127.0.0.1:5701");
         hazelcastInstance = Hazelcast.newHazelcastInstance(config);
         map = hazelcastInstance.getMap("my_buckets");
+
+        specs = Arrays.asList(
+            new ProxyManagerSpec<>(
+                "HazelcastProxyManager_JdkSerialization",
+                () -> UUID.randomUUID().toString(),
+                new HazelcastProxyManager<>(map, ClientSideConfig.getDefault())
+            ),
+            new ProxyManagerSpec<>(
+                "HazelcastLockBasedProxyManager_JdkSerialization",
+                () -> UUID.randomUUID().toString(),
+                new HazelcastLockBasedProxyManager<>(map, ClientSideConfig.getDefault())
+            ),
+            new ProxyManagerSpec<>(
+                "HazelcastCompareAndSwapBasedProxyManager_JdkSerialization",
+                () -> UUID.randomUUID().toString(),
+                new HazelcastCompareAndSwapProxyManager<>(map, ClientSideConfig.getDefault())
+            )
+        );
     }
 
     @AfterAll
@@ -64,17 +87,6 @@ public class HazelcastTest extends AbstractDistributedBucketTest<String> {
         if (cloud != null) {
             cloud.shutdown();
         }
-    }
-
-
-    @Override
-    protected ProxyManager<String> getProxyManager() {
-        return new HazelcastProxyManager<>(map, ClientSideConfig.getDefault());
-    }
-
-    @Override
-    protected String generateRandomKey() {
-        return UUID.randomUUID().toString();
     }
 
 }

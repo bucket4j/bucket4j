@@ -1,9 +1,14 @@
 package io.github.bucket4j.grid.ignite;
 
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
+import io.github.bucket4j.distributed.proxy.ExecutionStrategy;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
+import io.github.bucket4j.grid.ignite.thick.IgniteProxyManager;
 import io.github.bucket4j.grid.ignite.thin.cas.IgniteThinClientCasBasedProxyManager;
+import io.github.bucket4j.grid.ignite.thin.compute.IgniteThinClientProxyManager;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
+import io.github.bucket4j.tck.ProxyManagerSpec;
+
 import org.apache.ignite.Ignite;
 import org.apache.ignite.Ignition;
 import org.apache.ignite.client.ClientCache;
@@ -20,15 +25,22 @@ import org.junit.jupiter.api.BeforeAll;
 
 import java.io.Serializable;
 import java.nio.ByteBuffer;
+import java.time.Duration;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.UUID;
+import java.util.concurrent.Executors;
+
+import static io.github.bucket4j.distributed.proxy.ExecutionStrategy.backgroundTimeBounded;
 
 
-public class IgniteCasBasedClientTest extends AbstractDistributedBucketTest<String> {
+public class IgniteThinClientTest extends AbstractDistributedBucketTest {
 
     private static final String CACHE_NAME = "my_buckets";
+    public static final String CACHE2_NAME = CACHE_NAME + "_byte_buffer";
 
-    private static ClientCache<String, ByteBuffer> cache;
+    private static ClientCache<String, byte[]> cache;
+    private static ClientCache<String, ByteBuffer> cache2;
     private static Cloud cloud;
     private static ViNode server;
 
@@ -65,8 +77,8 @@ public class IgniteCasBasedClientTest extends AbstractDistributedBucketTest<Stri
 
             Ignite ignite = Ignition.start(igniteConfiguration);
 
-            CacheConfiguration cacheConfiguration = new CacheConfiguration(CACHE_NAME);
-            ignite.getOrCreateCache(cacheConfiguration);
+            ignite.getOrCreateCache(new CacheConfiguration(CACHE_NAME));
+            ignite.getOrCreateCache(new CacheConfiguration(CACHE2_NAME));
         });
 
         // start ignite thin client which works inside current JVM and does not hold data
@@ -76,6 +88,20 @@ public class IgniteCasBasedClientTest extends AbstractDistributedBucketTest<Stri
         igniteClient = Ignition.startClient(clientConfiguration);
 
         cache = igniteClient.cache(CACHE_NAME);
+        cache2 = igniteClient.cache(CACHE2_NAME);
+
+        specs = Arrays.asList(
+            new ProxyManagerSpec<>(
+                "IgniteThinClientProxyManager",
+                () -> UUID.randomUUID().toString(),
+                new IgniteThinClientProxyManager<>(cache, igniteClient.compute(), ClientSideConfig.getDefault())
+            ),
+            new ProxyManagerSpec<>(
+                "IgniteThinClientCasBasedProxyManager",
+                () -> UUID.randomUUID().toString(),
+                new IgniteThinClientCasBasedProxyManager<>(cache2, ClientSideConfig.getDefault())
+            )
+        );
     }
 
     @AfterAll
@@ -86,16 +112,6 @@ public class IgniteCasBasedClientTest extends AbstractDistributedBucketTest<Stri
         if (cloud != null) {
             cloud.shutdown();
         }
-    }
-
-    @Override
-    protected ProxyManager<String> getProxyManager() {
-        return new IgniteThinClientCasBasedProxyManager<>(cache, ClientSideConfig.getDefault());
-    }
-
-    @Override
-    protected String generateRandomKey() {
-        return UUID.randomUUID().toString();
     }
 
 }

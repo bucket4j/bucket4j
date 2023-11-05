@@ -1,7 +1,11 @@
 
 package io.github.bucket4j.grid.jcache.ignite;
 
-import io.github.bucket4j.grid.jcache.AbstractJCacheTest;
+import io.github.bucket4j.distributed.proxy.ClientSideConfig;
+import io.github.bucket4j.grid.jcache.JCacheProxyManager;
+import io.github.bucket4j.tck.AbstractDistributedBucketTest;
+import io.github.bucket4j.tck.ProxyManagerSpec;
+
 import org.apache.ignite.Ignite;
 import org.apache.ignite.Ignition;
 import org.apache.ignite.configuration.CacheConfiguration;
@@ -18,9 +22,11 @@ import org.junit.jupiter.api.BeforeAll;
 import javax.cache.Cache;
 import java.io.Serializable;
 import java.net.UnknownHostException;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.UUID;
 
-public class IgniteJCacheTest extends AbstractJCacheTest {
+public class IgniteJCacheTest extends AbstractDistributedBucketTest {
 
     private static Cache<String, byte[]> cache;
     private static Cloud cloud;
@@ -68,6 +74,14 @@ public class IgniteJCacheTest extends AbstractJCacheTest {
         ignite = Ignition.start(igniteConfiguration);
         CacheConfiguration cacheConfiguration = new CacheConfiguration("my_buckets");
         cache = ignite.getOrCreateCache(cacheConfiguration);
+
+        specs = Arrays.asList(
+            new ProxyManagerSpec<>(
+                "JCacheProxyManager",
+                () -> UUID.randomUUID().toString(),
+                new JCacheProxyManager<>(getCache(), ClientSideConfig.getDefault())
+            )
+        );
     }
 
     @AfterAll
@@ -80,8 +94,7 @@ public class IgniteJCacheTest extends AbstractJCacheTest {
         }
     }
 
-    @Override
-    protected Cache<String, byte[]> getCache() {
+    private static Cache<String, byte[]> getCache() {
         return cache;
     }
 
