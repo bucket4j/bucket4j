@@ -81,11 +81,12 @@ In addition to local in-memory buckets, the Bucket4j supports clustered usage sc
 | ```Redis/Lettuce```        |  Yes             |           Yes           |   [bucket4j-redis/Lettuce](https://bucket4j.com/8.6.0/toc.html#example-of-bucket-instantiation-via-lettucebasedproxymanager) |
 
 ### JDBC back-ends
-| Back-end                   |                                Documentation link                                 |
-| :---                       |:---------------------------------------------------------------------------------:|
-| ```MySQL```                |      [bucket4j-mysql](https://bucket4j.com/8.6.0/toc.html#mysql-integration)      |
-| ```PostgreSQL```           | [bucket4j-postgresql](https://bucket4j.com/8.6.0/toc.html#postgresql-integration) |
-| ```Oracle```               |     [bucket4j-oracle](https://bucket4j.com/8.6.0/toc.html#oracle-integration)     |
+| Back-end                   |                                  Documentation link                                  |
+|:---------------------------|:------------------------------------------------------------------------------------:|
+| ```MySQL```                |       [bucket4j-mysql](https://bucket4j.com/8.6.0/toc.html#mysql-integration)        |
+| ```PostgreSQL```           |  [bucket4j-postgresql](https://bucket4j.com/8.6.0/toc.html#postgresql-integration)   |
+| ```Oracle```               |      [bucket4j-oracle](https://bucket4j.com/8.6.0/toc.html#oracle-integration)       |
+| ```Microsoft SQL Server``` | [bucket4j-mssql](https://bucket4j.com/8.6.0/toc.html#microsoftsqlserver-integration) |
 
 
 ### Local caches support
