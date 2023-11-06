@@ -28,6 +28,7 @@ import io.lettuce.core.cluster.SlotHash;
 import io.lettuce.core.cluster.api.StatefulRedisClusterConnection;
 import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.JedisCluster;
+import redis.clients.jedis.UnifiedJedis;
 
 /**
  * @author Vladimir Bukhtoyarov
@@ -42,11 +43,14 @@ public class RedisClusterTest extends AbstractDistributedBucketTest {
 
     private static JedisCluster jedisCluster;
 
+    private static UnifiedJedis unifiedJedisCluster;
+
     @BeforeAll
     public static void setup() {
         container = startRedisContainer();
         redisClient = createLettuceClient(container);
         jedisCluster = createJedisCluster(container);
+        unifiedJedisCluster = createUnifiedJedisCluster(container);
 
         specs = Arrays.asList(
             // Lettuce
@@ -64,6 +68,14 @@ public class RedisClusterTest extends AbstractDistributedBucketTest {
                 JedisBasedProxyManager.builderFor(jedisCluster)
                     .withExpirationStrategy(ExpirationAfterWriteStrategy.fixedTimeToLive(Duration.ofSeconds(10)))
                     .build()
+            ),
+
+            new ProxyManagerSpec<>(
+                    "JedisBasedProxyManager_UnifiedJedis_NoExpiration_ByteArrayKey",
+                    () -> UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8),
+                    JedisBasedProxyManager.builderFor(unifiedJedisCluster)
+                            .withExpirationStrategy(ExpirationAfterWriteStrategy.fixedTimeToLive(Duration.ofSeconds(10)))
+                            .build()
             )
         );
     }
@@ -76,8 +88,14 @@ public class RedisClusterTest extends AbstractDistributedBucketTest {
                     redisClient.shutdown();
                 }
             } finally {
-                if (jedisCluster != null) {
-                    jedisCluster.close();
+                try {
+                    if (jedisCluster != null) {
+                        jedisCluster.close();
+                    }
+                } finally {
+                    if (unifiedJedisCluster != null) {
+                        unifiedJedisCluster.close();
+                    }
                 }
             }
         } finally {
@@ -104,6 +122,10 @@ public class RedisClusterTest extends AbstractDistributedBucketTest {
         }
 
         return new JedisCluster(new HashSet<>(shards));
+    }
+
+    private static UnifiedJedis createUnifiedJedisCluster(GenericContainer container) {
+        return createJedisCluster(container);
     }
 
     private static GenericContainer startRedisContainer() {
