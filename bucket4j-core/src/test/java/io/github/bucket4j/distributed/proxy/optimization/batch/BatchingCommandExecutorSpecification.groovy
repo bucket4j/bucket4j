@@ -53,6 +53,7 @@ class BatchingCommandExecutorSpecification extends Specification {
             for (int i = 0; i < MultiCommand.MERGING_THRESHOLD; i++) {
                 results.add(runAsync(consumeOneTokenCallable))
             }
+            Thread.sleep(100)
             proxyManager.unblockExecution()
         then:
             for (final def feature in results) {
@@ -98,6 +99,7 @@ class BatchingCommandExecutorSpecification extends Specification {
             for (int i = 0; i < MultiCommand.MERGING_THRESHOLD; i++) {
                 results.add(runAsync(consumeOneTokenCallable))
             }
+            Thread.sleep(100)
             proxyManager.unblockExecution()
         then:
             for (final def feature in results) {
@@ -143,6 +145,7 @@ class BatchingCommandExecutorSpecification extends Specification {
                 results.add(runAsync(consumeOneTokenCallable))
             }
             results.add(runAsync(consumeTwoTokensCallable))
+            Thread.sleep(100)
             proxyManager.unblockExecution()
         then:
             for (final def feature in results) {
@@ -243,6 +246,7 @@ class BatchingCommandExecutorSpecification extends Specification {
             }
             results.add(runAsync(consumeTwoTokensCallable))
             proxyManager.setException(new RuntimeException("Just because"))
+            Thread.sleep(100)
             proxyManager.unblockExecution()
             proxyManager.allowResultReturning()
         then:
