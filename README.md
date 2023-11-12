@@ -126,5 +126,4 @@ Bellow the compatibility matrix of Bucket4j's maven artefact with different java
 | ```com.bucket4j:bucket4j-mysql```                    | ```com.bucket4j:bucket4j_jdk8-mysql```           |                                             |
 | ```com.bucket4j:bucket4j-postgresql```               | ```com.bucket4j:bucket4j_jdk8-postgresql```      |                                             |
 | ```com.bucket4j:bucket4j-caffeine```                 | ```com.bucket4j:bucket4j_jdk8-caffeine```        |                                             |
-| ```com.bucket4j:bucket4j-dynamodb-sdk-v1``` | ```com.bucket4j:bucket4j_jdk8-dynamodb-sdk-v1``` |                                             |
 
