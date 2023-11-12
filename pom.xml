@@ -28,7 +28,6 @@
         <module>bucket4j-benchmarks</module>
         <module>bucket4j-examples</module>
         <module>lincheck-tests</module>
-        <module>bucket4j-dynamodb-sdk-v1</module>
         <module>bucket4j-redis</module>
         <module>bucket4j-coherence</module>
         <module>bucket4j-postgresql</module>
