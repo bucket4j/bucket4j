@@ -44,6 +44,40 @@ public class CheckConfigurationVersionAndExecuteCommand<T> implements RemoteComm
         this.desiredConfigurationVersion = desiredConfigurationVersion;
     }
 
+    @Override
+    public boolean canBeMerged(RemoteCommand<?> another) {
+        if (!(another instanceof CheckConfigurationVersionAndExecuteCommand)) {
+            return false;
+        }
+        CheckConfigurationVersionAndExecuteCommand<?> anotherCmd = (CheckConfigurationVersionAndExecuteCommand<?>) another;
+        return desiredConfigurationVersion == anotherCmd.desiredConfigurationVersion && targetCommand.canBeMerged(anotherCmd.targetCommand);
+    }
+
+    @Override
+    public RemoteCommand<?> toMergedCommand() {
+        return new CheckConfigurationVersionAndExecuteCommand<>(targetCommand.toMergedCommand(), desiredConfigurationVersion);
+    }
+
+    @Override
+    public void mergeInto(RemoteCommand<?> mergedCommand) {
+        targetCommand.mergeInto(((CheckConfigurationVersionAndExecuteCommand) mergedCommand).targetCommand);
+    }
+
+    @Override
+    public boolean isMerged() {
+        return targetCommand.isMerged();
+    }
+
+    @Override
+    public int getMergedCommandsCount() {
+        return targetCommand.getMergedCommandsCount();
+    }
+
+    @Override
+    public CommandResult<?> unwrapOneResult(T result, int indice) {
+        return targetCommand.unwrapOneResult(result, indice);
+    }
+
     public RemoteCommand<T> getTargetCommand() {
         return targetCommand;
     }

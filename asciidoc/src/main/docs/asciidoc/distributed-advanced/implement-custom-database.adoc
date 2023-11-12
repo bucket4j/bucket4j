@@ -1,6 +1,6 @@
 === Framework to implement custom work with your database
 The Bucket4j library allows implementing work with any database.
-If you didn't find in distributed realization your database (currently Bucket4j supports the next databases: Redis, Hazelcast, Apache Ignite, Infinispan, Oracle coherence, Dynamodb, PostgreSQL, MySQL)
+If you didn't find in distributed realization your database (currently Bucket4j supports the next databases: Redis, Hazelcast, Apache Ignite, Infinispan, Oracle coherence, PostgreSQL, MySQL)
 you can implement your database as a distributed storage.
 All what you need to do, extends from io.github.bucket4j.distributed.proxy.generic.select_for_update.AbstractLockBasedProxyManager or
 AbstractSelectForUpdateBasedProxyManager<T>

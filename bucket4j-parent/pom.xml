@@ -7,7 +7,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.bucket4j</groupId>
-    <version>8.6.0</version>
+    <version>8.7.0</version>
     <artifactId>bucket4j-parent</artifactId>
     <packaging>pom</packaging>
     <name>bucket4j-parent</name>
@@ -57,10 +57,12 @@
 
         <testcontainers.version>1.18.1</testcontainers.version>
         <lettuce-version>5.0.2.RELEASE</lettuce-version>
-        <jedis.version>4.2.3</jedis.version>
+        <jedis.version>4.4.6</jedis.version>
         <redisson.version>3.21.0</redisson.version>
         <lettuce.version>6.1.8.RELEASE</lettuce.version>
         <caffeine.version>2.9.3</caffeine.version>
+        <mssql.version>12.4.2.jre8</mssql.version>
+        <ojdbc.version>23.2.0.0</ojdbc.version>
     </properties>
 
     <scm>
@@ -386,6 +388,12 @@
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
+            <version>5.9.3</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-params</artifactId>
             <version>5.9.3</version>
             <scope>test</scope>
         </dependency>

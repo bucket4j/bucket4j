@@ -3,9 +3,10 @@
 package io.github.bucket4j.grid.infinispan;
 
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
-import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.grid.infinispan.serialization.Bucket4jProtobufContextInitializer;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
+import io.github.bucket4j.tck.ProxyManagerSpec;
+
 import org.infinispan.Cache;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
@@ -21,10 +22,11 @@ import org.junit.jupiter.api.BeforeAll;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
+import java.util.Arrays;
 import java.util.UUID;
 
 
-public class InfinispanTest extends AbstractDistributedBucketTest<String> {
+public class InfinispanTest extends AbstractDistributedBucketTest {
 
     private static ReadWriteMap<String, byte[]> readWriteMap;
     private static Cache<String, byte[]> cache;
@@ -54,6 +56,14 @@ public class InfinispanTest extends AbstractDistributedBucketTest<String> {
                         .build()
         );
         cacheManager2.getCache("my-cache");
+
+        specs = Arrays.asList(
+            new ProxyManagerSpec<>(
+                "InfinispanProxyManager",
+                () -> UUID.randomUUID().toString(),
+                new InfinispanProxyManager<>(readWriteMap, ClientSideConfig.getDefault())
+            )
+        );
     }
 
     private static GlobalConfiguration getGlobalConfiguration() {
@@ -66,16 +76,6 @@ public class InfinispanTest extends AbstractDistributedBucketTest<String> {
     public static void destroy() throws IOException {
         cacheManager1.close();
         cacheManager2.close();
-    }
-
-    @Override
-    protected ProxyManager<String> getProxyManager() {
-        return new InfinispanProxyManager<>(readWriteMap, ClientSideConfig.getDefault());
-    }
-
-    @Override
-    protected String generateRandomKey() {
-        return UUID.randomUUID().toString();
     }
 
     private static ReadWriteMap<String, byte[]> toMap(Cache<String, byte[]> cache) {

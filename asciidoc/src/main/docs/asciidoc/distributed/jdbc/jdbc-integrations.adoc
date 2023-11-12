@@ -17,33 +17,28 @@ CREATE TABLE IF NOT EXISTS buckets(id BIGINT PRIMARY KEY, state BYTEA);
 CREATE TABLE IF NOT EXISTS buckets(id BIGINT PRIMARY KEY, state BLOB);
 ----
 
-==== Configuring custom settings of SQLProxyManager
+.Oracle
+[,sql]
+----
+CREATE TABLE bucket(id NUMBER NOT NULL PRIMARY KEY, state RAW(255));
+----
 
+.Microsoft SQL Server
+[,sql]
+----
+CREATE TABLE bucket(id INT NOT NULL PRIMARY KEY, state BINARY(256))
+----
+
+==== Configuring custom settings of SQLProxyManager
 * Each proxy manager takes `SQLProxyConfiguration` to customize work with database
 
-* To do that, you should use `SQLProxyConfigurationBuilder`, which includes the next parameters:
-
+* To do that, you should use `SQLProxyConfigurationBuilder`, which allows to configure data-source and names for table and columns:
 [source, java]
 ----
-    /**
-     * @param clientSideConfig {@link ClientSideConfig} client-side configuration for proxy-manager.
-     *                                                 By default, under the hood uses {@link ClientSideConfig#getDefault}
-     * @return {@link SQLProxyConfigurationBuilder}
-     */
-    public SQLProxyConfigurationBuilder addClientSideConfig(ClientSideConfig clientSideConfig) {
-        this.clientSideConfig = clientSideConfig;
-        return this;
-    }
-
-    /**
-     * @param tableSettings {@link BucketTableSettings} define a configuration of the table to use as a Buckets store.
-     *                                                 By default, under the hood uses {@link BucketTableSettings#getDefault}
-     * @return {@link SQLProxyConfigurationBuilder}
-     */
-    public SQLProxyConfigurationBuilder addTableSettings(BucketTableSettings tableSettings) {
-        this.tableSettings = tableSettings;
-        return this;
-    }
+    SQLProxyConfiguration configuration = SQLProxyConfiguration.builder()
+        .withTableSettings(tableSettings)
+        .build(dataSource);
+    proxyManager = new MSSQLSelectForUpdateBasedProxyManager<>(configuration);
 ----
 
 ==== Overriding table configuration
@@ -169,6 +164,33 @@ To use Bucket4j extension for MySQL you need to add following dependency:
                 .withTableSettings(tableSettings)
                 .build(dataSource);
         OracleSelectForUpdateBasedProxyManager proxyManager = new OracleSelectForUpdateBasedProxyManager(sqlProxyConfiguration);
+        ...
+        BucketConfiguration bucketConfiguration = BucketConfiguration.builder()
+                .addLimit(limit -> limit.capacity(10).refillGreedy(10, ofSeconds(1)))
+                .build();
+        BucketProxy bucket = proxyManager.builder().build(key, bucketConfiguration);
+----
+
+==== MicrosoftSQLServer integration
+===== Dependencies
+To use Bucket4j extension for Microsoft SQL Server you need to add following dependency:
+
+[,xml,subs=attributes+]
+----
+<dependency>
+    <groupId>com.bucket4j</groupId>
+    <artifactId>bucket4j-mssql</artifactId>
+    <version>{revnumber}</version>
+</dependency>
+----
+
+===== Example of Bucket instantiation
+
+----
+        SQLProxyConfiguration<Long> sqlProxyConfiguration = SQLProxyConfiguration.builder()
+                .withTableSettings(tableSettings)
+                .build(dataSource);
+        MSSQLSelectForUpdateBasedProxyManager<Long> proxyManager = new MSSQLSelectForUpdateBasedProxyManager<>(sqlProxyConfiguration);
         ...
         BucketConfiguration bucketConfiguration = BucketConfiguration.builder()
                 .addLimit(limit -> limit.capacity(10).refillGreedy(10, ofSeconds(1)))

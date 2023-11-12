@@ -38,7 +38,9 @@ import static io.github.bucket4j.distributed.versioning.Versions.v_7_0_0;
 
 public class MultiCommand implements RemoteCommand<MultiResult>, ComparableByContent<MultiCommand> {
 
+    public static final int MERGING_THRESHOLD = Integer.getInteger("bucket4j.batching.merging-threshold", 5);
     private List<RemoteCommand<?>> commands;
+    private int mergedCommands;
 
     public static SerializationHandle<MultiCommand> SERIALIZATION_HANDLE = new SerializationHandle<MultiCommand>() {
         @Override
@@ -115,6 +117,80 @@ public class MultiCommand implements RemoteCommand<MultiResult>, ComparableByCon
         this.commands = commands;
     }
 
+    public static MultiCommand merge(List<RemoteCommand<?>> commands) {
+        if (commands.size() < MERGING_THRESHOLD) {
+            return new MultiCommand(commands);
+        }
+
+        // try to merge TryConsume(tokens=1) or Verbose(TryConsume(tokens=1))  commands into one ConsumeAsMuchAsPossibleCommand in order to reduce network utilization
+        int mergedCommandsCount = 0;
+        List<RemoteCommand<?>> mergedCommands = null; // lazy in order to avoid allocation if there is nothing to merge
+        for (int size = commands.size(), i = 0; i < size; i++) {
+            RemoteCommand<?> command = commands.get(i);
+            RemoteCommand<?> nextCommand = i + 1 < size ? commands.get(i + 1) : null;
+            boolean canBeMerged = nextCommand != null && command.canBeMerged(nextCommand);
+            if (!canBeMerged) {
+                if (mergedCommands != null) {
+                    mergedCommands.add(command);
+                }
+                continue;
+            }
+            if (mergedCommands == null) {
+                mergedCommands = new ArrayList<>(commands.size());
+                if (i > 0) {
+                    mergedCommands.addAll(commands.subList(0, i));
+                }
+            }
+            RemoteCommand<?> mergedCommand = command.toMergedCommand();
+            while (canBeMerged) {
+                nextCommand.mergeInto(mergedCommand);
+                mergedCommandsCount++;
+                i++;
+                nextCommand = i + 1 < size ? commands.get(i + 1) : null;
+                canBeMerged = nextCommand != null && command.canBeMerged(nextCommand);
+            }
+            mergedCommands.add(mergedCommand);
+        }
+        if (mergedCommands == null) {
+            return new MultiCommand(commands);
+        }
+
+        MultiCommand multiCommand = new MultiCommand(mergedCommands);
+        multiCommand.mergedCommands = mergedCommandsCount;
+        return multiCommand;
+    }
+
+    public List<CommandResult<?>> unwrap(CommandResult<MultiResult> multiResult) {
+        List<CommandResult<?>> results = multiResult.getData().getResults();
+        if (!isMerged()) {
+            return results;
+        }
+        List<CommandResult<?>> unwrappedResults = new ArrayList<>(results.size() + this.mergedCommands);
+        for (int i = 0; i < commands.size(); i++) {
+            RemoteCommand<?> command = commands.get(i);
+            CommandResult<?> result = results.get(i);
+            if (!command.isMerged()) {
+                unwrappedResults.add(result);
+                continue;
+            }
+            int mergedCommands = command.getMergedCommandsCount();
+            for (int j = 0; j < mergedCommands; j++) {
+                if (result.isError()) {
+                    unwrappedResults.add(result);
+                } else {
+                    CommandResult<?> unwrapped = ((RemoteCommand)command).unwrapOneResult(result.getData(), j);
+                    unwrappedResults.add(unwrapped);
+                }
+            }
+        }
+        return unwrappedResults;
+    }
+
+    @Override
+    public boolean isMerged() {
+        return this.mergedCommands > 0;
+    }
+
     @Override
     public CommandResult<MultiResult> execute(MutableBucketEntry mutableEntry, long currentTimeNanos) {
         List<CommandResult<?>> singleResults = new ArrayList<>(commands.size());
@@ -141,6 +217,10 @@ public class MultiCommand implements RemoteCommand<MultiResult>, ComparableByCon
     @Override
     public SerializationHandle getSerializationHandle() {
         return SERIALIZATION_HANDLE;
+    }
+
+    public int getMergedCommandsCount() {
+        return mergedCommands;
     }
 
     @Override

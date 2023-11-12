@@ -42,17 +42,42 @@ import io.github.bucket4j.distributed.versioning.Version;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.function.Consumer;
 
 public interface RemoteCommand<T> {
 
     CommandResult<T> execute(MutableBucketEntry mutableEntry, long currentTimeNanos);
 
     default VerboseCommand<T> asVerbose() {
-        return new VerboseCommand<>(this);
+        return VerboseCommand.from(this);
     }
 
     default boolean isInitializationCommand() {
         return false;
+    }
+
+    default boolean canBeMerged(RemoteCommand<?> another) {
+        return false;
+    }
+
+    default void mergeInto(RemoteCommand<?> mergedCommand) {
+        throw new UnsupportedOperationException();
+    }
+
+    default RemoteCommand<?> toMergedCommand() {
+        throw new UnsupportedOperationException();
+    }
+
+    default boolean isMerged() {
+        return false;
+    }
+
+    default CommandResult<?> unwrapOneResult(T result, int indice) {
+        throw new UnsupportedOperationException();
+    }
+
+    default int getMergedCommandsCount() {
+        throw new UnsupportedOperationException();
     }
 
     SerializationHandle<RemoteCommand<?>> getSerializationHandle();

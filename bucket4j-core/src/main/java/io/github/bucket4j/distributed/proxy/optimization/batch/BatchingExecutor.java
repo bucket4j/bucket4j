@@ -29,6 +29,7 @@ import io.github.bucket4j.distributed.remote.MultiResult;
 import io.github.bucket4j.util.concurrent.batch.BatchHelper;
 
 import java.util.List;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 public class BatchingExecutor implements CommandExecutor {
@@ -37,32 +38,34 @@ public class BatchingExecutor implements CommandExecutor {
     private final CommandExecutor wrappedExecutor;
     private final OptimizationListener listener;
 
-    private final Function<List<RemoteCommand<?>>, MultiCommand> taskCombiner = new Function<List<RemoteCommand<?>>, MultiCommand>() {
+    private final Function<List<RemoteCommand<?>>, MultiCommand> taskCombiner = new Function<>() {
         @Override
         public MultiCommand apply(List<RemoteCommand<?>> commands) {
-            listener.incrementMergeCount(commands.size() - 1);
-            return new MultiCommand(commands);
+            if (commands.size() > 1) {
+                listener.incrementMergeCount(commands.size() - 1);
+            }
+            return MultiCommand.merge(commands);
         }
     };
 
-    private final Function<MultiCommand, CommandResult<MultiResult>> combinedTaskExecutor = new Function<MultiCommand, CommandResult<MultiResult>>() {
+    private final Function<MultiCommand, CommandResult<MultiResult>> combinedTaskExecutor = new Function<>() {
         @Override
         public CommandResult<MultiResult> apply(MultiCommand multiCommand) {
             return wrappedExecutor.execute(multiCommand);
         }
     };
 
-    private final Function<RemoteCommand<?>, CommandResult<?>> taskExecutor = new Function<RemoteCommand<?>, CommandResult<?>>() {
+    private final Function<RemoteCommand<?>, CommandResult<?>> taskExecutor = new Function<>() {
         @Override
         public CommandResult<?> apply(RemoteCommand<?> remoteCommand) {
             return wrappedExecutor.execute(remoteCommand);
         }
     };
 
-    private final Function<CommandResult<MultiResult>, List<CommandResult<?>>> combinedResultSplitter = new Function<CommandResult<MultiResult>, List<CommandResult<?>>>() {
+    private final BiFunction<MultiCommand, CommandResult<MultiResult>, List<CommandResult<?>>> combinedResultSplitter = new BiFunction<>() {
         @Override
-        public List<CommandResult<?>> apply(CommandResult<MultiResult> multiResult) {
-            return multiResult.getData().getResults();
+        public List<CommandResult<?>> apply(MultiCommand multiCommand, CommandResult<MultiResult> multiResult) {
+            return multiCommand.unwrap(multiResult);
         }
     };
 

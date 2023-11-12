@@ -7,7 +7,12 @@ import com.hazelcast.config.JoinConfig;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ICacheManager;
-import io.github.bucket4j.grid.jcache.AbstractJCacheTest;
+
+import io.github.bucket4j.distributed.proxy.ClientSideConfig;
+import io.github.bucket4j.grid.jcache.JCacheProxyManager;
+import io.github.bucket4j.tck.AbstractDistributedBucketTest;
+import io.github.bucket4j.tck.ProxyManagerSpec;
+
 import org.gridkit.nanocloud.Cloud;
 import org.gridkit.nanocloud.CloudFactory;
 import org.gridkit.nanocloud.VX;
@@ -17,8 +22,10 @@ import org.junit.jupiter.api.BeforeAll;
 
 import javax.cache.Cache;
 import java.io.Serializable;
+import java.util.Arrays;
+import java.util.UUID;
 
-public class HazelcastJCacheTest extends AbstractJCacheTest {
+public class HazelcastJCacheTest extends AbstractDistributedBucketTest {
 
     private static Cache<String, byte[]> cache;
     private static Cloud cloud;
@@ -59,6 +66,14 @@ public class HazelcastJCacheTest extends AbstractJCacheTest {
         hazelcastInstance = Hazelcast.newHazelcastInstance(config);
         ICacheManager cacheManager = hazelcastInstance.getCacheManager();
         cache = cacheManager.getCache("my_buckets");
+
+        specs = Arrays.asList(
+            new ProxyManagerSpec<>(
+                "JCacheProxyManager",
+                () -> UUID.randomUUID().toString(),
+                new JCacheProxyManager<>(getCache(), ClientSideConfig.getDefault())
+            )
+        );
     }
 
     @AfterAll
@@ -71,8 +86,7 @@ public class HazelcastJCacheTest extends AbstractJCacheTest {
         }
     }
 
-    @Override
-    protected Cache<String, byte[]> getCache() {
+    private static Cache<String, byte[]> getCache() {
         return cache;
     }
 

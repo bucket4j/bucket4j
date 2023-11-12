@@ -4,15 +4,18 @@ import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
 import io.github.bucket4j.grid.coherence.CoherenceProxyManager;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
+import io.github.bucket4j.tck.ProxyManagerSpec;
+
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.littlegrid.ClusterMemberGroup;
 import org.littlegrid.ClusterMemberGroupUtils;
 
+import java.util.Arrays;
 import java.util.UUID;
 
 
-public class CoherenceWithPofSerializationTest extends AbstractDistributedBucketTest<String> {
+public class CoherenceWithPofSerializationTest extends AbstractDistributedBucketTest {
 
     private static ClusterMemberGroup memberGroup;
     private static NamedCache<String, byte[]> cache;
@@ -33,21 +36,19 @@ public class CoherenceWithPofSerializationTest extends AbstractDistributedBucket
         }
 
         cache = CacheFactory.getCache("my_buckets");
+
+        specs = Arrays.asList(
+            new ProxyManagerSpec<>(
+                "CoherenceProxyManager_PofSerialization",
+                () -> UUID.randomUUID().toString(),
+                new CoherenceProxyManager<String>(cache, ClientSideConfig.getDefault())
+            )
+        );
     }
 
     @AfterAll
     public static void shutdownCache() {
         ClusterMemberGroupUtils.shutdownCacheFactoryThenClusterMemberGroups(memberGroup);
-    }
-
-    @Override
-    protected ProxyManager<String> getProxyManager() {
-        return new CoherenceProxyManager<>(cache, ClientSideConfig.getDefault());
-    }
-
-    @Override
-    protected String generateRandomKey() {
-        return UUID.randomUUID().toString();
     }
 
 }

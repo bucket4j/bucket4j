@@ -2,4 +2,8 @@
 Release `{revnumber}`
 
 .The features/enhancements/bugfixes in release scope are following:
-* https://github.com/bucket4j/bucket4j/issues/417[#417 Local Bucket: tryConsumeAsMuchAsPossible returns negative values after calling consumeIgnoreRateLimits]
+* https://github.com/bucket4j/bucket4j/issues/120[#120 Microsoft SQL integration]
+* https://github.com/bucket4j/bucket4j/pull/420[#420 Implement UnifiedJedis builder for JedisBasedProxyManager]
+
+.Breaking changes
+* https://github.com/bucket4j/bucket4j/issues/423[#423 Support for Amazon Dynamo DB has been removed]

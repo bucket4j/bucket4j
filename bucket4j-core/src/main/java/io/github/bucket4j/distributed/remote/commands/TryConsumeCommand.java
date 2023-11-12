@@ -40,6 +40,8 @@ import static io.github.bucket4j.distributed.versioning.Versions.v_7_0_0;
 
 public class TryConsumeCommand implements RemoteCommand<Boolean>, ComparableByContent<TryConsumeCommand> {
 
+    public static final TryConsumeCommand TRY_CONSUME_ONE = new TryConsumeCommand(1);
+
     private long tokensToConsume;
 
     public static final SerializationHandle<TryConsumeCommand> SERIALIZATION_HANDLE = new SerializationHandle<TryConsumeCommand>() {
@@ -49,7 +51,7 @@ public class TryConsumeCommand implements RemoteCommand<Boolean>, ComparableByCo
             Versions.check(formatNumber, v_7_0_0, v_7_0_0);
 
             long tokensToConsume = adapter.readLong(input);
-            return new TryConsumeCommand(tokensToConsume);
+            return TryConsumeCommand.create(tokensToConsume);
         }
 
         @Override
@@ -75,7 +77,7 @@ public class TryConsumeCommand implements RemoteCommand<Boolean>, ComparableByCo
             Versions.check(formatNumber, v_7_0_0, v_7_0_0);
 
             long tokensToConsume = readLongValue(snapshot, "tokensToConsume");
-            return new TryConsumeCommand(tokensToConsume);
+            return TryConsumeCommand.create(tokensToConsume);
         }
 
         @Override
@@ -93,8 +95,34 @@ public class TryConsumeCommand implements RemoteCommand<Boolean>, ComparableByCo
 
     };
 
-    public TryConsumeCommand(long tokensToConsume) {
+    private TryConsumeCommand(long tokensToConsume) {
         this.tokensToConsume = tokensToConsume;
+    }
+
+    @Override
+    public RemoteCommand<?> toMergedCommand() {
+        ConsumeAsMuchAsPossibleCommand merged = new ConsumeAsMuchAsPossibleCommand(1);
+        merged.setMerged(true);
+        return merged;
+    }
+
+    @Override
+    public boolean canBeMerged(RemoteCommand<?> another) {
+        return this == TRY_CONSUME_ONE && another == TRY_CONSUME_ONE;
+    }
+
+    @Override
+    public void mergeInto(RemoteCommand<?> mergedCommand) {
+        ConsumeAsMuchAsPossibleCommand mergedConsume = (ConsumeAsMuchAsPossibleCommand) mergedCommand;
+        mergedConsume.setLimit(mergedConsume.getLimit() + 1);
+    }
+
+    public static TryConsumeCommand create(long tokensToConsume) {
+        if (tokensToConsume == 1) {
+            return TRY_CONSUME_ONE;
+        } else {
+            return new TryConsumeCommand(tokensToConsume);
+        }
     }
 
     @Override
