@@ -24,14 +24,14 @@ public class MockBatchExecutor {
             CombinedMockCommand::new,
             this::executeSync,
             (cmd) -> (Long) this.executeSync(cmd),
-            CombinedResult::getResults
+            (combinedCommand, combinedResult) -> combinedResult.getResults()
     );
 
     private AsyncBatchHelper<MockCommand, Long, CombinedMockCommand, CombinedResult> asyncBatchHelper = AsyncBatchHelper.create(
             CombinedMockCommand::new,
             this::executeAsync,
             (cmd) -> (CompletableFuture<Long>) this.executeAsync(cmd),
-            CombinedResult::getResults
+            (combinedCommand, combinedResult) -> combinedResult.getResults()
     );
 
     private final MockState state = new MockState();

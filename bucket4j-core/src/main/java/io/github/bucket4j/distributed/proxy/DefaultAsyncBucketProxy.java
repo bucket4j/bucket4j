@@ -86,7 +86,7 @@ public class DefaultAsyncBucketProxy implements AsyncBucketProxy, AsyncOptimizat
         public CompletableFuture<VerboseResult<Boolean>> tryConsume(long tokensToConsume) {
             checkTokensToConsume(tokensToConsume);
 
-            VerboseCommand<Boolean> command = new VerboseCommand<>(new TryConsumeCommand(tokensToConsume));
+            VerboseCommand<Boolean> command = TryConsumeCommand.create(tokensToConsume).asVerbose();
             return execute(command).thenApply(consumed -> {
                 if (consumed.getValue()) {
                     listener.onConsumed(tokensToConsume);
@@ -100,7 +100,7 @@ public class DefaultAsyncBucketProxy implements AsyncBucketProxy, AsyncOptimizat
         @Override
         public CompletableFuture<VerboseResult<Long>> consumeIgnoringRateLimits(long tokensToConsume) {
             checkTokensToConsume(tokensToConsume);
-            VerboseCommand<Long> command = new VerboseCommand<>(new ConsumeIgnoringRateLimitsCommand(tokensToConsume));
+            VerboseCommand<Long> command = VerboseCommand.from(new ConsumeIgnoringRateLimitsCommand(tokensToConsume));
             return execute(command).thenApply(penaltyNanos -> {
                 if (penaltyNanos.getValue() == INFINITY_DURATION) {
                     throw BucketExceptions.reservationOverflow();
@@ -114,7 +114,7 @@ public class DefaultAsyncBucketProxy implements AsyncBucketProxy, AsyncOptimizat
         public CompletableFuture<VerboseResult<ConsumptionProbe>> tryConsumeAndReturnRemaining(long tokensToConsume) {
             checkTokensToConsume(tokensToConsume);
 
-            VerboseCommand<ConsumptionProbe> command = new VerboseCommand<>(new TryConsumeAndReturnRemainingTokensCommand(tokensToConsume));
+            VerboseCommand<ConsumptionProbe> command = VerboseCommand.from(new TryConsumeAndReturnRemainingTokensCommand(tokensToConsume));
             return execute(command).thenApply(probe -> {
                 if (probe.getValue().isConsumed()) {
                     listener.onConsumed(tokensToConsume);
@@ -128,13 +128,13 @@ public class DefaultAsyncBucketProxy implements AsyncBucketProxy, AsyncOptimizat
         @Override
         public CompletableFuture<VerboseResult<EstimationProbe>> estimateAbilityToConsume(long numTokens) {
             checkTokensToConsume(numTokens);
-            return execute(new VerboseCommand<>(new EstimateAbilityToConsumeCommand(numTokens)))
+            return execute(VerboseCommand.from(new EstimateAbilityToConsumeCommand(numTokens)))
                     .thenApply(RemoteVerboseResult::asLocal);
         }
 
         @Override
         public CompletableFuture<VerboseResult<Long>> tryConsumeAsMuchAsPossible() {
-            VerboseCommand<Long> command = new VerboseCommand<>(new ConsumeAsMuchAsPossibleCommand (UNLIMITED_AMOUNT));
+            VerboseCommand<Long> command = VerboseCommand.from(new ConsumeAsMuchAsPossibleCommand (UNLIMITED_AMOUNT));
 
             return execute(command).thenApply(consumedTokens -> {
                 long actuallyConsumedTokens = consumedTokens.getValue();
@@ -149,7 +149,7 @@ public class DefaultAsyncBucketProxy implements AsyncBucketProxy, AsyncOptimizat
         public CompletableFuture<VerboseResult<Long>> tryConsumeAsMuchAsPossible(long limit) {
             checkTokensToConsume(limit);
 
-            VerboseCommand<Long> verboseCommand = new VerboseCommand<>(new ConsumeAsMuchAsPossibleCommand(limit));
+            VerboseCommand<Long> verboseCommand = VerboseCommand.from(new ConsumeAsMuchAsPossibleCommand(limit));
             return execute(verboseCommand).thenApply(consumedTokens -> {
                 long actuallyConsumedTokens = consumedTokens.getValue();
                 if (actuallyConsumedTokens > 0) {
@@ -162,20 +162,20 @@ public class DefaultAsyncBucketProxy implements AsyncBucketProxy, AsyncOptimizat
         @Override
         public CompletableFuture<VerboseResult<Nothing>> addTokens(long tokensToAdd) {
             checkTokensToAdd(tokensToAdd);
-            VerboseCommand<Nothing> verboseCommand = new VerboseCommand<>(new AddTokensCommand(tokensToAdd));
+            VerboseCommand<Nothing> verboseCommand = VerboseCommand.from(new AddTokensCommand(tokensToAdd));
             return execute(verboseCommand).thenApply(RemoteVerboseResult::asLocal);
         }
 
         @Override
         public CompletableFuture<VerboseResult<Nothing>> forceAddTokens(long tokensToAdd) {
             checkTokensToAdd(tokensToAdd);
-            VerboseCommand<Nothing> verboseCommand = new VerboseCommand<>(new ForceAddTokensCommand(tokensToAdd));
+            VerboseCommand<Nothing> verboseCommand = VerboseCommand.from(new ForceAddTokensCommand(tokensToAdd));
             return execute(verboseCommand).thenApply(RemoteVerboseResult::asLocal);
         }
 
         @Override
         public CompletableFuture<VerboseResult<Nothing>> reset() {
-            VerboseCommand<Nothing> verboseCommand = new VerboseCommand<>(new ResetCommand());
+            VerboseCommand<Nothing> verboseCommand = VerboseCommand.from(new ResetCommand());
             return execute(verboseCommand).thenApply(RemoteVerboseResult::asLocal);
         }
 
@@ -183,13 +183,13 @@ public class DefaultAsyncBucketProxy implements AsyncBucketProxy, AsyncOptimizat
         public CompletableFuture<VerboseResult<Nothing>> replaceConfiguration(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy) {
             checkConfiguration(newConfiguration);
             checkMigrationMode(tokensInheritanceStrategy);
-            VerboseCommand<Nothing> command = new VerboseCommand<>(new ReplaceConfigurationCommand(newConfiguration, tokensInheritanceStrategy));
+            VerboseCommand<Nothing> command = VerboseCommand.from(new ReplaceConfigurationCommand(newConfiguration, tokensInheritanceStrategy));
             return execute(command).thenApply(RemoteVerboseResult::asLocal);
         }
 
         @Override
         public CompletableFuture<VerboseResult<Long>> getAvailableTokens() {
-            VerboseCommand<Long> command = new VerboseCommand<>(new GetAvailableTokensCommand());
+            VerboseCommand<Long> command = VerboseCommand.from(new GetAvailableTokensCommand());
             return execute(command).thenApply(RemoteVerboseResult::asLocal);
         }
     };
@@ -210,7 +210,7 @@ public class DefaultAsyncBucketProxy implements AsyncBucketProxy, AsyncOptimizat
     public CompletableFuture<Boolean> tryConsume(long tokensToConsume) {
         checkTokensToConsume(tokensToConsume);
 
-        return execute(new TryConsumeCommand(tokensToConsume)).thenApply(consumed -> {
+        return execute(TryConsumeCommand.create(tokensToConsume)).thenApply(consumed -> {
             if (consumed) {
                 listener.onConsumed(tokensToConsume);
             } else {

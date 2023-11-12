@@ -32,18 +32,66 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import static io.github.bucket4j.distributed.remote.commands.TryConsumeCommand.TRY_CONSUME_ONE;
 import static io.github.bucket4j.distributed.versioning.Versions.v_7_0_0;
 
 public class VerboseCommand<T> implements RemoteCommand<RemoteVerboseResult<T>>, ComparableByContent<VerboseCommand<?>> {
 
+    public static final VerboseCommand<Boolean> TRY_CONSUME_ONE_VERBOSE = new VerboseCommand<>(TRY_CONSUME_ONE);
+
     private final RemoteCommand<T> targetCommand;
 
-    public VerboseCommand(RemoteCommand<T> targetCommand) {
+    private VerboseCommand(RemoteCommand<T> targetCommand) {
         this.targetCommand = targetCommand;
+    }
+
+    public static <T> VerboseCommand<T> from(RemoteCommand<T> targetCommand) {
+        if (targetCommand == TryConsumeCommand.TRY_CONSUME_ONE) {
+            return (VerboseCommand<T>) TRY_CONSUME_ONE_VERBOSE;
+        } else {
+            return new VerboseCommand<>(targetCommand);
+        }
     }
 
     public RemoteCommand<T> getTargetCommand() {
         return targetCommand;
+    }
+
+    @Override
+    public boolean canBeMerged(RemoteCommand<?> another) {
+        return this == TRY_CONSUME_ONE_VERBOSE && another == TRY_CONSUME_ONE_VERBOSE;
+    }
+
+    @Override
+    public RemoteCommand<?> toMergedCommand() {
+        return new VerboseCommand<>(targetCommand.toMergedCommand());
+    }
+
+    @Override
+    public void mergeInto(RemoteCommand<?> mergedCommand) {
+        targetCommand.mergeInto(((VerboseCommand<?>) mergedCommand).targetCommand);
+    }
+
+    @Override
+    public int getMergedCommandsCount() {
+        return targetCommand.getMergedCommandsCount();
+    }
+
+    @Override
+    public CommandResult<?> unwrapOneResult(RemoteVerboseResult<T> mergedVerboseResult, int indice) {
+        CommandResult<?> unwrappedTargetResult = targetCommand.unwrapOneResult(mergedVerboseResult.getValue(), indice);
+        RemoteVerboseResult<?> unwrappedVerboseResult = new RemoteVerboseResult<>(
+            mergedVerboseResult.getOperationTimeNanos(),
+            unwrappedTargetResult.getResultTypeId(),
+            unwrappedTargetResult.getData(),
+            mergedVerboseResult.getState()
+        );
+        return CommandResult.success(unwrappedVerboseResult, RemoteVerboseResult.SERIALIZATION_HANDLE);
+    }
+
+    @Override
+    public boolean isMerged() {
+        return targetCommand.isMerged();
     }
 
     @Override
@@ -69,7 +117,7 @@ public class VerboseCommand<T> implements RemoteCommand<RemoteVerboseResult<T>>,
             Versions.check(formatNumber, v_7_0_0, v_7_0_0);
 
             RemoteCommand<?> targetCommand  = RemoteCommand.deserialize(adapter, input);
-            return new VerboseCommand<>(targetCommand);
+            return VerboseCommand.from(targetCommand);
         }
 
         @Override
@@ -95,7 +143,7 @@ public class VerboseCommand<T> implements RemoteCommand<RemoteVerboseResult<T>>,
             Versions.check(formatNumber, v_7_0_0, v_7_0_0);
 
             RemoteCommand<?> targetCommand = RemoteCommand.fromJsonCompatibleSnapshot((Map<String, Object>) snapshot.get("targetCommand"));
-            return new VerboseCommand<>(targetCommand);
+            return VerboseCommand.from(targetCommand);
         }
 
         @Override

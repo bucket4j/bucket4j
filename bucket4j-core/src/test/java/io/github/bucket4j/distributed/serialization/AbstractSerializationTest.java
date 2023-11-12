@@ -259,7 +259,7 @@ public abstract class AbstractSerializationTest {
                 Arrays.asList(
                     new AddTokensCommand(3),
                     new GetAvailableTokensCommand(),
-                    new TryConsumeCommand(10)
+                    TryConsumeCommand.create(10)
                 )
             )
         );
@@ -277,7 +277,7 @@ public abstract class AbstractSerializationTest {
 
         testSerialization(new EstimateAbilityToConsumeCommand(3));
 
-        testSerialization(new TryConsumeCommand(10));
+        testSerialization(TryConsumeCommand.create(10));
 
         testSerialization(new TryConsumeAndReturnRemainingTokensCommand(11));
 
@@ -289,9 +289,9 @@ public abstract class AbstractSerializationTest {
 
         testSerialization(new ConsumeIgnoringRateLimitsCommand(100));
 
-        testSerialization(new VerboseCommand<>(new ConsumeIgnoringRateLimitsCommand(100)));
-        testSerialization(new VerboseCommand<>(new GetAvailableTokensCommand()));
-        testSerialization(new VerboseCommand<>(new ReplaceConfigurationCommand(configuration, TokensInheritanceStrategy.AS_IS)));
+        testSerialization(VerboseCommand.from(new ConsumeIgnoringRateLimitsCommand(100)));
+        testSerialization(VerboseCommand.from(new GetAvailableTokensCommand()));
+        testSerialization(VerboseCommand.from(new ReplaceConfigurationCommand(configuration, TokensInheritanceStrategy.AS_IS)));
         testSerialization(new SyncCommand(20, 10000000));
         testSerialization(new ResetCommand());
 

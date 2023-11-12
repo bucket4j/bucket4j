@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import static java.util.Objects.requireNonNull;
@@ -47,7 +48,7 @@ public class BatchHelper<T, R, CT, CR> {
     private final Function<CT, CR> combinedTaskExecutor;
     private final Function<T, R> taskExecutor;
 
-    private final Function<CR, List<R>> combinedResultSplitter;
+    private final BiFunction<CT, CR, List<R>> combinedResultSplitter;
 
     private final AtomicReference<WaitingTask> headReference = new AtomicReference<>(QUEUE_EMPTY);
 
@@ -55,20 +56,20 @@ public class BatchHelper<T, R, CT, CR> {
             Function<List<T>, CT> taskCombiner,
             Function<CT, CR> combinedTaskExecutor,
             Function<T, R> taskExecutor,
-            Function<CR, List<R>> combinedResultSplitter) {
+            BiFunction<CT, CR, List<R>> combinedResultSplitter) {
         return new BatchHelper<>(taskCombiner, combinedTaskExecutor, taskExecutor, combinedResultSplitter);
     }
 
     public static <T, R, CT, CR> BatchHelper<T, R, CT, CR> create(
             Function<List<T>, CT> taskCombiner,
             Function<CT, CR> combinedTaskExecutor,
-            Function<CR, List<R>> combinedResultSplitter) {
+            BiFunction<CT, CR, List<R>> combinedResultSplitter) {
         Function<T, R> taskExecutor = new Function<T, R>() {
             @Override
             public R apply(T task) {
                 CT combinedTask = taskCombiner.apply(Collections.singletonList(task));
                 CR combinedResult = combinedTaskExecutor.apply(combinedTask);
-                List<R> results = combinedResultSplitter.apply(combinedResult);
+                List<R> results = combinedResultSplitter.apply(combinedTask, combinedResult);
                 return results.get(0);
             }
         };
@@ -78,7 +79,7 @@ public class BatchHelper<T, R, CT, CR> {
     private BatchHelper(Function<List<T>, CT> taskCombiner,
                         Function<CT, CR> combinedTaskExecutor,
                         Function<T, R> taskExecutor,
-                        Function<CR, List<R>> combinedResultSplitter) {
+                        BiFunction<CT, CR, List<R>> combinedResultSplitter) {
         this.taskCombiner = requireNonNull(taskCombiner);
         this.combinedTaskExecutor = requireNonNull(combinedTaskExecutor);
         this.taskExecutor = requireNonNull(taskExecutor);
@@ -131,7 +132,7 @@ public class BatchHelper<T, R, CT, CR> {
             CT multiCommand = taskCombiner.apply(commandsInBatch);
 
             CR multiResult = combinedTaskExecutor.apply(multiCommand);
-            List<R> singleResults = combinedResultSplitter.apply(multiResult);
+            List<R> singleResults = combinedResultSplitter.apply(multiCommand, multiResult);
             for (int i = 0; i < waitingNodes.size(); i++) {
                 R singleResult = singleResults.get(i);
                 waitingNodes.get(i).future.complete(singleResult);

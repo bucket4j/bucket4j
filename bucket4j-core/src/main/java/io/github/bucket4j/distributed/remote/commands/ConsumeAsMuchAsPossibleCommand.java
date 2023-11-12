@@ -37,12 +37,14 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import static io.github.bucket4j.distributed.serialization.PrimitiveSerializationHandles.BOOLEAN_HANDLE;
 import static io.github.bucket4j.distributed.serialization.PrimitiveSerializationHandles.LONG_HANDLE;
 import static io.github.bucket4j.distributed.versioning.Versions.v_7_0_0;
 
 public class ConsumeAsMuchAsPossibleCommand implements RemoteCommand<Long>, ComparableByContent<ConsumeAsMuchAsPossibleCommand> {
 
     private long limit;
+    private boolean merged;
 
     public static final SerializationHandle<ConsumeAsMuchAsPossibleCommand> SERIALIZATION_HANDLE = new SerializationHandle<ConsumeAsMuchAsPossibleCommand>() {
         @Override
@@ -122,6 +124,10 @@ public class ConsumeAsMuchAsPossibleCommand implements RemoteCommand<Long>, Comp
         return limit;
     }
 
+    public void setLimit(long limit) {
+        this.limit = limit;
+    }
+
     @Override
     public SerializationHandle getSerializationHandle() {
         return SERIALIZATION_HANDLE;
@@ -150,6 +156,26 @@ public class ConsumeAsMuchAsPossibleCommand implements RemoteCommand<Long>, Comp
     @Override
     public Version getRequiredVersion() {
         return v_7_0_0;
+    }
+
+    @Override
+    public boolean isMerged() {
+        return merged;
+    }
+
+    @Override
+    public int getMergedCommandsCount() {
+        return (int) limit;
+    }
+
+    @Override
+    public CommandResult<?> unwrapOneResult(Long consumedTokens, int indice) {
+        boolean wasConsumed = indice <= consumedTokens;
+        return CommandResult.success(wasConsumed, BOOLEAN_HANDLE);
+    }
+
+    public void setMerged(boolean merged) {
+        this.merged = merged;
     }
 
 }

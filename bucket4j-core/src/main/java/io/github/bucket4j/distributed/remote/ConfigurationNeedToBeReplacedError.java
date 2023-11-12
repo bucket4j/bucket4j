@@ -43,7 +43,7 @@ public class ConfigurationNeedToBeReplacedError implements CommandError, Compara
         return new BucketNotFoundException();
     }
 
-    public static SerializationHandle<ConfigurationNeedToBeReplacedError> SERIALIZATION_HANDLE = new SerializationHandle<ConfigurationNeedToBeReplacedError>() {
+    public static SerializationHandle<ConfigurationNeedToBeReplacedError> SERIALIZATION_HANDLE = new SerializationHandle<>() {
         @Override
         public <S> ConfigurationNeedToBeReplacedError deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             int formatNumber = adapter.readInt(input);

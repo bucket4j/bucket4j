@@ -80,7 +80,7 @@ public class DefaultBucketProxy extends AbstractBucket implements BucketProxy, O
 
     @Override
     protected boolean tryConsumeImpl(long tokensToConsume) {
-        return execute(new TryConsumeCommand(tokensToConsume));
+        return execute(TryConsumeCommand.create(tokensToConsume));
     }
 
     @Override
@@ -139,7 +139,7 @@ public class DefaultBucketProxy extends AbstractBucket implements BucketProxy, O
 
     @Override
     protected VerboseResult<Boolean> tryConsumeVerboseImpl(long tokensToConsume) {
-        TryConsumeCommand command = new TryConsumeCommand(tokensToConsume);
+        TryConsumeCommand command = TryConsumeCommand.create(tokensToConsume);
         return execute(command.asVerbose()).asLocal();
     }
 
@@ -201,7 +201,7 @@ public class DefaultBucketProxy extends AbstractBucket implements BucketProxy, O
 
     private <T> T execute(RemoteCommand<T> command) {
         if (implicitConfigurationReplacement != null) {
-            command = new CheckConfigurationVersionAndExecuteCommand<T>(command, implicitConfigurationReplacement.getDesiredConfigurationVersion());
+            command = new CheckConfigurationVersionAndExecuteCommand<>(command, implicitConfigurationReplacement.getDesiredConfigurationVersion());
         }
 
         boolean wasInitializedBeforeExecution = wasInitialized.get();

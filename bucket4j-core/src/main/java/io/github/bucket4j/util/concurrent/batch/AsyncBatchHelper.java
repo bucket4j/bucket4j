@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import static java.util.Objects.requireNonNull;
@@ -44,7 +45,7 @@ public class AsyncBatchHelper<T, R, CT, CR> {
     private final Function<List<T>, CT> taskCombiner;
     private final Function<CT, CompletableFuture<CR>> asyncCombinedTaskExecutor;
     private final Function<T, CompletableFuture<R>> asyncTaskExecutor;
-    private final Function<CR, List<R>> combinedResultSplitter;
+    private final BiFunction<CT, CR, List<R>> combinedResultSplitter;
 
     private final AtomicReference<WaitingTask> headReference = new AtomicReference<>(QUEUE_EMPTY);
 
@@ -52,14 +53,14 @@ public class AsyncBatchHelper<T, R, CT, CR> {
             Function<List<T>, CT> taskCombiner,
             Function<CT, CompletableFuture<CR>> asyncCombinedTaskExecutor,
             Function<T, CompletableFuture<R>> asyncTaskExecutor,
-            Function<CR, List<R>> combinedResultSplitter) {
+            BiFunction<CT, CR, List<R>> combinedResultSplitter) {
         return new AsyncBatchHelper<>(taskCombiner, asyncCombinedTaskExecutor, asyncTaskExecutor, combinedResultSplitter);
     }
 
     public static <T, R, CT, CR> AsyncBatchHelper<T, R, CT, CR> create(
             Function<List<T>, CT> taskCombiner,
             Function<CT, CompletableFuture<CR>> asyncCombinedTaskExecutor,
-            Function<CR, List<R>> combinedResultSplitter
+            BiFunction<CT, CR, List<R>> combinedResultSplitter
     ) {
         Function<T, CompletableFuture<R>> asyncTaskExecutor = new Function<T, CompletableFuture<R>>() {
             @Override
@@ -67,7 +68,7 @@ public class AsyncBatchHelper<T, R, CT, CR> {
                 CT combinedTask = taskCombiner.apply(Collections.singletonList(task));
                 CompletableFuture<CR> resultFuture = asyncCombinedTaskExecutor.apply(combinedTask);
                 return resultFuture.thenApply((CR combinedResult) -> {
-                    List<R> results = combinedResultSplitter.apply(combinedResult);
+                    List<R> results = combinedResultSplitter.apply(combinedTask, combinedResult);
                     return results.get(0);
                 });
             }
@@ -78,7 +79,7 @@ public class AsyncBatchHelper<T, R, CT, CR> {
     private AsyncBatchHelper(Function<List<T>, CT> taskCombiner,
                         Function<CT, CompletableFuture<CR>> asyncCombinedTaskExecutor,
                         Function<T, CompletableFuture<R>> asyncTaskExecutor,
-                        Function<CR, List<R>> combinedResultSplitter) {
+                        BiFunction<CT, CR, List<R>> combinedResultSplitter) {
         this.taskCombiner = requireNonNull(taskCombiner);
         this.asyncCombinedTaskExecutor = requireNonNull(asyncCombinedTaskExecutor);
         this.asyncTaskExecutor = requireNonNull(asyncTaskExecutor);
@@ -117,7 +118,7 @@ public class AsyncBatchHelper<T, R, CT, CR> {
             CT multiCommand = taskCombiner.apply(commandsInBatch);
             CompletableFuture<CR> combinedFuture = asyncCombinedTaskExecutor.apply(multiCommand);
             combinedFuture
-                    .whenComplete((multiResult, error) -> completeWaitingFutures(waitingNodes, multiResult, error))
+                    .whenComplete((multiResult, error) -> completeWaitingFutures(multiCommand, waitingNodes, multiResult, error))
                     .whenComplete((multiResult, error) -> scheduleNextBatchAsync());
         } catch (Throwable e) {
             try {
@@ -130,7 +131,7 @@ public class AsyncBatchHelper<T, R, CT, CR> {
         }
     }
 
-    private void completeWaitingFutures(List<WaitingTask<T, R>> waitingNodes, CR multiResult, Throwable error) {
+    private void completeWaitingFutures(CT combinedTask, List<WaitingTask<T, R>> waitingNodes, CR multiResult, Throwable error) {
         if (error != null) {
             for (WaitingTask<T, R> waitingNode : waitingNodes) {
                 try {
@@ -140,7 +141,7 @@ public class AsyncBatchHelper<T, R, CT, CR> {
                 }
             }
         } else {
-            List<R> singleResults = combinedResultSplitter.apply(multiResult);
+            List<R> singleResults = combinedResultSplitter.apply(combinedTask, multiResult);
             for (int i = 0; i < waitingNodes.size(); i++) {
                 try {
                     waitingNodes.get(i).future.complete(singleResults.get(i));

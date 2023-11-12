@@ -30,6 +30,7 @@ import io.github.bucket4j.util.concurrent.batch.AsyncBatchHelper;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 public class AsyncBatchingExecutor implements AsyncCommandExecutor {
@@ -41,8 +42,10 @@ public class AsyncBatchingExecutor implements AsyncCommandExecutor {
     private final Function<List<RemoteCommand<?>>, MultiCommand> taskCombiner = new Function<>() {
         @Override
         public MultiCommand apply(List<RemoteCommand<?>> commands) {
-            listener.incrementMergeCount(commands.size() - 1);
-            return new MultiCommand(commands);
+            if (commands.size() > 1) {
+                listener.incrementMergeCount(commands.size() - 1);
+            }
+            return MultiCommand.merge(commands);
         }
     };
 
@@ -61,10 +64,10 @@ public class AsyncBatchingExecutor implements AsyncCommandExecutor {
         }
     };
 
-    private final Function<CommandResult<MultiResult>, List<CommandResult<?>>> combinedResultSplitter = new Function<>() {
+    private final BiFunction<MultiCommand, CommandResult<MultiResult>, List<CommandResult<?>>> combinedResultSplitter = new BiFunction<>() {
         @Override
-        public List<CommandResult<?>> apply(CommandResult<MultiResult> multiResult) {
-            return multiResult.getData().getResults();
+        public List<CommandResult<?>> apply(MultiCommand multiCommand, CommandResult<MultiResult> multiResult) {
+            return multiCommand.unwrap(multiResult);
         }
     };
 
