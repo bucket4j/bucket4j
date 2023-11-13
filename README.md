@@ -76,7 +76,7 @@ In addition to local in-memory buckets, the Bucket4j supports clustered usage sc
 ### Redis back-ends
 | Back-end                   |  Async supported | Redis cluster supported |                                                      Documentation link                                                      |
 | :---                       | :---:            |:-----------------------:|:----------------------------------------------------------------------------------------------------------------------------:|
-| ```Redis/Redisson```       |  Yes             |           No            | [bucket4j-redis/Redisson](https://bucket4j.com/8.7.0/toc.html#example-of-bucket-instantiation-via-redissonbasedproxymanager) |
+| ```Redis/Redisson```       |  Yes             |           Yes           | [bucket4j-redis/Redisson](https://bucket4j.com/8.7.0/toc.html#example-of-bucket-instantiation-via-redissonbasedproxymanager) |
 | ```Redis/Jedis```          |  No              |           Yes           |    [bucket4j-redis/Jedis](https://bucket4j.com/8.7.0/toc.html#example-of-bucket-instantiation-via-jedisbasedproxymanager)    |
 | ```Redis/Lettuce```        |  Yes             |           Yes           |   [bucket4j-redis/Lettuce](https://bucket4j.com/8.7.0/toc.html#example-of-bucket-instantiation-via-lettucebasedproxymanager) |
 

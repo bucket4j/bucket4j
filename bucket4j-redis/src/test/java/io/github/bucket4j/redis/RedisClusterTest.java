@@ -13,19 +13,31 @@ import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.redisson.Redisson;
+import org.redisson.api.RedissonClient;
+import org.redisson.command.CommandAsyncExecutor;
+import org.redisson.command.CommandAsyncService;
+import org.redisson.config.ClusterServersConfig;
+import org.redisson.config.Config;
+import org.redisson.config.ConfigSupport;
+import org.redisson.connection.ConnectionManager;
+import org.redisson.liveobject.core.RedissonObjectBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
 
 import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
+import io.github.bucket4j.distributed.serialization.Mapper;
 import io.github.bucket4j.redis.jedis.cas.JedisBasedProxyManager;
 import io.github.bucket4j.redis.lettuce.cas.LettuceBasedProxyManager;
+import io.github.bucket4j.redis.redisson.cas.RedissonBasedProxyManager;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
 import io.github.bucket4j.tck.ProxyManagerSpec;
 import io.lettuce.core.RedisURI;
 import io.lettuce.core.cluster.RedisClusterClient;
 import io.lettuce.core.cluster.SlotHash;
 import io.lettuce.core.cluster.api.StatefulRedisClusterConnection;
+import io.netty.util.internal.ThreadLocalRandom;
 import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.JedisCluster;
 import redis.clients.jedis.UnifiedJedis;
@@ -39,20 +51,48 @@ public class RedisClusterTest extends AbstractDistributedBucketTest {
     private static final Integer[] CONTAINER_CLUSTER_PORTS = {7000, 7001, 7002, 7003, 7004, 7005};
 
     private static GenericContainer container;
+
     private static RedisClusterClient redisClient;
 
     private static JedisCluster jedisCluster;
-
     private static UnifiedJedis unifiedJedisCluster;
+
+    private static ConnectionManager connectionManager;
+    private static CommandAsyncExecutor commandExecutor;
 
     @BeforeAll
     public static void setup() {
         container = startRedisContainer();
+
+        // Redisson
+        connectionManager = createRedissonClient(container);
+        commandExecutor = createRedissonExecutor(connectionManager);
+
+        // Lettuce
         redisClient = createLettuceClient(container);
         jedisCluster = createJedisCluster(container);
+
+        // Jedis
         unifiedJedisCluster = createUnifiedJedisCluster(container);
 
         specs = Arrays.asList(
+            // Redisson
+            new ProxyManagerSpec<>(
+                "RedissonBasedProxyManager_NoExpiration_LongKey",
+                () -> ThreadLocalRandom.current().nextLong(),
+                RedissonBasedProxyManager.builderFor(commandExecutor)
+                    .withExpirationStrategy(ExpirationAfterWriteStrategy.none())
+                    .withKeyMapper(Mapper.LONG)
+                    .build()
+            ),
+            new ProxyManagerSpec<>(
+                "RedissonBasedProxyManager_FixedTtl_StringKey",
+                () -> UUID.randomUUID().toString(),
+                RedissonBasedProxyManager.builderFor(commandExecutor)
+                    .withExpirationStrategy(ExpirationAfterWriteStrategy.fixedTimeToLive(Duration.ofSeconds(10)))
+                    .build()
+            ),
+
             // Lettuce
             new ProxyManagerSpec<>(
                 "LettuceBasedProxyManager_NoExpiration_ByteArrayKey",
@@ -62,6 +102,7 @@ public class RedisClusterTest extends AbstractDistributedBucketTest {
                     .build()
             ),
 
+            // Jedis
             new ProxyManagerSpec<>(
                 "JedisBasedProxyManager_NoExpiration_ByteArrayKey",
                 () -> UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8),
@@ -69,7 +110,6 @@ public class RedisClusterTest extends AbstractDistributedBucketTest {
                     .withExpirationStrategy(ExpirationAfterWriteStrategy.fixedTimeToLive(Duration.ofSeconds(10)))
                     .build()
             ),
-
             new ProxyManagerSpec<>(
                     "JedisBasedProxyManager_UnifiedJedis_NoExpiration_ByteArrayKey",
                     () -> UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8),
@@ -84,17 +124,23 @@ public class RedisClusterTest extends AbstractDistributedBucketTest {
     public static void shutdown() {
         try {
             try {
-                if (redisClient != null) {
-                    redisClient.shutdown();
+                if (connectionManager != null) {
+                    connectionManager.shutdown();
                 }
             } finally {
                 try {
-                    if (jedisCluster != null) {
-                        jedisCluster.close();
+                    if (redisClient != null) {
+                        redisClient.shutdown();
                     }
                 } finally {
-                    if (unifiedJedisCluster != null) {
-                        unifiedJedisCluster.close();
+                    try {
+                        if (jedisCluster != null) {
+                            jedisCluster.close();
+                        }
+                    } finally {
+                        if (unifiedJedisCluster != null) {
+                            unifiedJedisCluster.close();
+                        }
                     }
                 }
             }
@@ -122,6 +168,22 @@ public class RedisClusterTest extends AbstractDistributedBucketTest {
         }
 
         return new JedisCluster(new HashSet<>(shards));
+    }
+
+    private static ConnectionManager createRedissonClient(GenericContainer container) {
+        Config config = new Config();
+        ClusterServersConfig clusterConfig = config.useClusterServers();
+        for (Integer containerClusterPort : CONTAINER_CLUSTER_PORTS) {
+            String redisHost = container.getHost();
+            Integer redisPort = container.getMappedPort(containerClusterPort);
+            String redisUrl = "redis://" + redisHost + ":" + redisPort;
+            clusterConfig.addNodeAddress(redisUrl);
+        }
+        return ConfigSupport.createConnectionManager(config);
+    }
+
+    private static CommandAsyncExecutor createRedissonExecutor(ConnectionManager connectionManager) {
+        return new CommandAsyncService(connectionManager, null, RedissonObjectBuilder.ReferenceType.DEFAULT);
     }
 
     private static UnifiedJedis createUnifiedJedisCluster(GenericContainer container) {
