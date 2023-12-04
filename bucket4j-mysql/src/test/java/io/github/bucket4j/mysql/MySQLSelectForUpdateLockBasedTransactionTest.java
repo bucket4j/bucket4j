@@ -31,7 +31,7 @@ public class MySQLSelectForUpdateLockBasedTransactionTest extends AbstractDistri
     public static void initializeInstance() throws SQLException {
         container = startMySQLContainer();
         dataSource = createJdbcDataSource(container);
-        BucketTableSettings tableSettings = BucketTableSettings.getDefault();
+        BucketTableSettings tableSettings = BucketTableSettings.customSettings("test.bucket", "id", "state");
         final String INIT_TABLE_SCRIPT = "CREATE TABLE IF NOT EXISTS {0}({1} BIGINT PRIMARY KEY, {2} BLOB)";
         try (Connection connection = dataSource.getConnection()) {
             try (Statement statement = connection.createStatement()) {
