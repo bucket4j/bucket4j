@@ -8,13 +8,13 @@ General principles to use each JDBC integration:
 .PostgreSQL
 [,sql]
 ----
-CREATE TABLE IF NOT EXISTS buckets(id BIGINT PRIMARY KEY, state BYTEA);
+CREATE TABLE IF NOT EXISTS bucket(id BIGINT PRIMARY KEY, state BYTEA);
 ----
 
 .MySQL
 [,sql]
 ----
-CREATE TABLE IF NOT EXISTS buckets(id BIGINT PRIMARY KEY, state BLOB);
+CREATE TABLE IF NOT EXISTS bucket(id BIGINT PRIMARY KEY, state BLOB);
 ----
 
 .Oracle
