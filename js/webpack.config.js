@@ -15,5 +15,5 @@ module.exports = {
       name: 'bucket4j',
       type: 'umd',
     },
-  },
+  }
 };

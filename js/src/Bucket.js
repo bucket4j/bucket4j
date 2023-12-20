@@ -1,5 +1,5 @@
 export class Bucket {
-    constructor() {
-        // TODO
+    constructor(name) {
+
     }
 }
