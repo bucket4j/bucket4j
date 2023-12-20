@@ -1,0 +1,23 @@
+{
+  "name": "bucket4j-js",
+  "version": "1.0.0",
+  "description": "Token bucket implementation for Javascript that is compatible with Bucket4j library for JVM",
+  "private": true,
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "webpack",
+    "start": "webpack serve --open"
+  },
+  "keywords": [],
+  "author": "Vladimir Bukhtoyarov, jsecoder@mail.ru",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "gulp": "^4.0.2",
+    "webpack": "^5.89.0",
+    "webpack-cli": "^5.1.4",
+    "webpack-dev-server": "^4.15.1"
+  },
+  "dependencies": {
+    "lodash": "^4.17.21"
+  }
+}

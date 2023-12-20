@@ -9,7 +9,15 @@
 .classpath
 .project
 
+# vscode
+.vscode
+
+# Dotenv
+.env
+
 # Build outputs
 target/
 reports/
 .flattened-pom.xml
+/js/node_modules/
+/js/dist
