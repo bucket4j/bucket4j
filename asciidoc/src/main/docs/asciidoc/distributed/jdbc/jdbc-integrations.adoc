@@ -146,7 +146,7 @@ To use Bucket4j extension for MySQL you need to add following dependency:
 
 ==== Oracle integration
 ===== Dependencies
-To use Bucket4j extension for MySQL you need to add following dependency:
+To use Bucket4j extension for Oracle you need to add following dependency:
 
 [,xml,subs=attributes+]
 ----
