@@ -11,14 +11,14 @@ The Bucket4j is distributed through [Maven Central](http://search.maven.org/):
 <dependency>
     <groupId>com.bucket4j</groupId>
     <artifactId>bucket4j-core</artifactId>
-    <version>8.7.0</version>
+    <version>8.7.1</version>
 </dependency>
 
 <!-- For java 8 -->
 <dependency>
     <groupId>com.bucket4j</groupId>
     <artifactId>bucket4j_jdk8-core</artifactId>
-    <version>8.7.0</version>
+    <version>8.7.1</version>
 </dependency>
 ```
 #### Quick start
