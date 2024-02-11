@@ -33,6 +33,7 @@
         <module>bucket4j-postgresql</module>
         <module>bucket4j-oracle</module>
         <module>bucket4j-mysql</module>
+        <module>bucket4j-mariadb</module>
         <module>bucket4j-mssql</module>
         <module>bucket4j-caffeine</module>
 <!--        <module>backward-compatibility-tests</module>-->

@@ -81,12 +81,13 @@ In addition to local in-memory buckets, the Bucket4j supports clustered usage sc
 | ```Redis/Lettuce```        |  Yes             |           Yes           |   [bucket4j-redis/Lettuce](https://bucket4j.github.io/8.7.0/toc.html#example-of-bucket-instantiation-via-lettucebasedproxymanager) |
 
 ### JDBC back-ends
-| Back-end                   |                                  Documentation link                                  |
-|:---------------------------|:------------------------------------------------------------------------------------:|
+| Back-end                   |                                     Documentation link                                     |
+|:---------------------------|:------------------------------------------------------------------------------------------:|
 | ```MySQL```                |       [bucket4j-mysql](https://bucket4j.github.io/8.7.0/toc.html#mysql-integration)        |
 | ```PostgreSQL```           |  [bucket4j-postgresql](https://bucket4j.github.io/8.7.0/toc.html#postgresql-integration)   |
 | ```Oracle```               |      [bucket4j-oracle](https://bucket4j.github.io/8.7.0/toc.html#oracle-integration)       |
 | ```Microsoft SQL Server``` | [bucket4j-mssql](https://bucket4j.github.io/8.7.0/toc.html#microsoftsqlserver-integration) |
+| ```MariaDB```              |     [bucket4j-mariadb](https://bucket4j.github.io/8.7.0/toc.html#mariadb-integration)      |
 
 
 ### Local caches support
@@ -126,4 +127,3 @@ Bellow the compatibility matrix of Bucket4j's maven artefact with different java
 | ```com.bucket4j:bucket4j-mysql```                    | ```com.bucket4j:bucket4j_jdk8-mysql```           |                                             |
 | ```com.bucket4j:bucket4j-postgresql```               | ```com.bucket4j:bucket4j_jdk8-postgresql```      |                                             |
 | ```com.bucket4j:bucket4j-caffeine```                 | ```com.bucket4j:bucket4j_jdk8-caffeine```        |                                             |
-
