@@ -238,6 +238,11 @@ public final class BucketExceptions {
         return new UnsupportedOperationException(msg);
     }
 
+    public static IllegalArgumentException nonPositiveRequestTimeout(Duration requestTimeout) {
+        String msg = "Non-positive request timeout " + requestTimeout;
+        return new IllegalArgumentException(msg);
+    }
+
     public static class BucketExecutionException extends RuntimeException {
         public BucketExecutionException(Throwable cause) {
             super(cause);

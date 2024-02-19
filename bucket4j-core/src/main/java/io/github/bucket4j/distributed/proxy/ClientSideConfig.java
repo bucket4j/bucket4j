@@ -19,12 +19,14 @@
  */
 package io.github.bucket4j.distributed.proxy;
 
+import java.time.Duration;
+import java.util.Objects;
+import java.util.Optional;
+
+import io.github.bucket4j.BucketExceptions;
 import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.versioning.Version;
 import io.github.bucket4j.distributed.versioning.Versions;
-
-import java.util.Objects;
-import java.util.Optional;
 
 /**
  * Represents additional options for {@link ProxyManager} such as:
@@ -42,10 +44,13 @@ public class ClientSideConfig {
 
     private final ExecutionStrategy executionStrategy;
 
-    protected ClientSideConfig(Version backwardCompatibilityVersion, Optional<TimeMeter> clientSideClock, ExecutionStrategy executionStrategy) {
+    private final Optional<Duration> requestTimeout;
+
+    protected ClientSideConfig(Version backwardCompatibilityVersion, Optional<TimeMeter> clientSideClock, ExecutionStrategy executionStrategy, Optional<Duration> requestTimeout) {
         this.backwardCompatibilityVersion = Objects.requireNonNull(backwardCompatibilityVersion);
         this.clientSideClock = Objects.requireNonNull(clientSideClock);
         this.executionStrategy = executionStrategy;
+        this.requestTimeout = requestTimeout;
     }
 
     /**
@@ -75,7 +80,7 @@ public class ClientSideConfig {
      * @return new instance of {@link ClientSideConfig} with configured {@code backwardCompatibilityVersion}.
      */
     public ClientSideConfig backwardCompatibleWith(Version backwardCompatibilityVersion) {
-        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy);
+        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, requestTimeout);
     }
 
     /**
@@ -93,7 +98,7 @@ public class ClientSideConfig {
      * @return new instance of {@link ClientSideConfig} with configured {@code clientClock}.
      */
     public ClientSideConfig withClientClock(TimeMeter clientClock) {
-        return new ClientSideConfig(backwardCompatibilityVersion, Optional.of(clientClock), executionStrategy);
+        return new ClientSideConfig(backwardCompatibilityVersion, Optional.of(clientClock), executionStrategy, requestTimeout);
     }
 
     /**
@@ -107,7 +112,29 @@ public class ClientSideConfig {
      * @return new instance of {@link ClientSideConfig} with configured {@code clientClock}.
      */
     public ClientSideConfig withExecutionStrategy(ExecutionStrategy executionStrategy) {
-        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy);
+        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, requestTimeout);
+    }
+
+    /**
+     * Returns new instance of {@link ClientSideConfig} with configured timeout for remote operations.
+     *
+     * <p>
+     * The way in which timeout is applied depends on concrete implementation of {@link ProxyManager}. It can be three possible cases:
+     * <ol>
+     * <li>If underlying technology supports per request timeouts(like timeouts on prepared JDBC statements) then this feature is used by ProxyManager to satisfy requested timeout</li>
+     * <li>If timeouts is not supported by underlying technology, but it is possible to deal with timeout on Bucket4j library level(like specifying timeouts on CompletableFuture), then this way is applied.</li>
+     * <li>If nothing from above can be applied, then specified {@code requestTimeout} is totally ignored by {@link ProxyManager}</li>
+     * </ol>
+     *
+     * @param requestTimeout timeout for remote operations.
+     *
+     * @return new instance of {@link ClientSideConfig} with configured {@code requestTimeout}.
+     */
+    public ClientSideConfig withRequestTimeout(Duration requestTimeout) {
+        if (requestTimeout.isZero() || requestTimeout.isNegative()) {
+            throw BucketExceptions.nonPositiveRequestTimeout(requestTimeout);
+        }
+        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, Optional.of(requestTimeout));
     }
 
     /**
@@ -119,6 +146,15 @@ public class ClientSideConfig {
      */
     public Optional<TimeMeter> getClientSideClock() {
         return clientSideClock;
+    }
+
+    /**
+     * Returns timeout for remote operations
+     *
+     * @return timeout for remote operations
+     */
+    public Optional<Duration> getRequestTimeout() {
+        return requestTimeout;
     }
 
     /**
