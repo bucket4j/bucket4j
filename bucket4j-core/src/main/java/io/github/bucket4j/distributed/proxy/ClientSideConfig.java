@@ -37,20 +37,20 @@ import io.github.bucket4j.distributed.versioning.Versions;
  */
 public class ClientSideConfig {
 
-    private static ClientSideConfig defaultConfig = new ClientSideConfig(Versions.getLatest(), Optional.empty(), ExecutionStrategy.SAME_TREAD);
+    private static final ClientSideConfig defaultConfig = new ClientSideConfig(Versions.getLatest(), Optional.empty(), ExecutionStrategy.SAME_TREAD, Optional.empty());
 
     private final Version backwardCompatibilityVersion;
     private final Optional<TimeMeter> clientSideClock;
 
     private final ExecutionStrategy executionStrategy;
 
-    private final Optional<Duration> requestTimeout;
+    private final Optional<Long> requestTimeoutNanos;
 
-    protected ClientSideConfig(Version backwardCompatibilityVersion, Optional<TimeMeter> clientSideClock, ExecutionStrategy executionStrategy, Optional<Duration> requestTimeout) {
+    protected ClientSideConfig(Version backwardCompatibilityVersion, Optional<TimeMeter> clientSideClock, ExecutionStrategy executionStrategy, Optional<Long> requestTimeoutNanos) {
         this.backwardCompatibilityVersion = Objects.requireNonNull(backwardCompatibilityVersion);
         this.clientSideClock = Objects.requireNonNull(clientSideClock);
         this.executionStrategy = executionStrategy;
-        this.requestTimeout = requestTimeout;
+        this.requestTimeoutNanos = requestTimeoutNanos;
     }
 
     /**
@@ -80,7 +80,7 @@ public class ClientSideConfig {
      * @return new instance of {@link ClientSideConfig} with configured {@code backwardCompatibilityVersion}.
      */
     public ClientSideConfig backwardCompatibleWith(Version backwardCompatibilityVersion) {
-        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, requestTimeout);
+        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, requestTimeoutNanos);
     }
 
     /**
@@ -98,7 +98,7 @@ public class ClientSideConfig {
      * @return new instance of {@link ClientSideConfig} with configured {@code clientClock}.
      */
     public ClientSideConfig withClientClock(TimeMeter clientClock) {
-        return new ClientSideConfig(backwardCompatibilityVersion, Optional.of(clientClock), executionStrategy, requestTimeout);
+        return new ClientSideConfig(backwardCompatibilityVersion, Optional.of(clientClock), executionStrategy, requestTimeoutNanos);
     }
 
     /**
@@ -112,7 +112,7 @@ public class ClientSideConfig {
      * @return new instance of {@link ClientSideConfig} with configured {@code clientClock}.
      */
     public ClientSideConfig withExecutionStrategy(ExecutionStrategy executionStrategy) {
-        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, requestTimeout);
+        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, requestTimeoutNanos);
     }
 
     /**
@@ -134,7 +134,8 @@ public class ClientSideConfig {
         if (requestTimeout.isZero() || requestTimeout.isNegative()) {
             throw BucketExceptions.nonPositiveRequestTimeout(requestTimeout);
         }
-        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, Optional.of(requestTimeout));
+        long requestTimeoutNanos = requestTimeout.toNanos();
+        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, Optional.of(requestTimeoutNanos));
     }
 
     /**
@@ -153,8 +154,8 @@ public class ClientSideConfig {
      *
      * @return timeout for remote operations
      */
-    public Optional<Duration> getRequestTimeout() {
-        return requestTimeout;
+    public Optional<Long> getRequestTimeoutNanos() {
+        return requestTimeoutNanos;
     }
 
     /**

@@ -24,13 +24,18 @@ import io.github.bucket4j.BucketExceptions;
 import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.proxy.AbstractProxyManager;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
+import io.github.bucket4j.distributed.proxy.Timeout;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.MutableBucketEntry;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.remote.Request;
 
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 
 /**
@@ -48,15 +53,24 @@ public abstract class AbstractSelectForUpdateBasedProxyManager<K> extends Abstra
 
     @Override
     public <T> CommandResult<T> execute(K key, Request<T> request) {
-        SelectForUpdateBasedTransaction transaction = allocateTransaction(key);
+        Timeout timeout = Timeout.of(getClientSideConfig());
+        return executeWithTimeout(key, request, timeout, 1);
+    }
+
+    private <T> CommandResult<T> executeWithTimeout(K key, Request<T> request, Timeout timeout, int attempNumber) {
+        SelectForUpdateBasedTransaction transaction = timeout.call(timeoutNanos -> allocateTransaction(key, timeoutNanos));
         CommandResult<T> result;
         try {
-            result = execute(request, transaction);
+            result = execute(request, transaction, timeout);
         } finally {
             transaction.release();
         }
         if (result == RETRY_IN_THE_SCOPE_OF_NEW_TRANSACTION) {
-            result = execute(key, request);
+            if (attempNumber >= 3) {
+                // should never come here in robust implementation
+                throw new IllegalStateException("Exhausted attempts");
+            }
+            result = executeWithTimeout(key, request, timeout, attempNumber + 1);
             if (result == RETRY_IN_THE_SCOPE_OF_NEW_TRANSACTION) {
                 throw new IllegalStateException();
             }
@@ -79,33 +93,33 @@ public abstract class AbstractSelectForUpdateBasedProxyManager<K> extends Abstra
         return null;
     }
 
-    protected abstract SelectForUpdateBasedTransaction allocateTransaction(K key);
+    protected abstract SelectForUpdateBasedTransaction allocateTransaction(K key, Optional<Long> timeoutNanos);
 
-    private <T> CommandResult<T> execute(Request<T> request, SelectForUpdateBasedTransaction transaction) {
+    private <T> CommandResult<T> execute(Request<T> request, SelectForUpdateBasedTransaction transaction, Timeout timeout) {
         RemoteCommand<T> command = request.getCommand();
-        transaction.begin();
+        timeout.run(transaction::begin);
 
         // lock and get data
         LockAndGetResult lockResult;
         byte[] persistedDataOnBeginOfTransaction;
         try {
-            lockResult = transaction.tryLockAndGet();
+            lockResult = timeout.call(transaction::tryLockAndGet);
         } catch (Throwable t) {
-            transaction.rollback();
+            timeout.run(transaction::rollback);
             throw new BucketExceptions.BucketExecutionException(t);
         }
 
         // insert data that can be locked in next transaction if data does not exist
         if (!lockResult.isLocked()) {
             try {
-                if (transaction.tryInsertEmptyData()) {
-                    transaction.commit();
+                if (timeout.call(transaction::tryInsertEmptyData)) {
+                    timeout.run(transaction::commit);
                 } else {
-                    transaction.rollback();
+                    timeout.run(transaction::rollback);
                 }
                 return RETRY_IN_THE_SCOPE_OF_NEW_TRANSACTION;
             } catch (Throwable t) {
-                transaction.rollback();
+                timeout.run(transaction::rollback);
                 throw new BucketExceptions.BucketExecutionException(t);
             }
         }
@@ -113,7 +127,7 @@ public abstract class AbstractSelectForUpdateBasedProxyManager<K> extends Abstra
         // check that command is able to provide initial state in case of bucket does not exist
         persistedDataOnBeginOfTransaction = lockResult.getData();
         if (persistedDataOnBeginOfTransaction == null && !request.getCommand().isInitializationCommand()) {
-            transaction.rollback();
+            timeout.run(transaction::rollback);
             return CommandResult.bucketNotFound();
         }
 
@@ -123,12 +137,12 @@ public abstract class AbstractSelectForUpdateBasedProxyManager<K> extends Abstra
             if (entry.isStateModified()) {
                 RemoteBucketState modifiedState = entry.get();
                 byte[] bytes = entry.getStateBytes(request.getBackwardCompatibilityVersion());
-                transaction.update(bytes, modifiedState);
+                timeout.run(threshold -> transaction.update(bytes, modifiedState, threshold));
             }
-            transaction.commit();
+            timeout.run(transaction::commit);
             return result;
         } catch (Throwable t) {
-            transaction.rollback();
+            timeout.run(transaction::rollback);
             throw new BucketExceptions.BucketExecutionException(t);
         }
     }
@@ -138,6 +152,13 @@ public abstract class AbstractSelectForUpdateBasedProxyManager<K> extends Abstra
             return clientSideConfig;
         }
         return clientSideConfig.withClientClock(TimeMeter.SYSTEM_MILLISECONDS);
+    }
+
+    protected void applyTimeout(PreparedStatement statement, Optional<Long> requestTimeoutNanos) throws SQLException {
+        if (requestTimeoutNanos.isPresent()) {
+            int timeoutSeconds = (int) Math.max(1, TimeUnit.NANOSECONDS.toSeconds(requestTimeoutNanos.get()));
+            statement.setQueryTimeout(timeoutSeconds);
+        }
     }
 
 }

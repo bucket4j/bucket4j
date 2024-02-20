@@ -35,6 +35,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.MessageFormat;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * @author Maxim Bartkov
@@ -79,7 +80,7 @@ public class PostgreSQLSelectForUpdateBasedProxyManager<K> extends AbstractSelec
     }
 
     @Override
-    protected SelectForUpdateBasedTransaction allocateTransaction(K key) {
+    protected SelectForUpdateBasedTransaction allocateTransaction(K key, Optional<Long> requestTimeoutNanos) {
         Connection connection;
         try {
             connection = dataSource.getConnection();
@@ -89,7 +90,7 @@ public class PostgreSQLSelectForUpdateBasedProxyManager<K> extends AbstractSelec
 
         return new SelectForUpdateBasedTransaction() {
             @Override
-            public void begin() {
+            public void begin(Optional<Long> requestTimeoutNanos) {
                 try {
                     connection.setAutoCommit(false);
                 } catch (SQLException e) {
@@ -98,7 +99,7 @@ public class PostgreSQLSelectForUpdateBasedProxyManager<K> extends AbstractSelec
             }
 
             @Override
-            public void rollback() {
+            public void rollback(Optional<Long> requestTimeoutNanos) {
                 try {
                     connection.rollback();
                 } catch (SQLException e) {
@@ -107,7 +108,7 @@ public class PostgreSQLSelectForUpdateBasedProxyManager<K> extends AbstractSelec
             }
 
             @Override
-            public void commit() {
+            public void commit(Optional<Long> requestTimeoutNanos) {
                 try {
                     connection.commit();
                 } catch (SQLException e) {
@@ -116,8 +117,9 @@ public class PostgreSQLSelectForUpdateBasedProxyManager<K> extends AbstractSelec
             }
 
             @Override
-            public LockAndGetResult tryLockAndGet() {
+            public LockAndGetResult tryLockAndGet(Optional<Long> requestTimeoutNanos) {
                 try (PreparedStatement selectStatement = connection.prepareStatement(selectSqlQuery)) {
+                    applyTimeout(selectStatement, requestTimeoutNanos);
                     configuration.getPrimaryKeyMapper().set(selectStatement, 1, key);
                     try (ResultSet rs = selectStatement.executeQuery()) {
                         if (rs.next()) {
@@ -133,8 +135,9 @@ public class PostgreSQLSelectForUpdateBasedProxyManager<K> extends AbstractSelec
             }
 
             @Override
-            public boolean tryInsertEmptyData() {
+            public boolean tryInsertEmptyData(Optional<Long> requestTimeoutNanos) {
                 try (PreparedStatement insertStatement = connection.prepareStatement(insertSqlQuery)) {
+                    applyTimeout(insertStatement, requestTimeoutNanos);
                     configuration.getPrimaryKeyMapper().set(insertStatement, 1, key);
                     return insertStatement.executeUpdate() > 0;
                 } catch (SQLException e) {
@@ -143,9 +146,10 @@ public class PostgreSQLSelectForUpdateBasedProxyManager<K> extends AbstractSelec
             }
 
             @Override
-            public void update(byte[] data, RemoteBucketState newState) {
+            public void update(byte[] data, RemoteBucketState newState, Optional<Long> requestTimeoutNanos) {
                 try {
                     try (PreparedStatement updateStatement = connection.prepareStatement(updateSqlQuery)) {
+                        applyTimeout(updateStatement, requestTimeoutNanos);
                         updateStatement.setBytes(1, data);
                         configuration.getPrimaryKeyMapper().set(updateStatement, 2, key);
                         updateStatement.executeUpdate();
