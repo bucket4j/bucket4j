@@ -35,6 +35,9 @@ public class SimpleBackupProcessorSerializer implements StreamSerializer<SimpleB
     public SimpleBackupProcessorSerializer(int typeId) {
         this.typeId = typeId;
     }
+    public SimpleBackupProcessorSerializer() {
+        this.typeId = SerializationUtilities.getSerializerTypeId(this.getClass());
+    }
 
     public Class<SimpleBackupProcessor> getSerializableType() {
         return SimpleBackupProcessor.class;

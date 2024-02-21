@@ -35,6 +35,9 @@ public class HazelcastEntryProcessorSerializer implements StreamSerializer<Hazel
     public HazelcastEntryProcessorSerializer(int typeId) {
         this.typeId = typeId;
     }
+    public HazelcastEntryProcessorSerializer() {
+        this.typeId = SerializationUtilities.getSerializerTypeId(this.getClass());
+    }
 
     public Class<HazelcastEntryProcessor> getSerializableType() {
         return HazelcastEntryProcessor.class;
