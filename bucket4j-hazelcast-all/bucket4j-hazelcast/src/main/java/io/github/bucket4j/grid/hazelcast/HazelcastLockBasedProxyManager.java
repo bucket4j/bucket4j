@@ -26,6 +26,7 @@ import io.github.bucket4j.distributed.proxy.generic.pessimistic_locking.LockBase
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 
 import java.util.Objects;
+import java.util.Optional;
 
 public class HazelcastLockBasedProxyManager<K> extends AbstractLockBasedProxyManager<K> {
 
@@ -52,11 +53,11 @@ public class HazelcastLockBasedProxyManager<K> extends AbstractLockBasedProxyMan
     }
 
     @Override
-    protected LockBasedTransaction allocateTransaction(K key) {
+    protected LockBasedTransaction allocateTransaction(K key, Optional<Long> requestTimeout) {
         return new LockBasedTransaction() {
 
             @Override
-            public void begin() {
+            public void begin(Optional<Long> requestTimeout) {
                 // do nothing
             }
 
@@ -66,12 +67,12 @@ public class HazelcastLockBasedProxyManager<K> extends AbstractLockBasedProxyMan
             }
 
             @Override
-            public void commit() {
+            public void commit(Optional<Long> requestTimeout) {
                 // do nothing
             }
 
             @Override
-            public byte[] lockAndGet() {
+            public byte[] lockAndGet(Optional<Long> requestTimeout) {
                 map.lock(key);
                 return map.get(key);
             }
@@ -82,12 +83,12 @@ public class HazelcastLockBasedProxyManager<K> extends AbstractLockBasedProxyMan
             }
 
             @Override
-            public void create(byte[] data, RemoteBucketState newState) {
+            public void create(byte[] data, RemoteBucketState newState, Optional<Long> requestTimeout) {
                 map.put(key, data);
             }
 
             @Override
-            public void update(byte[] data, RemoteBucketState newState) {
+            public void update(byte[] data, RemoteBucketState newState, Optional<Long> requestTimeout) {
                 map.put(key, data);
             }
 

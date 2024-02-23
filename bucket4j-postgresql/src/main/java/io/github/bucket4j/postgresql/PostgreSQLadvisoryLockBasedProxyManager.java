@@ -34,6 +34,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.MessageFormat;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * @author Maxim Bartkov
@@ -76,7 +77,7 @@ public class PostgreSQLadvisoryLockBasedProxyManager<K> extends AbstractLockBase
     }
 
     @Override
-    protected LockBasedTransaction allocateTransaction(K key) {
+    protected LockBasedTransaction allocateTransaction(K key, Optional<Long> requestTimeout) {
         Connection connection;
         try {
             connection = dataSource.getConnection();
@@ -86,7 +87,7 @@ public class PostgreSQLadvisoryLockBasedProxyManager<K> extends AbstractLockBase
 
         return new LockBasedTransaction() {
             @Override
-            public void begin() {
+            public void begin(Optional<Long> requestTimeout) {
                 try {
                     connection.setAutoCommit(false);
                 } catch (SQLException e) {
@@ -95,10 +96,11 @@ public class PostgreSQLadvisoryLockBasedProxyManager<K> extends AbstractLockBase
             }
 
             @Override
-            public byte[] lockAndGet() {
+            public byte[] lockAndGet(Optional<Long> requestTimeout) {
                 try {
                     String lockSQL = "SELECT pg_advisory_xact_lock(?)";
                     try (PreparedStatement lockStatement = connection.prepareStatement(lockSQL)) {
+                        applyTimeout(lockStatement, requestTimeout);
                         long advisoryLockValue = (key instanceof Number) ? ((Number) key).longValue(): key.hashCode();
                         lockStatement.setLong(1, advisoryLockValue);
                         lockStatement.executeQuery();
@@ -120,9 +122,10 @@ public class PostgreSQLadvisoryLockBasedProxyManager<K> extends AbstractLockBase
             }
 
             @Override
-            public void update(byte[] data, RemoteBucketState newState) {
+            public void update(byte[] data, RemoteBucketState newState, Optional<Long> requestTimeout) {
                 try {
                     try (PreparedStatement updateStatement = connection.prepareStatement(updateSqlQuery)) {
+                        applyTimeout(updateStatement, requestTimeout);
                         updateStatement.setBytes(1, data);
                         configuration.getPrimaryKeyMapper().set(updateStatement, 2, key);
                         updateStatement.executeUpdate();
@@ -142,9 +145,10 @@ public class PostgreSQLadvisoryLockBasedProxyManager<K> extends AbstractLockBase
             }
 
             @Override
-            public void create(byte[] data, RemoteBucketState newState) {
+            public void create(byte[] data, RemoteBucketState newState, Optional<Long> requestTimeout) {
                 try {
                     try (PreparedStatement insertStatement = connection.prepareStatement(insertSqlQuery)) {
+                        applyTimeout(insertStatement, requestTimeout);
                         configuration.getPrimaryKeyMapper().set(insertStatement, 1, key);
                         insertStatement.setBytes(2, data);
                         insertStatement.executeUpdate();
@@ -164,7 +168,7 @@ public class PostgreSQLadvisoryLockBasedProxyManager<K> extends AbstractLockBase
             }
 
             @Override
-            public void commit() {
+            public void commit(Optional<Long> requestTimeout) {
                 try {
                     connection.commit();
                 } catch (SQLException e) {

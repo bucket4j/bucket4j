@@ -24,12 +24,17 @@ import io.github.bucket4j.BucketExceptions;
 import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.proxy.AbstractProxyManager;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
+import io.github.bucket4j.distributed.proxy.Timeout;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.MutableBucketEntry;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.remote.Request;
 
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 /**
  * The base class for proxy managers that built on top of idea that underlining storage provide Compare-And-Swap functionality.
@@ -44,9 +49,10 @@ public abstract class AbstractLockBasedProxyManager<K> extends AbstractProxyMana
 
     @Override
     public <T> CommandResult<T> execute(K key, Request<T> request) {
-        LockBasedTransaction transaction = allocateTransaction(key);
+        Timeout timeout = Timeout.of(getClientSideConfig());
+        LockBasedTransaction transaction = timeout.call(requestTimeout -> allocateTransaction(key, requestTimeout));
         try {
-            return execute(request, transaction);
+            return execute(request, transaction, timeout);
         } finally {
             transaction.release();
         }
@@ -67,16 +73,16 @@ public abstract class AbstractLockBasedProxyManager<K> extends AbstractProxyMana
         return null;
     }
 
-    protected abstract LockBasedTransaction allocateTransaction(K key);
+    protected abstract LockBasedTransaction allocateTransaction(K key, Optional<Long> timeoutNanos);
 
-    private <T> CommandResult<T> execute(Request<T> request, LockBasedTransaction transaction) {
+    private <T> CommandResult<T> execute(Request<T> request, LockBasedTransaction transaction, Timeout timeout) {
         RemoteCommand<T> command = request.getCommand();
-        transaction.begin();
+        timeout.run(transaction::begin);
 
         // lock and get data
         byte[] persistedDataOnBeginOfTransaction;
         try {
-            persistedDataOnBeginOfTransaction = transaction.lockAndGet();
+            persistedDataOnBeginOfTransaction = timeout.call(transaction::lockAndGet);
         } catch (Throwable t) {
             unlockAndRollback(transaction);
             throw new BucketExceptions.BucketExecutionException(t);
@@ -94,13 +100,13 @@ public abstract class AbstractLockBasedProxyManager<K> extends AbstractProxyMana
             if (entry.isStateModified()) {
                 byte[] bytes = entry.getStateBytes(request.getBackwardCompatibilityVersion());
                 if (persistedDataOnBeginOfTransaction == null) {
-                    transaction.create(bytes, entry.get());
+                    timeout.run(requestTimeout -> transaction.create(bytes, entry.get(), requestTimeout));
                 } else {
-                    transaction.update(bytes, entry.get());
+                    timeout.run(requestTimeout -> transaction.update(bytes, entry.get(), requestTimeout));
                 }
             }
             transaction.unlock();
-            transaction.commit();
+            timeout.run(transaction::commit);
             return result;
         } catch (Throwable t) {
             unlockAndRollback(transaction);
@@ -121,6 +127,13 @@ public abstract class AbstractLockBasedProxyManager<K> extends AbstractProxyMana
             return clientSideConfig;
         }
         return clientSideConfig.withClientClock(TimeMeter.SYSTEM_MILLISECONDS);
+    }
+
+    protected void applyTimeout(PreparedStatement statement, Optional<Long> requestTimeoutNanos) throws SQLException {
+        if (requestTimeoutNanos.isPresent()) {
+            int timeoutSeconds = (int) Math.max(1, TimeUnit.NANOSECONDS.toSeconds(requestTimeoutNanos.get()));
+            statement.setQueryTimeout(timeoutSeconds);
+        }
     }
 
 }
