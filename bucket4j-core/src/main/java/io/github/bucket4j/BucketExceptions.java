@@ -22,7 +22,6 @@ package io.github.bucket4j;
 import java.text.MessageFormat;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.concurrent.TimeoutException;
 
 public final class BucketExceptions {
 
@@ -244,10 +243,10 @@ public final class BucketExceptions {
         return new IllegalArgumentException(msg);
     }
 
-    public static IllegalStateException timeoutReached(long nanosElapsed, long requestTimeoutNanos) {
+    public static TimeoutException timeoutReached(long nanosElapsed, long requestTimeoutNanos) {
         String pattern = "Timeout {0} nanos has been reached, actual operation time is {1} nanos";
         String msg = MessageFormat.format(pattern, requestTimeoutNanos, nanosElapsed);
-        return new IllegalStateException(msg);
+        return new TimeoutException(msg, nanosElapsed, requestTimeoutNanos);
     }
 
     public static class BucketExecutionException extends RuntimeException {
