@@ -23,6 +23,7 @@ import io.github.bucket4j.BucketExceptions;
 import io.github.bucket4j.distributed.jdbc.BucketTableSettings;
 import io.github.bucket4j.distributed.jdbc.SQLProxyConfiguration;
 import io.github.bucket4j.distributed.jdbc.SQLProxyConfigurationBuilder;
+import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.generic.pessimistic_locking.AbstractLockBasedProxyManager;
 import io.github.bucket4j.distributed.proxy.generic.pessimistic_locking.LockBasedTransaction;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
@@ -62,12 +63,16 @@ public class PostgreSQLadvisoryLockBasedProxyManager<K> extends AbstractLockBase
     private final String insertSqlQuery;
     private final String selectSqlQuery;
 
+    public PostgreSQLadvisoryLockBasedProxyManager(SQLProxyConfiguration<K> configuration) {
+        this(configuration, ClientSideConfig.getDefault());
+    }
+
     /**
      *
      * @param configuration {@link SQLProxyConfiguration} configuration.
      */
-    public <T extends Object> PostgreSQLadvisoryLockBasedProxyManager(SQLProxyConfiguration<K> configuration) {
-        super(configuration.getClientSideConfig());
+    public PostgreSQLadvisoryLockBasedProxyManager(SQLProxyConfiguration<K> configuration, ClientSideConfig clientSideConfig) {
+        super(clientSideConfig);
         this.dataSource = Objects.requireNonNull(configuration.getDataSource());
         this.configuration = configuration;
         this.removeSqlQuery = MessageFormat.format("DELETE FROM {0} WHERE {1} = ?", configuration.getTableName(), configuration.getIdName());

@@ -18,6 +18,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.MessageFormat;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
@@ -67,6 +68,16 @@ public class PostgreSQLTest extends AbstractDistributedBucketTest {
                 "PostgreSQLSelectForUpdateBasedProxyManager",
                 () -> ThreadLocalRandom.current().nextLong(1_000_000_000),
                 new PostgreSQLSelectForUpdateBasedProxyManager<>(configuration_1)
+            ),
+            new ProxyManagerSpec<>(
+                "PostgreSQLadvisoryLockBasedProxyManager_withRequestTimeout",
+                () -> ThreadLocalRandom.current().nextLong(1_000_000_000),
+                new PostgreSQLadvisoryLockBasedProxyManager<>(configuration_1, ClientSideConfig.getDefault().withRequestTimeout(Duration.ofSeconds(3)))
+            ),
+            new ProxyManagerSpec<>(
+                "PostgreSQLSelectForUpdateBasedProxyManager_withRequestTimeout",
+                () -> ThreadLocalRandom.current().nextLong(1_000_000_000),
+                new PostgreSQLSelectForUpdateBasedProxyManager<>(configuration_1, ClientSideConfig.getDefault().withRequestTimeout(Duration.ofSeconds(3)))
             ),
             new ProxyManagerSpec<>(
                 "PostgreSQLadvisoryLockBasedProxyManager_StringKey",

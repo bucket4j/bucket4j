@@ -23,6 +23,7 @@ import io.github.bucket4j.BucketExceptions;
 import io.github.bucket4j.distributed.jdbc.BucketTableSettings;
 import io.github.bucket4j.distributed.jdbc.SQLProxyConfiguration;
 import io.github.bucket4j.distributed.jdbc.SQLProxyConfigurationBuilder;
+import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.generic.select_for_update.AbstractSelectForUpdateBasedProxyManager;
 import io.github.bucket4j.distributed.proxy.generic.select_for_update.LockAndGetResult;
 import io.github.bucket4j.distributed.proxy.generic.select_for_update.SelectForUpdateBasedTransaction;
@@ -69,7 +70,15 @@ public class PostgreSQLSelectForUpdateBasedProxyManager<K> extends AbstractSelec
      * @param configuration {@link SQLProxyConfiguration} configuration.
      */
     public PostgreSQLSelectForUpdateBasedProxyManager(SQLProxyConfiguration<K> configuration) {
-        super(configuration.getClientSideConfig());
+        this(configuration, ClientSideConfig.getDefault());
+    }
+
+    /**
+     *
+     * @param configuration {@link SQLProxyConfiguration} configuration.
+     */
+    public PostgreSQLSelectForUpdateBasedProxyManager(SQLProxyConfiguration<K> configuration, ClientSideConfig clientSideConfig) {
+        super(clientSideConfig);
         this.dataSource = Objects.requireNonNull(configuration.getDataSource());
         this.configuration = configuration;
         this.removeSqlQuery = MessageFormat.format("DELETE FROM {0} WHERE {1} = ?", configuration.getTableName(), configuration.getIdName());

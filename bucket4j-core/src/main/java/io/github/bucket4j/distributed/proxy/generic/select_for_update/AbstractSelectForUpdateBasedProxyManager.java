@@ -54,28 +54,18 @@ public abstract class AbstractSelectForUpdateBasedProxyManager<K> extends Abstra
     @Override
     public <T> CommandResult<T> execute(K key, Request<T> request) {
         Timeout timeout = Timeout.of(getClientSideConfig());
-        return executeWithTimeout(key, request, timeout, 1);
-    }
-
-    private <T> CommandResult<T> executeWithTimeout(K key, Request<T> request, Timeout timeout, int attempNumber) {
-        SelectForUpdateBasedTransaction transaction = timeout.call(timeoutNanos -> allocateTransaction(key, timeoutNanos));
-        CommandResult<T> result;
-        try {
-            result = execute(request, transaction, timeout);
-        } finally {
-            transaction.release();
-        }
-        if (result == RETRY_IN_THE_SCOPE_OF_NEW_TRANSACTION) {
-            if (attempNumber >= 3) {
-                // should never come here in robust implementation
-                throw new IllegalStateException("Exhausted attempts");
+        while (true) {
+            SelectForUpdateBasedTransaction transaction = timeout.call(timeoutNanos -> allocateTransaction(key, timeoutNanos));
+            CommandResult<T> result;
+            try {
+                result = execute(request, transaction, timeout);
+            } finally {
+                transaction.release();
             }
-            result = executeWithTimeout(key, request, timeout, attempNumber + 1);
-            if (result == RETRY_IN_THE_SCOPE_OF_NEW_TRANSACTION) {
-                throw new IllegalStateException();
+            if (result != RETRY_IN_THE_SCOPE_OF_NEW_TRANSACTION) {
+                return result;
             }
         }
-        return result;
     }
 
     @Override

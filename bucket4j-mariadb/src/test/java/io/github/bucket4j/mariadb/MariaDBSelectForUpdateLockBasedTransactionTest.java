@@ -4,6 +4,7 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import io.github.bucket4j.distributed.jdbc.BucketTableSettings;
 import io.github.bucket4j.distributed.jdbc.SQLProxyConfiguration;
+import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
 import io.github.bucket4j.tck.ProxyManagerSpec;
 
@@ -16,6 +17,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.MessageFormat;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -23,7 +25,6 @@ public class MariaDBSelectForUpdateLockBasedTransactionTest extends AbstractDist
 
     private static MariaDBContainer container;
     private static DataSource dataSource;
-    private static MariaDBSelectForUpdateBasedProxyManager<Long> proxyManager;
 
     @BeforeAll
     public static void initializeInstance() throws SQLException {
@@ -40,13 +41,17 @@ public class MariaDBSelectForUpdateLockBasedTransactionTest extends AbstractDist
         SQLProxyConfiguration<Long> configuration = SQLProxyConfiguration.builder()
                 .withTableSettings(tableSettings)
                 .build(dataSource);
-        proxyManager = new MariaDBSelectForUpdateBasedProxyManager<>(configuration);
 
         specs = Arrays.asList(
             new ProxyManagerSpec<>(
                 "MariaDBSelectForUpdateBasedProxyManager",
                 () -> ThreadLocalRandom.current().nextLong(1_000_000_000),
-                proxyManager
+                new MariaDBSelectForUpdateBasedProxyManager<>(configuration)
+            ),
+            new ProxyManagerSpec<>(
+                "MariaDBSelectForUpdateBasedProxyManager_withTimeout",
+                () -> ThreadLocalRandom.current().nextLong(1_000_000_000),
+                new MariaDBSelectForUpdateBasedProxyManager<>(configuration, ClientSideConfig.getDefault().withRequestTimeout(Duration.ofSeconds(3)))
             )
         );
     }

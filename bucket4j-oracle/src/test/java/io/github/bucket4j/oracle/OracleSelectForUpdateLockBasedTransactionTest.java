@@ -4,6 +4,7 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import io.github.bucket4j.distributed.jdbc.BucketTableSettings;
 import io.github.bucket4j.distributed.jdbc.SQLProxyConfiguration;
+import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
 import io.github.bucket4j.tck.ProxyManagerSpec;
 
@@ -16,6 +17,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.MessageFormat;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -45,6 +47,11 @@ public class OracleSelectForUpdateLockBasedTransactionTest extends AbstractDistr
                 "OracleSelectForUpdateBasedProxyManager",
                 () -> ThreadLocalRandom.current().nextLong(1_000_000_000),
                 new OracleSelectForUpdateBasedProxyManager<>(configuration)
+            ),
+            new ProxyManagerSpec<>(
+                "OracleSelectForUpdateBasedProxyManager_withTimeout",
+                () -> ThreadLocalRandom.current().nextLong(1_000_000_000),
+                new OracleSelectForUpdateBasedProxyManager<>(configuration, ClientSideConfig.getDefault().withRequestTimeout(Duration.ofSeconds(3)))
             )
         );
     }

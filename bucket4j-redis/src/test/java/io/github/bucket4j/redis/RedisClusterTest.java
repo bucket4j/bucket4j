@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
 
 import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
+import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.serialization.Mapper;
 import io.github.bucket4j.redis.jedis.cas.JedisBasedProxyManager;
 import io.github.bucket4j.redis.lettuce.cas.LettuceBasedProxyManager;
@@ -92,6 +93,14 @@ public class RedisClusterTest extends AbstractDistributedBucketTest {
                     .withExpirationStrategy(ExpirationAfterWriteStrategy.fixedTimeToLive(Duration.ofSeconds(10)))
                     .build()
             ),
+            new ProxyManagerSpec<>(
+                "RedissonBasedProxyManager_FixedTtl_StringKey_withTimeout",
+                () -> UUID.randomUUID().toString(),
+                RedissonBasedProxyManager.builderFor(commandExecutor)
+                    .withExpirationStrategy(ExpirationAfterWriteStrategy.fixedTimeToLive(Duration.ofSeconds(10)))
+                    .withClientSideConfig(ClientSideConfig.getDefault().withRequestTimeout(Duration.ofSeconds(3)))
+                    .build()
+            ),
 
             // Lettuce
             new ProxyManagerSpec<>(
@@ -99,6 +108,14 @@ public class RedisClusterTest extends AbstractDistributedBucketTest {
                 () -> UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8),
                 LettuceBasedProxyManager.builderFor(redisClient)
                     .withExpirationStrategy(ExpirationAfterWriteStrategy.none())
+                    .build()
+            ),
+            new ProxyManagerSpec<>(
+                "LettuceBasedProxyManager_NoExpiration_ByteArrayKey_withTimeout",
+                () -> UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8),
+                LettuceBasedProxyManager.builderFor(redisClient)
+                    .withExpirationStrategy(ExpirationAfterWriteStrategy.none())
+                    .withClientSideConfig(ClientSideConfig.getDefault().withRequestTimeout(Duration.ofSeconds(3)))
                     .build()
             ),
 

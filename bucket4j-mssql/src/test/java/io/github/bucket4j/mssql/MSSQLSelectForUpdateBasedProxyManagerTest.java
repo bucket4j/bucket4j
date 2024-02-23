@@ -19,6 +19,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.MessageFormat;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -33,7 +34,6 @@ public class MSSQLSelectForUpdateBasedProxyManagerTest extends AbstractDistribut
 
     private static MSSQLServerContainer container;
     private static HikariDataSource dataSource;
-    private static MSSQLSelectForUpdateBasedProxyManager<Long> proxyManager;
 
     @BeforeAll
     public static void initializeInstance() throws SQLException {
@@ -50,13 +50,17 @@ public class MSSQLSelectForUpdateBasedProxyManagerTest extends AbstractDistribut
         SQLProxyConfiguration<Long> configuration = SQLProxyConfiguration.builder()
                 .withTableSettings(tableSettings)
                 .build(dataSource);
-        proxyManager = new MSSQLSelectForUpdateBasedProxyManager<>(configuration);
 
         specs = Arrays.asList(
             new ProxyManagerSpec<>(
                 "MSSQLSelectForUpdateBasedProxyManager",
                 () -> ThreadLocalRandom.current().nextLong(1_000_000_000),
-                proxyManager
+                new MSSQLSelectForUpdateBasedProxyManager<>(configuration)
+            ),
+            new ProxyManagerSpec<>(
+                "MSSQLSelectForUpdateBasedProxyManager_withTimeout",
+                () -> ThreadLocalRandom.current().nextLong(1_000_000_000),
+                new MSSQLSelectForUpdateBasedProxyManager<>(configuration, ClientSideConfig.getDefault().withRequestTimeout(Duration.ofSeconds(3)))
             )
         );
     }

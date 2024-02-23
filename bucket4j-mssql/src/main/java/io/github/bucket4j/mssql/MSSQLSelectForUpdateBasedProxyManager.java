@@ -21,6 +21,7 @@ package io.github.bucket4j.mssql;
 
 import io.github.bucket4j.BucketExceptions;
 import io.github.bucket4j.distributed.jdbc.SQLProxyConfiguration;
+import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.generic.select_for_update.AbstractSelectForUpdateBasedProxyManager;
 import io.github.bucket4j.distributed.proxy.generic.select_for_update.LockAndGetResult;
 import io.github.bucket4j.distributed.proxy.generic.select_for_update.SelectForUpdateBasedTransaction;
@@ -53,16 +54,24 @@ public class MSSQLSelectForUpdateBasedProxyManager<K> extends AbstractSelectForU
      *
      * @param configuration {@link SQLProxyConfiguration} configuration.
      */
-    public MSSQLSelectForUpdateBasedProxyManager(SQLProxyConfiguration<K> configuration) {
-        super(configuration.getClientSideConfig());
+    public MSSQLSelectForUpdateBasedProxyManager(SQLProxyConfiguration<K> configuration, ClientSideConfig clientSideConfig) {
+        super(clientSideConfig);
         this.dataSource = Objects.requireNonNull(configuration.getDataSource());
         this.configuration = configuration;
         this.removeSqlQuery = MessageFormat.format("DELETE FROM {0} WHERE {1} = ?", configuration.getTableName(), configuration.getIdName());
         this.updateSqlQuery = MessageFormat.format("UPDATE {0} SET {1}=? WHERE {2}=?", configuration.getTableName(), configuration.getStateName(), configuration.getIdName());
         this.insertSqlQuery = MessageFormat.format(
             "INSERT INTO {0}({1},{2}) VALUES(?, null)",
-                configuration.getTableName(), configuration.getIdName(), configuration.getStateName());
+            configuration.getTableName(), configuration.getIdName(), configuration.getStateName());
         this.selectSqlQuery = MessageFormat.format("SELECT {0} FROM {1} WITH(ROWLOCK, UPDLOCK) WHERE {2} = ?", configuration.getStateName(), configuration.getTableName(), configuration.getIdName());
+    }
+
+    /**
+     *
+     * @param configuration {@link SQLProxyConfiguration} configuration.
+     */
+    public MSSQLSelectForUpdateBasedProxyManager(SQLProxyConfiguration<K> configuration) {
+        this(configuration, ClientSideConfig.getDefault());
     }
 
     @Override

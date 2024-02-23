@@ -16,6 +16,7 @@ import org.redisson.liveobject.core.RedissonObjectBuilder;
 import org.testcontainers.containers.GenericContainer;
 
 import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
+import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.serialization.Mapper;
 import io.github.bucket4j.redis.jedis.cas.JedisBasedProxyManager;
 import io.github.bucket4j.redis.lettuce.cas.LettuceBasedProxyManager;
@@ -92,6 +93,14 @@ public class RedisStandaloneTest extends AbstractDistributedBucketTest {
                     .withExpirationStrategy(ExpirationAfterWriteStrategy.none())
                     .build()
             ),
+            new ProxyManagerSpec<>(
+                "RedissonBasedProxyManager_NoExpiration_StringKey_RequestTimeout",
+                () -> UUID.randomUUID().toString(),
+                RedissonBasedProxyManager.builderFor(commandExecutor)
+                    .withExpirationStrategy(ExpirationAfterWriteStrategy.none())
+                    .withClientSideConfig(ClientSideConfig.getDefault().withRequestTimeout(Duration.ofSeconds(3)))
+                    .build()
+            ),
 
             // Letucce
             new ProxyManagerSpec<>(
@@ -113,6 +122,14 @@ public class RedisStandaloneTest extends AbstractDistributedBucketTest {
                 () -> UUID.randomUUID().toString(),
                 LettuceBasedProxyManager.builderFor(redisClient.connect(RedisCodec.of(StringCodec.UTF8, ByteArrayCodec.INSTANCE)))
                     .withExpirationStrategy(ExpirationAfterWriteStrategy.none())
+                    .build()
+            ),
+            new ProxyManagerSpec<>(
+                "LettuceBasedProxyManager_NoExpiration_StringKey_RequestTimeout",
+                () -> UUID.randomUUID().toString(),
+                LettuceBasedProxyManager.builderFor(redisClient.connect(RedisCodec.of(StringCodec.UTF8, ByteArrayCodec.INSTANCE)))
+                    .withExpirationStrategy(ExpirationAfterWriteStrategy.none())
+                    .withClientSideConfig(ClientSideConfig.getDefault().withRequestTimeout(Duration.ofSeconds(3)))
                     .build()
             ),
 
