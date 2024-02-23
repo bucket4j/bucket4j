@@ -46,6 +46,7 @@ import io.github.bucket4j.distributed.remote.Request;
 import io.github.bucket4j.distributed.versioning.Version;
 import io.github.bucket4j.grid.hazelcast.serialization.HazelcastEntryProcessorSerializer;
 import io.github.bucket4j.grid.hazelcast.serialization.HazelcastOffloadableEntryProcessorSerializer;
+import io.github.bucket4j.grid.hazelcast.serialization.SerializationUtilities;
 import io.github.bucket4j.grid.hazelcast.serialization.SimpleBackupProcessorSerializer;
 import io.github.bucket4j.distributed.serialization.InternalSerializationHelper;
 
@@ -137,19 +138,19 @@ public class HazelcastProxyManager<K> extends AbstractProxyManager<K> {
     public static void addCustomSerializers(SerializationConfig serializationConfig, final int typeIdBase) {
         serializationConfig.addSerializerConfig(
                 new SerializerConfig()
-                        .setImplementation(new HazelcastEntryProcessorSerializer(typeIdBase))
+                        .setImplementation(new HazelcastEntryProcessorSerializer(SerializationUtilities.getSerializerTypeId(HazelcastEntryProcessorSerializer.class, typeIdBase)))
                         .setTypeClass(HazelcastEntryProcessor.class)
         );
 
         serializationConfig.addSerializerConfig(
                 new SerializerConfig()
-                        .setImplementation(new SimpleBackupProcessorSerializer(typeIdBase + 1))
+                        .setImplementation(new SimpleBackupProcessorSerializer(SerializationUtilities.getSerializerTypeId(SimpleBackupProcessorSerializer.class, typeIdBase)))
                         .setTypeClass(SimpleBackupProcessor.class)
         );
 
         serializationConfig.addSerializerConfig(
                 new SerializerConfig()
-                        .setImplementation(new HazelcastOffloadableEntryProcessorSerializer(typeIdBase + 2))
+                        .setImplementation(new HazelcastOffloadableEntryProcessorSerializer(SerializationUtilities.getSerializerTypeId(HazelcastOffloadableEntryProcessorSerializer.class, typeIdBase)))
                         .setTypeClass(HazelcastOffloadableEntryProcessor.class)
         );
 

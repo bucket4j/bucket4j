@@ -36,6 +36,9 @@ public class HazelcastOffloadableEntryProcessorSerializer implements StreamSeria
     public HazelcastOffloadableEntryProcessorSerializer(int typeId) {
         this.typeId = typeId;
     }
+    public HazelcastOffloadableEntryProcessorSerializer() {
+        this.typeId = SerializationUtilities.getSerializerTypeId(this.getClass());
+    }
 
     public Class<HazelcastEntryProcessor> getSerializableType() {
         return HazelcastEntryProcessor.class;
