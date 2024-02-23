@@ -43,6 +43,7 @@ Bucket bucket = proxyManager.builder().build(key, configuration);
 ==== Configuring Custom Serialization for Bucket4j library classes
 If you configure nothing, then by default Java serialization will be used for serialization Bucket4j library classes. Java serialization can be rather slow and should be avoided in general.
 ``Bucket4j`` provides https://docs.hazelcast.org/docs/3.0/manual/html/ch03s03.html[custom serializers] for all library classes that could be transferred over the network.
+
 To let Hazelcast know about fast serializers you should register them programmatically in the serialization config:
 [source, java]
 ----
@@ -60,6 +61,28 @@ import io.github.bucket4j.grid.hazelcast.serialization.HazelcastSerializer;
     int baseTypeIdNumber = 10000;
 
     HazelcastProxyManager.addCustomSerializers(serializationConfig, baseTypeIdNumber);
+----
+
+==== Configuring Custom Serialization using an Hazelcast standalone cluster
+In case the Hazelcast Cluster is running as a standalone cluster outside your application, maybe started directly using its own jar or hosted by a third party software, you are not in position to register the custom serializers programmatically.
+
+In order to let the hazelcast cluster be aware of the custom serialization the following 3 actions are required:
+
+  1. Add the Bucket4j jars (`bucket4j-core` and `bucket4j-hazelcast`) into the classpath of each node of the Hazelcast cluster
+  2. Declare the typeIdBase via **OS Environment Variable** or via **Java System Property**, in both case the name is: `bucket4j.hazelcast.serializer.type_id_base`. Of course the value provided here at the Hazelcast server side has to be the same used programmatically into your java code at hazelcast client side.
+  3. Configure the custom serializers into the Hazlecast server configuration file, see the following hazelcast config snippet as reference:
+
+[source,yaml]
+----
+# ----- Hazelcast SERIALIZATIONs configuration -----
+serialization:
+  serializers:
+    - type-class: io.github.bucket4j.grid.hazelcast.HazelcastEntryProcessor
+      class-name: io.github.bucket4j.grid.hazelcast.serialization.HazelcastEntryProcessorSerializer
+    - type-class: io.github.bucket4j.grid.hazelcast.SimpleBackupProcessor
+      class-name: io.github.bucket4j.grid.hazelcast.serialization.SimpleBackupProcessorSerializer
+    - type-class: io.github.bucket4j.grid.hazelcast.HazelcastOffloadableEntryProcessor
+      class-name: io.github.bucket4j.grid.hazelcast.serialization.HazelcastOffloadableEntryProcessorSerializer
 ----
 
 ==== Support for externally managed Hazelcast without classpath access
