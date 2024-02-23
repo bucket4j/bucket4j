@@ -44,6 +44,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 public class LettuceBasedProxyManager<K> extends AbstractCompareAndSwapBasedProxyManager<K> {
 
@@ -130,14 +131,14 @@ public class LettuceBasedProxyManager<K> extends AbstractCompareAndSwapBasedProx
         K[] keys = (K[]) new Object[]{key};
         return new CompareAndSwapOperation() {
             @Override
-            public Optional<byte[]> getStateData() {
+            public Optional<byte[]> getStateData(Optional<Long> timeoutNanos) {
                 RedisFuture<byte[]> stateFuture = redisApi.get(key);
-                return Optional.ofNullable(getFutureValue(stateFuture));
+                return Optional.ofNullable(getFutureValue(stateFuture, timeoutNanos));
             }
 
             @Override
-            public boolean compareAndSwap(byte[] originalData, byte[] newData, RemoteBucketState newState) {
-                return getFutureValue(compareAndSwapFuture(keys, originalData, newData, newState));
+            public boolean compareAndSwap(byte[] originalData, byte[] newData, RemoteBucketState newState, Optional<Long> timeoutNanos) {
+                return getFutureValue(compareAndSwapFuture(keys, originalData, newData, newState), timeoutNanos);
             }
         };
     }
@@ -148,15 +149,15 @@ public class LettuceBasedProxyManager<K> extends AbstractCompareAndSwapBasedProx
         K[] keys = (K[]) new Object[]{key};
         return new AsyncCompareAndSwapOperation() {
             @Override
-            public CompletableFuture<Optional<byte[]>> getStateData() {
+            public CompletableFuture<Optional<byte[]>> getStateData(Optional<Long> timeoutNanos) {
                 RedisFuture<byte[]> stateFuture = redisApi.get(key);
-                return convertToCompletableFuture(stateFuture)
+                return convertToCompletableFuture(stateFuture, timeoutNanos)
                         .thenApply(Optional::ofNullable);
             }
 
             @Override
-            public CompletableFuture<Boolean> compareAndSwap(byte[] originalData, byte[] newData, RemoteBucketState newState) {
-                return convertToCompletableFuture(compareAndSwapFuture(keys, originalData, newData, newState));
+            public CompletableFuture<Boolean> compareAndSwap(byte[] originalData, byte[] newData, RemoteBucketState newState, Optional<Long> timeoutNanos) {
+                return convertToCompletableFuture(compareAndSwapFuture(keys, originalData, newData, newState), timeoutNanos);
             }
         };
     }
@@ -164,13 +165,13 @@ public class LettuceBasedProxyManager<K> extends AbstractCompareAndSwapBasedProx
     @Override
     public void removeProxy(K key) {
         RedisFuture<?> future = redisApi.delete(key);
-        getFutureValue(future);
+        getFutureValue(future, Optional.empty());
     }
 
     @Override
     protected CompletableFuture<Void> removeAsync(K key) {
         RedisFuture<?> future = redisApi.delete(key);
-        return convertToCompletableFuture(future).thenApply(bytes -> null);
+        return convertToCompletableFuture(future, Optional.empty()).thenApply(bytes -> null);
     }
 
     @Override
@@ -201,26 +202,26 @@ public class LettuceBasedProxyManager<K> extends AbstractCompareAndSwapBasedProx
         }
     }
 
-    private <T> CompletableFuture<T> convertToCompletableFuture(RedisFuture<T> redissonFuture) {
-        CompletableFuture<T> jdkFuture = new CompletableFuture<>();
-        redissonFuture.whenComplete((result, error) -> {
-            if (error != null) {
-                jdkFuture.completeExceptionally(error);
-            } else {
-                jdkFuture.complete(result);
-            }
-        });
-        return jdkFuture;
+    private <T> CompletableFuture<T> convertToCompletableFuture(RedisFuture<T> redisFuture, Optional<Long> timeoutNanos) {
+        if (timeoutNanos.isEmpty()) {
+            return redisFuture.toCompletableFuture();
+        } else {
+            return redisFuture.toCompletableFuture().orTimeout(timeoutNanos.get(), TimeUnit.NANOSECONDS);
+        }
     }
 
-    private <V> V getFutureValue(RedisFuture<V> value) {
+    private <V> V getFutureValue(RedisFuture<V> redisFuture, Optional<Long> timeoutNanos) {
         try {
-            return value.get();
+            if (timeoutNanos.isEmpty()) {
+                return redisFuture.get();
+            } else {
+                return redisFuture.get(timeoutNanos.get(), TimeUnit.NANOSECONDS);
+            }
         } catch (InterruptedException e) {
-            value.cancel(true);
+            redisFuture.cancel(true);
             Thread.currentThread().interrupt();
             throw new RedisException(e);
-        } catch (ExecutionException e) {
+        } catch (Exception e) {
             throw e.getCause() instanceof RedisException ? (RedisException) e.getCause() :
                     new RedisException("Unexpected exception while processing command", e.getCause());
         }

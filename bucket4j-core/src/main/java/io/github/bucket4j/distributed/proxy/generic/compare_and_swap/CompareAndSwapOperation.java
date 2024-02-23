@@ -29,9 +29,11 @@ public interface CompareAndSwapOperation {
     /**
      * Reads data if it exists
      *
+     * @param timeoutNanos optional timeout in nanoseconds
+     *
      * @return persisted data or empty optional if data not exists
      */
-    Optional<byte[]> getStateData();
+    Optional<byte[]> getStateData(Optional<Long> timeoutNanos);
 
     /**
      * Compares and swap data associated with key
@@ -39,9 +41,10 @@ public interface CompareAndSwapOperation {
      * @param originalData previous bucket state(can be null).
      * @param newData new bucket state
      * @param newState new state of bucket - can be used to extract additional data is useful for persistence or logging.
+     * @param timeoutNanos optional timeout in nanoseconds
      *
      * @return {@code true} if data changed, {@code false} if another parallel transaction achieved success instead of current transaction
      */
-    boolean compareAndSwap(byte[] originalData, byte[] newData, RemoteBucketState newState);
+    boolean compareAndSwap(byte[] originalData, byte[] newData, RemoteBucketState newState, Optional<Long> timeoutNanos);
 
 }

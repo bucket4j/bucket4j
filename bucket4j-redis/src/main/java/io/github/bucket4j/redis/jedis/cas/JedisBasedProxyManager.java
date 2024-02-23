@@ -144,12 +144,12 @@ public class JedisBasedProxyManager<K> extends AbstractCompareAndSwapBasedProxyM
         byte[] keyBytes = keyMapper.toBytes(key);
         return new CompareAndSwapOperation() {
             @Override
-            public Optional<byte[]> getStateData() {
+            public Optional<byte[]> getStateData(Optional<Long> timeoutNanos) {
                 return Optional.ofNullable(redisApi.get(keyBytes));
             }
 
             @Override
-            public boolean compareAndSwap(byte[] originalData, byte[] newData, RemoteBucketState newState) {
+            public boolean compareAndSwap(byte[] originalData, byte[] newData, RemoteBucketState newState, Optional<Long> timeoutNanos) {
                 return JedisBasedProxyManager.this.compareAndSwap(keyBytes, originalData, newData, newState);
             }
         };

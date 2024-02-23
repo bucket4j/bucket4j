@@ -51,7 +51,7 @@ public class IgniteThinClientCasBasedProxyManager<K> extends AbstractCompareAndS
     protected CompareAndSwapOperation beginCompareAndSwapOperation(K key) {
         return new CompareAndSwapOperation() {
             @Override
-            public Optional<byte[]> getStateData() {
+            public Optional<byte[]> getStateData(Optional<Long> timeoutNanos) {
                 ByteBuffer persistedState = cache.get(key);
                 if (persistedState == null) {
                     return Optional.empty();
@@ -60,7 +60,7 @@ public class IgniteThinClientCasBasedProxyManager<K> extends AbstractCompareAndS
                 return Optional.of(persistedStateBytes);
             }
             @Override
-            public boolean compareAndSwap(byte[] originalDataBytes, byte[] newDataBytes, RemoteBucketState newState) {
+            public boolean compareAndSwap(byte[] originalDataBytes, byte[] newDataBytes, RemoteBucketState newState, Optional<Long> timeoutNanos) {
                 ByteBuffer newData = ByteBuffer.wrap(newDataBytes);
                 if (originalDataBytes == null) {
                     return cache.putIfAbsent(key, newData);
@@ -75,7 +75,7 @@ public class IgniteThinClientCasBasedProxyManager<K> extends AbstractCompareAndS
     protected AsyncCompareAndSwapOperation beginAsyncCompareAndSwapOperation(K key) {
         return new AsyncCompareAndSwapOperation() {
             @Override
-            public CompletableFuture<Optional<byte[]>> getStateData() {
+            public CompletableFuture<Optional<byte[]>> getStateData(Optional<Long> timeoutNanos) {
                 IgniteClientFuture<ByteBuffer> igniteFuture = cache.getAsync(key);
                 CompletableFuture<ByteBuffer> resultFuture = ThinClientUtils.convertFuture(igniteFuture);
                 return resultFuture.thenApply((ByteBuffer persistedState) -> {
@@ -87,7 +87,7 @@ public class IgniteThinClientCasBasedProxyManager<K> extends AbstractCompareAndS
                 });
             }
             @Override
-            public CompletableFuture<Boolean> compareAndSwap(byte[] originalDataBytes, byte[] newDataBytes, RemoteBucketState newState) {
+            public CompletableFuture<Boolean> compareAndSwap(byte[] originalDataBytes, byte[] newDataBytes, RemoteBucketState newState, Optional<Long> timeoutNanos) {
                 ByteBuffer newData = ByteBuffer.wrap(newDataBytes);
                 if (originalDataBytes == null) {
                     IgniteClientFuture<Boolean> igniteFuture = cache.putIfAbsentAsync(key, newData);

@@ -23,6 +23,7 @@ package io.github.bucket4j.distributed.proxy.generic.compare_and_swap;
 import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.proxy.AbstractProxyManager;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
+import io.github.bucket4j.distributed.proxy.Timeout;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.MutableBucketEntry;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
@@ -46,9 +47,10 @@ public abstract class AbstractCompareAndSwapBasedProxyManager<K> extends Abstrac
 
     @Override
     public <T> CommandResult<T> execute(K key, Request<T> request) {
-        CompareAndSwapOperation operation = beginCompareAndSwapOperation(key);
+        Timeout timeout = Timeout.of(getClientSideConfig());
+        CompareAndSwapOperation operation = timeout.call(requestTimeout -> beginCompareAndSwapOperation(key));
         while (true) {
-            CommandResult<T> result = execute(request, operation);
+            CommandResult<T> result = execute(request, operation, timeout);
             if (result != UNSUCCESSFUL_CAS_RESULT) {
                 return result;
             }
@@ -57,18 +59,19 @@ public abstract class AbstractCompareAndSwapBasedProxyManager<K> extends Abstrac
 
     @Override
     public <T> CompletableFuture<CommandResult<T>> executeAsync(K key, Request<T> request) {
+        Timeout timeout = Timeout.of(getClientSideConfig());
         AsyncCompareAndSwapOperation operation = beginAsyncCompareAndSwapOperation(key);
-        CompletableFuture<CommandResult<T>> result = executeAsync(request, operation);
-        return result.thenCompose((CommandResult<T> response) -> retryIfCasWasUnsuccessful(operation, request, response));
+        CompletableFuture<CommandResult<T>> result = executeAsync(request, operation, timeout);
+        return result.thenCompose((CommandResult<T> response) -> retryIfCasWasUnsuccessful(operation, request, response, timeout));
     }
 
     protected abstract CompareAndSwapOperation beginCompareAndSwapOperation(K key);
 
     protected abstract AsyncCompareAndSwapOperation beginAsyncCompareAndSwapOperation(K key);
 
-    private <T> CommandResult<T> execute(Request<T> request, CompareAndSwapOperation operation) {
+    private <T> CommandResult<T> execute(Request<T> request, CompareAndSwapOperation operation, Timeout timeout) {
         RemoteCommand<T> command = request.getCommand();
-        byte[] originalStateBytes = operation.getStateData().orElse(null);
+        byte[] originalStateBytes = timeout.call(operation::getStateData).orElse(null);
         MutableBucketEntry entry = new MutableBucketEntry(originalStateBytes);
         CommandResult<T> result = command.execute(entry, getClientSideTime());
         if (!entry.isStateModified()) {
@@ -76,24 +79,23 @@ public abstract class AbstractCompareAndSwapBasedProxyManager<K> extends Abstrac
         }
 
         byte[] newStateBytes = entry.getStateBytes(request.getBackwardCompatibilityVersion());
-        if (operation.compareAndSwap(originalStateBytes, newStateBytes, entry.get())) {
+        if (timeout.call(requestTimeout -> operation.compareAndSwap(originalStateBytes, newStateBytes, entry.get(), requestTimeout))) {
             return result;
         } else {
             return null;
         }
     }
 
-    private <T> CompletableFuture<CommandResult<T>> retryIfCasWasUnsuccessful(AsyncCompareAndSwapOperation operation, Request<T> request, CommandResult<T> casResponse) {
+    private <T> CompletableFuture<CommandResult<T>> retryIfCasWasUnsuccessful(AsyncCompareAndSwapOperation operation, Request<T> request, CommandResult<T> casResponse, Timeout timeout) {
         if (casResponse != UNSUCCESSFUL_CAS_RESULT) {
             return CompletableFuture.completedFuture(casResponse);
         } else {
-            return executeAsync(request, operation).thenCompose((CommandResult<T> response) -> retryIfCasWasUnsuccessful(operation, request, response));
+            return executeAsync(request, operation, timeout).thenCompose((CommandResult<T> response) -> retryIfCasWasUnsuccessful(operation, request, response, timeout));
         }
     }
 
-
-    private <T> CompletableFuture<CommandResult<T>> executeAsync(Request<T> request, AsyncCompareAndSwapOperation operation) {
-        return operation.getStateData()
+    private <T> CompletableFuture<CommandResult<T>> executeAsync(Request<T> request, AsyncCompareAndSwapOperation operation, Timeout timeout) {
+        return timeout.callAsync(operation::getStateData)
             .thenApply((Optional<byte[]> originalStateBytes) -> originalStateBytes.orElse(null))
             .thenCompose((byte[] originalStateBytes) -> {
                 RemoteCommand<T> command = request.getCommand();
@@ -104,7 +106,8 @@ public abstract class AbstractCompareAndSwapBasedProxyManager<K> extends Abstrac
                 }
 
                 byte[] newStateBytes = entry.getStateBytes(request.getBackwardCompatibilityVersion());
-                return operation.compareAndSwap(originalStateBytes, newStateBytes, entry.get()).thenApply((casWasSuccessful) -> casWasSuccessful? result : null);
+                return timeout.callAsync(requestTimeout -> operation.compareAndSwap(originalStateBytes, newStateBytes, entry.get(), requestTimeout))
+                    .thenApply((casWasSuccessful) -> casWasSuccessful? result : null);
             });
     }
 

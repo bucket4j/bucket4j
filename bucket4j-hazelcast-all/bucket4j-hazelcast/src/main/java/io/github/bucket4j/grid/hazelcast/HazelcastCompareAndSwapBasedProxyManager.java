@@ -63,13 +63,13 @@ public class HazelcastCompareAndSwapBasedProxyManager<K> extends AbstractCompare
     protected CompareAndSwapOperation beginCompareAndSwapOperation(K key) {
         return new CompareAndSwapOperation() {
             @Override
-            public Optional<byte[]> getStateData() {
+            public Optional<byte[]> getStateData(Optional<Long> timeoutNanos) {
                 byte[] data = map.get(key);
                 return Optional.ofNullable(data);
             }
 
             @Override
-            public boolean compareAndSwap(byte[] originalData, byte[] newData, RemoteBucketState newState) {
+            public boolean compareAndSwap(byte[] originalData, byte[] newData, RemoteBucketState newState, Optional<Long> timeoutNanos) {
                 if (originalData == null) {
                     return map.putIfAbsent(key, newData) == null;
                 } else {

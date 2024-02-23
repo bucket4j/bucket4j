@@ -1,8 +1,7 @@
 package io.github.bucket4j.distributed.proxy;
 
-import java.sql.PreparedStatement;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -16,6 +15,8 @@ public interface Timeout {
     <T> T call(Function<Optional<Long>, T> timeBoundedOperation);
 
     void run(Consumer<Optional<Long>> timeBoundedOperation);
+
+    <T> CompletableFuture<T> callAsync(Function<Optional<Long>, CompletableFuture<T>> timeBoundedOperation);
 
     static Timeout of(ClientSideConfig clientSideConfig) {
         Optional<Long> requestTimeout = clientSideConfig.getRequestTimeoutNanos();
@@ -38,6 +39,11 @@ public interface Timeout {
             public void run(Consumer<Optional<Long>> timeBoundedOperation) {
                 timeBoundedOperation.accept(Optional.empty());
             }
+
+            @Override
+            public <T> CompletableFuture<T> callAsync(Function<Optional<Long>, CompletableFuture<T>> timeBoundedOperation) {
+                return timeBoundedOperation.apply(Optional.empty());
+            }
         };
     }
 
@@ -49,6 +55,18 @@ public interface Timeout {
                 long nanosElapsed = clientClock.currentTimeNanos() - startNanos;
                 if (nanosElapsed >= requestTimeoutNanos) {
                     throw BucketExceptions.timeoutReached(nanosElapsed, requestTimeoutNanos);
+                }
+                long remainingLimitNanos = requestTimeoutNanos - nanosElapsed;
+                return timeBoundedOperation.apply(Optional.of(remainingLimitNanos));
+            }
+
+            @Override
+            public <T> CompletableFuture<T> callAsync(Function<Optional<Long>, CompletableFuture<T>> timeBoundedOperation) {
+                long nanosElapsed = clientClock.currentTimeNanos() - startNanos;
+                if (nanosElapsed >= requestTimeoutNanos) {
+                    CompletableFuture<T> timeouted = new CompletableFuture<>();
+                    timeouted.completeExceptionally(BucketExceptions.timeoutReached(nanosElapsed, requestTimeoutNanos));
+                    return timeouted;
                 }
                 long remainingLimitNanos = requestTimeoutNanos - nanosElapsed;
                 return timeBoundedOperation.apply(Optional.of(remainingLimitNanos));
