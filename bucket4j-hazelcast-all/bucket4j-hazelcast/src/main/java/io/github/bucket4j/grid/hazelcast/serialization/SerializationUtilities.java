@@ -8,7 +8,7 @@ import java.util.*;
 import java.util.function.Supplier;
 
 public class SerializationUtilities {
-    public static final String TYPE_ID_BASE_PROP_NAME = "Bucket4jSerializers_TypeId_Base";
+    public static final String TYPE_ID_BASE_PROP_NAME = "bucket4j.hazelcast.serializer.type_id_base";
     private static final Map<Class<? extends Serializer>, Integer> serializerTypeIdOffsets = Map.ofEntries(
             new AbstractMap.SimpleEntry<Class<? extends Serializer>, Integer>(HazelcastEntryProcessorSerializer.class, 0),
             new AbstractMap.SimpleEntry<Class<? extends Serializer>, Integer>(SimpleBackupProcessorSerializer.class, 1),
