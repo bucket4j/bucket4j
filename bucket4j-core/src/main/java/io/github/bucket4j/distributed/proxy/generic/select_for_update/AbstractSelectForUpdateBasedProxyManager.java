@@ -95,8 +95,8 @@ public abstract class AbstractSelectForUpdateBasedProxyManager<K> extends Abstra
         try {
             lockResult = timeout.call(transaction::tryLockAndGet);
         } catch (Throwable t) {
-            timeout.run(transaction::rollback);
-            throw new BucketExceptions.BucketExecutionException(t);
+            transaction.rollback();
+            throw BucketExceptions.from(t);
         }
 
         // insert data that can be locked in next transaction if data does not exist
@@ -105,19 +105,19 @@ public abstract class AbstractSelectForUpdateBasedProxyManager<K> extends Abstra
                 if (timeout.call(transaction::tryInsertEmptyData)) {
                     timeout.run(transaction::commit);
                 } else {
-                    timeout.run(transaction::rollback);
+                    transaction.rollback();
                 }
                 return RETRY_IN_THE_SCOPE_OF_NEW_TRANSACTION;
             } catch (Throwable t) {
-                timeout.run(transaction::rollback);
-                throw new BucketExceptions.BucketExecutionException(t);
+                transaction.rollback();
+                throw BucketExceptions.from(t);
             }
         }
 
         // check that command is able to provide initial state in case of bucket does not exist
         persistedDataOnBeginOfTransaction = lockResult.getData();
         if (persistedDataOnBeginOfTransaction == null && !request.getCommand().isInitializationCommand()) {
-            timeout.run(transaction::rollback);
+            transaction.rollback();
             return CommandResult.bucketNotFound();
         }
 
@@ -132,8 +132,8 @@ public abstract class AbstractSelectForUpdateBasedProxyManager<K> extends Abstra
             timeout.run(transaction::commit);
             return result;
         } catch (Throwable t) {
-            timeout.run(transaction::rollback);
-            throw new BucketExceptions.BucketExecutionException(t);
+            transaction.rollback();
+            throw BucketExceptions.from(t);
         }
     }
 

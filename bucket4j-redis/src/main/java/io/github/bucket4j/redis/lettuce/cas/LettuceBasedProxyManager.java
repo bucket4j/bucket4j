@@ -221,9 +221,14 @@ public class LettuceBasedProxyManager<K> extends AbstractCompareAndSwapBasedProx
             redisFuture.cancel(true);
             Thread.currentThread().interrupt();
             throw new RedisException(e);
-        } catch (Exception e) {
-            throw e.getCause() instanceof RedisException ? (RedisException) e.getCause() :
-                    new RedisException("Unexpected exception while processing command", e.getCause());
+        } catch (java.util.concurrent.TimeoutException e) {
+            String message = "Violated timeout while waiting for redis future for " + timeoutNanos.get() + "ns";
+            throw new io.github.bucket4j.TimeoutException(message, timeoutNanos.get(), timeoutNanos.get());
+        } catch (ExecutionException e) {
+            if (e.getCause() instanceof RedisException) {
+                throw  (RedisException) e.getCause();
+            }
+            throw new RedisException("Unexpected exception while processing command", e.getCause());
         }
     }
 

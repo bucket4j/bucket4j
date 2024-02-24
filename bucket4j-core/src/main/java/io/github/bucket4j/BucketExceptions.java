@@ -249,6 +249,13 @@ public final class BucketExceptions {
         return new TimeoutException(msg, nanosElapsed, requestTimeoutNanos);
     }
 
+    public static BucketExecutionException from(Throwable t) {
+        if (t instanceof BucketExecutionException) {
+            return  (BucketExecutionException) t;
+        }
+        return new BucketExecutionException(t);
+    }
+
     public static class BucketExecutionException extends RuntimeException {
         public BucketExecutionException(Throwable cause) {
             super(cause);

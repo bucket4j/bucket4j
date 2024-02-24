@@ -39,7 +39,7 @@ public interface SelectForUpdateBasedTransaction {
 
     /**
      * Begins transaction if underlying storage requires transactions.
-     * There is strong guarantee that {@link #commit(Optional)} or {@link #rollback(Optional)} will be called if {@link #begin(Optional)} returns successfully.
+     * There is strong guarantee that {@link #commit(Optional)} or {@link #rollback()} will be called if {@link #begin(Optional)} returns successfully.
      *
      * @param timeoutNanos optional timeout in nanoseconds
      */
@@ -47,10 +47,8 @@ public interface SelectForUpdateBasedTransaction {
 
     /**
      * Rollbacks transaction if underlying storage requires transactions
-     *
-     * @param timeoutNanos optional timeout in nanoseconds
      */
-    void rollback(Optional<Long> timeoutNanos);
+    void rollback();
 
     /**
      * Commits transaction if underlying storage requires transactions

@@ -125,25 +125,6 @@ public class RedissonBasedProxyManager<K> extends AbstractCompareAndSwapBasedPro
                     }
                 }
             }
-
-            private <T> T getWithTimeout(RFuture<T> redissonFuture, Optional<Long> timeoutNanos) {
-                if (timeoutNanos.isEmpty()) {
-                    return commandExecutor.get(redissonFuture);
-                } else {
-                    try {
-                        return redissonFuture.get(timeoutNanos.get(), TimeUnit.NANOSECONDS);
-                    } catch (InterruptedException e) {
-                        redissonFuture.cancel(true);
-                        Thread.currentThread().interrupt();
-                        throw new RedisException(e);
-                    } catch (ExecutionException | TimeoutException  e) {
-                        if (e.getCause() instanceof RedisException) {
-                            throw (RedisException) e.getCause();
-                        }
-                        throw new RedisException(e);
-                    }
-                }
-            }
         };
     }
 
@@ -215,6 +196,28 @@ public class RedissonBasedProxyManager<K> extends AbstractCompareAndSwapBasedPro
             return redissonFuture.toCompletableFuture();
         } else {
             return redissonFuture.toCompletableFuture().orTimeout(timeoutNanos.get(), TimeUnit.NANOSECONDS);
+        }
+    }
+
+    private <T> T getWithTimeout(RFuture<T> redissonFuture, Optional<Long> timeoutNanos) {
+        if (timeoutNanos.isEmpty()) {
+            return commandExecutor.get(redissonFuture);
+        } else {
+            try {
+                return redissonFuture.get(timeoutNanos.get(), TimeUnit.NANOSECONDS);
+            } catch (InterruptedException e) {
+                redissonFuture.cancel(true);
+                Thread.currentThread().interrupt();
+                throw new RedisException(e);
+            } catch (java.util.concurrent.TimeoutException e) {
+                String message = "Violated timeout while waiting for redis future for " + timeoutNanos.get() + "ns";
+                throw new io.github.bucket4j.TimeoutException(message, timeoutNanos.get(), timeoutNanos.get());
+            } catch (ExecutionException e) {
+                if (e.getCause() instanceof RedisException) {
+                    throw (RedisException) e.getCause();
+                }
+                throw new RedisException(e);
+            }
         }
     }
 

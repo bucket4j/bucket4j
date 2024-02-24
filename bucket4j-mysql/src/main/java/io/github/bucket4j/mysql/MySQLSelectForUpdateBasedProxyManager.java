@@ -114,7 +114,7 @@ public class MySQLSelectForUpdateBasedProxyManager<K> extends AbstractSelectForU
             }
 
             @Override
-            public void rollback(Optional<Long> requestTimeoutNanos) {
+            public void rollback() {
                 try {
                     connection.rollback();
                 } catch (SQLException e) {

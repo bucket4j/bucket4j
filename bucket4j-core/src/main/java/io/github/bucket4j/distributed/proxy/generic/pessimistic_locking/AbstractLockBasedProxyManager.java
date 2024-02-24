@@ -85,7 +85,7 @@ public abstract class AbstractLockBasedProxyManager<K> extends AbstractProxyMana
             persistedDataOnBeginOfTransaction = timeout.call(transaction::lockAndGet);
         } catch (Throwable t) {
             unlockAndRollback(transaction);
-            throw new BucketExceptions.BucketExecutionException(t);
+            throw BucketExceptions.from(t);
         }
 
         // check that command is able to provide initial state in case of bucket does not exist
@@ -110,7 +110,7 @@ public abstract class AbstractLockBasedProxyManager<K> extends AbstractProxyMana
             return result;
         } catch (Throwable t) {
             unlockAndRollback(transaction);
-            throw new BucketExceptions.BucketExecutionException(t);
+            throw BucketExceptions.from(t);
         }
     }
 

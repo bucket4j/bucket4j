@@ -108,7 +108,7 @@ public class PostgreSQLSelectForUpdateBasedProxyManager<K> extends AbstractSelec
             }
 
             @Override
-            public void rollback(Optional<Long> requestTimeoutNanos) {
+            public void rollback() {
                 try {
                     connection.rollback();
                 } catch (SQLException e) {

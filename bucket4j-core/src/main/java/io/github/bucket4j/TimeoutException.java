@@ -1,6 +1,6 @@
 package io.github.bucket4j;
 
-public class TimeoutException extends RuntimeException {
+public class TimeoutException extends BucketExceptions.BucketExecutionException {
 
     private final long nanosElapsed;
     private final long requestTimeoutNanos;

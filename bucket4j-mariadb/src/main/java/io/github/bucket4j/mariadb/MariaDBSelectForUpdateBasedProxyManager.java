@@ -123,7 +123,7 @@ public class MariaDBSelectForUpdateBasedProxyManager<K> extends AbstractSelectFo
             }
 
             @Override
-            public void rollback(Optional<Long> timeoutNanos) {
+            public void rollback() {
                 try {
                     connection.rollback();
                 } catch (SQLException e) {

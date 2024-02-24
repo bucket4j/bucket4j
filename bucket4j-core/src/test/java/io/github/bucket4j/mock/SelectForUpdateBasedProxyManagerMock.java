@@ -63,7 +63,7 @@ public class SelectForUpdateBasedProxyManagerMock<K> extends AbstractSelectForUp
             }
 
             @Override
-            public void rollback(Optional<Long> requestTimeoutNanos) {
+            public void rollback() {
                 stateMap.put(key, backup);
             }
 
