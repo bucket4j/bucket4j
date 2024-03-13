@@ -5,7 +5,7 @@ distributed bucket operates with configuration that was provided at the time of 
 
 .Explicit config replacement can be awkward in the following cases:
 * It requires for library client to write the code for configuration replacement. It is unnecessary job, that is especially hard when bucket4j is used behind of high-level frameworks like bucket4j-spring-boot-starter, when end-clients are not mentally prepared to work directly with low-level API of Bucket4j.
-* It can confuse the user in the following scenario: user stores limits in the configuration for example in proerties or yaml file, user updates configuration files and restarts application and he becomes surprised because new limits are not applied for buckets that survive application restart in the storage, because as was mentioned above only one way to change the config for already persisted bucket is explicitly calling of replaceConfiguration for each persisted bucket.
+* It can confuse the user in the following scenario: user stores limits in the configuration for example in properties or yaml file, user updates configuration files and restarts application and he becomes surprised because new limits are not applied for buckets that survive application restart in the storage, because as was mentioned above only one way to change the config for already persisted bucket is explicitly calling of replaceConfiguration for each persisted bucket.
 * For some persistent technologies like Redis it is costly to identify all buckets that are persisted in the storage, because lack of mechanisms for grouping like tables or caches leads to scan all keys, even keys that points to data that not related to rate-limiting.
 
 .Implicit configuration replacement solution:
