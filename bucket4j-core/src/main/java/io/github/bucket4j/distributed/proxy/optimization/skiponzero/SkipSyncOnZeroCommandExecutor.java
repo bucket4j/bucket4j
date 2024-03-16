@@ -110,6 +110,9 @@ class SkipSyncOnZeroCommandExecutor implements CommandExecutor, AsyncCommandExec
         // execute local command
         MutableBucketEntry entry = new MutableBucketEntry(state.copy());
         CommandResult<T> result = command.execute(entry, currentTimeNanos);
+        if (result.isConfigurationNeedToBeReplaced()) {
+            return null;
+        }
         long locallyConsumedTokens = command.getConsumedTokens(result.getData());
         if (locallyConsumedTokens == Long.MAX_VALUE) {
             return null;

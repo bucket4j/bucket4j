@@ -19,7 +19,7 @@
  */
 package io.github.bucket4j.distributed.remote;
 
-import io.github.bucket4j.distributed.proxy.BucketNotFoundException;
+import io.github.bucket4j.distributed.proxy.ConfigurationNeedToBeReplacedException;
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
 import io.github.bucket4j.distributed.serialization.Scope;
 import io.github.bucket4j.distributed.serialization.SerializationAdapter;
@@ -40,7 +40,7 @@ public class ConfigurationNeedToBeReplacedError implements CommandError, Compara
 
     @Override
     public RuntimeException asException() {
-        return new BucketNotFoundException();
+        return new ConfigurationNeedToBeReplacedException();
     }
 
     public static SerializationHandle<ConfigurationNeedToBeReplacedError> SERIALIZATION_HANDLE = new SerializationHandle<>() {
@@ -63,7 +63,7 @@ public class ConfigurationNeedToBeReplacedError implements CommandError, Compara
 
         @Override
         public Class<ConfigurationNeedToBeReplacedError> getSerializedType() {
-            return (Class) ConfigurationNeedToBeReplacedError.class;
+            return ConfigurationNeedToBeReplacedError.class;
         }
 
         @Override
