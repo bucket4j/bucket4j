@@ -8,7 +8,7 @@
     <parent>
         <groupId>com.bucket4j</groupId>
         <artifactId>bucket4j-parent</artifactId>
-        <version>8.9.0</version>
+        <version>8.10.0</version>
         <relativePath>../bucket4j-parent</relativePath>
     </parent>
     <artifactId>bucket4j-caffeine</artifactId>
