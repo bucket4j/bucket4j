@@ -49,6 +49,7 @@ import io.github.bucket4j.grid.hazelcast.serialization.HazelcastOffloadableEntry
 import io.github.bucket4j.grid.hazelcast.serialization.SerializationUtilities;
 import io.github.bucket4j.grid.hazelcast.serialization.SimpleBackupProcessorSerializer;
 import io.github.bucket4j.distributed.serialization.InternalSerializationHelper;
+import io.github.bucket4j.grid.hazelcast.serialization.VersionedBackupProcessorSerializer;
 
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
@@ -92,6 +93,11 @@ public class HazelcastProxyManager<K> extends AbstractProxyManager<K> {
 
     @Override
     public boolean isAsyncModeSupported() {
+        return true;
+    }
+
+    @Override
+    public boolean isExpireAfterWriteSupported() {
         return true;
     }
 
@@ -152,6 +158,12 @@ public class HazelcastProxyManager<K> extends AbstractProxyManager<K> {
                 new SerializerConfig()
                         .setImplementation(new HazelcastOffloadableEntryProcessorSerializer(SerializationUtilities.getSerializerTypeId(HazelcastOffloadableEntryProcessorSerializer.class, typeIdBase)))
                         .setTypeClass(HazelcastOffloadableEntryProcessor.class)
+        );
+
+        serializationConfig.addSerializerConfig(
+            new SerializerConfig()
+                .setImplementation(new VersionedBackupProcessorSerializer(SerializationUtilities.getSerializerTypeId(VersionedBackupProcessorSerializer.class, typeIdBase)))
+                .setTypeClass(VersionedBackupProcessor.class)
         );
 
     }

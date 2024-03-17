@@ -20,6 +20,9 @@
 package io.github.bucket4j.grid.hazelcast;
 
 import com.hazelcast.map.EntryProcessor;
+import com.hazelcast.map.ExtendedMapEntry;
+
+import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
 import io.github.bucket4j.distributed.remote.AbstractBinaryTransaction;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.distributed.remote.Request;
@@ -27,6 +30,7 @@ import io.github.bucket4j.util.ComparableByContent;
 
 import java.util.Arrays;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import static io.github.bucket4j.distributed.serialization.InternalSerializationHelper.serializeRequest;
 
@@ -60,8 +64,16 @@ public class HazelcastEntryProcessor<K, T> implements EntryProcessor<K, byte[], 
 
             @Override
             protected void setRawState(byte[] newStateBytes, RemoteBucketState newState) {
-                entry.setValue(newStateBytes);
-                backupProcessor = new SimpleBackupProcessor<>(newStateBytes);
+                ExpirationAfterWriteStrategy expirationStrategy = getExpirationStrategy();
+                long ttlMillis = expirationStrategy == null ? -1 : expirationStrategy.calculateTimeToLiveMillis(newState, getCurrentTimeNanos());
+                if (ttlMillis > 0) {
+                    entry.setValue(newStateBytes);
+                    backupProcessor = new SimpleBackupProcessor<>(newStateBytes);
+                } else {
+                    ExtendedMapEntry extendedEntry = (ExtendedMapEntry) entry;
+                    extendedEntry.setValue(newStateBytes, ttlMillis, TimeUnit.MILLISECONDS);
+                    backupProcessor = new VersionedBackupProcessor<>(newStateBytes, ttlMillis);
+                }
             }
         }.execute();
     }

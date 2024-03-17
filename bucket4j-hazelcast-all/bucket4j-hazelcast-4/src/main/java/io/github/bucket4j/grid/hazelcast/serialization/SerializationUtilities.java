@@ -19,19 +19,22 @@
  */
 package io.github.bucket4j.grid.hazelcast.serialization;
 
+import java.text.MessageFormat;
+import java.util.AbstractMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.Supplier;
+
 import com.hazelcast.internal.util.StringUtil;
 import com.hazelcast.nio.serialization.Serializer;
-
-import java.text.MessageFormat;
-import java.util.*;
-import java.util.function.Supplier;
 
 public class SerializationUtilities {
     public static final String TYPE_ID_BASE_PROP_NAME = "bucket4j.hazelcast.serializer.type_id_base";
     private static final Map<Class<? extends Serializer>, Integer> serializerTypeIdOffsets = Map.ofEntries(
             new AbstractMap.SimpleEntry<Class<? extends Serializer>, Integer>(HazelcastEntryProcessorSerializer.class, 0),
             new AbstractMap.SimpleEntry<Class<? extends Serializer>, Integer>(SimpleBackupProcessorSerializer.class, 1),
-            new AbstractMap.SimpleEntry<Class<? extends Serializer>, Integer>(HazelcastOffloadableEntryProcessorSerializer.class, 2)
+            new AbstractMap.SimpleEntry<Class<? extends Serializer>, Integer>(HazelcastOffloadableEntryProcessorSerializer.class, 2),
+            new AbstractMap.SimpleEntry<Class<? extends Serializer>, Integer>(VersionedBackupProcessorSerializer.class, 3)
     );
 
     public static int getSerializerTypeId(Class<? extends Serializer> serializerType) {
