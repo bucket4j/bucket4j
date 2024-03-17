@@ -8,7 +8,7 @@ import java.util.Map;
 
 public class JdkDataOutputSerializationTest extends AbstractSerializationTest {
 
-    private Map<Class, SerializationHandle> allHandles = new HashMap<Class, SerializationHandle>()
+    private Map<Class, SerializationHandle> allHandles = new HashMap<>()
     {{
         for (SerializationHandle<?> handle : SerializationHandles.CORE_HANDLES.getAllHandles()) {
             put(handle.getSerializedType(), handle);

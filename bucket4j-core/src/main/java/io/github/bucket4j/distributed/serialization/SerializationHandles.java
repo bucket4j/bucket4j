@@ -20,6 +20,9 @@
 package io.github.bucket4j.distributed.serialization;
 
 import io.github.bucket4j.*;
+import io.github.bucket4j.distributed.expiration.BasedOnTimeForRefillingBucketUpToMaxExpirationAfterWriteStrategy;
+import io.github.bucket4j.distributed.expiration.FixedTtlExpirationAfterWriteStrategy;
+import io.github.bucket4j.distributed.expiration.NoneExpirationAfterWriteStrategy;
 import io.github.bucket4j.distributed.remote.*;
 import io.github.bucket4j.distributed.remote.commands.*;
 import io.github.bucket4j.distributed.versioning.UnsupportedNamedTypeException;
@@ -75,7 +78,11 @@ public class SerializationHandles {
 
             LockFreeBucket.SERIALIZATION_HANDLE, // 60
             SynchronizedBucket.SERIALIZATION_HANDLE, // 61
-            ThreadUnsafeBucket.SERIALIZATION_HANDLE // 62
+            ThreadUnsafeBucket.SERIALIZATION_HANDLE, // 62
+
+            BasedOnTimeForRefillingBucketUpToMaxExpirationAfterWriteStrategy.SERIALIZATION_HANDLE, // 70
+            FixedTtlExpirationAfterWriteStrategy.SERIALIZATION_HANDLE, // 71
+            NoneExpirationAfterWriteStrategy.SERIALIZATION_HANDLE // 72
     ));
 
     private final Collection<SerializationHandle<?>> allHandles;

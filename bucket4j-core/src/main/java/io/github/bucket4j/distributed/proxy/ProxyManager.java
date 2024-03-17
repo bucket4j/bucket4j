@@ -60,9 +60,18 @@ public interface ProxyManager<K> {
      * Describes whether or not this manager supports asynchronous API.
      * If this method returns <code>false</code> then any invocation of {@link #asAsync()} will throw {@link UnsupportedOperationException}.
      *
-     * @return <code>true</code> if this extension supports asynchronous API
+     * @return <code>true</code> if this manager supports asynchronous API
      */
     boolean isAsyncModeSupported();
+
+    /**
+     * Describes whether or not this manager supports expire-after-write feature.
+     *
+     * @return <code>true</code> if this manager supports expire-after-write feature.
+     */
+    default boolean isExpireAfterWriteSupported() {
+        return false;
+    }
 
     /**
      * Returns asynchronous API for this proxy manager.
@@ -102,6 +111,11 @@ public interface ProxyManager<K> {
             @Override
             public boolean isAsyncModeSupported() {
                 return ProxyManager.this.isAsyncModeSupported();
+            }
+
+            @Override
+            public boolean isExpireAfterWriteSupported() {
+                return ProxyManager.this.isExpireAfterWriteSupported();
             }
 
             @Override

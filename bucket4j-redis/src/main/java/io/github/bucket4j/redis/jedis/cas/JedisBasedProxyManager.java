@@ -111,6 +111,11 @@ public class JedisBasedProxyManager<K> extends AbstractCompareAndSwapBasedProxyM
         return new JedisBasedProxyManagerBuilder<>(Mapper.BYTES, redisApi);
     }
 
+    @Override
+    public boolean isExpireAfterWriteSupported() {
+        return true;
+    }
+
     public static class JedisBasedProxyManagerBuilder<K> extends AbstractRedisProxyManagerBuilder<JedisBasedProxyManagerBuilder<K>> {
 
         private final RedisApi redisApi;

@@ -6,9 +6,8 @@ import com.hazelcast.config.SerializerConfig;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.map.IMap;
-import groovy.util.logging.Slf4j;
+
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
-import io.github.bucket4j.distributed.serialization.JsonOutputSerializationTest;
 import io.github.bucket4j.grid.hazelcast.HazelcastEntryProcessor;
 import io.github.bucket4j.grid.hazelcast.HazelcastOffloadableEntryProcessor;
 import io.github.bucket4j.grid.hazelcast.HazelcastProxyManager;
@@ -25,7 +24,6 @@ import org.gridkit.nanocloud.VX;
 import org.gridkit.vicluster.ViNode;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.junitpioneer.jupiter.SetSystemProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

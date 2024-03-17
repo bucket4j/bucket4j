@@ -59,6 +59,7 @@ public class ClientSideConfig {
         this.clientSideClock = Objects.requireNonNull(clientSideClock);
         this.executionStrategy = executionStrategy;
         this.requestTimeoutNanos = requestTimeoutNanos;
+        this.expirationStrategy = expirationStrategy;
     }
 
     /**

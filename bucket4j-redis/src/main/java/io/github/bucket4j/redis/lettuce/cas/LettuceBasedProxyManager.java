@@ -70,6 +70,11 @@ public class LettuceBasedProxyManager<K> extends AbstractCompareAndSwapBasedProx
         return new LettuceBasedProxyManagerBuilder<>(redisApi);
     }
 
+    @Override
+    public boolean isExpireAfterWriteSupported() {
+        return true;
+    }
+
     public static <K> LettuceBasedProxyManagerBuilder<K> builderFor(StatefulRedisConnection<K, byte[]> statefulRedisConnection) {
         return builderFor(statefulRedisConnection.async());
     }

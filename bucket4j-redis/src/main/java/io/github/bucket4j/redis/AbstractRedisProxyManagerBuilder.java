@@ -23,12 +23,20 @@ import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 
 import java.util.Objects;
+import java.util.Optional;
 
 public class AbstractRedisProxyManagerBuilder<T extends AbstractRedisProxyManagerBuilder> {
 
     private ExpirationAfterWriteStrategy expirationStrategy;
     private ClientSideConfig clientSideConfig = ClientSideConfig.getDefault();
 
+    /**
+     * @deprecated use {@link ClientSideConfig#withExpirationAfterWriteStrategy(ExpirationAfterWriteStrategy)} and {@link #withClientSideConfig(ClientSideConfig)}
+     *
+     * @param expirationStrategy
+     * @return
+     */
+    @Deprecated
     public T withExpirationStrategy(ExpirationAfterWriteStrategy expirationStrategy) {
         this.expirationStrategy = Objects.requireNonNull(expirationStrategy);
         return (T) this;
@@ -40,6 +48,10 @@ public class AbstractRedisProxyManagerBuilder<T extends AbstractRedisProxyManage
     }
 
     public ExpirationAfterWriteStrategy getNotNullExpirationStrategy() {
+        Optional<ExpirationAfterWriteStrategy> optionalStrategy = clientSideConfig.getExpirationAfterWriteStrategy();
+        if (optionalStrategy.isPresent()) {
+            return optionalStrategy.get();
+        }
         if (expirationStrategy == null) {
             throw new IllegalStateException("expirationStrategy is not configured");
         }

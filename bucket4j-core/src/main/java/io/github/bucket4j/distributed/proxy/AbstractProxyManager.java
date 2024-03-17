@@ -25,6 +25,7 @@ import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.TokensInheritanceStrategy;
 import io.github.bucket4j.distributed.AsyncBucketProxy;
 import io.github.bucket4j.distributed.BucketProxy;
+import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
 import io.github.bucket4j.distributed.proxy.optimization.Optimization;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
@@ -46,6 +47,9 @@ public abstract class AbstractProxyManager<K> implements ProxyManager<K> {
     private final ClientSideConfig clientSideConfig;
 
     protected AbstractProxyManager(ClientSideConfig clientSideConfig) {
+        if (clientSideConfig.getExpirationAfterWriteStrategy().isPresent() && !isAsyncModeSupported()) {
+            throw BucketExceptions.expirationAfterWriteIsNotSupported();
+        }
         this.clientSideConfig = requireNonNull(clientSideConfig);
     }
 
@@ -53,8 +57,8 @@ public abstract class AbstractProxyManager<K> implements ProxyManager<K> {
         @Override
         public CompletableFuture<Optional<BucketConfiguration>> getProxyConfiguration(K key) {
             GetConfigurationCommand cmd = new GetConfigurationCommand();
-            getClientSideTime();
-            Request<BucketConfiguration> request = new Request<>(cmd, getBackwardCompatibilityVersion(), getClientSideTime());
+            ExpirationAfterWriteStrategy expirationStrategy = clientSideConfig.getExpirationAfterWriteStrategy().orElse(null);
+            Request<BucketConfiguration> request = new Request<>(cmd, getBackwardCompatibilityVersion(), getClientSideTime(), expirationStrategy);
             return executeAsync(key, request).thenApply(result -> {
                 if (result.isBucketNotFound()) {
                     return Optional.empty();
@@ -91,7 +95,7 @@ public abstract class AbstractProxyManager<K> implements ProxyManager<K> {
     public Optional<BucketConfiguration> getProxyConfiguration(K key) {
         GetConfigurationCommand cmd = new GetConfigurationCommand();
 
-        Request<BucketConfiguration> request = new Request<>(cmd, getBackwardCompatibilityVersion(), getClientSideTime());
+        Request<BucketConfiguration> request = new Request<>(cmd, getBackwardCompatibilityVersion(), getClientSideTime(), null);
         CommandResult<BucketConfiguration> result = this.execute(key, request);
         if (result.isBucketNotFound()) {
             return Optional.empty();
@@ -140,7 +144,8 @@ public abstract class AbstractProxyManager<K> implements ProxyManager<K> {
             AsyncCommandExecutor commandExecutor = new AsyncCommandExecutor() {
                 @Override
                 public <T> CompletableFuture<CommandResult<T>> executeAsync(RemoteCommand<T> command) {
-                    Request<T> request = new Request<>(command, getBackwardCompatibilityVersion(), getClientSideTime());
+                    ExpirationAfterWriteStrategy expirationStrategy = clientSideConfig.getExpirationAfterWriteStrategy().orElse(null);
+                    Request<T> request = new Request<>(command, getBackwardCompatibilityVersion(), getClientSideTime(), expirationStrategy);
                     Supplier<CompletableFuture<CommandResult<T>>> futureSupplier = () -> AbstractProxyManager.this.executeAsync(key, request);
                     return clientSideConfig.getExecutionStrategy().executeAsync(futureSupplier);
                 }
@@ -193,7 +198,8 @@ public abstract class AbstractProxyManager<K> implements ProxyManager<K> {
             CommandExecutor commandExecutor = new CommandExecutor() {
                 @Override
                 public <T> CommandResult<T> execute(RemoteCommand<T> command) {
-                    Request<T> request = new Request<>(command, getBackwardCompatibilityVersion(), getClientSideTime());
+                    ExpirationAfterWriteStrategy expirationStrategy = clientSideConfig.getExpirationAfterWriteStrategy().orElse(null);
+                    Request<T> request = new Request<>(command, getBackwardCompatibilityVersion(), getClientSideTime(), expirationStrategy);
                     Supplier<CommandResult<T>> resultSupplier = () -> AbstractProxyManager.this.execute(key, request);
                     return clientSideConfig.getExecutionStrategy().execute(resultSupplier);
                 }

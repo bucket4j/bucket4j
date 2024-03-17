@@ -90,6 +90,11 @@ public class RedissonBasedProxyManager<K> extends AbstractCompareAndSwapBasedPro
     }
 
     @Override
+    public boolean isExpireAfterWriteSupported() {
+        return true;
+    }
+
+    @Override
     protected CompareAndSwapOperation beginCompareAndSwapOperation(K key) {
         String stringKey = keyMapper.toString(key);
         List<Object> keys = Collections.singletonList(stringKey);
