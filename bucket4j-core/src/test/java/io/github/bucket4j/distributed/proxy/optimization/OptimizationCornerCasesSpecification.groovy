@@ -216,7 +216,7 @@ class OptimizationCornerCasesSpecification extends Specification {
             CommandExecutor executor = optimization.apply(new CommandExecutor() {
                 @Override
                 CommandResult execute(RemoteCommand command) {
-                    Request request = new Request(command, Versions.latest, clock.currentTimeNanos());
+                    Request request = new Request(command, Versions.latest, clock.currentTimeNanos(), null);
                     return proxyManagerMock.execute(KEY, request)
                 }
             })
@@ -268,7 +268,7 @@ class OptimizationCornerCasesSpecification extends Specification {
             AsyncCommandExecutor executor = optimization.apply (new AsyncCommandExecutor() {
                 @Override
                 CompletableFuture<CommandResult> executeAsync(RemoteCommand command) {
-                    Request request = new Request(command, Versions.latest, clock.currentTimeNanos());
+                    Request request = new Request(command, Versions.latest, clock.currentTimeNanos(), null);
                     return proxyManagerMock.executeAsync(KEY, request)
                 }
             })

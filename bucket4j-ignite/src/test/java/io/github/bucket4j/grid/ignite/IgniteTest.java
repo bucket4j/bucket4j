@@ -84,22 +84,22 @@ public class IgniteTest extends AbstractDistributedBucketTest {
             new ProxyManagerSpec<>(
                 "IgniteProxyManager",
                 () -> UUID.randomUUID().toString(),
-                new IgniteProxyManager<>(cache, ClientSideConfig.getDefault())
+                clientConfig -> new IgniteProxyManager<>(cache, clientConfig)
             ),
             new ProxyManagerSpec<>(
                 "IgniteProxyManager_background",
                 () -> UUID.randomUUID().toString(),
-                new IgniteProxyManager<>(
+                clientConfig -> new IgniteProxyManager<>(
                     cache,
-                    ClientSideConfig.getDefault().withExecutionStrategy(ExecutionStrategy.background(Executors.newFixedThreadPool(20)))
+                    clientConfig.withExecutionStrategy(ExecutionStrategy.background(Executors.newFixedThreadPool(20)))
                 )
             ),
             new ProxyManagerSpec<>(
                 "IgniteProxyManager_backgroundTimeBounded",
                 () -> UUID.randomUUID().toString(),
-                new IgniteProxyManager<>(
+                clientConfig -> new IgniteProxyManager<>(
                     cache,
-                    ClientSideConfig.getDefault().withExecutionStrategy(backgroundTimeBounded(Executors.newFixedThreadPool(20), Duration.ofSeconds(5)))
+                    clientConfig.withExecutionStrategy(backgroundTimeBounded(Executors.newFixedThreadPool(20), Duration.ofSeconds(5)))
                 )
             )
         );

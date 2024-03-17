@@ -5,7 +5,6 @@ import com.zaxxer.hikari.HikariDataSource;
 import io.github.bucket4j.distributed.jdbc.BucketTableSettings;
 import io.github.bucket4j.distributed.jdbc.PrimaryKeyMapper;
 import io.github.bucket4j.distributed.jdbc.SQLProxyConfiguration;
-import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
 import io.github.bucket4j.tck.ProxyManagerSpec;
 
@@ -62,27 +61,27 @@ public class PostgreSQLTest extends AbstractDistributedBucketTest {
             new ProxyManagerSpec<>(
                 "PostgreSQLadvisoryLockBasedProxyManager",
                 () -> ThreadLocalRandom.current().nextLong(1_000_000_000),
-                new PostgreSQLadvisoryLockBasedProxyManager<>(configuration_1)
+                clientConfig -> new PostgreSQLadvisoryLockBasedProxyManager<>(configuration_1, clientConfig)
             ),
             new ProxyManagerSpec<>(
                 "PostgreSQLSelectForUpdateBasedProxyManager",
                 () -> ThreadLocalRandom.current().nextLong(1_000_000_000),
-                new PostgreSQLSelectForUpdateBasedProxyManager<>(configuration_1)
+                clientConfig -> new PostgreSQLSelectForUpdateBasedProxyManager<>(configuration_1, clientConfig)
             ),
             new ProxyManagerSpec<>(
                 "PostgreSQLadvisoryLockBasedProxyManager_withRequestTimeout",
                 () -> ThreadLocalRandom.current().nextLong(1_000_000_000),
-                new PostgreSQLadvisoryLockBasedProxyManager<>(configuration_1, ClientSideConfig.getDefault().withRequestTimeout(Duration.ofSeconds(3)))
+                clientConfig -> new PostgreSQLadvisoryLockBasedProxyManager<>(configuration_1, clientConfig.withRequestTimeout(Duration.ofSeconds(3)))
             ),
             new ProxyManagerSpec<>(
                 "PostgreSQLSelectForUpdateBasedProxyManager_withRequestTimeout",
                 () -> ThreadLocalRandom.current().nextLong(1_000_000_000),
-                new PostgreSQLSelectForUpdateBasedProxyManager<>(configuration_1, ClientSideConfig.getDefault().withRequestTimeout(Duration.ofSeconds(3)))
+                clientConfig -> new PostgreSQLSelectForUpdateBasedProxyManager<>(configuration_1, clientConfig.withRequestTimeout(Duration.ofSeconds(3)))
             ),
             new ProxyManagerSpec<>(
                 "PostgreSQLadvisoryLockBasedProxyManager_StringKey",
                 () -> UUID.randomUUID().toString(),
-                new PostgreSQLadvisoryLockBasedProxyManager<>(configuration_2)
+                clientConfig -> new PostgreSQLadvisoryLockBasedProxyManager<>(configuration_2, clientConfig)
             )
         );
     }

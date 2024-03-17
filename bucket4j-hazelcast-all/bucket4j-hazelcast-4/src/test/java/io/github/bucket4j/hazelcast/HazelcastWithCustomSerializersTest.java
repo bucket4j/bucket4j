@@ -66,12 +66,12 @@ public class HazelcastWithCustomSerializersTest extends AbstractDistributedBucke
             new ProxyManagerSpec<>(
                 "HazelcastProxyManager_CustomSerialization",
                 () -> UUID.randomUUID().toString(),
-                new HazelcastProxyManager<>(map, ClientSideConfig.getDefault())
+                clientConfig -> new HazelcastProxyManager<>(map, clientConfig)
             ),
             new ProxyManagerSpec<>(
                 "HazelcastLockBasedProxyManager_JdkSerialization_offloadableExecutor",
                 () -> UUID.randomUUID().toString(),
-                new HazelcastProxyManager<>(map, ClientSideConfig.getDefault(), "my-executor")
+                clientConfig -> new HazelcastProxyManager<>(map, clientConfig, "my-executor")
             )
         );
     }

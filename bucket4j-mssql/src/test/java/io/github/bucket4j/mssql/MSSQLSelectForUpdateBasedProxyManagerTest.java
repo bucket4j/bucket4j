@@ -55,12 +55,12 @@ public class MSSQLSelectForUpdateBasedProxyManagerTest extends AbstractDistribut
             new ProxyManagerSpec<>(
                 "MSSQLSelectForUpdateBasedProxyManager",
                 () -> ThreadLocalRandom.current().nextLong(1_000_000_000),
-                new MSSQLSelectForUpdateBasedProxyManager<>(configuration)
+                clientConfig -> new MSSQLSelectForUpdateBasedProxyManager<>(configuration, clientConfig)
             ),
             new ProxyManagerSpec<>(
                 "MSSQLSelectForUpdateBasedProxyManager_withTimeout",
                 () -> ThreadLocalRandom.current().nextLong(1_000_000_000),
-                new MSSQLSelectForUpdateBasedProxyManager<>(configuration, ClientSideConfig.getDefault().withRequestTimeout(Duration.ofSeconds(3)))
+                clientConfig -> new MSSQLSelectForUpdateBasedProxyManager<>(configuration, clientConfig.withRequestTimeout(Duration.ofSeconds(3)))
             )
         );
     }

@@ -79,7 +79,7 @@ public class IgniteJCacheTest extends AbstractDistributedBucketTest {
             new ProxyManagerSpec<>(
                 "JCacheProxyManager",
                 () -> UUID.randomUUID().toString(),
-                new JCacheProxyManager<>(getCache(), ClientSideConfig.getDefault())
+                clientConfig -> new JCacheProxyManager<>(getCache(), clientConfig)
             )
         );
     }

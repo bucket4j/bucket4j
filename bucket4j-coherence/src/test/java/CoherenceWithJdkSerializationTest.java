@@ -43,7 +43,7 @@ public class CoherenceWithJdkSerializationTest extends AbstractDistributedBucket
             new ProxyManagerSpec<>(
                 "CoherenceProxyManager_JdkSerialization",
                 () -> UUID.randomUUID().toString(),
-                new CoherenceProxyManager<String>(cache, ClientSideConfig.getDefault())
+                clientConfig -> new CoherenceProxyManager<String>(cache, clientConfig)
             )
         );
     }

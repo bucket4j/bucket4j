@@ -46,12 +46,12 @@ public class MariaDBSelectForUpdateLockBasedTransactionTest extends AbstractDist
             new ProxyManagerSpec<>(
                 "MariaDBSelectForUpdateBasedProxyManager",
                 () -> ThreadLocalRandom.current().nextLong(1_000_000_000),
-                new MariaDBSelectForUpdateBasedProxyManager<>(configuration)
+                clientConfig -> new MariaDBSelectForUpdateBasedProxyManager<>(configuration, clientConfig)
             ),
             new ProxyManagerSpec<>(
                 "MariaDBSelectForUpdateBasedProxyManager_withTimeout",
                 () -> ThreadLocalRandom.current().nextLong(1_000_000_000),
-                new MariaDBSelectForUpdateBasedProxyManager<>(configuration, ClientSideConfig.getDefault().withRequestTimeout(Duration.ofSeconds(3)))
+                clientConfig -> new MariaDBSelectForUpdateBasedProxyManager<>(configuration, clientConfig.withRequestTimeout(Duration.ofSeconds(3)))
             )
         );
     }

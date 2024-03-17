@@ -41,7 +41,7 @@ public class CoherenceWithPofSerializationTest extends AbstractDistributedBucket
             new ProxyManagerSpec<>(
                 "CoherenceProxyManager_PofSerialization",
                 () -> UUID.randomUUID().toString(),
-                new CoherenceProxyManager<String>(cache, ClientSideConfig.getDefault())
+                clientConfig -> new CoherenceProxyManager<>(cache, clientConfig)
             )
         );
     }

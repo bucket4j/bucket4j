@@ -63,17 +63,17 @@ public class HazelcastTest extends AbstractDistributedBucketTest {
             new ProxyManagerSpec<>(
                 "HazelcastProxyManager_JdkSerialization",
                 () -> UUID.randomUUID().toString(),
-                new HazelcastProxyManager<>(map, ClientSideConfig.getDefault())
+                clientConfig -> new HazelcastProxyManager<>(map, clientConfig)
             ),
             new ProxyManagerSpec<>(
                 "HazelcastLockBasedProxyManager_JdkSerialization",
                 () -> UUID.randomUUID().toString(),
-                new HazelcastLockBasedProxyManager<>(map, ClientSideConfig.getDefault())
+                clientConfig -> new HazelcastLockBasedProxyManager<>(map, clientConfig)
             ),
             new ProxyManagerSpec<>(
                 "HazelcastCompareAndSwapBasedProxyManager_JdkSerialization",
                 () -> UUID.randomUUID().toString(),
-                new HazelcastCompareAndSwapBasedProxyManager<>(map, ClientSideConfig.getDefault())
+                clientConfig -> new HazelcastCompareAndSwapBasedProxyManager<>(map, clientConfig)
             )
         );
     }

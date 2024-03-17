@@ -53,7 +53,7 @@ public class AbstractRedisProxyManagerBuilder<T extends AbstractRedisProxyManage
             return optionalStrategy.get();
         }
         if (expirationStrategy == null) {
-            throw new IllegalStateException("expirationStrategy is not configured");
+            return ExpirationAfterWriteStrategy.none();
         }
         return expirationStrategy;
     }

@@ -2,7 +2,6 @@
 
 package io.github.bucket4j.grid.infinispan;
 
-import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.grid.infinispan.serialization.Bucket4jProtobufContextInitializer;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
 import io.github.bucket4j.tck.ProxyManagerSpec;
@@ -61,7 +60,7 @@ public class InfinispanTest extends AbstractDistributedBucketTest {
             new ProxyManagerSpec<>(
                 "InfinispanProxyManager",
                 () -> UUID.randomUUID().toString(),
-                new InfinispanProxyManager<>(readWriteMap, ClientSideConfig.getDefault())
+                clientConfig -> new InfinispanProxyManager<>(readWriteMap, clientConfig)
             )
         );
     }

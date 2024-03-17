@@ -42,13 +42,12 @@ public class MySQLSelectForUpdateLockBasedTransactionTest extends AbstractDistri
         SQLProxyConfiguration<Long> configuration = SQLProxyConfiguration.builder()
                 .withTableSettings(tableSettings)
                 .build(dataSource);
-        proxyManager = new MySQLSelectForUpdateBasedProxyManager<>(configuration);
 
         specs = Arrays.asList(
             new ProxyManagerSpec<>(
                 "MySQLSelectForUpdateBasedProxyManager",
                 () -> ThreadLocalRandom.current().nextLong(1_000_000_000),
-                proxyManager
+                clientConfig -> new MySQLSelectForUpdateBasedProxyManager<>(configuration)
             )
         );
     }

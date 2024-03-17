@@ -72,102 +72,72 @@ public class RedisStandaloneTest extends AbstractDistributedBucketTest {
         specs = Arrays.asList(
             // Redisson
             new ProxyManagerSpec<>(
-                "RedissonBasedProxyManager_NoExpiration_LongKey",
+                "RedissonBasedProxyManager_LongKey",
                 () -> ThreadLocalRandom.current().nextLong(),
-                RedissonBasedProxyManager.builderFor(commandExecutor)
-                    .withExpirationStrategy(ExpirationAfterWriteStrategy.none())
+                clientConfig -> RedissonBasedProxyManager.builderFor(commandExecutor)
                     .withKeyMapper(Mapper.LONG)
+                    .withClientSideConfig(clientConfig)
                     .build()
             ),
             new ProxyManagerSpec<>(
-                "RedissonBasedProxyManager_FixedTtl_StringKey",
+                "RedissonBasedProxyManager_StringKey",
                 () -> UUID.randomUUID().toString(),
-                RedissonBasedProxyManager.builderFor(commandExecutor)
-                    .withExpirationStrategy(ExpirationAfterWriteStrategy.fixedTimeToLive(Duration.ofSeconds(10)))
+                clientConfig -> RedissonBasedProxyManager.builderFor(commandExecutor)
+                    .withClientSideConfig(clientConfig)
                     .build()
             ),
             new ProxyManagerSpec<>(
-                "RedissonBasedProxyManager_NoExpiration_StringKey",
+                "RedissonBasedProxyManager_StringKey_RequestTimeout",
                 () -> UUID.randomUUID().toString(),
-                RedissonBasedProxyManager.builderFor(commandExecutor)
-                    .withExpirationStrategy(ExpirationAfterWriteStrategy.none())
-                    .build()
-            ),
-            new ProxyManagerSpec<>(
-                "RedissonBasedProxyManager_NoExpiration_StringKey_RequestTimeout",
-                () -> UUID.randomUUID().toString(),
-                RedissonBasedProxyManager.builderFor(commandExecutor)
-                    .withExpirationStrategy(ExpirationAfterWriteStrategy.none())
-                    .withClientSideConfig(ClientSideConfig.getDefault().withRequestTimeout(Duration.ofSeconds(3)))
+                clientConfig -> RedissonBasedProxyManager.builderFor(commandExecutor)
+                    .withClientSideConfig(clientConfig.withRequestTimeout(Duration.ofSeconds(3)))
                     .build()
             ),
 
             // Letucce
             new ProxyManagerSpec<>(
-                "LettuceBasedProxyManager_NoExpiration_ByteArrayKey",
+                "LettuceBasedProxyManager_ByteArrayKey",
                 () -> UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8),
-                LettuceBasedProxyManager.builderFor(redisClient)
-                    .withExpirationStrategy(ExpirationAfterWriteStrategy.none())
+                clientConfig -> LettuceBasedProxyManager.builderFor(redisClient)
+                    .withClientSideConfig(clientConfig)
                     .build()
             ),
             new ProxyManagerSpec<>(
-                "LettuceBasedProxyManager_FixedTtlExpiration_ByteArrayKey",
-                () -> UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8),
-                LettuceBasedProxyManager.builderFor(redisClient)
-                    .withExpirationStrategy(ExpirationAfterWriteStrategy.fixedTimeToLive(Duration.ofSeconds(10)))
-                    .build()
-            ),
-            new ProxyManagerSpec<>(
-                "LettuceBasedProxyManager_NoExpiration_StringKey",
+                "LettuceBasedProxyManager_StringKey",
                 () -> UUID.randomUUID().toString(),
-                LettuceBasedProxyManager.builderFor(redisClient.connect(RedisCodec.of(StringCodec.UTF8, ByteArrayCodec.INSTANCE)))
-                    .withExpirationStrategy(ExpirationAfterWriteStrategy.none())
+                clientConfig -> LettuceBasedProxyManager.builderFor(redisClient.connect(RedisCodec.of(StringCodec.UTF8, ByteArrayCodec.INSTANCE)))
+                    .withClientSideConfig(clientConfig)
                     .build()
             ),
             new ProxyManagerSpec<>(
                 "LettuceBasedProxyManager_NoExpiration_StringKey_RequestTimeout",
                 () -> UUID.randomUUID().toString(),
-                LettuceBasedProxyManager.builderFor(redisClient.connect(RedisCodec.of(StringCodec.UTF8, ByteArrayCodec.INSTANCE)))
-                    .withExpirationStrategy(ExpirationAfterWriteStrategy.none())
-                    .withClientSideConfig(ClientSideConfig.getDefault().withRequestTimeout(Duration.ofSeconds(3)))
+                clientConfig -> LettuceBasedProxyManager.builderFor(redisClient.connect(RedisCodec.of(StringCodec.UTF8, ByteArrayCodec.INSTANCE)))
+                    .withClientSideConfig(clientConfig.withRequestTimeout(Duration.ofSeconds(3)))
                     .build()
             ),
 
             // Jedis
             new ProxyManagerSpec<>(
-                "JedisBasedProxyManager_NoExpiration_ByteArrayKey",
+                "JedisBasedProxyManager_ByteArrayKey",
                 () -> UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8),
-                JedisBasedProxyManager.builderFor(jedisPool)
-                    .withExpirationStrategy(ExpirationAfterWriteStrategy.none())
+                clientConfig -> JedisBasedProxyManager.builderFor(jedisPool)
+                    .withClientSideConfig(clientConfig)
                     .build()
             ),
             new ProxyManagerSpec<>(
-                "JedisBasedProxyManager_FixedTtl_ByteArrayKey",
-                () -> UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8),
-                JedisBasedProxyManager.builderFor(jedisPool)
-                    .withExpirationStrategy(ExpirationAfterWriteStrategy.fixedTimeToLive(Duration.ofSeconds(10)))
-                    .build()
-            ),
-            new ProxyManagerSpec<>(
-                "JedisBasedProxyManager_FixedTtl_StringKey",
+                "JedisBasedProxyManager_StringKey",
                 () -> UUID.randomUUID().toString(),
-                JedisBasedProxyManager.builderFor(jedisPool)
-                    .withExpirationStrategy(ExpirationAfterWriteStrategy.none())
+                clientConfig -> JedisBasedProxyManager.builderFor(jedisPool)
+                    .withClientSideConfig(clientConfig)
                     .withKeyMapper(Mapper.STRING)
                     .build()
             ),
             new ProxyManagerSpec<>(
-                "JedisBasedProxyManager_unifiedJedisPooled_NoExpiration_ByteArrayKey",
+                "JedisBasedProxyManager_unifiedJedisPooled_ByteArrayKey",
                 () -> UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8),
-                JedisBasedProxyManager.builderFor(unifiedJedisPooled)
-                    .withExpirationStrategy(ExpirationAfterWriteStrategy.none())
-                    .build()
-            ),
-            new ProxyManagerSpec<>(
-                "JedisBasedProxyManager_unifiedJedis_NoExpiration_ByteArrayKey",
-                () -> UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8),
-                JedisBasedProxyManager.builderFor(unifiedJedis)
-                    .withExpirationStrategy(ExpirationAfterWriteStrategy.none())
+                clientConfig -> JedisBasedProxyManager.builderFor(unifiedJedisPooled)
+                    .withClientSideConfig(clientConfig)
                     .build()
             )
         );

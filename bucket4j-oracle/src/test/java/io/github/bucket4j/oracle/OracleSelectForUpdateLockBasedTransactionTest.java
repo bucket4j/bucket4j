@@ -46,12 +46,12 @@ public class OracleSelectForUpdateLockBasedTransactionTest extends AbstractDistr
             new ProxyManagerSpec<>(
                 "OracleSelectForUpdateBasedProxyManager",
                 () -> ThreadLocalRandom.current().nextLong(1_000_000_000),
-                new OracleSelectForUpdateBasedProxyManager<>(configuration)
+                clientConfig -> new OracleSelectForUpdateBasedProxyManager<>(configuration, clientConfig)
             ),
             new ProxyManagerSpec<>(
                 "OracleSelectForUpdateBasedProxyManager_withTimeout",
                 () -> ThreadLocalRandom.current().nextLong(1_000_000_000),
-                new OracleSelectForUpdateBasedProxyManager<>(configuration, ClientSideConfig.getDefault().withRequestTimeout(Duration.ofSeconds(3)))
+                clientConfig -> new OracleSelectForUpdateBasedProxyManager<>(configuration, clientConfig.withRequestTimeout(Duration.ofSeconds(3)))
             )
         );
     }
