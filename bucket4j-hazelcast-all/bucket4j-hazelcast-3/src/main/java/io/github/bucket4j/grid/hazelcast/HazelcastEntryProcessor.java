@@ -22,6 +22,7 @@ package io.github.bucket4j.grid.hazelcast;
 import com.hazelcast.map.EntryBackupProcessor;
 import com.hazelcast.map.EntryProcessor;
 import io.github.bucket4j.distributed.remote.AbstractBinaryTransaction;
+import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.distributed.remote.Request;
 import io.github.bucket4j.util.ComparableByContent;
 
@@ -59,9 +60,9 @@ public class HazelcastEntryProcessor<K, T> implements EntryProcessor<K, byte[]>,
             }
 
             @Override
-            protected void setRawState(byte[] stateBytes) {
-                entry.setValue(stateBytes);
-                backupProcessor = new SimpleBackupProcessor<>(stateBytes);
+            protected void setRawState(byte[] newStateBytes, RemoteBucketState newState) {
+                entry.setValue(newStateBytes);
+                backupProcessor = new SimpleBackupProcessor<>(newStateBytes);
             }
         }.execute();
     }

@@ -189,8 +189,8 @@ public class JCacheProxyManager<K> extends AbstractProxyManager<K> {
         }
 
         @Override
-        protected void setRawState(byte[] stateBytes) {
-            targetEntry.setValue(stateBytes);
+        protected void setRawState(byte[] newStateBytes, RemoteBucketState newState) {
+            targetEntry.setValue(newStateBytes);
         }
 
     }

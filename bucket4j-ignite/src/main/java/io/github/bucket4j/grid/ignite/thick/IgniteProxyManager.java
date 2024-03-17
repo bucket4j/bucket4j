@@ -144,8 +144,8 @@ public class IgniteProxyManager<K> extends AbstractProxyManager<K> {
                 }
 
                 @Override
-                protected void setRawState(byte[] stateBytes) {
-                    entry.setValue(stateBytes);
+                protected void setRawState(byte[] newStateBytes, RemoteBucketState newState) {
+                    entry.setValue(newStateBytes);
                 }
             }.execute();
         }

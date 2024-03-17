@@ -20,6 +20,7 @@
 package io.github.bucket4j.grid.infinispan;
 
 import io.github.bucket4j.distributed.remote.AbstractBinaryTransaction;
+import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.distributed.remote.Request;
 import io.github.bucket4j.distributed.serialization.InternalSerializationHelper;
 import io.github.bucket4j.util.ComparableByContent;
@@ -64,8 +65,8 @@ public class InfinispanProcessor<K, R> implements
             }
 
             @Override
-            protected void setRawState(byte[] stateBytes) {
-                entry.set(stateBytes);
+            protected void setRawState(byte[] newStateBytes, RemoteBucketState newState) {
+                entry.set(newStateBytes);
             }
         }.execute();
     }

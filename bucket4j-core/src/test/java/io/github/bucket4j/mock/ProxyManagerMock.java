@@ -198,9 +198,9 @@ public class ProxyManagerMock<K> extends AbstractProxyManager<K> {
                     return stateMap.get(key);
                 }
                 @Override
-                protected void setRawState(byte[] stateBytes) {
+                protected void setRawState(byte[] newStateBytes, RemoteBucketState newState) {
                     modificationCount++;
-                    stateMap.put(key, stateBytes);
+                    stateMap.put(key, newStateBytes);
                 }
                 @Override
                 public boolean exists() {

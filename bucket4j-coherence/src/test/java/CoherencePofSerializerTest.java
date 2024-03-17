@@ -2,7 +2,6 @@ import com.tangosol.io.Serializer;
 import com.tangosol.io.pof.ConfigurablePofContext;
 import com.tangosol.util.Binary;
 import com.tangosol.util.ExternalizableHelper;
-import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.distributed.remote.Request;
 import io.github.bucket4j.distributed.remote.commands.AddTokensCommand;
 import io.github.bucket4j.distributed.versioning.Versions;
@@ -26,7 +25,7 @@ public class CoherencePofSerializerTest {
     @Test
     public void testSerializationOfEntryProcessors() {
         AddTokensCommand command = new AddTokensCommand(42);
-        Request request = new Request(command, Versions.getLatest(), null);
+        Request request = new Request(command, Versions.getLatest(), null, null);
         testSerialization(new CoherenceProcessor(request));
     }
 

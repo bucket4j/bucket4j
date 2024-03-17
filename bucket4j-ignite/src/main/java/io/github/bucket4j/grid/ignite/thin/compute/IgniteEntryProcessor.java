@@ -20,6 +20,7 @@
 package io.github.bucket4j.grid.ignite.thin.compute;
 
 import io.github.bucket4j.distributed.remote.AbstractBinaryTransaction;
+import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.distributed.remote.Request;
 import org.apache.ignite.cache.CacheEntryProcessor;
 
@@ -53,8 +54,8 @@ public class IgniteEntryProcessor<K> implements Serializable, CacheEntryProcesso
             }
 
             @Override
-            protected void setRawState(byte[] stateBytes) {
-                entry.setValue(stateBytes);
+            protected void setRawState(byte[] newStateBytes, RemoteBucketState newState) {
+                entry.setValue(newStateBytes);
             }
         }.execute();
     }

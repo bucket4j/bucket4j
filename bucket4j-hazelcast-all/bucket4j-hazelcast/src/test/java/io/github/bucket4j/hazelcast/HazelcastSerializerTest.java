@@ -60,7 +60,7 @@ public class HazelcastSerializerTest {
     @Test
     public void tetsSerializationOfEntryProcessors() {
         RemoteCommand<?> command = new AddTokensCommand(42);
-        Request request = new Request(command, Versions.getLatest(), null);
+        Request request = new Request(command, Versions.getLatest(), null, null);
         testSerialization(new HazelcastEntryProcessor(request));
         testSerialization(new SimpleBackupProcessor(new byte[] {1,2,3}));
     }

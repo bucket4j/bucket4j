@@ -21,17 +21,14 @@ package io.github.bucket4j.grid.coherence;
 
 import com.tangosol.util.InvocableMap;
 import com.tangosol.util.processor.AbstractProcessor;
-import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.remote.AbstractBinaryTransaction;
-import io.github.bucket4j.distributed.remote.CommandResult;
-import io.github.bucket4j.distributed.remote.RemoteCommand;
+import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.distributed.remote.Request;
 import io.github.bucket4j.distributed.serialization.InternalSerializationHelper;
 import io.github.bucket4j.util.ComparableByContent;
 
 import java.util.Arrays;
 
-import static io.github.bucket4j.distributed.serialization.InternalSerializationHelper.serializeResult;
 
 public class CoherenceProcessor<K, T> extends AbstractProcessor<K, byte[], byte[]> implements ComparableByContent {
 
@@ -65,8 +62,8 @@ public class CoherenceProcessor<K, T> extends AbstractProcessor<K, byte[], byte[
             }
 
             @Override
-            protected void setRawState(byte[] stateBytes) {
-                entry.setValue(stateBytes);
+            protected void setRawState(byte[] newStateBytes, RemoteBucketState newState) {
+                entry.setValue(newStateBytes);
             }
         }.execute();
     }

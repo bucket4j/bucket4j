@@ -61,7 +61,7 @@ public abstract class AbstractBinaryTransaction {
 
             if (entryWrapper.isStateModified()) {
                 RemoteBucketState newState = entryWrapper.get();
-                setRawState(serializeState(newState, backwardCompatibilityVersion));
+                setRawState(serializeState(newState, backwardCompatibilityVersion), newState);
             }
 
             return serializeResult(result, request.getBackwardCompatibilityVersion());
@@ -76,7 +76,7 @@ public abstract class AbstractBinaryTransaction {
 
     protected abstract byte[] getRawState();
 
-    protected abstract void setRawState(byte[] stateBytes);
+    protected abstract void setRawState(byte[] newStateBytes, RemoteBucketState newState);
 
     public abstract boolean exists();
 
