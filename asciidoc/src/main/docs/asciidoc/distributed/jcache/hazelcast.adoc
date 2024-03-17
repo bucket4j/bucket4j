@@ -10,12 +10,12 @@ To use Bucket4j extension for Hazelcast with ``Hazelcast 4.x`` you need to add t
     <version>{revnumber}</version>
 </dependency>
 ----
-If you are using a legacy version of Hazelcast ``3.x`` then you need to add the following dependency:
+If you are using a legacy version of Hazelcast ``4.x`` then you need to add the following dependency:
 [source, xml, subs=attributes+]
 ----
 <dependency>
     <groupId>com.bucket4j</groupId>
-    <artifactId>bucket4j-hazelcast-3</artifactId>
+    <artifactId>bucket4j-hazelcast-4</artifactId>
     <version>{revnumber}</version>
 </dependency>
 ----
