@@ -25,6 +25,7 @@ import java.util.Optional;
 
 import io.github.bucket4j.BucketExceptions;
 import io.github.bucket4j.TimeMeter;
+import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
 import io.github.bucket4j.distributed.versioning.Version;
 import io.github.bucket4j.distributed.versioning.Versions;
 
@@ -37,7 +38,8 @@ import io.github.bucket4j.distributed.versioning.Versions;
  */
 public class ClientSideConfig {
 
-    private static final ClientSideConfig defaultConfig = new ClientSideConfig(Versions.getLatest(), Optional.empty(), ExecutionStrategy.SAME_TREAD, Optional.empty());
+    private static final ClientSideConfig defaultConfig = new ClientSideConfig(Versions.getLatest(), Optional.empty(),
+        ExecutionStrategy.SAME_TREAD, Optional.empty(), Optional.empty());
 
     private final Version backwardCompatibilityVersion;
     private final Optional<TimeMeter> clientSideClock;
@@ -46,7 +48,13 @@ public class ClientSideConfig {
 
     private final Optional<Long> requestTimeoutNanos;
 
-    protected ClientSideConfig(Version backwardCompatibilityVersion, Optional<TimeMeter> clientSideClock, ExecutionStrategy executionStrategy, Optional<Long> requestTimeoutNanos) {
+    private final Optional<ExpirationAfterWriteStrategy> expirationStrategy;
+
+    protected ClientSideConfig(Version backwardCompatibilityVersion, Optional<TimeMeter> clientSideClock,
+                               ExecutionStrategy executionStrategy,
+                               Optional<Long> requestTimeoutNanos,
+                               Optional<ExpirationAfterWriteStrategy> expirationStrategy
+                               ) {
         this.backwardCompatibilityVersion = Objects.requireNonNull(backwardCompatibilityVersion);
         this.clientSideClock = Objects.requireNonNull(clientSideClock);
         this.executionStrategy = executionStrategy;
@@ -80,7 +88,7 @@ public class ClientSideConfig {
      * @return new instance of {@link ClientSideConfig} with configured {@code backwardCompatibilityVersion}.
      */
     public ClientSideConfig backwardCompatibleWith(Version backwardCompatibilityVersion) {
-        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, requestTimeoutNanos);
+        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, requestTimeoutNanos, expirationStrategy);
     }
 
     /**
@@ -98,7 +106,7 @@ public class ClientSideConfig {
      * @return new instance of {@link ClientSideConfig} with configured {@code clientClock}.
      */
     public ClientSideConfig withClientClock(TimeMeter clientClock) {
-        return new ClientSideConfig(backwardCompatibilityVersion, Optional.of(clientClock), executionStrategy, requestTimeoutNanos);
+        return new ClientSideConfig(backwardCompatibilityVersion, Optional.of(clientClock), executionStrategy, requestTimeoutNanos, expirationStrategy);
     }
 
     /**
@@ -112,7 +120,7 @@ public class ClientSideConfig {
      * @return new instance of {@link ClientSideConfig} with configured {@code clientClock}.
      */
     public ClientSideConfig withExecutionStrategy(ExecutionStrategy executionStrategy) {
-        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, requestTimeoutNanos);
+        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, requestTimeoutNanos, expirationStrategy);
     }
 
     /**
@@ -135,7 +143,29 @@ public class ClientSideConfig {
             throw BucketExceptions.nonPositiveRequestTimeout(requestTimeout);
         }
         long requestTimeoutNanos = requestTimeout.toNanos();
-        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, Optional.of(requestTimeoutNanos));
+        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, Optional.of(requestTimeoutNanos), expirationStrategy);
+    }
+
+    /**
+     * Returns new instance of {@link ClientSideConfig} with configured strategy for choosing time to live for buckets.
+     * If particular {@link ProxyManager} does not support {@link ExpirationAfterWriteStrategy}
+     *  then exception  will be thrown in attempt to construct such ProxyManager with this instance of {@link ClientSideConfig}.
+     *
+     * @param expirationStrategy the strategy for choosing time to live for buckets.
+     *
+     * @return new instance of {@link ClientSideConfig} with configured {@code expirationStrategy}.
+     */
+    public ClientSideConfig withExpirationAfterWriteStrategy(ExpirationAfterWriteStrategy expirationStrategy) {
+        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, requestTimeoutNanos, Optional.of(expirationStrategy));
+    }
+
+    /**
+     * Returns the strategy for choosing time to live for buckets.
+     *
+     * @return the strategy for choosing time to live for buckets
+     */
+    public Optional<ExpirationAfterWriteStrategy> getExpirationAfterWriteStrategy() {
+        return expirationStrategy;
     }
 
     /**
