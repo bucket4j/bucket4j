@@ -4,10 +4,10 @@ import com.hazelcast.config.Config;
 import com.hazelcast.config.JoinConfig;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.core.IMap;
+import com.hazelcast.map.IMap;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
-import io.github.bucket4j.grid.hazelcast.HazelcastCompareAndSwapProxyManager;
+import io.github.bucket4j.grid.hazelcast.HazelcastCompareAndSwapBasedProxyManager;
 import io.github.bucket4j.grid.hazelcast.HazelcastLockBasedProxyManager;
 import io.github.bucket4j.grid.hazelcast.HazelcastProxyManager;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
@@ -24,7 +24,7 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.UUID;
 
-public class HazelcastTest extends AbstractDistributedBucketTest {
+public class HazelcastWithCustomSerializersTest extends AbstractDistributedBucketTest {
 
     private static IMap<String, byte[]> map;
     private static Cloud cloud;
@@ -41,6 +41,7 @@ public class HazelcastTest extends AbstractDistributedBucketTest {
 
         server.exec((Runnable & Serializable) () -> {
             Config config = new Config();
+            HazelcastProxyManager.addCustomSerializers(config.getSerializationConfig(), 10_000);
             JoinConfig joinConfig = config.getNetworkConfig().getJoin();
             joinConfig.getMulticastConfig().setEnabled(false);
             joinConfig.getTcpIpConfig().setEnabled(true);
@@ -52,29 +53,25 @@ public class HazelcastTest extends AbstractDistributedBucketTest {
 
         // start hazelcast client which works inside current JVM and does not hold data
         Config config = new Config();
-        config.setLiteMember(true);
         JoinConfig joinConfig = config.getNetworkConfig().getJoin();
         joinConfig.getMulticastConfig().setEnabled(false);
         joinConfig.getTcpIpConfig().setEnabled(true);
         joinConfig.getTcpIpConfig().addMember("127.0.0.1:5701");
+        HazelcastProxyManager.addCustomSerializers(config.getSerializationConfig(), 10_000);
+        config.setLiteMember(true);
         hazelcastInstance = Hazelcast.newHazelcastInstance(config);
         map = hazelcastInstance.getMap("my_buckets");
 
         specs = Arrays.asList(
             new ProxyManagerSpec<>(
-                "HazelcastProxyManager_JdkSerialization",
+                "HazelcastProxyManager_CustomSerialization",
                 () -> UUID.randomUUID().toString(),
                 new HazelcastProxyManager<>(map, ClientSideConfig.getDefault())
             ),
             new ProxyManagerSpec<>(
-                "HazelcastLockBasedProxyManager_JdkSerialization",
+                "HazelcastLockBasedProxyManager_JdkSerialization_offloadableExecutor",
                 () -> UUID.randomUUID().toString(),
-                new HazelcastLockBasedProxyManager<>(map, ClientSideConfig.getDefault())
-            ),
-            new ProxyManagerSpec<>(
-                "HazelcastCompareAndSwapBasedProxyManager_JdkSerialization",
-                () -> UUID.randomUUID().toString(),
-                new HazelcastCompareAndSwapProxyManager<>(map, ClientSideConfig.getDefault())
+                new HazelcastProxyManager<>(map, ClientSideConfig.getDefault(), "my-executor")
             )
         );
     }

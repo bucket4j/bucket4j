@@ -11,12 +11,12 @@
         <version>8.10.0</version>
         <relativePath>../../bucket4j-hazelcast-all</relativePath>
     </parent>
-    <artifactId>bucket4j-hazelcast-3</artifactId>
-    <name>bucket4j-hazelcast-3</name>
+    <artifactId>bucket4j-hazelcast-4</artifactId>
+    <name>bucket4j-hazelcast-4</name>
     <description>Bucket4j integration with Hazelcast 3.x branch</description>
 
     <properties>
-        <modular-name>hazelcast3</modular-name>
+        <modular-name>hazelcast4</modular-name>
     </properties>
 
     <dependencies>
@@ -46,8 +46,14 @@
         <dependency>
             <groupId>com.hazelcast</groupId>
             <artifactId>hazelcast</artifactId>
-            <version>${hazelcast.3.version}</version>
+            <version>${hazelcast.4.version}</version>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit-pioneer</groupId>
+            <artifactId>junit-pioneer</artifactId>
+            <version>2.2.0</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
     

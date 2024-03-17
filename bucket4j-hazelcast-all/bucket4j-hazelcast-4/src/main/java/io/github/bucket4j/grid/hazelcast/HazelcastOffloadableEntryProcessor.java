@@ -19,34 +19,28 @@
  */
 package io.github.bucket4j.grid.hazelcast;
 
-import com.hazelcast.map.EntryBackupProcessor;
-import io.github.bucket4j.util.ComparableByContent;
+import com.hazelcast.core.Offloadable;
+import io.github.bucket4j.distributed.remote.Request;
 
-import java.util.Arrays;
-import java.util.Map;
-
-public class SimpleBackupProcessor<K> implements EntryBackupProcessor<K, byte[]>, ComparableByContent<SimpleBackupProcessor> {
+public class HazelcastOffloadableEntryProcessor<K, T> extends HazelcastEntryProcessor<K, T> implements Offloadable {
 
     private static final long serialVersionUID = 1L;
 
-    private final byte[] state;
+    private final String executorName;
 
-    public SimpleBackupProcessor(byte[] state) {
-        this.state = state;
+    public HazelcastOffloadableEntryProcessor(Request<T> request, String executorName) {
+        super(request);
+        this.executorName = executorName;
+    }
+
+    public HazelcastOffloadableEntryProcessor(byte[] requestBytes, String executorName) {
+        super(requestBytes);
+        this.executorName = executorName;
     }
 
     @Override
-    public void processBackup(Map.Entry<K, byte[]> entry) {
-        entry.setValue(state);
-    }
-
-    public byte[] getState() {
-        return state;
-    }
-
-    @Override
-    public boolean equalsByContent(SimpleBackupProcessor other) {
-        return Arrays.equals(state, other.state);
+    public String getExecutorName() {
+        return executorName;
     }
 
 }

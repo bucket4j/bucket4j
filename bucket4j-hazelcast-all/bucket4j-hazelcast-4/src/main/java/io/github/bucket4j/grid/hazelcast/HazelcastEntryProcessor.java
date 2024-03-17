@@ -19,7 +19,6 @@
  */
 package io.github.bucket4j.grid.hazelcast;
 
-import com.hazelcast.map.EntryBackupProcessor;
 import com.hazelcast.map.EntryProcessor;
 import io.github.bucket4j.distributed.remote.AbstractBinaryTransaction;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
@@ -31,12 +30,12 @@ import java.util.Map;
 
 import static io.github.bucket4j.distributed.serialization.InternalSerializationHelper.serializeRequest;
 
-public class HazelcastEntryProcessor<K, T> implements EntryProcessor<K, byte[]>, ComparableByContent<HazelcastEntryProcessor> {
+public class HazelcastEntryProcessor<K, T> implements EntryProcessor<K, byte[], byte[]>, ComparableByContent<HazelcastEntryProcessor> {
 
     private static final long serialVersionUID = 1L;
 
     private final byte[] requestBytes;
-    private EntryBackupProcessor<K, byte[]> backupProcessor;
+    private EntryProcessor<K, byte[], byte[]> backupProcessor;
 
     public HazelcastEntryProcessor(Request<T> request) {
         this.requestBytes = serializeRequest(request);
@@ -68,7 +67,7 @@ public class HazelcastEntryProcessor<K, T> implements EntryProcessor<K, byte[]>,
     }
 
     @Override
-    public EntryBackupProcessor<K, byte[]> getBackupProcessor() {
+    public EntryProcessor<K, byte[], byte[]> getBackupProcessor() {
         return backupProcessor;
     }
 

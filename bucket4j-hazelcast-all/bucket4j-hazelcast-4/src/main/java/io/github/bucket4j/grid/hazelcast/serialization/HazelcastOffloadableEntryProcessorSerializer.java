@@ -24,16 +24,20 @@ import com.hazelcast.nio.ObjectDataOutput;
 import com.hazelcast.nio.serialization.StreamSerializer;
 import com.hazelcast.nio.serialization.TypedStreamDeserializer;
 import io.github.bucket4j.grid.hazelcast.HazelcastEntryProcessor;
+import io.github.bucket4j.grid.hazelcast.HazelcastOffloadableEntryProcessor;
 
 import java.io.IOException;
 
 
-public class HazelcastEntryProcessorSerializer implements StreamSerializer<HazelcastEntryProcessor>, TypedStreamDeserializer<HazelcastEntryProcessor> {
+public class HazelcastOffloadableEntryProcessorSerializer implements StreamSerializer<HazelcastOffloadableEntryProcessor>, TypedStreamDeserializer<HazelcastOffloadableEntryProcessor> {
 
     private final int typeId;
 
-    public HazelcastEntryProcessorSerializer(int typeId) {
+    public HazelcastOffloadableEntryProcessorSerializer(int typeId) {
         this.typeId = typeId;
+    }
+    public HazelcastOffloadableEntryProcessorSerializer() {
+        this.typeId = SerializationUtilities.getSerializerTypeId(this.getClass());
     }
 
     public Class<HazelcastEntryProcessor> getSerializableType() {
@@ -51,23 +55,25 @@ public class HazelcastEntryProcessorSerializer implements StreamSerializer<Hazel
     }
 
     @Override
-    public void write(ObjectDataOutput out, HazelcastEntryProcessor serializable) throws IOException {
+    public void write(ObjectDataOutput out, HazelcastOffloadableEntryProcessor serializable) throws IOException {
         out.writeByteArray(serializable.getRequestBytes());
+        out.writeUTF(serializable.getExecutorName());
     }
 
     @Override
-    public HazelcastEntryProcessor read(ObjectDataInput in) throws IOException {
+    public HazelcastOffloadableEntryProcessor read(ObjectDataInput in) throws IOException {
         return read0(in);
     }
 
     @Override
-    public HazelcastEntryProcessor read(ObjectDataInput in, Class aClass) throws IOException {
+    public HazelcastOffloadableEntryProcessor read(ObjectDataInput in, Class aClass) throws IOException {
         return read0(in);
     }
 
-    private HazelcastEntryProcessor read0(ObjectDataInput in) throws IOException {
+    private HazelcastOffloadableEntryProcessor read0(ObjectDataInput in) throws IOException {
         byte[] commandBytes = in.readByteArray();
-        return new HazelcastEntryProcessor(commandBytes);
+        String executorName = in.readUTF();
+        return new HazelcastOffloadableEntryProcessor(commandBytes, executorName);
     }
 
 }

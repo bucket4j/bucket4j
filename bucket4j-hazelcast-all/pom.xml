@@ -15,7 +15,7 @@
 
     <modules>
         <module>bucket4j-hazelcast</module>
-        <module>bucket4j-hazelcast-3</module>
+        <module>bucket4j-hazelcast-4</module>
     </modules>
 
 </project>

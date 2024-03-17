@@ -38,18 +38,21 @@ package io.github.bucket4j.grid.hazelcast;
 
 import com.hazelcast.config.SerializationConfig;
 import com.hazelcast.config.SerializerConfig;
-import com.hazelcast.core.ExecutionCallback;
-import com.hazelcast.core.ICompletableFuture;
-import com.hazelcast.core.IMap;
+import com.hazelcast.map.IMap;
 import io.github.bucket4j.distributed.proxy.AbstractProxyManager;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
-import io.github.bucket4j.distributed.remote.*;
+import io.github.bucket4j.distributed.remote.CommandResult;
+import io.github.bucket4j.distributed.remote.Request;
 import io.github.bucket4j.distributed.versioning.Version;
 import io.github.bucket4j.grid.hazelcast.serialization.HazelcastEntryProcessorSerializer;
+import io.github.bucket4j.grid.hazelcast.serialization.HazelcastOffloadableEntryProcessorSerializer;
+import io.github.bucket4j.grid.hazelcast.serialization.SerializationUtilities;
 import io.github.bucket4j.grid.hazelcast.serialization.SimpleBackupProcessorSerializer;
+import io.github.bucket4j.distributed.serialization.InternalSerializationHelper;
 
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 
 import static io.github.bucket4j.distributed.serialization.InternalSerializationHelper.deserializeResult;
 
@@ -59,6 +62,7 @@ import static io.github.bucket4j.distributed.serialization.InternalSerialization
 public class HazelcastProxyManager<K> extends AbstractProxyManager<K> {
 
     private final IMap<K, byte[]> map;
+    private final String offloadableExecutorName;
 
     public HazelcastProxyManager(IMap<K, byte[]> map) {
         this(map, ClientSideConfig.getDefault());
@@ -67,12 +71,21 @@ public class HazelcastProxyManager<K> extends AbstractProxyManager<K> {
     public HazelcastProxyManager(IMap<K, byte[]> map, ClientSideConfig clientSideConfig) {
         super(clientSideConfig);
         this.map = Objects.requireNonNull(map);
+        this.offloadableExecutorName = null;
+    }
+
+    public HazelcastProxyManager(IMap<K, byte[]> map, ClientSideConfig clientSideConfig, String offlodableExecutorName) {
+        super(clientSideConfig);
+        this.map = Objects.requireNonNull(map);
+        this.offloadableExecutorName = Objects.requireNonNull(offlodableExecutorName);
     }
 
     @Override
     public <T> CommandResult<T> execute(K key, Request<T> request) {
-        HazelcastEntryProcessor<K, T> entryProcessor = new HazelcastEntryProcessor<>(request);
-        byte[] response = (byte[]) map.executeOnKey(key, entryProcessor);
+        HazelcastEntryProcessor<K, T> entryProcessor = offloadableExecutorName == null?
+                new HazelcastEntryProcessor<>(request) :
+                new HazelcastOffloadableEntryProcessor<>(request, offloadableExecutorName);
+        byte[] response = map.executeOnKey(key, entryProcessor);
         Version backwardCompatibilityVersion = request.getBackwardCompatibilityVersion();
         return deserializeResult(response, backwardCompatibilityVersion);
     }
@@ -84,26 +97,12 @@ public class HazelcastProxyManager<K> extends AbstractProxyManager<K> {
 
     @Override
     public <T> CompletableFuture<CommandResult<T>> executeAsync(K key, Request<T> request) {
-        HazelcastEntryProcessor<K, T> entryProcessor = new HazelcastEntryProcessor<>(request);
-        CompletableFuture<CommandResult<T>> future = new CompletableFuture<>();
+        HazelcastEntryProcessor<K, T> entryProcessor = offloadableExecutorName == null?
+                new HazelcastEntryProcessor<>(request) :
+                new HazelcastOffloadableEntryProcessor<>(request, offloadableExecutorName);
+        CompletionStage<byte[]> future = map.submitToKey(key, entryProcessor);
         Version backwardCompatibilityVersion = request.getBackwardCompatibilityVersion();
-        map.submitToKey(key, entryProcessor, new ExecutionCallback<byte[]>() {
-            @Override
-            public void onResponse(byte[] response) {
-                try {
-                    CommandResult<T> result = deserializeResult(response, backwardCompatibilityVersion);
-                    future.complete(result);
-                } catch (Throwable t) {
-                    future.completeExceptionally(t);
-                }
-            }
-
-            @Override
-            public void onFailure(Throwable t) {
-                future.completeExceptionally(t);
-            }
-        });
-        return future;
+        return (CompletableFuture) future.thenApply((byte[] bytes) -> InternalSerializationHelper.deserializeResult(bytes, backwardCompatibilityVersion));
     }
 
     @Override
@@ -113,18 +112,14 @@ public class HazelcastProxyManager<K> extends AbstractProxyManager<K> {
 
     @Override
     protected CompletableFuture<Void> removeAsync(K key) {
-        ICompletableFuture<byte[]> hazelcastFuture = map.removeAsync(key);
+        CompletionStage<byte[]> hazelcastFuture = map.removeAsync(key);
         CompletableFuture<Void> resultFuture = new CompletableFuture<>();
-        hazelcastFuture.andThen(new ExecutionCallback<byte[]>() {
-            @Override
-            public void onResponse(byte[] response) {
-                resultFuture.complete(null);
-            }
-
-            @Override
-            public void onFailure(Throwable t) {
-                resultFuture.completeExceptionally(t);
-            }
+        hazelcastFuture.whenComplete((oldState, error) -> {
+          if (error == null) {
+              resultFuture.complete(null);
+          } else {
+              resultFuture.completeExceptionally(error);
+          }
         });
         return resultFuture;
     }
@@ -143,15 +138,22 @@ public class HazelcastProxyManager<K> extends AbstractProxyManager<K> {
     public static void addCustomSerializers(SerializationConfig serializationConfig, final int typeIdBase) {
         serializationConfig.addSerializerConfig(
                 new SerializerConfig()
-                        .setImplementation(new HazelcastEntryProcessorSerializer(typeIdBase))
+                        .setImplementation(new HazelcastEntryProcessorSerializer(SerializationUtilities.getSerializerTypeId(HazelcastEntryProcessorSerializer.class, typeIdBase)))
                         .setTypeClass(HazelcastEntryProcessor.class)
         );
 
         serializationConfig.addSerializerConfig(
                 new SerializerConfig()
-                        .setImplementation(new SimpleBackupProcessorSerializer(typeIdBase + 1))
+                        .setImplementation(new SimpleBackupProcessorSerializer(SerializationUtilities.getSerializerTypeId(SimpleBackupProcessorSerializer.class, typeIdBase)))
                         .setTypeClass(SimpleBackupProcessor.class)
         );
+
+        serializationConfig.addSerializerConfig(
+                new SerializerConfig()
+                        .setImplementation(new HazelcastOffloadableEntryProcessorSerializer(SerializationUtilities.getSerializerTypeId(HazelcastOffloadableEntryProcessorSerializer.class, typeIdBase)))
+                        .setTypeClass(HazelcastOffloadableEntryProcessor.class)
+        );
+
     }
 
 }
