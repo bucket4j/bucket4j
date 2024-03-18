@@ -40,6 +40,22 @@ BucketConfiguration configuration = BucketConfiguration.builder()
 Bucket bucket = proxyManager.builder().build(key, configuration);
 ----
 
+==== Configuring flexible per entry expiration
+It is possible configure precise expiration for bucket entries inside cache,
+in order to avoid storing data related to buckets more than it needs to refill for consumed tokens.
+[source, java]
+----
+IMap<K, byte[]> map = ...;
+Duration evictionJitter = Duration.ofSeconds(15);
+expiration = ExpirationAfterWriteStrategy.basedOnTimeForRefillingBucketUpToMax(evictionJitter)
+
+private static final HazelcastProxyManager<K> proxyManager = new HazelcastProxyManager<>(map, ClientSideConfig.getDefault().withExpirationAfterWriteStrategy(expiration)));
+
+----
+How to choose eviction jitter properly? Zero means immediate eviction after refill,
+however it is better to avoid too small jitter, because recreation of bucket after expiration will require one network hope,
+so it is better to configure at least of few seconds for jitter in order to avoid to frequent buckets recreation.
+
 ==== Configuring Custom Serialization for Bucket4j library classes
 If you configure nothing, then by default Java serialization will be used for serialization Bucket4j library classes. Java serialization can be rather slow and should be avoided in general.
 ``Bucket4j`` provides https://docs.hazelcast.org/docs/3.0/manual/html/ch03s03.html[custom serializers] for all library classes that could be transferred over the network.
