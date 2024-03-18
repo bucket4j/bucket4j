@@ -47,7 +47,7 @@ public abstract class AbstractProxyManager<K> implements ProxyManager<K> {
     private final ClientSideConfig clientSideConfig;
 
     protected AbstractProxyManager(ClientSideConfig clientSideConfig) {
-        if (clientSideConfig.getExpirationAfterWriteStrategy().isPresent() && !isAsyncModeSupported()) {
+        if (clientSideConfig.getExpirationAfterWriteStrategy().isPresent() && !isExpireAfterWriteSupported()) {
             throw BucketExceptions.expirationAfterWriteIsNotSupported();
         }
         this.clientSideConfig = requireNonNull(clientSideConfig);

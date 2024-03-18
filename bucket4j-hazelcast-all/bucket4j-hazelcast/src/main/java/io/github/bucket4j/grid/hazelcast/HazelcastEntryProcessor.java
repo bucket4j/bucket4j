@@ -67,12 +67,12 @@ public class HazelcastEntryProcessor<K, T> implements EntryProcessor<K, byte[], 
                 ExpirationAfterWriteStrategy expirationStrategy = getExpirationStrategy();
                 long ttlMillis = expirationStrategy == null ? -1 : expirationStrategy.calculateTimeToLiveMillis(newState, getCurrentTimeNanos());
                 if (ttlMillis > 0) {
-                    entry.setValue(newStateBytes);
-                    backupProcessor = new SimpleBackupProcessor<>(newStateBytes);
-                } else {
-                    ExtendedMapEntry extendedEntry = (ExtendedMapEntry) entry;
+                    ExtendedMapEntry<K, byte[]> extendedEntry = (ExtendedMapEntry<K, byte[]>) entry;
                     extendedEntry.setValue(newStateBytes, ttlMillis, TimeUnit.MILLISECONDS);
                     backupProcessor = new VersionedBackupProcessor<>(newStateBytes, ttlMillis);
+                } else {
+                    entry.setValue(newStateBytes);
+                    backupProcessor = new SimpleBackupProcessor<>(newStateBytes);
                 }
             }
         }.execute();
