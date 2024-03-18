@@ -249,7 +249,7 @@ public abstract class AbstractDistributedBucketTest {
         K key = spec.generateRandomKey();
         BucketProxy bucket = proxyManager.builder().build(key, () -> configuration);
         assertTrue(bucket.tryConsume(1));
-        Thread.sleep(1000);
+        Thread.sleep(100);
         assertFalse(proxyManager.getProxyConfiguration(key).isEmpty());
         Thread.sleep(3000);
         assertTrue(proxyManager.getProxyConfiguration(key).isEmpty());
@@ -276,7 +276,7 @@ public abstract class AbstractDistributedBucketTest {
         K key = spec.generateRandomKey();
         AsyncBucketProxy bucket = proxyManager.asAsync().builder().build(key, () -> CompletableFuture.completedFuture(configuration));
         assertEquals(true, bucket.tryConsume(1).get());
-        Thread.sleep(1000);
+        Thread.sleep(100);
         assertFalse(proxyManager.getProxyConfiguration(key).isEmpty());
         Thread.sleep(3000);
         assertTrue(proxyManager.getProxyConfiguration(key).isEmpty());
