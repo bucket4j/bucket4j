@@ -94,8 +94,7 @@ public class RedisClusterTest extends AbstractDistributedBucketTest {
                 "RedissonBasedProxyManager_StringKey_withTimeout",
                 () -> UUID.randomUUID().toString(),
                 clientConfig -> RedissonBasedProxyManager.builderFor(commandExecutor)
-                    .withClientSideConfig(clientConfig)
-                    .withClientSideConfig(ClientSideConfig.getDefault().withRequestTimeout(Duration.ofSeconds(3)))
+                    .withClientSideConfig(clientConfig.withRequestTimeout(Duration.ofSeconds(3)))
                     .build()
             ),
 

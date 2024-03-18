@@ -49,7 +49,7 @@
         <ignite.version>2.10.0</ignite.version>
 
         <hazelcast.4.version>4.1</hazelcast.4.version>
-        <hazelcast.latest.version>5.3.0</hazelcast.latest.version>
+        <hazelcast.latest.version>5.3.6</hazelcast.latest.version>
 
         <infinispan-8.version>8.2.12.Final</infinispan-8.version>
         <infinispan.latest.version>11.0.1.Final</infinispan.latest.version>

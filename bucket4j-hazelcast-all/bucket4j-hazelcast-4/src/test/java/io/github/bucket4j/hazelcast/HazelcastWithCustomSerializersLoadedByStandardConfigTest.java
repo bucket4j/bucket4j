@@ -103,7 +103,7 @@ public class HazelcastWithCustomSerializersLoadedByStandardConfigTest extends Ab
                 clientConfig -> new HazelcastProxyManager<>(map, clientConfig)
             ),
             new ProxyManagerSpec<>(
-                "HazelcastLockBasedProxyManager_JdkSerialization_offloadableExecutor",
+                "HazelcastLockBasedProxyManager_CustomSerialization_offloadableExecutor",
                 () -> UUID.randomUUID().toString(),
                 clientConfig -> new HazelcastProxyManager<>(map, clientConfig, "my-executor")
             )

@@ -145,7 +145,8 @@ public abstract class AbstractDistributedBucketTest {
             .build();
         ProxyManager<K> proxyManager;
         try {
-            proxyManager = spec.proxyManagerSupplier.apply(ClientSideConfig.getDefault().withExpirationAfterWriteStrategy(ExpirationAfterWriteStrategy.none()));
+            proxyManager = spec.proxyManagerSupplier.apply(ClientSideConfig.getDefault()
+                .withExpirationAfterWriteStrategy(ExpirationAfterWriteStrategy.none()));
         } catch (UnsupportedOperationException e) {
             // expiration not supported
             return;
@@ -156,6 +157,129 @@ public abstract class AbstractDistributedBucketTest {
         assertEquals(10, bucket.tryConsumeAsMuchAsPossible());
         Thread.sleep(3000);
         assertTrue(proxyManager.getProxyConfiguration(key).isPresent());
+    }
+
+    @MethodSource("specs")
+    @ParameterizedTest
+    public <K> void testNoExpirationAfterWrite_Async(ProxyManagerSpec<K> spec) throws InterruptedException, ExecutionException {
+        BucketConfiguration configuration = BucketConfiguration.builder()
+            .addLimit(Bandwidth.simple(10, Duration.ofSeconds (1)))
+            .build();
+        ProxyManager<K> proxyManager;
+        try {
+            proxyManager = spec.proxyManagerSupplier.apply(ClientSideConfig.getDefault()
+                .withExpirationAfterWriteStrategy(ExpirationAfterWriteStrategy.none()));
+        } catch (UnsupportedOperationException e) {
+            // expiration not supported
+            return;
+        }
+        if (!proxyManager.isAsyncModeSupported()) {
+            return;
+        }
+
+        K key = spec.generateRandomKey();
+        AsyncBucketProxy bucket = proxyManager.asAsync().builder().build(key, () -> CompletableFuture.completedFuture(configuration));
+        assertEquals(10, bucket.tryConsumeAsMuchAsPossible().get());
+        Thread.sleep(3000);
+        assertTrue(proxyManager.getProxyConfiguration(key).isPresent());
+    }
+
+    @MethodSource("specs")
+    @ParameterizedTest
+    public <K> void testFixedTtlExpirationAfterWrite(ProxyManagerSpec<K> spec) throws InterruptedException {
+        BucketConfiguration configuration = BucketConfiguration.builder()
+            .addLimit(Bandwidth.simple(10, Duration.ofSeconds (100)))
+            .build();
+        ProxyManager<K> proxyManager;
+        try {
+            proxyManager = spec.proxyManagerSupplier.apply(ClientSideConfig.getDefault()
+                .withExpirationAfterWriteStrategy(ExpirationAfterWriteStrategy.fixedTimeToLive(Duration.ofSeconds(1))));
+        } catch (UnsupportedOperationException e) {
+            // expiration not supported
+            return;
+        }
+
+        K key = spec.generateRandomKey();
+        BucketProxy bucket = proxyManager.builder().build(key, () -> configuration);
+        assertEquals(10, bucket.tryConsumeAsMuchAsPossible());
+        Thread.sleep(3000);
+        assertTrue(proxyManager.getProxyConfiguration(key).isEmpty());
+    }
+
+    @MethodSource("specs")
+    @ParameterizedTest
+    public <K> void testFixedTtlExpirationAfterWrite_Async(ProxyManagerSpec<K> spec) throws InterruptedException, ExecutionException {
+        BucketConfiguration configuration = BucketConfiguration.builder()
+            .addLimit(Bandwidth.simple(10, Duration.ofSeconds (100)))
+            .build();
+        ProxyManager<K> proxyManager;
+        try {
+            proxyManager = spec.proxyManagerSupplier.apply(ClientSideConfig.getDefault()
+                .withExpirationAfterWriteStrategy(ExpirationAfterWriteStrategy.fixedTimeToLive(Duration.ofSeconds(1))));
+        } catch (UnsupportedOperationException e) {
+            // expiration not supported
+            return;
+        }
+        if (!proxyManager.isAsyncModeSupported()) {
+            return;
+        }
+
+        K key = spec.generateRandomKey();
+        AsyncBucketProxy bucket = proxyManager.asAsync().builder().build(key, () -> CompletableFuture.completedFuture(configuration));
+        assertEquals(10, bucket.tryConsumeAsMuchAsPossible().get());
+        Thread.sleep(3000);
+        assertTrue(proxyManager.getProxyConfiguration(key).isEmpty());
+    }
+
+    @MethodSource("specs")
+    @ParameterizedTest
+    public <K> void testRefillBasedExpirationAfterWrite(ProxyManagerSpec<K> spec) throws InterruptedException {
+        BucketConfiguration configuration = BucketConfiguration.builder()
+            .addLimit(Bandwidth.simple(10, Duration.ofSeconds (10)))
+            .build();
+        ProxyManager<K> proxyManager;
+        try {
+            proxyManager = spec.proxyManagerSupplier.apply(ClientSideConfig.getDefault()
+                .withExpirationAfterWriteStrategy(ExpirationAfterWriteStrategy.basedOnTimeForRefillingBucketUpToMax(Duration.ofSeconds(1))));
+        } catch (UnsupportedOperationException e) {
+            // expiration not supported
+            return;
+        }
+
+        K key = spec.generateRandomKey();
+        BucketProxy bucket = proxyManager.builder().build(key, () -> configuration);
+        assertTrue(bucket.tryConsume(1));
+        Thread.sleep(1000);
+        assertFalse(proxyManager.getProxyConfiguration(key).isEmpty());
+        Thread.sleep(3000);
+        assertTrue(proxyManager.getProxyConfiguration(key).isEmpty());
+    }
+
+    @MethodSource("specs")
+    @ParameterizedTest
+    public <K> void testRefillBasedExpirationAfterWrite_Async(ProxyManagerSpec<K> spec) throws InterruptedException, ExecutionException {
+        BucketConfiguration configuration = BucketConfiguration.builder()
+            .addLimit(Bandwidth.simple(10, Duration.ofSeconds (10)))
+            .build();
+        ProxyManager<K> proxyManager;
+        try {
+            proxyManager = spec.proxyManagerSupplier.apply(ClientSideConfig.getDefault()
+                .withExpirationAfterWriteStrategy(ExpirationAfterWriteStrategy.basedOnTimeForRefillingBucketUpToMax(Duration.ofSeconds(1))));
+        } catch (UnsupportedOperationException e) {
+            // expiration not supported
+            return;
+        }
+        if (!proxyManager.isAsyncModeSupported()) {
+            return;
+        }
+
+        K key = spec.generateRandomKey();
+        AsyncBucketProxy bucket = proxyManager.asAsync().builder().build(key, () -> CompletableFuture.completedFuture(configuration));
+        assertEquals(true, bucket.tryConsume(1).get());
+        Thread.sleep(1000);
+        assertFalse(proxyManager.getProxyConfiguration(key).isEmpty());
+        Thread.sleep(3000);
+        assertTrue(proxyManager.getProxyConfiguration(key).isEmpty());
     }
 
     @MethodSource("specs")
