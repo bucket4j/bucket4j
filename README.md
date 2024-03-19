@@ -42,8 +42,8 @@ private void doSomethingProtected() {
 More examples [can be found there](https://bucket4j.github.io/8.3.0/toc.html#quick-start-examples)
 
 ## [Documentation](https://bucket4j.github.io)
-* [Reference](https://bucket4j.github.io/8.7.0/toc.html)
-* [Quick start examples](https://bucket4j.github.io/8.7.0/toc.html#quick-start-examples)
+* [Reference](https://bucket4j.github.io/8.9.0/toc.html)
+* [Quick start examples](https://bucket4j.github.io/8.9.0/toc.html#quick-start-examples)
 * [Third-party articles](https://bucket4j.github.io/#third-party-articles)
 
 ## Bucket4j basic features
@@ -67,27 +67,27 @@ In addition to local in-memory buckets, the Bucket4j supports clustered usage sc
 
 | Back-end                   |  Async supported | Optimized serialization | Thin-client support |                               Documentation link                               |
 | :---                       | :---:            | :---:                   |:-------------------:|:------------------------------------------------------------------------------:|
-| ```JCache API (JSR 107)``` |  No              | No                      |         No          |     [bucket4j-jcache](https://bucket4j.github.io/8.7.0/toc.html#bucket4j-jcache)     |
-| ```Hazelcast```            |  Yes             | Yes                     |         No          |  [bucket4j-hazelcast](https://bucket4j.github.io/8.7.0/toc.html#bucket4j-hazelcast)  |
-| ```Apache Ignite```        |  Yes             | n/a                     |         Yes         |     [bucket4j-ignite](https://bucket4j.github.io/8.7.0/toc.html#bucket4j-ignite)     |
-| ```Inifinispan```          |  Yes             | Yes                     |         No          | [bucket4j-infinispan](https://bucket4j.github.io/8.7.0/toc.html#bucket4j-infinispan) |
-| ```Oracle Coherence```     |  Yes             | Yes                     |         No          |  [bucket4j-coherence](https://bucket4j.github.io/8.7.0/toc.html#bucket4j-coherence)  |
+| ```JCache API (JSR 107)``` |  No              | No                      |         No          |     [bucket4j-jcache](https://bucket4j.github.io/8.9.0/toc.html#bucket4j-jcache)     |
+| ```Hazelcast```            |  Yes             | Yes                     |         No          |  [bucket4j-hazelcast](https://bucket4j.github.io/8.9.0/toc.html#bucket4j-hazelcast)  |
+| ```Apache Ignite```        |  Yes             | n/a                     |         Yes         |     [bucket4j-ignite](https://bucket4j.github.io/8.9.0/toc.html#bucket4j-ignite)     |
+| ```Inifinispan```          |  Yes             | Yes                     |         No          | [bucket4j-infinispan](https://bucket4j.github.io/8.9.0/toc.html#bucket4j-infinispan) |
+| ```Oracle Coherence```     |  Yes             | Yes                     |         No          |  [bucket4j-coherence](https://bucket4j.github.io/8.9.0/toc.html#bucket4j-coherence)  |
 
 ### Redis back-ends
 | Back-end                   |  Async supported | Redis cluster supported |                                                      Documentation link                                                      |
 | :---                       | :---:            |:-----------------------:|:----------------------------------------------------------------------------------------------------------------------------:|
-| ```Redis/Redisson```       |  Yes             |           Yes           | [bucket4j-redis/Redisson](https://bucket4j.github.io/8.7.0/toc.html#example-of-bucket-instantiation-via-redissonbasedproxymanager) |
-| ```Redis/Jedis```          |  No              |           Yes           |    [bucket4j-redis/Jedis](https://bucket4j.github.io/8.7.0/toc.html#example-of-bucket-instantiation-via-jedisbasedproxymanager)    |
-| ```Redis/Lettuce```        |  Yes             |           Yes           |   [bucket4j-redis/Lettuce](https://bucket4j.github.io/8.7.0/toc.html#example-of-bucket-instantiation-via-lettucebasedproxymanager) |
+| ```Redis/Redisson```       |  Yes             |           Yes           | [bucket4j-redis/Redisson](https://bucket4j.github.io/8.9.0/toc.html#example-of-bucket-instantiation-via-redissonbasedproxymanager) |
+| ```Redis/Jedis```          |  No              |           Yes           |    [bucket4j-redis/Jedis](https://bucket4j.github.io/8.9.0/toc.html#example-of-bucket-instantiation-via-jedisbasedproxymanager)    |
+| ```Redis/Lettuce```        |  Yes             |           Yes           |   [bucket4j-redis/Lettuce](https://bucket4j.github.io/8.9.0/toc.html#example-of-bucket-instantiation-via-lettucebasedproxymanager) |
 
 ### JDBC back-ends
 | Back-end                   |                                     Documentation link                                     |
 |:---------------------------|:------------------------------------------------------------------------------------------:|
-| ```MySQL```                |       [bucket4j-mysql](https://bucket4j.github.io/8.7.0/toc.html#mysql-integration)        |
-| ```PostgreSQL```           |  [bucket4j-postgresql](https://bucket4j.github.io/8.7.0/toc.html#postgresql-integration)   |
-| ```Oracle```               |      [bucket4j-oracle](https://bucket4j.github.io/8.7.0/toc.html#oracle-integration)       |
-| ```Microsoft SQL Server``` | [bucket4j-mssql](https://bucket4j.github.io/8.7.0/toc.html#microsoftsqlserver-integration) |
-| ```MariaDB```              |     [bucket4j-mariadb](https://bucket4j.github.io/8.7.0/toc.html#mariadb-integration)      |
+| ```MySQL```                |       [bucket4j-mysql](https://bucket4j.github.io/8.9.0/toc.html#mysql-integration)        |
+| ```PostgreSQL```           |  [bucket4j-postgresql](https://bucket4j.github.io/8.9.0/toc.html#postgresql-integration)   |
+| ```Oracle```               |      [bucket4j-oracle](https://bucket4j.github.io/8.9.0/toc.html#oracle-integration)       |
+| ```Microsoft SQL Server``` | [bucket4j-mssql](https://bucket4j.github.io/8.9.0/toc.html#microsoftsqlserver-integration) |
+| ```MariaDB```              |     [bucket4j-mariadb](https://bucket4j.github.io/8.9.0/toc.html#mariadb-integration)      |
 
 
 ### Local caches support
