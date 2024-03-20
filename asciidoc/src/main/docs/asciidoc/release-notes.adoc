@@ -2,5 +2,10 @@
 Release `{revnumber}`
 
 .The features/enhancements in release scope are following:
-* https://github.com/bucket4j/bucket4j/issues/447[#447 Enhance custom serialization for standalone Hazelcast cluster]
-* https://github.com/bucket4j/bucket4j/issues/406[#406 Support request timeouts where possible(Redis, JDBC)]
+* https://github.com/bucket4j/bucket4j/issues/461[#461 Flexible per-entry expiration for Hazelcast]
+
+.Bugfixes:
+* https://github.com/bucket4j/bucket4j/issues/456[#456 Rare exceptions when ManyalySync optimization is used with conjunction of implicit configuration replacement]
+
+.Backward incompatible changes:
+Hazelcast `3.x` is not supported anymore. Since `bucket4-8.10.0` the minimum supported Hazelcast version is `4.1`.
