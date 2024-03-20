@@ -28,6 +28,7 @@ import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.TokensInheritanceStrategy;
 import io.github.bucket4j.distributed.BucketProxy;
+import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.grid.hazelcast.HazelcastProxyManager;
@@ -92,6 +93,31 @@ public class HazelcastScenarios {
                             .withImplicitConfigurationReplacement(1, TokensInheritanceStrategy.AS_IS)
                             .build(666L, config);
                     System.out.println("Available tokens: " + bucket.asVerbose().getAvailableTokens().getValue());;
+                } catch (Throwable t) {
+                    t.printStackTrace();
+                } finally {
+                    hazelcastInstance.shutdown();
+                    System.out.println("Hazelcast has been stopped");
+                    System.exit(0);
+                }
+            }
+        }
+
+        public static class CreateBucketWithFlexibleExpiration {
+            public static void main(String[] args) throws IOException {
+                HazelcastInstance hazelcastInstance = createLiteMemberHazelcastInstance();
+                try {
+                    IMap<Long, byte[]> map = hazelcastInstance.getMap("my_buckets");
+                    ProxyManager<Long> proxyManager = new HazelcastProxyManager<>(map, ClientSideConfig.getDefault().withExpirationAfterWriteStrategy(ExpirationAfterWriteStrategy.fixedTimeToLive(Duration.ofSeconds(10))));
+                    proxyManager.removeProxy(666L);
+
+                    BucketConfiguration config = BucketConfiguration.builder()
+                            .addLimit(Bandwidth.simple(3, Duration.ofSeconds(60)))
+                            .build();
+                    BucketProxy bucket = proxyManager.builder().build(666L, config);
+                    System.out.println("Available tokens: " + bucket.asVerbose().getAvailableTokens().getValue());;
+                } catch (Throwable t) {
+                    t.printStackTrace();
                 } finally {
                     hazelcastInstance.shutdown();
                     System.out.println("Hazelcast has been stopped");
