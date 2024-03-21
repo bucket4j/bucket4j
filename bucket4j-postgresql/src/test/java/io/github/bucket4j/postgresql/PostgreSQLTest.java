@@ -64,6 +64,7 @@ public class PostgreSQLTest extends AbstractDistributedBucketTest {
                 () -> ThreadLocalRandom.current().nextLong(1_000_000_000),
                 clientConfig -> new PostgreSQLSelectForUpdateBasedProxyManager<>(SQLProxyConfiguration.builder()
                     .withTableSettings(tableSettings_1)
+                    .withClientSideConfig(clientConfig)
                     .build(dataSource))
             ),
             new ProxyManagerSpec<>(
