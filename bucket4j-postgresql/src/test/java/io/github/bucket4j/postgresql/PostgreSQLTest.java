@@ -39,9 +39,6 @@ public class PostgreSQLTest extends AbstractDistributedBucketTest {
                 statement.execute(query);
             }
         }
-        SQLProxyConfiguration<Long> configuration_1 = SQLProxyConfiguration.builder()
-            .withTableSettings(tableSettings_1)
-            .build(dataSource);
 
 
         BucketTableSettings tableSettings_2 = BucketTableSettings.customSettings("buckets_String_key", "id", "state");
@@ -52,36 +49,50 @@ public class PostgreSQLTest extends AbstractDistributedBucketTest {
                 statement.execute(query);
             }
         }
-        SQLProxyConfiguration<String> configuration_2 = SQLProxyConfiguration.builder()
-            .withPrimaryKeyMapper(PrimaryKeyMapper.STRING)
-            .withTableSettings(tableSettings_2)
-            .build(dataSource);
 
         specs = Arrays.asList(
             new ProxyManagerSpec<>(
                 "PostgreSQLadvisoryLockBasedProxyManager",
                 () -> ThreadLocalRandom.current().nextLong(1_000_000_000),
-                clientConfig -> new PostgreSQLadvisoryLockBasedProxyManager<>(configuration_1, clientConfig)
+                clientConfig -> new PostgreSQLadvisoryLockBasedProxyManager<>(SQLProxyConfiguration.builder()
+                    .withTableSettings(tableSettings_1)
+                    .withClientSideConfig(clientConfig)
+                    .build(dataSource))
             ),
             new ProxyManagerSpec<>(
                 "PostgreSQLSelectForUpdateBasedProxyManager",
                 () -> ThreadLocalRandom.current().nextLong(1_000_000_000),
-                clientConfig -> new PostgreSQLSelectForUpdateBasedProxyManager<>(configuration_1, clientConfig)
+                clientConfig -> new PostgreSQLSelectForUpdateBasedProxyManager<>(SQLProxyConfiguration.builder()
+                    .withTableSettings(tableSettings_1)
+                    .withClientSideConfig(clientConfig)
+                    .build(dataSource))
             ),
             new ProxyManagerSpec<>(
                 "PostgreSQLadvisoryLockBasedProxyManager_withRequestTimeout",
                 () -> ThreadLocalRandom.current().nextLong(1_000_000_000),
-                clientConfig -> new PostgreSQLadvisoryLockBasedProxyManager<>(configuration_1, clientConfig.withRequestTimeout(Duration.ofSeconds(3)))
+                clientConfig -> new PostgreSQLadvisoryLockBasedProxyManager<>(SQLProxyConfiguration.builder()
+                        .withTableSettings(tableSettings_1)
+                        .withClientSideConfig(clientConfig.withRequestTimeout(Duration.ofSeconds(3)))
+                        .build(dataSource)
+                )
             ),
             new ProxyManagerSpec<>(
                 "PostgreSQLSelectForUpdateBasedProxyManager_withRequestTimeout",
                 () -> ThreadLocalRandom.current().nextLong(1_000_000_000),
-                clientConfig -> new PostgreSQLSelectForUpdateBasedProxyManager<>(configuration_1, clientConfig.withRequestTimeout(Duration.ofSeconds(3)))
+                clientConfig -> new PostgreSQLadvisoryLockBasedProxyManager<>(SQLProxyConfiguration.builder()
+                        .withTableSettings(tableSettings_1)
+                        .withClientSideConfig(clientConfig.withRequestTimeout(Duration.ofSeconds(3)))
+                        .build(dataSource)
+                )
             ),
             new ProxyManagerSpec<>(
                 "PostgreSQLadvisoryLockBasedProxyManager_StringKey",
                 () -> UUID.randomUUID().toString(),
-                clientConfig -> new PostgreSQLadvisoryLockBasedProxyManager<>(configuration_2, clientConfig)
+                clientConfig -> new PostgreSQLadvisoryLockBasedProxyManager<>(SQLProxyConfiguration.builder()
+                    .withPrimaryKeyMapper(PrimaryKeyMapper.STRING)
+                    .withTableSettings(tableSettings_2)
+                    .withClientSideConfig(clientConfig)
+                    .build(dataSource))
             )
         );
     }

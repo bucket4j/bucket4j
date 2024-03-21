@@ -8,7 +8,7 @@
     <parent>
         <groupId>com.bucket4j</groupId>
         <artifactId>bucket4j-infinispan-all</artifactId>
-        <version>8.10.0</version>
+        <version>8.10.1</version>
         <relativePath>../../bucket4j-infinispan-all</relativePath>
     </parent>
     <artifactId>bucket4j-infinispan</artifactId>

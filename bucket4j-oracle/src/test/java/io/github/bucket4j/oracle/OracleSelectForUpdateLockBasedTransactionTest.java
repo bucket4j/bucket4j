@@ -38,20 +38,23 @@ public class OracleSelectForUpdateLockBasedTransactionTest extends AbstractDistr
                 statement.execute(query);
             }
         }
-        SQLProxyConfiguration<Long> configuration = SQLProxyConfiguration.builder()
-                .withTableSettings(tableSettings)
-                .build(dataSource);
 
         specs = Arrays.asList(
             new ProxyManagerSpec<>(
                 "OracleSelectForUpdateBasedProxyManager",
                 () -> ThreadLocalRandom.current().nextLong(1_000_000_000),
-                clientConfig -> new OracleSelectForUpdateBasedProxyManager<>(configuration, clientConfig)
+                clientConfig -> new OracleSelectForUpdateBasedProxyManager<>(SQLProxyConfiguration.builder()
+                        .withTableSettings(tableSettings)
+                        .withClientSideConfig(clientConfig)
+                        .build(dataSource))
             ),
             new ProxyManagerSpec<>(
                 "OracleSelectForUpdateBasedProxyManager_withTimeout",
                 () -> ThreadLocalRandom.current().nextLong(1_000_000_000),
-                clientConfig -> new OracleSelectForUpdateBasedProxyManager<>(configuration, clientConfig.withRequestTimeout(Duration.ofSeconds(3)))
+                clientConfig -> new OracleSelectForUpdateBasedProxyManager<>(SQLProxyConfiguration.builder()
+                        .withTableSettings(tableSettings)
+                        .withClientSideConfig(clientConfig.withRequestTimeout(Duration.ofSeconds(3)))
+                        .build(dataSource))
             )
         );
     }

@@ -8,7 +8,7 @@
     <parent>
         <groupId>com.bucket4j</groupId>
         <artifactId>bucket4j-hazelcast-all</artifactId>
-        <version>8.10.0</version>
+        <version>8.10.1</version>
         <relativePath>../../bucket4j-hazelcast-all</relativePath>
     </parent>
     <artifactId>bucket4j-hazelcast-4</artifactId>

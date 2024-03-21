@@ -58,11 +58,7 @@ public class OracleSelectForUpdateBasedProxyManager<K> extends AbstractSelectFor
      * @param configuration {@link SQLProxyConfiguration} configuration.
      */
     public OracleSelectForUpdateBasedProxyManager(SQLProxyConfiguration<K> configuration) {
-        this(configuration, ClientSideConfig.getDefault());
-    }
-
-    public OracleSelectForUpdateBasedProxyManager(SQLProxyConfiguration<K> configuration, ClientSideConfig clientSideConfig) {
-        super(clientSideConfig);
+        super(configuration.getClientSideConfig());
         this.dataSource = Objects.requireNonNull(configuration.getDataSource());
         this.configuration = configuration;
         this.removeSqlQuery = MessageFormat.format("DELETE FROM {0} WHERE {1} = ?", configuration.getTableName(), configuration.getIdName());
