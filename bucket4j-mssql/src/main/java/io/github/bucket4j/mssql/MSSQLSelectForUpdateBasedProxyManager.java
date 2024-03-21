@@ -54,8 +54,8 @@ public class MSSQLSelectForUpdateBasedProxyManager<K> extends AbstractSelectForU
      *
      * @param configuration {@link SQLProxyConfiguration} configuration.
      */
-    public MSSQLSelectForUpdateBasedProxyManager(SQLProxyConfiguration<K> configuration, ClientSideConfig clientSideConfig) {
-        super(clientSideConfig);
+    public MSSQLSelectForUpdateBasedProxyManager(SQLProxyConfiguration<K> configuration) {
+        super(configuration.getClientSideConfig());
         this.dataSource = Objects.requireNonNull(configuration.getDataSource());
         this.configuration = configuration;
         this.removeSqlQuery = MessageFormat.format("DELETE FROM {0} WHERE {1} = ?", configuration.getTableName(), configuration.getIdName());
@@ -64,14 +64,6 @@ public class MSSQLSelectForUpdateBasedProxyManager<K> extends AbstractSelectForU
             "INSERT INTO {0}({1},{2}) VALUES(?, null)",
             configuration.getTableName(), configuration.getIdName(), configuration.getStateName());
         this.selectSqlQuery = MessageFormat.format("SELECT {0} FROM {1} WITH(ROWLOCK, UPDLOCK) WHERE {2} = ?", configuration.getStateName(), configuration.getTableName(), configuration.getIdName());
-    }
-
-    /**
-     *
-     * @param configuration {@link SQLProxyConfiguration} configuration.
-     */
-    public MSSQLSelectForUpdateBasedProxyManager(SQLProxyConfiguration<K> configuration) {
-        this(configuration, ClientSideConfig.getDefault());
     }
 
     @Override

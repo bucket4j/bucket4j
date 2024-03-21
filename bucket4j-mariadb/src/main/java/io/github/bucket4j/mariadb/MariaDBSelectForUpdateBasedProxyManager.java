@@ -62,15 +62,7 @@ public class MariaDBSelectForUpdateBasedProxyManager<K> extends AbstractSelectFo
      * @param configuration {@link SQLProxyConfiguration} configuration.
      */
     public MariaDBSelectForUpdateBasedProxyManager(SQLProxyConfiguration<K> configuration) {
-        this(configuration, ClientSideConfig.getDefault());
-    }
-
-    /**
-     *
-     * @param configuration {@link SQLProxyConfiguration} configuration.
-     */
-    public MariaDBSelectForUpdateBasedProxyManager(SQLProxyConfiguration<K> configuration, ClientSideConfig clientSideConfig) {
-        super(clientSideConfig);
+        super(configuration.getClientSideConfig());
         this.dataSource = Objects.requireNonNull(configuration.getDataSource());
         this.configuration = configuration;
         this.removeSqlQuery = MessageFormat.format("DELETE FROM {0} WHERE {1} = ?", configuration.getTableName(), configuration.getIdName());

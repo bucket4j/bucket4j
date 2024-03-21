@@ -38,20 +38,23 @@ public class MariaDBSelectForUpdateLockBasedTransactionTest extends AbstractDist
                 statement.execute(query);
             }
         }
-        SQLProxyConfiguration<Long> configuration = SQLProxyConfiguration.builder()
-                .withTableSettings(tableSettings)
-                .build(dataSource);
 
         specs = Arrays.asList(
             new ProxyManagerSpec<>(
                 "MariaDBSelectForUpdateBasedProxyManager",
                 () -> ThreadLocalRandom.current().nextLong(1_000_000_000),
-                clientConfig -> new MariaDBSelectForUpdateBasedProxyManager<>(configuration, clientConfig)
+                clientConfig -> new MariaDBSelectForUpdateBasedProxyManager<>(SQLProxyConfiguration.builder()
+                        .withTableSettings(tableSettings)
+                        .withClientSideConfig(clientConfig)
+                        .build(dataSource))
             ),
             new ProxyManagerSpec<>(
                 "MariaDBSelectForUpdateBasedProxyManager_withTimeout",
                 () -> ThreadLocalRandom.current().nextLong(1_000_000_000),
-                clientConfig -> new MariaDBSelectForUpdateBasedProxyManager<>(configuration, clientConfig.withRequestTimeout(Duration.ofSeconds(3)))
+                clientConfig -> new MariaDBSelectForUpdateBasedProxyManager<>(SQLProxyConfiguration.builder()
+                        .withTableSettings(tableSettings)
+                        .withClientSideConfig(clientConfig.withRequestTimeout(Duration.ofSeconds(3)))
+                        .build(dataSource))
             )
         );
     }

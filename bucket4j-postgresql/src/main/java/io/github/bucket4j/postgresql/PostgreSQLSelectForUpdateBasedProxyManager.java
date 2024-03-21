@@ -70,15 +70,7 @@ public class PostgreSQLSelectForUpdateBasedProxyManager<K> extends AbstractSelec
      * @param configuration {@link SQLProxyConfiguration} configuration.
      */
     public PostgreSQLSelectForUpdateBasedProxyManager(SQLProxyConfiguration<K> configuration) {
-        this(configuration, ClientSideConfig.getDefault());
-    }
-
-    /**
-     *
-     * @param configuration {@link SQLProxyConfiguration} configuration.
-     */
-    public PostgreSQLSelectForUpdateBasedProxyManager(SQLProxyConfiguration<K> configuration, ClientSideConfig clientSideConfig) {
-        super(clientSideConfig);
+        super(configuration.getClientSideConfig());
         this.dataSource = Objects.requireNonNull(configuration.getDataSource());
         this.configuration = configuration;
         this.removeSqlQuery = MessageFormat.format("DELETE FROM {0} WHERE {1} = ?", configuration.getTableName(), configuration.getIdName());

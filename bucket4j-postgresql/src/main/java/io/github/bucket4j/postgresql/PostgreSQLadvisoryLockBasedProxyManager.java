@@ -63,16 +63,12 @@ public class PostgreSQLadvisoryLockBasedProxyManager<K> extends AbstractLockBase
     private final String insertSqlQuery;
     private final String selectSqlQuery;
 
-    public PostgreSQLadvisoryLockBasedProxyManager(SQLProxyConfiguration<K> configuration) {
-        this(configuration, ClientSideConfig.getDefault());
-    }
-
     /**
      *
      * @param configuration {@link SQLProxyConfiguration} configuration.
      */
-    public PostgreSQLadvisoryLockBasedProxyManager(SQLProxyConfiguration<K> configuration, ClientSideConfig clientSideConfig) {
-        super(clientSideConfig);
+    public <T extends Object> PostgreSQLadvisoryLockBasedProxyManager(SQLProxyConfiguration<K> configuration) {
+        super(configuration.getClientSideConfig());
         this.dataSource = Objects.requireNonNull(configuration.getDataSource());
         this.configuration = configuration;
         this.removeSqlQuery = MessageFormat.format("DELETE FROM {0} WHERE {1} = ?", configuration.getTableName(), configuration.getIdName());

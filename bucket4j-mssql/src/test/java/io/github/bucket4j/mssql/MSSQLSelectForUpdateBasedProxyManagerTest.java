@@ -47,20 +47,23 @@ public class MSSQLSelectForUpdateBasedProxyManagerTest extends AbstractDistribut
                 statement.execute(query);
             }
         }
-        SQLProxyConfiguration<Long> configuration = SQLProxyConfiguration.builder()
-                .withTableSettings(tableSettings)
-                .build(dataSource);
 
         specs = Arrays.asList(
             new ProxyManagerSpec<>(
                 "MSSQLSelectForUpdateBasedProxyManager",
                 () -> ThreadLocalRandom.current().nextLong(1_000_000_000),
-                clientConfig -> new MSSQLSelectForUpdateBasedProxyManager<>(configuration, clientConfig)
+                clientConfig -> new MSSQLSelectForUpdateBasedProxyManager<>(SQLProxyConfiguration.builder()
+                        .withTableSettings(tableSettings)
+                        .withClientSideConfig(clientConfig)
+                        .build(dataSource))
             ),
             new ProxyManagerSpec<>(
                 "MSSQLSelectForUpdateBasedProxyManager_withTimeout",
                 () -> ThreadLocalRandom.current().nextLong(1_000_000_000),
-                clientConfig -> new MSSQLSelectForUpdateBasedProxyManager<>(configuration, clientConfig.withRequestTimeout(Duration.ofSeconds(3)))
+                clientConfig -> new MSSQLSelectForUpdateBasedProxyManager<>(SQLProxyConfiguration.builder()
+                        .withTableSettings(tableSettings)
+                        .withClientSideConfig(clientConfig.withRequestTimeout(Duration.ofSeconds(3)))
+                        .build(dataSource))
             )
         );
     }
