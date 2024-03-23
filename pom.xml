@@ -5,13 +5,13 @@
 
     <groupId>com.bucket4j</groupId>
     <artifactId>bucket4j</artifactId>
-    <version>8.10.1</version>
+    <version>8.11.0</version>
     <packaging>pom</packaging>
 
     <parent>
         <groupId>com.bucket4j</groupId>
         <artifactId>bucket4j-parent</artifactId>
-        <version>8.10.1</version>
+        <version>8.11.0</version>
         <relativePath>./bucket4j-parent</relativePath>
     </parent>
 
@@ -24,7 +24,6 @@
         <module>bucket4j-ignite</module>
         <module>bucket4j-infinispan-all</module>
         <module>bucket4j-hazelcast-all</module>
-<!--        <module>experimental</module>-->
         <module>bucket4j-benchmarks</module>
         <module>bucket4j-examples</module>
         <module>lincheck-tests</module>

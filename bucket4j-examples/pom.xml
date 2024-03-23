@@ -23,7 +23,7 @@
     <parent>
         <groupId>com.bucket4j</groupId>
         <artifactId>bucket4j-parent</artifactId>
-        <version>8.10.1</version>
+        <version>8.11.0</version>
         <relativePath>../bucket4j-parent</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -60,7 +60,7 @@
         </dependency>
         <dependency>
             <groupId>com.bucket4j</groupId>
-            <artifactId>bucket4j-redis</artifactId>
+            <artifactId>bucket4j-lettuce</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

@@ -8,9 +8,10 @@
     <parent>
         <groupId>com.bucket4j</groupId>
         <artifactId>bucket4j-parent</artifactId>
-        <version>8.10.1</version>
+        <version>8.11.0</version>
         <relativePath>../bucket4j-parent</relativePath>
     </parent>
+    <packaging>pom</packaging>
     <artifactId>bucket4j-redis</artifactId>
     <name>bucket4j-redis</name>
 
@@ -18,17 +19,12 @@
         <modular-name>redis</modular-name>
     </properties>
 
-    <profiles>
-        <profile>
-            <id>travis</id>
-            <activation>
-                <activeByDefault>false</activeByDefault>
-            </activation>
-            <properties>
-                <maven.test.skip>true</maven.test.skip>
-            </properties>
-        </profile>
-    </profiles>
+    <modules>
+        <module>bucket4j-redis-common</module>
+        <module>bucket4j-jedis</module>
+        <module>bucket4j-lettuce</module>
+        <module>bucket4j-redisson</module>
+    </modules>
 
     <dependencies>
         <dependency>
@@ -44,56 +40,11 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.redisson</groupId>
-            <artifactId>redisson</artifactId>
-            <version>${redisson.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>io.lettuce</groupId>
-            <artifactId>lettuce-core</artifactId>
-            <version>${lettuce.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>redis.clients</groupId>
-            <artifactId>jedis</artifactId>
-            <version>${jedis.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>testcontainers</artifactId>
             <version>${testcontainers.version}</version>
             <scope>test</scope>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>com.bucket4j</groupId>-->
-<!--            <artifactId>bucket4j-lua</artifactId>-->
-<!--            <version>${project.version}</version>-->
-<!--            <type>test-jar</type>-->
-<!--            <scope>test</scope>-->
-<!--        </dependency>-->
-
-        <dependency>
-            <groupId>org.classdump.luna</groupId>
-            <artifactId>luna-all-shaded</artifactId>
-            <version>0.2</version>
-            <scope>test</scope>
-        </dependency>
     </dependencies>
-
-    <build>
-        <resources>
-            <resource>
-                <directory>src/main/lua</directory>
-            </resource>
-        </resources>
-        <testResources>
-            <testResource>
-                <directory>src/test/lua</directory>
-            </testResource>
-        </testResources>
-    </build>
 
 </project>
