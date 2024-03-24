@@ -36,6 +36,7 @@ import io.github.bucket4j.distributed.versioning.Versions;
  *     <li>Client-side clock, see {@link #withClientClock(TimeMeter)} for more details.</li>
  * </ul>
  */
+@Deprecated
 public class ClientSideConfig {
 
     private static final ClientSideConfig defaultConfig = new ClientSideConfig(Versions.getLatest(), Optional.empty(),

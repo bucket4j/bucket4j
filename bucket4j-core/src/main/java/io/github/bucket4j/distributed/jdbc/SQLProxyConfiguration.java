@@ -23,6 +23,7 @@ import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 
 import javax.sql.DataSource;
 
+@Deprecated
 public class SQLProxyConfiguration<K> {
 
     private final DataSource dataSource;
