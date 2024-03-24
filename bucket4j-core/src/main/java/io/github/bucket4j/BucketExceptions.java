@@ -254,6 +254,12 @@ public final class BucketExceptions {
         return new TimeoutException(msg, nanosElapsed, requestTimeoutNanos);
     }
 
+    public static IllegalArgumentException isNotWallBasedClockUsedInDistributedEnvironment(Class<? extends TimeMeter> clockClass) {
+        String pattern = "Trying to use not wall-based clock {0} in distributed environment";
+        String msg = MessageFormat.format(pattern, clockClass);
+        return new IllegalArgumentException(msg);
+    }
+
     public static BucketExecutionException from(Throwable t) {
         if (t instanceof BucketExecutionException) {
             return  (BucketExecutionException) t;

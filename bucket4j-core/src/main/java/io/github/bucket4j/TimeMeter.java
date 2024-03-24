@@ -39,7 +39,8 @@ public interface TimeMeter {
 
     /**
      * Returns {@code true} if implementation of clock behaves the similar way as {@link System#currentTimeMillis()},
-     * in other words if implementation can be used as wall clock.
+     * in other words if implementation can be used in distributed scenarios
+     * and returns approximately the same time in all machines in cluster
      *
      * @return {@code true} if implementation can be used as wall clock
      */
