@@ -185,4 +185,8 @@ public abstract class AbstractProxyManagerBuilder<K, P extends ProxyManager<K>, 
         return false;
     }
 
+    public ClientSideConfig getClientSideConfig() {
+        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, requestTimeoutNanos, expirationStrategy);
+    }
+
 }

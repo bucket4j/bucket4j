@@ -21,12 +21,14 @@ package io.github.bucket4j.postgresql;
 
 import io.github.bucket4j.BucketExceptions;
 import io.github.bucket4j.distributed.jdbc.BucketTableSettings;
+import io.github.bucket4j.distributed.jdbc.PrimaryKeyMapper;
 import io.github.bucket4j.distributed.jdbc.SQLProxyConfiguration;
 import io.github.bucket4j.distributed.jdbc.SQLProxyConfigurationBuilder;
-import io.github.bucket4j.distributed.proxy.ClientSideConfig;
+import io.github.bucket4j.distributed.jdbc.LockIdSupplier;
 import io.github.bucket4j.distributed.proxy.generic.pessimistic_locking.AbstractLockBasedProxyManager;
 import io.github.bucket4j.distributed.proxy.generic.pessimistic_locking.LockBasedTransaction;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
+import io.github.bucket4j.postgresql.Bucket4jPostgreSQL.PostgreSQLadvisoryLockBasedProxyManagerBuilder;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -56,21 +58,34 @@ import java.util.Optional;
  */
 public class PostgreSQLadvisoryLockBasedProxyManager<K> extends AbstractLockBasedProxyManager<K> {
 
+    private final LockIdSupplier<K> lockIdSupplier;
+    private final PrimaryKeyMapper<K> primaryKeyMapper;
     private final DataSource dataSource;
-    private final SQLProxyConfiguration<K> configuration;
     private final String removeSqlQuery;
     private final String updateSqlQuery;
     private final String insertSqlQuery;
     private final String selectSqlQuery;
 
+    PostgreSQLadvisoryLockBasedProxyManager(PostgreSQLadvisoryLockBasedProxyManagerBuilder<K> builder) {
+        super(builder.getClientSideConfig());
+        this.dataSource = builder.getDataSource();
+        this.primaryKeyMapper = builder.getPrimaryKeyMapper();
+        this.lockIdSupplier = builder.getLockIdSupplier();
+        this.removeSqlQuery = MessageFormat.format("DELETE FROM {0} WHERE {1} = ?", builder.getTableName(), builder.getIdColumnName());
+        this.updateSqlQuery = MessageFormat.format("UPDATE {0} SET {1}=? WHERE {2}=?", builder.getTableName(), builder.getStateColumnName(), builder.getIdColumnName());
+        this.insertSqlQuery = MessageFormat.format("INSERT INTO {0}({1}, {2}) VALUES(?, ?)", builder.getTableName(), builder.getIdColumnName(), builder.getStateColumnName());
+        this.selectSqlQuery = MessageFormat.format("SELECT {0} as state FROM {1} WHERE {2} = ?", builder.getStateColumnName(), builder.getTableName(), builder.getIdColumnName());
+    }
+
     /**
-     *
-     * @param configuration {@link SQLProxyConfiguration} configuration.
+     * @deprecated use {@link Bucket4jPostgreSQL#advisoryLockBasedBuilder(DataSource)}
      */
-    public <T extends Object> PostgreSQLadvisoryLockBasedProxyManager(SQLProxyConfiguration<K> configuration) {
+    @Deprecated
+    public PostgreSQLadvisoryLockBasedProxyManager(SQLProxyConfiguration<K> configuration) {
         super(configuration.getClientSideConfig());
         this.dataSource = Objects.requireNonNull(configuration.getDataSource());
-        this.configuration = configuration;
+        this.primaryKeyMapper = configuration.getPrimaryKeyMapper();
+        this.lockIdSupplier = (LockIdSupplier) LockIdSupplier.DEFAULT;
         this.removeSqlQuery = MessageFormat.format("DELETE FROM {0} WHERE {1} = ?", configuration.getTableName(), configuration.getIdName());
         this.updateSqlQuery = MessageFormat.format("UPDATE {0} SET {1}=? WHERE {2}=?", configuration.getTableName(), configuration.getStateName(), configuration.getIdName());
         this.insertSqlQuery = MessageFormat.format("INSERT INTO {0}({1}, {2}) VALUES(?, ?)", configuration.getTableName(), configuration.getIdName(), configuration.getStateName());
@@ -102,16 +117,16 @@ public class PostgreSQLadvisoryLockBasedProxyManager<K> extends AbstractLockBase
                     String lockSQL = "SELECT pg_advisory_xact_lock(?)";
                     try (PreparedStatement lockStatement = connection.prepareStatement(lockSQL)) {
                         applyTimeout(lockStatement, requestTimeout);
-                        long advisoryLockValue = (key instanceof Number) ? ((Number) key).longValue(): key.hashCode();
+                        long advisoryLockValue = lockIdSupplier.toLockId(key);
                         lockStatement.setLong(1, advisoryLockValue);
                         lockStatement.executeQuery();
                     }
 
                     try (PreparedStatement selectStatement = connection.prepareStatement(selectSqlQuery)) {
-                        configuration.getPrimaryKeyMapper().set(selectStatement, 1, key);
+                        primaryKeyMapper.set(selectStatement, 1, key);
                         try (ResultSet rs = selectStatement.executeQuery()) {
                             if (rs.next()) {
-                                return rs.getBytes(configuration.getStateName());
+                                return rs.getBytes("state");
                             } else {
                                 return null;
                             }
@@ -128,7 +143,7 @@ public class PostgreSQLadvisoryLockBasedProxyManager<K> extends AbstractLockBase
                     try (PreparedStatement updateStatement = connection.prepareStatement(updateSqlQuery)) {
                         applyTimeout(updateStatement, requestTimeout);
                         updateStatement.setBytes(1, data);
-                        configuration.getPrimaryKeyMapper().set(updateStatement, 2, key);
+                        primaryKeyMapper.set(updateStatement, 2, key);
                         updateStatement.executeUpdate();
                     }
                 } catch (SQLException e) {
@@ -150,7 +165,7 @@ public class PostgreSQLadvisoryLockBasedProxyManager<K> extends AbstractLockBase
                 try {
                     try (PreparedStatement insertStatement = connection.prepareStatement(insertSqlQuery)) {
                         applyTimeout(insertStatement, requestTimeout);
-                        configuration.getPrimaryKeyMapper().set(insertStatement, 1, key);
+                        primaryKeyMapper.set(insertStatement, 1, key);
                         insertStatement.setBytes(2, data);
                         insertStatement.executeUpdate();
                     }
@@ -188,7 +203,7 @@ public class PostgreSQLadvisoryLockBasedProxyManager<K> extends AbstractLockBase
     public void removeProxy(K key) {
         try (Connection connection = dataSource.getConnection()) {
             try(PreparedStatement removeStatement = connection.prepareStatement(removeSqlQuery)) {
-                configuration.getPrimaryKeyMapper().set(removeStatement, 1, key);
+                primaryKeyMapper.set(removeStatement, 1, key);
                 removeStatement.executeUpdate();
             }
         } catch (SQLException e) {
