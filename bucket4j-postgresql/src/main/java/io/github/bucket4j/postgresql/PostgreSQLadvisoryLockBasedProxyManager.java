@@ -20,10 +20,8 @@
 package io.github.bucket4j.postgresql;
 
 import io.github.bucket4j.BucketExceptions;
-import io.github.bucket4j.distributed.jdbc.BucketTableSettings;
 import io.github.bucket4j.distributed.jdbc.PrimaryKeyMapper;
 import io.github.bucket4j.distributed.jdbc.SQLProxyConfiguration;
-import io.github.bucket4j.distributed.jdbc.SQLProxyConfigurationBuilder;
 import io.github.bucket4j.distributed.jdbc.LockIdSupplier;
 import io.github.bucket4j.distributed.proxy.generic.pessimistic_locking.AbstractLockBasedProxyManager;
 import io.github.bucket4j.distributed.proxy.generic.pessimistic_locking.LockBasedTransaction;
@@ -40,19 +38,9 @@ import java.util.Objects;
 import java.util.Optional;
 
 /**
- * @author Maxim Bartkov
  * The extension of Bucket4j library addressed to support <a href="https://www.postgresql.org/">PostgreSQL</a>
- * To start work with the PostgreSQL extension you must create a table, which will include the possibility to work with buckets
- * In order to do this, your table should include the next columns: id as a PRIMARY KEY (BIGINT) and state (BYTEA)
- * To define column names, {@link SQLProxyConfiguration} include {@link BucketTableSettings} which takes settings for the table to work with Bucket4j.
  *
- * <p>This implementation solves transaction related problems via pg_advisory_xact_lock
- * locks an application-defined resource, which can be identified either by a single 64-bit key value or two 32-bit key values (note that these two key spaces do not overlap).
- * If another session already holds a lock on the same resource identifier, this function will wait until the resource becomes available.
- * The lock is exclusive.
- * Multiple lock requests stack so that if the same resource is locked three times it must then be unlocked three times to be released for other sessions use.
- * The lock is automatically released at the end of the current transaction and cannot be released explicitly.
- * @see {@link SQLProxyConfigurationBuilder} to get more information how to build {@link SQLProxyConfiguration}
+ * <p>This implementation solves transaction/concurrency related problems via pg_advisory_xact_lock
  *
  * @param <K> type of primary key
  */
@@ -89,7 +77,7 @@ public class PostgreSQLadvisoryLockBasedProxyManager<K> extends AbstractLockBase
         this.removeSqlQuery = MessageFormat.format("DELETE FROM {0} WHERE {1} = ?", configuration.getTableName(), configuration.getIdName());
         this.updateSqlQuery = MessageFormat.format("UPDATE {0} SET {1}=? WHERE {2}=?", configuration.getTableName(), configuration.getStateName(), configuration.getIdName());
         this.insertSqlQuery = MessageFormat.format("INSERT INTO {0}({1}, {2}) VALUES(?, ?)", configuration.getTableName(), configuration.getIdName(), configuration.getStateName());
-        this.selectSqlQuery = MessageFormat.format("SELECT {0} FROM {1} WHERE {2} = ?", configuration.getStateName(), configuration.getTableName(), configuration.getIdName());
+        this.selectSqlQuery = MessageFormat.format("SELECT {0} as state FROM {1} WHERE {2} = ?", configuration.getStateName(), configuration.getTableName(), configuration.getIdName());
     }
 
     @Override

@@ -22,7 +22,6 @@ package io.github.bucket4j.mariadb;
 import io.github.bucket4j.BucketExceptions;
 import io.github.bucket4j.distributed.jdbc.PrimaryKeyMapper;
 import io.github.bucket4j.distributed.jdbc.SQLProxyConfiguration;
-import io.github.bucket4j.distributed.jdbc.SQLProxyConfigurationBuilder;
 import io.github.bucket4j.distributed.proxy.generic.select_for_update.AbstractSelectForUpdateBasedProxyManager;
 import io.github.bucket4j.distributed.proxy.generic.select_for_update.LockAndGetResult;
 import io.github.bucket4j.distributed.proxy.generic.select_for_update.SelectForUpdateBasedTransaction;
@@ -40,13 +39,9 @@ import java.util.Objects;
 import java.util.Optional;
 
 /**
- * @author Maxim Bartkov
- * The extension of Bucket4j library addressed to support <a href="https://www.mysql.com">MySQL</a>
- * To start work with the MariaDB extension you must create a table, which will include the possibility to work with buckets
- * In order to do this, your table should include the next columns: id as a PRIMARY KEY (BIGINT) and state (BLOB)
- * To define column names, {@link SQLProxyConfiguration} include {@link io.github.bucket4j.distributed.jdbc.BucketTableSettings} which takes settings for the table to work with Bucket4j
+ * The extension of Bucket4j library addressed to support <a href="https://mariadb.org/">MariaDB</a>
  *
- * @see {@link SQLProxyConfigurationBuilder} to get more information how to build {@link SQLProxyConfiguration}
+ * <p>This implementation solves transaction/concurrency related problems via "SELECT FOR UPDATE" SQL syntax.
  *
  * @param <K> type of primary key
  */
@@ -71,9 +66,9 @@ public class MariaDBSelectForUpdateBasedProxyManager<K> extends AbstractSelectFo
     }
 
     /**
-     *
-     * @param configuration {@link SQLProxyConfiguration} configuration.
+     * @deprecated use {@link Bucket4jMariaDB#selectForUpdateBasedBuilder(DataSource)} instead
      */
+    @Deprecated
     public MariaDBSelectForUpdateBasedProxyManager(SQLProxyConfiguration<K> configuration) {
         super(configuration.getClientSideConfig());
         this.dataSource = Objects.requireNonNull(configuration.getDataSource());

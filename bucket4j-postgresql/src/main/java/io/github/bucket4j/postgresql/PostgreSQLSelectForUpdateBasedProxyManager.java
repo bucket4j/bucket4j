@@ -20,10 +20,8 @@
 package io.github.bucket4j.postgresql;
 
 import io.github.bucket4j.BucketExceptions;
-import io.github.bucket4j.distributed.jdbc.BucketTableSettings;
 import io.github.bucket4j.distributed.jdbc.PrimaryKeyMapper;
 import io.github.bucket4j.distributed.jdbc.SQLProxyConfiguration;
-import io.github.bucket4j.distributed.jdbc.SQLProxyConfigurationBuilder;
 import io.github.bucket4j.distributed.proxy.generic.select_for_update.AbstractSelectForUpdateBasedProxyManager;
 import io.github.bucket4j.distributed.proxy.generic.select_for_update.LockAndGetResult;
 import io.github.bucket4j.distributed.proxy.generic.select_for_update.SelectForUpdateBasedTransaction;
@@ -40,20 +38,9 @@ import java.util.Objects;
 import java.util.Optional;
 
 /**
- * @author Maxim Bartkov
- *
  * The extension of Bucket4j library addressed to support <a href="https://www.postgresql.org/">PostgreSQL</a>
- * To start work with the PostgreSQL extension you must create a table, which will include the possibility to work with buckets
- * In order to do this, your table should include the next columns: id as a PRIMARY KEY (BIGINT) and state (BYTEA)
- * To define column names, {@link SQLProxyConfiguration} include {@link BucketTableSettings} which takes settings for the table to work with Bucket4j.
  *
- * <p>This implementation solves transaction related problems via Based on SELECT FOR UPDATE SQL syntax.
- * This prevents them from being modified or deleted by other transactions until the current transaction ends.
- * That is, other transactions that attempt UPDATE, DELETE, or SELECT FOR UPDATE of these rows will be blocked until the current transaction ends.
- * Also, if an UPDATE, DELETE, or SELECT FOR UPDATE from another transaction has already locked a selected row or rows, SELECT FOR UPDATE will wait for the other transaction to complete, and will then lock and return the updated row (or no row, if the row was deleted).
- * Within a SERIALIZABLE transaction, however, an error will be thrown if a row to be locked has changed since the transaction started.
- *
- * @see {@link SQLProxyConfigurationBuilder} to get more information how to build {@link SQLProxyConfiguration}
+ * <p>This implementation solves transaction/concurrency related problems via "SELECT FOR UPDATE" SQL syntax.
  *
  * @param <K> type of primary key
  */

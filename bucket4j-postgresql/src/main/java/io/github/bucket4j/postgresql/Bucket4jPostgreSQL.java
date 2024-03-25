@@ -7,7 +7,6 @@ import javax.sql.DataSource;
 import io.github.bucket4j.distributed.jdbc.AbstractJdbcProxyManagerBuilder;
 import io.github.bucket4j.distributed.jdbc.LockIdSupplier;
 import io.github.bucket4j.distributed.jdbc.PrimaryKeyMapper;
-import io.github.bucket4j.distributed.jdbc.SQLProxyConfigurationBuilder;
 
 /**
  * Entry point for PostgreSQL integration
@@ -35,7 +34,6 @@ public class Bucket4jPostgreSQL {
     public static PostgreSQLSelectForUpdateBasedProxyManagerBuilder<Long> selectForUpdateBasedBuilder(DataSource dataSource) {
         return new PostgreSQLSelectForUpdateBasedProxyManagerBuilder<>(dataSource, PrimaryKeyMapper.LONG);
     }
-
 
     public static class PostgreSQLadvisoryLockBasedProxyManagerBuilder<K> extends AbstractJdbcProxyManagerBuilder<K, PostgreSQLadvisoryLockBasedProxyManager<K>, PostgreSQLadvisoryLockBasedProxyManagerBuilder<K>> {
 
@@ -67,7 +65,7 @@ public class Bucket4jPostgreSQL {
          *
          * @param primaryKeyMapper object responsible for setting primary key value in prepared statement.
          *
-         * @return {@link SQLProxyConfigurationBuilder}
+         * @return this builder instance
          */
         public <K2> PostgreSQLadvisoryLockBasedProxyManagerBuilder<K2> primaryKeyMapper(PrimaryKeyMapper<K2> primaryKeyMapper) {
             super.primaryKeyMapper = (PrimaryKeyMapper) Objects.requireNonNull(primaryKeyMapper);
@@ -96,7 +94,7 @@ public class Bucket4jPostgreSQL {
          *
          * @param primaryKeyMapper object responsible for setting primary key value in prepared statement.
          *
-         * @return {@link SQLProxyConfigurationBuilder}
+         * @return this builder instance
          */
         public <K2> PostgreSQLSelectForUpdateBasedProxyManagerBuilder<K2> primaryKeyMapper(PrimaryKeyMapper<K2> primaryKeyMapper) {
             super.primaryKeyMapper = (PrimaryKeyMapper) Objects.requireNonNull(primaryKeyMapper);

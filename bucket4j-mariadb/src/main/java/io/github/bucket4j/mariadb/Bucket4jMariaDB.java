@@ -6,7 +6,6 @@ import javax.sql.DataSource;
 
 import io.github.bucket4j.distributed.jdbc.AbstractJdbcProxyManagerBuilder;
 import io.github.bucket4j.distributed.jdbc.PrimaryKeyMapper;
-import io.github.bucket4j.distributed.jdbc.SQLProxyConfigurationBuilder;
 
 /**
  * Entry point for MariaDB integration
@@ -40,7 +39,7 @@ public class Bucket4jMariaDB {
          *
          * @param primaryKeyMapper object responsible for setting primary key value in prepared statement.
          *
-         * @return {@link SQLProxyConfigurationBuilder}
+         * @return this builder instance
          */
         public <K2> MariaDBSelectForUpdateBasedProxyManagerBuilder<K2> primaryKeyMapper(PrimaryKeyMapper<K2> primaryKeyMapper) {
             super.primaryKeyMapper = (PrimaryKeyMapper) Objects.requireNonNull(primaryKeyMapper);
