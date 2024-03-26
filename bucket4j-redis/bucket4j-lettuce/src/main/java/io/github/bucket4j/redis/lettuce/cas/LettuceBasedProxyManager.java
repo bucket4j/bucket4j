@@ -35,6 +35,8 @@ import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.CompareAndS
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.redis.AbstractRedisProxyManagerBuilder;
 import io.github.bucket4j.redis.consts.LuaScripts;
+import io.github.bucket4j.redis.lettuce.Bucket4jLettuce;
+import io.github.bucket4j.redis.lettuce.RedisApi;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.RedisException;
 import io.lettuce.core.RedisFuture;
@@ -51,7 +53,66 @@ public class LettuceBasedProxyManager<K> extends AbstractCompareAndSwapBasedProx
     private final RedisApi<K> redisApi;
     private final ExpirationAfterWriteStrategy expirationStrategy;
 
+    /**
+     * @deprecated use {@link Bucket4jLettuce#builderFor(RedisAsyncCommands)}
+     */
+    @Deprecated
     public static <K> LettuceBasedProxyManagerBuilder<K> builderFor(RedisAsyncCommands<K, byte[]> redisAsyncCommands) {
+        Objects.requireNonNull(redisAsyncCommands);
+        RedisApi<K> redisApi = new RedisApi<>() {
+            @Override
+            public <V> RedisFuture<V> eval(String script, ScriptOutputType scriptOutputType, K[] keys, byte[][] params) {
+                return redisAsyncCommands.eval(script, scriptOutputType, keys, params);
+            }
+            @Override
+            public RedisFuture<byte[]> get(K key) {
+                return redisAsyncCommands.get(key);
+            }
+            @Override
+            public RedisFuture<?> delete(K key) {
+                return redisAsyncCommands.del(key);
+            }
+        };
+        return new LettuceBasedProxyManagerBuilder<>(redisApi);
+    }
+
+    /**
+     * @deprecated use {@link Bucket4jLettuce#builderFor(StatefulRedisConnection)}
+     */
+    @Deprecated
+    public static <K> LettuceBasedProxyManagerBuilder<K> builderFor(StatefulRedisConnection<K, byte[]> statefulRedisConnection) {
+        return builderFor(statefulRedisConnection.async());
+    }
+
+    /**
+     * @deprecated use {@link Bucket4jLettuce#builderFor(RedisClient)}
+     */
+    @Deprecated
+    public static LettuceBasedProxyManagerBuilder<byte[]> builderFor(RedisClient redisClient) {
+        return builderFor(redisClient.connect(ByteArrayCodec.INSTANCE));
+    }
+
+    /**
+     * @deprecated use {@link Bucket4jLettuce#builderFor(RedisClusterClient)}
+     */
+    @Deprecated
+    public static LettuceBasedProxyManagerBuilder<byte[]> builderFor(RedisClusterClient redisClient) {
+        return builderFor(redisClient.connect(ByteArrayCodec.INSTANCE));
+    }
+
+    /**
+     * @deprecated use {@link Bucket4jLettuce#builderFor(StatefulRedisClusterConnection)}
+     */
+    @Deprecated
+    public static <K> LettuceBasedProxyManagerBuilder<K> builderFor(StatefulRedisClusterConnection<K, byte[]> connection) {
+        return builderFor(connection.async());
+    }
+
+    /**
+     * @deprecated use {@link Bucket4jLettuce#builderFor(RedisAdvancedClusterAsyncCommands)}
+     */
+    @Deprecated
+    public static <K> LettuceBasedProxyManagerBuilder<K> builderFor(RedisAdvancedClusterAsyncCommands<K, byte[]> redisAsyncCommands) {
         Objects.requireNonNull(redisAsyncCommands);
         RedisApi<K> redisApi = new RedisApi<>() {
             @Override
@@ -75,41 +136,6 @@ public class LettuceBasedProxyManager<K> extends AbstractCompareAndSwapBasedProx
         return true;
     }
 
-    public static <K> LettuceBasedProxyManagerBuilder<K> builderFor(StatefulRedisConnection<K, byte[]> statefulRedisConnection) {
-        return builderFor(statefulRedisConnection.async());
-    }
-
-    public static LettuceBasedProxyManagerBuilder<byte[]> builderFor(RedisClient redisClient) {
-        return builderFor(redisClient.connect(ByteArrayCodec.INSTANCE));
-    }
-
-    public static LettuceBasedProxyManagerBuilder<byte[]> builderFor(RedisClusterClient redisClient) {
-        return builderFor(redisClient.connect(ByteArrayCodec.INSTANCE));
-    }
-
-    public static <K> LettuceBasedProxyManagerBuilder<K> builderFor(StatefulRedisClusterConnection<K, byte[]> connection) {
-        return builderFor(connection.async());
-    }
-
-    public static <K> LettuceBasedProxyManagerBuilder<K> builderFor(RedisAdvancedClusterAsyncCommands<K, byte[]> redisAsyncCommands) {
-        Objects.requireNonNull(redisAsyncCommands);
-        RedisApi<K> redisApi = new RedisApi<>() {
-            @Override
-            public <V> RedisFuture<V> eval(String script, ScriptOutputType scriptOutputType, K[] keys, byte[][] params) {
-                return redisAsyncCommands.eval(script, scriptOutputType, keys, params);
-            }
-            @Override
-            public RedisFuture<byte[]> get(K key) {
-                return redisAsyncCommands.get(key);
-            }
-            @Override
-            public RedisFuture<?> delete(K key) {
-                return redisAsyncCommands.del(key);
-            }
-        };
-        return new LettuceBasedProxyManagerBuilder<>(redisApi);
-    }
-
     public static class LettuceBasedProxyManagerBuilder<K> extends AbstractRedisProxyManagerBuilder<LettuceBasedProxyManagerBuilder<K>> {
 
         private final RedisApi<K> redisApi;
@@ -124,10 +150,16 @@ public class LettuceBasedProxyManager<K> extends AbstractCompareAndSwapBasedProx
 
     }
 
-    private LettuceBasedProxyManager(LettuceBasedProxyManagerBuilder<K> builder) {
+    public LettuceBasedProxyManager(LettuceBasedProxyManagerBuilder<K> builder) {
         super(builder.getClientSideConfig());
         this.expirationStrategy = builder.getNotNullExpirationStrategy();
         this.redisApi = builder.redisApi;
+    }
+
+    public LettuceBasedProxyManager(Bucket4jLettuce.LettuceBasedProxyManagerBuilder<K> builder) {
+        super(builder.getClientSideConfig());
+        this.expirationStrategy = builder.getExpirationAfterWrite().orElse(ExpirationAfterWriteStrategy.none());
+        this.redisApi = builder.getRedisApi();
     }
 
     @Override
@@ -245,16 +277,6 @@ public class LettuceBasedProxyManager<K> extends AbstractCompareAndSwapBasedProx
         Optional<TimeMeter> clock = getClientSideConfig().getClientSideClock();
         long currentTimeNanos = clock.isPresent() ? clock.get().currentTimeNanos() : System.currentTimeMillis() * 1_000_000;
         return expirationStrategy.calculateTimeToLiveMillis(state, currentTimeNanos);
-    }
-
-    private interface RedisApi<K> {
-
-        <V> RedisFuture<V> eval(String script, ScriptOutputType scriptOutputType, K[] keys, byte[][] params);
-
-        RedisFuture<byte[]> get(K key);
-
-        RedisFuture<?> delete(K key);
-
     }
 
 }

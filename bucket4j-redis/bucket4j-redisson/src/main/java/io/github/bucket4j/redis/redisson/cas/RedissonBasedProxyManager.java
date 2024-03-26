@@ -47,6 +47,7 @@ import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.distributed.serialization.Mapper;
 import io.github.bucket4j.redis.AbstractRedisProxyManagerBuilder;
 import io.github.bucket4j.redis.consts.LuaScripts;
+import io.github.bucket4j.redis.redisson.Bucket4jRedisson;
 import io.netty.buffer.ByteBuf;
 
 public class RedissonBasedProxyManager<K> extends AbstractCompareAndSwapBasedProxyManager<K> {
@@ -58,6 +59,10 @@ public class RedissonBasedProxyManager<K> extends AbstractCompareAndSwapBasedPro
 
     private final Mapper<K> keyMapper;
 
+    /**
+     * @deprecated use {@link Bucket4jRedisson#builderFor(CommandAsyncExecutor)}
+     */
+    @Deprecated
     public static RedissonBasedProxyManagerBuilder<String> builderFor(CommandAsyncExecutor commandExecutor) {
         return new RedissonBasedProxyManagerBuilder<>(Mapper.STRING, commandExecutor);
     }
@@ -81,6 +86,13 @@ public class RedissonBasedProxyManager<K> extends AbstractCompareAndSwapBasedPro
             return new RedissonBasedProxyManager<>(this);
         }
 
+    }
+
+    public RedissonBasedProxyManager(Bucket4jRedisson.RedissonBasedProxyManagerBuilder<K> builder) {
+        super(builder.getClientSideConfig());
+        this.commandExecutor = builder.getCommandExecutor();
+        this.expirationStrategy = builder.getExpirationAfterWrite().orElse(ExpirationAfterWriteStrategy.none());
+        this.keyMapper = builder.getKeyMapper();
     }
 
     private RedissonBasedProxyManager(RedissonBasedProxyManagerBuilder<K> builder) {

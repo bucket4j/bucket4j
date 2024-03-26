@@ -34,6 +34,8 @@ import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.distributed.serialization.Mapper;
 import io.github.bucket4j.redis.AbstractRedisProxyManagerBuilder;
 import io.github.bucket4j.redis.consts.LuaScripts;
+import io.github.bucket4j.redis.jedis.Bucket4jJedis;
+import io.github.bucket4j.redis.jedis.RedisApi;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisCluster;
 import redis.clients.jedis.UnifiedJedis;
@@ -45,6 +47,10 @@ public class JedisBasedProxyManager<K> extends AbstractCompareAndSwapBasedProxyM
     private final ExpirationAfterWriteStrategy expirationStrategy;
     private final Mapper<K> keyMapper;
 
+    /**
+     * @deprecated use {@link Bucket4jJedis#builderFor(Pool)}
+     */
+    @Deprecated
     public static JedisBasedProxyManagerBuilder<byte[]> builderFor(Pool<Jedis> jedisPool) {
         Objects.requireNonNull(jedisPool);
         RedisApi redisApi = new RedisApi() {
@@ -70,6 +76,10 @@ public class JedisBasedProxyManager<K> extends AbstractCompareAndSwapBasedProxyM
         return new JedisBasedProxyManagerBuilder<>(Mapper.BYTES, redisApi);
     }
 
+    /**
+     * @deprecated use {@link Bucket4jJedis#builderFor(UnifiedJedis)}
+     */
+    @Deprecated
     public static JedisBasedProxyManagerBuilder<byte[]> builderFor(UnifiedJedis unifiedJedis) {
         Objects.requireNonNull(unifiedJedis);
         RedisApi redisApi = new RedisApi() {
@@ -92,6 +102,9 @@ public class JedisBasedProxyManager<K> extends AbstractCompareAndSwapBasedProxyM
 
     }
 
+    /**
+     * @deprecated use {@link Bucket4jJedis#builderFor(JedisCluster)}
+     */
     public static JedisBasedProxyManagerBuilder<byte[]> builderFor(JedisCluster jedisCluster) {
         Objects.requireNonNull(jedisCluster);
         RedisApi redisApi = new RedisApi() {
@@ -135,6 +148,13 @@ public class JedisBasedProxyManager<K> extends AbstractCompareAndSwapBasedProxyM
             return new JedisBasedProxyManager<K>(this);
         }
 
+    }
+
+    public JedisBasedProxyManager(Bucket4jJedis.JedisBasedProxyManagerBuilder<K> builder) {
+        super(builder.getClientSideConfig());
+        this.keyMapper = builder.getKeyMapper();
+        this.expirationStrategy = builder.getExpirationAfterWrite().orElse(ExpirationAfterWriteStrategy.none());
+        this.redisApi = builder.getRedisApi();
     }
 
     private JedisBasedProxyManager(JedisBasedProxyManagerBuilder<K> builder) {
@@ -215,16 +235,6 @@ public class JedisBasedProxyManager<K> extends AbstractCompareAndSwapBasedProxyM
         Optional<TimeMeter> clock = getClientSideConfig().getClientSideClock();
         long currentTimeNanos = clock.isPresent() ? clock.get().currentTimeNanos() : System.currentTimeMillis() * 1_000_000;
         return expirationStrategy.calculateTimeToLiveMillis(state, currentTimeNanos);
-    }
-
-    private interface RedisApi {
-
-        Object eval(final byte[] script, final int keyCount, final byte[]... params);
-
-        byte[] get(byte[] key);
-
-        void delete(byte[] key);
-
     }
 
 }
