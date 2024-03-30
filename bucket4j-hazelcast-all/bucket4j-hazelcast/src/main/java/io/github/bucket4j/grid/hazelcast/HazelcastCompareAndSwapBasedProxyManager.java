@@ -25,6 +25,7 @@ import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AbstractCom
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AsyncCompareAndSwapOperation;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.CompareAndSwapOperation;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
+import io.github.bucket4j.grid.hazelcast.Bucket4jHazelcast.HazelcastCompareAndSwapBasedProxyManagerBuilder;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -34,10 +35,23 @@ public class HazelcastCompareAndSwapBasedProxyManager<K> extends AbstractCompare
 
     private final IMap<K, byte[]> map;
 
+    HazelcastCompareAndSwapBasedProxyManager(HazelcastCompareAndSwapBasedProxyManagerBuilder<K> builder) {
+        super(builder.getClientSideConfig());
+        this.map = builder.map;
+    }
+
+    /**
+     * @deprecated use {@link Bucket4jHazelcast#builderForCasBasedProxyManager(IMap)}
+     */
+    @Deprecated
     public HazelcastCompareAndSwapBasedProxyManager(IMap<K, byte[]> map) {
         this(map, ClientSideConfig.getDefault());
     }
 
+    /**
+     * @deprecated use {@link Bucket4jHazelcast#builderForCasBasedProxyManager(IMap)}
+     */
+    @Deprecated
     public HazelcastCompareAndSwapBasedProxyManager(IMap<K, byte[]> map, ClientSideConfig clientSideConfig) {
         super(clientSideConfig);
         this.map = Objects.requireNonNull(map);

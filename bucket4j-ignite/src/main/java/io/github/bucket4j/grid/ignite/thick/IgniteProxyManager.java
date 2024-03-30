@@ -40,6 +40,8 @@ import io.github.bucket4j.distributed.proxy.AbstractProxyManager;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.remote.*;
 import io.github.bucket4j.distributed.versioning.Version;
+import io.github.bucket4j.grid.ignite.Bucket4jIgnite;
+
 import org.apache.ignite.IgniteCache;
 import org.apache.ignite.cache.CacheEntryProcessor;
 import org.apache.ignite.lang.IgniteFuture;
@@ -61,10 +63,23 @@ public class IgniteProxyManager<K> extends AbstractProxyManager<K> {
 
     private final IgniteCache<K, byte[]> cache;
 
+    IgniteProxyManager(Bucket4jIgniteThick.IgniteProxyManagerBuilder<K> builder) {
+        super(builder.getClientSideConfig());
+        cache = builder.cache;
+    }
+
+    /**
+     * @deprecated use {@link Bucket4jIgnite#thick()#builderFor()}
+     */
+    @Deprecated
     public IgniteProxyManager(IgniteCache<K, byte[]> cache) {
         this(cache, ClientSideConfig.getDefault());
     }
 
+    /**
+     * @deprecated use {@link Bucket4jIgnite#thick()#builderFor()}
+     */
+    @Deprecated
     public IgniteProxyManager(IgniteCache<K, byte[]> cache, ClientSideConfig clientSideConfig) {
         super(clientSideConfig);
         this.cache = Objects.requireNonNull(cache);

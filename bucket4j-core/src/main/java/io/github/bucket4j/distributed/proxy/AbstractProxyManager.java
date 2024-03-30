@@ -225,6 +225,10 @@ public abstract class AbstractProxyManager<K> implements ProxyManager<K> {
         return clientSideConfig.getBackwardCompatibilityVersion();
     }
 
+    protected long currentTimeNanos() {
+        return clientSideConfig.getClientSideClock().orElse(TimeMeter.SYSTEM_MILLISECONDS).currentTimeNanos();
+    }
+
     protected Long getClientSideTime() {
         Optional<TimeMeter> clientClock = clientSideConfig.getClientSideClock();
         if (!clientClock.isPresent()) {

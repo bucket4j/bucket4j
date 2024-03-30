@@ -65,10 +65,25 @@ public class JCacheProxyManager<K> extends AbstractProxyManager<K> {
     private final Cache<K, byte[]> cache;
     private final boolean preferLambdaStyle;
 
+    public JCacheProxyManager(Bucket4jJCache.JCacheProxyManagerBuilder<K> builder) {
+        super(builder.getClientSideConfig());
+        cache = builder.cache;
+        checkCompatibilityWithProvider(cache);
+        this.preferLambdaStyle = preferLambdaStyle(cache);
+    }
+
+    /**
+     * @deprecated use {@link Bucket4jJCache#builderFor(Cache)}
+     */
+    @Deprecated
     public JCacheProxyManager(Cache<K, byte[]> cache) {
         this(cache, ClientSideConfig.getDefault());
     }
 
+    /**
+     * @deprecated use {@link Bucket4jJCache#builderFor(Cache)}
+     */
+    @Deprecated
     public JCacheProxyManager(Cache<K, byte[]> cache, ClientSideConfig clientSideConfig) {
         super(clientSideConfig);
         checkCompatibilityWithProvider(cache);

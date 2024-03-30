@@ -25,7 +25,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AbstractCompareAndSwapBasedProxyManager;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AsyncCompareAndSwapOperation;
@@ -201,7 +200,7 @@ public class JedisBasedProxyManager<K> extends AbstractCompareAndSwapBasedProxyM
     }
 
     private Boolean compareAndSwap(byte[] key, byte[] originalData, byte[] newData, RemoteBucketState newState) {
-        long ttlMillis = calculateTtlMillis(newState);
+        long ttlMillis = expirationStrategy.calculateTimeToLiveMillis(newState, currentTimeNanos());
         if (ttlMillis > 0) {
             if (originalData == null) {
                 // nulls are prohibited as values, so "replace" must not be used in such cases
@@ -229,12 +228,6 @@ public class JedisBasedProxyManager<K> extends AbstractCompareAndSwapBasedProxyM
 
     private byte[] encodeLong(Long value) {
         return ("" + value).getBytes(StandardCharsets.UTF_8);
-    }
-
-    private long calculateTtlMillis(RemoteBucketState state) {
-        Optional<TimeMeter> clock = getClientSideConfig().getClientSideClock();
-        long currentTimeNanos = clock.isPresent() ? clock.get().currentTimeNanos() : System.currentTimeMillis() * 1_000_000;
-        return expirationStrategy.calculateTimeToLiveMillis(state, currentTimeNanos);
     }
 
 }

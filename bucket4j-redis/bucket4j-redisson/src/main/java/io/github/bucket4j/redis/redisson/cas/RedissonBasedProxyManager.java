@@ -38,7 +38,6 @@ import org.redisson.client.protocol.RedisCommands;
 import org.redisson.client.protocol.convertor.BooleanNotNullReplayConvertor;
 import org.redisson.command.CommandAsyncExecutor;
 
-import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AbstractCompareAndSwapBasedProxyManager;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AsyncCompareAndSwapOperation;
@@ -120,7 +119,7 @@ public class RedissonBasedProxyManager<K> extends AbstractCompareAndSwapBasedPro
 
             @Override
             public boolean compareAndSwap(byte[] originalData, byte[] newData, RemoteBucketState newState, Optional<Long> timeoutNanos) {
-                long ttlMillis = calculateTtlMillis(newState);
+                long ttlMillis = expirationStrategy.calculateTimeToLiveMillis(newState, currentTimeNanos());
                 if (ttlMillis > 0) {
                     if (originalData == null) {
                         // Redisson prohibits the usage null as values, so "replace" must not be used in such cases
@@ -166,7 +165,7 @@ public class RedissonBasedProxyManager<K> extends AbstractCompareAndSwapBasedPro
             }
             @Override
             public CompletableFuture<Boolean> compareAndSwap(byte[] originalData, byte[] newData, RemoteBucketState newState, Optional<Long> timeoutNanos) {
-                long ttlMillis = calculateTtlMillis(newState);
+                long ttlMillis = expirationStrategy.calculateTimeToLiveMillis(newState, currentTimeNanos());
                 if (ttlMillis > 0) {
                     if (originalData == null) {
                         RFuture<Boolean> redissonFuture = commandExecutor.writeAsync(stringKey, ByteArrayCodec.INSTANCE, SET, stringKey, encodeByteArray(newData), "PX", ttlMillis, "NX");
@@ -245,12 +244,6 @@ public class RedissonBasedProxyManager<K> extends AbstractCompareAndSwapBasedPro
         } catch (IOException e) {
             throw new IllegalArgumentException(e);
         }
-    }
-
-    private long calculateTtlMillis(RemoteBucketState state) {
-        Optional<TimeMeter> clock = getClientSideConfig().getClientSideClock();
-        long currentTimeNanos = clock.isPresent() ? clock.get().currentTimeNanos() : System.currentTimeMillis() * 1_000_000;
-        return expirationStrategy.calculateTimeToLiveMillis(state, currentTimeNanos);
     }
 
 }

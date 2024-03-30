@@ -42,6 +42,8 @@ import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.Request;
 import io.github.bucket4j.distributed.versioning.Version;
+import io.github.bucket4j.grid.ignite.Bucket4jIgnite;
+import io.github.bucket4j.grid.ignite.thin.Bucket4jIgniteThin;
 import io.github.bucket4j.grid.ignite.thin.ThinClientUtils;
 import org.apache.ignite.client.ClientCache;
 import org.apache.ignite.client.ClientCompute;
@@ -60,10 +62,24 @@ public class IgniteThinClientProxyManager<K> extends AbstractProxyManager<K> {
     private final ClientCache<K, byte[]> cache;
     private final ClientCompute clientCompute;
 
+    public IgniteThinClientProxyManager(Bucket4jIgniteThin.IgniteThinClientComputeProxyManagerBuilder<K> builder) {
+        super(builder.getClientSideConfig());
+        cache = builder.getCache();
+        clientCompute = builder.getClientCompute();
+    }
+
+    /**
+     * @deprecated use {@link Bucket4jIgnite#thin()#builderForClientComputeBasedProxyManager()}
+     */
+    @Deprecated
     public IgniteThinClientProxyManager(ClientCache<K, byte[]> cache, ClientCompute clientCompute) {
         this(cache, clientCompute, ClientSideConfig.getDefault());
     }
 
+    /**
+     * @deprecated use {@link Bucket4jIgnite#thin()#builderForClientComputeBasedProxyManager()}
+     */
+    @Deprecated
     public IgniteThinClientProxyManager(ClientCache<K, byte[]> cache, ClientCompute clientCompute, ClientSideConfig clientSideConfig) {
         super(clientSideConfig);
         this.cache = Objects.requireNonNull(cache);

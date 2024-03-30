@@ -25,6 +25,8 @@ import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AbstractCom
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AsyncCompareAndSwapOperation;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.CompareAndSwapOperation;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
+import io.github.bucket4j.grid.ignite.Bucket4jIgnite;
+import io.github.bucket4j.grid.ignite.thin.Bucket4jIgniteThin.IgniteThinClientCasBasedProxyManagerBuilder;
 import io.github.bucket4j.grid.ignite.thin.ThinClientUtils;
 import org.apache.ignite.client.ClientCache;
 import org.apache.ignite.client.IgniteClientFuture;
@@ -38,10 +40,23 @@ public class IgniteThinClientCasBasedProxyManager<K> extends AbstractCompareAndS
 
     private final ClientCache<K, ByteBuffer> cache;
 
+    public IgniteThinClientCasBasedProxyManager(IgniteThinClientCasBasedProxyManagerBuilder<K> builder) {
+        super(builder.getClientSideConfig());
+        this.cache = builder.getCache();
+    }
+
+    /**
+     * @deprecated use {@link Bucket4jIgnite#thin()#builderForCasBasedProxyManager()}
+     */
+    @Deprecated
     public IgniteThinClientCasBasedProxyManager(ClientCache<K, ByteBuffer> cache) {
         this(cache, ClientSideConfig.getDefault());
     }
 
+    /**
+     * @deprecated use {@link Bucket4jIgnite#thin()#builderForCasBasedProxyManager()}
+     */
+    @Deprecated
     public IgniteThinClientCasBasedProxyManager(ClientCache<K, ByteBuffer> cache, ClientSideConfig clientSideConfig) {
         super(clientSideConfig);
         this.cache = Objects.requireNonNull(cache);
