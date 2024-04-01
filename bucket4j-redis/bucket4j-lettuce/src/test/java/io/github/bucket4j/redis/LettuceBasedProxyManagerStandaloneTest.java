@@ -9,6 +9,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.testcontainers.containers.GenericContainer;
 
+import io.github.bucket4j.redis.lettuce.Bucket4jLettuce;
 import io.github.bucket4j.redis.lettuce.cas.LettuceBasedProxyManager;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
 import io.github.bucket4j.tck.ProxyManagerSpec;
@@ -17,9 +18,6 @@ import io.lettuce.core.codec.ByteArrayCodec;
 import io.lettuce.core.codec.RedisCodec;
 import io.lettuce.core.codec.StringCodec;
 
-/**
- * @author Vladimir Bukhtoyarov
- */
 public class LettuceBasedProxyManagerStandaloneTest extends AbstractDistributedBucketTest {
 
     private static GenericContainer container;
@@ -39,23 +37,12 @@ public class LettuceBasedProxyManagerStandaloneTest extends AbstractDistributedB
             new ProxyManagerSpec<>(
                 "LettuceBasedProxyManager_ByteArrayKey",
                 () -> UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8),
-                clientConfig -> LettuceBasedProxyManager.builderFor(redisClient)
-                    .withClientSideConfig(clientConfig)
-                    .build()
+                () -> Bucket4jLettuce.casBasedBuilder(redisClient)
             ),
             new ProxyManagerSpec<>(
                 "LettuceBasedProxyManager_StringKey",
                 () -> UUID.randomUUID().toString(),
-                clientConfig -> LettuceBasedProxyManager.builderFor(redisClient.connect(RedisCodec.of(StringCodec.UTF8, ByteArrayCodec.INSTANCE)))
-                    .withClientSideConfig(clientConfig)
-                    .build()
-            ),
-            new ProxyManagerSpec<>(
-                "LettuceBasedProxyManager_NoExpiration_StringKey_RequestTimeout",
-                () -> UUID.randomUUID().toString(),
-                clientConfig -> LettuceBasedProxyManager.builderFor(redisClient.connect(RedisCodec.of(StringCodec.UTF8, ByteArrayCodec.INSTANCE)))
-                    .withClientSideConfig(clientConfig.withRequestTimeout(Duration.ofSeconds(3)))
-                    .build()
+                () -> Bucket4jLettuce.casBasedBuilder(redisClient.connect(RedisCodec.of(StringCodec.UTF8, ByteArrayCodec.INSTANCE)))
             )
         );
     }

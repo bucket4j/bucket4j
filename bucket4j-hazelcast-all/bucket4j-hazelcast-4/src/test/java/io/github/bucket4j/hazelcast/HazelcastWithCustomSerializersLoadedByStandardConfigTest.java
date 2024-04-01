@@ -7,7 +7,7 @@ import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.map.IMap;
 
-import io.github.bucket4j.distributed.proxy.ClientSideConfig;
+import io.github.bucket4j.grid.hazelcast.Bucket4jHazelcast;
 import io.github.bucket4j.grid.hazelcast.HazelcastEntryProcessor;
 import io.github.bucket4j.grid.hazelcast.HazelcastOffloadableEntryProcessor;
 import io.github.bucket4j.grid.hazelcast.HazelcastProxyManager;
@@ -100,12 +100,12 @@ public class HazelcastWithCustomSerializersLoadedByStandardConfigTest extends Ab
             new ProxyManagerSpec<>(
                 "HazelcastProxyManager_CustomSerialization",
                 () -> UUID.randomUUID().toString(),
-                clientConfig -> new HazelcastProxyManager<>(map, clientConfig)
+                () -> Bucket4jHazelcast.entryProcessorBasedBuilder(map)
             ),
             new ProxyManagerSpec<>(
                 "HazelcastLockBasedProxyManager_CustomSerialization_offloadableExecutor",
                 () -> UUID.randomUUID().toString(),
-                clientConfig -> new HazelcastProxyManager<>(map, clientConfig, "my-executor")
+                () -> Bucket4jHazelcast.entryProcessorBasedBuilder(map).offloadableExecutorName("my-executor")
             )
         );
     }

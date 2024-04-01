@@ -19,7 +19,7 @@ public class Bucket4jCoherence {
      * @return new instance of {@link CoherenceProxyManagerBuilder}
      * @param <K> type ok key
      */
-    public static <K> CoherenceProxyManagerBuilder<K> builderFor(NamedCache<K, byte[]> cache) {
+    public static <K> CoherenceProxyManagerBuilder<K> entryProcessorBasedBuilder(NamedCache<K, byte[]> cache) {
         return new CoherenceProxyManagerBuilder<>(cache);
     }
 

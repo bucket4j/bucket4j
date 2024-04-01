@@ -20,7 +20,7 @@ public class Bucket4jRedisson {
      *
      * @return new instance of {@link RedissonBasedProxyManagerBuilder}
      */
-    public static RedissonBasedProxyManagerBuilder<String> builderFor(CommandAsyncExecutor commandExecutor) {
+    public static RedissonBasedProxyManagerBuilder<String> casBasedBuilder(CommandAsyncExecutor commandExecutor) {
         return new RedissonBasedProxyManagerBuilder<>(Mapper.STRING, commandExecutor);
     }
 

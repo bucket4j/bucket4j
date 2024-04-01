@@ -1,8 +1,6 @@
 package io.github.bucket4j.grid.ignite;
 
-import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.ExecutionStrategy;
-import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.grid.ignite.thick.IgniteProxyManager;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
 import io.github.bucket4j.tck.ProxyManagerSpec;
@@ -29,6 +27,7 @@ import java.util.Collections;
 import java.util.UUID;
 import java.util.concurrent.Executors;
 
+import static io.github.bucket4j.distributed.proxy.ExecutionStrategy.background;
 import static io.github.bucket4j.distributed.proxy.ExecutionStrategy.backgroundTimeBounded;
 
 public class IgniteTest extends AbstractDistributedBucketTest {
@@ -84,23 +83,21 @@ public class IgniteTest extends AbstractDistributedBucketTest {
             new ProxyManagerSpec<>(
                 "IgniteProxyManager",
                 () -> UUID.randomUUID().toString(),
-                clientConfig -> new IgniteProxyManager<>(cache, clientConfig)
+                () -> Bucket4jIgnite.thick().entryProcessorBasedBuilder(cache)
             ),
             new ProxyManagerSpec<>(
                 "IgniteProxyManager_background",
                 () -> UUID.randomUUID().toString(),
-                clientConfig -> new IgniteProxyManager<>(
-                    cache,
-                    clientConfig.withExecutionStrategy(ExecutionStrategy.background(Executors.newFixedThreadPool(20)))
-                )
+                () -> Bucket4jIgnite.thick()
+                    .entryProcessorBasedBuilder(cache)
+                    .executionStrategy(background(Executors.newFixedThreadPool(20)))
             ),
             new ProxyManagerSpec<>(
                 "IgniteProxyManager_backgroundTimeBounded",
                 () -> UUID.randomUUID().toString(),
-                clientConfig -> new IgniteProxyManager<>(
-                    cache,
-                    clientConfig.withExecutionStrategy(backgroundTimeBounded(Executors.newFixedThreadPool(20), Duration.ofSeconds(5)))
-                )
+                () -> Bucket4jIgnite.thick()
+                    .entryProcessorBasedBuilder(cache)
+                    .executionStrategy(backgroundTimeBounded(Executors.newFixedThreadPool(20), Duration.ofSeconds(5)))
             )
         );
     }

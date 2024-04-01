@@ -42,7 +42,7 @@ public class HazelcastLockBasedProxyManager<K> extends AbstractLockBasedProxyMan
     }
 
     /**
-     * @deprecated use {@link Bucket4jHazelcast#builderForLockBasedProxyManager(IMap)}
+     * @deprecated use {@link Bucket4jHazelcast#lockBasedBuilder(IMap)}
      */
     @Deprecated
     public HazelcastLockBasedProxyManager(IMap<K, byte[]> map) {
@@ -50,7 +50,7 @@ public class HazelcastLockBasedProxyManager<K> extends AbstractLockBasedProxyMan
     }
 
     /**
-     * @deprecated use {@link Bucket4jHazelcast#builderForLockBasedProxyManager(IMap)}
+     * @deprecated use {@link Bucket4jHazelcast#lockBasedBuilder(IMap)}
      */
     @Deprecated
     public HazelcastLockBasedProxyManager(IMap<K, byte[]> map, ClientSideConfig clientSideConfig) {

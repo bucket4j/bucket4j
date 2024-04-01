@@ -73,7 +73,7 @@ public class JCacheProxyManager<K> extends AbstractProxyManager<K> {
     }
 
     /**
-     * @deprecated use {@link Bucket4jJCache#builderFor(Cache)}
+     * @deprecated use {@link Bucket4jJCache#entryProcessorBasedBuilder(Cache)}
      */
     @Deprecated
     public JCacheProxyManager(Cache<K, byte[]> cache) {
@@ -81,7 +81,7 @@ public class JCacheProxyManager<K> extends AbstractProxyManager<K> {
     }
 
     /**
-     * @deprecated use {@link Bucket4jJCache#builderFor(Cache)}
+     * @deprecated use {@link Bucket4jJCache#entryProcessorBasedBuilder(Cache)}
      */
     @Deprecated
     public JCacheProxyManager(Cache<K, byte[]> cache, ClientSideConfig clientSideConfig) {

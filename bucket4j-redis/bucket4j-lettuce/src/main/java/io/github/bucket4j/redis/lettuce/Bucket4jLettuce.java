@@ -27,7 +27,7 @@ public class Bucket4jLettuce {
      *
      * @return new instance of {@link LettuceBasedProxyManagerBuilder}
      */
-    public static <K> LettuceBasedProxyManagerBuilder<K> builderFor(RedisAsyncCommands<K, byte[]> redisAsyncCommands) {
+    public static <K> LettuceBasedProxyManagerBuilder<K> casBasedBuilder(RedisAsyncCommands<K, byte[]> redisAsyncCommands) {
         Objects.requireNonNull(redisAsyncCommands);
         RedisApi<K> redisApi = new RedisApi<>() {
             @Override
@@ -53,8 +53,8 @@ public class Bucket4jLettuce {
      *
      * @return new instance of {@link LettuceBasedProxyManagerBuilder}
      */
-    public static <K> LettuceBasedProxyManagerBuilder<K> builderFor(StatefulRedisConnection<K, byte[]> statefulRedisConnection) {
-        return builderFor(statefulRedisConnection.async());
+    public static <K> LettuceBasedProxyManagerBuilder<K> casBasedBuilder(StatefulRedisConnection<K, byte[]> statefulRedisConnection) {
+        return casBasedBuilder(statefulRedisConnection.async());
     }
 
     /**
@@ -64,8 +64,8 @@ public class Bucket4jLettuce {
      *
      * @return new instance of {@link LettuceBasedProxyManagerBuilder}
      */
-    public static LettuceBasedProxyManagerBuilder<byte[]> builderFor(RedisClient redisClient) {
-        return builderFor(redisClient.connect(ByteArrayCodec.INSTANCE));
+    public static LettuceBasedProxyManagerBuilder<byte[]> casBasedBuilder(RedisClient redisClient) {
+        return casBasedBuilder(redisClient.connect(ByteArrayCodec.INSTANCE));
     }
 
     /**
@@ -75,8 +75,8 @@ public class Bucket4jLettuce {
      *
      * @return new instance of {@link LettuceBasedProxyManagerBuilder}
      */
-    public static LettuceBasedProxyManagerBuilder<byte[]> builderFor(RedisClusterClient redisClient) {
-        return builderFor(redisClient.connect(ByteArrayCodec.INSTANCE));
+    public static LettuceBasedProxyManagerBuilder<byte[]> casBasedBuilder(RedisClusterClient redisClient) {
+        return casBasedBuilder(redisClient.connect(ByteArrayCodec.INSTANCE));
     }
 
     /**
@@ -86,8 +86,8 @@ public class Bucket4jLettuce {
      *
      * @return new instance of {@link LettuceBasedProxyManagerBuilder}
      */
-    public static <K> LettuceBasedProxyManagerBuilder<K> builderFor(StatefulRedisClusterConnection<K, byte[]> connection) {
-        return builderFor(connection.async());
+    public static <K> LettuceBasedProxyManagerBuilder<K> casBasedBuilder(StatefulRedisClusterConnection<K, byte[]> connection) {
+        return casBasedBuilder(connection.async());
     }
 
     /**
@@ -97,7 +97,7 @@ public class Bucket4jLettuce {
      *
      * @return new instance of {@link LettuceBasedProxyManagerBuilder}
      */
-    public static <K> LettuceBasedProxyManagerBuilder<K> builderFor(RedisAdvancedClusterAsyncCommands<K, byte[]> redisAsyncCommands) {
+    public static <K> LettuceBasedProxyManagerBuilder<K> casBasedBuilder(RedisAdvancedClusterAsyncCommands<K, byte[]> redisAsyncCommands) {
         Objects.requireNonNull(redisAsyncCommands);
         RedisApi<K> redisApi = new RedisApi<>() {
             @Override

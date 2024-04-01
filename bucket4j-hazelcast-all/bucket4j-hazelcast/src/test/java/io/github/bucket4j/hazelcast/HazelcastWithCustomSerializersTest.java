@@ -5,10 +5,7 @@ import com.hazelcast.config.JoinConfig;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.map.IMap;
-import io.github.bucket4j.distributed.proxy.ClientSideConfig;
-import io.github.bucket4j.distributed.proxy.ProxyManager;
-import io.github.bucket4j.grid.hazelcast.HazelcastCompareAndSwapBasedProxyManager;
-import io.github.bucket4j.grid.hazelcast.HazelcastLockBasedProxyManager;
+import io.github.bucket4j.grid.hazelcast.Bucket4jHazelcast;
 import io.github.bucket4j.grid.hazelcast.HazelcastProxyManager;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
 import io.github.bucket4j.tck.ProxyManagerSpec;
@@ -66,12 +63,13 @@ public class HazelcastWithCustomSerializersTest extends AbstractDistributedBucke
             new ProxyManagerSpec<>(
                 "HazelcastProxyManager_CustomSerialization",
                 () -> UUID.randomUUID().toString(),
-                clientConfig -> new HazelcastProxyManager<>(map, clientConfig)
+                () -> Bucket4jHazelcast.entryProcessorBasedBuilder(map)
             ),
             new ProxyManagerSpec<>(
                 "HazelcastLockBasedProxyManager_JdkSerialization_offloadableExecutor",
                 () -> UUID.randomUUID().toString(),
-                clientConfig -> new HazelcastProxyManager<>(map, clientConfig, "my-executor")
+                () -> Bucket4jHazelcast.entryProcessorBasedBuilder(map)
+                    .offloadableExecutorName("my-executor")
             )
         );
     }

@@ -30,7 +30,6 @@ import static io.github.bucket4j.Bandwidth.UNSPECIFIED_TIME_OF_FIRST_REFILL;
 /**
  * Provides API for bandwidth builder
  *
- * @author Vladimir Bukhtoyarov
  */
 public class BandwidthBuilder {
 

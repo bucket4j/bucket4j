@@ -3,8 +3,6 @@ package io.github.bucket4j.mariadb;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import io.github.bucket4j.distributed.jdbc.BucketTableSettings;
-import io.github.bucket4j.distributed.jdbc.SQLProxyConfiguration;
-import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
 import io.github.bucket4j.tck.ProxyManagerSpec;
 
@@ -17,11 +15,10 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.MessageFormat;
-import java.time.Duration;
 import java.util.Arrays;
 import java.util.concurrent.ThreadLocalRandom;
 
-public class MariaDBSelectForUpdateLockBasedTransactionTest extends AbstractDistributedBucketTest {
+public class MariaDBSelectForUpdateBasedTransactionTest extends AbstractDistributedBucketTest {
 
     private static MariaDBContainer container;
     private static DataSource dataSource;
@@ -43,18 +40,10 @@ public class MariaDBSelectForUpdateLockBasedTransactionTest extends AbstractDist
             new ProxyManagerSpec<>(
                 "MariaDBSelectForUpdateBasedProxyManager",
                 () -> ThreadLocalRandom.current().nextLong(1_000_000_000),
-                clientConfig -> new MariaDBSelectForUpdateBasedProxyManager<>(SQLProxyConfiguration.builder()
-                        .withTableSettings(tableSettings)
-                        .withClientSideConfig(clientConfig)
-                        .build(dataSource))
-            ),
-            new ProxyManagerSpec<>(
-                "MariaDBSelectForUpdateBasedProxyManager_withTimeout",
-                () -> ThreadLocalRandom.current().nextLong(1_000_000_000),
-                clientConfig -> new MariaDBSelectForUpdateBasedProxyManager<>(SQLProxyConfiguration.builder()
-                        .withTableSettings(tableSettings)
-                        .withClientSideConfig(clientConfig.withRequestTimeout(Duration.ofSeconds(3)))
-                        .build(dataSource))
+                () -> Bucket4jMariaDB.selectForUpdateBasedBuilder(dataSource)
+                    .table("test.bucket")
+                    .idColumn("id")
+                    .stateColumn("state")
             )
         );
     }

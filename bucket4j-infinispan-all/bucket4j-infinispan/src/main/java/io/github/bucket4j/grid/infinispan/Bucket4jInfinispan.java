@@ -21,7 +21,7 @@ public class Bucket4jInfinispan {
      *
      * @param <K> type ok key
      */
-    public static <K> InfinispanProxyManagerBuilder<K> builderFor(FunctionalMap.ReadWriteMap<K, byte[]> readWriteMap) {
+    public static <K> InfinispanProxyManagerBuilder<K> entryProcessorBasedBuilder(FunctionalMap.ReadWriteMap<K, byte[]> readWriteMap) {
         return new InfinispanProxyManagerBuilder<>(readWriteMap);
     }
 

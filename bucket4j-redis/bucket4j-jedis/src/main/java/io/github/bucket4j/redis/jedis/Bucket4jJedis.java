@@ -23,7 +23,7 @@ public class Bucket4jJedis {
      *
      * @return new instance of {@link JedisBasedProxyManagerBuilder}
      */
-    public static JedisBasedProxyManagerBuilder<byte[]> builderFor(Pool<Jedis> jedisPool) {
+    public static JedisBasedProxyManagerBuilder<byte[]> casBasedBuilder(Pool<Jedis> jedisPool) {
         Objects.requireNonNull(jedisPool);
         RedisApi redisApi = new RedisApi() {
             @Override
@@ -55,7 +55,7 @@ public class Bucket4jJedis {
      *
      * @return new instance of {@link JedisBasedProxyManagerBuilder}
      */
-    public static JedisBasedProxyManagerBuilder<byte[]> builderFor(UnifiedJedis unifiedJedis) {
+    public static JedisBasedProxyManagerBuilder<byte[]> casBasedBuilder(UnifiedJedis unifiedJedis) {
         Objects.requireNonNull(unifiedJedis);
         RedisApi redisApi = new RedisApi() {
             @Override
@@ -84,7 +84,7 @@ public class Bucket4jJedis {
      *
      * @return new instance of {@link JedisBasedProxyManagerBuilder}
      */
-    public static JedisBasedProxyManagerBuilder<byte[]> builderFor(JedisCluster jedisCluster) {
+    public static JedisBasedProxyManagerBuilder<byte[]> casBasedBuilder(JedisCluster jedisCluster) {
         Objects.requireNonNull(jedisCluster);
         RedisApi redisApi = new RedisApi() {
             @Override

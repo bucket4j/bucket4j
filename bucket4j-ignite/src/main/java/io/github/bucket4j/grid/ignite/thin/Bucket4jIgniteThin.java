@@ -23,7 +23,7 @@ public class Bucket4jIgniteThin {
      *
      * @param <K> type ok key
      */
-    public static <K> IgniteThinClientCasBasedProxyManagerBuilder<K> builderForCasBasedProxyManager(ClientCache<K, ByteBuffer> cache) {
+    public <K> IgniteThinClientCasBasedProxyManagerBuilder<K> casBasedBuilder(ClientCache<K, ByteBuffer> cache) {
         return new IgniteThinClientCasBasedProxyManagerBuilder<>(cache);
     }
 
@@ -37,7 +37,7 @@ public class Bucket4jIgniteThin {
      *
      * @param <K> type ok key
      */
-    public static <K> IgniteThinClientComputeProxyManagerBuilder<K> builderForClientComputeBasedProxyManager(ClientCache<K, byte[]> cache, ClientCompute clientCompute) {
+    public <K> IgniteThinClientComputeProxyManagerBuilder<K> clientComputeBasedBuilder(ClientCache<K, byte[]> cache, ClientCompute clientCompute) {
         return new IgniteThinClientComputeProxyManagerBuilder<>(cache, clientCompute);
     }
 

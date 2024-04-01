@@ -19,9 +19,8 @@ public class Bucket4jIgniteThick {
      *
      * @param <K> type ok key
      */
-    public static <K> IgniteProxyManagerBuilder<K> builderFor(IgniteCache<K, byte[]> cache) {
-        return new IgniteProxyManagerBuilder<>(cache
-        );
+    public <K> IgniteProxyManagerBuilder<K> entryProcessorBasedBuilder(IgniteCache<K, byte[]> cache) {
+        return new IgniteProxyManagerBuilder<>(cache);
     }
 
     public static class IgniteProxyManagerBuilder<K> extends AbstractProxyManagerBuilder<K, IgniteProxyManager<K>, IgniteProxyManagerBuilder<K>> {

@@ -1,7 +1,6 @@
 package io.github.bucket4j.redis;
 
 import java.nio.charset.StandardCharsets;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -17,7 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
 
-import io.github.bucket4j.redis.jedis.cas.JedisBasedProxyManager;
+import io.github.bucket4j.redis.jedis.Bucket4jJedis;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
 import io.github.bucket4j.tck.ProxyManagerSpec;
 import io.lettuce.core.RedisURI;
@@ -28,9 +27,6 @@ import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.JedisCluster;
 import redis.clients.jedis.UnifiedJedis;
 
-/**
- * @author Vladimir Bukhtoyarov
- */
 public class JedisBasedProxyManagerClusterTest extends AbstractDistributedBucketTest {
 
     private static final Logger logger = LoggerFactory.getLogger(JedisBasedProxyManagerClusterTest.class);
@@ -53,16 +49,7 @@ public class JedisBasedProxyManagerClusterTest extends AbstractDistributedBucket
             new ProxyManagerSpec<>(
                 "JedisBasedProxyManager_ByteArrayKey",
                 () -> UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8),
-                clientConfig -> JedisBasedProxyManager.builderFor(jedisCluster)
-                    .withClientSideConfig(clientConfig)
-                    .build()
-            ),
-            new ProxyManagerSpec<>(
-                "JedisBasedProxyManager_ByteArrayKey_withTimeout",
-                () -> UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8),
-                clientConfig -> JedisBasedProxyManager.builderFor(jedisCluster)
-                    .withClientSideConfig(clientConfig.withRequestTimeout(Duration.ofSeconds(3)))
-                    .build()
+                () -> Bucket4jJedis.casBasedBuilder(jedisCluster)
             )
         );
     }

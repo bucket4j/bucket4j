@@ -5,10 +5,8 @@ import com.hazelcast.config.JoinConfig;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.map.IMap;
-import io.github.bucket4j.distributed.proxy.ClientSideConfig;
-import io.github.bucket4j.grid.hazelcast.HazelcastCompareAndSwapBasedProxyManager;
-import io.github.bucket4j.grid.hazelcast.HazelcastLockBasedProxyManager;
-import io.github.bucket4j.grid.hazelcast.HazelcastProxyManager;
+
+import io.github.bucket4j.grid.hazelcast.Bucket4jHazelcast;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
 import io.github.bucket4j.tck.ProxyManagerSpec;
 
@@ -63,17 +61,17 @@ public class HazelcastTest extends AbstractDistributedBucketTest {
             new ProxyManagerSpec<>(
                 "HazelcastProxyManager_JdkSerialization",
                 () -> UUID.randomUUID().toString(),
-                clientConfig -> new HazelcastProxyManager<>(map, clientConfig)
+                () -> Bucket4jHazelcast.entryProcessorBasedBuilder(map)
             ),
             new ProxyManagerSpec<>(
                 "HazelcastLockBasedProxyManager_JdkSerialization",
                 () -> UUID.randomUUID().toString(),
-                clientConfig -> new HazelcastLockBasedProxyManager<>(map, clientConfig)
+                () -> Bucket4jHazelcast.lockBasedBuilder(map)
             ),
             new ProxyManagerSpec<>(
                 "HazelcastCompareAndSwapBasedProxyManager_JdkSerialization",
                 () -> UUID.randomUUID().toString(),
-                clientConfig -> new HazelcastCompareAndSwapBasedProxyManager<>(map, clientConfig)
+                () -> Bucket4jHazelcast.casBasedBuilder(map)
             )
         );
     }

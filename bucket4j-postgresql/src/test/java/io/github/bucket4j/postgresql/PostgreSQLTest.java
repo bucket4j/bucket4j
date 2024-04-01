@@ -4,7 +4,6 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import io.github.bucket4j.distributed.jdbc.BucketTableSettings;
 import io.github.bucket4j.distributed.jdbc.PrimaryKeyMapper;
-import io.github.bucket4j.distributed.jdbc.SQLProxyConfiguration;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
 import io.github.bucket4j.tck.ProxyManagerSpec;
 
@@ -17,7 +16,6 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.MessageFormat;
-import java.time.Duration;
 import java.util.Arrays;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
@@ -40,7 +38,6 @@ public class PostgreSQLTest extends AbstractDistributedBucketTest {
             }
         }
 
-
         BucketTableSettings tableSettings_2 = BucketTableSettings.customSettings("buckets_String_key", "id", "state");
         final String INIT_TABLE_SCRIPT_2 = "CREATE TABLE IF NOT EXISTS {0}({1} VARCHAR PRIMARY KEY, {2} BYTEA)";
         try (Connection connection = dataSource.getConnection()) {
@@ -54,45 +51,27 @@ public class PostgreSQLTest extends AbstractDistributedBucketTest {
             new ProxyManagerSpec<>(
                 "PostgreSQLadvisoryLockBasedProxyManager",
                 () -> ThreadLocalRandom.current().nextLong(1_000_000_000),
-                clientConfig -> new PostgreSQLadvisoryLockBasedProxyManager<>(SQLProxyConfiguration.builder()
-                    .withTableSettings(tableSettings_1)
-                    .withClientSideConfig(clientConfig)
-                    .build(dataSource))
+                () -> Bucket4jPostgreSQL.advisoryLockBasedBuilder(dataSource)
+                    .table("bucket")
+                    .idColumn("id")
+                    .stateColumn("state")
             ),
             new ProxyManagerSpec<>(
                 "PostgreSQLSelectForUpdateBasedProxyManager",
                 () -> ThreadLocalRandom.current().nextLong(1_000_000_000),
-                clientConfig -> new PostgreSQLSelectForUpdateBasedProxyManager<>(SQLProxyConfiguration.builder()
-                    .withTableSettings(tableSettings_1)
-                    .withClientSideConfig(clientConfig)
-                    .build(dataSource))
-            ),
-            new ProxyManagerSpec<>(
-                "PostgreSQLadvisoryLockBasedProxyManager_withRequestTimeout",
-                () -> ThreadLocalRandom.current().nextLong(1_000_000_000),
-                clientConfig -> new PostgreSQLadvisoryLockBasedProxyManager<>(SQLProxyConfiguration.builder()
-                        .withTableSettings(tableSettings_1)
-                        .withClientSideConfig(clientConfig.withRequestTimeout(Duration.ofSeconds(3)))
-                        .build(dataSource)
-                )
-            ),
-            new ProxyManagerSpec<>(
-                "PostgreSQLSelectForUpdateBasedProxyManager_withRequestTimeout",
-                () -> ThreadLocalRandom.current().nextLong(1_000_000_000),
-                clientConfig -> new PostgreSQLadvisoryLockBasedProxyManager<>(SQLProxyConfiguration.builder()
-                        .withTableSettings(tableSettings_1)
-                        .withClientSideConfig(clientConfig.withRequestTimeout(Duration.ofSeconds(3)))
-                        .build(dataSource)
-                )
+                () -> Bucket4jPostgreSQL.selectForUpdateBasedBuilder(dataSource)
+                    .table("bucket")
+                    .idColumn("id")
+                    .stateColumn("state")
             ),
             new ProxyManagerSpec<>(
                 "PostgreSQLadvisoryLockBasedProxyManager_StringKey",
                 () -> UUID.randomUUID().toString(),
-                clientConfig -> new PostgreSQLadvisoryLockBasedProxyManager<>(SQLProxyConfiguration.builder()
-                    .withPrimaryKeyMapper(PrimaryKeyMapper.STRING)
-                    .withTableSettings(tableSettings_2)
-                    .withClientSideConfig(clientConfig)
-                    .build(dataSource))
+                () -> Bucket4jPostgreSQL.advisoryLockBasedBuilder(dataSource)
+                    .table("buckets_String_key")
+                    .idColumn("id")
+                    .stateColumn("state")
+                    .primaryKeyMapper(PrimaryKeyMapper.STRING)
             )
         );
     }

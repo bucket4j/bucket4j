@@ -9,7 +9,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.testcontainers.containers.GenericContainer;
 
 import io.github.bucket4j.distributed.serialization.Mapper;
-import io.github.bucket4j.redis.jedis.cas.JedisBasedProxyManager;
+import io.github.bucket4j.redis.jedis.Bucket4jJedis;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
 import io.github.bucket4j.tck.ProxyManagerSpec;
 import redis.clients.jedis.HostAndPort;
@@ -17,9 +17,6 @@ import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPooled;
 import redis.clients.jedis.UnifiedJedis;
 
-/**
- * @author Vladimir Bukhtoyarov
- */
 public class JedisBasedProxyManagerStandaloneTest extends AbstractDistributedBucketTest {
 
     private static GenericContainer container;
@@ -44,24 +41,17 @@ public class JedisBasedProxyManagerStandaloneTest extends AbstractDistributedBuc
             new ProxyManagerSpec<>(
                 "JedisBasedProxyManager_ByteArrayKey",
                 () -> UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8),
-                clientConfig -> JedisBasedProxyManager.builderFor(jedisPool)
-                    .withClientSideConfig(clientConfig)
-                    .build()
+                () -> Bucket4jJedis.casBasedBuilder(jedisPool)
             ),
             new ProxyManagerSpec<>(
                 "JedisBasedProxyManager_StringKey",
                 () -> UUID.randomUUID().toString(),
-                clientConfig -> JedisBasedProxyManager.builderFor(jedisPool)
-                    .withClientSideConfig(clientConfig)
-                    .withKeyMapper(Mapper.STRING)
-                    .build()
+                () -> Bucket4jJedis.casBasedBuilder(jedisPool).keyMapper(Mapper.STRING)
             ),
             new ProxyManagerSpec<>(
                 "JedisBasedProxyManager_unifiedJedisPooled_ByteArrayKey",
                 () -> UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8),
-                clientConfig -> JedisBasedProxyManager.builderFor(unifiedJedisPooled)
-                    .withClientSideConfig(clientConfig)
-                    .build()
+                () -> Bucket4jJedis.casBasedBuilder(unifiedJedisPooled)
             )
         );
     }

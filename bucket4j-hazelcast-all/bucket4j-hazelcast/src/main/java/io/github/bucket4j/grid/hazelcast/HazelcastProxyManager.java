@@ -73,7 +73,7 @@ public class HazelcastProxyManager<K> extends AbstractProxyManager<K> {
     }
 
     /**
-     * @deprecated use {@link Bucket4jHazelcast#builderFor(IMap)}
+     * @deprecated use {@link Bucket4jHazelcast#entryProcessorBasedBuilder(IMap)}
      */
     @Deprecated
     public HazelcastProxyManager(IMap<K, byte[]> map) {
@@ -81,7 +81,7 @@ public class HazelcastProxyManager<K> extends AbstractProxyManager<K> {
     }
 
     /**
-     * @deprecated use {@link Bucket4jHazelcast#builderFor(IMap)}
+     * @deprecated use {@link Bucket4jHazelcast#entryProcessorBasedBuilder(IMap)}
      */
     @Deprecated
     public HazelcastProxyManager(IMap<K, byte[]> map, ClientSideConfig clientSideConfig) {
@@ -91,7 +91,7 @@ public class HazelcastProxyManager<K> extends AbstractProxyManager<K> {
     }
 
     /**
-     * @deprecated use {@link Bucket4jHazelcast#builderFor(IMap)}
+     * @deprecated use {@link Bucket4jHazelcast#entryProcessorBasedBuilder(IMap)}
      */
     @Deprecated
     public HazelcastProxyManager(IMap<K, byte[]> map, ClientSideConfig clientSideConfig, String offlodableExecutorName) {

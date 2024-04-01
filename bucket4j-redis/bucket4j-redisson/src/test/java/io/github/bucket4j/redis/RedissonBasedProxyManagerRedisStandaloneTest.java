@@ -1,6 +1,5 @@
 package io.github.bucket4j.redis;
 
-import java.time.Duration;
 import java.util.Arrays;
 import java.util.UUID;
 
@@ -15,15 +14,12 @@ import org.redisson.liveobject.core.RedissonObjectBuilder;
 import org.testcontainers.containers.GenericContainer;
 
 import io.github.bucket4j.distributed.serialization.Mapper;
-import io.github.bucket4j.redis.redisson.cas.RedissonBasedProxyManager;
+import io.github.bucket4j.redis.redisson.Bucket4jRedisson;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
 import io.github.bucket4j.tck.ProxyManagerSpec;
 import io.lettuce.core.RedisClient;
 import io.netty.util.internal.ThreadLocalRandom;
 
-/**
- * @author Vladimir Bukhtoyarov
- */
 public class RedissonBasedProxyManagerRedisStandaloneTest extends AbstractDistributedBucketTest {
 
     private static GenericContainer container;
@@ -51,24 +47,12 @@ public class RedissonBasedProxyManagerRedisStandaloneTest extends AbstractDistri
             new ProxyManagerSpec<>(
                 "RedissonBasedProxyManager_LongKey",
                 () -> ThreadLocalRandom.current().nextLong(),
-                clientConfig -> RedissonBasedProxyManager.builderFor(commandExecutor)
-                    .withKeyMapper(Mapper.LONG)
-                    .withClientSideConfig(clientConfig)
-                    .build()
+                () -> Bucket4jRedisson.casBasedBuilder(commandExecutor).keyMapper(Mapper.LONG)
             ),
             new ProxyManagerSpec<>(
                 "RedissonBasedProxyManager_StringKey",
                 () -> UUID.randomUUID().toString(),
-                clientConfig -> RedissonBasedProxyManager.builderFor(commandExecutor)
-                    .withClientSideConfig(clientConfig)
-                    .build()
-            ),
-            new ProxyManagerSpec<>(
-                "RedissonBasedProxyManager_StringKey_RequestTimeout",
-                () -> UUID.randomUUID().toString(),
-                clientConfig -> RedissonBasedProxyManager.builderFor(commandExecutor)
-                    .withClientSideConfig(clientConfig.withRequestTimeout(Duration.ofSeconds(3)))
-                    .build()
+                () -> Bucket4jRedisson.casBasedBuilder(commandExecutor)
             )
         );
     }

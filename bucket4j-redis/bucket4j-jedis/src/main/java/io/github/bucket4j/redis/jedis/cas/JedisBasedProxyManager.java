@@ -47,7 +47,7 @@ public class JedisBasedProxyManager<K> extends AbstractCompareAndSwapBasedProxyM
     private final Mapper<K> keyMapper;
 
     /**
-     * @deprecated use {@link Bucket4jJedis#builderFor(Pool)}
+     * @deprecated use {@link Bucket4jJedis#casBasedBuilder(Pool)}
      */
     @Deprecated
     public static JedisBasedProxyManagerBuilder<byte[]> builderFor(Pool<Jedis> jedisPool) {
@@ -76,7 +76,7 @@ public class JedisBasedProxyManager<K> extends AbstractCompareAndSwapBasedProxyM
     }
 
     /**
-     * @deprecated use {@link Bucket4jJedis#builderFor(UnifiedJedis)}
+     * @deprecated use {@link Bucket4jJedis#casBasedBuilder(UnifiedJedis)}
      */
     @Deprecated
     public static JedisBasedProxyManagerBuilder<byte[]> builderFor(UnifiedJedis unifiedJedis) {
@@ -102,7 +102,7 @@ public class JedisBasedProxyManager<K> extends AbstractCompareAndSwapBasedProxyM
     }
 
     /**
-     * @deprecated use {@link Bucket4jJedis#builderFor(JedisCluster)}
+     * @deprecated use {@link Bucket4jJedis#casBasedBuilder(JedisCluster)}
      */
     public static JedisBasedProxyManagerBuilder<byte[]> builderFor(JedisCluster jedisCluster) {
         Objects.requireNonNull(jedisCluster);

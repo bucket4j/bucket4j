@@ -61,7 +61,7 @@ public class InfinispanProxyManager<K> extends AbstractProxyManager<K> {
     }
 
     /**
-     * @deprecated use {@link Bucket4jInfinispan#builderFor(ReadWriteMap)}
+     * @deprecated use {@link Bucket4jInfinispan#entryProcessorBasedBuilder(ReadWriteMap)}
      */
     @Deprecated
     public InfinispanProxyManager(ReadWriteMap<K, byte[]> readWriteMap) {
@@ -69,7 +69,7 @@ public class InfinispanProxyManager<K> extends AbstractProxyManager<K> {
     }
 
     /**
-     * @deprecated use {@link Bucket4jInfinispan#builderFor(ReadWriteMap)}
+     * @deprecated use {@link Bucket4jInfinispan#entryProcessorBasedBuilder(ReadWriteMap)}
      */
     @Deprecated
     public InfinispanProxyManager(ReadWriteMap<K, byte[]> readWriteMap, ClientSideConfig clientSideConfig) {

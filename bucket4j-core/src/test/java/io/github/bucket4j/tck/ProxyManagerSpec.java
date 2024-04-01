@@ -1,24 +1,20 @@
 package io.github.bucket4j.tck;
 
-import java.util.function.Function;
 import java.util.function.Supplier;
 
-import io.github.bucket4j.distributed.proxy.ClientSideConfig;
+import io.github.bucket4j.distributed.proxy.AbstractProxyManagerBuilder;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
 
-/**
- * @author Vladimir Bukhtoyarov
- */
-public class ProxyManagerSpec<K> {
+public class ProxyManagerSpec<K, P extends ProxyManager<K>, B extends AbstractProxyManagerBuilder<K, P, B>> {
 
     public final String description;
-    public final Function<ClientSideConfig, ProxyManager<K>> proxyManagerSupplier;
+    public final Supplier<AbstractProxyManagerBuilder<K, P, B>> builder;
     public final Supplier<K> keyGenerator;
 
-    public ProxyManagerSpec(String description, Supplier<K> keyGenerator, Function<ClientSideConfig, ProxyManager<K>>  proxyManagerSupplier) {
+    public ProxyManagerSpec(String description, Supplier<K> keyGenerator, Supplier<AbstractProxyManagerBuilder<K, P, B>> builder) {
         this.description = description;
         this.keyGenerator = keyGenerator;
-        this.proxyManagerSupplier = proxyManagerSupplier;
+        this.builder = builder;
     }
 
     @Override

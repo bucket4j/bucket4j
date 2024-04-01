@@ -9,9 +9,6 @@ import java.time.Instant
 import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit;
 
-/**
- * @author Vladimir Bukhtoyarov
- */
 class BandwidthBuilderSpecification extends Specification {
 
     static Instant firstRefillTime = ZonedDateTime.now()

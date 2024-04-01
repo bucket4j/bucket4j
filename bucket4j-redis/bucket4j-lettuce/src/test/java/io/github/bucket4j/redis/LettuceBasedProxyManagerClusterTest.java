@@ -15,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
 
+import io.github.bucket4j.redis.lettuce.Bucket4jLettuce;
 import io.github.bucket4j.redis.lettuce.cas.LettuceBasedProxyManager;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
 import io.github.bucket4j.tck.ProxyManagerSpec;
@@ -23,9 +24,6 @@ import io.lettuce.core.cluster.RedisClusterClient;
 import io.lettuce.core.cluster.SlotHash;
 import io.lettuce.core.cluster.api.StatefulRedisClusterConnection;
 
-/**
- * @author Vladimir Bukhtoyarov
- */
 public class LettuceBasedProxyManagerClusterTest extends AbstractDistributedBucketTest {
 
     private static final Logger logger = LoggerFactory.getLogger(LettuceBasedProxyManagerClusterTest.class);
@@ -46,16 +44,7 @@ public class LettuceBasedProxyManagerClusterTest extends AbstractDistributedBuck
             new ProxyManagerSpec<>(
                 "LettuceBasedProxyManager_ByteArrayKey",
                 () -> UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8),
-                clientConfig -> LettuceBasedProxyManager.builderFor(redisClient)
-                    .withClientSideConfig(clientConfig)
-                    .build()
-            ),
-            new ProxyManagerSpec<>(
-                "LettuceBasedProxyManager_withTimeout",
-                () -> UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8),
-                clientConfig -> LettuceBasedProxyManager.builderFor(redisClient)
-                    .withClientSideConfig(clientConfig.withRequestTimeout(Duration.ofSeconds(3)))
-                    .build()
+                () -> Bucket4jLettuce.casBasedBuilder(redisClient)
             )
         );
     }

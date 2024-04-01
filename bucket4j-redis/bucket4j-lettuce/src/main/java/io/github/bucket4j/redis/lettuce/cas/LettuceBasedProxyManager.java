@@ -53,7 +53,7 @@ public class LettuceBasedProxyManager<K> extends AbstractCompareAndSwapBasedProx
     private final ExpirationAfterWriteStrategy expirationStrategy;
 
     /**
-     * @deprecated use {@link Bucket4jLettuce#builderFor(RedisAsyncCommands)}
+     * @deprecated use {@link Bucket4jLettuce#casBasedBuilder(RedisAsyncCommands)}
      */
     @Deprecated
     public static <K> LettuceBasedProxyManagerBuilder<K> builderFor(RedisAsyncCommands<K, byte[]> redisAsyncCommands) {
@@ -76,7 +76,7 @@ public class LettuceBasedProxyManager<K> extends AbstractCompareAndSwapBasedProx
     }
 
     /**
-     * @deprecated use {@link Bucket4jLettuce#builderFor(StatefulRedisConnection)}
+     * @deprecated use {@link Bucket4jLettuce#casBasedBuilder(StatefulRedisConnection)}
      */
     @Deprecated
     public static <K> LettuceBasedProxyManagerBuilder<K> builderFor(StatefulRedisConnection<K, byte[]> statefulRedisConnection) {
@@ -84,7 +84,7 @@ public class LettuceBasedProxyManager<K> extends AbstractCompareAndSwapBasedProx
     }
 
     /**
-     * @deprecated use {@link Bucket4jLettuce#builderFor(RedisClient)}
+     * @deprecated use {@link Bucket4jLettuce#casBasedBuilder(RedisClient)}
      */
     @Deprecated
     public static LettuceBasedProxyManagerBuilder<byte[]> builderFor(RedisClient redisClient) {
@@ -92,7 +92,7 @@ public class LettuceBasedProxyManager<K> extends AbstractCompareAndSwapBasedProx
     }
 
     /**
-     * @deprecated use {@link Bucket4jLettuce#builderFor(RedisClusterClient)}
+     * @deprecated use {@link Bucket4jLettuce#casBasedBuilder(RedisClusterClient)}
      */
     @Deprecated
     public static LettuceBasedProxyManagerBuilder<byte[]> builderFor(RedisClusterClient redisClient) {
@@ -100,7 +100,7 @@ public class LettuceBasedProxyManager<K> extends AbstractCompareAndSwapBasedProx
     }
 
     /**
-     * @deprecated use {@link Bucket4jLettuce#builderFor(StatefulRedisClusterConnection)}
+     * @deprecated use {@link Bucket4jLettuce#casBasedBuilder(StatefulRedisClusterConnection)}
      */
     @Deprecated
     public static <K> LettuceBasedProxyManagerBuilder<K> builderFor(StatefulRedisClusterConnection<K, byte[]> connection) {
@@ -108,7 +108,7 @@ public class LettuceBasedProxyManager<K> extends AbstractCompareAndSwapBasedProx
     }
 
     /**
-     * @deprecated use {@link Bucket4jLettuce#builderFor(RedisAdvancedClusterAsyncCommands)}
+     * @deprecated use {@link Bucket4jLettuce#casBasedBuilder(RedisAdvancedClusterAsyncCommands)}
      */
     @Deprecated
     public static <K> LettuceBasedProxyManagerBuilder<K> builderFor(RedisAdvancedClusterAsyncCommands<K, byte[]> redisAsyncCommands) {

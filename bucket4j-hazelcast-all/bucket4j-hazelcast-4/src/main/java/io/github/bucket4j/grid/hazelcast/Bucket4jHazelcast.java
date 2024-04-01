@@ -20,8 +20,8 @@ public class Bucket4jHazelcast {
      *
      * @param <K> type ok key
      */
-    public static <K> HazelcastCompareAndSwapBasedProxyManagerBuilder<K> builderFor(IMap<K, byte[]> map) {
-        return new HazelcastCompareAndSwapBasedProxyManagerBuilder<>(map);
+    public static <K> HazelcastProxyManagerBuilder<K> entryProcessorBasedBuilder(IMap<K, byte[]> map) {
+        return new HazelcastProxyManagerBuilder<>(map);
     }
 
     /**
@@ -33,7 +33,7 @@ public class Bucket4jHazelcast {
      *
      * @param <K> type ok key
      */
-    public static <K> HazelcastLockBasedProxyManagerBuilder<K> builderForLockBasedProxyManager(IMap<K, byte[]> map) {
+    public static <K> HazelcastLockBasedProxyManagerBuilder<K> lockBasedBuilder(IMap<K, byte[]> map) {
         return new HazelcastLockBasedProxyManagerBuilder<>(map);
     }
 
@@ -46,7 +46,7 @@ public class Bucket4jHazelcast {
      *
      * @param <K> type ok key
      */
-    public static <K> HazelcastCompareAndSwapBasedProxyManagerBuilder<K> builderForCasBasedProxyManager(IMap<K, byte[]> map) {
+    public static <K> HazelcastCompareAndSwapBasedProxyManagerBuilder<K> casBasedBuilder(IMap<K, byte[]> map) {
         return new HazelcastCompareAndSwapBasedProxyManagerBuilder<>(map);
     }
 

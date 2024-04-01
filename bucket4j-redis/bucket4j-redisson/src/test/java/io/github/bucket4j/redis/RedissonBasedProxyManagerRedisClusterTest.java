@@ -1,6 +1,5 @@
 package io.github.bucket4j.redis;
 
-import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -22,7 +21,7 @@ import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
 
 import io.github.bucket4j.distributed.serialization.Mapper;
-import io.github.bucket4j.redis.redisson.cas.RedissonBasedProxyManager;
+import io.github.bucket4j.redis.redisson.Bucket4jRedisson;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
 import io.github.bucket4j.tck.ProxyManagerSpec;
 import io.lettuce.core.RedisURI;
@@ -31,9 +30,6 @@ import io.lettuce.core.cluster.SlotHash;
 import io.lettuce.core.cluster.api.StatefulRedisClusterConnection;
 import io.netty.util.internal.ThreadLocalRandom;
 
-/**
- * @author Vladimir Bukhtoyarov
- */
 public class RedissonBasedProxyManagerRedisClusterTest extends AbstractDistributedBucketTest {
 
     private static final Logger logger = LoggerFactory.getLogger(RedissonBasedProxyManagerRedisClusterTest.class);
@@ -62,24 +58,12 @@ public class RedissonBasedProxyManagerRedisClusterTest extends AbstractDistribut
             new ProxyManagerSpec<>(
                 "RedissonBasedProxyManager_LongKey",
                 () -> ThreadLocalRandom.current().nextLong(),
-                clientConfig -> RedissonBasedProxyManager.builderFor(commandExecutor)
-                    .withClientSideConfig(clientConfig)
-                    .withKeyMapper(Mapper.LONG)
-                    .build()
+                () -> Bucket4jRedisson.casBasedBuilder(commandExecutor).keyMapper(Mapper.LONG)
             ),
             new ProxyManagerSpec<>(
                 "RedissonBasedProxyManager_StringKey",
                 () -> UUID.randomUUID().toString(),
-                clientConfig ->RedissonBasedProxyManager.builderFor(commandExecutor)
-                    .withClientSideConfig(clientConfig)
-                    .build()
-            ),
-            new ProxyManagerSpec<>(
-                "RedissonBasedProxyManager_StringKey_withTimeout",
-                () -> UUID.randomUUID().toString(),
-                clientConfig -> RedissonBasedProxyManager.builderFor(commandExecutor)
-                    .withClientSideConfig(clientConfig.withRequestTimeout(Duration.ofSeconds(3)))
-                    .build()
+                () -> Bucket4jRedisson.casBasedBuilder(commandExecutor)
             )
         );
     }

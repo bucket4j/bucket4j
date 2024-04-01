@@ -1,11 +1,5 @@
 package io.github.bucket4j.grid.ignite;
 
-import io.github.bucket4j.distributed.proxy.ClientSideConfig;
-import io.github.bucket4j.distributed.proxy.ExecutionStrategy;
-import io.github.bucket4j.distributed.proxy.ProxyManager;
-import io.github.bucket4j.grid.ignite.thick.IgniteProxyManager;
-import io.github.bucket4j.grid.ignite.thin.cas.IgniteThinClientCasBasedProxyManager;
-import io.github.bucket4j.grid.ignite.thin.compute.IgniteThinClientProxyManager;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
 import io.github.bucket4j.tck.ProxyManagerSpec;
 
@@ -25,13 +19,9 @@ import org.junit.jupiter.api.BeforeAll;
 
 import java.io.Serializable;
 import java.nio.ByteBuffer;
-import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.UUID;
-import java.util.concurrent.Executors;
-
-import static io.github.bucket4j.distributed.proxy.ExecutionStrategy.backgroundTimeBounded;
 
 
 public class IgniteThinClientTest extends AbstractDistributedBucketTest {
@@ -92,14 +82,14 @@ public class IgniteThinClientTest extends AbstractDistributedBucketTest {
 
         specs = Arrays.asList(
             new ProxyManagerSpec<>(
-                "IgniteThinClientProxyManager",
+                "IgniteThinClientCompute",
                 () -> UUID.randomUUID().toString(),
-                clientConfig -> new IgniteThinClientProxyManager<>(cache, igniteClient.compute(), clientConfig)
+                () -> Bucket4jIgnite.thin().clientComputeBasedBuilder(cache, igniteClient.compute())
             ),
             new ProxyManagerSpec<>(
-                "IgniteThinClientCasBasedProxyManager",
+                "IgniteThinClientCas",
                 () -> UUID.randomUUID().toString(),
-                clientConfig -> new IgniteThinClientCasBasedProxyManager<>(cache2, clientConfig)
+                () -> Bucket4jIgnite.thin().casBasedBuilder(cache2)
             )
         );
     }

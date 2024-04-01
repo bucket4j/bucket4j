@@ -59,7 +59,7 @@ public class RedissonBasedProxyManager<K> extends AbstractCompareAndSwapBasedPro
     private final Mapper<K> keyMapper;
 
     /**
-     * @deprecated use {@link Bucket4jRedisson#builderFor(CommandAsyncExecutor)}
+     * @deprecated use {@link Bucket4jRedisson#casBasedBuilder(CommandAsyncExecutor)}
      */
     @Deprecated
     public static RedissonBasedProxyManagerBuilder<String> builderFor(CommandAsyncExecutor commandExecutor) {

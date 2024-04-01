@@ -3,9 +3,6 @@ package io.github.bucket4j.mysql;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import io.github.bucket4j.distributed.jdbc.BucketTableSettings;
-import io.github.bucket4j.distributed.jdbc.SQLProxyConfiguration;
-import io.github.bucket4j.distributed.proxy.ClientSideConfig;
-import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
 import io.github.bucket4j.tck.ProxyManagerSpec;
 
@@ -25,7 +22,6 @@ public class MySQLSelectForUpdateLockBasedTransactionTest extends AbstractDistri
 
     private static MySQLContainer container;
     private static DataSource dataSource;
-    private static MySQLSelectForUpdateBasedProxyManager<Long> proxyManager;
 
     @BeforeAll
     public static void initializeInstance() throws SQLException {
@@ -44,13 +40,10 @@ public class MySQLSelectForUpdateLockBasedTransactionTest extends AbstractDistri
             new ProxyManagerSpec<>(
                 "MySQLSelectForUpdateBasedProxyManager",
                 () -> ThreadLocalRandom.current().nextLong(1_000_000_000),
-                clientConfig -> {
-                    SQLProxyConfiguration<Long> configuration = SQLProxyConfiguration.builder()
-                            .withTableSettings(tableSettings)
-                            .withClientSideConfig(clientConfig)
-                            .build(dataSource);
-                    return new MySQLSelectForUpdateBasedProxyManager<>(configuration);
-                }
+                () -> Bucket4jMySQL.selectForUpdateBasedBuilder(dataSource)
+                    .table("test.bucket")
+                    .idColumn("id")
+                    .stateColumn("state")
             )
         );
     }

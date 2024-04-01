@@ -41,7 +41,7 @@ public class HazelcastCompareAndSwapBasedProxyManager<K> extends AbstractCompare
     }
 
     /**
-     * @deprecated use {@link Bucket4jHazelcast#builderForCasBasedProxyManager(IMap)}
+     * @deprecated use {@link Bucket4jHazelcast#casBasedBuilder(IMap)}
      */
     @Deprecated
     public HazelcastCompareAndSwapBasedProxyManager(IMap<K, byte[]> map) {
@@ -49,7 +49,7 @@ public class HazelcastCompareAndSwapBasedProxyManager<K> extends AbstractCompare
     }
 
     /**
-     * @deprecated use {@link Bucket4jHazelcast#builderForCasBasedProxyManager(IMap)}
+     * @deprecated use {@link Bucket4jHazelcast#casBasedBuilder(IMap)}
      */
     @Deprecated
     public HazelcastCompareAndSwapBasedProxyManager(IMap<K, byte[]> map, ClientSideConfig clientSideConfig) {

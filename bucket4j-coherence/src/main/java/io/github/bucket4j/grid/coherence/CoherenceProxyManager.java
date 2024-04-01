@@ -64,7 +64,7 @@ public class CoherenceProxyManager<K> extends AbstractProxyManager<K> {
     }
 
     /**
-     * @deprecated use {@link Bucket4jCoherence#builderFor(NamedCache)}
+     * @deprecated use {@link Bucket4jCoherence#entryProcessorBasedBuilder(NamedCache)}
      */
     @Deprecated
     public CoherenceProxyManager(NamedCache<K, byte[]> cache, ClientSideConfig clientSideConfig) {

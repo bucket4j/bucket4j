@@ -1,9 +1,7 @@
 import com.tangosol.net.CacheFactory;
 import com.tangosol.net.NamedCache;
-import io.github.bucket4j.distributed.proxy.ClientSideConfig;
+import io.github.bucket4j.grid.coherence.Bucket4jCoherence;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
-import io.github.bucket4j.grid.coherence.CoherenceProxyManager;
-import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.tck.ProxyManagerSpec;
 
 import org.junit.jupiter.api.AfterAll;
@@ -41,7 +39,7 @@ public class CoherenceWithPofSerializationTest extends AbstractDistributedBucket
             new ProxyManagerSpec<>(
                 "CoherenceProxyManager_PofSerialization",
                 () -> UUID.randomUUID().toString(),
-                clientConfig -> new CoherenceProxyManager<>(cache, clientConfig)
+                () -> Bucket4jCoherence.entryProcessorBasedBuilder(cache)
             )
         );
     }

@@ -21,7 +21,7 @@ public class Bucket4jJCache {
      *
      * @param <K> type ok key
      */
-    public static <K> JCacheProxyManagerBuilder<K> builderFor(Cache<K, byte[]> cache) {
+    public static <K> JCacheProxyManagerBuilder<K> entryProcessorBasedBuilder(Cache<K, byte[]> cache) {
         return new JCacheProxyManagerBuilder<>(cache);
     }
 

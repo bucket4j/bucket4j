@@ -1,8 +1,7 @@
 
 package io.github.bucket4j.grid.jcache.ignite;
 
-import io.github.bucket4j.distributed.proxy.ClientSideConfig;
-import io.github.bucket4j.grid.jcache.JCacheProxyManager;
+import io.github.bucket4j.grid.jcache.Bucket4jJCache;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
 import io.github.bucket4j.tck.ProxyManagerSpec;
 
@@ -79,7 +78,7 @@ public class IgniteJCacheTest extends AbstractDistributedBucketTest {
             new ProxyManagerSpec<>(
                 "JCacheProxyManager",
                 () -> UUID.randomUUID().toString(),
-                clientConfig -> new JCacheProxyManager<>(getCache(), clientConfig)
+                () -> Bucket4jJCache.entryProcessorBasedBuilder(getCache())
             )
         );
     }
