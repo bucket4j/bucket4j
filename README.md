@@ -46,6 +46,9 @@ More examples [can be found there](https://bucket4j.github.io/8.3.0/toc.html#qui
 * [Quick start examples](https://bucket4j.github.io/8.10.1/toc.html#quick-start-examples)
 * [Third-party articles](https://bucket4j.github.io/#third-party-articles)
 
+## [Spring boot starter](https://github.com/MarcGiffing/bucket4j-spring-boot-starter)
+Bucket4j is not a framework, it is a library, with Bucket4j you need to write a code to achive your goals. For generic use-cases, try to look at powerfull [Spring Boot Starter for Bucket4j](https://github.com/MarcGiffing/bucket4j-spring-boot-starter), that allowes you to set access limits on your API effortlessly. Its key advantage lies in the configuration via properties or yaml files, eliminating the need for manual code authoring.
+
 ## Bucket4j basic features
 * *Absolutely non-compromise precision* - Bucket4j does not operate with floats or doubles, all calculation are performed in the integer arithmetic, this feature protects end users from calculation errors involved by rounding.
 * *Effective implementation in terms of concurrency*:
