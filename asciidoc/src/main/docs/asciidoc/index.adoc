@@ -13,17 +13,17 @@ If you are looking for documentation related to a previous version then http://b
 
 == About the authors
 Vladimir Bukhtoyarov::
-Lead Java developer at vc.com +
+Lead Java developer at vk.com +
 Saint-Petersburg, Russia +
 jsecoder@mail.ru +
-Role: maintainer, future vision +
+Role: Author, maintainer, code owner, future vision +
 image:images/photo.jpg[80,80] +
 
 Maxim Bartkov::
 Lead Java developer at RooX Solutions +
-Kharkov, Ukraine +
+US +
 maxgalayoutop@gmail.com +
-Role: contributor, evangelist, author of scientific publications  +
+Role: evangelist, author of scientific publications  +
 image:images/Maxim_Bartkov.jpg[80,80] +
 
 == Third-party articles and integrations
