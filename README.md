@@ -126,3 +126,8 @@ Licensed under the Apache Software License, Version 2.0: <http://www.apache.org/
 :heavy_dollar_sign: Keep in mind that access to fresh releases of Bucket4j for Java 8 can be moved to a commercial model at any moment.
 
 :pill: Right Maven artifact name for Java 8 can be found on [jdk-matrix-compatibility page](java-compatibility-matrix.md).
+
+## :beer: Want to support?
+Following options are available to increase motivation to develop new features:
+* [By PDF documentation](https://app.lava.top/products/7fa42710-fbb5-4213-9aba-e9902b75b0e1)
+* [Make donate](https://app.lava.top/ru/2716741203?donate=open)
