@@ -115,19 +115,14 @@ Copyright 2015-2021 Vladimir Bukhtoyarov
 Licensed under the Apache Software License, Version 2.0: <http://www.apache.org/licenses/LICENSE-2.0>.
 
 ## Java compatibility matrix
-Since July 2022(release 8.0.0) it was decided to migrate Bucket4j to Java 11. It can be bad news for all who get stuck on Java 8 by different reasons. We understand your pain and will provide special  builds with dedicated artifacts for java 8 for intermediate period, but keep in mind then probably access to fresh releases of Bucket4j for Java 8 can be moved to a commercial model in the future.
+:heavy_exclamation_mark: Since July 2022(release 8.0.0) it was decided to migrate Bucket4j to Java 11.
 
-Bellow the compatibility matrix of Bucket4j's maven artefact with different java versions
-| JAVA 11 maven artifact                               |  JAVA 8 maven artifact                           | Comments                                    |
-| :---                                                 | :---:                                            | :---:                                       |
-| ```com.bucket4j:bucket4j-core```                     | ```com.bucket4j:bucket4j_jdk8-core```            |                                             |
-| ```com.bucket4j:bucket4j-jcache```                   | ```com.bucket4j:bucket4j_jdk8-jcache```          |                                             |
-| ```com.bucket4j:bucket4j-coherence```                | ```com.bucket4j:bucket4j_jdk8-coherence```       |                                             |
-| ```com.bucket4j:bucket4j-hazelcast```                | ```com.bucket4j:bucket4j_jdk8-hazelcast```       |                                             |
-| ```com.bucket4j:bucket4j-hazelcast```                | ```com.bucket4j:bucket4j_jdk8-hazelcast```       |                                             |
-| ```com.bucket4j:bucket4j-infinispan```               | ```com.bucket4j:bucket4j_jdk8-infinispan```      |                                             |
-|  Not supported                                       | ```com.bucket4j:bucket4j_jdk8-infinispan-8```    | Infinispan-8 is not compatible with Java 11 |
-| ```com.bucket4j:bucket4j-redis```                    | ```com.bucket4j:bucket4j_jdk8-redis```           |                                             |
-| ```com.bucket4j:bucket4j-mysql```                    | ```com.bucket4j:bucket4j_jdk8-mysql```           |                                             |
-| ```com.bucket4j:bucket4j-postgresql```               | ```com.bucket4j:bucket4j_jdk8-postgresql```      |                                             |
-| ```com.bucket4j:bucket4j-caffeine```                 | ```com.bucket4j:bucket4j_jdk8-caffeine```        |                                             |
+:shit: Obviously, it bad news for all who get stuck on Java 8 by different reasons.
+
+:ambulance: Bucket4j maintainers understand your pain and provide special builds with dedicated artifacts for java 8.
+
+:gift: Maven artifacts for Java 8, currently are provided for free. 
+
+:heavy_dollar_sign: Keep in mind that access to fresh releases of Bucket4j for Java 8 can be moved to a commercial model at any moment.
+
+:pill: Right Maven artifact name for Java 8 can be found on [jdk-matrix-compatibility page](java-compatibility-matrix.md).
