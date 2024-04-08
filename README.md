@@ -108,7 +108,6 @@ Sometimes you are having deal with bucket per key scenarios but distributed sync
 Feel free to ask via:
 * [Bucket4j issue tracker](https://github.com/bucket4j/bucket4j/issues/new) to report a bug.
 * [Bucket4j discussions](https://github.com/bucket4j/bucket4j/discussions) for questions, feature proposals, sharing of experience.
-* [Telegram chat in English](https://t.me/Bucket4j_English) or [Telegram chat in Russian](https://t.me/Bucket4jUSSR), if you want to discuss something special, that is not suitable for Github discussions.
 
 ## License
 Copyright 2015-2021 Vladimir Bukhtoyarov
