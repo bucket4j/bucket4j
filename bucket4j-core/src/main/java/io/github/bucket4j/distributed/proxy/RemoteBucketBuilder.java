@@ -21,11 +21,14 @@
 package io.github.bucket4j.distributed.proxy;
 
 import io.github.bucket4j.BucketConfiguration;
+import io.github.bucket4j.BucketListener;
 import io.github.bucket4j.TokensInheritanceStrategy;
 import io.github.bucket4j.distributed.BucketProxy;
 import io.github.bucket4j.distributed.proxy.optimization.Optimization;
+import io.github.bucket4j.local.LocalBucketBuilder;
 
 
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -81,6 +84,15 @@ public interface RemoteBucketBuilder<K> {
      * @return {@code this}
      */
     RemoteBucketBuilder<K> withImplicitConfigurationReplacement(long desiredConfigurationVersion, TokensInheritanceStrategy tokensInheritanceStrategy);
+
+    /**
+     * Specifies {@code listener} for buckets that will be created by this builder.
+     *
+     * @param listener the listener of bucket events.
+     *
+     * @return this builder instance
+     */
+    RemoteBucketBuilder<K> withBucketListener(BucketListener listener);
 
     /**
      * Has the same semantic with {@link #build(Object, BucketConfiguration)},
@@ -140,6 +152,12 @@ public interface RemoteBucketBuilder<K> {
             @Override
             public RemoteBucketBuilder<K1> withImplicitConfigurationReplacement(long desiredConfigurationVersion, TokensInheritanceStrategy tokensInheritanceStrategy) {
                 RemoteBucketBuilder.this.withImplicitConfigurationReplacement(desiredConfigurationVersion, tokensInheritanceStrategy);
+                return this;
+            }
+
+            @Override
+            public RemoteBucketBuilder<K1> withBucketListener(BucketListener listener) {
+                RemoteBucketBuilder.this.withBucketListener(listener);
                 return this;
             }
 

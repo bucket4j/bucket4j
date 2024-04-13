@@ -21,6 +21,7 @@ package io.github.bucket4j.distributed.proxy;
 
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.BucketExceptions;
+import io.github.bucket4j.BucketListener;
 import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.TokensInheritanceStrategy;
 import io.github.bucket4j.distributed.AsyncBucketProxy;
@@ -33,6 +34,7 @@ import io.github.bucket4j.distributed.remote.Request;
 import io.github.bucket4j.distributed.remote.commands.GetConfigurationCommand;
 import io.github.bucket4j.distributed.versioning.Version;
 
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
@@ -108,6 +110,7 @@ public abstract class AbstractProxyManager<K> implements ProxyManager<K> {
         private RecoveryStrategy recoveryStrategy = DEFAULT_RECOVERY_STRATEGY;
         private Optimization asyncRequestOptimizer = DEFAULT_REQUEST_OPTIMIZER;
         private ImplicitConfigurationReplacement implicitConfigurationReplacement;
+        private BucketListener listener = BucketListener.NOPE;
 
         @Override
         public DefaultAsyncRemoteBucketBuilder withRecoveryStrategy(RecoveryStrategy recoveryStrategy) {
@@ -124,6 +127,12 @@ public abstract class AbstractProxyManager<K> implements ProxyManager<K> {
         @Override
         public DefaultAsyncRemoteBucketBuilder withImplicitConfigurationReplacement(long desiredConfigurationVersion, TokensInheritanceStrategy tokensInheritanceStrategy) {
             this.implicitConfigurationReplacement = new ImplicitConfigurationReplacement(desiredConfigurationVersion, requireNonNull(tokensInheritanceStrategy));
+            return this;
+        }
+
+        @Override
+        public RemoteAsyncBucketBuilder<K> withBucketListener(BucketListener listener) {
+            this.listener = Objects.requireNonNull(listener);
             return this;
         }
 
@@ -152,7 +161,7 @@ public abstract class AbstractProxyManager<K> implements ProxyManager<K> {
             };
             commandExecutor = asyncRequestOptimizer.apply(commandExecutor);
 
-            return new DefaultAsyncBucketProxy(commandExecutor, recoveryStrategy, configurationSupplier, implicitConfigurationReplacement);
+            return new DefaultAsyncBucketProxy(commandExecutor, recoveryStrategy, configurationSupplier, implicitConfigurationReplacement, listener);
         }
 
     }
@@ -162,6 +171,7 @@ public abstract class AbstractProxyManager<K> implements ProxyManager<K> {
         private RecoveryStrategy recoveryStrategy = DEFAULT_RECOVERY_STRATEGY;
         private Optimization requestOptimizer = DEFAULT_REQUEST_OPTIMIZER;
         private ImplicitConfigurationReplacement implicitConfigurationReplacement;
+        private BucketListener listener = BucketListener.NOPE;
 
         @Override
         public RemoteBucketBuilder<K> withRecoveryStrategy(RecoveryStrategy recoveryStrategy) {
@@ -178,6 +188,12 @@ public abstract class AbstractProxyManager<K> implements ProxyManager<K> {
         @Override
         public RemoteBucketBuilder<K> withImplicitConfigurationReplacement(long desiredConfigurationVersion, TokensInheritanceStrategy tokensInheritanceStrategy) {
             this.implicitConfigurationReplacement = new ImplicitConfigurationReplacement(desiredConfigurationVersion, requireNonNull(tokensInheritanceStrategy));
+            return this;
+        }
+
+        @Override
+        public RemoteBucketBuilder<K> withBucketListener(BucketListener listener) {
+            this.listener = Objects.requireNonNull(listener);
             return this;
         }
 
@@ -206,7 +222,7 @@ public abstract class AbstractProxyManager<K> implements ProxyManager<K> {
             };
             commandExecutor = requestOptimizer.apply(commandExecutor);
 
-            return new DefaultBucketProxy(configurationSupplier, commandExecutor, recoveryStrategy, implicitConfigurationReplacement);
+            return new DefaultBucketProxy(configurationSupplier, commandExecutor, recoveryStrategy, implicitConfigurationReplacement, listener);
         }
 
     }

@@ -21,6 +21,7 @@
 package io.github.bucket4j.distributed.proxy;
 
 import io.github.bucket4j.BucketConfiguration;
+import io.github.bucket4j.BucketListener;
 import io.github.bucket4j.TokensInheritanceStrategy;
 import io.github.bucket4j.distributed.AsyncBucketProxy;
 import io.github.bucket4j.distributed.proxy.optimization.Optimization;
@@ -81,6 +82,15 @@ public interface RemoteAsyncBucketBuilder<K> {
     RemoteAsyncBucketBuilder<K> withImplicitConfigurationReplacement(long desiredConfigurationVersion, TokensInheritanceStrategy tokensInheritanceStrategy);
 
     /**
+     * Specifies {@code listener} for buckets that will be created by this builder.
+     *
+     * @param listener the listener of bucket events.
+     *
+     * @return this builder instance
+     */
+    RemoteAsyncBucketBuilder<K> withBucketListener(BucketListener listener);
+
+    /**
      * Builds the {@link AsyncBucketProxy}. Proxy is being created in lazy mode, its state is not persisted in external storage until first interaction,
      * so if you want to save bucket state immediately then just call {@link AsyncBucketProxy#getAvailableTokens()}.
      *
@@ -137,6 +147,12 @@ public interface RemoteAsyncBucketBuilder<K> {
             @Override
             public RemoteAsyncBucketBuilder<K1> withImplicitConfigurationReplacement(long desiredConfigurationVersion, TokensInheritanceStrategy tokensInheritanceStrategy) {
                 RemoteAsyncBucketBuilder.this.withImplicitConfigurationReplacement(desiredConfigurationVersion, tokensInheritanceStrategy);
+                return this;
+            }
+
+            @Override
+            public RemoteAsyncBucketBuilder<K1> withBucketListener(BucketListener listener) {
+                RemoteAsyncBucketBuilder.this.withBucketListener(listener);
                 return this;
             }
 
