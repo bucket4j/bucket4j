@@ -46,11 +46,11 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket, C
     private BucketState state;
     private final Lock lock;
 
-    public SynchronizedBucket(BucketConfiguration configuration, MathType mathType, TimeMeter timeMeter) {
-        this(configuration, mathType, timeMeter, new ReentrantLock());
+    public SynchronizedBucket(BucketConfiguration configuration, MathType mathType, TimeMeter timeMeter, BucketListener listener) {
+        this(configuration, mathType, timeMeter, listener, new ReentrantLock());
     }
 
-    SynchronizedBucket(BucketConfiguration configuration, MathType mathType, TimeMeter timeMeter, Lock lock) {
+    SynchronizedBucket(BucketConfiguration configuration, MathType mathType, TimeMeter timeMeter, BucketListener listener, Lock lock) {
         this(BucketListener.NOPE, timeMeter, lock, BucketState.createInitialState(configuration, mathType, timeMeter.currentTimeNanos()));
     }
 

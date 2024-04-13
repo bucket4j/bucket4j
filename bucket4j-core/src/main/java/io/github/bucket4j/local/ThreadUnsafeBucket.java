@@ -43,8 +43,8 @@ public class ThreadUnsafeBucket extends AbstractBucket implements LocalBucket, C
     private final TimeMeter timeMeter;
     private BucketState state;
 
-    public ThreadUnsafeBucket(BucketConfiguration configuration, MathType mathType, TimeMeter timeMeter) {
-        this(BucketListener.NOPE, timeMeter, BucketState.createInitialState(configuration, mathType, timeMeter.currentTimeNanos()));
+    public ThreadUnsafeBucket(BucketConfiguration configuration, MathType mathType, TimeMeter timeMeter, BucketListener listener) {
+        this(listener, timeMeter, BucketState.createInitialState(configuration, mathType, timeMeter.currentTimeNanos()));
     }
 
     private ThreadUnsafeBucket(BucketListener listener, TimeMeter timeMeter, BucketState initialState) {
