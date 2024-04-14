@@ -16,6 +16,9 @@
     <url>http://github.com/vladimir-bukhtoyarov/bucket4j</url>
 
     <distributionManagement>
+        <relocation>
+            <groupId>com.bucket4j</groupId>
+        </relocation>
         <snapshotRepository>
             <id>ossrh</id>
             <url>https://oss.sonatype.org/content/repositories/snapshots</url>
