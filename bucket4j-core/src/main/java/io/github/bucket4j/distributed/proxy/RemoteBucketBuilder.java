@@ -25,10 +25,8 @@ import io.github.bucket4j.BucketListener;
 import io.github.bucket4j.TokensInheritanceStrategy;
 import io.github.bucket4j.distributed.BucketProxy;
 import io.github.bucket4j.distributed.proxy.optimization.Optimization;
-import io.github.bucket4j.local.LocalBucketBuilder;
 
 
-import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -92,7 +90,7 @@ public interface RemoteBucketBuilder<K> {
      *
      * @return this builder instance
      */
-    RemoteBucketBuilder<K> withBucketListener(BucketListener listener);
+    RemoteBucketBuilder<K> withListener(BucketListener listener);
 
     /**
      * Has the same semantic with {@link #build(Object, BucketConfiguration)},
@@ -156,8 +154,8 @@ public interface RemoteBucketBuilder<K> {
             }
 
             @Override
-            public RemoteBucketBuilder<K1> withBucketListener(BucketListener listener) {
-                RemoteBucketBuilder.this.withBucketListener(listener);
+            public RemoteBucketBuilder<K1> withListener(BucketListener listener) {
+                RemoteBucketBuilder.this.withListener(listener);
                 return this;
             }
 

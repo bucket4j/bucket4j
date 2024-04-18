@@ -131,7 +131,7 @@ public abstract class AbstractProxyManager<K> implements ProxyManager<K> {
         }
 
         @Override
-        public RemoteAsyncBucketBuilder<K> withBucketListener(BucketListener listener) {
+        public RemoteAsyncBucketBuilder<K> withListener(BucketListener listener) {
             this.listener = Objects.requireNonNull(listener);
             return this;
         }
@@ -192,7 +192,7 @@ public abstract class AbstractProxyManager<K> implements ProxyManager<K> {
         }
 
         @Override
-        public RemoteBucketBuilder<K> withBucketListener(BucketListener listener) {
+        public RemoteBucketBuilder<K> withListener(BucketListener listener) {
             this.listener = Objects.requireNonNull(listener);
             return this;
         }

@@ -53,7 +53,7 @@ class BlockingTryConsumeWithSchedulerSpecification extends Specification {
             BucketConfiguration configuration = BucketConfiguration.builder()
                 .addLimit(Bandwidth.simple(10, Duration.ofSeconds(1)))
                 .build()
-            AsyncBucketProxy bucket = type.createAsyncBucket(configuration, clock).toListenable(listener)
+            AsyncBucketProxy bucket = type.createAsyncBucket(configuration, clock, listener)
 
         when:
             bucket.asScheduler().consume(9, scheduler)

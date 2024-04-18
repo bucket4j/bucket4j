@@ -27,8 +27,6 @@ import io.github.bucket4j.BandwidthBuilder.BandwidthBuilderCapacityStage;
 import java.util.Objects;
 import java.util.function.Function;
 
-import static io.github.bucket4j.BucketExceptions.nullBuilder;
-
 /**
  * This builder creates in-memory buckets ({@link LockFreeBucket}).
  */
@@ -121,7 +119,7 @@ public class LocalBucketBuilder {
      *
      * @return this builder instance
      */
-    public LocalBucketBuilder withBucketListener(BucketListener listener) {
+    public LocalBucketBuilder withListener(BucketListener listener) {
         this.listener = Objects.requireNonNull(listener);
         return this;
     }

@@ -61,7 +61,7 @@ class ConsumeAsMuchAsPossibleSpecification extends Specification {
     @Unroll
     def "#type verbose=#verbose test listener for tryConsumeAsMuchAsPossible"(BucketType type, boolean verbose) {
         setup:
-            Bucket bucket = type.createBucket(configuration, clock).toListenable(listener)
+            Bucket bucket = type.createBucket(configuration, clock, listener)
 
         when:
             if (!verbose) {
@@ -90,7 +90,7 @@ class ConsumeAsMuchAsPossibleSpecification extends Specification {
     @Unroll
     def "#type verbose=#verbose test listener for tryConsumeAsMuchAsPossible with limit"(BucketType type, boolean verbose) {
         setup:
-            Bucket bucket = type.createBucket(configuration, clock).toListenable(listener)
+            Bucket bucket = type.createBucket(configuration, clock, listener)
 
         when:
             if (!verbose) {
@@ -129,7 +129,7 @@ class ConsumeAsMuchAsPossibleSpecification extends Specification {
     @Unroll
     def "#type verbose=#verbose test listener for async tryConsumeAsMuchAsPossible"(BucketType type, boolean verbose) {
         setup:
-        AsyncBucketProxy bucket = type.createAsyncBucket(configuration, clock).toListenable(listener)
+        AsyncBucketProxy bucket = type.createAsyncBucket(configuration, clock, listener)
 
         when:
         if (!verbose) {
@@ -158,7 +158,7 @@ class ConsumeAsMuchAsPossibleSpecification extends Specification {
     @Unroll
     def "#type verbose=#verbose test listener for async tryConsumeAsMuchAsPossible with limit"(BucketType type, boolean verbose) {
         setup:
-            AsyncBucketProxy bucket = type.createAsyncBucket(configuration, clock).toListenable(listener)
+            AsyncBucketProxy bucket = type.createAsyncBucket(configuration, clock, listener)
 
         when:
             if (!verbose) {

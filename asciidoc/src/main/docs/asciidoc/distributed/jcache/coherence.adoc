@@ -21,9 +21,9 @@ private static final CoherenceProxyManager<K> proxyManager = new CoherenceProxyM
 ...
 BucketConfiguration configuration = BucketConfiguration.builder()
     .addLimit(limit -> limit.capacity(1_000).refillGreedy(1_000, ofMinutes(1)))
-    .build(key, configuration);
+    .build();
 
-Bucket bucket = proxyManager.builder().build(configuration);
+Bucket bucket = proxyManager.builder().build(key, configuration);
 ----
 
 ==== Configuring POF serialization for Bucket4j library classes

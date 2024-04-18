@@ -88,7 +88,7 @@ public interface RemoteAsyncBucketBuilder<K> {
      *
      * @return this builder instance
      */
-    RemoteAsyncBucketBuilder<K> withBucketListener(BucketListener listener);
+    RemoteAsyncBucketBuilder<K> withListener(BucketListener listener);
 
     /**
      * Builds the {@link AsyncBucketProxy}. Proxy is being created in lazy mode, its state is not persisted in external storage until first interaction,
@@ -151,8 +151,8 @@ public interface RemoteAsyncBucketBuilder<K> {
             }
 
             @Override
-            public RemoteAsyncBucketBuilder<K1> withBucketListener(BucketListener listener) {
-                RemoteAsyncBucketBuilder.this.withBucketListener(listener);
+            public RemoteAsyncBucketBuilder<K1> withListener(BucketListener listener) {
+                RemoteAsyncBucketBuilder.this.withListener(listener);
                 return this;
             }
 

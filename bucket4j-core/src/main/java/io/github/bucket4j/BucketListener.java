@@ -19,9 +19,21 @@
  */
 package io.github.bucket4j;
 
+import io.github.bucket4j.distributed.proxy.RemoteAsyncBucketBuilder;
+import io.github.bucket4j.distributed.proxy.RemoteBucketBuilder;
+import io.github.bucket4j.local.LocalBucketBuilder;
+
 /**
  * Interface for listening bucket related events. The typical use-cases of this interface are logging and monitoring.
- * The bucket can be decorated by listener via {@link Bucket#toListenable(BucketListener)} method.
+ *
+ * The bucket can be decorated by listener via:
+ * <ul>
+ *     <li>Via {@link LocalBucketBuilder#withListener(BucketListener)} method at building time of local bucket.</li>
+ *     <li>Via {@link RemoteBucketBuilder#withListener(BucketListener)} method at building time of distributed bucket.</li>
+ *     <li>Via {@link RemoteAsyncBucketBuilder#withListener(BucketListener)} method at building time of async distributed bucket.</li>
+ *     <li>Via {@link Bucket#toListenable(BucketListener)} method on bucket instance. Use this method when listener is not known at bucket build time.</li>
+ * </ul>
+ *
  *
  * <h3>Question: How many listeners is need to create in case of application uses many buckets?</h3>
  * <b>Answer:</b>  it depends:
