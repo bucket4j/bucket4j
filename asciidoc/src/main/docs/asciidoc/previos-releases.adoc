@@ -1,33 +1,39 @@
 == Documentation for previous versions
 === 2024
+==== 8.10.1
+Release date: `23 Mar 2024`
+
+* http://bucket4j.com/8.10.1/release-notes.html[8.10.1 Release notes]
+* http://bucket4j.com/8.10.1/toc.html[8.10.1 Reference]
+
 ==== 8.9.0
-Release date: `21 Feb 2024`
-* http://bucket4j.com/8.9.0/release-notes.html[8.8.0 Release notes]
-* http://bucket4j.com/8.9.0/toc.html[8.8.0 Reference]
+Release date: `24 Feb 2024`
+
+* http://bucket4j.com/8.9.0/release-notes.html[8.9.0 Release notes]
+* http://bucket4j.com/8.9.0/toc.html[8.9.0 Reference]
 
 ==== 8.8.0
 Release date: `11 Feb 2024`
+
 * http://bucket4j.com/8.8.0/release-notes.html[8.8.0 Release notes]
 * http://bucket4j.com/8.8.0/toc.html[8.8.0 Reference]
 
 === 2023
 ==== 8.7.0
 Release date: `12 November 2023`
-* http://bucket4j.com/8.7.0/release-notes.html[8.7.0 Release notes]
-* http://bucket4j.com/8.7.0/toc.html[8.7.0 Reference]
 
-==== 8.7.0
-Release date: `12 November 2023`
 * http://bucket4j.com/8.7.0/release-notes.html[8.7.0 Release notes]
 * http://bucket4j.com/8.7.0/toc.html[8.7.0 Reference]
 
 ==== 8.6.0
 Release date: `1 November 2023`
+
 * http://bucket4j.com/8.6.0/release-notes.html[8.6.0 Release notes]
 * http://bucket4j.com/8.6.0/toc.html[8.6.0 Reference]
 
 ==== 8.5.0
 Release date: `2 Oct 2023`
+
 * http://bucket4j.com/8.5.0/release-notes.html[8.5.0 Release notes]
 * http://bucket4j.com/8.5.0/toc.html[8.5.0 Reference]
 
@@ -64,11 +70,13 @@ Release date: `31 July 2022`
 
 ==== 7.6.0
 Release date: `23 July 2022`
+
 * http://bucket4j.com/7.6.0/release-notes.html[7.6.0 Release notes]
 * http://bucket4j.com/7.6.0/toc.html[7.6.0 Reference]
 
 ==== 7.5.0
 Release date: `02 May 2022`
+
 * http://bucket4j.com/7.5.0/release-notes.html[7.5.0 Release notes]
 * http://bucket4j.com/7.5.0/toc.html[7.5.0 Reference]
 
