@@ -71,7 +71,7 @@ public abstract class AbstractProxyManager<K> implements ProxyManager<K> {
 
         @Override
         public RemoteAsyncBucketBuilder<K> builder() {
-            return new DefaultAsyncRemoteBucketBuilder();
+            return getClientSideConfig().apply(new DefaultAsyncRemoteBucketBuilder());
         }
 
         @Override
@@ -90,7 +90,7 @@ public abstract class AbstractProxyManager<K> implements ProxyManager<K> {
 
     @Override
     public RemoteBucketBuilder<K> builder() {
-        return new DefaultRemoteBucketBuilder();
+        return getClientSideConfig().apply(new DefaultRemoteBucketBuilder());
     }
 
     @Override
@@ -105,7 +105,7 @@ public abstract class AbstractProxyManager<K> implements ProxyManager<K> {
         return Optional.of(result.getData());
     }
 
-    private class DefaultAsyncRemoteBucketBuilder implements RemoteAsyncBucketBuilder<K> {
+    class DefaultAsyncRemoteBucketBuilder implements RemoteAsyncBucketBuilder<K> {
 
         private RecoveryStrategy recoveryStrategy = DEFAULT_RECOVERY_STRATEGY;
         private Optimization asyncRequestOptimizer = DEFAULT_REQUEST_OPTIMIZER;
@@ -166,7 +166,7 @@ public abstract class AbstractProxyManager<K> implements ProxyManager<K> {
 
     }
 
-    private class DefaultRemoteBucketBuilder implements RemoteBucketBuilder<K> {
+    class DefaultRemoteBucketBuilder implements RemoteBucketBuilder<K> {
 
         private RecoveryStrategy recoveryStrategy = DEFAULT_RECOVERY_STRATEGY;
         private Optimization requestOptimizer = DEFAULT_REQUEST_OPTIMIZER;

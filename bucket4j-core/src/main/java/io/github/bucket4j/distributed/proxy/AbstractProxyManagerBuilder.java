@@ -5,6 +5,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 import io.github.bucket4j.BucketExceptions;
+import io.github.bucket4j.BucketListener;
 import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
 import io.github.bucket4j.distributed.versioning.Version;
@@ -24,6 +25,9 @@ public abstract class AbstractProxyManagerBuilder<K, P extends ProxyManager<K>, 
     private ExecutionStrategy executionStrategy = ExecutionStrategy.SAME_TREAD;
     private Optional<Long> requestTimeoutNanos = Optional.empty();
     private Optional<ExpirationAfterWriteStrategy> expirationStrategy = Optional.empty();
+
+    private BucketListener defaultListener = BucketListener.NOPE;
+    private RecoveryStrategy defaultRecoveryStrategy = RecoveryStrategy.RECONSTRUCT;
 
     /**
      * Configures {@code backwardCompatibilityVersion}.
@@ -123,6 +127,30 @@ public abstract class AbstractProxyManagerBuilder<K, P extends ProxyManager<K>, 
     }
 
     /**
+     * Configures listener at proxy-manager level, this listener will be used for buckets in case of listener will not be specified during bucket build time.
+     *
+     * @param defaultListener listener of bucket events
+     *
+     * @return this builder instance
+     */
+    public B defaultListener(BucketListener defaultListener) {
+        this.defaultListener = Objects.requireNonNull(defaultListener);
+        return (B) this;
+    }
+
+    /**
+     * Configures custom recovery strategy  at proxy-manager level, this strategy will be used for buckets in case of it will not be specified during bucket build time.
+     *
+     * @param recoveryStrategy specifies the reaction which should be applied in case of previously saved state of bucket has been lost, explicitly removed or expired.
+     *
+     * @return {@code this}
+     */
+    public B defaultRecoveryStrategy(RecoveryStrategy recoveryStrategy) {
+        this.defaultRecoveryStrategy = Objects.requireNonNull(recoveryStrategy);
+        return (B) this;
+    }
+
+    /**
      * Returns the strategy for choosing time to live for buckets.
      *
      * @return the strategy for choosing time to live for buckets
@@ -186,7 +214,7 @@ public abstract class AbstractProxyManagerBuilder<K, P extends ProxyManager<K>, 
     }
 
     public ClientSideConfig getClientSideConfig() {
-        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, requestTimeoutNanos, expirationStrategy);
+        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, requestTimeoutNanos, expirationStrategy, defaultListener, defaultRecoveryStrategy);
     }
 
 }

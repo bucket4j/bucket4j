@@ -131,46 +131,7 @@ public interface RemoteAsyncBucketBuilder<K> {
      * @param <K1> the type of key accepted by returned RemoteAsyncBucketBuilder
      */
     default <K1> RemoteAsyncBucketBuilder<K1> withMapper(Function<? super K1, ? extends K> mapper) {
-        return new RemoteAsyncBucketBuilder<>() {
-            @Override
-            public RemoteAsyncBucketBuilder<K1> withRecoveryStrategy(RecoveryStrategy recoveryStrategy) {
-                RemoteAsyncBucketBuilder.this.withRecoveryStrategy(recoveryStrategy);
-                return this;
-            }
-
-            @Override
-            public RemoteAsyncBucketBuilder<K1> withOptimization(Optimization optimization) {
-                RemoteAsyncBucketBuilder.this.withOptimization(optimization);
-                return this;
-            }
-
-            @Override
-            public RemoteAsyncBucketBuilder<K1> withImplicitConfigurationReplacement(long desiredConfigurationVersion, TokensInheritanceStrategy tokensInheritanceStrategy) {
-                RemoteAsyncBucketBuilder.this.withImplicitConfigurationReplacement(desiredConfigurationVersion, tokensInheritanceStrategy);
-                return this;
-            }
-
-            @Override
-            public RemoteAsyncBucketBuilder<K1> withListener(BucketListener listener) {
-                RemoteAsyncBucketBuilder.this.withListener(listener);
-                return this;
-            }
-
-            @Override
-            public AsyncBucketProxy build(K1 key, BucketConfiguration configuration) {
-                return RemoteAsyncBucketBuilder.this.build(mapper.apply(key), configuration);
-            }
-
-            @Override
-            public AsyncBucketProxy build(K1 key, Supplier<CompletableFuture<BucketConfiguration>> configurationSupplier) {
-                return RemoteAsyncBucketBuilder.this.build(mapper.apply(key), configurationSupplier);
-            }
-
-            // To prevent nesting of anonymous class instances, directly map the original instance.
-            @Override
-            public <K2> RemoteAsyncBucketBuilder<K2> withMapper(Function<? super K2, ? extends K1> innerMapper) {
-                return RemoteAsyncBucketBuilder.this.withMapper(mapper.compose(innerMapper));
-            }
-        };
+        return new RemoteAsyncBucketBuilderView(this, mapper);
     }
+
 }
