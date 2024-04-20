@@ -7,6 +7,7 @@ Release date: `21 March 2024`
 
 * http://bucket4j.com/{revnumber}/release-notes.html[{revnumber} Release notes]
 * http://bucket4j.com/{revnumber}/toc.html[{revnumber} Reference]
+* http://bucket4j.com/java8.html[Instructions to get the builds for Java 8]
 
 == Documentation archive
 If you are looking for documentation related to a previous version then http://bucket4j.com/previos-releases.html[ see there]
