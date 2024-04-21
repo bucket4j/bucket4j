@@ -55,4 +55,3 @@ include::oracle.adoc[]
 
 include::mssql.adoc[]
 
-

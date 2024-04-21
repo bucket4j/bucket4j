@@ -1,5 +1,5 @@
 [[bucket4j-redis, Bucket4j-Redis]]
-=== Bucket4j-Redis integration
+=== Bucket4j-Redis
 Bucket4j provides integration with four Redis libraries:
 [cols="1,1,1"]
 |===

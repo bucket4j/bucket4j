@@ -1,5 +1,5 @@
 [[bucket4j-jcache, JCache integration]]
-=== JCache integration
+==== JCache integration
 ``Bucket4j`` supports any GRID solution which compatible with https://www.jcp.org/en/jsr/detail?id=107[JCache API (JSR 107)] specification.
 
 NOTE: Do not forget to read <<distributed-checklist, Distributed usage checklist>>  before using the Bucket4j over the JCache cluster.
@@ -24,7 +24,7 @@ JCache expects javax.cache.cache-api to be a provided dependency. Do not forget 
 </dependency>
 ----
 
-==== Example 1 - limiting access to HTTP server by IP address
+===== Example 1 - limiting access to HTTP server by IP address
 > Imagine that you develop any Servlet-based WEB application and want to limit access per IP basis.
 You want to use the same limits for each IP - 30 requests per minute.
 
@@ -58,7 +58,7 @@ public class IpThrottlingFilter implements javax.servlet.Filter {
         String ip = IpHelper.getIpFromRequest(httpRequest);
 
         // acquire cheap proxy to the bucket
-        Bucket bucket = proxyManager.builder().build(key, configuration);
+        Bucket bucket = proxyManager.getProxy(key, () -> configuration);
 
         // tryConsume returns false immediately if no tokens available with the bucket
         if (bucket.tryConsume(1)) {
@@ -76,7 +76,7 @@ public class IpThrottlingFilter implements javax.servlet.Filter {
 }
 ----
 
-==== Example 2 - limiting access to service by contract agreements
+===== Example 2 - limiting access to service by contract agreements
 > Imagine that you provide paid language translation service via HTTP. Each user has a unique agreement that differs from the other.
 Details of each agreement are stored in a relational database and take significant time to fetch(for example 100ms).
 The example above will not work fine in this case, because time to create/fetch the configuration of the bucket from the database
@@ -116,7 +116,7 @@ public class IpThrottlingFilter implements javax.servlet.Filter {
         Supplier<BucketConfiguration> configurationLazySupplier = getConfigSupplierForUser(userId);
 
         // acquire cheap proxy to the bucket
-        Bucket bucket = proxyManager.builder().build(key, configurationLazySupplier);
+        Bucket bucket = proxyManager.getProxy(key, configurationLazySupplier);
 
         // tryConsume returns false immediately if no tokens available with the bucket
         if (bucket.tryConsume(1)) {
@@ -143,7 +143,7 @@ public class IpThrottlingFilter implements javax.servlet.Filter {
 }
 ----
 
-==== Why JCache specification is not enough in modern stacks and since 3.0 were introduced the dedicated modules for Infinispan, Hazelcast, Coherence and Ignite?
+===== Why JCache specification is not enough in modern stacks and since 3.0 were introduced the dedicated modules for Infinispan, Hazelcast, Coherence and Ignite?
 Asynchronous processing is very important for high-throughput applications, but JCache specification does not specify asynchronous API, because two early attempts to bring this kind of functionality at spec level https://github.com/jsr107/jsr107spec/issues/307[307], https://github.com/jsr107/jsr107spec/issues/312[312] were failed in absence of consensus.
 
 .Sad, but true, if you need for asynchronous API, then JCache extension is useless, and you need to choose from following extensions:
@@ -154,7 +154,7 @@ Asynchronous processing is very important for high-throughput applications, but 
 
 Also, implementing the asynchronous support for any other JCache provider outside of the list above should be an easy exercise, so feel free to return back the pull request addressed to cover your favorite JCache provider.
 
-==== Verification of compatibility with a particular JCache provider is your responsibility
+===== Verification of compatibility with a particular JCache provider is your responsibility
 IMPORTANT: Keep in mind that there are many non-certified implementations of JCache specifications on the market.
 Many of them want to increase their popularity by declaring support for the JCache API,
 but often only the API is supported and the semantic of JCache is totally ignored.

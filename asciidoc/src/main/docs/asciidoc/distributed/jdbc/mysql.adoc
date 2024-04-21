@@ -1,6 +1,6 @@
 [[bucket4j-mysql, Bucket4j-MySQL]]
-=== MySQL integration
-==== Dependencies
+==== MySQL integration
+===== Dependencies
 To use ``bucket4j-coherence`` extension you need to add the following dependency:
 [,xml,subs=attributes+]
 ----
@@ -29,5 +29,5 @@ Long key = 1L;
 BucketConfiguration bucketConfiguration = BucketConfiguration.builder()
         .addLimit(limit -> limit.capacity(10).refillGreedy(10, ofSeconds(1)))
         .build();
-BucketProxy bucket = proxyManager.builder().build(key, bucketConfiguration);
+BucketProxy bucket = proxyManager.getProxy(key, () -> bucketConfiguration);
 ----

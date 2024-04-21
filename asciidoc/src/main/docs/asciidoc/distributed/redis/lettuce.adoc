@@ -1,6 +1,6 @@
 [[bucket4j-lettuce, Bucket4j-Lettuce]]
-=== Lettuce integration
-==== Dependencies
+==== Lettuce integration
+===== Dependencies
 To use ``bucket4j-letucce`` extension you need to add following dependency:
 [,xml,subs=attributes+]
 ----
@@ -16,7 +16,7 @@ To use ``bucket4j-letucce`` extension you need to add following dependency:
 </dependency>
 ----
 
-==== Example of Bucket instantiation via LettuceBasedProxyManager
+===== Example of Bucket instantiation via LettuceBasedProxyManager
 [source, java]
 ----
 StatefulRedisConnection<K, byte[]> connection = ...;
@@ -28,5 +28,5 @@ LettuceBasedProxyManager<K> proxyManager = Bucket4jLettuce.casBasedBuilder(conne
 BucketConfiguration configuration = BucketConfiguration.builder()
     .addLimit(limit -> capacity(1_000).refillGreedy(1_000, ofMinutes(1)))
     .build();
-Bucket bucket = proxyManager.builder().build(key, configuration);
+Bucket bucket = proxyManager.getProxy(key, () -> configuration);
 ----

@@ -1,6 +1,6 @@
 [[bucket4j-redisson, Bucket4j-Redisson]]
-=== Redisson integration
-==== Dependencies
+==== Redisson integration
+===== Dependencies
 To use ``bucket4j-redisson`` extension you need to add following dependency:
 [,xml,subs=attributes+]
 ----
@@ -16,7 +16,7 @@ To use ``bucket4j-redisson`` extension you need to add following dependency:
 </dependency>
 ----
 
-==== Example of Bucket instantiation via RedissonBasedProxyManager
+===== Example of Bucket instantiation via RedissonBasedProxyManager
 [source, java]
 ----
 RedissonBasedProxyManager<String> proxyManager = Bucket4jRedisson.casBasedBuilder(jedisPool)
@@ -28,5 +28,5 @@ RedissonBasedProxyManager<String> proxyManager = Bucket4jRedisson.casBasedBuilde
 BucketConfiguration configuration = BucketConfiguration.builder()
     .addLimit(limit -> capacity(1_000).refillGreedy(1_000, ofMinutes(1)))
     .build();
-Bucket bucket = proxyManager.builder().build(key, configuration);
+Bucket bucket = proxyManager.getProxy(key, () -> configuration);
 ----

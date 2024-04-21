@@ -33,7 +33,7 @@ Long key = 1L;
 BucketConfiguration bucketConfiguration = BucketConfiguration.builder()
     .addLimit(limit -> limit.capacity(10).refillGreedy(10, ofSeconds(1)))
     .build();
-BucketProxy bucket = proxyManager.builder().build(key, bucketConfiguration);
+BucketProxy bucket = proxyManager.getProxy(key, () -> bucketConfiguration);
 ----
 
 ===== PostgreSQLadvisoryLockBasedProxyManager
@@ -53,5 +53,5 @@ Long key = 1L;
 BucketConfiguration bucketConfiguration = BucketConfiguration.builder()
     .addLimit(limit -> limit.capacity(10).refillGreedy(10, ofSeconds(1)))
     .build();
-BucketProxy bucket = proxyManager.builder().build(key, bucketConfiguration);
+BucketProxy bucket = proxyManager.getProxy(key, () -> bucketConfiguration);
 ----

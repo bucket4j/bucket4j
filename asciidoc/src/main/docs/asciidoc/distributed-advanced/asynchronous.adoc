@@ -7,7 +7,7 @@ ProxyManager proxyManager = ...;
 AsyncProxyManager asyncProxyManager = proxyManager.asAsync();
 
 BucketConfiguration configuration = ...;
-AsyncBucketProxy asyncBucket = asyncProxyManager.builder().build(key, configuration);
+AsyncBucketProxy asyncBucket = asyncProxyManager.getProxy(key, () -> configuration);
 ----
 Each method of class ```AsyncBucketProxy``` has full equivalence with the same semantic in asynchronous version in the ```Bucket``` class.
 
@@ -36,13 +36,14 @@ non-blocking architecture means that both sms sending and limit checking should 
 **Solution:** let's use asynchronous features provided by bucket4j and Servlet-API.
 
 **Mockup of service based on top of Servlet API and bucket4j-infinispan**:
-[source, java]
+
+[source,java]
 ----
 public class SmsServlet extends javax.servlet.http.HttpServlet {
 
     private SmsSender smsSender;
     private AsyncProxyManager<String> buckets;
-    private Supplier<BucketConfiguration> configuration;
+    private Supplier<BucketConfiguration> configurationSupplier;
        
     @Override
     public void init(ServletConfig config) throws ServletException {
@@ -54,7 +55,7 @@ public class SmsServlet extends javax.servlet.http.HttpServlet {
         FunctionalMapImpl<String, byte[]> bucketMap = (FunctionalMapImpl<String, byte[]>) ctx.getAttribute("bucket-map");
         this.buckets = new InfinispanProxyManager(bucketMap).asAsync();
         
-        this.configuration = () -> {
+        this.configurationSupplier = () -> {
             return BucketConfiguratiion.builder()
                 .addLimit(limit -> limit.capacity(20).refillGreedy(10, Duration.ofMinutes(1)))
                 .build();
@@ -69,7 +70,7 @@ public class SmsServlet extends javax.servlet.http.HttpServlet {
         String toNumber = req.getParameter("to");
         String text = req.getParameter("text");
         
-        AsyncBucketProxy bucket = buckets.builder().build(fromNumber, configuration);
+        AsyncBucketProxy bucket = buckets.getProxy(fromNumber, configurationSupplier);
         CompletableFuture<ConsumptionProbe> limitCheckingFuture = bucket.asAsync().tryConsumeAndReturnRemaining(1);
         final AsyncContext asyncContext = req.startAsync();
         limitCheckingFuture.thenCompose(probe -> {
