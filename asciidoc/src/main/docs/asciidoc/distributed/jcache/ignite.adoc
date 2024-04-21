@@ -28,7 +28,10 @@ NOTE: see https://github.com/bucket4j/bucket4j/tree/8.0#java-compatibility-matri
 [source, java]
 ----
 org.apache.ignite.IgniteCache<K, byte[]> cache = ...;
-private static final IgniteProxyManager proxyManager = new IgniteProxyManager(cache);
+private static final IgniteProxyManager proxyManager = Bucket4jIgnite.thickClient()
+    .entryProcessorBasedBuilder(cache)
+    // setup optional parameters if necessary
+    .build();
 ...
 
 BucketConfiguration configuration = BucketConfiguration.builder()
@@ -43,7 +46,10 @@ IMPORTANT: Pay attention that IgniteProxyManager requires all nodes in the clust
 ----
 org.apache.ignite.client.ClientCache<K, byte[]> cache = ...;
 org.apache.ignite.client.ClientCompute clientCompute = ...;
-private static final IgniteThinClientProxyManager<K> proxyManager = new IgniteThinClientProxyManager(cache, clientCompute)
+private static final IgniteThinClientProxyManager<K> proxyManager = Bucket4jIgnite.thinClient()
+    .clientComputeBasedBuilder(cache, clientCompute)
+    // setup optional parameters if necessary
+    .build();
 ...
 
 BucketConfiguration configuration = BucketConfiguration.builder()
@@ -57,7 +63,10 @@ IMPORTANT: Pay attention that IgniteThinClientProxyManager requires all nodes in
 [source, java]
 ----
 org.apache.ignite.client.ClientCache<K, byte[]> cache = ...;
-private static final IgniteThinClientCasBasedProxyManager<K> proxyManager = new IgniteThinClientCasBasedProxyManager(cache)
+private static final IgniteThinClientCasBasedProxyManager<K> proxyManager = Bucket4jIgnite.thinClient()
+    .casBasedBuilder(cache)
+    // setup optional parameters if necessary
+    .build();
 ...
 
 BucketConfiguration configuration = BucketConfiguration.builder()

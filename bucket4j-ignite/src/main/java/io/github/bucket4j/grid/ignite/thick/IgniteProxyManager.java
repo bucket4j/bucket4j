@@ -69,7 +69,7 @@ public class IgniteProxyManager<K> extends AbstractProxyManager<K> {
     }
 
     /**
-     * @deprecated use {@link Bucket4jIgnite#thick()#builderFor()}
+     * @deprecated use {@link Bucket4jIgnite#thickClient()#builderFor()}
      */
     @Deprecated
     public IgniteProxyManager(IgniteCache<K, byte[]> cache) {
@@ -77,7 +77,7 @@ public class IgniteProxyManager<K> extends AbstractProxyManager<K> {
     }
 
     /**
-     * @deprecated use {@link Bucket4jIgnite#thick()#builderFor()}
+     * @deprecated use {@link Bucket4jIgnite#thickClient()#builderFor()}
      */
     @Deprecated
     public IgniteProxyManager(IgniteCache<K, byte[]> cache, ClientSideConfig clientSideConfig) {

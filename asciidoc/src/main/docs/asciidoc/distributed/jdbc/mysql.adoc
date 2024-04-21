@@ -1,0 +1,34 @@
+[[bucket4j-coherence, Bucket4j-Coherence]]
+=== Oracle Coherence integration
+==== Dependencies
+To use ``bucket4j-coherence`` extension you need to add the following dependency:
+[,xml,subs=attributes+]
+----
+<dependency>
+    <groupId>com.bucket4j</groupId>
+    <artifactId>bucket4j-coherence</artifactId>
+    <version>{revnumber}</version>
+</dependency>
+----
+NOTE: see https://github.com/bucket4j/bucket4j/tree/8.0#java-compatibility-matrix[Java compatibility matrix] if you need for build that is compatible with Java 8
+
+===== DDL example
+[source,sql]
+----
+CREATE TABLE IF NOT EXISTS bucket(id BIGINT PRIMARY KEY, state BLOB);
+----
+
+===== Example of Bucket instantiation
+[source, java]
+----
+MySQLSelectForUpdateBasedProxyManager<Long> proxyManager = Bucket4jMySQL
+    .selectForUpdateBasedBuilder(dataSource)
+    .build();
+
+...
+Long key = 1L;
+BucketConfiguration bucketConfiguration = BucketConfiguration.builder()
+        .addLimit(limit -> limit.capacity(10).refillGreedy(10, ofSeconds(1)))
+        .build();
+BucketProxy bucket = proxyManager.builder().build(key, bucketConfiguration);
+----

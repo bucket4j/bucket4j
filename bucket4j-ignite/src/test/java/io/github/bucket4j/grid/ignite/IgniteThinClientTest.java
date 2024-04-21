@@ -84,12 +84,12 @@ public class IgniteThinClientTest extends AbstractDistributedBucketTest {
             new ProxyManagerSpec<>(
                 "IgniteThinClientCompute",
                 () -> UUID.randomUUID().toString(),
-                () -> Bucket4jIgnite.thin().clientComputeBasedBuilder(cache, igniteClient.compute())
+                () -> Bucket4jIgnite.thinClient().clientComputeBasedBuilder(cache, igniteClient.compute())
             ),
             new ProxyManagerSpec<>(
                 "IgniteThinClientCas",
                 () -> UUID.randomUUID().toString(),
-                () -> Bucket4jIgnite.thin().casBasedBuilder(cache2)
+                () -> Bucket4jIgnite.thinClient().casBasedBuilder(cache2)
             )
         );
     }

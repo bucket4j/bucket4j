@@ -29,7 +29,7 @@ import java.util.function.Supplier;
 /**
  * Represents an extension point of bucket4j library.
  * {@link ProxyManager} provides API for building and managing the collection of {@link BucketProxy} in backing storage.
- * Typically an instance of {@link ProxyManager} is organized around RDBMS table, GRID cache, or some similarly isolated part of external storage.
+ * Typically, an instance of {@link ProxyManager} is organized around RDBMS table, GRID cache, or some similarly isolated part of external storage.
  * Primary keys are used to distinguish persisted state of different buckets.
  *
  * @param <K> type of primary key
@@ -41,6 +41,7 @@ public interface ProxyManager<K> {
 
     /**
      * Creates bucket-proxy that configured by default parameters that set on proxy-manager level.
+     * In case if you need to configure something special for bucket like implicit config replacement you should to use {@link #builder()} instead of this method.
      *
      * @param key the key that used in external storage to distinguish one bucket from another.
      * @param configurationSupplier provider for bucket configuration

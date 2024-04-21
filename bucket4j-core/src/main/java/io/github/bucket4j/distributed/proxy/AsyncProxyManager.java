@@ -40,6 +40,8 @@ public interface AsyncProxyManager<K> {
     /**
      * Creates bucket-proxy that configured by default parameters that set on proxy-manager level.
      *
+     * <p> In case if you need to configure something special for bucket like implicit config replacement you should to use {@link #builder()} instead of this method.
+     *
      * @param key the key that used in external storage to distinguish one bucket from another.
      * @param configurationSupplier provider for bucket configuration
      *

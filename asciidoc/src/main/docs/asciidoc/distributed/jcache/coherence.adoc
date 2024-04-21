@@ -16,7 +16,10 @@ NOTE: see https://github.com/bucket4j/bucket4j/tree/8.0#java-compatibility-matri
 [source, java]
 ----
 com.tangosol.net.NamedCache<K, byte[]> cache = ...;
-private static final CoherenceProxyManager<K> proxyManager = new CoherenceProxyManager(map);
+private static final CoherenceProxyManager<K> proxyManager = Bucket4jCoherence
+    .entryProcessorBasedBuilder(cache)
+     // setup optional parameters if necessary
+    .build();
 
 ...
 BucketConfiguration configuration = BucketConfiguration.builder()

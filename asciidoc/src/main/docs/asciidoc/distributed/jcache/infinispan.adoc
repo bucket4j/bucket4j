@@ -67,8 +67,10 @@ And that is all. Just registering ``Bucket4jProtobufContextInitializer`` in any 
 [source, java]
 ----
 org.infinispan.functional.FunctionalMap.ReadWriteMap<K, byte[]> map = ...;
-private static final InfinispanProxyManager<K> proxyManager = new InfinispanProxyManager(map);
-
+private static final InfinispanProxyManager<K> proxyManager = Bucket4jInfinispan
+    .entryProcessorBasedBuilder(cache)
+     // setup optional parameters if necessary
+    .build();
 ...
 BucketConfiguration configuration = BucketConfiguration.builder()
     .addLimit(limit -> limit.capacity(1_000).refillGreedy(1_000, ofMinutes(1)))

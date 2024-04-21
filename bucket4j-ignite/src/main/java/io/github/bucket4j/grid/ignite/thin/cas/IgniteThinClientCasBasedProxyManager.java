@@ -46,7 +46,7 @@ public class IgniteThinClientCasBasedProxyManager<K> extends AbstractCompareAndS
     }
 
     /**
-     * @deprecated use {@link Bucket4jIgnite#thin()#builderForCasBasedProxyManager()}
+     * @deprecated use {@link Bucket4jIgnite#thinClient()#builderForCasBasedProxyManager()}
      */
     @Deprecated
     public IgniteThinClientCasBasedProxyManager(ClientCache<K, ByteBuffer> cache) {
@@ -54,7 +54,7 @@ public class IgniteThinClientCasBasedProxyManager<K> extends AbstractCompareAndS
     }
 
     /**
-     * @deprecated use {@link Bucket4jIgnite#thin()#builderForCasBasedProxyManager()}
+     * @deprecated use {@link Bucket4jIgnite#thinClient()#builderForCasBasedProxyManager()}
      */
     @Deprecated
     public IgniteThinClientCasBasedProxyManager(ClientCache<K, ByteBuffer> cache, ClientSideConfig clientSideConfig) {

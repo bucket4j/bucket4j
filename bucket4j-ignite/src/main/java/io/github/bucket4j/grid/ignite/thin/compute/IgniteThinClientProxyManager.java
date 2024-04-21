@@ -69,7 +69,7 @@ public class IgniteThinClientProxyManager<K> extends AbstractProxyManager<K> {
     }
 
     /**
-     * @deprecated use {@link Bucket4jIgnite#thin()#builderForClientComputeBasedProxyManager()}
+     * @deprecated use {@link Bucket4jIgnite#thinClient()#builderForClientComputeBasedProxyManager()}
      */
     @Deprecated
     public IgniteThinClientProxyManager(ClientCache<K, byte[]> cache, ClientCompute clientCompute) {
@@ -77,7 +77,7 @@ public class IgniteThinClientProxyManager<K> extends AbstractProxyManager<K> {
     }
 
     /**
-     * @deprecated use {@link Bucket4jIgnite#thin()#builderForClientComputeBasedProxyManager()}
+     * @deprecated use {@link Bucket4jIgnite#thinClient()#builderForClientComputeBasedProxyManager()}
      */
     @Deprecated
     public IgniteThinClientProxyManager(ClientCache<K, byte[]> cache, ClientCompute clientCompute, ClientSideConfig clientSideConfig) {

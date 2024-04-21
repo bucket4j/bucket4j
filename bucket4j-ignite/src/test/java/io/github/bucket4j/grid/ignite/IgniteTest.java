@@ -1,7 +1,5 @@
 package io.github.bucket4j.grid.ignite;
 
-import io.github.bucket4j.distributed.proxy.ExecutionStrategy;
-import io.github.bucket4j.grid.ignite.thick.IgniteProxyManager;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
 import io.github.bucket4j.tck.ProxyManagerSpec;
 
@@ -83,19 +81,19 @@ public class IgniteTest extends AbstractDistributedBucketTest {
             new ProxyManagerSpec<>(
                 "IgniteProxyManager",
                 () -> UUID.randomUUID().toString(),
-                () -> Bucket4jIgnite.thick().entryProcessorBasedBuilder(cache)
+                () -> Bucket4jIgnite.thickClient().entryProcessorBasedBuilder(cache)
             ),
             new ProxyManagerSpec<>(
                 "IgniteProxyManager_background",
                 () -> UUID.randomUUID().toString(),
-                () -> Bucket4jIgnite.thick()
+                () -> Bucket4jIgnite.thickClient()
                     .entryProcessorBasedBuilder(cache)
                     .executionStrategy(background(Executors.newFixedThreadPool(20)))
             ),
             new ProxyManagerSpec<>(
                 "IgniteProxyManager_backgroundTimeBounded",
                 () -> UUID.randomUUID().toString(),
-                () -> Bucket4jIgnite.thick()
+                () -> Bucket4jIgnite.thickClient()
                     .entryProcessorBasedBuilder(cache)
                     .executionStrategy(backgroundTimeBounded(Executors.newFixedThreadPool(20), Duration.ofSeconds(5)))
             )

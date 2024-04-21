@@ -47,7 +47,10 @@ public class IpThrottlingFilter implements javax.servlet.Filter {
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
          // init bucket registry
-         buckets = new JCacheProxyManager<>(cache);
+         buckets = Bucket4jJCache
+            .entryProcessorBasedBuilder(cache)
+             // setup optional parameters if necessary
+            .build();
     }
 
     @Override
@@ -99,7 +102,10 @@ public class IpThrottlingFilter implements javax.servlet.Filter {
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
          // init bucket registry
-         buckets = new JCacheProxyManager<>(cache);
+         buckets = Bucket4jJCache
+            .entryProcessorBasedBuilder(cache)
+             // setup optional parameters if necessary
+            .build();
     }
 
     @Override

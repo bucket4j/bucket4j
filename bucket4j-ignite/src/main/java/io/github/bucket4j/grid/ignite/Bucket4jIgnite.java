@@ -30,14 +30,14 @@ public class Bucket4jIgnite {
     /**
      * @return entry points for Ignite integration based on top of Thick client.
      */
-    public static Bucket4jIgniteThick thick() {
+    public static Bucket4jIgniteThick thickClient() {
         return Bucket4jIgniteThick.INSTANCE;
     }
 
     /**
      * @return entry points for Ignite integration based on top of Thin client.
      */
-    public static Bucket4jIgniteThin thin() {
+    public static Bucket4jIgniteThin thinClient() {
         return Bucket4jIgniteThin.INSTANCE;
     }
 
