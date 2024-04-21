@@ -7,12 +7,12 @@
 
     <parent>
         <groupId>com.bucket4j</groupId>
-        <artifactId>bucket4j-hazelcast-all</artifactId>
+        <artifactId>bucket4j_jdk17-hazelcast-all</artifactId>
         <version>8.11.0</version>
         <relativePath>../../bucket4j-hazelcast-all</relativePath>
     </parent>
-    <artifactId>bucket4j-hazelcast-4</artifactId>
-    <name>bucket4j-hazelcast-4</name>
+    <artifactId>bucket4j_jdk17-hazelcast-4</artifactId>
+    <name>bucket4j_jdk17-hazelcast-4</name>
     <description>Bucket4j integration with Hazelcast 3.x branch</description>
 
     <properties>
@@ -22,17 +22,17 @@
     <dependencies>
         <dependency>
             <groupId>com.bucket4j</groupId>
-            <artifactId>bucket4j-core</artifactId>
+            <artifactId>bucket4j_jdk17-core</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.bucket4j</groupId>
-            <artifactId>bucket4j-jcache</artifactId>
+            <artifactId>bucket4j_jdk17-jcache</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.bucket4j</groupId>
-            <artifactId>bucket4j-core</artifactId>
+            <artifactId>bucket4j_jdk17-core</artifactId>
             <version>${project.version}</version>
             <type>test-jar</type>
             <scope>test</scope>

@@ -24,17 +24,17 @@
     <dependencies>
         <dependency>
             <groupId>com.bucket4j</groupId>
-            <artifactId>bucket4j-core</artifactId>
+            <artifactId>bucket4j_jdk17-core</artifactId>
             <version>${current.version}</version>
         </dependency>
         <dependency>
             <groupId>com.bucket4j</groupId>
-            <artifactId>bucket4j-hazelcast</artifactId>
+            <artifactId>bucket4j_jdk17-hazelcast</artifactId>
             <version>${current.version}</version>
         </dependency>
         <dependency>
             <groupId>com.bucket4j</groupId>
-            <artifactId>bucket4j-postgresql</artifactId>
+            <artifactId>bucket4j_jdk17-postgresql</artifactId>
             <version>${current.version}</version>
         </dependency>
         <dependency>

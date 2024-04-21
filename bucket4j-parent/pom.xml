@@ -8,9 +8,9 @@
 
     <groupId>com.bucket4j</groupId>
     <version>8.11.0</version>
-    <artifactId>bucket4j-parent</artifactId>
+    <artifactId>bucket4j_jdk17-parent</artifactId>
     <packaging>pom</packaging>
-    <name>bucket4j-parent</name>
+    <name>bucket4j_jdk17-parent</name>
 
     <description>bucket4j - is a java implementation of token bucket algorithm for rate limiting</description>
     <url>http://github.com/bucket4j/bucket4j</url>

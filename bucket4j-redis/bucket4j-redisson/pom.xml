@@ -7,12 +7,12 @@
 
     <parent>
         <groupId>com.bucket4j</groupId>
-        <artifactId>bucket4j-redis</artifactId>
+        <artifactId>bucket4j_jdk17-redis</artifactId>
         <version>8.11.0</version>
         <relativePath>../../bucket4j-redis</relativePath>
     </parent>
-    <artifactId>bucket4j-redisson</artifactId>
-    <name>bucket4j-redisson</name>
+    <artifactId>bucket4j_jdk17-redisson</artifactId>
+    <name>bucket4j_jdk17-redisson</name>
 
     <properties>
         <modular-name>redisson</modular-name>
@@ -21,17 +21,17 @@
     <dependencies>
         <dependency>
             <groupId>com.bucket4j</groupId>
-            <artifactId>bucket4j-core</artifactId>
+            <artifactId>bucket4j_jdk17-core</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.bucket4j</groupId>
-            <artifactId>bucket4j-redis-common</artifactId>
+            <artifactId>bucket4j_jdk17-redis-common</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.bucket4j</groupId>
-            <artifactId>bucket4j-core</artifactId>
+            <artifactId>bucket4j_jdk17-core</artifactId>
             <version>${project.version}</version>
             <type>test-jar</type>
             <scope>test</scope>

@@ -7,13 +7,13 @@
 
     <parent>
         <groupId>com.bucket4j</groupId>
-        <artifactId>bucket4j-parent</artifactId>
+        <artifactId>bucket4j_jdk17-parent</artifactId>
         <version>8.11.0</version>
         <relativePath>../bucket4j-parent</relativePath>
     </parent>
     <packaging>pom</packaging>
-    <artifactId>bucket4j-redis</artifactId>
-    <name>bucket4j-redis</name>
+    <artifactId>bucket4j_jdk17-redis</artifactId>
+    <name>bucket4j_jdk17-redis</name>
 
     <properties>
         <modular-name>redis</modular-name>
@@ -29,12 +29,12 @@
     <dependencies>
         <dependency>
             <groupId>com.bucket4j</groupId>
-            <artifactId>bucket4j-core</artifactId>
+            <artifactId>bucket4j_jdk17-core</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.bucket4j</groupId>
-            <artifactId>bucket4j-core</artifactId>
+            <artifactId>bucket4j_jdk17-core</artifactId>
             <version>${project.version}</version>
             <type>test-jar</type>
             <scope>test</scope>

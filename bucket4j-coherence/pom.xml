@@ -8,14 +8,14 @@
 
     <parent>
         <groupId>com.bucket4j</groupId>
-        <artifactId>bucket4j-parent</artifactId>
+        <artifactId>bucket4j_jdk17-parent</artifactId>
         <version>8.11.0</version>
         <relativePath>../bucket4j-parent</relativePath>
     </parent>
 
-    <name>bucket4j-coherence</name>
+    <name>bucket4j_jdk17-coherence</name>
     <description>Bucket4j integration with Coherence</description>
-    <artifactId>bucket4j-coherence</artifactId>
+    <artifactId>bucket4j_jdk17-coherence</artifactId>
 
     <properties>
         <modular-name>coherence</modular-name>
@@ -24,7 +24,7 @@
     <dependencies>
         <dependency>
             <groupId>com.bucket4j</groupId>
-            <artifactId>bucket4j-core</artifactId>
+            <artifactId>bucket4j_jdk17-core</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
@@ -42,7 +42,7 @@
 
         <dependency>
             <groupId>com.bucket4j</groupId>
-            <artifactId>bucket4j-core</artifactId>
+            <artifactId>bucket4j_jdk17-core</artifactId>
             <version>${project.version}</version>
             <type>test-jar</type>
             <scope>test</scope>
