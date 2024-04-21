@@ -1,4 +1,4 @@
-[[bucket4j-coherence, Bucket4j-Postgresql]]
+[[bucket4j-postgresql, Bucket4j-Postgresql]]
 ==== PostgreSQL integration
 ===== Dependencies
 To use Bucket4j extension for PostgreSQL you need to add following dependency:
@@ -10,7 +10,6 @@ To use Bucket4j extension for PostgreSQL you need to add following dependency:
     <version>{revnumber}</version>
 </dependency>
 ----
-NOTE: see https://github.com/bucket4j/bucket4j/tree/8.0#java-compatibility-matrix[Java compatibility matrix] if you need for build that is compatible with Java 8
 
 ===== DDL example
 [source,sql]

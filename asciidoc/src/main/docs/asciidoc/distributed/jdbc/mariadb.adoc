@@ -1,4 +1,4 @@
-[[bucket4j-coherence, Bucket4j-Coherence]]
+[[bucket4j-mariadb, Bucket4j-MariaDB]]
 ==== MariaDB integration
 ===== Dependencies
 To use Bucket4j extension for MariaDB you need to add following dependency:
@@ -28,7 +28,7 @@ MariaDBSelectForUpdateBasedProxyManager<Long> proxyManager = Bucket4jMariaDB
 ...
 Long key = 1L;
 BucketConfiguration bucketConfiguration = BucketConfiguration.builder()
-        .addLimit(limit -> limit.capacity(10).refillGreedy(10, ofSeconds(1)))
-        .build();
+    .addLimit(limit -> limit.capacity(10).refillGreedy(10, ofSeconds(1)))
+    .build();
 BucketProxy bucket = proxyManager.builder().build(key, bucketConfiguration);
 ----

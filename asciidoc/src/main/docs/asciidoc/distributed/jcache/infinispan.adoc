@@ -19,7 +19,6 @@ If you are using a legacy version of Infinispan ``8.x`` then you need to add the
     <version>{revnumber}</version>
 </dependency>
 ----
-NOTE: see https://github.com/bucket4j/bucket4j/tree/8.0#java-compatibility-matrix[Java compatibility matrix] if you need for build that is compatible with Java 8
 
 ==== General compatibility matrix principles::
 * Bucket4j authors do not perform continuous monitoring of new Infinispan releases. So, there is can be a case when there is no one version of Bucket4j which is compatible with the newly released Infinispan, just log an issue to https://github.com/bucket4j/bucket4j/issues[bug tracker] in this case, adding support to new version of Infinispan is usually an easy exercise.

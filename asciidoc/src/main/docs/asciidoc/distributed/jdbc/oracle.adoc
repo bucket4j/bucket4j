@@ -1,5 +1,5 @@
-[[bucket4j-coherence, Bucket4j-Coherence]]
-==== Oracle integration
+[[bucket4j-oracle, Bucket4j-Oracle]]
+==== Oracle database integration
 ===== Dependencies
 To use Bucket4j extension for Oracle you need to add following dependency:
 
