@@ -45,6 +45,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class LettuceBasedProxyManager<K> extends AbstractCompareAndSwapBasedProxyManager<K> {
 
@@ -130,6 +131,8 @@ public class LettuceBasedProxyManager<K> extends AbstractCompareAndSwapBasedProx
         this.redisApi = builder.redisApi;
     }
 
+    private static final AtomicInteger count = new AtomicInteger();
+
     @Override
     protected CompareAndSwapOperation beginCompareAndSwapOperation(K key) {
         @SuppressWarnings("unchecked")
@@ -137,6 +140,7 @@ public class LettuceBasedProxyManager<K> extends AbstractCompareAndSwapBasedProx
         return new CompareAndSwapOperation() {
             @Override
             public Optional<byte[]> getStateData(Optional<Long> timeoutNanos) {
+                new RuntimeException("Just debug. Get executed " + count.incrementAndGet() + " times").printStackTrace();
                 RedisFuture<byte[]> stateFuture = redisApi.get(key);
                 return Optional.ofNullable(getFutureValue(stateFuture, timeoutNanos));
             }
