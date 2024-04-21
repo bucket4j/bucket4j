@@ -64,6 +64,19 @@ AsyncBucketProxy bucket = proxyManager.asAsync().builder()
      .build(key, configSupplier);
 ----
 
+==== Specify listener to distributed bucket at proxy-manager build time
+You can configure default listener at proxy-manager build time. And this listener will be used for all bucket that belong to this proxy-manager.
+Bellow example for Hazelcast, the way to configure listener for other backends is the same.
+[source, java]
+----
+BucketListener listener = new MyListener();
+
+// listener will be attached to all buckets that belong to this proxy manager
+HazelcastLockBasedProxyManager proxyManager = Bucket4jHazelcast.entryProcessorBasedBuilder(map)
+    .defaultListener(listener)
+    .build();
+----
+
 ==== Specify listener to bucket at use time.
 Sometimes listener is not known at bucket build time, and you want to clarify listener later.
 For example it can happen when you want to share same bucket per multiple users,
