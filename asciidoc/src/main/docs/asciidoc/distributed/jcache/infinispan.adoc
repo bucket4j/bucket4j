@@ -4,18 +4,34 @@
 To use ``bucket4j-infinispan`` with ``Infinispan 9.x, 10.x`` extension you need to add following dependency:
 [source, xml, subs=attributes+]
 ----
+<!-- For java 17 -->
 <dependency>
     <groupId>com.bucket4j</groupId>
-    <artifactId>bucket4j-infinispan</artifactId>
+    <artifactId>bucket4j_jdk17-infinispan</artifactId>
+    <version>{revnumber}</version>
+</dependency>
+
+<!-- For java 11 -->
+<dependency>
+    <groupId>com.bucket4j</groupId>
+    <artifactId>bucket4j_jdk11-infinispan</artifactId>
     <version>{revnumber}</version>
 </dependency>
 ----
 If you are using a legacy version of Infinispan ``8.x`` then you need to add the following dependency:
 [source, xml, subs=attributes+]
 ----
+<!-- For java 17 -->
 <dependency>
     <groupId>com.bucket4j</groupId>
-    <artifactId>bucket4j-infinispan-8</artifactId>
+    <artifactId>bucket4j_jdk17-infinispan-8</artifactId>
+    <version>{revnumber}</version>
+</dependency>
+
+<!-- For java 11 -->
+<dependency>
+    <groupId>com.bucket4j</groupId>
+    <artifactId>bucket4j_jdk11-infinispan-8</artifactId>
     <version>{revnumber}</version>
 </dependency>
 ----

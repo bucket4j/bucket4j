@@ -6,21 +6,29 @@
 
 #### Get dependency
 The Bucket4j is distributed through [Maven Central](http://search.maven.org/):
-```xml
-<!-- For java 11+ -->
-<dependency>
-    <groupId>com.bucket4j</groupId>
-    <artifactId>bucket4j-core</artifactId>
-    <version>8.11.0</version>
-</dependency>
 
-<!-- For java 8 -->
+##### Java 17 dependency
+```xml
+<!-- For java 17+ -->
 <dependency>
-    <groupId>com.bucket4j</groupId>
-    <artifactId>bucket4j_jdk8-core</artifactId>
-    <version>8.11.0</version>
+  <groupId>com.bucket4j</groupId>
+  <artifactId>bucket4j_jdk17-core</artifactId>
+  <version>8.11.0</version>
 </dependency>
 ```
+##### Java 11 dependency
+```xml
+<!-- For java 11 -->
+<dependency>
+  <groupId>com.bucket4j</groupId>
+  <artifactId>bucket4j_jdk11-core</artifactId>
+  <version>8.11.0</version>
+</dependency>
+```
+##### Java 8 dependency
+:heavy_exclamation_mark: According to [Bucket4j backward compatibility policies](backward-compatibility-policy.md) builds for Java 8 are not published to Maven-Central since ```8.11.0``.
+To get `Java 8` builds follow to [this instructions](java8.md)
+
 #### Quick start
 ```java
 import io.github.bucket4j.Bucket;
@@ -39,15 +47,12 @@ private void doSomethingProtected() {
    }
 }
 ```
-More examples [can be found there](https://bucket4j.github.io/8.3.0/toc.html#quick-start-examples)
+More examples [can be found there](https://bucket4j.github.io/8.11.0/toc.html#quick-start-examples)
 
 ## [Documentation](https://bucket4j.github.io)
 * [Reference](https://bucket4j.github.io/8.11.0/toc.html)
 * [Quick start examples](https://bucket4j.github.io/8.11.0/toc.html#quick-start-examples)
 * [Third-party articles](https://bucket4j.github.io/#third-party-articles)
-
-## [Spring boot starter](https://github.com/MarcGiffing/bucket4j-spring-boot-starter)
-Bucket4j is not a framework, it is a library, with Bucket4j you need to write a code to achive your goals. For generic use-cases, try to look at powerfull [Spring Boot Starter for Bucket4j](https://github.com/MarcGiffing/bucket4j-spring-boot-starter), that allows you to set access limits on your API effortlessly. Its key advantage lies in the configuration via properties or yaml files, eliminating the need for manual code authoring.
 
 ## Bucket4j basic features
 * *Absolutely non-compromise precision* - Bucket4j does not operate with floats or doubles, all calculation are performed in the integer arithmetic, this feature protects end users from calculation errors involved by rounding.
@@ -64,6 +69,11 @@ In additional to basic features described above, ```Bucket4j``` provides ability
 - Bucket4j out of the box supports any GRID solution which compatible with JCache API (JSR 107) specification.
 - Bucket4j provides the framework that allows to quickly build integration with your own persistent technology like RDMS or a key-value storage.
 - For clustered usage scenarios Bucket4j supports asynchronous API that extremely matters when going to distribute world, because asynchronous API allows avoiding blocking your application threads each time when you need to execute Network request.
+
+## [Spring boot starter](https://github.com/MarcGiffing/bucket4j-spring-boot-starter)
+Bucket4j is not a framework, it is a library, with Bucket4j you need to write a code to achive your goals. 
+For generic use-cases, try to look at powerfull [Spring Boot Starter for Bucket4j](https://github.com/MarcGiffing/bucket4j-spring-boot-starter), that allows you to set access limits on your API effortlessly. 
+Its key advantage lies in the configuration via properties or yaml files, eliminating the need for manual code authoring.
 
 ### Supported JCache compatible(or similar) back-ends
 In addition to local in-memory buckets, the Bucket4j supports clustered usage scenario on top of following back-ends:
@@ -104,27 +114,16 @@ Sometimes you are having deal with bucket per key scenarios but distributed sync
 | :---                          |:------------------------------------------------------------------------:|
 | ```Datomic Database```        | [clj-bucket4j-datomic](https://github.com/fr33m0nk/clj-bucket4j-datomic) |
 
+## [Bucket4j Backward compatibility policy](backward-compatibility-policy.md)
+
 ## Have a question?
 Feel free to ask via:
 * [Bucket4j issue tracker](https://github.com/bucket4j/bucket4j/issues/new) to report a bug.
 * [Bucket4j discussions](https://github.com/bucket4j/bucket4j/discussions) for questions, feature proposals, sharing of experience.
 
 ## License
-Copyright 2015-2021 Vladimir Bukhtoyarov
+Copyright 2015-2024 Vladimir Bukhtoyarov
 Licensed under the Apache Software License, Version 2.0: <http://www.apache.org/licenses/LICENSE-2.0>.
-
-## Java compatibility matrix
-:heavy_exclamation_mark: Since July 2022(release 8.0.0) it was decided to migrate Bucket4j to Java 11.
-
-:shit: Obviously, it bad news for all who get stuck on Java 8 by different reasons.
-
-:ambulance: Bucket4j maintainers understand your pain and provide special builds with dedicated artifacts for java 8.
-
-:gift: Maven artifacts for Java 8, currently are provided for free. 
-
-:heavy_dollar_sign: Keep in mind that access to fresh releases of Bucket4j for Java 8 can be moved to a commercial model at any moment.
-
-:pill: Right Maven artifact name for Java 8 can be found on [jdk-matrix-compatibility page](java-compatibility-matrix.md).
 
 ## :beer: Want to support?
 [Make donate](https://app.lava.top/ru/2716741203?donate=open) to increase motivation of maintainer.

@@ -14,11 +14,19 @@ developing the dedicated module ``bucket4j-ignite`` was the only way to provide 
 
 ===== Dependencies
 To use ``bucket4j-ignite`` extension you need to add following dependency:
-[,xml,subs=attributes+]
+[source, xml, subs=attributes+]
 ----
+<!-- For java 17 -->
 <dependency>
     <groupId>com.bucket4j</groupId>
-    <artifactId>bucket4j-ignite</artifactId>
+    <artifactId>bucket4j_jdk17-ignite</artifactId>
+    <version>{revnumber}</version>
+</dependency>
+
+<!-- For java 11 -->
+<dependency>
+    <groupId>com.bucket4j</groupId>
+    <artifactId>bucket4j_jdk11-ignite</artifactId>
     <version>{revnumber}</version>
 </dependency>
 ----

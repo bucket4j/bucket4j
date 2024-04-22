@@ -7,9 +7,17 @@ NOTE: Do not forget to read <<distributed-checklist, Distributed usage checklist
 To use the JCache extension you also need to add the following dependency:
 [source, xml, subs=attributes+]
 ----
+<!-- For java 17 -->
 <dependency>
     <groupId>com.bucket4j</groupId>
-    <artifactId>bucket4j-jcache</artifactId>
+    <artifactId>bucket4j_jdk17-jcache</artifactId>
+    <version>{revnumber}</version>
+</dependency>
+
+<!-- For java 11 -->
+<dependency>
+    <groupId>com.bucket4j</groupId>
+    <artifactId>bucket4j_jdk11-jcache</artifactId>
     <version>{revnumber}</version>
 </dependency>
 ----

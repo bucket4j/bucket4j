@@ -2,16 +2,29 @@
 ==== Jedis integration
 ===== Dependencies
 To use ``bucket4j-jedis`` extension you need to add following dependency:
-[,xml,subs=attributes+]
+[source, xml, subs=attributes+]
 ----
+<!-- For java 17 -->
 <dependency>
     <groupId>com.bucket4j</groupId>
-    <artifactId>bucket4j-redis-common</artifactId>
+    <artifactId>bucket4j_jdk17-redis-common</artifactId>
     <version>{revnumber}</version>
 </dependency>
 <dependency>
     <groupId>com.bucket4j</groupId>
-    <artifactId>bucket4j-jedis</artifactId>
+    <artifactId>bucket4j_jdk17-jedis</artifactId>
+    <version>{revnumber}</version>
+</dependency>
+
+<!-- For java 11 -->
+<dependency>
+    <groupId>com.bucket4j</groupId>
+    <artifactId>bucket4j_jdk11-redis-common</artifactId>
+    <version>{revnumber}</version>
+</dependency>
+<dependency>
+    <groupId>com.bucket4j</groupId>
+    <artifactId>bucket4j_jdk11-jedis</artifactId>
     <version>{revnumber}</version>
 </dependency>
 ----

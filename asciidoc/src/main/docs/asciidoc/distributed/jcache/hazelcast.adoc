@@ -4,18 +4,34 @@
 To use Bucket4j extension for Hazelcast with ``Hazelcast 4.x`` you need to add the following dependency:
 [source, xml, subs=attributes+]
 ----
+<!-- For java 17 -->
 <dependency>
     <groupId>com.bucket4j</groupId>
-    <artifactId>bucket4j-hazelcast</artifactId>
+    <artifactId>bucket4j_jdk17-hazelcast</artifactId>
+    <version>{revnumber}</version>
+</dependency>
+
+<!-- For java 11 -->
+<dependency>
+    <groupId>com.bucket4j</groupId>
+    <artifactId>bucket4j_jdk11-hazelcast</artifactId>
     <version>{revnumber}</version>
 </dependency>
 ----
 If you are using a legacy version of Hazelcast ``4.x`` then you need to add the following dependency:
 [source, xml, subs=attributes+]
 ----
+<!-- For java 17 -->
 <dependency>
     <groupId>com.bucket4j</groupId>
-    <artifactId>bucket4j-hazelcast-4</artifactId>
+    <artifactId>bucket4j_jdk17-hazelcast-4</artifactId>
+    <version>{revnumber}</version>
+</dependency>
+
+<!-- For java 11 -->
+<dependency>
+    <groupId>com.bucket4j</groupId>
+    <artifactId>bucket4j_jdk11-hazelcast-4</artifactId>
     <version>{revnumber}</version>
 </dependency>
 ----

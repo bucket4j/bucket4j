@@ -3,11 +3,19 @@
 ===== Dependencies
 To use Bucket4j extension for Microsoft SQL Server you need to add following dependency:
 
-[,xml,subs=attributes+]
+[source, xml, subs=attributes+]
 ----
+<!-- For java 17 -->
 <dependency>
     <groupId>com.bucket4j</groupId>
-    <artifactId>bucket4j-mssql</artifactId>
+    <artifactId>bucket4j_jdk17-mssql</artifactId>
+    <version>{revnumber}</version>
+</dependency>
+
+<!-- For java 11 -->
+<dependency>
+    <groupId>com.bucket4j</groupId>
+    <artifactId>bucket4j_jdk11-mssql</artifactId>
     <version>{revnumber}</version>
 </dependency>
 ----
