@@ -15,11 +15,14 @@
         <maven.deploy.skip>true</maven.deploy.skip>
         <revapi.skip>true</revapi.skip>
         <experimentalCoroutines>enable</experimentalCoroutines>
-        <kotlin.version>1.6.0</kotlin.version>
-        <lincheck.version>2.14.1</lincheck.version>
-        <asm.version>9.0</asm.version>
-        <maven.compiler.source>11</maven.compiler.source>
-        <maven.compiler.target>11</maven.compiler.target>
+        <kotlin.version>1.9.21</kotlin.version>
+        <kotlin.coroutines.version>1.7.3</kotlin.coroutines.version>
+
+        <lincheck.version>2.24</lincheck.version>
+        <asm.version>9.6</asm.version>
+        <byteBuddyVersion>1.14.12</byteBuddyVersion>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
     </properties>
 
     <modelVersion>4.0.0</modelVersion>
@@ -62,8 +65,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.5.1</version>
                 <configuration>
-                    <source>11</source>
-                    <target>11</target>
+                    <source>17</source>
+                    <target>17</target>
                 </configuration>
                 <executions>
                     <!-- Replacing default-compile as it is treated specially by maven -->
@@ -113,22 +116,9 @@
         </dependency>
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
-            <artifactId>kotlin-stdlib-jdk8</artifactId>
-            <version>${kotlin.version}</version>
-            <scope>test</scope>
-        </dependency>
-
-        <!-- Lincheck related dependencies -->
-        <dependency>
-            <groupId>org.jetbrains.kotlinx</groupId>
-            <artifactId>lincheck-jvm</artifactId>
-            <version>${lincheck.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-stdlib</artifactId>
             <version>${kotlin.version}</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
@@ -141,9 +131,22 @@
             <version>${kotlin.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-reflect</artifactId>
+            <version>${kotlin.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.jetbrains.kotlinx</groupId>
             <artifactId>kotlinx-coroutines-core</artifactId>
-            <version>${kotlin.version}</version>
+            <version>${kotlin.coroutines.version}</version>
+        </dependency>
+
+        <!-- Lincheck related dependencies -->
+        <dependency>
+            <groupId>org.jetbrains.kotlinx</groupId>
+            <artifactId>lincheck-jvm</artifactId>
+            <version>${lincheck.version}</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.reflections</groupId>
@@ -160,7 +163,15 @@
             <artifactId>asm-util</artifactId>
             <version>${asm.version}</version>
         </dependency>
+        <dependency>
+            <groupId>net.bytebuddy</groupId>
+            <artifactId>byte-buddy</artifactId>
+            <version>${byteBuddyVersion}</version>
+        </dependency>
+        <dependency>
+            <groupId>net.bytebuddy</groupId>
+            <artifactId>byte-buddy-agent</artifactId>
+            <version>${byteBuddyVersion}</version>
+        </dependency>
     </dependencies>
-
-
 </project>

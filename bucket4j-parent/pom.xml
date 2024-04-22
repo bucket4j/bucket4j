@@ -46,7 +46,7 @@
         <argLine/>
         <maven.build.timestamp.format>yyyy-MM-dd HH</maven.build.timestamp.format>
         <jcache.version>1.0.0</jcache.version>
-        <ignite.version>2.10.0</ignite.version>
+        <ignite.version>2.16.0</ignite.version>
 
         <hazelcast.4.version>4.1</hazelcast.4.version>
         <hazelcast.latest.version>5.3.6</hazelcast.latest.version>
@@ -63,6 +63,7 @@
         <caffeine.version>2.9.3</caffeine.version>
         <mssql.version>12.4.2.jre8</mssql.version>
         <ojdbc.version>23.2.0.0</ojdbc.version>
+        <junit.jupiter.version>5.10.2</junit.jupiter.version>
     </properties>
 
     <scm>
@@ -159,13 +160,24 @@
                         <logback.configurationFile>${basedir}/src/test/resources/logback-test.xml</logback.configurationFile>
                     </systemPropertyVariables>
                     <!-- Travis build workaround -->
-                    <argLine>-Xms1024m -Xmx2048m</argLine>
+                    <argLine>-Xms1024m -Xmx2048m
+                        --add-opens=java.base/jdk.internal.misc=ALL-UNNAMED
+                        --add-opens=java.base/sun.nio.ch=ALL-UNNAMED
+                        --add-opens=java.management/com.sun.jmx.mbeanserver=ALL-UNNAMED
+                        --add-opens=jdk.internal.jvmstat/sun.jvmstat.monitor=ALL-UNNAMED
+                        --add-opens=java.base/sun.reflect.generics.reflectiveObjects=ALL-UNNAMED
+                        --add-opens=jdk.management/com.sun.management.internal=ALL-UNNAMED
+                        --add-opens=java.base/java.io=ALL-UNNAMED
+                        --add-opens=java.base/java.nio=ALL-UNNAMED
+                        --add-opens=java.base/java.util=ALL-UNNAMED
+                        --add-opens=java.base/java.lang=ALL-UNNAMED
+                    </argLine>
                 </configuration>
                 <dependencies>
                     <dependency>
                         <groupId>org.junit.jupiter</groupId>
                         <artifactId>junit-jupiter-engine</artifactId>
-                        <version>5.9.3</version>
+                        <version>${junit.jupiter.version}</version>
                     </dependency>
                 </dependencies>
             </plugin>
@@ -350,19 +362,19 @@
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
-            <version>5.10.2</version>
+            <version>${junit.jupiter.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-params</artifactId>
-            <version>5.10.2</version>
+            <version>${junit.jupiter.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>
-            <version>5.10.2</version>
+            <version>${junit.jupiter.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>

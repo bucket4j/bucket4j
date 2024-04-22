@@ -41,6 +41,7 @@ public class IgniteTest extends AbstractDistributedBucketTest {
         // start separated JVM on current host
         cloud = CloudFactory.createCloud();
         cloud.node("**").x(VX.TYPE).setLocal();
+        ADD_OPENS.forEach(arg -> cloud.node("**").x(VX.JVM).addJvmArg(arg));
         server = cloud.node("stateful-ignite-server");
 
         int serverDiscoveryPort = 47500;
