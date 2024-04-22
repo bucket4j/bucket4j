@@ -26,8 +26,7 @@ The Bucket4j is distributed through [Maven Central](http://search.maven.org/):
 </dependency>
 ```
 ##### Java 8 dependency
-:heavy_exclamation_mark: According to [Bucket4j backward compatibility policies](backward-compatibility-policy.md) builds for Java 8 are not published to Maven-Central since ```8.11.0``.
-To get `Java 8` builds follow to [this instructions](java8.md)
+To get the builds for `Java 8` follow to [this instruction](java8.md)
 
 #### Quick start
 ```java
