@@ -32,7 +32,6 @@ class IntervallyAlignedRefillSpecification extends Specification {
         Bucket bucket = Bucket.builder()
                     .withCustomTimePrecision(mockTimer)
                     .addLimit(bandwidth)
-                    .withMath(mathType)
                     .build()
 
         expect:
@@ -68,7 +67,6 @@ class IntervallyAlignedRefillSpecification extends Specification {
             Bucket bucket = Bucket.builder()
                 .withCustomTimePrecision(mockTimer)
                 .addLimit(bandwidth)
-                .withMath(mathType)
                 .build()
 
         expect: "initialTokens == capacity because useAdaptiveInitialTokens == false"
@@ -128,7 +126,6 @@ class IntervallyAlignedRefillSpecification extends Specification {
             Bucket bucket = Bucket.builder()
                     .withCustomTimePrecision(mockTimer)
                     .addLimit(bandwidth)
-                    .withMath(mathType)
                     .build()
 
         expect: "initialTokens == capacity because useAdaptiveInitialTokens == false"
@@ -181,7 +178,6 @@ class IntervallyAlignedRefillSpecification extends Specification {
             LocalBucket bucket = Bucket.builder()
                     .withCustomTimePrecision(timeMeter)
                     .addLimit(Bandwidth.classic(400, refill))
-                    .withMath(mathType)
                     .build()
 
             bucket.tryConsumeAsMuchAsPossible()
