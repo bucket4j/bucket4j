@@ -51,7 +51,7 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket, C
     }
 
     SynchronizedBucket(BucketConfiguration configuration, MathType mathType, TimeMeter timeMeter, BucketListener listener, Lock lock) {
-        this(BucketListener.NOPE, timeMeter, lock, BucketState.createInitialState(configuration, mathType, timeMeter.currentTimeNanos()));
+        this(listener, timeMeter, lock, BucketState.createInitialState(configuration, mathType, timeMeter.currentTimeNanos()));
     }
 
     private SynchronizedBucket(BucketListener listener, TimeMeter timeMeter, Lock lock, BucketState initialState) {
