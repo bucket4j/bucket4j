@@ -9,7 +9,7 @@ that can be installed into your local maven repo, or deployed to your company re
 or added as [system dependency](https://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html#system-dependencies).
 
 :heavy_dollar_sign: This costs some money. By buying artifacts for Java 8, you increase motivation of project maintainer to develop new features,
-write documentation and answer to user questions. [To get artifacts for Java 8    follow this instructions](https://bucket4j.com/java8.html).
+write documentation and answer to user questions. [To get artifacts for Java 8 follow this instructions](https://bucket4j.com/commercial/java8.html).
 
 :pill: If you don't want to pay something for Java 8 builds, feel free to do backporting job by yourself, due to all sources are licensed under `Apache 2.0 license`,
 nothing to prevent you to maintain in-house fork.
