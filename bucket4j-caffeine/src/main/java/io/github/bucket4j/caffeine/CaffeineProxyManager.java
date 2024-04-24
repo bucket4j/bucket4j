@@ -51,19 +51,19 @@ public class CaffeineProxyManager<K> extends AbstractProxyManager<K> {
 
                 @Override
                 public long expireAfterCreate(K key, RemoteBucketState bucketState, long currentTime) {
-                    long ttlNanos = expiration.calculateTimeToLiveMillis(bucketState, currentTimeNanos());
+                    long ttlNanos = expiration.calculateTimeToLiveMillis(bucketState, currentTimeNanos()) * 1_000_000;
                     return ttlNanos < 0 ? Long.MAX_VALUE : ttlNanos;
                 }
 
                 @Override
                 public long expireAfterUpdate(K key, RemoteBucketState bucketState, long currentTime, long currentDuration) {
-                    long ttlNanos = expiration.calculateTimeToLiveMillis(bucketState, currentTimeNanos());
+                    long ttlNanos = expiration.calculateTimeToLiveMillis(bucketState, currentTimeNanos()) * 1_000_000;
                     return ttlNanos < 0 ? Long.MAX_VALUE : ttlNanos;
                 }
 
                 @Override
                 public long expireAfterRead(K key, RemoteBucketState bucketState, long currentTime, long currentDuration) {
-                    long ttlNanos = expiration.calculateTimeToLiveMillis(bucketState, currentTimeNanos());
+                    long ttlNanos = expiration.calculateTimeToLiveMillis(bucketState, currentTimeNanos()) * 1_000_000;
                     return ttlNanos < 0 ? Long.MAX_VALUE : ttlNanos;
                 }
             })
