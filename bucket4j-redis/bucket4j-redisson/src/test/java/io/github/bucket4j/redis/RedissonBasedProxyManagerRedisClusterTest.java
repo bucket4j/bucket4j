@@ -59,12 +59,12 @@ public class RedissonBasedProxyManagerRedisClusterTest extends AbstractDistribut
                 "RedissonBasedProxyManager_LongKey",
                 () -> ThreadLocalRandom.current().nextLong(),
                 () -> Bucket4jRedisson.casBasedBuilder(commandExecutor).keyMapper(Mapper.LONG)
-            ),
+            ).checkExpiration(),
             new ProxyManagerSpec<>(
                 "RedissonBasedProxyManager_StringKey",
                 () -> UUID.randomUUID().toString(),
                 () -> Bucket4jRedisson.casBasedBuilder(commandExecutor)
-            )
+            ).checkExpiration()
         );
     }
 

@@ -153,18 +153,15 @@ public abstract class AbstractDistributedBucketTest {
     @MethodSource("specs")
     @ParameterizedTest
     public <K, P extends ProxyManager<K>, B extends AbstractProxyManagerBuilder<K, P, B>> void testNoExpirationAfterWrite(ProxyManagerSpec<K, P, B> spec) throws InterruptedException {
+        if (!spec.expirationSupported) {
+            return;
+        }
         BucketConfiguration configuration = BucketConfiguration.builder()
             .addLimit(Bandwidth.simple(10, Duration.ofSeconds (1)))
             .build();
-        ProxyManager<K> proxyManager;
-        try {
-            proxyManager = spec.builder.get()
+        ProxyManager<K> proxyManager = spec.builder.get()
                 .expirationAfterWrite(ExpirationAfterWriteStrategy.none())
                 .build();;
-        } catch (UnsupportedOperationException e) {
-            // expiration not supported
-            return;
-        }
 
         K key = spec.generateRandomKey();
         BucketProxy bucket = proxyManager.builder().build(key, () -> configuration);
@@ -176,18 +173,16 @@ public abstract class AbstractDistributedBucketTest {
     @MethodSource("specs")
     @ParameterizedTest
     public <K, P extends ProxyManager<K>, B extends AbstractProxyManagerBuilder<K, P, B>> void testNoExpirationAfterWrite_Async(ProxyManagerSpec<K, P, B> spec) throws InterruptedException, ExecutionException {
+        if (!spec.expirationSupported) {
+            return;
+        }
         BucketConfiguration configuration = BucketConfiguration.builder()
             .addLimit(Bandwidth.simple(10, Duration.ofSeconds (1)))
             .build();
-        ProxyManager<K> proxyManager;
-        try {
-            proxyManager = spec.builder.get()
+        ProxyManager<K> proxyManager = spec.builder.get()
                 .expirationAfterWrite(ExpirationAfterWriteStrategy.none())
                 .build();
-        } catch (UnsupportedOperationException e) {
-            // expiration not supported
-            return;
-        }
+
         if (!proxyManager.isAsyncModeSupported()) {
             return;
         }
@@ -202,18 +197,15 @@ public abstract class AbstractDistributedBucketTest {
     @MethodSource("specs")
     @ParameterizedTest
     public <K, P extends ProxyManager<K>, B extends AbstractProxyManagerBuilder<K, P, B>> void testFixedTtlExpirationAfterWrite(ProxyManagerSpec<K, P, B> spec) throws InterruptedException {
+        if (!spec.expirationSupported) {
+            return;
+        }
         BucketConfiguration configuration = BucketConfiguration.builder()
             .addLimit(Bandwidth.simple(10, Duration.ofSeconds (100)))
             .build();
-        ProxyManager<K> proxyManager;
-        try {
-            proxyManager = spec.builder.get()
-                .expirationAfterWrite(ExpirationAfterWriteStrategy.fixedTimeToLive(Duration.ofSeconds(1)))
-                .build();
-        } catch (UnsupportedOperationException e) {
-            // expiration not supported
-            return;
-        }
+        ProxyManager<K> proxyManager = spec.builder.get()
+            .expirationAfterWrite(ExpirationAfterWriteStrategy.fixedTimeToLive(Duration.ofSeconds(1)))
+            .build();
 
         K key = spec.generateRandomKey();
         BucketProxy bucket = proxyManager.builder().build(key, () -> configuration);
@@ -225,18 +217,15 @@ public abstract class AbstractDistributedBucketTest {
     @MethodSource("specs")
     @ParameterizedTest
     public <K, P extends ProxyManager<K>, B extends AbstractProxyManagerBuilder<K, P, B>> void testFixedTtlExpirationAfterWrite_Async(ProxyManagerSpec<K, P, B> spec) throws InterruptedException, ExecutionException {
+        if (!spec.expirationSupported) {
+            return;
+        }
         BucketConfiguration configuration = BucketConfiguration.builder()
             .addLimit(Bandwidth.simple(10, Duration.ofSeconds (100)))
             .build();
-        ProxyManager<K> proxyManager;
-        try {
-            proxyManager = spec.builder.get()
-                .expirationAfterWrite(ExpirationAfterWriteStrategy.fixedTimeToLive(Duration.ofSeconds(1)))
-                .build();
-        } catch (UnsupportedOperationException e) {
-            // expiration not supported
-            return;
-        }
+        ProxyManager<K> proxyManager = spec.builder.get()
+            .expirationAfterWrite(ExpirationAfterWriteStrategy.fixedTimeToLive(Duration.ofSeconds(1)))
+            .build();
         if (!proxyManager.isAsyncModeSupported()) {
             return;
         }
@@ -251,18 +240,15 @@ public abstract class AbstractDistributedBucketTest {
     @MethodSource("specs")
     @ParameterizedTest
     public <K, P extends ProxyManager<K>, B extends AbstractProxyManagerBuilder<K, P, B>> void testRefillBasedExpirationAfterWrite(ProxyManagerSpec<K, P, B> spec) throws InterruptedException {
+        if (!spec.expirationSupported) {
+            return;
+        }
         BucketConfiguration configuration = BucketConfiguration.builder()
             .addLimit(Bandwidth.simple(10, Duration.ofSeconds (10)))
             .build();
-        ProxyManager<K> proxyManager;
-        try {
-            proxyManager = spec.builder.get()
+        ProxyManager<K> proxyManager = spec.builder.get()
                 .expirationAfterWrite(ExpirationAfterWriteStrategy.basedOnTimeForRefillingBucketUpToMax(Duration.ofSeconds(1)))
                 .build();
-        } catch (UnsupportedOperationException e) {
-            // expiration not supported
-            return;
-        }
 
         K key = spec.generateRandomKey();
         BucketProxy bucket = proxyManager.builder().build(key, () -> configuration);
@@ -276,18 +262,16 @@ public abstract class AbstractDistributedBucketTest {
     @MethodSource("specs")
     @ParameterizedTest
     public <K, P extends ProxyManager<K>, B extends AbstractProxyManagerBuilder<K, P, B>> void testRefillBasedExpirationAfterWrite_Async(ProxyManagerSpec<K, P, B> spec) throws InterruptedException, ExecutionException {
+        if (!spec.expirationSupported) {
+            return;
+        }
         BucketConfiguration configuration = BucketConfiguration.builder()
             .addLimit(Bandwidth.simple(10, Duration.ofSeconds (10)))
             .build();
-        ProxyManager<K> proxyManager;
-        try {
-            proxyManager = spec.builder.get()
-                .expirationAfterWrite(ExpirationAfterWriteStrategy.basedOnTimeForRefillingBucketUpToMax(Duration.ofSeconds(1)))
-                .build();
-        } catch (UnsupportedOperationException e) {
-            // expiration not supported
-            return;
-        }
+        ProxyManager<K> proxyManager = spec.builder.get()
+            .expirationAfterWrite(ExpirationAfterWriteStrategy.basedOnTimeForRefillingBucketUpToMax(Duration.ofSeconds(1)))
+            .build();
+
         if (!proxyManager.isAsyncModeSupported()) {
             return;
         }

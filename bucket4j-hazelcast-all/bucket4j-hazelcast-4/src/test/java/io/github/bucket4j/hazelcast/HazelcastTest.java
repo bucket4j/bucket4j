@@ -62,7 +62,7 @@ public class HazelcastTest extends AbstractDistributedBucketTest {
                 "HazelcastProxyManager_JdkSerialization",
                 () -> UUID.randomUUID().toString(),
                 () -> Bucket4jHazelcast.entryProcessorBasedBuilder(map)
-            ),
+            ).checkExpiration(),
             new ProxyManagerSpec<>(
                 "HazelcastLockBasedProxyManager_JdkSerialization",
                 () -> UUID.randomUUID().toString(),

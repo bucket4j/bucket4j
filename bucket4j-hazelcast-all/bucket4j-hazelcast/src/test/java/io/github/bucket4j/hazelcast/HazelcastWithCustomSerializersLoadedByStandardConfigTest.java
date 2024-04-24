@@ -101,12 +101,12 @@ public class HazelcastWithCustomSerializersLoadedByStandardConfigTest extends Ab
                 "HazelcastProxyManager_CustomSerialization",
                 () -> UUID.randomUUID().toString(),
                 () -> Bucket4jHazelcast.entryProcessorBasedBuilder(map)
-            ),
+            ).checkExpiration(),
             new ProxyManagerSpec<>(
                 "HazelcastLockBasedProxyManager_CustomSerialization_offloadableExecutor",
                 () -> UUID.randomUUID().toString(),
                 () -> Bucket4jHazelcast.entryProcessorBasedBuilder(map).offloadableExecutorName("my-executor")
-            )
+            ).checkExpiration()
         );
     }
 

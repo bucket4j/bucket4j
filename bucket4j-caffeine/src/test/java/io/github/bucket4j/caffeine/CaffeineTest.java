@@ -22,7 +22,7 @@ public class CaffeineTest extends AbstractDistributedBucketTest {
                 "CaffeineProxyManager",
                 () -> UUID.randomUUID().toString(),
                 () -> Bucket4jCaffeine.builderFor(Caffeine.newBuilder().maximumSize(100))
-            )
+            ).checkExpiration()
         );
     }
 

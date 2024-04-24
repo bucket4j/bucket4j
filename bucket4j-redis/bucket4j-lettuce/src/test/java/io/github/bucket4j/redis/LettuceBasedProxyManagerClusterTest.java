@@ -45,7 +45,7 @@ public class LettuceBasedProxyManagerClusterTest extends AbstractDistributedBuck
                 "LettuceBasedProxyManager_ByteArrayKey",
                 () -> UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8),
                 () -> Bucket4jLettuce.casBasedBuilder(redisClient)
-            )
+            ).checkExpiration()
         );
     }
 
