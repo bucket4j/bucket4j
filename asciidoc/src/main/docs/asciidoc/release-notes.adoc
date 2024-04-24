@@ -1,11 +1,19 @@
 === Bucket4j {revnumber} release notes
 Release `{revnumber}`
 
-.The features/enhancements in release scope are following:
-* https://github.com/bucket4j/bucket4j/issues/461[#461 Flexible per-entry expiration for Hazelcast]
+==== The features/enhancements in release scope are following:
+* https://github.com/bucket4j/bucket4j/issues/466[#466 Split support for Redis by individual maven modules]
+* https://github.com/bucket4j/bucket4j/issues/467[#467 Create unified style builders for all ProxyManagers]
+* https://github.com/bucket4j/bucket4j/issues/474[#474 Migrate to JDK17]
 
-.Bugfixes:
-* https://github.com/bucket4j/bucket4j/issues/456[#456 Rare exceptions when ManyalySync optimization is used with conjunction of implicit configuration replacement]
+==== Backward incompatible changes:
+===== New scheme of naming for Maven artifacts
+Now, the version of target JDK become a part of artifact name. For example `com.bucket4j:bucket4j-core` has been changed to `com.bucket4j:bucket4j_jdk17-core`.
 
-.Backward incompatible changes:
-Hazelcast `3.x` is not supported anymore. Since `bucket4-8.10.0` the minimum supported Hazelcast version is `4.1`.
+===== Dependencies structure for Redis has been changed
+Support for Redis has been splitted by individual modules(Jedis, Lettuce, Redisson). +
+See docs for your library
+
+* https://bucket4j.com/8.11.0/toc.html#dependencies-5[Lettuce]
+* https://bucket4j.com/8.11.0/toc.html#dependencies-6[Redisson]
+* https://bucket4j.com/8.11.0/toc.html#dependencies-7[Jedis]

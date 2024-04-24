@@ -13,7 +13,7 @@ jobs:
     strategy:
       matrix:
         # java: [ '8', '11' ]
-        java: [ '11' ]
+        java: [ '17' ]
         os: [ 'ubuntu-latest' ]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
