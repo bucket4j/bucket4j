@@ -13,7 +13,7 @@ The Bucket4j is distributed through [Maven Central](http://search.maven.org/):
 <dependency>
   <groupId>com.bucket4j</groupId>
   <artifactId>bucket4j_jdk17-core</artifactId>
-  <version>8.11.0</version>
+  <version>8.11.1</version>
 </dependency>
 ```
 ##### Java 11 dependency
@@ -22,7 +22,7 @@ The Bucket4j is distributed through [Maven Central](http://search.maven.org/):
 <dependency>
   <groupId>com.bucket4j</groupId>
   <artifactId>bucket4j_jdk11-core</artifactId>
-  <version>8.11.0</version>
+  <version>8.11.1</version>
 </dependency>
 ```
 ##### Java 8 dependency
@@ -46,11 +46,11 @@ private void doSomethingProtected() {
    }
 }
 ```
-More examples [can be found there](https://bucket4j.github.io/8.11.0/toc.html#quick-start-examples)
+More examples [can be found there](https://bucket4j.github.io/8.11.1/toc.html#quick-start-examples)
 
 ## [Documentation](https://bucket4j.github.io)
-* [Reference](https://bucket4j.github.io/8.11.0/toc.html)
-* [Quick start examples](https://bucket4j.github.io/8.11.0/toc.html#quick-start-examples)
+* [Reference](https://bucket4j.github.io/8.11.1/toc.html)
+* [Quick start examples](https://bucket4j.github.io/8.11.1/toc.html#quick-start-examples)
 * [Third-party articles](https://bucket4j.github.io/#third-party-articles)
 
 ## Bucket4j basic features
@@ -95,11 +95,11 @@ In addition to local in-memory buckets, the Bucket4j supports clustered usage sc
 ### JDBC back-ends
 | Back-end                   |                                     Documentation link                                      |
 |:---------------------------|:-------------------------------------------------------------------------------------------:|
-| ```MySQL```                |       [bucket4j-mysql](https://bucket4j.github.io/8.11.0/toc.html#mysql-integration)        |
-| ```PostgreSQL```           |  [bucket4j-postgresql](https://bucket4j.github.io/8.11.0/toc.html#postgresql-integration)   |
-| ```Oracle```               |      [bucket4j-oracle](https://bucket4j.github.io/8.11.0/toc.html#oracle-integration)       |
-| ```Microsoft SQL Server``` | [bucket4j-mssql](https://bucket4j.github.io/8.11.0/toc.html#microsoftsqlserver-integration) |
-| ```MariaDB```              |     [bucket4j-mariadb](https://bucket4j.github.io/8.11.0/toc.html#mariadb-integration)      |
+| ```MySQL```                |       [bucket4j-mysql](https://bucket4j.github.io/8.11.1/toc.html#mysql-integration)        |
+| ```PostgreSQL```           |  [bucket4j-postgresql](https://bucket4j.github.io/8.11.1/toc.html#postgresql-integration)   |
+| ```Oracle```               |      [bucket4j-oracle](https://bucket4j.github.io/8.11.1/toc.html#oracle-integration)       |
+| ```Microsoft SQL Server``` | [bucket4j-mssql](https://bucket4j.github.io/8.11.1/toc.html#microsoftsqlserver-integration) |
+| ```MariaDB```              |     [bucket4j-mariadb](https://bucket4j.github.io/8.11.1/toc.html#mariadb-integration)      |
 
 
 ### Local caches support
