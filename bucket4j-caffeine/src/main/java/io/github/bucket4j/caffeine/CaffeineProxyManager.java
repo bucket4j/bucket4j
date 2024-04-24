@@ -110,6 +110,11 @@ public class CaffeineProxyManager<K> extends AbstractProxyManager<K> {
             .build();
     }
 
+    @Override
+    public boolean isExpireAfterWriteSupported() {
+        return true;
+    }
+
     /**
      * Returns the cache that is used for storing the buckets
      *

@@ -57,6 +57,11 @@ public class Bucket4jCaffeine {
             return new CaffeineProxyManager<>(this);
         }
 
+        @Override
+        public boolean isExpireAfterWriteSupported() {
+            return true;
+        }
+
     }
 
 }

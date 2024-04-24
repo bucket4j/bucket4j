@@ -42,17 +42,17 @@ public class JedisBasedProxyManagerStandaloneTest extends AbstractDistributedBuc
                 "JedisBasedProxyManager_ByteArrayKey",
                 () -> UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8),
                 () -> Bucket4jJedis.casBasedBuilder(jedisPool)
-            ),
+            ).checkExpiration(),
             new ProxyManagerSpec<>(
                 "JedisBasedProxyManager_StringKey",
                 () -> UUID.randomUUID().toString(),
                 () -> Bucket4jJedis.casBasedBuilder(jedisPool).keyMapper(Mapper.STRING)
-            ),
+            ).checkExpiration(),
             new ProxyManagerSpec<>(
                 "JedisBasedProxyManager_unifiedJedisPooled_ByteArrayKey",
                 () -> UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8),
                 () -> Bucket4jJedis.casBasedBuilder(unifiedJedisPooled)
-            )
+            ).checkExpiration()
         );
     }
 

@@ -64,12 +64,12 @@ public class HazelcastWithCustomSerializersTest extends AbstractDistributedBucke
                 "HazelcastProxyManager_CustomSerialization",
                 () -> UUID.randomUUID().toString(),
                 () -> Bucket4jHazelcast.entryProcessorBasedBuilder(map)
-            ),
+            ).checkExpiration(),
             new ProxyManagerSpec<>(
                 "HazelcastLockBasedProxyManager_JdkSerialization_offloadableExecutor",
                 () -> UUID.randomUUID().toString(),
                 () -> Bucket4jHazelcast.entryProcessorBasedBuilder(map).offloadableExecutorName("my-executor")
-            )
+            ).checkExpiration()
         );
     }
 

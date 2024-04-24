@@ -156,6 +156,11 @@ public class Bucket4jJedis {
         public RedisApi getRedisApi() {
             return redisApi;
         }
+
+        @Override
+        public boolean isExpireAfterWriteSupported() {
+            return true;
+        }
     }
 
 }
