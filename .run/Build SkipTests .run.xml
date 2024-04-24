@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Build MAVEN CENTRAL" type="MavenRunConfiguration" factoryName="Maven">
+  <configuration default="false" name="Build SkipTests " type="MavenRunConfiguration" factoryName="Maven">
     <MavenSettings>
       <option name="myGeneralSettings" />
       <option name="myRunnerSettings" />
@@ -18,9 +18,7 @@
           </option>
           <option name="pomFileName" />
           <option name="profilesMap">
-            <map>
-              <entry key="release" value="true" />
-            </map>
+            <map />
           </option>
           <option name="projectsCmdOptionValues">
             <list />

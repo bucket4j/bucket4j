@@ -63,10 +63,12 @@ public class LettuceBasedProxyManager<K> extends AbstractCompareAndSwapBasedProx
             public <V> RedisFuture<V> eval(String script, ScriptOutputType scriptOutputType, K[] keys, byte[][] params) {
                 return redisAsyncCommands.eval(script, scriptOutputType, keys, params);
             }
+
             @Override
             public RedisFuture<byte[]> get(K key) {
                 return redisAsyncCommands.get(key);
             }
+
             @Override
             public RedisFuture<?> delete(K key) {
                 return redisAsyncCommands.del(key);

@@ -87,6 +87,11 @@ public class Bucket4jHazelcast {
         public HazelcastProxyManager<K> build() {
             return new HazelcastProxyManager<>(this);
         }
+
+        @Override
+        public boolean isExpireAfterWriteSupported() {
+            return true;
+        }
     }
 
     public static class HazelcastCompareAndSwapBasedProxyManagerBuilder<K> extends AbstractProxyManagerBuilder<K, HazelcastCompareAndSwapBasedProxyManager<K>, HazelcastCompareAndSwapBasedProxyManagerBuilder<K>> {

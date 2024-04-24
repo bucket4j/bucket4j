@@ -78,6 +78,11 @@ public class Bucket4jRedisson {
             return new RedissonBasedProxyManager<>(this);
         }
 
+        @Override
+        public boolean isExpireAfterWriteSupported() {
+            return true;
+        }
+
     }
 
 }

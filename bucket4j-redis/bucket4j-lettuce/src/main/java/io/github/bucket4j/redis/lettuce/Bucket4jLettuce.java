@@ -151,6 +151,12 @@ public class Bucket4jLettuce {
         public LettuceBasedProxyManager<K> build() {
             return new LettuceBasedProxyManager<>(this);
         }
+
+        @Override
+        public boolean isExpireAfterWriteSupported() {
+            return true;
+        }
+
     }
 
 }

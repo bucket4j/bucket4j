@@ -38,12 +38,12 @@ public class LettuceBasedProxyManagerStandaloneTest extends AbstractDistributedB
                 "LettuceBasedProxyManager_ByteArrayKey",
                 () -> UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8),
                 () -> Bucket4jLettuce.casBasedBuilder(redisClient)
-            ),
+            ).checkExpiration(),
             new ProxyManagerSpec<>(
                 "LettuceBasedProxyManager_StringKey",
                 () -> UUID.randomUUID().toString(),
                 () -> Bucket4jLettuce.casBasedBuilder(redisClient.connect(RedisCodec.of(StringCodec.UTF8, ByteArrayCodec.INSTANCE)))
-            )
+            ).checkExpiration()
         );
     }
 

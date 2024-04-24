@@ -14,6 +14,6 @@ Now, the version of target JDK become a part of artifact name. For example `com.
 Support for Redis has been splitted by individual modules(Jedis, Lettuce, Redisson). +
 See docs for your library
 
-* https://bucket4j.com/8.11.0/toc.html#dependencies-5[Lettuce]
-* https://bucket4j.com/8.11.0/toc.html#dependencies-6[Redisson]
-* https://bucket4j.com/8.11.0/toc.html#dependencies-7[Jedis]
+* https://bucket4j.com/8.11.1/toc.html#dependencies-5[Lettuce]
+* https://bucket4j.com/8.11.1/toc.html#dependencies-6[Redisson]
+* https://bucket4j.com/8.11.1/toc.html#dependencies-7[Jedis]
