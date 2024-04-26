@@ -6,6 +6,7 @@ import io.github.bucket4j.distributed.BucketProxy;
 import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
 import io.github.bucket4j.distributed.proxy.AbstractProxyManagerBuilder;
 import io.github.bucket4j.distributed.proxy.BucketNotFoundException;
+import io.github.bucket4j.distributed.proxy.ExpiredEntriesCleaner;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.distributed.proxy.optimization.DelayParameters;
 import io.github.bucket4j.distributed.proxy.optimization.NopeOptimizationListener;
@@ -167,6 +168,9 @@ public abstract class AbstractDistributedBucketTest {
         BucketProxy bucket = proxyManager.builder().build(key, () -> configuration);
         assertEquals(10, bucket.tryConsumeAsMuchAsPossible());
         Thread.sleep(3000);
+        if (proxyManager instanceof ExpiredEntriesCleaner) {
+            assertEquals(0, ((ExpiredEntriesCleaner) proxyManager).removeExpired(1));
+        }
         assertTrue(proxyManager.getProxyConfiguration(key).isPresent());
     }
 
@@ -191,6 +195,9 @@ public abstract class AbstractDistributedBucketTest {
         AsyncBucketProxy bucket = proxyManager.asAsync().builder().build(key, () -> CompletableFuture.completedFuture(configuration));
         assertEquals(10, bucket.tryConsumeAsMuchAsPossible().get());
         Thread.sleep(3000);
+        if (proxyManager instanceof ExpiredEntriesCleaner) {
+            assertEquals(0, ((ExpiredEntriesCleaner) proxyManager).removeExpired(1));
+        }
         assertTrue(proxyManager.getProxyConfiguration(key).isPresent());
     }
 
@@ -211,6 +218,9 @@ public abstract class AbstractDistributedBucketTest {
         BucketProxy bucket = proxyManager.builder().build(key, () -> configuration);
         assertEquals(10, bucket.tryConsumeAsMuchAsPossible());
         Thread.sleep(3000);
+        if (proxyManager instanceof ExpiredEntriesCleaner) {
+            assertEquals(1, ((ExpiredEntriesCleaner) proxyManager).removeExpired(1));
+        }
         assertTrue(proxyManager.getProxyConfiguration(key).isEmpty());
     }
 
@@ -234,6 +244,9 @@ public abstract class AbstractDistributedBucketTest {
         AsyncBucketProxy bucket = proxyManager.asAsync().builder().build(key, () -> CompletableFuture.completedFuture(configuration));
         assertEquals(10, bucket.tryConsumeAsMuchAsPossible().get());
         Thread.sleep(3000);
+        if (proxyManager instanceof ExpiredEntriesCleaner) {
+            assertEquals(1, ((ExpiredEntriesCleaner) proxyManager).removeExpired(1));
+        }
         assertTrue(proxyManager.getProxyConfiguration(key).isEmpty());
     }
 
@@ -254,8 +267,14 @@ public abstract class AbstractDistributedBucketTest {
         BucketProxy bucket = proxyManager.builder().build(key, () -> configuration);
         assertTrue(bucket.tryConsume(1));
         Thread.sleep(100);
+        if (proxyManager instanceof ExpiredEntriesCleaner) {
+            assertEquals(0, ((ExpiredEntriesCleaner) proxyManager).removeExpired(1));
+        }
         assertFalse(proxyManager.getProxyConfiguration(key).isEmpty());
         Thread.sleep(3000);
+        if (proxyManager instanceof ExpiredEntriesCleaner) {
+            assertEquals(1, ((ExpiredEntriesCleaner) proxyManager).removeExpired(1));
+        }
         assertTrue(proxyManager.getProxyConfiguration(key).isEmpty());
     }
 
@@ -280,8 +299,14 @@ public abstract class AbstractDistributedBucketTest {
         AsyncBucketProxy bucket = proxyManager.asAsync().builder().build(key, () -> CompletableFuture.completedFuture(configuration));
         assertEquals(true, bucket.tryConsume(1).get());
         Thread.sleep(100);
+        if (proxyManager instanceof ExpiredEntriesCleaner) {
+            assertEquals(0, ((ExpiredEntriesCleaner) proxyManager).removeExpired(1));
+        }
         assertFalse(proxyManager.getProxyConfiguration(key).isEmpty());
         Thread.sleep(3000);
+        if (proxyManager instanceof ExpiredEntriesCleaner) {
+            assertEquals(1, ((ExpiredEntriesCleaner) proxyManager).removeExpired(1));
+        }
         assertTrue(proxyManager.getProxyConfiguration(key).isEmpty());
     }
 

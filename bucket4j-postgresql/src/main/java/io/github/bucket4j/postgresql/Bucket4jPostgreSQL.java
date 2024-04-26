@@ -95,6 +95,10 @@ public class Bucket4jPostgreSQL {
             return lockIdSupplier;
         }
 
+        @Override
+        public boolean isExpireAfterWriteSupported() {
+            return true;
+        }
     }
 
     public static class PostgreSQLSelectForUpdateBasedProxyManagerBuilder<K> extends AbstractJdbcProxyManagerBuilder<K, PostgreSQLSelectForUpdateBasedProxyManager<K>, PostgreSQLSelectForUpdateBasedProxyManagerBuilder<K>> {
@@ -118,6 +122,11 @@ public class Bucket4jPostgreSQL {
         public <K2> PostgreSQLSelectForUpdateBasedProxyManagerBuilder<K2> primaryKeyMapper(PrimaryKeyMapper<K2> primaryKeyMapper) {
             super.primaryKeyMapper = (PrimaryKeyMapper) Objects.requireNonNull(primaryKeyMapper);
             return (PostgreSQLSelectForUpdateBasedProxyManagerBuilder<K2>) this;
+        }
+
+        @Override
+        public boolean isExpireAfterWriteSupported() {
+            return true;
         }
 
     }

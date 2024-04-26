@@ -19,12 +19,21 @@
  */
 package io.github.bucket4j.distributed.jdbc;
 
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import javax.sql.DataSource;
 
+import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
 import io.github.bucket4j.distributed.proxy.AbstractProxyManagerBuilder;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
+import io.github.bucket4j.distributed.remote.RemoteBucketState;
 
 /**
  * Base class for all JDBC proxy-manager builders.
@@ -43,6 +52,7 @@ public abstract class AbstractJdbcProxyManagerBuilder<K, P extends ProxyManager<
     private String idColumnName = "state";
     private String stateColumnName = "id";
     private String expiresAtColumnName = "expires_at";
+    private final List<CustomColumnProvider<K>> customColumns = new ArrayList<>();
 
     public AbstractJdbcProxyManagerBuilder(DataSource dataSource, PrimaryKeyMapper<K> primaryKeyMapper) {
         this.dataSource = Objects.requireNonNull(dataSource);
@@ -76,7 +86,7 @@ public abstract class AbstractJdbcProxyManagerBuilder<K, P extends ProxyManager<
     /**
      * Specifies name column that used to store a state of bucket
      *
-     * @param stateColumnName name column that used to store a state of bucket
+     * @param stateColumnName name of column that used to store a state of bucket
      *
      * @return this builder instance
      */
@@ -85,8 +95,35 @@ public abstract class AbstractJdbcProxyManagerBuilder<K, P extends ProxyManager<
         return (B) this;
     }
 
+    /**
+     * Specifies name of column that used to store expiration date, instead of name "expires_at" that is configured by default.
+     *
+     * @param expiresAtColumnName name of column that used to store expiration date
+     *
+     * @return this builder instance
+     */
     public B expiresAtColumn(String expiresAtColumnName) {
         this.expiresAtColumnName = Objects.requireNonNull(expiresAtColumnName);
+        return (B) this;
+    }
+
+    /**
+     * Specifies provider of custom field value
+     *
+     * @param column provider of custom field value
+     *
+     * @return this builder instance
+     */
+    public B addCustomColumn(CustomColumnProvider<K> column) {
+        if (column.getCustomFieldName() == null) {
+            throw new IllegalArgumentException("column.customFieldName must not be null");
+        }
+        customColumns.forEach(addedColumn -> {
+            if (addedColumn.getCustomFieldName().equals(column.getCustomFieldName())) {
+                throw new IllegalArgumentException("column with name " + column.getCustomFieldName() + " is already configured");
+            }
+        });
+        customColumns.add(column);
         return (B) this;
     }
 
@@ -113,4 +150,9 @@ public abstract class AbstractJdbcProxyManagerBuilder<K, P extends ProxyManager<
     public String getExpiresAtColumnName() {
         return expiresAtColumnName;
     }
+
+    public List<CustomColumnProvider<K>> getCustomColumns() {
+        return Collections.unmodifiableList(customColumns);
+    }
+
 }

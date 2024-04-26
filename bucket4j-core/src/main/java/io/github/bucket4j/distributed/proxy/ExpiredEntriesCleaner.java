@@ -29,15 +29,13 @@ import java.util.Collection;
  * Typically, this interface is implemented by RDBMS backed proxy-managers where underlying DBMS is not support automatically expiration.
  * And wise versa, this interface never implemented by Redis/JCache integrations,
  * because for such technologies expiration is supported out-of-the box by underlying technology.
- *
- * @param <K> type of key
  */
-public interface ExpiredEntriesCleaner<K> {
+public interface ExpiredEntriesCleaner {
 
     /**
      * Tries to remove expired bucket entries and put all removed keys to the returned collection.
      * It is guaranteed that on call of {@code removeExpired} does not remove more than {@code batchSize} buckets at once,
-     * it also means that size of returned collection always less than or equal to {@code batchSize},
+     * it also means that returned result always less than or equal to {@code batchSize},
      * so caller needs to analyze the size of returned collection and call {@code removeExpired} again if needed.
      *
      * <p>Example of usage:
@@ -49,23 +47,23 @@ public interface ExpiredEntriesCleaner<K> {
      *
      *    @Scheduled(fixedDelay = CLEANUP_INTERVAL_MILLIS)
      *    public void scheduleFixedDelayTask() {
-     *       Collection<Long> removedKeys;
+     *       int removedKeysCount;
      *       do {
-     *            removedKeys = proxyManager.removedKeys(MAX_KEYS_TO_REMOVE_IN_ONE_TRANSACTION);
-     *            if (!removedKeys.isEmpty()) {
-     *                logger.info("Removed {} expired buckets", expiredKeys.size());
+     *            removedKeysCount = proxyManager.removedKeys(MAX_KEYS_TO_REMOVE_IN_ONE_TRANSACTION);
+     *            if (removedKeysCount > 0) {
+     *                logger.info("Removed {} expired buckets", removedKeysCount);
      *            } else {
      *                logger.info("There are no expired buckets to remove");
      *            }
-     *       } while (removedKeys.size() > THRESHOLD_TO_CONTINUE_REMOVING)
+     *       } while (removedKeysCount > THRESHOLD_TO_CONTINUE_REMOVING)
      *    }
      * }
      * </pre>
      *
      * @param batchSize specifies how many expired buckets can be deleted in single transaction.
      *
-     * @return collection of removed bucket keys
+     * @return count of removed keys
      */
-    Collection<K> removeExpired(int batchSize);
+    int removeExpired(int batchSize);
 
 }

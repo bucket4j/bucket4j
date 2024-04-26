@@ -199,4 +199,9 @@ public class PostgreSQLadvisoryLockBasedProxyManager<K> extends AbstractLockBase
         }
     }
 
+    @Override
+    public boolean isExpireAfterWriteSupported() {
+        return true;
+    }
+
 }
