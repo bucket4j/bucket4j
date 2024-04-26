@@ -20,9 +20,11 @@
 package io.github.bucket4j.postgresql;
 
 import io.github.bucket4j.BucketExceptions;
+import io.github.bucket4j.distributed.jdbc.CustomColumnProvider;
 import io.github.bucket4j.distributed.jdbc.PrimaryKeyMapper;
 import io.github.bucket4j.distributed.jdbc.SQLProxyConfiguration;
 import io.github.bucket4j.distributed.jdbc.LockIdSupplier;
+import io.github.bucket4j.distributed.proxy.ExpiredEntriesCleaner;
 import io.github.bucket4j.distributed.proxy.generic.pessimistic_locking.AbstractLockBasedProxyManager;
 import io.github.bucket4j.distributed.proxy.generic.pessimistic_locking.LockBasedTransaction;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
@@ -34,6 +36,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.MessageFormat;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -44,7 +48,7 @@ import java.util.Optional;
  *
  * @param <K> type of primary key
  */
-public class PostgreSQLadvisoryLockBasedProxyManager<K> extends AbstractLockBasedProxyManager<K> {
+public class PostgreSQLadvisoryLockBasedProxyManager<K> extends AbstractLockBasedProxyManager<K> implements ExpiredEntriesCleaner {
 
     private final LockIdSupplier<K> lockIdSupplier;
     private final PrimaryKeyMapper<K> primaryKeyMapper;
@@ -53,6 +57,8 @@ public class PostgreSQLadvisoryLockBasedProxyManager<K> extends AbstractLockBase
     private final String updateSqlQuery;
     private final String insertSqlQuery;
     private final String selectSqlQuery;
+    private final String clearExpiredSqlQuery;
+    private final List<CustomColumnProvider<K>> customColumns = new ArrayList<>();
 
     PostgreSQLadvisoryLockBasedProxyManager(PostgreSQLadvisoryLockBasedProxyManagerBuilder<K> builder) {
         super(builder.getClientSideConfig());
@@ -60,9 +66,46 @@ public class PostgreSQLadvisoryLockBasedProxyManager<K> extends AbstractLockBase
         this.primaryKeyMapper = builder.getPrimaryKeyMapper();
         this.lockIdSupplier = builder.getLockIdSupplier();
         this.removeSqlQuery = MessageFormat.format("DELETE FROM {0} WHERE {1} = ?", builder.getTableName(), builder.getIdColumnName());
-        this.updateSqlQuery = MessageFormat.format("UPDATE {0} SET {1}=? WHERE {2}=?", builder.getTableName(), builder.getStateColumnName(), builder.getIdColumnName());
-        this.insertSqlQuery = MessageFormat.format("INSERT INTO {0}({1}, {2}) VALUES(?, ?)", builder.getTableName(), builder.getIdColumnName(), builder.getStateColumnName());
         this.selectSqlQuery = MessageFormat.format("SELECT {0} as state FROM {1} WHERE {2} = ?", builder.getStateColumnName(), builder.getTableName(), builder.getIdColumnName());
+        this.customColumns.addAll(builder.getCustomColumns());
+        getClientSideConfig().getExpirationAfterWriteStrategy().ifPresent(expiration -> {
+            this.customColumns.add(CustomColumnProvider.createExpiresInColumnProvider(builder.getExpiresAtColumnName(), expiration));
+            String lockColumn = builder.getLockColumn();
+            this.customColumns.add(new CustomColumnProvider<K>() {
+                @Override
+                public void setCustomField(K key, int paramIndex, PreparedStatement statement, RemoteBucketState state, long currentTimeNanos) throws SQLException {
+                    statement.setLong(paramIndex, lockIdSupplier.toLockId(key));
+                }
+                @Override
+                public String getCustomFieldName() {
+                    return lockColumn;
+                }
+            });
+        });
+        if (customColumns.isEmpty()) {
+            this.insertSqlQuery = MessageFormat.format("INSERT INTO {0}({1}, {2}) VALUES(?, ?)", builder.getTableName(), builder.getIdColumnName(), builder.getStateColumnName());
+            this.updateSqlQuery = MessageFormat.format("UPDATE {0} SET {1}=? WHERE {2}=?", builder.getTableName(), builder.getStateColumnName(), builder.getIdColumnName());
+        } else {
+            String customPartInUpdate = String.join(",", customColumns.stream().map(column -> column.getCustomFieldName() + "=?").toList());
+            this.updateSqlQuery = MessageFormat.format("UPDATE {0} SET {1}=?,{2} WHERE {3}=?", builder.getTableName(), builder.getStateColumnName(), customPartInUpdate, builder.getIdColumnName());
+
+            String customInsertColumns = String.join(",", customColumns.stream().map(CustomColumnProvider::getCustomFieldName).toList());
+            String customInsertValues = String.join(",", customColumns.stream().map(column -> "?").toList());
+            this.insertSqlQuery = MessageFormat.format("INSERT INTO {0}({1},{2},{3}) VALUES(?,?,{4})",
+                builder.getTableName(),
+                builder.getIdColumnName(),
+                builder.getStateColumnName(),
+                customInsertColumns,
+                customInsertValues
+            );
+        }
+        this.clearExpiredSqlQuery = MessageFormat.format(
+            """
+            DELETE FROM {0} WHERE
+                {2} < ? AND
+                {1} IN(SELECT {1} FROM {0} WHERE {2} < ? AND pg_try_advisory_xact_lock({3}) LIMIT ?)
+            """, builder.getTableName(), builder.getIdColumnName(), builder.getExpiresAtColumnName(), builder.getLockColumn()
+        );
     }
 
     /**
@@ -71,6 +114,7 @@ public class PostgreSQLadvisoryLockBasedProxyManager<K> extends AbstractLockBase
     @Deprecated
     public PostgreSQLadvisoryLockBasedProxyManager(SQLProxyConfiguration<K> configuration) {
         super(configuration.getClientSideConfig());
+        this.clearExpiredSqlQuery = null;
         this.dataSource = Objects.requireNonNull(configuration.getDataSource());
         this.primaryKeyMapper = configuration.getPrimaryKeyMapper();
         this.lockIdSupplier = (LockIdSupplier) LockIdSupplier.DEFAULT;
@@ -78,6 +122,9 @@ public class PostgreSQLadvisoryLockBasedProxyManager<K> extends AbstractLockBase
         this.updateSqlQuery = MessageFormat.format("UPDATE {0} SET {1}=? WHERE {2}=?", configuration.getTableName(), configuration.getStateName(), configuration.getIdName());
         this.insertSqlQuery = MessageFormat.format("INSERT INTO {0}({1}, {2}) VALUES(?, ?)", configuration.getTableName(), configuration.getIdName(), configuration.getStateName());
         this.selectSqlQuery = MessageFormat.format("SELECT {0} as state FROM {1} WHERE {2} = ?", configuration.getStateName(), configuration.getTableName(), configuration.getIdName());
+        if (getClientSideConfig().getExpirationAfterWriteStrategy().isPresent()) {
+            throw new IllegalArgumentException();
+        }
     }
 
     @Override
@@ -130,8 +177,12 @@ public class PostgreSQLadvisoryLockBasedProxyManager<K> extends AbstractLockBase
                 try {
                     try (PreparedStatement updateStatement = connection.prepareStatement(updateSqlQuery)) {
                         applyTimeout(updateStatement, requestTimeout);
-                        updateStatement.setBytes(1, data);
-                        primaryKeyMapper.set(updateStatement, 2, key);
+                        int i = 0;
+                        updateStatement.setBytes(++i, data);
+                        for (CustomColumnProvider<K> column : customColumns) {
+                            column.setCustomField(key, ++i, updateStatement, newState, currentTimeNanos());
+                        }
+                        primaryKeyMapper.set(updateStatement, ++i, key);
                         updateStatement.executeUpdate();
                     }
                 } catch (SQLException e) {
@@ -153,8 +204,12 @@ public class PostgreSQLadvisoryLockBasedProxyManager<K> extends AbstractLockBase
                 try {
                     try (PreparedStatement insertStatement = connection.prepareStatement(insertSqlQuery)) {
                         applyTimeout(insertStatement, requestTimeout);
-                        primaryKeyMapper.set(insertStatement, 1, key);
-                        insertStatement.setBytes(2, data);
+                        int i = 0;
+                        primaryKeyMapper.set(insertStatement, ++i, key);
+                        insertStatement.setBytes(++i, data);
+                        for (CustomColumnProvider<K> column : customColumns) {
+                            column.setCustomField(key, ++i, insertStatement, newState, currentTimeNanos());
+                        }
                         insertStatement.executeUpdate();
                     }
                 } catch (SQLException e) {
@@ -202,6 +257,21 @@ public class PostgreSQLadvisoryLockBasedProxyManager<K> extends AbstractLockBase
     @Override
     public boolean isExpireAfterWriteSupported() {
         return true;
+    }
+
+    @Override
+    public int removeExpired(int batchSize) {
+        try (Connection connection = dataSource.getConnection()) {
+            long currentTimeMillis = System.currentTimeMillis();
+            try(PreparedStatement clearStatement = connection.prepareStatement(clearExpiredSqlQuery)) {
+                clearStatement.setLong(1, currentTimeMillis);
+                clearStatement.setLong(2, currentTimeMillis);
+                clearStatement.setInt(3, batchSize);
+                return clearStatement.executeUpdate();
+            }
+        } catch (SQLException e) {
+            throw new BucketExceptions.BucketExecutionException(e);
+        }
     }
 
 }

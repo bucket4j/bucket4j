@@ -57,6 +57,7 @@ public class Bucket4jPostgreSQL {
     public static class PostgreSQLadvisoryLockBasedProxyManagerBuilder<K> extends AbstractJdbcProxyManagerBuilder<K, PostgreSQLadvisoryLockBasedProxyManager<K>, PostgreSQLadvisoryLockBasedProxyManagerBuilder<K>> {
 
         private LockIdSupplier<K> lockIdSupplier = (LockIdSupplier) LockIdSupplier.DEFAULT;
+        private String lockColumn = "explicit_lock";
 
         public PostgreSQLadvisoryLockBasedProxyManagerBuilder(DataSource dataSource, PrimaryKeyMapper<K> primaryKeyMapper) {
             super(dataSource, primaryKeyMapper);
@@ -91,8 +92,24 @@ public class Bucket4jPostgreSQL {
             return (PostgreSQLadvisoryLockBasedProxyManagerBuilder<K2>) this;
         }
 
+        /**
+         * Specifies the name of column to store advisory_lock instead of default "explicit_lock".
+         *
+         * @param lockColumn the name of column to store advisory_lock
+         *
+         * @return this builder instance
+         */
+        public PostgreSQLadvisoryLockBasedProxyManagerBuilder<K> lockColumn(String lockColumn) {
+            this.lockColumn = Objects.requireNonNull(lockColumn);
+            return this;
+        }
+
         public LockIdSupplier<K> getLockIdSupplier() {
             return lockIdSupplier;
+        }
+
+        public String getLockColumn() {
+            return lockColumn;
         }
 
         @Override

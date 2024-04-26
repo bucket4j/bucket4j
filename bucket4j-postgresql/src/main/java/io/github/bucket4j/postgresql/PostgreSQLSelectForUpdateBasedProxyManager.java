@@ -57,7 +57,7 @@ public class PostgreSQLSelectForUpdateBasedProxyManager<K> extends AbstractSelec
     private final String insertSqlQuery;
     private final String selectSqlQuery;
     private final String clearExpiredSqlQuery;
-    private final List<CustomColumnProvider<K>> customColumns;
+    private final List<CustomColumnProvider<K>> customColumns = new ArrayList<>();
 
     public PostgreSQLSelectForUpdateBasedProxyManager(PostgreSQLSelectForUpdateBasedProxyManagerBuilder<K> builder) {
         super(builder.getClientSideConfig());
@@ -67,7 +67,6 @@ public class PostgreSQLSelectForUpdateBasedProxyManager<K> extends AbstractSelec
         this.insertSqlQuery = MessageFormat.format("INSERT INTO {0}({1}, {2}) VALUES(?, null) ON CONFLICT({3}) DO NOTHING",
             builder.getTableName(), builder.getIdColumnName(), builder.getStateColumnName(), builder.getIdColumnName());
         this.selectSqlQuery = MessageFormat.format("SELECT {0} as state FROM {1} WHERE {2} = ? FOR UPDATE", builder.getStateColumnName(), builder.getTableName(), builder.getIdColumnName());
-        this.customColumns = new ArrayList<>();
         this.customColumns.addAll(builder.getCustomColumns());
         getClientSideConfig().getExpirationAfterWriteStrategy().ifPresent(expiration -> {
             this.customColumns.add(CustomColumnProvider.createExpiresInColumnProvider(builder.getExpiresAtColumnName(), expiration));
@@ -88,9 +87,9 @@ public class PostgreSQLSelectForUpdateBasedProxyManager<K> extends AbstractSelec
     }
 
     /**
-     *
-     * @param configuration {@link SQLProxyConfiguration} configuration.
+     * @deprecated use {@link Bucket4jPostgreSQL#selectForUpdateBasedBuilder }
      */
+    @Deprecated
     public PostgreSQLSelectForUpdateBasedProxyManager(SQLProxyConfiguration<K> configuration) {
         super(configuration.getClientSideConfig());
         this.clearExpiredSqlQuery = null;
@@ -101,7 +100,7 @@ public class PostgreSQLSelectForUpdateBasedProxyManager<K> extends AbstractSelec
         this.insertSqlQuery = MessageFormat.format("INSERT INTO {0}({1}, {2}) VALUES(?, null) ON CONFLICT({3}) DO NOTHING",
                 configuration.getTableName(), configuration.getIdName(), configuration.getStateName(), configuration.getIdName());
         this.selectSqlQuery = MessageFormat.format("SELECT {0} as state FROM {1} WHERE {2} = ? FOR UPDATE", configuration.getStateName(), configuration.getTableName(), configuration.getIdName());
-        this.customColumns = new ArrayList<>();
+
         if (getClientSideConfig().getExpirationAfterWriteStrategy().isPresent()) {
             throw new IllegalArgumentException();
         }
