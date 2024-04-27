@@ -64,6 +64,11 @@ public class Bucket4jOracle {
             super.primaryKeyMapper = (PrimaryKeyMapper) Objects.requireNonNull(primaryKeyMapper);
             return (OracleSelectForUpdateBasedProxyManagerBuilder<K2>) this;
         }
+
+        @Override
+        public boolean isExpireAfterWriteSupported() {
+            return true;
+        }
     }
 
 }

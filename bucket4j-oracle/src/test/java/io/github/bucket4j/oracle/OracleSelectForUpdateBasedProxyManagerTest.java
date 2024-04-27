@@ -3,8 +3,7 @@ package io.github.bucket4j.oracle;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import io.github.bucket4j.distributed.jdbc.BucketTableSettings;
-import io.github.bucket4j.distributed.jdbc.SQLProxyConfiguration;
-import io.github.bucket4j.distributed.proxy.ClientSideConfig;
+import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
 import io.github.bucket4j.tck.ProxyManagerSpec;
 
@@ -14,14 +13,14 @@ import org.testcontainers.containers.OracleContainer;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.MessageFormat;
-import java.time.Duration;
 import java.util.Arrays;
 import java.util.concurrent.ThreadLocalRandom;
 
-public class OracleSelectForUpdateLockBasedTransactionTest extends AbstractDistributedBucketTest {
+public class OracleSelectForUpdateBasedProxyManagerTest extends AbstractDistributedBucketTest {
 
     private static OracleContainer container;
     private static DataSource dataSource;
@@ -31,7 +30,7 @@ public class OracleSelectForUpdateLockBasedTransactionTest extends AbstractDistr
         container = startOracleXeContainer();
         dataSource = createJdbcDataSource(container);
         BucketTableSettings tableSettings = BucketTableSettings.getDefault();
-        final String INIT_TABLE_SCRIPT = "CREATE TABLE {0} ( {1} NUMBER NOT NULL PRIMARY KEY, {2} RAW(255) )";
+        final String INIT_TABLE_SCRIPT = "CREATE TABLE {0} ( {1} NUMBER NOT NULL PRIMARY KEY, {2} RAW(255), expires_at NUMBER)";
         try (Connection connection = dataSource.getConnection()) {
             try (Statement statement = connection.createStatement()) {
                 String query = MessageFormat.format(INIT_TABLE_SCRIPT, tableSettings.getTableName(), tableSettings.getIdName(), tableSettings.getStateName());
@@ -47,7 +46,7 @@ public class OracleSelectForUpdateLockBasedTransactionTest extends AbstractDistr
                     .table("bucket")
                     .idColumn("id")
                     .stateColumn("state")
-            )
+            ).checkExpiration()
         );
     }
 

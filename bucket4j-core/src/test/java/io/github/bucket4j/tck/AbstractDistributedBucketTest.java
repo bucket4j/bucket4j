@@ -23,6 +23,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
 
+import java.sql.SQLException;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
@@ -153,7 +154,7 @@ public abstract class AbstractDistributedBucketTest {
 
     @MethodSource("specs")
     @ParameterizedTest
-    public <K, P extends ProxyManager<K>, B extends AbstractProxyManagerBuilder<K, P, B>> void testNoExpirationAfterWrite(ProxyManagerSpec<K, P, B> spec) throws InterruptedException {
+    public <K, P extends ProxyManager<K>, B extends AbstractProxyManagerBuilder<K, P, B>> void testNoExpirationAfterWrite(ProxyManagerSpec<K, P, B> spec) throws InterruptedException, SQLException {
         if (!spec.expirationSupported) {
             return;
         }
@@ -170,13 +171,15 @@ public abstract class AbstractDistributedBucketTest {
         Thread.sleep(3000);
         if (proxyManager instanceof ExpiredEntriesCleaner) {
             assertEquals(0, ((ExpiredEntriesCleaner) proxyManager).removeExpired(1));
+        } else {
+            assertEquals(0, removeExpired(proxyManager, 1));
         }
         assertTrue(proxyManager.getProxyConfiguration(key).isPresent());
     }
 
     @MethodSource("specs")
     @ParameterizedTest
-    public <K, P extends ProxyManager<K>, B extends AbstractProxyManagerBuilder<K, P, B>> void testNoExpirationAfterWrite_Async(ProxyManagerSpec<K, P, B> spec) throws InterruptedException, ExecutionException {
+    public <K, P extends ProxyManager<K>, B extends AbstractProxyManagerBuilder<K, P, B>> void testNoExpirationAfterWrite_Async(ProxyManagerSpec<K, P, B> spec) throws InterruptedException, ExecutionException, SQLException {
         if (!spec.expirationSupported) {
             return;
         }
@@ -197,13 +200,15 @@ public abstract class AbstractDistributedBucketTest {
         Thread.sleep(3000);
         if (proxyManager instanceof ExpiredEntriesCleaner) {
             assertEquals(0, ((ExpiredEntriesCleaner) proxyManager).removeExpired(1));
+        } else {
+            assertEquals(0, removeExpired(proxyManager, 1));
         }
         assertTrue(proxyManager.getProxyConfiguration(key).isPresent());
     }
 
     @MethodSource("specs")
     @ParameterizedTest
-    public <K, P extends ProxyManager<K>, B extends AbstractProxyManagerBuilder<K, P, B>> void testFixedTtlExpirationAfterWrite(ProxyManagerSpec<K, P, B> spec) throws InterruptedException {
+    public <K, P extends ProxyManager<K>, B extends AbstractProxyManagerBuilder<K, P, B>> void testFixedTtlExpirationAfterWrite(ProxyManagerSpec<K, P, B> spec) throws InterruptedException, SQLException {
         if (!spec.expirationSupported) {
             return;
         }
@@ -220,13 +225,15 @@ public abstract class AbstractDistributedBucketTest {
         Thread.sleep(3000);
         if (proxyManager instanceof ExpiredEntriesCleaner) {
             assertEquals(1, ((ExpiredEntriesCleaner) proxyManager).removeExpired(1));
+        } else {
+            assertEquals(1, removeExpired(proxyManager, 1));
         }
         assertTrue(proxyManager.getProxyConfiguration(key).isEmpty());
     }
 
     @MethodSource("specs")
     @ParameterizedTest
-    public <K, P extends ProxyManager<K>, B extends AbstractProxyManagerBuilder<K, P, B>> void testFixedTtlExpirationAfterWrite_Async(ProxyManagerSpec<K, P, B> spec) throws InterruptedException, ExecutionException {
+    public <K, P extends ProxyManager<K>, B extends AbstractProxyManagerBuilder<K, P, B>> void testFixedTtlExpirationAfterWrite_Async(ProxyManagerSpec<K, P, B> spec) throws InterruptedException, ExecutionException, SQLException {
         if (!spec.expirationSupported) {
             return;
         }
@@ -246,13 +253,15 @@ public abstract class AbstractDistributedBucketTest {
         Thread.sleep(3000);
         if (proxyManager instanceof ExpiredEntriesCleaner) {
             assertEquals(1, ((ExpiredEntriesCleaner) proxyManager).removeExpired(1));
+        } else {
+            assertEquals(1, removeExpired(proxyManager, 1));
         }
         assertTrue(proxyManager.getProxyConfiguration(key).isEmpty());
     }
 
     @MethodSource("specs")
     @ParameterizedTest
-    public <K, P extends ProxyManager<K>, B extends AbstractProxyManagerBuilder<K, P, B>> void testRefillBasedExpirationAfterWrite(ProxyManagerSpec<K, P, B> spec) throws InterruptedException {
+    public <K, P extends ProxyManager<K>, B extends AbstractProxyManagerBuilder<K, P, B>> void testRefillBasedExpirationAfterWrite(ProxyManagerSpec<K, P, B> spec) throws InterruptedException, SQLException {
         if (!spec.expirationSupported) {
             return;
         }
@@ -269,18 +278,22 @@ public abstract class AbstractDistributedBucketTest {
         Thread.sleep(100);
         if (proxyManager instanceof ExpiredEntriesCleaner) {
             assertEquals(0, ((ExpiredEntriesCleaner) proxyManager).removeExpired(1));
+        } else {
+            assertEquals(0, removeExpired(proxyManager, 1));
         }
         assertFalse(proxyManager.getProxyConfiguration(key).isEmpty());
         Thread.sleep(3000);
         if (proxyManager instanceof ExpiredEntriesCleaner) {
             assertEquals(1, ((ExpiredEntriesCleaner) proxyManager).removeExpired(1));
+        }  else {
+            assertEquals(1, removeExpired(proxyManager, 1));
         }
         assertTrue(proxyManager.getProxyConfiguration(key).isEmpty());
     }
 
     @MethodSource("specs")
     @ParameterizedTest
-    public <K, P extends ProxyManager<K>, B extends AbstractProxyManagerBuilder<K, P, B>> void testRefillBasedExpirationAfterWrite_Async(ProxyManagerSpec<K, P, B> spec) throws InterruptedException, ExecutionException {
+    public <K, P extends ProxyManager<K>, B extends AbstractProxyManagerBuilder<K, P, B>> void testRefillBasedExpirationAfterWrite_Async(ProxyManagerSpec<K, P, B> spec) throws InterruptedException, ExecutionException, SQLException {
         if (!spec.expirationSupported) {
             return;
         }
@@ -301,11 +314,15 @@ public abstract class AbstractDistributedBucketTest {
         Thread.sleep(100);
         if (proxyManager instanceof ExpiredEntriesCleaner) {
             assertEquals(0, ((ExpiredEntriesCleaner) proxyManager).removeExpired(1));
+        } else {
+            assertEquals(0, removeExpired(proxyManager, 1));
         }
         assertFalse(proxyManager.getProxyConfiguration(key).isEmpty());
         Thread.sleep(3000);
         if (proxyManager instanceof ExpiredEntriesCleaner) {
             assertEquals(1, ((ExpiredEntriesCleaner) proxyManager).removeExpired(1));
+        } else {
+            assertEquals(1, removeExpired(proxyManager, 1));
         }
         assertTrue(proxyManager.getProxyConfiguration(key).isEmpty());
     }
@@ -883,6 +900,10 @@ public abstract class AbstractDistributedBucketTest {
         System.out.println("Updates by thread " + updatesByThread);
         assertTrue(errors.isEmpty());
         assertEquals(capacity - opsCount, availableTokens);
+    }
+
+    protected <K> int removeExpired(ProxyManager<K> proxyManager, int batchSize) throws SQLException {
+        throw new UnsupportedOperationException();
     }
 
 }
