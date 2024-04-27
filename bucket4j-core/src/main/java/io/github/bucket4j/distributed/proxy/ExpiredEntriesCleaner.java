@@ -19,8 +19,6 @@
  */
 package io.github.bucket4j.distributed.proxy;
 
-import java.util.Collection;
-
 /**
  * Interface used by particular {@link ProxyManager} implementations to indicate
  * that they support the manual(triggered by user) removing of expired bucket entries.
@@ -41,21 +39,21 @@ public interface ExpiredEntriesCleaner {
      * <p>Example of usage:
      * <pre>
      * {@code
-     *    private static final int CLEANUP_INTERVAL_MILLIS = 10_000;
-     *    private static final int MAX_KEYS_TO_REMOVE_IN_ONE_TRANSACTION = 100;
-     *    private static final int THRESHOLD_TO_CONTINUE_REMOVING = 20;
+     *    private static final int MAX_TO_REMOVE_IN_ONE_TRANSACTION = 1_000;
+     *    private static final int THRESHOLD_TO_CONTINUE_REMOVING = 50;
      *
-     *    @Scheduled(fixedDelay = CLEANUP_INTERVAL_MILLIS)
+     *    // once per day at 4:30 morning
+     *    @Scheduled(cron = "0 30 4 * * *")
      *    public void scheduleFixedDelayTask() {
      *       int removedKeysCount;
      *       do {
-     *            removedKeysCount = proxyManager.removedKeys(MAX_KEYS_TO_REMOVE_IN_ONE_TRANSACTION);
+     *            removedCount = proxyManager.removeExpired(MAX_TO_REMOVE_IN_ONE_TRANSACTION);
      *            if (removedKeysCount > 0) {
-     *                logger.info("Removed {} expired buckets", removedKeysCount);
+     *                logger.info("Removed {} expired buckets", removedCount);
      *            } else {
      *                logger.info("There are no expired buckets to remove");
      *            }
-     *       } while (removedKeysCount > THRESHOLD_TO_CONTINUE_REMOVING)
+     *       } while (removedCount > THRESHOLD_TO_CONTINUE_REMOVING)
      *    }
      * }
      * </pre>

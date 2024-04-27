@@ -64,6 +64,11 @@ public class Bucket4jMySQL {
             super.primaryKeyMapper = (PrimaryKeyMapper) Objects.requireNonNull(primaryKeyMapper);
             return (MySQLSelectForUpdateBasedProxyManagerBuilder<K2>) this;
         }
+
+        @Override
+        public boolean isExpireAfterWriteSupported() {
+            return true;
+        }
     }
 
 }

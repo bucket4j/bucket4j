@@ -9,6 +9,10 @@ Release date: `21 Apr 2024`
 * http://bucket4j.com/{revnumber}/toc.html[{revnumber} Reference]
 * http://bucket4j.com/commercial/java8.html[Instructions to get the builds for Java 8]
 
+== How to support
+https://app.lava.top/ru/2716741203?donate=open[Make donate] to increase motivation of project maintainer to develop new features,
+write documentation and answer user questions.
+
 == Documentation archive
 If you are looking for documentation related to a previous version then http://bucket4j.com/previos-releases.html[ see there]
 
@@ -17,7 +21,7 @@ Vladimir Bukhtoyarov::
 Lead Java developer at vk.com +
 Saint-Petersburg, Russia +
 jsecoder@mail.ru +
-Role: maintainer, future vision, architect +
+Role: maintainer, future vision, code owner +
 image:images/photo.jpg[80,80] +
 
 Maxim Bartkov::
