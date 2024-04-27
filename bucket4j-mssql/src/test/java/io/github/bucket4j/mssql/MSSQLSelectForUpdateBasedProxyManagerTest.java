@@ -40,10 +40,10 @@ public class MSSQLSelectForUpdateBasedProxyManagerTest extends AbstractDistribut
         container = startMsSqlContainer();
         dataSource = createJdbcDataSource(container);
         BucketTableSettings tableSettings = BucketTableSettings.getDefault();
-        final String INIT_TABLE_SCRIPT = "CREATE TABLE {0} ( {1} INT NOT NULL PRIMARY KEY, {2} BINARY(256) )";
+        final String INIT_TABLE_SCRIPT = "CREATE TABLE {0} ( {1} BIGINT NOT NULL PRIMARY KEY, {2} BINARY(256), {3} BIGINT)";
         try (Connection connection = dataSource.getConnection()) {
             try (Statement statement = connection.createStatement()) {
-                String query = MessageFormat.format(INIT_TABLE_SCRIPT, tableSettings.getTableName(), tableSettings.getIdName(), tableSettings.getStateName());
+                String query = MessageFormat.format(INIT_TABLE_SCRIPT, tableSettings.getTableName(), tableSettings.getIdName(), tableSettings.getStateName(), "expires_at");
                 statement.execute(query);
             }
         }
@@ -56,7 +56,8 @@ public class MSSQLSelectForUpdateBasedProxyManagerTest extends AbstractDistribut
                     .table("bucket")
                     .idColumn("id")
                     .stateColumn("state")
-            )
+                    .expiresAtColumn("expires_at")
+            ).checkExpiration()
         );
     }
 

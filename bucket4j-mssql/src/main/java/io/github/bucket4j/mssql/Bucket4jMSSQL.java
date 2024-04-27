@@ -64,6 +64,11 @@ public class Bucket4jMSSQL {
             super.primaryKeyMapper = (PrimaryKeyMapper) Objects.requireNonNull(primaryKeyMapper);
             return (MSSQLSelectForUpdateBasedProxyManagerBuilder<K2>) this;
         }
+
+        @Override
+        public boolean isExpireAfterWriteSupported() {
+            return true;
+        }
     }
 
 }

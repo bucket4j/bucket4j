@@ -20,8 +20,10 @@
 package io.github.bucket4j.mssql;
 
 import io.github.bucket4j.BucketExceptions;
+import io.github.bucket4j.distributed.jdbc.CustomColumnProvider;
 import io.github.bucket4j.distributed.jdbc.PrimaryKeyMapper;
 import io.github.bucket4j.distributed.jdbc.SQLProxyConfiguration;
+import io.github.bucket4j.distributed.proxy.ExpiredEntriesCleaner;
 import io.github.bucket4j.distributed.proxy.generic.select_for_update.AbstractSelectForUpdateBasedProxyManager;
 import io.github.bucket4j.distributed.proxy.generic.select_for_update.LockAndGetResult;
 import io.github.bucket4j.distributed.proxy.generic.select_for_update.SelectForUpdateBasedTransaction;
@@ -33,6 +35,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.MessageFormat;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -44,7 +48,7 @@ import java.util.Optional;
  *
  * @param <K> type of primary key
  */
-public class MSSQLSelectForUpdateBasedProxyManager<K> extends AbstractSelectForUpdateBasedProxyManager<K> {
+public class MSSQLSelectForUpdateBasedProxyManager<K> extends AbstractSelectForUpdateBasedProxyManager<K> implements ExpiredEntriesCleaner {
 
     private final DataSource dataSource;
     private final PrimaryKeyMapper<K> primaryKeyMapper;
@@ -53,16 +57,32 @@ public class MSSQLSelectForUpdateBasedProxyManager<K> extends AbstractSelectForU
     private final String insertSqlQuery;
     private final String selectSqlQuery;
 
+    private final String clearExpiredSqlQuery;
+    private final List<CustomColumnProvider<K>> customColumns = new ArrayList<>();
+
     MSSQLSelectForUpdateBasedProxyManager(Bucket4jMSSQL.MSSQLSelectForUpdateBasedProxyManagerBuilder<K> builder) {
         super(builder.getClientSideConfig());
         this.dataSource = builder.getDataSource();
         this.primaryKeyMapper = builder.getPrimaryKeyMapper();
         this.removeSqlQuery = MessageFormat.format("DELETE FROM {0} WHERE {1} = ?", builder.getTableName(), builder.getIdColumnName());
-        this.updateSqlQuery = MessageFormat.format("UPDATE {0} SET {1}=? WHERE {2}=?", builder.getTableName(), builder.getStateColumnName(), builder.getIdColumnName());
         this.insertSqlQuery = MessageFormat.format(
             "INSERT INTO {0}({1},{2}) VALUES(?, null)",
             builder.getTableName(), builder.getIdColumnName(), builder.getStateColumnName());
         this.selectSqlQuery = MessageFormat.format("SELECT {0} as state FROM {1} WITH(ROWLOCK, UPDLOCK) WHERE {2} = ?", builder.getStateColumnName(), builder.getTableName(), builder.getIdColumnName());
+        this.customColumns.addAll(builder.getCustomColumns());
+        getClientSideConfig().getExpirationAfterWriteStrategy().ifPresent(expiration -> {
+            this.customColumns.add(CustomColumnProvider.createExpiresInColumnProvider(builder.getExpiresAtColumnName(), expiration));
+        });
+        if (customColumns.isEmpty()) {
+            this.updateSqlQuery = MessageFormat.format("UPDATE {0} SET {1}=? WHERE {2}=?", builder.getTableName(), builder.getStateColumnName(), builder.getIdColumnName());
+        } else {
+            String customPartInUpdate = String.join(",", customColumns.stream().map(column -> column.getCustomFieldName() + "=?").toList());
+            this.updateSqlQuery = MessageFormat.format("UPDATE {0} SET {1}=?,{2} WHERE {3}=?", builder.getTableName(), builder.getStateColumnName(), customPartInUpdate, builder.getIdColumnName());
+        }
+        this.clearExpiredSqlQuery = MessageFormat.format(
+            "DELETE TOP(?) FROM {0} WHERE {1} < ?",
+            builder.getTableName(), builder.getExpiresAtColumnName()
+        );
     }
 
     /**
@@ -71,6 +91,7 @@ public class MSSQLSelectForUpdateBasedProxyManager<K> extends AbstractSelectForU
     @Deprecated
     public MSSQLSelectForUpdateBasedProxyManager(SQLProxyConfiguration<K> configuration) {
         super(configuration.getClientSideConfig());
+        this.clearExpiredSqlQuery = null;
         this.dataSource = Objects.requireNonNull(configuration.getDataSource());
         this.primaryKeyMapper = configuration.getPrimaryKeyMapper();
         this.removeSqlQuery = MessageFormat.format("DELETE FROM {0} WHERE {1} = ?", configuration.getTableName(), configuration.getIdName());
@@ -161,8 +182,12 @@ public class MSSQLSelectForUpdateBasedProxyManager<K> extends AbstractSelectForU
                 try {
                     try (PreparedStatement updateStatement = connection.prepareStatement(updateSqlQuery)) {
                         applyTimeout(updateStatement, requestTimeoutNanos);
-                        updateStatement.setBytes(1, data);
-                        primaryKeyMapper.set(updateStatement, 2, key);
+                        int i = 0;
+                        updateStatement.setBytes(++i, data);
+                        for (CustomColumnProvider<K> column : customColumns) {
+                            column.setCustomField(key, ++i, updateStatement, newState, currentTimeNanos());
+                        }
+                        primaryKeyMapper.set(updateStatement, ++i, key);
                         updateStatement.executeUpdate();
                     }
                 } catch (SQLException e) {
@@ -189,6 +214,25 @@ public class MSSQLSelectForUpdateBasedProxyManager<K> extends AbstractSelectForU
             try(PreparedStatement removeStatement = connection.prepareStatement(removeSqlQuery)) {
                 primaryKeyMapper.set(removeStatement, 1, key);
                 removeStatement.executeUpdate();
+            }
+        } catch (SQLException e) {
+            throw new BucketExceptions.BucketExecutionException(e);
+        }
+    }
+
+    @Override
+    public boolean isExpireAfterWriteSupported() {
+        return true;
+    }
+
+    @Override
+    public int removeExpired(int batchSize) {
+        try (Connection connection = dataSource.getConnection()) {
+            long currentTimeMillis = System.currentTimeMillis();
+            try(PreparedStatement clearStatement = connection.prepareStatement(clearExpiredSqlQuery)) {
+                clearStatement.setInt(1, batchSize);
+                clearStatement.setLong(2, currentTimeMillis);
+                return clearStatement.executeUpdate();
             }
         } catch (SQLException e) {
             throw new BucketExceptions.BucketExecutionException(e);

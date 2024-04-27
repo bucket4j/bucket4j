@@ -23,7 +23,7 @@ To use Bucket4j extension for Microsoft SQL Server you need to add following dep
 ===== DDL example
 [source,sql]
 ----
-CREATE TABLE bucket(id INT NOT NULL PRIMARY KEY, state BINARY(256))
+CREATE TABLE bucket(id BIGINT NOT NULL PRIMARY KEY, state BINARY(256))
 ----
 
 ===== Example of Bucket instantiation

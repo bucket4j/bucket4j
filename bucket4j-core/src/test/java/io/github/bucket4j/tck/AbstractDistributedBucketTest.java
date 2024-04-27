@@ -171,8 +171,6 @@ public abstract class AbstractDistributedBucketTest {
         Thread.sleep(3000);
         if (proxyManager instanceof ExpiredEntriesCleaner) {
             assertEquals(0, ((ExpiredEntriesCleaner) proxyManager).removeExpired(1));
-        } else {
-            assertEquals(0, removeExpired(proxyManager, 1));
         }
         assertTrue(proxyManager.getProxyConfiguration(key).isPresent());
     }
@@ -200,8 +198,6 @@ public abstract class AbstractDistributedBucketTest {
         Thread.sleep(3000);
         if (proxyManager instanceof ExpiredEntriesCleaner) {
             assertEquals(0, ((ExpiredEntriesCleaner) proxyManager).removeExpired(1));
-        } else {
-            assertEquals(0, removeExpired(proxyManager, 1));
         }
         assertTrue(proxyManager.getProxyConfiguration(key).isPresent());
     }
@@ -225,8 +221,6 @@ public abstract class AbstractDistributedBucketTest {
         Thread.sleep(3000);
         if (proxyManager instanceof ExpiredEntriesCleaner) {
             assertEquals(1, ((ExpiredEntriesCleaner) proxyManager).removeExpired(1));
-        } else {
-            assertEquals(1, removeExpired(proxyManager, 1));
         }
         assertTrue(proxyManager.getProxyConfiguration(key).isEmpty());
     }
@@ -253,8 +247,6 @@ public abstract class AbstractDistributedBucketTest {
         Thread.sleep(3000);
         if (proxyManager instanceof ExpiredEntriesCleaner) {
             assertEquals(1, ((ExpiredEntriesCleaner) proxyManager).removeExpired(1));
-        } else {
-            assertEquals(1, removeExpired(proxyManager, 1));
         }
         assertTrue(proxyManager.getProxyConfiguration(key).isEmpty());
     }
@@ -278,15 +270,11 @@ public abstract class AbstractDistributedBucketTest {
         Thread.sleep(100);
         if (proxyManager instanceof ExpiredEntriesCleaner) {
             assertEquals(0, ((ExpiredEntriesCleaner) proxyManager).removeExpired(1));
-        } else {
-            assertEquals(0, removeExpired(proxyManager, 1));
         }
         assertFalse(proxyManager.getProxyConfiguration(key).isEmpty());
         Thread.sleep(3000);
         if (proxyManager instanceof ExpiredEntriesCleaner) {
             assertEquals(1, ((ExpiredEntriesCleaner) proxyManager).removeExpired(1));
-        }  else {
-            assertEquals(1, removeExpired(proxyManager, 1));
         }
         assertTrue(proxyManager.getProxyConfiguration(key).isEmpty());
     }
@@ -314,15 +302,11 @@ public abstract class AbstractDistributedBucketTest {
         Thread.sleep(100);
         if (proxyManager instanceof ExpiredEntriesCleaner) {
             assertEquals(0, ((ExpiredEntriesCleaner) proxyManager).removeExpired(1));
-        } else {
-            assertEquals(0, removeExpired(proxyManager, 1));
         }
         assertFalse(proxyManager.getProxyConfiguration(key).isEmpty());
         Thread.sleep(3000);
         if (proxyManager instanceof ExpiredEntriesCleaner) {
             assertEquals(1, ((ExpiredEntriesCleaner) proxyManager).removeExpired(1));
-        } else {
-            assertEquals(1, removeExpired(proxyManager, 1));
         }
         assertTrue(proxyManager.getProxyConfiguration(key).isEmpty());
     }
@@ -900,10 +884,6 @@ public abstract class AbstractDistributedBucketTest {
         System.out.println("Updates by thread " + updatesByThread);
         assertTrue(errors.isEmpty());
         assertEquals(capacity - opsCount, availableTokens);
-    }
-
-    protected <K> int removeExpired(ProxyManager<K> proxyManager, int batchSize) throws SQLException {
-        throw new UnsupportedOperationException();
     }
 
 }
