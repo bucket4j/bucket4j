@@ -64,6 +64,11 @@ public class Bucket4jMariaDB {
             super.primaryKeyMapper = (PrimaryKeyMapper) Objects.requireNonNull(primaryKeyMapper);
             return (MariaDBSelectForUpdateBasedProxyManagerBuilder<K2>) this;
         }
+
+        @Override
+        public boolean isExpireAfterWriteSupported() {
+            return true;
+        }
     }
 
 }

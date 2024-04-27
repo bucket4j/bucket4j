@@ -28,7 +28,7 @@ public class MariaDBSelectForUpdateBasedTransactionTest extends AbstractDistribu
         container = startMariaDbContainer();
         dataSource = createJdbcDataSource(container);
         BucketTableSettings tableSettings = BucketTableSettings.customSettings("test.bucket", "id", "state");
-        final String INIT_TABLE_SCRIPT = "CREATE TABLE IF NOT EXISTS {0}({1} BIGINT PRIMARY KEY, {2} BLOB)";
+        final String INIT_TABLE_SCRIPT = "CREATE TABLE IF NOT EXISTS {0}({1} BIGINT PRIMARY KEY, {2} BLOB, expires_at BIGINT)";
         try (Connection connection = dataSource.getConnection()) {
             try (Statement statement = connection.createStatement()) {
                 String query = MessageFormat.format(INIT_TABLE_SCRIPT, tableSettings.getTableName(), tableSettings.getIdName(), tableSettings.getStateName());
@@ -44,7 +44,7 @@ public class MariaDBSelectForUpdateBasedTransactionTest extends AbstractDistribu
                     .table("test.bucket")
                     .idColumn("id")
                     .stateColumn("state")
-            )
+            ).checkExpiration()
         );
     }
 
