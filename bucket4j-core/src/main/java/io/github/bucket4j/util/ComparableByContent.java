@@ -29,7 +29,7 @@ public interface ComparableByContent<T extends ComparableByContent> {
         if (object1 == object2) {
             return true;
         }
-        if ((object1 == null && object2 != null) || (object1 != null && object2 == null)) {
+        if (object1 == null || object2 == null) {
             return false;
         }
 

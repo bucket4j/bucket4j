@@ -169,8 +169,8 @@ public abstract class AbstractDistributedBucketTest {
         BucketProxy bucket = proxyManager.builder().build(key, () -> configuration);
         assertEquals(10, bucket.tryConsumeAsMuchAsPossible());
         Thread.sleep(3000);
-        if (proxyManager instanceof ExpiredEntriesCleaner) {
-            assertEquals(0, ((ExpiredEntriesCleaner) proxyManager).removeExpired(1));
+        if (proxyManager instanceof ExpiredEntriesCleaner cleaner) {
+            assertEquals(0, cleaner.removeExpired(1));
         }
         assertTrue(proxyManager.getProxyConfiguration(key).isPresent());
     }
@@ -196,8 +196,8 @@ public abstract class AbstractDistributedBucketTest {
         AsyncBucketProxy bucket = proxyManager.asAsync().builder().build(key, () -> CompletableFuture.completedFuture(configuration));
         assertEquals(10, bucket.tryConsumeAsMuchAsPossible().get());
         Thread.sleep(3000);
-        if (proxyManager instanceof ExpiredEntriesCleaner) {
-            assertEquals(0, ((ExpiredEntriesCleaner) proxyManager).removeExpired(1));
+        if (proxyManager instanceof ExpiredEntriesCleaner cleaner) {
+            assertEquals(0, cleaner.removeExpired(1));
         }
         assertTrue(proxyManager.getProxyConfiguration(key).isPresent());
     }
@@ -219,8 +219,8 @@ public abstract class AbstractDistributedBucketTest {
         BucketProxy bucket = proxyManager.builder().build(key, () -> configuration);
         assertEquals(10, bucket.tryConsumeAsMuchAsPossible());
         Thread.sleep(3000);
-        if (proxyManager instanceof ExpiredEntriesCleaner) {
-            assertEquals(1, ((ExpiredEntriesCleaner) proxyManager).removeExpired(1));
+        if (proxyManager instanceof ExpiredEntriesCleaner cleaner) {
+            assertEquals(1, cleaner.removeExpired(1));
         }
         assertTrue(proxyManager.getProxyConfiguration(key).isEmpty());
     }
@@ -245,8 +245,8 @@ public abstract class AbstractDistributedBucketTest {
         AsyncBucketProxy bucket = proxyManager.asAsync().builder().build(key, () -> CompletableFuture.completedFuture(configuration));
         assertEquals(10, bucket.tryConsumeAsMuchAsPossible().get());
         Thread.sleep(3000);
-        if (proxyManager instanceof ExpiredEntriesCleaner) {
-            assertEquals(1, ((ExpiredEntriesCleaner) proxyManager).removeExpired(1));
+        if (proxyManager instanceof ExpiredEntriesCleaner cleaner) {
+            assertEquals(1, cleaner.removeExpired(1));
         }
         assertTrue(proxyManager.getProxyConfiguration(key).isEmpty());
     }
@@ -268,13 +268,13 @@ public abstract class AbstractDistributedBucketTest {
         BucketProxy bucket = proxyManager.builder().build(key, () -> configuration);
         assertTrue(bucket.tryConsume(1));
         Thread.sleep(100);
-        if (proxyManager instanceof ExpiredEntriesCleaner) {
-            assertEquals(0, ((ExpiredEntriesCleaner) proxyManager).removeExpired(1));
+        if (proxyManager instanceof ExpiredEntriesCleaner cleaner) {
+            assertEquals(0, cleaner.removeExpired(1));
         }
         assertFalse(proxyManager.getProxyConfiguration(key).isEmpty());
         Thread.sleep(3000);
-        if (proxyManager instanceof ExpiredEntriesCleaner) {
-            assertEquals(1, ((ExpiredEntriesCleaner) proxyManager).removeExpired(1));
+        if (proxyManager instanceof ExpiredEntriesCleaner cleaner) {
+            assertEquals(1, cleaner.removeExpired(1));
         }
         assertTrue(proxyManager.getProxyConfiguration(key).isEmpty());
     }
@@ -300,13 +300,13 @@ public abstract class AbstractDistributedBucketTest {
         AsyncBucketProxy bucket = proxyManager.asAsync().builder().build(key, () -> CompletableFuture.completedFuture(configuration));
         assertEquals(true, bucket.tryConsume(1).get());
         Thread.sleep(100);
-        if (proxyManager instanceof ExpiredEntriesCleaner) {
-            assertEquals(0, ((ExpiredEntriesCleaner) proxyManager).removeExpired(1));
+        if (proxyManager instanceof ExpiredEntriesCleaner cleaner) {
+            assertEquals(0, cleaner.removeExpired(1));
         }
         assertFalse(proxyManager.getProxyConfiguration(key).isEmpty());
         Thread.sleep(3000);
-        if (proxyManager instanceof ExpiredEntriesCleaner) {
-            assertEquals(1, ((ExpiredEntriesCleaner) proxyManager).removeExpired(1));
+        if (proxyManager instanceof ExpiredEntriesCleaner cleaner) {
+            assertEquals(1, cleaner.removeExpired(1));
         }
         assertTrue(proxyManager.getProxyConfiguration(key).isEmpty());
     }

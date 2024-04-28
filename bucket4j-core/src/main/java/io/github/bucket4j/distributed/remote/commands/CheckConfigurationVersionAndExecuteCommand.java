@@ -46,10 +46,9 @@ public class CheckConfigurationVersionAndExecuteCommand<T> implements RemoteComm
 
     @Override
     public boolean canBeMerged(RemoteCommand<?> another) {
-        if (!(another instanceof CheckConfigurationVersionAndExecuteCommand)) {
+        if (!(another instanceof CheckConfigurationVersionAndExecuteCommand<?> anotherCmd)) {
             return false;
         }
-        CheckConfigurationVersionAndExecuteCommand<?> anotherCmd = (CheckConfigurationVersionAndExecuteCommand<?>) another;
         return desiredConfigurationVersion == anotherCmd.desiredConfigurationVersion && targetCommand.canBeMerged(anotherCmd.targetCommand);
     }
 

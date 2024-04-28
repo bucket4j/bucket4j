@@ -52,8 +52,7 @@ public interface SerializationHandle<T> {
         Object object = snapshot.get(fieldName);
         if (object instanceof double[]) {
             return (double[]) object;
-        } else if (object instanceof Number[]) {
-            Number[] array = (Number[]) object;
+        } else if (object instanceof Number[] array) {
             double[] result = new double[array.length];
             for (int i = 0; i < array.length; i++) {
                 result[i] = array[i].doubleValue();
@@ -73,8 +72,7 @@ public interface SerializationHandle<T> {
         Object object = snapshot.get(fieldName);
         if (object instanceof long[]) {
             return (long[]) object;
-        } else if (object instanceof Number[]) {
-            Number[] array = (Number[]) object;
+        } else if (object instanceof Number[] array) {
             long[] result = new long[array.length];
             for (int i = 0; i < array.length; i++) {
                 result[i] = array[i].longValue();
@@ -105,8 +103,8 @@ public interface SerializationHandle<T> {
         if (object == null) {
             return null;
         }
-        if (object instanceof Long) {
-            return (Long) object;
+        if (object instanceof Long l) {
+            return l;
         } else {
             Number number = (Number) object;
             return number.longValue();
@@ -118,8 +116,8 @@ public interface SerializationHandle<T> {
         if (object == null) {
             return null;
         }
-        if (object instanceof Integer) {
-            return (Integer) object;
+        if (object instanceof Integer i) {
+            return i;
         } else {
             Number number = (Number) object;
             return number.intValue();
@@ -128,8 +126,8 @@ public interface SerializationHandle<T> {
 
     default int readIntValue(Map<String, Object> snapshot, String fieldName) {
         Object object = snapshot.get(fieldName);
-        if (object instanceof Integer) {
-            return (Integer) object;
+        if (object instanceof Integer i) {
+            return i;
         } else {
             Number number = (Number) object;
             return number.intValue();

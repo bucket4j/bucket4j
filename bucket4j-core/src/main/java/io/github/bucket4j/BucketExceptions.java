@@ -261,8 +261,8 @@ public final class BucketExceptions {
     }
 
     public static BucketExecutionException from(Throwable t) {
-        if (t instanceof BucketExecutionException) {
-            return  (BucketExecutionException) t;
+        if (t instanceof BucketExecutionException b) {
+            return b;
         }
         return new BucketExecutionException(t);
     }

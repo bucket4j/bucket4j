@@ -27,7 +27,7 @@ package io.github.bucket4j.distributed.jdbc;
  */
 public interface LockIdSupplier<K> {
 
-    LockIdSupplier<?> DEFAULT = (LockIdSupplier<Object>) key -> (key instanceof Number) ? ((Number) key).longValue(): key.hashCode();
+    LockIdSupplier<?> DEFAULT = (LockIdSupplier<Object>) key -> key instanceof Number number? number.longValue(): key.hashCode();
 
     /**
      * Returns the lock-id specified with the key.

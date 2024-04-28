@@ -158,8 +158,7 @@ public class CommandResult<T> implements ComparableByContent<CommandResult> {
     }
 
     public T getData() {
-        if (data instanceof CommandError) {
-            CommandError error = (CommandError) data;
+        if (data instanceof CommandError error) {
             throw error.asException();
         }
         return data;
