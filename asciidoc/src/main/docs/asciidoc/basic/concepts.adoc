@@ -59,7 +59,7 @@ Bucket bucket = Bucket.builder()
 Bucket4j allows to choose different <<refill-types>>.
 
 Initial tokens::
-Bucket4j extends the token-bucket algorithm by allowing to specify the initial amount of tokens for each bandwidth. By default, an initial amount of tokens equal to capacity and can be changed by `withInitialTokens` method: +
+Bucket4j extends the token-bucket algorithm by allowing to specify the initial amount of tokens for each bandwidth. By default, an initial amount of tokens equals to capacity and can be changed by `withInitialTokens` method: +
 +
 [source, java]
 ----
@@ -87,7 +87,7 @@ Bucket4j allows to choose different styles in which consumed tokens are being re
 
 .There are four types of refill:
 Greedy::
-This type of refill greedily regenerates tokens manner, it tries to add the tokens to the bucket as soon as possible. For example refill "10 tokens per 1 second" adds 1 token per every 100 milliseconds, in other words, the refill will not wait 1 second to regenerate a whole bunch of 10 tokens. The three refills below do refill of tokens with the same speed: +
+This type of refill greedily regenerates tokens manner, it tries to add the tokens to the bucket as soon as possible. For example refill "10 tokens per 1 second" adds 1 token per every 100 milliseconds, in other words, the refill will not wait 1 second to regenerate a bunch of 10 tokens. The three refills below do refill of tokens with the same speed: +
 +
 [source, java]
 ----
@@ -143,7 +143,7 @@ It was explicitly decided by library authors to not provide for end-users to con
 
 .It was to reason to split built-time and usage-time APIs:
 * To be able in the future to change internal implementations without breaking backward compatibility.
-* To to provide `Fluent Builder API` that in our minds is a good modern library design pattern.
+* To provide `Fluent Builder API` that in our minds is a good modern library design pattern.
 
 `LocalBucketBuilder` is a fluent builder that is specialized to construct the local buckets, where a local bucket is a bucket that holds an internal state just in memory and does not provide clustering functionality. Bellow an example of LocalBucketBuilder usage:
 [source, java]

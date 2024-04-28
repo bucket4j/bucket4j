@@ -46,7 +46,7 @@ BucketConfiguration configuration = BucketConfiguration.builder()
     .build();
 Bucket bucket = proxyManager.getProxy(key, () -> configuration);
 ----
-IMPORTANT: Pay attention that IgniteProxyManager requires all nodes in the cluster to contain bucket4j Jars in classpath.
+IMPORTANT: Pay attention that IgniteProxyManager requires all nodes in the cluster to contain Bucket4j Jars in classpath.
 
 ===== Example of Bucket instantiation via Thin Client
 [source, java]
@@ -64,7 +64,7 @@ BucketConfiguration configuration = BucketConfiguration.builder()
     .build();
 Bucket bucket = proxyManager.getProxy(key, () -> configuration);
 ----
-IMPORTANT: Pay attention that IgniteThinClientProxyManager requires all nodes in the cluster to contain bucket4j Jars in classpath.
+IMPORTANT: Pay attention that IgniteThinClientProxyManager requires all nodes in the cluster to contain Bucket4j Jars in classpath.
 
 ===== Example of Bucket instantiation of via Thin Client and IgniteThinClientCasBasedProxyManager
 [source, java]
@@ -81,4 +81,4 @@ BucketConfiguration configuration = BucketConfiguration.builder()
     .build();
 Bucket bucket = proxyManager.getProxy(key, () -> configuration);
 ----
-IMPORTANT: IgniteThinClientCasBasedProxyManager does not require all nodes in the cluster to contain bucket4j Jars in classpath, but it operates with more latency, so choose it over IgniteThinClientProxyManager if and only if you have no control over cluster classpath.
+IMPORTANT: IgniteThinClientCasBasedProxyManager does not require all nodes in the cluster to contain Bucket4j Jars in classpath, but it operates with more latency, so choose it over IgniteThinClientProxyManager if and only if you have no control over cluster classpath.

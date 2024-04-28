@@ -160,7 +160,7 @@ Asynchronous processing is very important for high-throughput applications, but 
 * <<bucket4j-infinispan, bucket4j-infinispan>>
 * <<bucket4j-coherence, bucket4j-coherence>>
 
-Also, implementing the asynchronous support for any other JCache provider outside of the list above should be an easy exercise, so feel free to return back the pull request addressed to cover your favorite JCache provider.
+Also, implementing the asynchronous support for any other JCache provider outside the list above should be an easy exercise, so feel free to return back the pull request addressed to cover your favorite JCache provider.
 
 ===== Verification of compatibility with a particular JCache provider is your responsibility
 IMPORTANT: Keep in mind that there are many non-certified implementations of JCache specifications on the market.

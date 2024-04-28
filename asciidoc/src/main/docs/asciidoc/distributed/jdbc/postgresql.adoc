@@ -44,7 +44,7 @@ BucketConfiguration bucketConfiguration = BucketConfiguration.builder()
 BucketProxy bucket = proxyManager.getProxy(key, () -> bucketConfiguration);
 ----
 
-===== PostgreSQLadvisoryLockBasedProxyManager
+===== PostgreSQLAdvisoryLockBasedProxyManager
 `PostgreSQLadvisoryLockBasedProxyManager` - is based on pg_advisory_xact_lock locks an application-defined resource, which can be identified either by a single 64-bit key value or two 32-bit key values (note that these two key spaces do not overlap).
 If another session already holds a lock on the same resource identifier, this function will wait until the resource becomes available.
 The lock is exclusive.

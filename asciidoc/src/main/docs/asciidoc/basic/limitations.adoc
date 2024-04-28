@@ -23,7 +23,7 @@ Bucket4j works with time intervals as the 64-bit number of nanoseconds. So maxim
 ----
 Duration.ofNanos(Long.MAX_VALUE);
 ----
-Any attempt to specify a period longer than the limit above will fail with an exception. For example, the code below will failed
+Any attempt to specify a period longer than the limit above will fail with an exception. For example, the code below will fail
 [source, java]
 ----
 Bandwidth.builder(limit -> limit.capacity(...).refillGreedy(42, Duration.ofMinutes(153722867280912930));

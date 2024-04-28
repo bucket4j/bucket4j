@@ -4,7 +4,7 @@ Before using Bucket4j in clustered scenario you need to understand, agree, and c
 
 .Do not forget about exception handling
 When working within a distributed system, it is inevitable that requests may cross the border of the current JVM, leading to communication on the network.
-The network being unreliable, it is impossible to avoid failures. Thus you should embrace this reality and be ready to get unchecked exceptions when interacting with a distributed bucket.
+The network being unreliable, it is impossible to avoid failures. Thus, you should embrace this reality and be ready to get unchecked exceptions when interacting with a distributed bucket.
 **It is your responsibility to handle(or ignore) such exceptions:**
 
 * You probably do not want to fail business transactions if the grid responsible for throttling goes down. If this is the case you can simply log the exception and continue your business transaction without throttling

@@ -259,7 +259,7 @@ No releases
 === 2015
 
 ==== 1.0.0
-`10 May 2015` First version of bucket4j library
+`10 May 2015` First version of Bucket4j library
 
 * https://github.com/bucket4j/bucket4j/releases/tag/bucket4j-1.0.0[1.0.0 Release notes]
 * https://github.com/bucket4j/bucket4j/tree/release_1-0[1.0.0 Reference]

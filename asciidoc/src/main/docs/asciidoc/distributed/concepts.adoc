@@ -22,7 +22,7 @@
 //So, independently of count of buckets ProxyManager will never be a reason of crash or extreme memory consumption.
 //
 //**Question:** what will happen if bucket state will be lost in the GRID  because of split-brain, human mistake or pragmatically errors introduced by GRID vendor?
-//**Answer:** ProxyManager automatically detect this kind of situations and save bucket yet another time, to reconstruct bucket it uses provided configuration supplier.
+//**Answer:** ProxyManager automatically detect this kind of situation and save bucket yet another time, to reconstruct bucket it uses provided configuration supplier.
 //Reconstructed bucket remembers nothing about previously consumed tokens, so limit can be exceeded in this kind of GRID failures.
 //
 //**Question:** should I always work with JCache through ProxyManager?

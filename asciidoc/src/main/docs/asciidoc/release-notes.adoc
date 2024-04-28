@@ -11,7 +11,7 @@ Release `{revnumber}`
 Now, the version of target JDK become a part of artifact name. For example `com.bucket4j:bucket4j-core` has been changed to `com.bucket4j:bucket4j_jdk17-core`.
 
 ===== Dependencies structure for Redis has been changed
-Support for Redis has been splitted by individual modules(Jedis, Lettuce, Redisson). +
+Support for Redis has been split by individual modules(Jedis, Lettuce, Redisson). +
 See docs for your library
 
 * https://bucket4j.com/8.11.1/toc.html#dependencies-5[Lettuce]

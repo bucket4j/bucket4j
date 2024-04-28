@@ -2,9 +2,9 @@
 The Bucket4j library allows implementing work with any database.
 If you didn't find in distributed realization your database (currently Bucket4j supports the next databases: Redis, Hazelcast, Apache Ignite, Infinispan, Oracle coherence, PostgreSQL, MySQL)
 you can implement your database as a distributed storage.
-All what you need to do, extends from io.github.bucket4j.distributed.proxy.generic.select_for_update.AbstractLockBasedProxyManager or
+All what you need to do, extends from `io.github.bucket4j.distributed.proxy.generic.select_for_update.AbstractLockBasedProxyManager` or
 AbstractSelectForUpdateBasedProxyManager<T>
-and override 3 methods and create your implementation which implements from io.github.bucket4j.distributed.proxy.generic.select_for_update.LockBasedTransaction.
+and override 3 methods and create your implementation which implements from `io.github.bucket4j.distributed.proxy.generic.select_for_update.LockBasedTransaction`.
 
 **Step by step to take that.**
 

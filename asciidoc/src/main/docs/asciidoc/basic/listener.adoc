@@ -12,7 +12,7 @@
 ========
 **Question:** How many listeners are needed to create an application that uses many buckets?
 
-**Answer:**  it depends:
+**Answer:**  it depends on:
 
 - If you want to have aggregated statistics for all buckets then create a single listener per application and reuse this listener for all buckets.
 - If you want to measure statistics independently per bucket then use a listener per bucket model.
@@ -79,7 +79,7 @@ HazelcastLockBasedProxyManager proxyManager = Bucket4jHazelcast.entryProcessorBa
 
 ==== Specify listener to bucket at use time.
 Sometimes listener is not known at bucket build time, and you want to clarify listener later.
-For example it can happen when you want to share same bucket per multiple users,
+For example, it can happen when you want to share same bucket per multiple users,
 but in same time it needs to have dedicated listener per each user.
 
 In such case you can build bucket without listener and attach it later via the ``toListenable`` method,
