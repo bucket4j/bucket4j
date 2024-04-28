@@ -46,6 +46,8 @@ import javax.cache.CacheManager;
 import javax.cache.processor.EntryProcessor;
 import javax.cache.processor.MutableEntry;
 import javax.cache.spi.CachingProvider;
+
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -55,8 +57,9 @@ import java.util.concurrent.CompletableFuture;
  */
 public class JCacheProxyManager<K> extends AbstractProxyManager<K> {
 
-    private static final Map<String, String> incompatibleProviders = Collections.emptyMap();
+    private static final Map<String, String> incompatibleProviders;
     static {
+        incompatibleProviders = Collections.emptyMap();
         // incompatibleProviders.put("org.infinispan", " use module bucket4j-infinispan directly");
     }
 
@@ -169,6 +172,7 @@ public class JCacheProxyManager<K> extends AbstractProxyManager<K> {
 
     private static class BucketProcessor<K, T> implements Serializable, EntryProcessor<K, byte[], byte[]> {
 
+        @Serial
         private static final long serialVersionUID = 911;
 
         private final byte[] serializedRequest;

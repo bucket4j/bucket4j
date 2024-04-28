@@ -43,9 +43,9 @@ import static io.github.bucket4j.distributed.versioning.Versions.v_7_0_0;
 
 public class TryConsumeAndReturnRemainingTokensCommand implements RemoteCommand<ConsumptionProbe>, ComparableByContent<TryConsumeAndReturnRemainingTokensCommand> {
 
-    private long tokensToConsume;
+    private final long tokensToConsume;
 
-    public static final SerializationHandle<TryConsumeAndReturnRemainingTokensCommand> SERIALIZATION_HANDLE = new SerializationHandle<TryConsumeAndReturnRemainingTokensCommand>() {
+    public static final SerializationHandle<TryConsumeAndReturnRemainingTokensCommand> SERIALIZATION_HANDLE = new SerializationHandle<>() {
         @Override
         public <S> TryConsumeAndReturnRemainingTokensCommand deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             int formatNumber = adapter.readInt(input);
@@ -74,7 +74,7 @@ public class TryConsumeAndReturnRemainingTokensCommand implements RemoteCommand<
         }
 
         @Override
-        public TryConsumeAndReturnRemainingTokensCommand fromJsonCompatibleSnapshot(Map<String, Object> snapshot) throws IOException {
+        public TryConsumeAndReturnRemainingTokensCommand fromJsonCompatibleSnapshot(Map<String, Object> snapshot) {
             int formatNumber = readIntValue(snapshot, "version");
             Versions.check(formatNumber, v_7_0_0, v_7_0_0);
 
@@ -83,7 +83,7 @@ public class TryConsumeAndReturnRemainingTokensCommand implements RemoteCommand<
         }
 
         @Override
-        public Map<String, Object> toJsonCompatibleSnapshot(TryConsumeAndReturnRemainingTokensCommand command, Version backwardCompatibilityVersion, Scope scope) throws IOException {
+        public Map<String, Object> toJsonCompatibleSnapshot(TryConsumeAndReturnRemainingTokensCommand command, Version backwardCompatibilityVersion, Scope scope) {
             Map<String, Object> result = new HashMap<>();
             result.put("version", v_7_0_0.getNumber());
             result.put("tokensToConsume", command.tokensToConsume);

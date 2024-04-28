@@ -67,14 +67,14 @@ public class NoneExpirationAfterWriteStrategy implements ExpirationAfterWriteStr
         }
 
         @Override
-        public NoneExpirationAfterWriteStrategy fromJsonCompatibleSnapshot(Map<String, Object> snapshot) throws IOException {
+        public NoneExpirationAfterWriteStrategy fromJsonCompatibleSnapshot(Map<String, Object> snapshot) {
             int formatNumber = readIntValue(snapshot, "version");
             Versions.check(formatNumber, v_8_10_0, v_8_10_0);
             return NoneExpirationAfterWriteStrategy.INSTANCE;
         }
 
         @Override
-        public Map<String, Object> toJsonCompatibleSnapshot(NoneExpirationAfterWriteStrategy strategy, Version backwardCompatibilityVersion, Scope scope) throws IOException {
+        public Map<String, Object> toJsonCompatibleSnapshot(NoneExpirationAfterWriteStrategy strategy, Version backwardCompatibilityVersion, Scope scope) {
             Map<String, Object> result = new HashMap<>();
             result.put("version", v_8_10_0.getNumber());
             return result;

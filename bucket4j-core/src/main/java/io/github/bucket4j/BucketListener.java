@@ -25,7 +25,7 @@ import io.github.bucket4j.local.LocalBucketBuilder;
 
 /**
  * Interface for listening bucket related events. The typical use-cases of this interface are logging and monitoring.
- *
+ * <p>
  * The bucket can be decorated by listener via:
  * <ul>
  *     <li>Via {@link LocalBucketBuilder#withListener(BucketListener)} method at building time of local bucket.</li>
@@ -44,7 +44,7 @@ import io.github.bucket4j.local.LocalBucketBuilder;
  *
  * <h3>Question: where is methods of listener are invoking in case of distributed usage?</h3>
  * <b>Answer:</b> listener always invoked on client side, it is means that each client JVM will have own totally independent  for same bucket.
- *
+ * <p>
  * <h3>Question: Why does bucket invoke the listener on client side instead of server side in case of distributed scenario?
  * What I need to do if I need in aggregated stat across the whole cluster?</h3>
  * <b>Answer:</b> Because of planned expansion to non-JVM back-ends such as Redis, MySQL, PostgreSQL.
@@ -84,7 +84,7 @@ public interface BucketListener {
      *
      * @param nanos amount of nanoseconds for which thread will be parked
      */
-    default void beforeParking(long nanos) {};
+    default void beforeParking(long nanos) {}
 
     /**
      * This method is called each time when thread was interrupted during the wait of tokens refill

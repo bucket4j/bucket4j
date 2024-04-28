@@ -501,7 +501,7 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket, Compa
                 '}';
     }
 
-    public static final SerializationHandle<LockFreeBucket> SERIALIZATION_HANDLE = new SerializationHandle<LockFreeBucket>() {
+    public static final SerializationHandle<LockFreeBucket> SERIALIZATION_HANDLE = new SerializationHandle<>() {
         @Override
         public <S> LockFreeBucket deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             int formatNumber = adapter.readInt(input);

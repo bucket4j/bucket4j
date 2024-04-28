@@ -41,9 +41,9 @@ import static io.github.bucket4j.distributed.versioning.Versions.v_7_0_0;
 
 public class ConsumeIgnoringRateLimitsCommand implements RemoteCommand<Long>, ComparableByContent<ConsumeIgnoringRateLimitsCommand> {
 
-    private long tokensToConsume;
+    private final long tokensToConsume;
 
-    public static final SerializationHandle<ConsumeIgnoringRateLimitsCommand> SERIALIZATION_HANDLE = new SerializationHandle<ConsumeIgnoringRateLimitsCommand>() {
+    public static final SerializationHandle<ConsumeIgnoringRateLimitsCommand> SERIALIZATION_HANDLE = new SerializationHandle<>() {
         @Override
         public <S> ConsumeIgnoringRateLimitsCommand deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             int formatNumber = adapter.readInt(input);
@@ -72,7 +72,7 @@ public class ConsumeIgnoringRateLimitsCommand implements RemoteCommand<Long>, Co
         }
 
         @Override
-        public ConsumeIgnoringRateLimitsCommand fromJsonCompatibleSnapshot(Map<String, Object> snapshot) throws IOException {
+        public ConsumeIgnoringRateLimitsCommand fromJsonCompatibleSnapshot(Map<String, Object> snapshot) {
             int formatNumber = readIntValue(snapshot, "version");
             Versions.check(formatNumber, v_7_0_0, v_7_0_0);
 
@@ -81,7 +81,7 @@ public class ConsumeIgnoringRateLimitsCommand implements RemoteCommand<Long>, Co
         }
 
         @Override
-        public Map<String, Object> toJsonCompatibleSnapshot(ConsumeIgnoringRateLimitsCommand command, Version backwardCompatibilityVersion, Scope scope) throws IOException {
+        public Map<String, Object> toJsonCompatibleSnapshot(ConsumeIgnoringRateLimitsCommand command, Version backwardCompatibilityVersion, Scope scope) {
             Map<String, Object> result = new HashMap<>();
             result.put("version", v_7_0_0.getNumber());
             result.put("tokensToConsume", command.tokensToConsume);
@@ -143,7 +143,7 @@ public class ConsumeIgnoringRateLimitsCommand implements RemoteCommand<Long>, Co
 
     @Override
     public long getConsumedTokens(Long result) {
-        return result == Long.MAX_VALUE? 0l: tokensToConsume;
+        return result == Long.MAX_VALUE? 0L : tokensToConsume;
     }
 
     @Override

@@ -67,14 +67,14 @@ public class ConfigurationNeedToBeReplacedError implements CommandError, Compara
         }
 
         @Override
-        public ConfigurationNeedToBeReplacedError fromJsonCompatibleSnapshot(Map<String, Object> snapshot) throws IOException {
+        public ConfigurationNeedToBeReplacedError fromJsonCompatibleSnapshot(Map<String, Object> snapshot) {
             int formatNumber = readIntValue(snapshot, "version");
             Versions.check(formatNumber, v_8_1_0, v_8_1_0);
             return INSTANCE;
         }
 
         @Override
-        public Map<String, Object> toJsonCompatibleSnapshot(ConfigurationNeedToBeReplacedError error, Version backwardCompatibilityVersion, Scope scope) throws IOException {
+        public Map<String, Object> toJsonCompatibleSnapshot(ConfigurationNeedToBeReplacedError error, Version backwardCompatibilityVersion, Scope scope) {
             Map<String, Object> result = new HashMap<>();
             result.put("version", v_8_1_0.getNumber());
             return result;

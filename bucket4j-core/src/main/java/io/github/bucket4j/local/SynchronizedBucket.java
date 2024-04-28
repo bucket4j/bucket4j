@@ -427,7 +427,7 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket, C
         }
     }
 
-    public static final SerializationHandle<SynchronizedBucket> SERIALIZATION_HANDLE = new SerializationHandle<SynchronizedBucket>() {
+    public static final SerializationHandle<SynchronizedBucket> SERIALIZATION_HANDLE = new SerializationHandle<>() {
         @Override
         public <S> SynchronizedBucket deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             int formatNumber = adapter.readInt(input);

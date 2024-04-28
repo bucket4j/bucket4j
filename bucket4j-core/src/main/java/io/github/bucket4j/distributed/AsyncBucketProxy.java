@@ -288,7 +288,7 @@ public interface AsyncBucketProxy {
     /**
      * Returns new copy of this bucket instance decorated by {@code listener}.
      * The created bucket will share same tokens with source bucket and vice versa.
-     *
+     * <p>
      * See javadocs for {@link BucketListener} in order to understand semantic of listener.
      *
      * @param listener the listener of bucket events.

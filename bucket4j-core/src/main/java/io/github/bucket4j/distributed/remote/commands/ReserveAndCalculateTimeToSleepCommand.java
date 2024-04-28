@@ -42,10 +42,10 @@ import static io.github.bucket4j.distributed.versioning.Versions.v_7_0_0;
 
 public class ReserveAndCalculateTimeToSleepCommand implements RemoteCommand<Long>, ComparableByContent<ReserveAndCalculateTimeToSleepCommand> {
 
-    private long tokensToConsume;
-    private long waitIfBusyNanosLimit;
+    private final long tokensToConsume;
+    private final long waitIfBusyNanosLimit;
 
-    public static final SerializationHandle<ReserveAndCalculateTimeToSleepCommand> SERIALIZATION_HANDLE = new SerializationHandle<ReserveAndCalculateTimeToSleepCommand>() {
+    public static final SerializationHandle<ReserveAndCalculateTimeToSleepCommand> SERIALIZATION_HANDLE = new SerializationHandle<>() {
         @Override
         public <S> ReserveAndCalculateTimeToSleepCommand deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             int formatNumber = adapter.readInt(input);
@@ -76,7 +76,7 @@ public class ReserveAndCalculateTimeToSleepCommand implements RemoteCommand<Long
         }
 
         @Override
-        public ReserveAndCalculateTimeToSleepCommand fromJsonCompatibleSnapshot(Map<String, Object> snapshot) throws IOException {
+        public ReserveAndCalculateTimeToSleepCommand fromJsonCompatibleSnapshot(Map<String, Object> snapshot) {
             int formatNumber = readIntValue(snapshot, "version");
             Versions.check(formatNumber, v_7_0_0, v_7_0_0);
 
@@ -86,7 +86,7 @@ public class ReserveAndCalculateTimeToSleepCommand implements RemoteCommand<Long
         }
 
         @Override
-        public Map<String, Object> toJsonCompatibleSnapshot(ReserveAndCalculateTimeToSleepCommand command, Version backwardCompatibilityVersion, Scope scope) throws IOException {
+        public Map<String, Object> toJsonCompatibleSnapshot(ReserveAndCalculateTimeToSleepCommand command, Version backwardCompatibilityVersion, Scope scope) {
             Map<String, Object> result = new HashMap<>();
             result.put("version", v_7_0_0.getNumber());
             result.put("tokensToConsume", command.tokensToConsume);

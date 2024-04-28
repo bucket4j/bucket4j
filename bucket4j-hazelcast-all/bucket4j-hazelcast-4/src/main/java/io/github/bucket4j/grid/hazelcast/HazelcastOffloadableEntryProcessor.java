@@ -19,11 +19,14 @@
  */
 package io.github.bucket4j.grid.hazelcast;
 
+import java.io.Serial;
+
 import com.hazelcast.core.Offloadable;
 import io.github.bucket4j.distributed.remote.Request;
 
 public class HazelcastOffloadableEntryProcessor<K, T> extends HazelcastEntryProcessor<K, T> implements Offloadable {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     private final String executorName;

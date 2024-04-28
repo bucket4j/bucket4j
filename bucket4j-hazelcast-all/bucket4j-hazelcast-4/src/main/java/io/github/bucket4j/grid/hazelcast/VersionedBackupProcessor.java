@@ -19,6 +19,7 @@
  */
 package io.github.bucket4j.grid.hazelcast;
 
+import java.io.Serial;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
@@ -31,6 +32,7 @@ import io.github.bucket4j.util.ComparableByContent;
 
 public class VersionedBackupProcessor<K> implements EntryProcessor<K, byte[], byte[]>, ComparableByContent<VersionedBackupProcessor> {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     private final byte[] state;

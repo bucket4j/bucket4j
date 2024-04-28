@@ -26,12 +26,15 @@ import org.apache.ignite.cache.CacheEntryProcessor;
 
 import javax.cache.processor.EntryProcessorException;
 import javax.cache.processor.MutableEntry;
+
+import java.io.Serial;
 import java.io.Serializable;
 
 import static io.github.bucket4j.distributed.serialization.InternalSerializationHelper.serializeRequest;
 
 public class IgniteEntryProcessor<K> implements Serializable, CacheEntryProcessor<K, byte[], byte[]> {
 
+    @Serial
     private static final long serialVersionUID = 1;
 
     private final byte[] requestBytes;

@@ -49,7 +49,7 @@ public class RemoteStat implements ComparableByContent<RemoteStat> {
         this.consumedTokens += consumedTokens;
     }
 
-    public static final SerializationHandle<RemoteStat> SERIALIZATION_HANDLE = new SerializationHandle<RemoteStat>() {
+    public static final SerializationHandle<RemoteStat> SERIALIZATION_HANDLE = new SerializationHandle<>() {
         @Override
         public <S> RemoteStat deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             int formatNumber = adapter.readInt(input);
@@ -77,7 +77,7 @@ public class RemoteStat implements ComparableByContent<RemoteStat> {
         }
 
         @Override
-        public RemoteStat fromJsonCompatibleSnapshot(Map<String, Object> snapshot) throws IOException {
+        public RemoteStat fromJsonCompatibleSnapshot(Map<String, Object> snapshot) {
             int formatNumber = readIntValue(snapshot, "version");
             Versions.check(formatNumber, v_7_0_0, v_7_0_0);
 
@@ -86,7 +86,7 @@ public class RemoteStat implements ComparableByContent<RemoteStat> {
         }
 
         @Override
-        public Map<String, Object> toJsonCompatibleSnapshot(RemoteStat stat, Version backwardCompatibilityVersion, Scope scope) throws IOException {
+        public Map<String, Object> toJsonCompatibleSnapshot(RemoteStat stat, Version backwardCompatibilityVersion, Scope scope) {
             Map<String, Object> result = new HashMap<>();
             result.put("version", v_7_0_0.getNumber());
             result.put("consumedTokens", stat.consumedTokens);

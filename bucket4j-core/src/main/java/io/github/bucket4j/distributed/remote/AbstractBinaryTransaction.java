@@ -28,7 +28,6 @@ import static io.github.bucket4j.distributed.serialization.InternalSerialization
 public abstract class AbstractBinaryTransaction {
 
     private final byte[] requestBytes;
-    private Version backwardCompatibilityVersion;
     private Request<?> request;
     private long currentTimeNanos;
 
@@ -47,7 +46,7 @@ public abstract class AbstractBinaryTransaction {
             return serializeResult(CommandResult.usageOfObsoleteApiException(e.getRequestedFormatNumber(), e.getMinSupportedFormatNumber()), Versions.getOldest());
         }
 
-        backwardCompatibilityVersion = request.getBackwardCompatibilityVersion();
+        Version backwardCompatibilityVersion = request.getBackwardCompatibilityVersion();
 
         try {
             RemoteBucketState currentState = null;

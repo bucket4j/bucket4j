@@ -65,11 +65,12 @@ public class OracleSelectForUpdateBasedProxyManager<K> extends AbstractSelectFor
         this.primaryKeyMapper = builder.getPrimaryKeyMapper();
         this.removeSqlQuery = MessageFormat.format("DELETE FROM {0} WHERE {1} = ?", builder.getTableName(), builder.getIdColumnName());
         this.insertSqlQuery = MessageFormat.format(
-            "MERGE INTO {0} b1\n" +
-                "USING (SELECT ? {1} FROM dual) b2\n" +
-                "ON (b1.{1} = b2.{1})\n" +
-                "WHEN NOT matched THEN\n" +
-                "INSERT ({1}, {2}) VALUES (?, null)",
+            """
+                MERGE INTO {0} b1
+                USING (SELECT ? {1} FROM dual) b2
+                ON (b1.{1} = b2.{1})
+                WHEN NOT matched THEN
+                INSERT ({1}, {2}) VALUES (?, null)""",
             builder.getTableName(), builder.getIdColumnName(), builder.getStateColumnName());
         this.selectSqlQuery = MessageFormat.format("SELECT {0} as state FROM {1} WHERE {2} = ? FOR UPDATE", builder.getStateColumnName(), builder.getTableName(), builder.getIdColumnName());
         this.customColumns.addAll(builder.getCustomColumns());
@@ -105,11 +106,12 @@ public class OracleSelectForUpdateBasedProxyManager<K> extends AbstractSelectFor
         this.removeSqlQuery = MessageFormat.format("DELETE FROM {0} WHERE {1} = ?", configuration.getTableName(), configuration.getIdName());
         this.updateSqlQuery = MessageFormat.format("UPDATE {0} SET {1}=? WHERE {2}=?", configuration.getTableName(), configuration.getStateName(), configuration.getIdName());
         this.insertSqlQuery = MessageFormat.format(
-            "MERGE INTO {0} b1\n" +
-                "USING (SELECT ? {1} FROM dual) b2\n" +
-                "ON (b1.{1} = b2.{1})\n" +
-                "WHEN NOT matched THEN\n" +
-                "INSERT ({1}, {2}) VALUES (?, null)",
+            """
+                MERGE INTO {0} b1
+                USING (SELECT ? {1} FROM dual) b2
+                ON (b1.{1} = b2.{1})
+                WHEN NOT matched THEN
+                INSERT ({1}, {2}) VALUES (?, null)""",
                 configuration.getTableName(), configuration.getIdName(), configuration.getStateName());
         this.selectSqlQuery = MessageFormat.format("SELECT {0} as state FROM {1} WHERE {2} = ? FOR UPDATE", configuration.getStateName(), configuration.getTableName(), configuration.getIdName());
         if (getClientSideConfig().getExpirationAfterWriteStrategy().isPresent()) {
@@ -196,7 +198,7 @@ public class OracleSelectForUpdateBasedProxyManager<K> extends AbstractSelectFor
                         for (CustomColumnProvider<K> column : customColumns) {
                             column.setCustomField(key, ++i, updateStatement, newState, currentTimeNanos());
                         }
-                        primaryKeyMapper.set(updateStatement, ++i, key);;
+                        primaryKeyMapper.set(updateStatement, ++i, key);
                         updateStatement.executeUpdate();
                     }
                 } catch (SQLException e) {

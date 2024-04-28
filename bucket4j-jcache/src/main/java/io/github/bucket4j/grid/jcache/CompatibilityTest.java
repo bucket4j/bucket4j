@@ -20,12 +20,11 @@
 
 package io.github.bucket4j.grid.jcache;
 
-import javax.cache.Cache;
-import javax.cache.processor.EntryProcessor;
 import java.io.Serializable;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.atomic.AtomicLong;
+
+import javax.cache.Cache;
+import javax.cache.processor.EntryProcessor;
 
 public class CompatibilityTest {
 

@@ -130,7 +130,7 @@ public abstract class AbstractProxyManagerBuilder<K, P extends ProxyManager<K>, 
 
     /**
      * Configures strategy for choosing time to live for buckets.
-     *
+     * <p>
      * If particular {@link P} does not support {@link ExpirationAfterWriteStrategy} then this method throws exception.
      *
      * @param expirationStrategy the strategy for choosing time to live for buckets.

@@ -101,13 +101,14 @@ public class CoherenceProxyManager<K> extends AbstractProxyManager<K> {
         CompletableFuture<CommandResult<T>> future = new CompletableFuture<>();
         Version backwardCompatibilityVersion = request.getBackwardCompatibilityVersion();
         SingleEntryAsynchronousProcessor<K, byte[], byte[]> asyncProcessor =
-            new SingleEntryAsynchronousProcessor<K, byte[], byte[]>(entryProcessor) {
+            new SingleEntryAsynchronousProcessor<>(entryProcessor) {
                 @Override
                 public void onResult(Map.Entry<K, byte[]> entry) {
                     super.onResult(entry);
                     byte[] resultBytes = entry.getValue();
                     future.complete(deserializeResult(resultBytes, backwardCompatibilityVersion));
                 }
+
                 @Override
                 public void onException(Throwable error) {
                     super.onException(error);

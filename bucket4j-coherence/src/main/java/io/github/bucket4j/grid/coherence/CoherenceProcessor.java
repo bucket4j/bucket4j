@@ -27,11 +27,14 @@ import io.github.bucket4j.distributed.remote.Request;
 import io.github.bucket4j.distributed.serialization.InternalSerializationHelper;
 import io.github.bucket4j.util.ComparableByContent;
 
+import java.io.Serial;
 import java.util.Arrays;
 
 
 public class CoherenceProcessor<K, T> extends AbstractProcessor<K, byte[], byte[]> implements ComparableByContent {
 
+    @Serial
+    @Serial
     private static final long serialVersionUID = 1L;
 
     private final byte[] requestBytes;

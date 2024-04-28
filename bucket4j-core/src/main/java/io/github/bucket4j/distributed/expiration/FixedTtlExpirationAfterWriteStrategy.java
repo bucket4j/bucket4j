@@ -80,7 +80,7 @@ public class FixedTtlExpirationAfterWriteStrategy implements ExpirationAfterWrit
         }
 
         @Override
-        public FixedTtlExpirationAfterWriteStrategy fromJsonCompatibleSnapshot(Map<String, Object> snapshot) throws IOException {
+        public FixedTtlExpirationAfterWriteStrategy fromJsonCompatibleSnapshot(Map<String, Object> snapshot) {
             int formatNumber = readIntValue(snapshot, "version");
             Versions.check(formatNumber, v_8_10_0, v_8_10_0);
 
@@ -89,7 +89,7 @@ public class FixedTtlExpirationAfterWriteStrategy implements ExpirationAfterWrit
         }
 
         @Override
-        public Map<String, Object> toJsonCompatibleSnapshot(FixedTtlExpirationAfterWriteStrategy strategy, Version backwardCompatibilityVersion, Scope scope) throws IOException {
+        public Map<String, Object> toJsonCompatibleSnapshot(FixedTtlExpirationAfterWriteStrategy strategy, Version backwardCompatibilityVersion, Scope scope) {
             Map<String, Object> result = new HashMap<>();
             result.put("version", v_8_10_0.getNumber());
             result.put("ttlMillis", strategy.ttlMillis);

@@ -132,11 +132,8 @@ class SkipSyncOnZeroCommandExecutor implements CommandExecutor, AsyncCommandExec
     }
 
     private boolean isLocalExecutionResultSatisfiesThreshold(long locallyConsumedTokens) {
-        if (locallyConsumedTokens == Long.MAX_VALUE || locallyConsumedTokens < 0) {
-            // math overflow
-            return false;
-        }
-        return true;
+        // check math overflow
+        return locallyConsumedTokens != Long.MAX_VALUE && locallyConsumedTokens >= 0;
     }
 
     private <T> boolean isNeedToExecuteRemoteImmediately(RemoteCommand<T> command, long commandConsumeTokens, long currentTimeNanos) {

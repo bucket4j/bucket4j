@@ -25,7 +25,7 @@ public interface ComparableByContent<T extends ComparableByContent> {
 
     boolean equalsByContent(T other);
 
-    public static <T> boolean equals(T object1, T object2) {
+    static <T> boolean equals(T object1, T object2) {
         if (object1 == object2) {
             return true;
         }

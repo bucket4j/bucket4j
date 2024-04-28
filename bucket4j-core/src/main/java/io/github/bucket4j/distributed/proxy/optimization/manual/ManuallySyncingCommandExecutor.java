@@ -159,11 +159,8 @@ class ManuallySyncingCommandExecutor implements CommandExecutor, AsyncCommandExe
     }
 
     private boolean isLocalExecutionResultSatisfiesThreshold(long locallyConsumedTokens) {
-        if (locallyConsumedTokens == Long.MAX_VALUE || postponedToConsumeTokens + locallyConsumedTokens < 0) {
-            // math overflow
-            return false;
-        }
-        return true;
+        // check math overflow
+        return locallyConsumedTokens != Long.MAX_VALUE && postponedToConsumeTokens + locallyConsumedTokens >= 0;
     }
 
     private <T> boolean isNeedToExecuteRemoteImmediately(RemoteCommand<T> command, long currentTimeNanos) {

@@ -64,7 +64,7 @@ public class BatchHelper<T, R, CT, CR> {
             Function<List<T>, CT> taskCombiner,
             Function<CT, CR> combinedTaskExecutor,
             BiFunction<CT, CR, List<R>> combinedResultSplitter) {
-        Function<T, R> taskExecutor = new Function<T, R>() {
+        Function<T, R> taskExecutor = new Function<>() {
             @Override
             public R apply(T task) {
                 CT combinedTask = taskCombiner.apply(Collections.singletonList(task));
@@ -231,7 +231,7 @@ public class BatchHelper<T, R, CT, CR> {
         }
 
         public R waitUninterruptedly() {
-            boolean wasInterrupted = false;;
+            boolean wasInterrupted = false;
             try {
                 while (true) {
                     wasInterrupted = wasInterrupted || Thread.interrupted();

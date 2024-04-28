@@ -49,6 +49,8 @@ import org.apache.ignite.lang.IgniteInClosure;
 
 import javax.cache.processor.EntryProcessorException;
 import javax.cache.processor.MutableEntry;
+
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
@@ -137,6 +139,7 @@ public class IgniteProxyManager<K> extends AbstractProxyManager<K> {
 
     private static class IgniteProcessor<K> implements Serializable, CacheEntryProcessor<K, byte[], byte[]> {
 
+        @Serial
         private static final long serialVersionUID = 1;
 
         private final byte[] requestBytes;

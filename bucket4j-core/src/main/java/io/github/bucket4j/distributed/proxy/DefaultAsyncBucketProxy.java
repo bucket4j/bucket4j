@@ -377,7 +377,7 @@ public class DefaultAsyncBucketProxy implements AsyncBucketProxy, AsyncOptimizat
 
     private <T> CompletableFuture<T> execute(RemoteCommand<T> command) {
         RemoteCommand<T> commandToExecute = implicitConfigurationReplacement == null? command :
-                new CheckConfigurationVersionAndExecuteCommand<T>(command, implicitConfigurationReplacement.getDesiredConfigurationVersion());
+            new CheckConfigurationVersionAndExecuteCommand<>(command, implicitConfigurationReplacement.getDesiredConfigurationVersion());
 
         boolean wasInitializedBeforeExecution = wasInitialized.get();
         CompletableFuture<CommandResult<T>> futureResult = commandExecutor.executeAsync(commandToExecute);

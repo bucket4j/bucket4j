@@ -50,11 +50,6 @@ public class HazelcastOffloadableEntryProcessorSerializer implements StreamSeria
     }
 
     @Override
-    public void destroy() {
-
-    }
-
-    @Override
     public void write(ObjectDataOutput out, HazelcastOffloadableEntryProcessor serializable) throws IOException {
         out.writeByteArray(serializable.getRequestBytes());
         out.writeUTF(serializable.getExecutorName());

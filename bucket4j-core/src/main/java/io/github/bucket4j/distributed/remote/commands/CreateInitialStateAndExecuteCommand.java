@@ -40,10 +40,10 @@ import static io.github.bucket4j.distributed.versioning.Versions.v_7_0_0;
 
 public class CreateInitialStateAndExecuteCommand<T> implements RemoteCommand<T>, ComparableByContent<CreateInitialStateAndExecuteCommand> {
 
-    private RemoteCommand<T> targetCommand;
-    private BucketConfiguration configuration;
+    private final RemoteCommand<T> targetCommand;
+    private final BucketConfiguration configuration;
 
-    public static SerializationHandle<CreateInitialStateAndExecuteCommand> SERIALIZATION_HANDLE = new SerializationHandle<CreateInitialStateAndExecuteCommand>() {
+    public static SerializationHandle<CreateInitialStateAndExecuteCommand> SERIALIZATION_HANDLE = new SerializationHandle<>() {
         @Override
         public <S> CreateInitialStateAndExecuteCommand deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             int formatNumber = adapter.readInt(input);
@@ -79,7 +79,7 @@ public class CreateInitialStateAndExecuteCommand<T> implements RemoteCommand<T>,
             Versions.check(formatNumber, v_7_0_0, v_7_0_0);
 
             BucketConfiguration configuration = BucketConfiguration.SERIALIZATION_HANDLE
-                    .fromJsonCompatibleSnapshot((Map<String, Object>) snapshot.get("configuration"));
+                .fromJsonCompatibleSnapshot((Map<String, Object>) snapshot.get("configuration"));
             RemoteCommand<?> targetCommand = RemoteCommand.fromJsonCompatibleSnapshot((Map<String, Object>) snapshot.get("targetCommand"));
             return new CreateInitialStateAndExecuteCommand<>(configuration, targetCommand);
         }

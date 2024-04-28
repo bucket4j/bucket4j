@@ -19,14 +19,14 @@
  */
 package io.github.bucket4j.grid.hazelcast.serialization;
 
-import com.hazelcast.internal.util.StringUtil;
-import com.hazelcast.nio.serialization.Serializer;
-
 import java.text.MessageFormat;
-import java.util.*;
+import java.util.AbstractMap;
+import java.util.Map;
+import java.util.Optional;
 import java.util.function.Supplier;
 
-import io.github.bucket4j.grid.hazelcast.VersionedBackupProcessor;
+import com.hazelcast.internal.util.StringUtil;
+import com.hazelcast.nio.serialization.Serializer;
 
 public class SerializationUtilities {
     public static final String TYPE_ID_BASE_PROP_NAME = "bucket4j.hazelcast.serializer.type_id_base";
@@ -56,7 +56,7 @@ public class SerializationUtilities {
         return Optional.ofNullable(
                 getSerializerTypeIdBaseFromSystemProperty()
                         .orElseGet(() -> getSerializerTypeIdBaseFromEnvironmentVariable()
-                                .orElseGet(() -> null)));
+                                .orElse(null)));
     }
 
     private static int getSerializerTypeIdOffset(Class<? extends Serializer> serializerType) {

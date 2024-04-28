@@ -53,11 +53,6 @@ public class VersionedBackupProcessorSerializer implements StreamSerializer<Vers
     }
 
     @Override
-    public void destroy() {
-
-    }
-
-    @Override
     public void write(ObjectDataOutput out, VersionedBackupProcessor serializable) throws IOException {
         out.writeInt(v_8_10_0.getNumber());
         out.writeByteArray(serializable.getState());

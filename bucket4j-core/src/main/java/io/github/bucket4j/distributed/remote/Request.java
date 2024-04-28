@@ -156,7 +156,7 @@ public class Request<T> implements ComparableByContent<Request<T>> {
 
         @Override
         public Map<String, Object> toJsonCompatibleSnapshot(Request<?> request, Version backwardCompatibilityVersion, Scope scope) throws IOException {
-            Version effectiveVersion = Versions.max(request.command.getRequiredVersion(), request.getSelfVersion());;
+            Version effectiveVersion = Versions.max(request.command.getRequiredVersion(), request.getSelfVersion());
             Versions.check(effectiveVersion.getNumber(), v_7_0_0, request.backwardCompatibilityVersion);
 
             Version selfVersion = request.getSelfVersion();

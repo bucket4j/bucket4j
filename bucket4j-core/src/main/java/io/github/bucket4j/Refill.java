@@ -27,7 +27,7 @@ import io.github.bucket4j.BandwidthBuilder.BandwidthBuilderRefillStage;
 
 /**
  * Specifies the speed of tokens regeneration.
- *
+ * <p>
  * This class is deprecated, you should use {@link Bandwidth#builder()}
  * @deprecated
  */
@@ -109,14 +109,12 @@ public class Refill {
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder("Refill{");
-        sb.append("periodNanos=").append(periodNanos);
-        sb.append(", tokens=").append(tokens);
-        sb.append(", refillIntervally=").append(refillIntervally);
-        sb.append(", timeOfFirstRefillMillis=").append(timeOfFirstRefillMillis);
-        sb.append(", useAdaptiveInitialTokens=").append(useAdaptiveInitialTokens);
-        sb.append('}');
-        return sb.toString();
+        return "Refill{" + "periodNanos=" + periodNanos +
+            ", tokens=" + tokens +
+            ", refillIntervally=" + refillIntervally +
+            ", timeOfFirstRefillMillis=" + timeOfFirstRefillMillis +
+            ", useAdaptiveInitialTokens=" + useAdaptiveInitialTokens +
+            '}';
     }
 
 }

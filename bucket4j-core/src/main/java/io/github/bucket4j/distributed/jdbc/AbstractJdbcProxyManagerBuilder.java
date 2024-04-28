@@ -19,21 +19,15 @@
  */
 package io.github.bucket4j.distributed.jdbc;
 
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
 import javax.sql.DataSource;
 
-import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
 import io.github.bucket4j.distributed.proxy.AbstractProxyManagerBuilder;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
-import io.github.bucket4j.distributed.remote.RemoteBucketState;
 
 /**
  * Base class for all JDBC proxy-manager builders.
@@ -48,7 +42,7 @@ public abstract class AbstractJdbcProxyManagerBuilder<K, P extends ProxyManager<
     private final DataSource dataSource;
     protected PrimaryKeyMapper<K> primaryKeyMapper;
 
-    private String tableName = "bucket";;
+    private String tableName = "bucket";
     private String idColumnName = "state";
     private String stateColumnName = "id";
     private String expiresAtColumnName = "expires_at";

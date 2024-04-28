@@ -49,11 +49,6 @@ public class SimpleBackupProcessorSerializer implements StreamSerializer<SimpleB
     }
 
     @Override
-    public void destroy() {
-
-    }
-
-    @Override
     public void write(ObjectDataOutput out, SimpleBackupProcessor serializable) throws IOException {
         out.writeByteArray(serializable.getState());
     }

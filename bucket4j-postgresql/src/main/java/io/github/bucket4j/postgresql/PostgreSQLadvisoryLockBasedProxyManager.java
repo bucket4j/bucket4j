@@ -71,11 +71,12 @@ public class PostgreSQLadvisoryLockBasedProxyManager<K> extends AbstractLockBase
         getClientSideConfig().getExpirationAfterWriteStrategy().ifPresent(expiration -> {
             this.customColumns.add(CustomColumnProvider.createExpiresInColumnProvider(builder.getExpiresAtColumnName(), expiration));
             String lockColumn = builder.getLockColumn();
-            this.customColumns.add(new CustomColumnProvider<K>() {
+            this.customColumns.add(new CustomColumnProvider<>() {
                 @Override
                 public void setCustomField(K key, int paramIndex, PreparedStatement statement, RemoteBucketState state, long currentTimeNanos) throws SQLException {
                     statement.setLong(paramIndex, lockIdSupplier.toLockId(key));
                 }
+
                 @Override
                 public String getCustomFieldName() {
                     return lockColumn;

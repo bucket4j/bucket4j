@@ -28,7 +28,7 @@ public enum Versions implements Version {
 
     private final int number;
 
-    private Versions(int number) {
+    Versions(int number) {
         this.number = number;
     }
 

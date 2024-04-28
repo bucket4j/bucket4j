@@ -44,7 +44,7 @@ public class BucketState64BitsInteger implements BucketState, ComparableByConten
 
     private BucketConfiguration configuration;
 
-    public static SerializationHandle<BucketState64BitsInteger> SERIALIZATION_HANDLE = new SerializationHandle<BucketState64BitsInteger>() {
+    public static SerializationHandle<BucketState64BitsInteger> SERIALIZATION_HANDLE = new SerializationHandle<>() {
         @Override
         public <S> BucketState64BitsInteger deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             int formatNumber = adapter.readInt(input);
@@ -196,8 +196,7 @@ public class BucketState64BitsInteger implements BucketState, ComparableByConten
             return;
         }
         if (newBandwidth.isGready() && previousBandwidth.isGready()) {
-            long newSize = Math.min(newBandwidth.capacity, currentSize);
-            newState.setCurrentSize(newBandwidthIndex, newSize);
+            newState.setCurrentSize(newBandwidthIndex, currentSize);
 
             long roundingError = getRoundingError(previousBandwidthIndex);
             double roundingScale = (double) newBandwidth.refillPeriodNanos / (double) previousBandwidth.refillPeriodNanos;
@@ -207,10 +206,8 @@ public class BucketState64BitsInteger implements BucketState, ComparableByConten
             }
             newState.setRoundingError(newBandwidthIndex, newRoundingError);
             return;
-        } else {
-            long newSize = Math.min(newBandwidth.capacity, currentSize);
-            newState.setCurrentSize(newBandwidthIndex, newSize);
         }
+        newState.setCurrentSize(newBandwidthIndex, currentSize);
     }
 
     private void replaceBandwidthProportional(BucketState64BitsInteger newState, int newBandwidthIndex, Bandwidth newBandwidth, int previousBandwidthIndex, Bandwidth previousBandwidth, long currentTimeNanos) {

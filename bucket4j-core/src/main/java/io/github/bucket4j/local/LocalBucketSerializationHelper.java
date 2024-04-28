@@ -61,7 +61,7 @@ public class LocalBucketSerializationHelper {
         return serializationHandle.fromJsonCompatibleSnapshot(snapshot);
     }
 
-    private static SerializationHandle<LocalBucket> getSerializationHandle(LocalBucket localBucket) throws IOException {
+    private static SerializationHandle<LocalBucket> getSerializationHandle(LocalBucket localBucket) {
         return switch (localBucket.getSynchronizationStrategy()) {
             case LOCK_FREE -> (SerializationHandle) LockFreeBucket.SERIALIZATION_HANDLE;
             case SYNCHRONIZED -> (SerializationHandle) SynchronizedBucket.SERIALIZATION_HANDLE;

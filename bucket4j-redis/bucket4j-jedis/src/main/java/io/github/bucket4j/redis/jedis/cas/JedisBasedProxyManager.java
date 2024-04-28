@@ -144,7 +144,7 @@ public class JedisBasedProxyManager<K> extends AbstractCompareAndSwapBasedProxyM
         }
 
         public JedisBasedProxyManager<K> build() {
-            return new JedisBasedProxyManager<K>(this);
+            return new JedisBasedProxyManager<>(this);
         }
 
     }

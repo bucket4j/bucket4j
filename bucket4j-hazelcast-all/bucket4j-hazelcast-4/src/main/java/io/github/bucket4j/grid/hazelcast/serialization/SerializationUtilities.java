@@ -56,7 +56,7 @@ public class SerializationUtilities {
         return Optional.ofNullable(
                 getSerializerTypeIdBaseFromSystemProperty()
                         .orElseGet(() -> getSerializerTypeIdBaseFromEnvironmentVariable()
-                                .orElseGet(() -> null)));
+                                .orElse(null)));
     }
 
     private static int getSerializerTypeIdOffset(Class<? extends Serializer> serializerType) {

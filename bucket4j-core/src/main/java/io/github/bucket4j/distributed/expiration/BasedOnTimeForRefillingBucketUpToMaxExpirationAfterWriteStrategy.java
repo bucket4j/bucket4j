@@ -26,7 +26,6 @@ import java.util.Map;
 
 import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
-import io.github.bucket4j.distributed.remote.commands.ConsumeIgnoringRateLimitsCommand;
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
 import io.github.bucket4j.distributed.serialization.Scope;
 import io.github.bucket4j.distributed.serialization.SerializationAdapter;
@@ -82,7 +81,7 @@ public class BasedOnTimeForRefillingBucketUpToMaxExpirationAfterWriteStrategy im
         }
 
         @Override
-        public BasedOnTimeForRefillingBucketUpToMaxExpirationAfterWriteStrategy fromJsonCompatibleSnapshot(Map<String, Object> snapshot) throws IOException {
+        public BasedOnTimeForRefillingBucketUpToMaxExpirationAfterWriteStrategy fromJsonCompatibleSnapshot(Map<String, Object> snapshot) {
             int formatNumber = readIntValue(snapshot, "version");
             Versions.check(formatNumber, v_8_10_0, v_8_10_0);
 
@@ -91,7 +90,7 @@ public class BasedOnTimeForRefillingBucketUpToMaxExpirationAfterWriteStrategy im
         }
 
         @Override
-        public Map<String, Object> toJsonCompatibleSnapshot(BasedOnTimeForRefillingBucketUpToMaxExpirationAfterWriteStrategy strategy, Version backwardCompatibilityVersion, Scope scope) throws IOException {
+        public Map<String, Object> toJsonCompatibleSnapshot(BasedOnTimeForRefillingBucketUpToMaxExpirationAfterWriteStrategy strategy, Version backwardCompatibilityVersion, Scope scope) {
             Map<String, Object> result = new HashMap<>();
             result.put("version", v_8_10_0.getNumber());
             result.put("keepAfterRefillDurationMillis", strategy.keepAfterRefillDurationMillis);

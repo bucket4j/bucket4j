@@ -55,7 +55,7 @@ public abstract class AbstractProxyManager<K> implements ProxyManager<K> {
         this.clientSideConfig = requireNonNull(clientSideConfig);
     }
 
-    private AsyncProxyManager<K> asyncView = new AsyncProxyManager<K>() {
+    private final AsyncProxyManager<K> asyncView = new AsyncProxyManager<>() {
         @Override
         public CompletableFuture<Optional<BucketConfiguration>> getProxyConfiguration(K key) {
             GetConfigurationCommand cmd = new GetConfigurationCommand();
@@ -247,7 +247,7 @@ public abstract class AbstractProxyManager<K> implements ProxyManager<K> {
 
     protected Long getClientSideTime() {
         Optional<TimeMeter> clientClock = clientSideConfig.getClientSideClock();
-        if (!clientClock.isPresent()) {
+        if (clientClock.isEmpty()) {
             return null;
         }
         return clientClock.get().currentTimeNanos();

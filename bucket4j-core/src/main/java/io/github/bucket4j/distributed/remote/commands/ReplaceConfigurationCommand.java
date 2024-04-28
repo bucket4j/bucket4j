@@ -47,7 +47,7 @@ public class ReplaceConfigurationCommand implements RemoteCommand<Nothing>, Comp
     private final TokensInheritanceStrategy tokensInheritanceStrategy;
     private final BucketConfiguration newConfiguration;
 
-    public static final SerializationHandle<ReplaceConfigurationCommand> SERIALIZATION_HANDLE = new SerializationHandle<ReplaceConfigurationCommand>() {
+    public static final SerializationHandle<ReplaceConfigurationCommand> SERIALIZATION_HANDLE = new SerializationHandle<>() {
         @Override
         public <S> ReplaceConfigurationCommand deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             int formatNumber = adapter.readInt(input);
@@ -83,7 +83,7 @@ public class ReplaceConfigurationCommand implements RemoteCommand<Nothing>, Comp
 
             TokensInheritanceStrategy tokensInheritanceStrategy = TokensInheritanceStrategy.valueOf((String) snapshot.get("tokensInheritanceStrategy"));
             BucketConfiguration newConfiguration = BucketConfiguration.SERIALIZATION_HANDLE
-                    .fromJsonCompatibleSnapshot((Map<String, Object>) snapshot.get("newConfiguration"));
+                .fromJsonCompatibleSnapshot((Map<String, Object>) snapshot.get("newConfiguration"));
             return new ReplaceConfigurationCommand(newConfiguration, tokensInheritanceStrategy);
         }
 

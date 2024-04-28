@@ -19,17 +19,16 @@
  */
 package io.github.bucket4j.benchmark.state;
 
-import io.github.resilience4j.ratelimiter.RateLimiter;
-import io.github.resilience4j.ratelimiter.RateLimiterConfig;
-import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
-import io.github.resilience4j.ratelimiter.internal.AtomicRateLimiter;
-import io.github.resilience4j.ratelimiter.internal.SemaphoreBasedRateLimiter;
-import org.openjdk.jmh.annotations.Scope;
-import org.openjdk.jmh.annotations.State;
-import org.openjdk.jmh.infra.Blackhole;
-
 import java.time.Duration;
 import java.util.function.Supplier;
+
+import org.openjdk.jmh.annotations.Scope;
+import org.openjdk.jmh.annotations.State;
+
+import io.github.resilience4j.ratelimiter.RateLimiter;
+import io.github.resilience4j.ratelimiter.RateLimiterConfig;
+import io.github.resilience4j.ratelimiter.internal.AtomicRateLimiter;
+import io.github.resilience4j.ratelimiter.internal.SemaphoreBasedRateLimiter;
 
 @State(Scope.Benchmark)
 public class Resilience4jState {

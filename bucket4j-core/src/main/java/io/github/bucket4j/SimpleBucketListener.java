@@ -24,11 +24,11 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public class SimpleBucketListener implements BucketListener {
 
-    private AtomicLong consumed = new AtomicLong();
-    private AtomicLong rejected = new AtomicLong();
-    private AtomicLong delayedNanos = new AtomicLong();
-    private AtomicLong parkedNanos = new AtomicLong();
-    private AtomicLong interrupted = new AtomicLong();
+    private final AtomicLong consumed = new AtomicLong();
+    private final AtomicLong rejected = new AtomicLong();
+    private final AtomicLong delayedNanos = new AtomicLong();
+    private final AtomicLong parkedNanos = new AtomicLong();
+    private final AtomicLong interrupted = new AtomicLong();
 
     @Override
     public void onConsumed(long tokens) {

@@ -72,7 +72,7 @@ public interface Bucket {
     /**
      * Consumes {@code tokens} from bucket ignoring all limits.
      * In result of this operation amount of tokens in the bucket could became negative.
-     *
+     * <p>
      * There are two possible reasons to use this method:
      * <ul>
      * <li>An operation with high priority should be executed independently of rate limits, but it should take effect to subsequent operation with bucket.</li>
@@ -134,7 +134,7 @@ public interface Bucket {
      * Resulted count of tokens are calculated by following formula:
      * <pre>newTokens = Math.min(capacity, currentTokens + tokensToAdd)</pre>
      * in other words resulted number of tokens never exceeds capacity independent of <tt>tokensToAdd</tt>.
-     *
+     * <p>
      * <h3>Example of usage</h3>
      * The "compensating transaction" is one of obvious use case, when any piece of code consumed tokens from bucket, tried to do something and failed, the "addTokens" will be helpful to return tokens back to bucket:
      * <pre>{@code
@@ -156,7 +156,7 @@ public interface Bucket {
 
     /**
      * Add <tt>tokensToAdd</tt> to bucket. In opposite to {@link #addTokens(long)} usage of this method can lead to overflow bucket capacity.
-     *
+     * <p>
      * <h3>Example of usage</h3>
      * The "compensating transaction" is one of obvious use case, when any piece of code consumed tokens from bucket, tried to do something and failed, the "addTokens" will be helpful to return tokens back to bucket:
      * <pre>{@code
@@ -261,7 +261,7 @@ public interface Bucket {
     /**
      * Returns new copy of this bucket instance decorated by {@code listener}.
      * The created bucket will share same tokens with source bucket and vice versa.
-     *
+     * <p>
      * See javadocs for {@link BucketListener} in order to understand semantic of listener.
      *
      * @param listener the listener of bucket events.

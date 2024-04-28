@@ -41,11 +41,9 @@ import static io.github.bucket4j.distributed.versioning.Versions.v_7_0_0;
 
 public class ForceAddTokensCommand implements RemoteCommand<Nothing>, ComparableByContent<ForceAddTokensCommand> {
 
-    private static final long serialVersionUID = 1L;
+    private final long tokensToAdd;
 
-    private long tokensToAdd;
-
-    public static final SerializationHandle<ForceAddTokensCommand> SERIALIZATION_HANDLE = new SerializationHandle<ForceAddTokensCommand>() {
+    public static final SerializationHandle<ForceAddTokensCommand> SERIALIZATION_HANDLE = new SerializationHandle<>() {
 
         @Override
         public <I> ForceAddTokensCommand deserialize(DeserializationAdapter<I> adapter, I input) throws IOException {
@@ -75,7 +73,7 @@ public class ForceAddTokensCommand implements RemoteCommand<Nothing>, Comparable
         }
 
         @Override
-        public ForceAddTokensCommand fromJsonCompatibleSnapshot(Map<String, Object> snapshot) throws IOException {
+        public ForceAddTokensCommand fromJsonCompatibleSnapshot(Map<String, Object> snapshot) {
             int formatNumber = readIntValue(snapshot, "version");
             Versions.check(formatNumber, v_7_0_0, v_7_0_0);
 
@@ -84,7 +82,7 @@ public class ForceAddTokensCommand implements RemoteCommand<Nothing>, Comparable
         }
 
         @Override
-        public Map<String, Object> toJsonCompatibleSnapshot(ForceAddTokensCommand command, Version backwardCompatibilityVersion, Scope scope) throws IOException {
+        public Map<String, Object> toJsonCompatibleSnapshot(ForceAddTokensCommand command, Version backwardCompatibilityVersion, Scope scope) {
             Map<String, Object> result = new HashMap<>();
             result.put("version", v_7_0_0.getNumber());
             result.put("tokensToAdd", command.tokensToAdd);

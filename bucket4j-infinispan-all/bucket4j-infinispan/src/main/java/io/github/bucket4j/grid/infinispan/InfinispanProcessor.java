@@ -19,6 +19,8 @@
  */
 package io.github.bucket4j.grid.infinispan;
 
+import java.io.Serial;
+
 import io.github.bucket4j.distributed.remote.AbstractBinaryTransaction;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.distributed.remote.Request;
@@ -31,6 +33,7 @@ public class InfinispanProcessor<K, R> implements
         SerializableFunction<EntryView.ReadWriteEntryView<K, byte[]>, byte[]>,
         ComparableByContent<InfinispanProcessor> {
 
+    @Serial
     private static final long serialVersionUID = 911L;
 
     private final byte[] requestBytes;

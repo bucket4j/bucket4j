@@ -24,6 +24,5 @@ public enum Scope {
     REQUEST,
     RESPONSE,
     PERSISTED_STATE,
-    ;
 
 }

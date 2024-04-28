@@ -28,6 +28,7 @@ import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.distributed.remote.Request;
 import io.github.bucket4j.util.ComparableByContent;
 
+import java.io.Serial;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -36,6 +37,7 @@ import static io.github.bucket4j.distributed.serialization.InternalSerialization
 
 public class HazelcastEntryProcessor<K, T> implements EntryProcessor<K, byte[], byte[]>, ComparableByContent<HazelcastEntryProcessor> {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     private final byte[] requestBytes;

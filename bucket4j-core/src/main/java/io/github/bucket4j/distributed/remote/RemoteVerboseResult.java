@@ -77,10 +77,10 @@ public class RemoteVerboseResult<T> implements ComparableByContent<RemoteVerbose
     }
 
     public <R> RemoteVerboseResult<R> map(Function<T, R> mapper) {
-        return new RemoteVerboseResult<R>(operationTimeNanos, resultTypeId, mapper.apply(value), state);
+        return new RemoteVerboseResult<>(operationTimeNanos, resultTypeId, mapper.apply(value), state);
     }
 
-    public static final SerializationHandle<RemoteVerboseResult<?>> SERIALIZATION_HANDLE = new SerializationHandle<RemoteVerboseResult<?>>() {
+    public static final SerializationHandle<RemoteVerboseResult<?>> SERIALIZATION_HANDLE = new SerializationHandle<>() {
 
         @Override
         public <I> RemoteVerboseResult<?> deserialize(DeserializationAdapter<I> adapter, I input) throws IOException {

@@ -314,7 +314,7 @@ public class ThreadUnsafeBucket extends AbstractBucket implements LocalBucket, C
         }
     }
 
-    public static final SerializationHandle<ThreadUnsafeBucket> SERIALIZATION_HANDLE = new SerializationHandle<ThreadUnsafeBucket>() {
+    public static final SerializationHandle<ThreadUnsafeBucket> SERIALIZATION_HANDLE = new SerializationHandle<>() {
         @Override
         public <S> ThreadUnsafeBucket deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             int formatNumber = adapter.readInt(input);

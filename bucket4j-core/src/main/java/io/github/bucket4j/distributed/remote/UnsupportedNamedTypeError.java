@@ -56,7 +56,7 @@ public class UnsupportedNamedTypeError implements CommandError, ComparableByCont
         return other.typeName.equals(typeName);
     }
 
-    public static SerializationHandle<UnsupportedNamedTypeError> SERIALIZATION_HANDLE = new SerializationHandle<UnsupportedNamedTypeError>() {
+    public static SerializationHandle<UnsupportedNamedTypeError> SERIALIZATION_HANDLE = new SerializationHandle<>() {
         @Override
         public <S> UnsupportedNamedTypeError deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             int formatNumber = adapter.readInt(input);
@@ -79,11 +79,11 @@ public class UnsupportedNamedTypeError implements CommandError, ComparableByCont
 
         @Override
         public Class<UnsupportedNamedTypeError> getSerializedType() {
-            return (Class) UnsupportedNamedTypeError.class;
+            return UnsupportedNamedTypeError.class;
         }
 
         @Override
-        public UnsupportedNamedTypeError fromJsonCompatibleSnapshot(Map<String, Object> snapshot) throws IOException {
+        public UnsupportedNamedTypeError fromJsonCompatibleSnapshot(Map<String, Object> snapshot) {
             int formatNumber = readIntValue(snapshot, "version");
             Versions.check(formatNumber, v_7_0_0, v_7_0_0);
             String typeName = (String) snapshot.get("typeName");
@@ -91,7 +91,7 @@ public class UnsupportedNamedTypeError implements CommandError, ComparableByCont
         }
 
         @Override
-        public Map<String, Object> toJsonCompatibleSnapshot(UnsupportedNamedTypeError error, Version backwardCompatibilityVersion, Scope scope) throws IOException {
+        public Map<String, Object> toJsonCompatibleSnapshot(UnsupportedNamedTypeError error, Version backwardCompatibilityVersion, Scope scope) {
             Map<String, Object> result = new HashMap<>();
             result.put("version", v_7_0_0.getNumber());
             result.put("typeName", error.typeName);

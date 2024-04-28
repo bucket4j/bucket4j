@@ -122,7 +122,7 @@ public class VerboseResult<T> implements ComparableByContent<VerboseResult<?>> {
     }
 
     public <R> VerboseResult<R> map(Function<T, R> mapper) {
-        return new VerboseResult<R>(operationTimeNanos, mapper.apply(value), state);
+        return new VerboseResult<>(operationTimeNanos, mapper.apply(value), state);
     }
 
     @Override

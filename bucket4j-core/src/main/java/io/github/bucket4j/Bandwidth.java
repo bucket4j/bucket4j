@@ -169,7 +169,7 @@ public class Bandwidth implements ComparableByContent<Bandwidth> {
         return id;
     }
 
-    public static final SerializationHandle<Bandwidth> SERIALIZATION_HANDLE = new SerializationHandle<Bandwidth>() {
+    public static final SerializationHandle<Bandwidth> SERIALIZATION_HANDLE = new SerializationHandle<>() {
         @Override
         public <S> Bandwidth deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             int formatNumber = adapter.readInt(input);
@@ -183,10 +183,10 @@ public class Bandwidth implements ComparableByContent<Bandwidth> {
             long timeOfFirstRefillMillis = adapter.readLong(input);
             boolean useAdaptiveInitialTokens = adapter.readBoolean(input);
             boolean hasId = adapter.readBoolean(input);
-            String id = hasId? adapter.readString(input) : UNDEFINED_ID;
+            String id = hasId ? adapter.readString(input) : UNDEFINED_ID;
 
             return new Bandwidth(capacity, refillPeriodNanos, refillTokens, initialTokens, refillIntervally,
-                    timeOfFirstRefillMillis, useAdaptiveInitialTokens, id);
+                timeOfFirstRefillMillis, useAdaptiveInitialTokens, id);
         }
 
         @Override
@@ -217,7 +217,7 @@ public class Bandwidth implements ComparableByContent<Bandwidth> {
         }
 
         @Override
-        public Bandwidth fromJsonCompatibleSnapshot(Map<String, Object> snapshot) throws IOException {
+        public Bandwidth fromJsonCompatibleSnapshot(Map<String, Object> snapshot) {
             int formatNumber = readIntValue(snapshot, "version");
             Versions.check(formatNumber, v_7_0_0, v_7_0_0);
 
@@ -231,11 +231,11 @@ public class Bandwidth implements ComparableByContent<Bandwidth> {
             String id = (String) snapshot.get("id");
 
             return new Bandwidth(capacity, refillPeriodNanos, refillTokens, initialTokens, refillIntervally,
-                    timeOfFirstRefillMillis, useAdaptiveInitialTokens, id);
+                timeOfFirstRefillMillis, useAdaptiveInitialTokens, id);
         }
 
         @Override
-        public Map<String, Object> toJsonCompatibleSnapshot(Bandwidth bandwidth, Version backwardCompatibilityVersion, Scope scope) throws IOException {
+        public Map<String, Object> toJsonCompatibleSnapshot(Bandwidth bandwidth, Version backwardCompatibilityVersion, Scope scope) {
             Map<String, Object> result = new HashMap<>();
             result.put("version", v_7_0_0.getNumber());
 
@@ -293,16 +293,14 @@ public class Bandwidth implements ComparableByContent<Bandwidth> {
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder("Bandwidth{");
-        sb.append("capacity=").append(capacity);
-        sb.append(", initialTokens=").append(initialTokens);
-        sb.append(", refillPeriodNanos=").append(refillPeriodNanos);
-        sb.append(", refillTokens=").append(refillTokens);
-        sb.append(", refillIntervally=").append(refillIntervally);
-        sb.append(", timeOfFirstRefillMillis=").append(timeOfFirstRefillMillis);
-        sb.append(", useAdaptiveInitialTokens=").append(useAdaptiveInitialTokens);
-        sb.append('}');
-        return sb.toString();
+        return "Bandwidth{" + "capacity=" + capacity +
+            ", initialTokens=" + initialTokens +
+            ", refillPeriodNanos=" + refillPeriodNanos +
+            ", refillTokens=" + refillTokens +
+            ", refillIntervally=" + refillIntervally +
+            ", timeOfFirstRefillMillis=" + timeOfFirstRefillMillis +
+            ", useAdaptiveInitialTokens=" + useAdaptiveInitialTokens +
+            '}';
     }
 
     @Override

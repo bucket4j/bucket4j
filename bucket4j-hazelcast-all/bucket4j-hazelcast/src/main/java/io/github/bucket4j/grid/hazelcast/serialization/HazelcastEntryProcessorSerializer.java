@@ -49,11 +49,6 @@ public class HazelcastEntryProcessorSerializer implements StreamSerializer<Hazel
     }
 
     @Override
-    public void destroy() {
-
-    }
-
-    @Override
     public void write(ObjectDataOutput out, HazelcastEntryProcessor serializable) throws IOException {
         out.writeByteArray(serializable.getRequestBytes());
     }
