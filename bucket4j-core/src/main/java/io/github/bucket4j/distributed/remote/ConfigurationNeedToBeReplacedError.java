@@ -43,7 +43,7 @@ public class ConfigurationNeedToBeReplacedError implements CommandError, Compara
         return new ConfigurationNeedToBeReplacedException();
     }
 
-    public static SerializationHandle<ConfigurationNeedToBeReplacedError> SERIALIZATION_HANDLE = new SerializationHandle<>() {
+    public static final SerializationHandle<ConfigurationNeedToBeReplacedError> SERIALIZATION_HANDLE = new SerializationHandle<>() {
         @Override
         public <S> ConfigurationNeedToBeReplacedError deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             int formatNumber = adapter.readInt(input);

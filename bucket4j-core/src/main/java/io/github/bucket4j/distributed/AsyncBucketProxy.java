@@ -301,7 +301,7 @@ public interface AsyncBucketProxy {
      * Returns amount of available tokens in this bucket.
 
      * <p> This method designed to be used only for monitoring and testing, you should never use this method for business cases,
-     * because available tokens can be changed by concurrent transactions for case of multithreaded/multi-process environment.
+     * because available tokens can be changed by concurrent transactions for case of multithreaded/multiprocess environment.
      *
      * @return amount of available tokens
      */

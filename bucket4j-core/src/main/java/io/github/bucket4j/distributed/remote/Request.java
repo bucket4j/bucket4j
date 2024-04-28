@@ -66,7 +66,7 @@ public class Request<T> implements ComparableByContent<Request<T>> {
         return expirationStrategy;
     }
 
-    public static SerializationHandle<Request<?>> SERIALIZATION_HANDLE = new SerializationHandle<>() {
+    public static final SerializationHandle<Request<?>> SERIALIZATION_HANDLE = new SerializationHandle<>() {
         @Override
         public <S> Request<?> deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             int formatNumber = adapter.readInt(input);

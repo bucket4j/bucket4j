@@ -56,7 +56,7 @@ public class UnsupportedNamedTypeError implements CommandError, ComparableByCont
         return other.typeName.equals(typeName);
     }
 
-    public static SerializationHandle<UnsupportedNamedTypeError> SERIALIZATION_HANDLE = new SerializationHandle<>() {
+    public static final SerializationHandle<UnsupportedNamedTypeError> SERIALIZATION_HANDLE = new SerializationHandle<>() {
         @Override
         public <S> UnsupportedNamedTypeError deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             int formatNumber = adapter.readInt(input);

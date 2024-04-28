@@ -51,7 +51,7 @@ import io.netty.buffer.ByteBuf;
 
 public class RedissonBasedProxyManager<K> extends AbstractCompareAndSwapBasedProxyManager<K> {
 
-    public static RedisCommand<Boolean> SET = new RedisCommand<>("SET", new BooleanNotNullReplayConvertor());
+    public static final RedisCommand<Boolean> SET = new RedisCommand<>("SET", new BooleanNotNullReplayConvertor());
 
     private final CommandAsyncExecutor commandExecutor;
     private final ExpirationAfterWriteStrategy expirationStrategy;

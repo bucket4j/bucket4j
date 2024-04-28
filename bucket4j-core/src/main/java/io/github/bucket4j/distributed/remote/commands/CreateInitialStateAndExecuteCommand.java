@@ -43,7 +43,7 @@ public class CreateInitialStateAndExecuteCommand<T> implements RemoteCommand<T>,
     private final RemoteCommand<T> targetCommand;
     private final BucketConfiguration configuration;
 
-    public static SerializationHandle<CreateInitialStateAndExecuteCommand> SERIALIZATION_HANDLE = new SerializationHandle<>() {
+    public static final SerializationHandle<CreateInitialStateAndExecuteCommand> SERIALIZATION_HANDLE = new SerializationHandle<>() {
         @Override
         public <S> CreateInitialStateAndExecuteCommand deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             int formatNumber = adapter.readInt(input);

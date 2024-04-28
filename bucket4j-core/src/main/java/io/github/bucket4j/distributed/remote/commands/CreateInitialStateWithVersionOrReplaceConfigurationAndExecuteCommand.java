@@ -46,7 +46,7 @@ public class CreateInitialStateWithVersionOrReplaceConfigurationAndExecuteComman
     private final long desiredConfigurationVersion;
     private final TokensInheritanceStrategy tokensInheritanceStrategy;
 
-    public static SerializationHandle<CreateInitialStateWithVersionOrReplaceConfigurationAndExecuteCommand<?>> SERIALIZATION_HANDLE = new SerializationHandle<>() {
+    public static final SerializationHandle<CreateInitialStateWithVersionOrReplaceConfigurationAndExecuteCommand<?>> SERIALIZATION_HANDLE = new SerializationHandle<>() {
         @Override
         public <S> CreateInitialStateWithVersionOrReplaceConfigurationAndExecuteCommand<?> deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             int formatNumber = adapter.readInt(input);

@@ -28,7 +28,7 @@ import io.github.bucket4j.distributed.proxy.ExpiredEntriesCleaner;
 import io.github.bucket4j.distributed.proxy.generic.pessimistic_locking.AbstractLockBasedProxyManager;
 import io.github.bucket4j.distributed.proxy.generic.pessimistic_locking.LockBasedTransaction;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
-import io.github.bucket4j.postgresql.Bucket4jPostgreSQL.PostgreSQLadvisoryLockBasedProxyManagerBuilder;
+import io.github.bucket4j.postgresql.Bucket4jPostgreSQL.PostgreSQLAdvisoryLockBasedProxyManagerBuilder;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -60,7 +60,7 @@ public class PostgreSQLadvisoryLockBasedProxyManager<K> extends AbstractLockBase
     private final String clearExpiredSqlQuery;
     private final List<CustomColumnProvider<K>> customColumns = new ArrayList<>();
 
-    PostgreSQLadvisoryLockBasedProxyManager(PostgreSQLadvisoryLockBasedProxyManagerBuilder<K> builder) {
+    PostgreSQLadvisoryLockBasedProxyManager(PostgreSQLAdvisoryLockBasedProxyManagerBuilder<K> builder) {
         super(builder.getClientSideConfig());
         this.dataSource = builder.getDataSource();
         this.primaryKeyMapper = builder.getPrimaryKeyMapper();

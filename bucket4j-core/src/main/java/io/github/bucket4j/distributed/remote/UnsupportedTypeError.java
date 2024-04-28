@@ -56,7 +56,7 @@ public class UnsupportedTypeError implements CommandError, ComparableByContent<U
         return other.typeId == typeId;
     }
 
-    public static SerializationHandle<UnsupportedTypeError> SERIALIZATION_HANDLE = new SerializationHandle<>() {
+    public static final SerializationHandle<UnsupportedTypeError> SERIALIZATION_HANDLE = new SerializationHandle<>() {
         @Override
         public <S> UnsupportedTypeError deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             int formatNumber = adapter.readInt(input);

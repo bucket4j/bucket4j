@@ -113,14 +113,14 @@ public interface Bucket {
     EstimationProbe estimateAbilityToConsume(long numTokens);
 
     /**
-     * Tries to consume as much tokens from this bucket as available at the moment of invocation.
+     * Tries to consume as many tokens from this bucket as available at the moment of invocation.
      *
      * @return number of tokens which has been consumed, or zero if was consumed nothing.
      */
     long tryConsumeAsMuchAsPossible();
 
     /**
-     * Tries to consume as much tokens from bucket as available in the bucket at the moment of invocation,
+     * Tries to consume as many tokens from bucket as available in the bucket at the moment of invocation,
      * but tokens which should be consumed is limited by {@code limit}.
      *
      * @param limit maximum number of tokens to consume, should be positive.
@@ -185,7 +185,7 @@ public interface Bucket {
      * Returns amount of available tokens in this bucket.
 
      * <p>
-     *     Typically you should avoid using of this method for, because available tokens can be changed by concurrent transactions for case of multithreaded/multi-process environment.
+     *     Typically, you should avoid using of this method for, because available tokens can be changed by concurrent transactions for case of multithreaded/multiprocess environment.
      *
      * @return amount of available tokens
      */
@@ -200,7 +200,7 @@ public interface Bucket {
      * But it becomes to a tricky problem when we expect that previous consumption(that has not been compensated by refill yet) should take effect to the bucket with new configuration.
      * In this case you need to make a choice between {@link TokensInheritanceStrategy#PROPORTIONALLY} and {@link TokensInheritanceStrategy#AS_IS}, read documentation about both with strong attention.
      *
-     * <p> There is another problem when you are choosing {@link TokensInheritanceStrategy#PROPORTIONALLY} and {@link TokensInheritanceStrategy#AS_IS} and bucket has more then one bandwidth.
+     * <p> There is another problem when you are choosing {@link TokensInheritanceStrategy#PROPORTIONALLY} and {@link TokensInheritanceStrategy#AS_IS} and bucket has more than one bandwidth.
      * For example how does replaceConfiguration implementation should bind bandwidths to each other in the following example?
      * <pre>
      * <code>
@@ -209,16 +209,16 @@ public interface Bucket {
      *                       .addLimit(Bandwidth.simple(10000, Duration.ofHours(1)))
      *                       .build();
      *     ...
-     *     BucketConfiguration newConfiguration = BucketConfiguratiion.builder()
+     *     BucketConfiguration newConfiguration = BucketConfiguration.builder()
      *                                               .addLimit(Bandwidth.simple(5000, Duration.ofHours(1)))
      *                                               .addLimit(Bandwidth.simple(100, Duration.ofSeconds(10)))
      *                                               .build();
      *     bucket.replaceConfiguration(newConfiguration, TokensInheritanceStrategy.AS_IS);
      * </code>
      * </pre>
-     * It is obviously that simple strategy - copying tokens by bandwidth index will not work well in this case, because of it highly depends from order.
-     * Instead of inventing the backward maggic Bucket4j provides to you ability to deap controll of this process by specifying identifiers for bandwidth,
-     * so in case of multiple bandwidth configuratoin replacement code can copy available tokens by bandwidth ID. So it is better to rewrite code above as following:
+     * It is obviously that simple strategy - copying tokens by bandwidth index will not work well in this case, because of it highly depends on from order.
+     * Instead of inventing the backward magic Bucket4j provides to you ability to deap control of this process by specifying identifiers for bandwidth,
+     * so in case of multiple bandwidth configuration replacement code can copy available tokens by bandwidth ID. So it is better to rewrite code above as following:
      * <pre>
      * <code>
      * Bucket bucket = Bucket.builder()
@@ -226,7 +226,7 @@ public interface Bucket {
      *                            .addLimit(Bandwidth.simple(10000, Duration.ofHours(1)).withId("business-limit"))
      *                            .build();
      * ...
-     * BucketConfiguration newConfiguration = BucketConfiguratiion.builder()
+     * BucketConfiguration newConfiguration = BucketConfiguration.builder()
      *                            .addLimit(Bandwidth.simple(5000, Duration.ofHours(1)).withId("business-limit"))
      *                            .addLimit(Bandwidth.simple(100, Duration.ofSeconds(10)).withId("technical-limit"))
      *                            .build();
@@ -249,7 +249,7 @@ public interface Bucket {
      *     </li>
      *     <li>
      *         {@link TokensInheritanceStrategy#RESET} strategy will be applied for tokens migration during config replacement for bandwidth which has no bound bandwidth with same ID in previous configuration,
-     *         idependently of strategy that was requested.
+     *         independently of strategy that was requested.
      *     </li>
      * </ul>
      *

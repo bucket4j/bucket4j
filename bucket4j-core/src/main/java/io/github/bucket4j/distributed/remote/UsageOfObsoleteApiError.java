@@ -63,7 +63,7 @@ public class UsageOfObsoleteApiError implements ComparableByContent<UsageOfObsol
                 && other.minSupportedFormatNumber == minSupportedFormatNumber;
     }
 
-    public static SerializationHandle<UsageOfObsoleteApiError> SERIALIZATION_HANDLE = new SerializationHandle<>() {
+    public static final SerializationHandle<UsageOfObsoleteApiError> SERIALIZATION_HANDLE = new SerializationHandle<>() {
         @Override
         public <S> UsageOfObsoleteApiError deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             int formatNumber = adapter.readInt(input);

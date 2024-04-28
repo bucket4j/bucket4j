@@ -50,7 +50,7 @@ public class Bucket4jComputeTask <K> extends ComputeTaskAdapter<Bucket4jComputeT
             }
         }
 
-        // should never come here, but if it happen let's execute Job on random node
+        // should never come here, but if it happens let's execute Job on random node
         int randomNode = ThreadLocalRandom.current().nextInt(subgrid.size());
         return Collections.singletonMap(job, subgrid.get(randomNode));
     }

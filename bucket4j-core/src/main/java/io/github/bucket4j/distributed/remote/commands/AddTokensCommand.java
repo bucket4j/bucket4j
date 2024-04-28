@@ -41,7 +41,7 @@ import static io.github.bucket4j.distributed.versioning.Versions.v_7_0_0;
 
 public class AddTokensCommand implements RemoteCommand<Nothing>, ComparableByContent<AddTokensCommand> {
 
-    private long tokensToAdd;
+    private final long tokensToAdd;
 
     public static final SerializationHandle<AddTokensCommand> SERIALIZATION_HANDLE = new SerializationHandle<>() {
         @Override

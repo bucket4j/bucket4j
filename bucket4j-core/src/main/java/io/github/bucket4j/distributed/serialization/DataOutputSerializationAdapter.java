@@ -26,7 +26,7 @@ import java.io.IOException;
 
 public class DataOutputSerializationAdapter implements SerializationAdapter<DataOutput>, DeserializationAdapter<DataInput> {
 
-    public static DataOutputSerializationAdapter INSTANCE = new DataOutputSerializationAdapter();
+    public static final DataOutputSerializationAdapter INSTANCE = new DataOutputSerializationAdapter();
 
     private DataOutputSerializationAdapter() {}
 

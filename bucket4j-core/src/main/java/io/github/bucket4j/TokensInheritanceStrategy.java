@@ -56,7 +56,7 @@ public enum TokensInheritanceStrategy {
      *
      * <p> <b>Example 2:</b> imagine bandwidth that was created by {@code Bandwidth.builder().capacity(100).refillGreedy(10, ofMinutes(1)).build()}.
      * At the moment of config replacement it was 40 available tokens. After replacing this bandwidth by following {@code Bandwidth.builder().capacity(20).refillGreedy(10, ofMinutes(1)).build()}
-     * 40 available tokens can not be copied as is, because it is greater then new capacity, so available tokens will be reduced to 20.
+     * 40 available tokens can not be copied as is, because it is greater than new capacity, so available tokens will be reduced to 20.
      */
     AS_IS((byte) 1),
 

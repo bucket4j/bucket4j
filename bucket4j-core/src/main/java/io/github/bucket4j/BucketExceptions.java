@@ -183,7 +183,7 @@ public final class BucketExceptions {
     }
 
     public static IllegalArgumentException intervallyAlignedRefillWithAdaptiveInitialTokensIncompatipleWithManualSpecifiedInitialTokens() {
-        String msg = "Intervally aligned Refill With adaptive initial tokens incompatiple with maanual specified initial tokens";
+        String msg = "Intervally aligned Refill With adaptive initial tokens incompatiple with manual specified initial tokens";
         return new IllegalArgumentException(msg);
     }
 

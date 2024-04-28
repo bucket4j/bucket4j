@@ -42,7 +42,7 @@ public class MultiCommand implements RemoteCommand<MultiResult>, ComparableByCon
     private final List<RemoteCommand<?>> commands;
     private int mergedCommands;
 
-    public static SerializationHandle<MultiCommand> SERIALIZATION_HANDLE = new SerializationHandle<>() {
+    public static final SerializationHandle<MultiCommand> SERIALIZATION_HANDLE = new SerializationHandle<>() {
         @Override
         public <S> MultiCommand deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             int formatNumber = adapter.readInt(input);

@@ -37,10 +37,10 @@ public class Bucket4jPostgreSQL {
      *
      * @param dataSource
      *
-     * @return new instance of {@link PostgreSQLadvisoryLockBasedProxyManagerBuilder}
+     * @return new instance of {@link PostgreSQLAdvisoryLockBasedProxyManagerBuilder}
      */
-    public static PostgreSQLadvisoryLockBasedProxyManagerBuilder<Long> advisoryLockBasedBuilder(DataSource dataSource) {
-        return new PostgreSQLadvisoryLockBasedProxyManagerBuilder<>(dataSource, PrimaryKeyMapper.LONG);
+    public static PostgreSQLAdvisoryLockBasedProxyManagerBuilder<Long> advisoryLockBasedBuilder(DataSource dataSource) {
+        return new PostgreSQLAdvisoryLockBasedProxyManagerBuilder<>(dataSource, PrimaryKeyMapper.LONG);
     }
 
     /**
@@ -54,12 +54,12 @@ public class Bucket4jPostgreSQL {
         return new PostgreSQLSelectForUpdateBasedProxyManagerBuilder<>(dataSource, PrimaryKeyMapper.LONG);
     }
 
-    public static class PostgreSQLadvisoryLockBasedProxyManagerBuilder<K> extends AbstractJdbcProxyManagerBuilder<K, PostgreSQLadvisoryLockBasedProxyManager<K>, PostgreSQLadvisoryLockBasedProxyManagerBuilder<K>> {
+    public static class PostgreSQLAdvisoryLockBasedProxyManagerBuilder<K> extends AbstractJdbcProxyManagerBuilder<K, PostgreSQLadvisoryLockBasedProxyManager<K>, PostgreSQLAdvisoryLockBasedProxyManagerBuilder<K>> {
 
         private LockIdSupplier<K> lockIdSupplier = (LockIdSupplier) LockIdSupplier.DEFAULT;
         private String lockColumn = "explicit_lock";
 
-        public PostgreSQLadvisoryLockBasedProxyManagerBuilder(DataSource dataSource, PrimaryKeyMapper<K> primaryKeyMapper) {
+        public PostgreSQLAdvisoryLockBasedProxyManagerBuilder(DataSource dataSource, PrimaryKeyMapper<K> primaryKeyMapper) {
             super(dataSource, primaryKeyMapper);
         }
 
@@ -75,7 +75,7 @@ public class Bucket4jPostgreSQL {
          *
          * @return this builder instance
          */
-        public PostgreSQLadvisoryLockBasedProxyManagerBuilder<K> lockIdSupplier(LockIdSupplier<K> lockIdSupplier) {
+        public PostgreSQLAdvisoryLockBasedProxyManagerBuilder<K> lockIdSupplier(LockIdSupplier<K> lockIdSupplier) {
             this.lockIdSupplier = Objects.requireNonNull(lockIdSupplier);
             return this;
         }
@@ -87,9 +87,9 @@ public class Bucket4jPostgreSQL {
          *
          * @return this builder instance
          */
-        public <K2> PostgreSQLadvisoryLockBasedProxyManagerBuilder<K2> primaryKeyMapper(PrimaryKeyMapper<K2> primaryKeyMapper) {
+        public <K2> PostgreSQLAdvisoryLockBasedProxyManagerBuilder<K2> primaryKeyMapper(PrimaryKeyMapper<K2> primaryKeyMapper) {
             super.primaryKeyMapper = (PrimaryKeyMapper) Objects.requireNonNull(primaryKeyMapper);
-            return (PostgreSQLadvisoryLockBasedProxyManagerBuilder<K2>) this;
+            return (PostgreSQLAdvisoryLockBasedProxyManagerBuilder<K2>) this;
         }
 
         /**
@@ -99,7 +99,7 @@ public class Bucket4jPostgreSQL {
          *
          * @return this builder instance
          */
-        public PostgreSQLadvisoryLockBasedProxyManagerBuilder<K> lockColumn(String lockColumn) {
+        public PostgreSQLAdvisoryLockBasedProxyManagerBuilder<K> lockColumn(String lockColumn) {
             this.lockColumn = Objects.requireNonNull(lockColumn);
             return this;
         }

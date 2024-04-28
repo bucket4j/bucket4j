@@ -43,7 +43,7 @@ public class BucketNotFoundError implements CommandError, ComparableByContent<Bu
         return new BucketNotFoundException();
     }
 
-    public static SerializationHandle<BucketNotFoundError> SERIALIZATION_HANDLE = new SerializationHandle<>() {
+    public static final SerializationHandle<BucketNotFoundError> SERIALIZATION_HANDLE = new SerializationHandle<>() {
         @Override
         public <S> BucketNotFoundError deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             int formatNumber = adapter.readInt(input);

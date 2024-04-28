@@ -51,7 +51,7 @@ public class GetConfigurationCommand implements RemoteCommand<BucketConfiguratio
         return CommandResult.success(state.getConfiguration(), BucketConfiguration.SERIALIZATION_HANDLE);
     }
 
-    public static SerializationHandle<GetConfigurationCommand> SERIALIZATION_HANDLE = new SerializationHandle<>() {
+    public static final SerializationHandle<GetConfigurationCommand> SERIALIZATION_HANDLE = new SerializationHandle<>() {
 
         @Override
         public <S> GetConfigurationCommand deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {

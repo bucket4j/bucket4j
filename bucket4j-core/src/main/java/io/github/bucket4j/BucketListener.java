@@ -36,7 +36,7 @@ import io.github.bucket4j.local.LocalBucketBuilder;
  *
  *
  * <h3>Question: How many listeners is need to create in case of application uses many buckets?</h3>
- * <b>Answer:</b>  it depends:
+ * <b>Answer:</b>  it depends on:
  * <ul>
  *     <li>If you want to have aggregated statistics for all buckets then create single listener per application and reuse this listener for all buckets.</li>
  *     <li>If you want to measure statistics independently per each bucket then use listener per bucket model.</li>

@@ -102,7 +102,7 @@ public class Bandwidth implements ComparableByContent<Bandwidth> {
     }
 
     /**
-     * This method is deprecated, you should use {@link BandwidthBuilder.BandwidthBuilderBuildStage#initialTokens(long)} )}
+     * This method is deprecated, you should use {@link BandwidthBuilder.BandwidthBuilderBuildStage#initialTokens(long)}
      *
      * @deprecated
      */

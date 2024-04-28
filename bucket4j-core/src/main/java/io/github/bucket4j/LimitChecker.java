@@ -24,8 +24,8 @@ import java.util.concurrent.ScheduledExecutorService;
 
 public class LimitChecker {
 
-    public static long INFINITY_DURATION = Long.MAX_VALUE;
-    public static long UNLIMITED_AMOUNT = Long.MAX_VALUE;
+    public static final long INFINITY_DURATION = Long.MAX_VALUE;
+    public static final long UNLIMITED_AMOUNT = Long.MAX_VALUE;
 
     public static void checkTokensToAdd(long tokensToAdd) {
         if (tokensToAdd <= 0) {

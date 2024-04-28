@@ -1,7 +1,6 @@
 package io.github.bucket4j.redis;
 
 import java.nio.charset.StandardCharsets;
-import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -16,7 +15,6 @@ import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
 
 import io.github.bucket4j.redis.lettuce.Bucket4jLettuce;
-import io.github.bucket4j.redis.lettuce.cas.LettuceBasedProxyManager;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
 import io.github.bucket4j.tck.ProxyManagerSpec;
 import io.lettuce.core.RedisURI;

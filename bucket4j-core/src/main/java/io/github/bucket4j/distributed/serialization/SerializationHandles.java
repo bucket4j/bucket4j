@@ -146,9 +146,7 @@ public class SerializationHandles {
 
     public SerializationHandles merge(SerializationHandle<?>... handles) {
         List<SerializationHandle<?>> resultHandles = new ArrayList<>(this.allHandles);
-        for (SerializationHandle<?> handle : handles) {
-            resultHandles.add(handle);
-        }
+        resultHandles.addAll(Arrays.asList(handles));
         return new SerializationHandles(resultHandles);
     }
 

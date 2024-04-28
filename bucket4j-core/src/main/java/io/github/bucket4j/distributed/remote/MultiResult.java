@@ -36,7 +36,7 @@ public class MultiResult implements ComparableByContent<MultiResult> {
 
     private final List<CommandResult<?>> results;
 
-    public static SerializationHandle<MultiResult> SERIALIZATION_HANDLE = new SerializationHandle<>() {
+    public static final SerializationHandle<MultiResult> SERIALIZATION_HANDLE = new SerializationHandle<>() {
         @Override
         public <S> MultiResult deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             int formatNumber = adapter.readInt(input);

@@ -27,7 +27,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
- * Represents an extension point of bucket4j library.
+ * Represents an extension point of Bucket4j library.
  * {@link ProxyManager} provides API for building and managing the collection of {@link BucketProxy} in backing storage.
  * Typically, an instance of {@link ProxyManager} is organized around RDBMS table, GRID cache, or some similarly isolated part of external storage.
  * Primary keys are used to distinguish persisted state of different buckets.
@@ -80,7 +80,7 @@ public interface ProxyManager<K> {
     void removeProxy(K key);
 
     /**
-     * Describes whether or not this manager supports asynchronous API.
+     * Describes whether this manager supports asynchronous API.
      * If this method returns <code>false</code> then any invocation of {@link #asAsync()} will throw {@link UnsupportedOperationException}.
      *
      * @return <code>true</code> if this manager supports asynchronous API
@@ -88,7 +88,7 @@ public interface ProxyManager<K> {
     boolean isAsyncModeSupported();
 
     /**
-     * Describes whether or not this manager supports expire-after-write feature.
+     * Describes whether this manager supports expire-after-write feature.
      *
      * @return <code>true</code> if this manager supports expire-after-write feature.
      */

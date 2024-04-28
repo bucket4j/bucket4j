@@ -109,7 +109,7 @@ public class ClientSideConfig {
      * but sometimes it can be useful, especially for testing and modeling.
      *
      * <p>
-     * By default client-clock is null. This means that server-side clock is always used.
+     * By default, client-clock is null. This means that server-side clock is always used.
      *
      * @param clientClock the clock that will be used for time measuring instead of server-side clock.
      *

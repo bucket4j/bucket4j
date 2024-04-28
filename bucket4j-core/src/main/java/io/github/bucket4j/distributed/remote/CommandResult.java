@@ -49,7 +49,7 @@ public class CommandResult<T> implements ComparableByContent<CommandResult> {
     private final T data;
     private final int resultTypeId;
 
-    public static SerializationHandle<CommandResult<?>> SERIALIZATION_HANDLE = new SerializationHandle<>() {
+    public static final SerializationHandle<CommandResult<?>> SERIALIZATION_HANDLE = new SerializationHandle<>() {
         @Override
         public <S> CommandResult<?> deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             int formatNumber = adapter.readInt(input);

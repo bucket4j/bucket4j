@@ -66,7 +66,7 @@ public class MariaDBSelectForUpdateBasedProxyManager<K> extends AbstractSelectFo
         this.primaryKeyMapper = builder.getPrimaryKeyMapper();
         this.removeSqlQuery = MessageFormat.format("DELETE FROM {0} WHERE {1} = ?", builder.getTableName(), builder.getIdColumnName());
         this.insertSqlQuery = MessageFormat.format("INSERT IGNORE INTO {0}({1}, {2}) VALUES(?, null)",
-            builder.getTableName(), builder.getIdColumnName(), builder.getStateColumnName(), builder.getIdColumnName());
+            builder.getTableName(), builder.getIdColumnName(), builder.getStateColumnName());
         this.selectSqlQuery = MessageFormat.format("SELECT {0} as state FROM {1} WHERE {2} = ? FOR UPDATE", builder.getStateColumnName(), builder.getTableName(), builder.getIdColumnName());
         getClientSideConfig().getExpirationAfterWriteStrategy().ifPresent(expiration -> {
             this.customColumns.add(CustomColumnProvider.createExpiresInColumnProvider(builder.getExpiresAtColumnName(), expiration));
@@ -99,7 +99,7 @@ public class MariaDBSelectForUpdateBasedProxyManager<K> extends AbstractSelectFo
         this.removeSqlQuery = MessageFormat.format("DELETE FROM {0} WHERE {1} = ?", configuration.getTableName(), configuration.getIdName());
         this.updateSqlQuery = MessageFormat.format("UPDATE {0} SET {1}=? WHERE {2}=?", configuration.getTableName(), configuration.getStateName(), configuration.getIdName());
         this.insertSqlQuery = MessageFormat.format("INSERT IGNORE INTO {0}({1}, {2}) VALUES(?, null)",
-                configuration.getTableName(), configuration.getIdName(), configuration.getStateName(), configuration.getIdName());
+                configuration.getTableName(), configuration.getIdName(), configuration.getStateName());
         this.selectSqlQuery = MessageFormat.format("SELECT {0} as state FROM {1} WHERE {2} = ? FOR UPDATE", configuration.getStateName(), configuration.getTableName(), configuration.getIdName());
         if (getClientSideConfig().getExpirationAfterWriteStrategy().isPresent()) {
             throw new IllegalArgumentException();

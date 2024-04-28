@@ -63,7 +63,7 @@ public class UsageOfUnsupportedApiError implements CommandError, ComparableByCon
                 maxSupportedFormatNumber == other.maxSupportedFormatNumber;
     }
 
-    public static SerializationHandle<UsageOfUnsupportedApiError> SERIALIZATION_HANDLE = new SerializationHandle<>() {
+    public static final SerializationHandle<UsageOfUnsupportedApiError> SERIALIZATION_HANDLE = new SerializationHandle<>() {
         @Override
         public <S> UsageOfUnsupportedApiError deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             int formatNumber = adapter.readInt(input);

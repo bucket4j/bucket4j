@@ -44,7 +44,7 @@ public class BucketState64BitsInteger implements BucketState, ComparableByConten
 
     private BucketConfiguration configuration;
 
-    public static SerializationHandle<BucketState64BitsInteger> SERIALIZATION_HANDLE = new SerializationHandle<>() {
+    public static final SerializationHandle<BucketState64BitsInteger> SERIALIZATION_HANDLE = new SerializationHandle<>() {
         @Override
         public <S> BucketState64BitsInteger deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             int formatNumber = adapter.readInt(input);
@@ -329,9 +329,6 @@ public class BucketState64BitsInteger implements BucketState, ComparableByConten
             Bandwidth bandwidth = bandwidths[i];
             long delay = calculateDelayNanosAfterWillBePossibleToConsume(i, bandwidth, tokensToConsume, currentTimeNanos, checkTokensToConsumeShouldBeLessThenCapacity);
             delayAfterWillBePossibleToConsume = Math.max(delayAfterWillBePossibleToConsume, delay);
-            if (delay > delayAfterWillBePossibleToConsume) {
-                delayAfterWillBePossibleToConsume = delay;
-            }
         }
         return delayAfterWillBePossibleToConsume;
     }
