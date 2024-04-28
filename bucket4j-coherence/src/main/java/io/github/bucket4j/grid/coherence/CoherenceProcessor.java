@@ -19,8 +19,11 @@
  */
 package io.github.bucket4j.grid.coherence;
 
+import com.tangosol.util.BinaryEntry;
 import com.tangosol.util.InvocableMap;
 import com.tangosol.util.processor.AbstractProcessor;
+
+import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
 import io.github.bucket4j.distributed.remote.AbstractBinaryTransaction;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.distributed.remote.Request;
@@ -29,6 +32,7 @@ import io.github.bucket4j.util.ComparableByContent;
 
 import java.io.Serial;
 import java.util.Arrays;
+import java.util.concurrent.TimeUnit;
 
 
 public class CoherenceProcessor<K, T> extends AbstractProcessor<K, byte[], byte[]> implements ComparableByContent {
@@ -65,7 +69,16 @@ public class CoherenceProcessor<K, T> extends AbstractProcessor<K, byte[], byte[
 
             @Override
             protected void setRawState(byte[] newStateBytes, RemoteBucketState newState) {
-                entry.setValue(newStateBytes);
+                ExpirationAfterWriteStrategy expirationStrategy = getExpirationStrategy();
+                long ttlMillis = expirationStrategy == null ? -1 : expirationStrategy.calculateTimeToLiveMillis(newState, getCurrentTimeNanos());
+                if (ttlMillis > 0) {
+                    BinaryEntry<K, byte[]> binaryEntry = entry.asBinaryEntry();
+                    binaryEntry.setValue(newStateBytes);
+                    binaryEntry.expire(ttlMillis);
+                    entry.setValue(newStateBytes);
+                } else {
+                    entry.setValue(newStateBytes);
+                }
             }
         }.execute();
     }

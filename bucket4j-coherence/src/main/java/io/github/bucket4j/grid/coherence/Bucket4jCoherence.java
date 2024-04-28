@@ -55,6 +55,11 @@ public class Bucket4jCoherence {
             return new CoherenceProxyManager<>(this);
         }
 
+        @Override
+        public boolean isExpireAfterWriteSupported() {
+            return true;
+        }
+
     }
 
 }

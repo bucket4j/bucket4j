@@ -42,7 +42,7 @@ public class CoherenceWithJdkSerializationTest extends AbstractDistributedBucket
                 "CoherenceProxyManager_JdkSerialization",
                 () -> UUID.randomUUID().toString(),
                 () -> Bucket4jCoherence.entryProcessorBasedBuilder(cache)
-            )
+            ).checkExpiration()
         );
     }
 

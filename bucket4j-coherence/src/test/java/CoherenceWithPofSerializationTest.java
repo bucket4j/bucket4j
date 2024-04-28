@@ -40,7 +40,7 @@ public class CoherenceWithPofSerializationTest extends AbstractDistributedBucket
                 "CoherenceProxyManager_PofSerialization",
                 () -> UUID.randomUUID().toString(),
                 () -> Bucket4jCoherence.entryProcessorBasedBuilder(cache)
-            )
+            ).checkExpiration()
         );
     }
 

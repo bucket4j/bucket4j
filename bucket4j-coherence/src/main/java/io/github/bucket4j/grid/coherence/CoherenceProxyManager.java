@@ -124,4 +124,9 @@ public class CoherenceProxyManager<K> extends AbstractProxyManager<K> {
         return cache.async().remove(key).thenApply(oldState -> null);
     }
 
+    @Override
+    public boolean isExpireAfterWriteSupported() {
+        return true;
+    }
+
 }
