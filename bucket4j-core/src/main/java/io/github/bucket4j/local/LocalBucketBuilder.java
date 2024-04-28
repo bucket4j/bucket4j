@@ -131,12 +131,11 @@ public class LocalBucketBuilder {
      */
     public LocalBucket build() {
         BucketConfiguration configuration = buildConfiguration();
-        switch (synchronizationStrategy) {
-            case LOCK_FREE: return new LockFreeBucket(configuration, MathType.INTEGER_64_BITS, timeMeter, listener);
-            case SYNCHRONIZED: return new SynchronizedBucket(configuration, MathType.INTEGER_64_BITS, timeMeter, listener);
-            case NONE: return new ThreadUnsafeBucket(configuration, MathType.INTEGER_64_BITS, timeMeter, listener);
-            default: throw new IllegalStateException();
-        }
+        return switch (synchronizationStrategy) {
+            case LOCK_FREE -> new LockFreeBucket(configuration, MathType.INTEGER_64_BITS, timeMeter, listener);
+            case SYNCHRONIZED -> new SynchronizedBucket(configuration, MathType.INTEGER_64_BITS, timeMeter, listener);
+            case NONE -> new ThreadUnsafeBucket(configuration, MathType.INTEGER_64_BITS, timeMeter, listener);
+        };
     }
 
     private BucketConfiguration buildConfiguration() {

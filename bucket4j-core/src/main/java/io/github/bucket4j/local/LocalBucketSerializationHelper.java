@@ -62,12 +62,11 @@ public class LocalBucketSerializationHelper {
     }
 
     private static SerializationHandle<LocalBucket> getSerializationHandle(LocalBucket localBucket) throws IOException {
-        switch (localBucket.getSynchronizationStrategy()) {
-            case LOCK_FREE: return (SerializationHandle) LockFreeBucket.SERIALIZATION_HANDLE;
-            case SYNCHRONIZED: return (SerializationHandle) SynchronizedBucket.SERIALIZATION_HANDLE;
-            case NONE: return (SerializationHandle) ThreadUnsafeBucket.SERIALIZATION_HANDLE;
-            default: throw new IOException("Unknown SynchronizationStrategy:" + localBucket.getSynchronizationStrategy());
-        }
+        return switch (localBucket.getSynchronizationStrategy()) {
+            case LOCK_FREE -> (SerializationHandle) LockFreeBucket.SERIALIZATION_HANDLE;
+            case SYNCHRONIZED -> (SerializationHandle) SynchronizedBucket.SERIALIZATION_HANDLE;
+            case NONE -> (SerializationHandle) ThreadUnsafeBucket.SERIALIZATION_HANDLE;
+        };
     }
 
     private static SerializationHandle<LocalBucket> getSerializationHandle(int typeId) throws IOException {
