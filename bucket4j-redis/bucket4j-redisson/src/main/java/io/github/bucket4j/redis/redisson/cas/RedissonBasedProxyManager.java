@@ -230,8 +230,8 @@ public class RedissonBasedProxyManager<K> extends AbstractCompareAndSwapBasedPro
                 String message = "Violated timeout while waiting for redis future for " + timeoutNanos.get() + "ns";
                 throw new io.github.bucket4j.TimeoutException(message, timeoutNanos.get(), timeoutNanos.get());
             } catch (ExecutionException e) {
-                if (e.getCause() instanceof RedisException) {
-                    throw (RedisException) e.getCause();
+                if (e.getCause() instanceof RedisException re) {
+                    throw re;
                 }
                 throw new RedisException(e);
             }
