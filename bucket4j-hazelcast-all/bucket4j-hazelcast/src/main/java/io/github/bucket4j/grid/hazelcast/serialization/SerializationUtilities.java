@@ -38,7 +38,7 @@ public class SerializationUtilities {
     );
 
     public static int getSerializerTypeId(Class<? extends Serializer> serializerType) {
-        var typeIdBase = getSerializersTypeIdBase();
+        Optional<Integer> typeIdBase = getSerializersTypeIdBase();
 
         if (typeIdBase.isEmpty()) {
             String msg = MessageFormat.format("Missing TypeIdBase number, impossible to load Bucket4j custom serializers. It must be provided in form of Environment Variable or System Property, both using the following key: [{0}]", TYPE_ID_BASE_PROP_NAME);
