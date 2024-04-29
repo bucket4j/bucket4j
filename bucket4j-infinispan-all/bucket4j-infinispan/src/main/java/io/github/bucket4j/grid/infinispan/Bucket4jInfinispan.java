@@ -57,6 +57,11 @@ public class Bucket4jInfinispan {
             return new InfinispanProxyManager<>(this);
         }
 
+        @Override
+        public boolean isExpireAfterWriteSupported() {
+            return true;
+        }
+
     }
 
 }

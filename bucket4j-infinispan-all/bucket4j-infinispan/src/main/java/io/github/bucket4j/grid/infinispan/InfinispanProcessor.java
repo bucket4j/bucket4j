@@ -21,12 +21,14 @@ package io.github.bucket4j.grid.infinispan;
 
 import java.io.Serial;
 
+import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
 import io.github.bucket4j.distributed.remote.AbstractBinaryTransaction;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.distributed.remote.Request;
 import io.github.bucket4j.distributed.serialization.InternalSerializationHelper;
 import io.github.bucket4j.util.ComparableByContent;
 import org.infinispan.functional.EntryView;
+import org.infinispan.functional.MetaParam;
 import org.infinispan.util.function.SerializableFunction;
 
 public class InfinispanProcessor<K, R> implements
@@ -69,7 +71,13 @@ public class InfinispanProcessor<K, R> implements
 
             @Override
             protected void setRawState(byte[] newStateBytes, RemoteBucketState newState) {
-                entry.set(newStateBytes);
+                ExpirationAfterWriteStrategy expirationStrategy = getExpirationStrategy();
+                long ttlMillis = expirationStrategy == null ? -1 : expirationStrategy.calculateTimeToLiveMillis(newState, getCurrentTimeNanos());
+                if (ttlMillis > 0) {
+                    entry.set(newStateBytes, new MetaParam.MetaLifespan(ttlMillis));
+                } else {
+                    entry.set(newStateBytes);
+                }
             }
         }.execute();
     }

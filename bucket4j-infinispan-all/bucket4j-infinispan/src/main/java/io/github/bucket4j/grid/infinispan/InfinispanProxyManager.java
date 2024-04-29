@@ -127,4 +127,9 @@ public class InfinispanProxyManager<K> extends AbstractProxyManager<K> {
         }
     }
 
+    @Override
+    public boolean isExpireAfterWriteSupported() {
+        return true;
+    }
+
 }

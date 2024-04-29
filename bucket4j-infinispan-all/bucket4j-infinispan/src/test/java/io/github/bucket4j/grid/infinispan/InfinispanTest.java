@@ -61,7 +61,7 @@ public class InfinispanTest extends AbstractDistributedBucketTest {
                 "InfinispanProxyManager",
                 () -> UUID.randomUUID().toString(),
                 () -> Bucket4jInfinispan.entryProcessorBasedBuilder(readWriteMap)
-            )
+            ).checkExpiration()
         );
     }
 
