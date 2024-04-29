@@ -13,7 +13,7 @@ The Bucket4j is distributed through [Maven Central](http://search.maven.org/):
 <dependency>
   <groupId>com.bucket4j</groupId>
   <artifactId>bucket4j_jdk17-core</artifactId>
-  <version>8.11.1</version>
+  <version>8.12.0</version>
 </dependency>
 ```
 ##### Java 11 dependency
@@ -22,7 +22,7 @@ The Bucket4j is distributed through [Maven Central](http://search.maven.org/):
 <dependency>
   <groupId>com.bucket4j</groupId>
   <artifactId>bucket4j_jdk11-core</artifactId>
-  <version>8.11.1</version>
+  <version>8.12.0</version>
 </dependency>
 ```
 ##### Java 8 dependency
@@ -46,11 +46,11 @@ private void doSomethingProtected() {
    }
 }
 ```
-More examples [can be found there](https://bucket4j.github.io/8.11.1/toc.html#quick-start-examples)
+More examples [can be found there](https://bucket4j.github.io/8.12.0/toc.html#quick-start-examples)
 
 ## [Documentation](https://bucket4j.github.io)
-* [Reference](https://bucket4j.github.io/8.11.1/toc.html)
-* [Quick start examples](https://bucket4j.github.io/8.11.1/toc.html#quick-start-examples)
+* [Reference](https://bucket4j.github.io/8.12.0/toc.html)
+* [Quick start examples](https://bucket4j.github.io/8.12.0/toc.html#quick-start-examples)
 * [Third-party articles](https://bucket4j.github.io/#third-party-articles)
 
 ## Bucket4j basic features
