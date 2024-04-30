@@ -30,11 +30,13 @@ public class Bucket4jProtobufContextInitializer implements SerializationContextI
 
     private static final String FOOTER = "package bucket4j;\n";
 
-    private static final String TYPE_TEMPLATE = "message [type_name] {\n" +
-            "\n" +
-            "    required bytes data = 1;\n" +
-            "\n" +
-            "}\n\n";
+    private static final String TYPE_TEMPLATE = """
+        message [type_name] {
+
+            required bytes data = 1;
+
+        }
+        """;
 
     @Override
     public String getProtoFileName() {

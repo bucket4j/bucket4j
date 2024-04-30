@@ -21,7 +21,7 @@ implementation 'com.bucket4j:bucket4j-core:{revnumber}'
 NOTE: see https://github.com/bucket4j/bucket4j/tree/8.0#java-compatibility-matrix[Java compatibility matrix] if you need for build that is compatible with Java 8
 
 ==== Limiting the rate of access to REST API
-Imagine that you develop yet another social network and you want to provide REST API for third-party developers.
+Imagine that you develop yet another social network, and you want to provide REST API for third-party developers.
 To protect your system from overloading you want to introduce the following limitation:
 
 > The bucket size is 50 calls (which cannot be exceeded at any given time), with a "refill rate" of 10 calls per second that continually increases tokens in the bucket.
@@ -89,7 +89,7 @@ If you want to provide more information to the end-user about the state of the b
 ----
 
 ==== Specifying initial amount of tokens
-By default initial size of the bucket equals capacity.
+By default, initial size of the bucket equals capacity.
 But sometimes, you may want to have a lesser initial size, for example for the case of cold start in order to prevent denial of service:
 
 [source, java]
@@ -117,7 +117,7 @@ if (wallet.tryConsume(50)) { // get 50 cents from wallet
 ----
 
 ==== Customizing time measurement - choosing nanotime time resolution
-By default Bucket4j uses millisecond time resolution, it is the preferred time measurement strategy.
+By default, Bucket4j uses millisecond time resolution, it is the preferred time measurement strategy.
 But rarely(for example benchmarking) do you wish the nanosecond precision:
 [source, java]
 ----

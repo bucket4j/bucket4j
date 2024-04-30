@@ -24,6 +24,7 @@ import io.github.bucket4j.distributed.remote.RemoteBucketState;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 public class LockBasedProxyManagerMock<K> extends AbstractLockBasedProxyManager<K> {
 
@@ -34,18 +35,18 @@ public class LockBasedProxyManagerMock<K> extends AbstractLockBasedProxyManager<
     }
 
     @Override
-    protected LockBasedTransaction allocateTransaction(K key) {
+    protected LockBasedTransaction allocateTransaction(K key, Optional<Long> requestTimeout) {
         byte[] backup = stateMap.get(key);
 
         return new LockBasedTransaction() {
 
             @Override
-            public void begin() {
+            public void begin(Optional<Long> requestTimeout) {
                 // do nothing
             }
 
             @Override
-            public void update(byte[] data, RemoteBucketState newState) {
+            public void update(byte[] data, RemoteBucketState newState, Optional<Long> requestTimeout) {
                 if (backup == null) {
                     throw new IllegalStateException();
                 }
@@ -58,7 +59,7 @@ public class LockBasedProxyManagerMock<K> extends AbstractLockBasedProxyManager<
             }
 
             @Override
-            public void create(byte[] data, RemoteBucketState newState) {
+            public void create(byte[] data, RemoteBucketState newState, Optional<Long> requestTimeout) {
                 if (backup != null) {
                     throw new IllegalStateException();
                 }
@@ -71,12 +72,12 @@ public class LockBasedProxyManagerMock<K> extends AbstractLockBasedProxyManager<
             }
 
             @Override
-            public void commit() {
+            public void commit(Optional<Long> requestTimeout) {
                 // do nothing
             }
 
             @Override
-            public byte[] lockAndGet() {
+            public byte[] lockAndGet(Optional<Long> requestTimeout) {
                 return backup;
             }
 

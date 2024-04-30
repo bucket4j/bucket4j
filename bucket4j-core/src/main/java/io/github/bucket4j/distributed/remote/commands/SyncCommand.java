@@ -47,7 +47,7 @@ public class SyncCommand implements RemoteCommand<Nothing>, ComparableByContent<
     private final long unsynchronizedTokens;
     private final long nanosSinceLastSync;
 
-    public static final SerializationHandle<SyncCommand> SERIALIZATION_HANDLE = new SerializationHandle<SyncCommand>() {
+    public static final SerializationHandle<SyncCommand> SERIALIZATION_HANDLE = new SerializationHandle<>() {
         @Override
         public <S> SyncCommand deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             int formatNumber = adapter.readInt(input);
@@ -77,7 +77,7 @@ public class SyncCommand implements RemoteCommand<Nothing>, ComparableByContent<
         }
 
         @Override
-        public SyncCommand fromJsonCompatibleSnapshot(Map<String, Object> snapshot) throws IOException {
+        public SyncCommand fromJsonCompatibleSnapshot(Map<String, Object> snapshot) {
             int formatNumber = readIntValue(snapshot, "version");
             Versions.check(formatNumber, v_7_0_0, v_7_0_0);
 
@@ -87,7 +87,7 @@ public class SyncCommand implements RemoteCommand<Nothing>, ComparableByContent<
         }
 
         @Override
-        public Map<String, Object> toJsonCompatibleSnapshot(SyncCommand command, Version backwardCompatibilityVersion, Scope scope) throws IOException {
+        public Map<String, Object> toJsonCompatibleSnapshot(SyncCommand command, Version backwardCompatibilityVersion, Scope scope) {
             Map<String, Object> result = new HashMap<>();
             result.put("version", v_7_0_0.getNumber());
             result.put("unsynchronizedTokens", command.unsynchronizedTokens);

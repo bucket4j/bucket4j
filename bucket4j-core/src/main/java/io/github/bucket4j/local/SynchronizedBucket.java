@@ -46,12 +46,12 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket, C
     private BucketState state;
     private final Lock lock;
 
-    public SynchronizedBucket(BucketConfiguration configuration, MathType mathType, TimeMeter timeMeter) {
-        this(configuration, mathType, timeMeter, new ReentrantLock());
+    public SynchronizedBucket(BucketConfiguration configuration, MathType mathType, TimeMeter timeMeter, BucketListener listener) {
+        this(configuration, mathType, timeMeter, listener, new ReentrantLock());
     }
 
-    SynchronizedBucket(BucketConfiguration configuration, MathType mathType, TimeMeter timeMeter, Lock lock) {
-        this(BucketListener.NOPE, timeMeter, lock, BucketState.createInitialState(configuration, mathType, timeMeter.currentTimeNanos()));
+    SynchronizedBucket(BucketConfiguration configuration, MathType mathType, TimeMeter timeMeter, BucketListener listener, Lock lock) {
+        this(listener, timeMeter, lock, BucketState.createInitialState(configuration, mathType, timeMeter.currentTimeNanos()));
     }
 
     private SynchronizedBucket(BucketListener listener, TimeMeter timeMeter, Lock lock, BucketState initialState) {
@@ -427,7 +427,7 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket, C
         }
     }
 
-    public static final SerializationHandle<SynchronizedBucket> SERIALIZATION_HANDLE = new SerializationHandle<SynchronizedBucket>() {
+    public static final SerializationHandle<SynchronizedBucket> SERIALIZATION_HANDLE = new SerializationHandle<>() {
         @Override
         public <S> SynchronizedBucket deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             int formatNumber = adapter.readInt(input);

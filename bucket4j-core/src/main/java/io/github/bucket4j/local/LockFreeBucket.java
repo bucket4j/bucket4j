@@ -43,8 +43,8 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket, Compa
     private final AtomicReference<BucketState> stateRef;
     private final TimeMeter timeMeter;
 
-    public LockFreeBucket(BucketConfiguration configuration, MathType mathType, TimeMeter timeMeter) {
-        this(new AtomicReference<>(createStateWithConfiguration(configuration, mathType, timeMeter)), timeMeter, BucketListener.NOPE);
+    public LockFreeBucket(BucketConfiguration configuration, MathType mathType, TimeMeter timeMeter, BucketListener listener) {
+        this(new AtomicReference<>(createStateWithConfiguration(configuration, mathType, timeMeter)), timeMeter, listener);
     }
 
     private LockFreeBucket(AtomicReference<BucketState> stateRef, TimeMeter timeMeter, BucketListener listener) {
@@ -501,7 +501,7 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket, Compa
                 '}';
     }
 
-    public static final SerializationHandle<LockFreeBucket> SERIALIZATION_HANDLE = new SerializationHandle<LockFreeBucket>() {
+    public static final SerializationHandle<LockFreeBucket> SERIALIZATION_HANDLE = new SerializationHandle<>() {
         @Override
         public <S> LockFreeBucket deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             int formatNumber = adapter.readInt(input);

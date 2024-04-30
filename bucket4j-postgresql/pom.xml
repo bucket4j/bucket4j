@@ -6,13 +6,13 @@
 
     <parent>
         <groupId>com.bucket4j</groupId>
-        <artifactId>bucket4j-parent</artifactId>
-        <version>8.7.0</version>
+        <artifactId>bucket4j_jdk17-parent</artifactId>
+        <version>8.12.0</version>
         <relativePath>../bucket4j-parent</relativePath>
     </parent>
 
-    <artifactId>bucket4j-postgresql</artifactId>
-    <name>bucket4j-postgresql</name>
+    <artifactId>bucket4j_jdk17-postgresql</artifactId>
+    <name>bucket4j_jdk17-postgresql</name>
 
     <properties>
         <modular-name>postgresql</modular-name>
@@ -28,12 +28,12 @@
     <dependencies>
         <dependency>
             <groupId>com.bucket4j</groupId>
-            <artifactId>bucket4j-core</artifactId>
+            <artifactId>bucket4j_jdk17-core</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.bucket4j</groupId>
-            <artifactId>bucket4j-core</artifactId>
+            <artifactId>bucket4j_jdk17-core</artifactId>
             <version>${project.version}</version>
             <type>test-jar</type>
             <scope>test</scope>
@@ -47,7 +47,7 @@
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
-            <version>42.4.3</version>
+            <version>42.7.2</version>
             <scope>provided</scope>
         </dependency>
         <dependency>

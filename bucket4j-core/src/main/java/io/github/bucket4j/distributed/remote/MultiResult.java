@@ -34,9 +34,9 @@ import static io.github.bucket4j.distributed.versioning.Versions.v_7_0_0;
 
 public class MultiResult implements ComparableByContent<MultiResult> {
 
-    private List<CommandResult<?>> results;
+    private final List<CommandResult<?>> results;
 
-    public static SerializationHandle<MultiResult> SERIALIZATION_HANDLE = new SerializationHandle<MultiResult>() {
+    public static final SerializationHandle<MultiResult> SERIALIZATION_HANDLE = new SerializationHandle<>() {
         @Override
         public <S> MultiResult deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             int formatNumber = adapter.readInt(input);

@@ -1,0 +1,45 @@
+[[bucket4j-lettuce, Bucket4j-Lettuce]]
+==== Lettuce integration
+===== Dependencies
+To use ``bucket4j-letucce`` extension you need to add following dependency:
+[source, xml, subs=attributes+]
+----
+<!-- For java 17 -->
+<dependency>
+    <groupId>com.bucket4j</groupId>
+    <artifactId>bucket4j_jdk17-redis-common</artifactId>
+    <version>{revnumber}</version>
+</dependency>
+<dependency>
+    <groupId>com.bucket4j</groupId>
+    <artifactId>bucket4j_jdk17-lettuce</artifactId>
+    <version>{revnumber}</version>
+</dependency>
+
+<!-- For java 11 -->
+<dependency>
+    <groupId>com.bucket4j</groupId>
+    <artifactId>bucket4j_jdk11-redis-common</artifactId>
+    <version>{revnumber}</version>
+</dependency>
+<dependency>
+    <groupId>com.bucket4j</groupId>
+    <artifactId>bucket4j_jdk11-lettuce</artifactId>
+    <version>{revnumber}</version>
+</dependency>
+----
+
+===== Example of Bucket instantiation via LettuceBasedProxyManager
+[source, java]
+----
+StatefulRedisConnection<K, byte[]> connection = ...;
+LettuceBasedProxyManager<K> proxyManager = Bucket4jLettuce.casBasedBuilder(connection)
+    .expirationAfterWrite(ExpirationAfterWriteStrategy.basedOnTimeForRefillingBucketUpToMax(ofSeconds(10)))
+    .build();
+...
+
+BucketConfiguration configuration = BucketConfiguration.builder()
+    .addLimit(limit -> capacity(1_000).refillGreedy(1_000, ofMinutes(1)))
+    .build();
+Bucket bucket = proxyManager.getProxy(key, () -> configuration);
+----

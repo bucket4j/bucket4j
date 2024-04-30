@@ -46,6 +46,8 @@ import javax.cache.CacheManager;
 import javax.cache.processor.EntryProcessor;
 import javax.cache.processor.MutableEntry;
 import javax.cache.spi.CachingProvider;
+
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -55,8 +57,9 @@ import java.util.concurrent.CompletableFuture;
  */
 public class JCacheProxyManager<K> extends AbstractProxyManager<K> {
 
-    private static final Map<String, String> incompatibleProviders = Collections.emptyMap();
+    private static final Map<String, String> incompatibleProviders;
     static {
+        incompatibleProviders = Collections.emptyMap();
         // incompatibleProviders.put("org.infinispan", " use module bucket4j-infinispan directly");
     }
 
@@ -65,10 +68,25 @@ public class JCacheProxyManager<K> extends AbstractProxyManager<K> {
     private final Cache<K, byte[]> cache;
     private final boolean preferLambdaStyle;
 
+    public JCacheProxyManager(Bucket4jJCache.JCacheProxyManagerBuilder<K> builder) {
+        super(builder.getClientSideConfig());
+        cache = builder.cache;
+        checkCompatibilityWithProvider(cache);
+        this.preferLambdaStyle = preferLambdaStyle(cache);
+    }
+
+    /**
+     * @deprecated use {@link Bucket4jJCache#entryProcessorBasedBuilder(Cache)}
+     */
+    @Deprecated
     public JCacheProxyManager(Cache<K, byte[]> cache) {
         this(cache, ClientSideConfig.getDefault());
     }
 
+    /**
+     * @deprecated use {@link Bucket4jJCache#entryProcessorBasedBuilder(Cache)}
+     */
+    @Deprecated
     public JCacheProxyManager(Cache<K, byte[]> cache, ClientSideConfig clientSideConfig) {
         super(clientSideConfig);
         checkCompatibilityWithProvider(cache);
@@ -154,6 +172,7 @@ public class JCacheProxyManager<K> extends AbstractProxyManager<K> {
 
     private static class BucketProcessor<K, T> implements Serializable, EntryProcessor<K, byte[], byte[]> {
 
+        @Serial
         private static final long serialVersionUID = 911;
 
         private final byte[] serializedRequest;
@@ -189,8 +208,8 @@ public class JCacheProxyManager<K> extends AbstractProxyManager<K> {
         }
 
         @Override
-        protected void setRawState(byte[] stateBytes) {
-            targetEntry.setValue(stateBytes);
+        protected void setRawState(byte[] newStateBytes, RemoteBucketState newState) {
+            targetEntry.setValue(newStateBytes);
         }
 
     }

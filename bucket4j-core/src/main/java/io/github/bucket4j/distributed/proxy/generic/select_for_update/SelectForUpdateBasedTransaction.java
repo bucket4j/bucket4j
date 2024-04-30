@@ -20,16 +20,18 @@
 
 package io.github.bucket4j.distributed.proxy.generic.select_for_update;
 
+import java.util.Optional;
+
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 
 /**
  * Describes the set of operations that {@link AbstractSelectForUpdateBasedProxyManager} typically performs in reaction to user request.
  * The typical flow is following:
  * <ol>
- *     <li>begin - {@link #begin()}</li>
- *     <li>lock - {@link #tryLockAndGet()}</li>
- *     <li>update - {@link #update(byte[], RemoteBucketState)}</li>
- *     <li>commit - {@link #commit()}</li>
+ *     <li>begin - {@link #begin(Optional)}</li>
+ *     <li>lock - {@link #tryLockAndGet(Optional)}</li>
+ *     <li>update - {@link #update(byte[],RemoteBucketState,Optional)}</li>
+ *     <li>commit - {@link #commit(Optional)}</li>
  *     <li>release - {@link #release()}</li>
  * </ol>
  */
@@ -37,9 +39,11 @@ public interface SelectForUpdateBasedTransaction {
 
     /**
      * Begins transaction if underlying storage requires transactions.
-     * There is strong guarantee that {@link #commit()} or {@link #rollback()} will be called if {@link #begin()} returns successfully.
+     * There is strong guarantee that {@link #commit(Optional)} or {@link #rollback()} will be called if {@link #begin(Optional)} returns successfully.
+     *
+     * @param timeoutNanos optional timeout in nanoseconds
      */
-    void begin();
+    void begin(Optional<Long> timeoutNanos);
 
     /**
      * Rollbacks transaction if underlying storage requires transactions
@@ -48,31 +52,38 @@ public interface SelectForUpdateBasedTransaction {
 
     /**
      * Commits transaction if underlying storage requires transactions
+     *
+     * @param timeoutNanos optional timeout in nanoseconds
      */
-    void commit();
+    void commit(Optional<Long> timeoutNanos);
 
     /**
      * Locks data by the key associated with this transaction and returns data that is associated with the key.
      *
+     * @param timeoutNanos optional timeout in nanoseconds
+     *
      * @return the data by the key associated with this transaction, or null data associated with key does not exist
      */
-    LockAndGetResult tryLockAndGet();
+    LockAndGetResult tryLockAndGet(Optional<Long> timeoutNanos);
 
     /**
      * Creates empty data by for the key associated with this transaction.
      * This operation is required to be able to lock data in the scope of next transaction.
      *
+     * @param timeoutNanos optional timeout in nanoseconds
+     *
      * @return true if data has been inserted
      */
-    boolean tryInsertEmptyData();
+    boolean tryInsertEmptyData(Optional<Long> timeoutNanos);
 
     /**
      * Updates the data by the key associated with this transaction.
      *
      * @param data bucket state to persists
      * @param newState new state of bucket - can be used to extract additional data is useful for persistence or logging.
+     * @param timeoutNanos optional timeout in nanoseconds
      */
-    void update(byte[] data, RemoteBucketState newState);
+    void update(byte[] data, RemoteBucketState newState, Optional<Long> timeoutNanos);
 
     /**
      * Frees resources associated with this transaction

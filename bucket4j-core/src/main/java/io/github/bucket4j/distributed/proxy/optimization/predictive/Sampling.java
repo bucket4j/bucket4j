@@ -28,7 +28,7 @@ public class Sampling {
 
     private final PredictionParameters predictionParameters;
 
-    private LinkedList<Sample> samples = new LinkedList<>();
+    private final LinkedList<Sample> samples = new LinkedList<>();
     private double othersRate;
 
     public Sampling(PredictionParameters predictionParameters) {
@@ -124,8 +124,8 @@ public class Sampling {
     }
 
     private static class Sample {
-        private long syncTimeNanos;
-        private long observedConsumptionCounter;
+        private final long syncTimeNanos;
+        private final long observedConsumptionCounter;
         private long selfConsumedTokens;
 
         public Sample(long syncTimeNanos, long observedConsumptionCounter, long selfConsumedTokens) {

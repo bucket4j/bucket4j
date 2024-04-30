@@ -19,12 +19,24 @@
  */
 package io.github.bucket4j;
 
+import io.github.bucket4j.distributed.proxy.RemoteAsyncBucketBuilder;
+import io.github.bucket4j.distributed.proxy.RemoteBucketBuilder;
+import io.github.bucket4j.local.LocalBucketBuilder;
+
 /**
  * Interface for listening bucket related events. The typical use-cases of this interface are logging and monitoring.
- * The bucket can be decorated by listener via {@link Bucket#toListenable(BucketListener)} method.
+ * <p>
+ * The bucket can be decorated by listener via:
+ * <ul>
+ *     <li>Via {@link LocalBucketBuilder#withListener(BucketListener)} method at building time of local bucket.</li>
+ *     <li>Via {@link RemoteBucketBuilder#withListener(BucketListener)} method at building time of distributed bucket.</li>
+ *     <li>Via {@link RemoteAsyncBucketBuilder#withListener(BucketListener)} method at building time of async distributed bucket.</li>
+ *     <li>Via {@link Bucket#toListenable(BucketListener)} method on bucket instance. Use this method when listener is not known at bucket build time.</li>
+ * </ul>
+ *
  *
  * <h3>Question: How many listeners is need to create in case of application uses many buckets?</h3>
- * <b>Answer:</b>  it depends:
+ * <b>Answer:</b>  it depends on:
  * <ul>
  *     <li>If you want to have aggregated statistics for all buckets then create single listener per application and reuse this listener for all buckets.</li>
  *     <li>If you want to measure statistics independently per each bucket then use listener per bucket model.</li>
@@ -32,7 +44,7 @@ package io.github.bucket4j;
  *
  * <h3>Question: where is methods of listener are invoking in case of distributed usage?</h3>
  * <b>Answer:</b> listener always invoked on client side, it is means that each client JVM will have own totally independent  for same bucket.
- *
+ * <p>
  * <h3>Question: Why does bucket invoke the listener on client side instead of server side in case of distributed scenario?
  * What I need to do if I need in aggregated stat across the whole cluster?</h3>
  * <b>Answer:</b> Because of planned expansion to non-JVM back-ends such as Redis, MySQL, PostgreSQL.
@@ -72,7 +84,7 @@ public interface BucketListener {
      *
      * @param nanos amount of nanoseconds for which thread will be parked
      */
-    default void beforeParking(long nanos) {};
+    default void beforeParking(long nanos) {}
 
     /**
      * This method is called each time when thread was interrupted during the wait of tokens refill

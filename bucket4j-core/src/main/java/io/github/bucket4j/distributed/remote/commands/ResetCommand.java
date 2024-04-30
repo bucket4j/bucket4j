@@ -42,7 +42,7 @@ import static io.github.bucket4j.distributed.versioning.Versions.v_7_0_0;
 
 public class ResetCommand implements RemoteCommand<Nothing>, ComparableByContent<ResetCommand> {
 
-    public static final SerializationHandle<ResetCommand> SERIALIZATION_HANDLE = new SerializationHandle<ResetCommand>() {
+    public static final SerializationHandle<ResetCommand> SERIALIZATION_HANDLE = new SerializationHandle<>() {
         @Override
         public <S> ResetCommand deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             int formatNumber = adapter.readInt(input);
@@ -66,7 +66,7 @@ public class ResetCommand implements RemoteCommand<Nothing>, ComparableByContent
         }
 
         @Override
-        public ResetCommand fromJsonCompatibleSnapshot(Map<String, Object> snapshot) throws IOException {
+        public ResetCommand fromJsonCompatibleSnapshot(Map<String, Object> snapshot) {
             int formatNumber = readIntValue(snapshot, "version");
             Versions.check(formatNumber, v_7_0_0, v_7_0_0);
 
@@ -74,7 +74,7 @@ public class ResetCommand implements RemoteCommand<Nothing>, ComparableByContent
         }
 
         @Override
-        public Map<String, Object> toJsonCompatibleSnapshot(ResetCommand command, Version backwardCompatibilityVersion, Scope scope) throws IOException {
+        public Map<String, Object> toJsonCompatibleSnapshot(ResetCommand command, Version backwardCompatibilityVersion, Scope scope) {
             Map<String, Object> result = new HashMap<>();
             result.put("version", v_7_0_0.getNumber());
             return result;

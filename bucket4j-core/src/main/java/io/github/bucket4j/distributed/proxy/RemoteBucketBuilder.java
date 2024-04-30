@@ -21,6 +21,7 @@
 package io.github.bucket4j.distributed.proxy;
 
 import io.github.bucket4j.BucketConfiguration;
+import io.github.bucket4j.BucketListener;
 import io.github.bucket4j.TokensInheritanceStrategy;
 import io.github.bucket4j.distributed.BucketProxy;
 import io.github.bucket4j.distributed.proxy.optimization.Optimization;
@@ -83,6 +84,15 @@ public interface RemoteBucketBuilder<K> {
     RemoteBucketBuilder<K> withImplicitConfigurationReplacement(long desiredConfigurationVersion, TokensInheritanceStrategy tokensInheritanceStrategy);
 
     /**
+     * Specifies {@code listener} for buckets that will be created by this builder.
+     *
+     * @param listener the listener of bucket events.
+     *
+     * @return this builder instance
+     */
+    RemoteBucketBuilder<K> withListener(BucketListener listener);
+
+    /**
      * Has the same semantic with {@link #build(Object, BucketConfiguration)},
      * but additionally provides ability to provide configuration lazily, that can be helpful when figuring-out the right configuration parameters
      * is costly, for example because parameters for particular {@code key} are stored in external database,
@@ -124,40 +134,7 @@ public interface RemoteBucketBuilder<K> {
      * @param <K1> the type of key accepted by returned RemoteBucketBuilder
      */
     default <K1> RemoteBucketBuilder<K1> withMapper(Function<? super K1, ? extends K> mapper) {
-        return new RemoteBucketBuilder<>() {
-            @Override
-            public RemoteBucketBuilder<K1> withRecoveryStrategy(RecoveryStrategy recoveryStrategy) {
-                RemoteBucketBuilder.this.withRecoveryStrategy(recoveryStrategy);
-                return this;
-            }
-
-            @Override
-            public RemoteBucketBuilder<K1> withOptimization(Optimization optimization) {
-                RemoteBucketBuilder.this.withOptimization(optimization);
-                return this;
-            }
-
-            @Override
-            public RemoteBucketBuilder<K1> withImplicitConfigurationReplacement(long desiredConfigurationVersion, TokensInheritanceStrategy tokensInheritanceStrategy) {
-                RemoteBucketBuilder.this.withImplicitConfigurationReplacement(desiredConfigurationVersion, tokensInheritanceStrategy);
-                return this;
-            }
-
-            @Override
-            public BucketProxy build(K1 key, Supplier<BucketConfiguration> configurationSupplier) {
-                return RemoteBucketBuilder.this.build(mapper.apply(key), configurationSupplier);
-            }
-
-            @Override
-            public BucketProxy build(K1 key, BucketConfiguration configuration) {
-                return RemoteBucketBuilder.this.build(mapper.apply(key), configuration);
-            }
-
-            // To prevent nesting of anonymous class instances, directly map the original instance.
-            @Override
-            public <K2> RemoteBucketBuilder<K2> withMapper(Function<? super K2, ? extends K1> innerMapper) {
-                return RemoteBucketBuilder.this.withMapper(mapper.compose(innerMapper));
-            }
-        };
+        return new RemoteBucketBuilderView(this, mapper);
     }
+
 }

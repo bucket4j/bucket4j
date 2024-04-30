@@ -3,15 +3,13 @@ package io.github.bucket4j.mysql;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import io.github.bucket4j.distributed.jdbc.BucketTableSettings;
-import io.github.bucket4j.distributed.jdbc.SQLProxyConfiguration;
-import io.github.bucket4j.distributed.proxy.ClientSideConfig;
-import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
 import io.github.bucket4j.tck.ProxyManagerSpec;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.testcontainers.containers.MySQLContainer;
+import org.testcontainers.utility.DockerImageName;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -25,31 +23,29 @@ public class MySQLSelectForUpdateLockBasedTransactionTest extends AbstractDistri
 
     private static MySQLContainer container;
     private static DataSource dataSource;
-    private static MySQLSelectForUpdateBasedProxyManager<Long> proxyManager;
 
     @BeforeAll
     public static void initializeInstance() throws SQLException {
         container = startMySQLContainer();
         dataSource = createJdbcDataSource(container);
         BucketTableSettings tableSettings = BucketTableSettings.customSettings("test.bucket", "id", "state");
-        final String INIT_TABLE_SCRIPT = "CREATE TABLE IF NOT EXISTS {0}({1} BIGINT PRIMARY KEY, {2} BLOB)";
+        final String INIT_TABLE_SCRIPT = "CREATE TABLE IF NOT EXISTS {0}({1} BIGINT PRIMARY KEY, {2} BLOB, expires_at BIGINT)";
         try (Connection connection = dataSource.getConnection()) {
             try (Statement statement = connection.createStatement()) {
                 String query = MessageFormat.format(INIT_TABLE_SCRIPT, tableSettings.getTableName(), tableSettings.getIdName(), tableSettings.getStateName());
                 statement.execute(query);
             }
         }
-        SQLProxyConfiguration<Long> configuration = SQLProxyConfiguration.builder()
-                .withTableSettings(tableSettings)
-                .build(dataSource);
-        proxyManager = new MySQLSelectForUpdateBasedProxyManager<>(configuration);
 
         specs = Arrays.asList(
             new ProxyManagerSpec<>(
                 "MySQLSelectForUpdateBasedProxyManager",
                 () -> ThreadLocalRandom.current().nextLong(1_000_000_000),
-                proxyManager
-            )
+                () -> Bucket4jMySQL.selectForUpdateBasedBuilder(dataSource)
+                    .table("test.bucket")
+                    .idColumn("id")
+                    .stateColumn("state")
+            ).checkExpiration()
         );
     }
 
@@ -61,17 +57,16 @@ public class MySQLSelectForUpdateLockBasedTransactionTest extends AbstractDistri
     }
 
     private static DataSource createJdbcDataSource(MySQLContainer container) {
-        HikariConfig hikariConfig = new HikariConfig();
-        hikariConfig.setJdbcUrl(container.getJdbcUrl());
-        hikariConfig.setUsername(container.getUsername());
-        hikariConfig.setPassword(container.getPassword());
-        hikariConfig.setDriverClassName(container.getDriverClassName());
-        hikariConfig.setMaximumPoolSize(100);
-        return new HikariDataSource(hikariConfig);
+        HikariConfig config = new HikariConfig();
+        config.setJdbcUrl(container.getJdbcUrl());
+        config.setUsername(container.getUsername());
+        config.setPassword(container.getPassword());
+        config.setMaximumPoolSize(10);
+        return new HikariDataSource(config);
     }
 
     private static MySQLContainer startMySQLContainer() {
-        MySQLContainer container = new MySQLContainer();
+        MySQLContainer container = new MySQLContainer(DockerImageName.parse("mysql:8.0.36"));
         container.start();
         return container;
     }

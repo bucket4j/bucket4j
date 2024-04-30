@@ -46,10 +46,10 @@ public class CommandResult<T> implements ComparableByContent<CommandResult> {
     private static final CommandResult<?> CONFIGURATION_NEED_TO_BE_REPLACED = new CommandResult<>(new ConfigurationNeedToBeReplacedError(), ConfigurationNeedToBeReplacedError.SERIALIZATION_HANDLE.getTypeId());
     private static final CommandResult<?> NULL = new CommandResult<>(null, NULL_HANDLE.getTypeId());
 
-    private T data;
-    private int resultTypeId;
+    private final T data;
+    private final int resultTypeId;
 
-    public static SerializationHandle<CommandResult<?>> SERIALIZATION_HANDLE = new SerializationHandle<CommandResult<?>>() {
+    public static final SerializationHandle<CommandResult<?>> SERIALIZATION_HANDLE = new SerializationHandle<>() {
         @Override
         public <S> CommandResult<?> deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             int formatNumber = adapter.readInt(input);
@@ -158,8 +158,7 @@ public class CommandResult<T> implements ComparableByContent<CommandResult> {
     }
 
     public T getData() {
-        if (data instanceof CommandError) {
-            CommandError error = (CommandError) data;
+        if (data instanceof CommandError error) {
             throw error.asException();
         }
         return data;

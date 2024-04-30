@@ -2,6 +2,7 @@
 package io.github.bucket4j.distributed.serialization;
 
 import io.github.bucket4j.*;
+import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
 import io.github.bucket4j.distributed.remote.*;
 import io.github.bucket4j.distributed.remote.commands.*;
 import io.github.bucket4j.distributed.versioning.Versions;
@@ -295,9 +296,10 @@ public abstract class AbstractSerializationTest {
         testSerialization(new SyncCommand(20, 10000000));
         testSerialization(new ResetCommand());
 
-        testSerialization(new Request<>(new GetAvailableTokensCommand(), Versions.getLatest(), null));
-        testSerialization(new Request<>(new GetAvailableTokensCommand(), Versions.getLatest(), 0L));
-        testSerialization(new Request<>(new GetAvailableTokensCommand(), Versions.getLatest(), System.currentTimeMillis()));
+        testSerialization(new Request<>(new GetAvailableTokensCommand(), Versions.getLatest(), null, null));
+        testSerialization(new Request<>(new GetAvailableTokensCommand(), Versions.getLatest(), 0L, null));
+        testSerialization(new Request<>(new GetAvailableTokensCommand(), Versions.getLatest(), System.currentTimeMillis(), null));
+        testSerialization(new Request<>(new GetAvailableTokensCommand(), Versions.getLatest(), null, ExpirationAfterWriteStrategy.none()));
     }
 
     @Test
@@ -318,6 +320,13 @@ public abstract class AbstractSerializationTest {
                 .withSynchronizationStrategy(SynchronizationStrategy.NONE)
                 .build();
         testSerialization(unsafeBucket);
+    }
+
+    @Test
+    public void serializationOfExpirationStrategies() throws IOException {
+        testSerialization(ExpirationAfterWriteStrategy.none());
+        testSerialization(ExpirationAfterWriteStrategy.fixedTimeToLive(Duration.ofSeconds(60)));
+        testSerialization(ExpirationAfterWriteStrategy.basedOnTimeForRefillingBucketUpToMax(Duration.ofSeconds(15)));
     }
 
 }

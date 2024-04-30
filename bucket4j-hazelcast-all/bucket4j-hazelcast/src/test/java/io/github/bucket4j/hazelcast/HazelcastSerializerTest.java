@@ -12,9 +12,13 @@ import io.github.bucket4j.distributed.remote.Request;
 import io.github.bucket4j.distributed.remote.commands.AddTokensCommand;
 import io.github.bucket4j.distributed.versioning.Versions;
 import io.github.bucket4j.grid.hazelcast.HazelcastEntryProcessor;
+import io.github.bucket4j.grid.hazelcast.HazelcastOffloadableEntryProcessor;
 import io.github.bucket4j.grid.hazelcast.SimpleBackupProcessor;
+import io.github.bucket4j.grid.hazelcast.VersionedBackupProcessor;
 import io.github.bucket4j.grid.hazelcast.serialization.HazelcastEntryProcessorSerializer;
+import io.github.bucket4j.grid.hazelcast.serialization.HazelcastOffloadableEntryProcessorSerializer;
 import io.github.bucket4j.grid.hazelcast.serialization.SimpleBackupProcessorSerializer;
+import io.github.bucket4j.grid.hazelcast.serialization.VersionedBackupProcessorSerializer;
 import io.github.bucket4j.util.ComparableByContent;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -49,8 +53,24 @@ public class HazelcastSerializerTest {
                         .setTypeClass(backupSerializer.getSerializableType())
         );
 
+        HazelcastOffloadableEntryProcessorSerializer offloadableProcessorSerializer = new HazelcastOffloadableEntryProcessorSerializer(1002);
+        serializationConfig.addSerializerConfig(
+            new SerializerConfig()
+                .setImplementation(offloadableProcessorSerializer)
+                .setTypeClass(offloadableProcessorSerializer.getSerializableType())
+        );
+
+        VersionedBackupProcessorSerializer versionedBackupSerializer = new VersionedBackupProcessorSerializer(1003);
+        serializationConfig.addSerializerConfig(
+            new SerializerConfig()
+                .setImplementation(versionedBackupSerializer)
+                .setTypeClass(versionedBackupSerializer.getSerializableType())
+        );
+
         serializerByClass.put(processorSerializer.getSerializableType(), processorSerializer);
         serializerByClass.put(backupSerializer.getSerializableType(), backupSerializer);
+        serializerByClass.put(offloadableProcessorSerializer.getSerializableType(), offloadableProcessorSerializer);
+        serializerByClass.put(versionedBackupSerializer.getSerializableType(), versionedBackupSerializer);
 
         this.serializationService = new DefaultSerializationServiceBuilder()
                 .setConfig(serializationConfig)
@@ -60,9 +80,12 @@ public class HazelcastSerializerTest {
     @Test
     public void tetsSerializationOfEntryProcessors() {
         RemoteCommand<?> command = new AddTokensCommand(42);
-        Request request = new Request(command, Versions.getLatest(), null);
+        Request request = new Request(command, Versions.getLatest(), null, null);
         testSerialization(new HazelcastEntryProcessor(request));
+        testSerialization(new HazelcastOffloadableEntryProcessor<>(request, "my-custom-executor"));
         testSerialization(new SimpleBackupProcessor(new byte[] {1,2,3}));
+        testSerialization(new VersionedBackupProcessor<>(new byte[] {1,2,3}, null));
+        testSerialization(new VersionedBackupProcessor<>(new byte[] {1,2,3}, 42L));
     }
 
     private <T> T serializeAndDeserialize(T original) {

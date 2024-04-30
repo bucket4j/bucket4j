@@ -63,8 +63,9 @@ public class DefaultAsyncBucketProxy implements AsyncBucketProxy, AsyncOptimizat
         return this;
     }
 
-    public DefaultAsyncBucketProxy(AsyncCommandExecutor commandExecutor, RecoveryStrategy recoveryStrategy, Supplier<CompletableFuture<BucketConfiguration>> configurationSupplier, ImplicitConfigurationReplacement implicitConfigurationReplacement) {
-        this(commandExecutor, recoveryStrategy, configurationSupplier, implicitConfigurationReplacement, new AtomicBoolean(false), BucketListener.NOPE);
+    public DefaultAsyncBucketProxy(AsyncCommandExecutor commandExecutor, RecoveryStrategy recoveryStrategy, Supplier<CompletableFuture<BucketConfiguration>> configurationSupplier,
+                                   ImplicitConfigurationReplacement implicitConfigurationReplacement, BucketListener listener) {
+        this(commandExecutor, recoveryStrategy, configurationSupplier, implicitConfigurationReplacement, new AtomicBoolean(false), listener);
     }
 
     private DefaultAsyncBucketProxy(AsyncCommandExecutor commandExecutor, RecoveryStrategy recoveryStrategy, Supplier<CompletableFuture<BucketConfiguration>> configurationSupplier, ImplicitConfigurationReplacement implicitConfigurationReplacement, AtomicBoolean wasInitialized, BucketListener listener) {
@@ -376,7 +377,7 @@ public class DefaultAsyncBucketProxy implements AsyncBucketProxy, AsyncOptimizat
 
     private <T> CompletableFuture<T> execute(RemoteCommand<T> command) {
         RemoteCommand<T> commandToExecute = implicitConfigurationReplacement == null? command :
-                new CheckConfigurationVersionAndExecuteCommand<T>(command, implicitConfigurationReplacement.getDesiredConfigurationVersion());
+            new CheckConfigurationVersionAndExecuteCommand<>(command, implicitConfigurationReplacement.getDesiredConfigurationVersion());
 
         boolean wasInitializedBeforeExecution = wasInitialized.get();
         CompletableFuture<CommandResult<T>> futureResult = commandExecutor.executeAsync(commandToExecute);

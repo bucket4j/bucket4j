@@ -46,11 +46,11 @@ public class CompareAndSwapBasedProxyManagerMock<K> extends AbstractCompareAndSw
     protected CompareAndSwapOperation beginCompareAndSwapOperation(K key) {
         return new CompareAndSwapOperation() {
             @Override
-            public Optional<byte[]> getStateData() {
+            public Optional<byte[]> getStateData(Optional<Long> timeoutNanos) {
                 return Optional.ofNullable(stateMap.get(key));
             }
             @Override
-            public boolean compareAndSwap(byte[] originalData, byte[] newData, RemoteBucketState newState) {
+            public boolean compareAndSwap(byte[] originalData, byte[] newData, RemoteBucketState newState, Optional<Long> timeoutNanos) {
                 stateMap.put(key, newData);
                 return true;
             }
@@ -62,11 +62,11 @@ public class CompareAndSwapBasedProxyManagerMock<K> extends AbstractCompareAndSw
         byte[] backup = stateMap.get(key);
         return new AsyncCompareAndSwapOperation() {
             @Override
-            public CompletableFuture<Optional<byte[]>> getStateData() {
+            public CompletableFuture<Optional<byte[]>> getStateData(Optional<Long> timeoutNanos) {
                 return CompletableFuture.completedFuture(Optional.ofNullable(backup));
             }
             @Override
-            public CompletableFuture<Boolean> compareAndSwap(byte[] originalData, byte[] newData, RemoteBucketState newState) {
+            public CompletableFuture<Boolean> compareAndSwap(byte[] originalData, byte[] newData, RemoteBucketState newState, Optional<Long> timeoutNanos) {
                 stateMap.put(key, newData);
                 return CompletableFuture.completedFuture(true);
             }

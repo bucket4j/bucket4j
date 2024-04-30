@@ -42,7 +42,7 @@ import static io.github.bucket4j.distributed.versioning.Versions.v_7_0_0;
 
 public class GetAvailableTokensCommand implements RemoteCommand<Long>, ComparableByContent<GetAvailableTokensCommand> {
 
-    public static final SerializationHandle<GetAvailableTokensCommand> SERIALIZATION_HANDLE = new SerializationHandle<GetAvailableTokensCommand>() {
+    public static final SerializationHandle<GetAvailableTokensCommand> SERIALIZATION_HANDLE = new SerializationHandle<>() {
         @Override
         public <S> GetAvailableTokensCommand deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             int formatNumber = adapter.readInt(input);
@@ -69,7 +69,7 @@ public class GetAvailableTokensCommand implements RemoteCommand<Long>, Comparabl
         }
 
         @Override
-        public GetAvailableTokensCommand fromJsonCompatibleSnapshot(Map<String, Object> snapshot) throws IOException {
+        public GetAvailableTokensCommand fromJsonCompatibleSnapshot(Map<String, Object> snapshot) {
             int formatNumber = readIntValue(snapshot, "version");
             Versions.check(formatNumber, v_7_0_0, v_7_0_0);
 
@@ -77,7 +77,7 @@ public class GetAvailableTokensCommand implements RemoteCommand<Long>, Comparabl
         }
 
         @Override
-        public Map<String, Object> toJsonCompatibleSnapshot(GetAvailableTokensCommand command, Version backwardCompatibilityVersion, Scope scope) throws IOException {
+        public Map<String, Object> toJsonCompatibleSnapshot(GetAvailableTokensCommand command, Version backwardCompatibilityVersion, Scope scope) {
             Map<String, Object> result = new HashMap<>();
             result.put("version", v_7_0_0.getNumber());
             return result;

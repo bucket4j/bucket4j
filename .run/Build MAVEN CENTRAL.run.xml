@@ -5,6 +5,7 @@
       <option name="myRunnerSettings" />
       <option name="myRunnerParameters">
         <MavenRunnerParameters>
+          <option name="cmdOptions" />
           <option name="profiles">
             <set />
           </option>
@@ -12,7 +13,7 @@
             <list>
               <option value="clean" />
               <option value="install" />
-              <option value="-Dmaven.test.skip=true" />
+              <option value="-DskipTests" />
             </list>
           </option>
           <option name="pomFileName" />
@@ -20,6 +21,9 @@
             <map>
               <entry key="release" value="true" />
             </map>
+          </option>
+          <option name="projectsCmdOptionValues">
+            <list />
           </option>
           <option name="resolveToWorkspace" value="false" />
           <option name="workingDirPath" value="$PROJECT_DIR$" />

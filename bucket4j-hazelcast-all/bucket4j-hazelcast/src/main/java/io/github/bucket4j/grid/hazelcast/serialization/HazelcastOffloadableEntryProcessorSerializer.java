@@ -19,14 +19,14 @@
  */
 package io.github.bucket4j.grid.hazelcast.serialization;
 
+import java.io.IOException;
+
 import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;
 import com.hazelcast.nio.serialization.StreamSerializer;
 import com.hazelcast.nio.serialization.TypedStreamDeserializer;
-import io.github.bucket4j.grid.hazelcast.HazelcastEntryProcessor;
-import io.github.bucket4j.grid.hazelcast.HazelcastOffloadableEntryProcessor;
 
-import java.io.IOException;
+import io.github.bucket4j.grid.hazelcast.HazelcastOffloadableEntryProcessor;
 
 
 public class HazelcastOffloadableEntryProcessorSerializer implements StreamSerializer<HazelcastOffloadableEntryProcessor>, TypedStreamDeserializer<HazelcastOffloadableEntryProcessor> {
@@ -36,19 +36,17 @@ public class HazelcastOffloadableEntryProcessorSerializer implements StreamSeria
     public HazelcastOffloadableEntryProcessorSerializer(int typeId) {
         this.typeId = typeId;
     }
+    public HazelcastOffloadableEntryProcessorSerializer() {
+        this.typeId = SerializationUtilities.getSerializerTypeId(this.getClass());
+    }
 
-    public Class<HazelcastEntryProcessor> getSerializableType() {
-        return HazelcastEntryProcessor.class;
+    public Class<HazelcastOffloadableEntryProcessor> getSerializableType() {
+        return HazelcastOffloadableEntryProcessor.class;
     }
 
     @Override
     public int getTypeId() {
         return typeId;
-    }
-
-    @Override
-    public void destroy() {
-
     }
 
     @Override

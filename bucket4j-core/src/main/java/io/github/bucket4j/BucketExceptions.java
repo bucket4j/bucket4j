@@ -183,7 +183,7 @@ public final class BucketExceptions {
     }
 
     public static IllegalArgumentException intervallyAlignedRefillWithAdaptiveInitialTokensIncompatipleWithManualSpecifiedInitialTokens() {
-        String msg = "Intervally aligned Refill With adaptive initial tokens incompatiple with maanual specified initial tokens";
+        String msg = "Intervally aligned Refill With adaptive initial tokens incompatiple with manual specified initial tokens";
         return new IllegalArgumentException(msg);
     }
 
@@ -236,6 +236,35 @@ public final class BucketExceptions {
     public static UnsupportedOperationException asyncModeIsNotSupported() {
         String msg = "Asynchronous mode is not supported";
         return new UnsupportedOperationException(msg);
+    }
+
+    public static UnsupportedOperationException expirationAfterWriteIsNotSupported() {
+        String msg = "Expiration-after-write is not supported";
+        return new UnsupportedOperationException(msg);
+    }
+
+    public static IllegalArgumentException nonPositiveRequestTimeout(Duration requestTimeout) {
+        String msg = "Non-positive request timeout " + requestTimeout;
+        return new IllegalArgumentException(msg);
+    }
+
+    public static TimeoutException timeoutReached(long nanosElapsed, long requestTimeoutNanos) {
+        String pattern = "Timeout {0} nanos has been reached, actual operation time is {1} nanos";
+        String msg = MessageFormat.format(pattern, requestTimeoutNanos, nanosElapsed);
+        return new TimeoutException(msg, nanosElapsed, requestTimeoutNanos);
+    }
+
+    public static IllegalArgumentException isNotWallBasedClockUsedInDistributedEnvironment(Class<? extends TimeMeter> clockClass) {
+        String pattern = "Trying to use not wall-based clock {0} in distributed environment";
+        String msg = MessageFormat.format(pattern, clockClass);
+        return new IllegalArgumentException(msg);
+    }
+
+    public static BucketExecutionException from(Throwable t) {
+        if (t instanceof BucketExecutionException b) {
+            return b;
+        }
+        return new BucketExecutionException(t);
     }
 
     public static class BucketExecutionException extends RuntimeException {

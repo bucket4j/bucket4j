@@ -43,7 +43,7 @@ public class BucketNotFoundError implements CommandError, ComparableByContent<Bu
         return new BucketNotFoundException();
     }
 
-    public static SerializationHandle<BucketNotFoundError> SERIALIZATION_HANDLE = new SerializationHandle<BucketNotFoundError>() {
+    public static final SerializationHandle<BucketNotFoundError> SERIALIZATION_HANDLE = new SerializationHandle<>() {
         @Override
         public <S> BucketNotFoundError deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             int formatNumber = adapter.readInt(input);
@@ -63,18 +63,18 @@ public class BucketNotFoundError implements CommandError, ComparableByContent<Bu
 
         @Override
         public Class<BucketNotFoundError> getSerializedType() {
-            return (Class) BucketNotFoundError.class;
+            return BucketNotFoundError.class;
         }
 
         @Override
-        public BucketNotFoundError fromJsonCompatibleSnapshot(Map<String, Object> snapshot) throws IOException {
+        public BucketNotFoundError fromJsonCompatibleSnapshot(Map<String, Object> snapshot) {
             int formatNumber = readIntValue(snapshot, "version");
             Versions.check(formatNumber, v_7_0_0, v_7_0_0);
             return INSTANCE;
         }
 
         @Override
-        public Map<String, Object> toJsonCompatibleSnapshot(BucketNotFoundError error, Version backwardCompatibilityVersion, Scope scope) throws IOException {
+        public Map<String, Object> toJsonCompatibleSnapshot(BucketNotFoundError error, Version backwardCompatibilityVersion, Scope scope) {
             Map<String, Object> result = new HashMap<>();
             result.put("version", v_7_0_0.getNumber());
             return result;

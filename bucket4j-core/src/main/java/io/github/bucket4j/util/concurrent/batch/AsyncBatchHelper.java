@@ -62,7 +62,7 @@ public class AsyncBatchHelper<T, R, CT, CR> {
             Function<CT, CompletableFuture<CR>> asyncCombinedTaskExecutor,
             BiFunction<CT, CR, List<R>> combinedResultSplitter
     ) {
-        Function<T, CompletableFuture<R>> asyncTaskExecutor = new Function<T, CompletableFuture<R>>() {
+        Function<T, CompletableFuture<R>> asyncTaskExecutor = new Function<>() {
             @Override
             public CompletableFuture<R> apply(T task) {
                 CT combinedTask = taskCombiner.apply(Collections.singletonList(task));
@@ -73,7 +73,7 @@ public class AsyncBatchHelper<T, R, CT, CR> {
                 });
             }
         };
-        return new AsyncBatchHelper<T, R, CT, CR>(taskCombiner, asyncCombinedTaskExecutor, asyncTaskExecutor, combinedResultSplitter);
+        return new AsyncBatchHelper<>(taskCombiner, asyncCombinedTaskExecutor, asyncTaskExecutor, combinedResultSplitter);
     }
 
     private AsyncBatchHelper(Function<List<T>, CT> taskCombiner,

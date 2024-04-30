@@ -19,6 +19,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.MessageFormat;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -33,31 +34,30 @@ public class MSSQLSelectForUpdateBasedProxyManagerTest extends AbstractDistribut
 
     private static MSSQLServerContainer container;
     private static HikariDataSource dataSource;
-    private static MSSQLSelectForUpdateBasedProxyManager<Long> proxyManager;
 
     @BeforeAll
     public static void initializeInstance() throws SQLException {
         container = startMsSqlContainer();
         dataSource = createJdbcDataSource(container);
         BucketTableSettings tableSettings = BucketTableSettings.getDefault();
-        final String INIT_TABLE_SCRIPT = "CREATE TABLE {0} ( {1} INT NOT NULL PRIMARY KEY, {2} BINARY(256) )";
+        final String INIT_TABLE_SCRIPT = "CREATE TABLE {0} ( {1} BIGINT NOT NULL PRIMARY KEY, {2} BINARY(256), {3} BIGINT)";
         try (Connection connection = dataSource.getConnection()) {
             try (Statement statement = connection.createStatement()) {
-                String query = MessageFormat.format(INIT_TABLE_SCRIPT, tableSettings.getTableName(), tableSettings.getIdName(), tableSettings.getStateName());
+                String query = MessageFormat.format(INIT_TABLE_SCRIPT, tableSettings.getTableName(), tableSettings.getIdName(), tableSettings.getStateName(), "expires_at");
                 statement.execute(query);
             }
         }
-        SQLProxyConfiguration<Long> configuration = SQLProxyConfiguration.builder()
-                .withTableSettings(tableSettings)
-                .build(dataSource);
-        proxyManager = new MSSQLSelectForUpdateBasedProxyManager<>(configuration);
 
         specs = Arrays.asList(
             new ProxyManagerSpec<>(
                 "MSSQLSelectForUpdateBasedProxyManager",
                 () -> ThreadLocalRandom.current().nextLong(1_000_000_000),
-                proxyManager
-            )
+                () -> Bucket4jMSSQL.selectForUpdateBasedBuilder(dataSource)
+                    .table("bucket")
+                    .idColumn("id")
+                    .stateColumn("state")
+                    .expiresAtColumn("expires_at")
+            ).checkExpiration()
         );
     }
 

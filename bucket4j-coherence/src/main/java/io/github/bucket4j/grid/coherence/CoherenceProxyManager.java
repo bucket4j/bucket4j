@@ -63,9 +63,18 @@ public class CoherenceProxyManager<K> extends AbstractProxyManager<K> {
         this(cache, ClientSideConfig.getDefault());
     }
 
+    /**
+     * @deprecated use {@link Bucket4jCoherence#entryProcessorBasedBuilder(NamedCache)}
+     */
+    @Deprecated
     public CoherenceProxyManager(NamedCache<K, byte[]> cache, ClientSideConfig clientSideConfig) {
         super(clientSideConfig);
         this.cache = cache;
+    }
+
+    CoherenceProxyManager(Bucket4jCoherence.CoherenceProxyManagerBuilder<K> builder) {
+        super(builder.getClientSideConfig());
+        this.cache = builder.cache;
     }
 
     @Override
@@ -92,13 +101,14 @@ public class CoherenceProxyManager<K> extends AbstractProxyManager<K> {
         CompletableFuture<CommandResult<T>> future = new CompletableFuture<>();
         Version backwardCompatibilityVersion = request.getBackwardCompatibilityVersion();
         SingleEntryAsynchronousProcessor<K, byte[], byte[]> asyncProcessor =
-            new SingleEntryAsynchronousProcessor<K, byte[], byte[]>(entryProcessor) {
+            new SingleEntryAsynchronousProcessor<>(entryProcessor) {
                 @Override
                 public void onResult(Map.Entry<K, byte[]> entry) {
                     super.onResult(entry);
                     byte[] resultBytes = entry.getValue();
                     future.complete(deserializeResult(resultBytes, backwardCompatibilityVersion));
                 }
+
                 @Override
                 public void onException(Throwable error) {
                     super.onException(error);
@@ -112,6 +122,11 @@ public class CoherenceProxyManager<K> extends AbstractProxyManager<K> {
     @Override
     protected CompletableFuture<Void> removeAsync(K key) {
         return cache.async().remove(key).thenApply(oldState -> null);
+    }
+
+    @Override
+    public boolean isExpireAfterWriteSupported() {
+        return true;
     }
 
 }

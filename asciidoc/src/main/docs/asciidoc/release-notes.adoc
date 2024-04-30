@@ -1,9 +1,19 @@
 === Bucket4j {revnumber} release notes
 Release `{revnumber}`
 
-.The features/enhancements/bugfixes in release scope are following:
-* https://github.com/bucket4j/bucket4j/issues/120[#120 Microsoft SQL integration]
-* https://github.com/bucket4j/bucket4j/pull/420[#420 Implement UnifiedJedis builder for JedisBasedProxyManager]
+==== The features/enhancements in release scope are following:
+* https://github.com/bucket4j/bucket4j/issues/466[#466 Split support for Redis by individual maven modules]
+* https://github.com/bucket4j/bucket4j/issues/467[#467 Create unified style builders for all ProxyManagers]
+* https://github.com/bucket4j/bucket4j/issues/474[#474 Migrate to JDK17]
 
-.Breaking changes
-* https://github.com/bucket4j/bucket4j/issues/423[#423 Support for Amazon Dynamo DB has been removed]
+==== Backward incompatible changes:
+===== New scheme of naming for Maven artifacts
+Now, the version of target JDK become a part of artifact name. For example `com.bucket4j:bucket4j-core` has been changed to `com.bucket4j:bucket4j_jdk17-core`.
+
+===== Dependencies structure for Redis has been changed
+Support for Redis has been split by individual modules(Jedis, Lettuce, Redisson). +
+See docs for your library
+
+* https://bucket4j.com/8.12.0/toc.html#dependencies-5[Lettuce]
+* https://bucket4j.com/8.12.0/toc.html#dependencies-6[Redisson]
+* https://bucket4j.com/8.12.0/toc.html#dependencies-7[Jedis]

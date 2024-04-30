@@ -7,8 +7,8 @@
 
     <parent>
         <groupId>com.bucket4j</groupId>
-        <artifactId>bucket4j-parent</artifactId>
-        <version>8.7.0</version>
+        <artifactId>bucket4j_jdk17-parent</artifactId>
+        <version>8.12.0</version>
         <relativePath>../bucket4j-parent</relativePath>
     </parent>
     <artifactId>asciidoc</artifactId>
@@ -112,7 +112,7 @@
                                     <goal>process-asciidoc</goal>
                                 </goals>
                                 <configuration>
-                                    <sourceDocumentName>previos-releases.adoc</sourceDocumentName>
+                                    <sourceDocumentName>previous-releases.adoc</sourceDocumentName>
                                     <outputDirectory>${asciidoc.generated.directory}</outputDirectory>
                                 </configuration>
                             </execution>

@@ -25,6 +25,7 @@ import io.github.bucket4j.distributed.AsyncBucketProxy;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
  * The asynchronous equivalent of {@link ProxyManager}.
@@ -37,7 +38,25 @@ import java.util.function.Function;
 public interface AsyncProxyManager<K> {
 
     /**
+     * Creates bucket-proxy that configured by default parameters that set on proxy-manager level.
+     *
+     * <p> In case if you need to configure something special for bucket like implicit config replacement you should to use {@link #builder()} instead of this method.
+     *
+     * @param key the key that used in external storage to distinguish one bucket from another.
+     * @param configurationSupplier provider for bucket configuration
+     *
+     * @return new instance of {@link AsyncBucketProxy}
+     */
+    default AsyncBucketProxy getProxy(K key, Supplier<CompletableFuture<BucketConfiguration>> configurationSupplier) {
+        return builder().build(key, configurationSupplier);
+    }
+
+    /**
      * Creates new instance of {@link RemoteAsyncBucketBuilder}
+     *
+     * <p>
+     * Use this method only if you need to create bucket with parameters that can not be specified via {@link AbstractProxyManagerBuilder},
+     * otherwise prefer {@link #getProxy(Object, Supplier)}
      *
      * @return new instance of {@link RemoteAsyncBucketBuilder}
      */
@@ -70,27 +89,7 @@ public interface AsyncProxyManager<K> {
      * @param <K1> the type of key accepted by returned AsyncProxyManager
      */
     default <K1> AsyncProxyManager<K1> withMapper(Function<? super K1, ? extends K> mapper) {
-        return new AsyncProxyManager<>() {
-            @Override
-            public RemoteAsyncBucketBuilder<K1> builder() {
-                return AsyncProxyManager.this.builder().withMapper(mapper);
-            }
-
-            @Override
-            public CompletableFuture<Void> removeProxy(K1 key) {
-                return AsyncProxyManager.this.removeProxy(mapper.apply(key));
-            }
-
-            @Override
-            public CompletableFuture<Optional<BucketConfiguration>> getProxyConfiguration(K1 key) {
-                return AsyncProxyManager.this.getProxyConfiguration(mapper.apply(key));
-            }
-
-            // To prevent nesting of anonymous class instances, directly map the original instance.
-            @Override
-            public <K2> AsyncProxyManager<K2> withMapper(Function<? super K2, ? extends K1> innerMapper) {
-                return AsyncProxyManager.this.withMapper(mapper.compose(innerMapper));
-            }
-        };
+        return new AsyncProxyManagerView(this, mapper);
     }
+
 }

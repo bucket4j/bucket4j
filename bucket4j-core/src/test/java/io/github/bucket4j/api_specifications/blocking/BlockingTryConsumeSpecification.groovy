@@ -193,7 +193,7 @@ class BlockingTryConsumeSpecification extends Specification {
     @Unroll
     def "#type test listener for blocking tryConsume"(BucketType type) {
         setup:
-            Bucket bucket = type.createBucket(configuration, clock).toListenable(listener)
+            Bucket bucket = type.createBucket(configuration, clock, listener)
 
         when:
             bucket.asBlocking().tryConsume(9, Duration.ofSeconds(1), blocker)
@@ -240,7 +240,7 @@ class BlockingTryConsumeSpecification extends Specification {
     @Unroll
     def "#type test listener for blocking tryConsumeUninterruptibly"(BucketType type) {
         setup:
-            Bucket bucket = type.createBucket(configuration, clock).toListenable(listener)
+            Bucket bucket = type.createBucket(configuration, clock, listener)
 
         when:
             bucket.asBlocking().tryConsume(9, Duration.ofSeconds(1), blocker)
@@ -287,7 +287,7 @@ class BlockingTryConsumeSpecification extends Specification {
     @Unroll
     def "#type test listener for async scheduled tryConsume"(BucketType type) {
         setup:
-            AsyncBucketProxy bucket = type.createAsyncBucket(configuration, clock).toListenable(listener)
+            AsyncBucketProxy bucket = type.createAsyncBucket(configuration, clock, listener)
 
         when:
             bucket.asScheduler().tryConsume(9, Duration.ofSeconds(1).toNanos(), scheduler)

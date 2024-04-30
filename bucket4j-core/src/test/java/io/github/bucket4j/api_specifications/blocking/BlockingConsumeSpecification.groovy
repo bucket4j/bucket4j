@@ -71,7 +71,7 @@ class BlockingConsumeSpecification extends Specification {
             BucketConfiguration configuration = BucketConfiguration.builder()
                 .addLimit(Bandwidth.simple(10, Duration.ofSeconds(1)))
                 .build()
-            Bucket bucket = type.createBucket(configuration, clock).toListenable(listener)
+            Bucket bucket = type.createBucket(configuration, clock, listener)
 
         when:
             bucket.asBlocking().consume(9, blocker)
@@ -147,7 +147,7 @@ class BlockingConsumeSpecification extends Specification {
             BucketConfiguration configuration = BucketConfiguration.builder()
                 .addLimit(Bandwidth.simple(10, Duration.ofSeconds(1)))
                 .build()
-            Bucket bucket = type.createBucket(configuration, clock).toListenable(listener)
+            Bucket bucket = type.createBucket(configuration, clock, listener)
 
         when:
             bucket.asBlocking().consume(9, blocker)

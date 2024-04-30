@@ -20,17 +20,19 @@
 
 package io.github.bucket4j.distributed.proxy.generic.pessimistic_locking;
 
+import java.util.Optional;
+
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 
 /**
  * Describes the set of operations that {@link AbstractLockBasedProxyManager} typically performs in reaction to user request.
  * The typical flow is following:
  * <ol>
- *     <li>begin - {@link #begin()}</li>
- *     <li>lock - {@link #lockAndGet()}</li>
- *     <li>update - {@link #update(byte[], RemoteBucketState)}</li>
+ *     <li>begin - {@link #begin(Optional)}</li>
+ *     <li>lock - {@link #lockAndGet(Optional)}</li>
+ *     <li>update - {@link #update(byte[], RemoteBucketState, Optional)}</li>
  *     <li>unlock - {@link #unlock()}</li>
- *     <li>commit - {@link #commit()}</li>
+ *     <li>commit - {@link #commit(Optional)}</li>
  *     <li>release - {@link #release()}</li>
  * </ol>
  */
@@ -38,27 +40,34 @@ public interface LockBasedTransaction {
 
     /**
      * Begins transaction if underlying storage requires transactions.
-     * There is strong guarantee that {@link #commit()} or {@link #rollback()} will be called if {@link #begin()} returns successfully.
+     * There is strong guarantee that {@link #commit(Optional)} or {@link #rollback()} will be called if {@link #begin(Optional)} returns successfully.
+     *
+     * @param timeoutNanos optional timeout in nanoseconds
      */
-    void begin();
+    void begin(Optional<Long> timeoutNanos);
 
     /**
      * Rollbacks transaction if underlying storage requires transactions
+     *
      */
     void rollback();
 
     /**
      * Commits transaction if underlying storage requires transactions
+     *
+     * @param timeoutNanos optional timeout in nanoseconds
      */
-    void commit();
+    void commit(Optional<Long> timeoutNanos);
 
     /**
      * Locks data by the key associated with this transaction and returns data that is associated with the key.
-     * There is strong guarantee that {@link #unlock()} will be called if {@link #lockAndGet()} returns successfully.
+     * There is strong guarantee that {@link #unlock()} will be called if {@link #lockAndGet(Optional)} returns successfully.
+     *
+     * @param timeoutNanos optional timeout in nanoseconds
      *
      * @return Returns the data by the key associated with this transaction, or null data associated with key does not exist
      */
-    byte[] lockAndGet();
+    byte[] lockAndGet(Optional<Long> timeoutNanos);
 
     /**
      * Unlocks data by the key associated with this transaction.
@@ -70,8 +79,9 @@ public interface LockBasedTransaction {
      *
      * @param data bucket state to persists
      * @param state of bucket - can be used to extract additional data is useful for persistence or logging.
+     * @param timeoutNanos optional timeout in nanoseconds
      */
-    void create(byte[] data, RemoteBucketState state);
+    void create(byte[] data, RemoteBucketState state, Optional<Long> timeoutNanos);
 
     /**
      * Updates the data by the key associated with this transaction.
@@ -79,7 +89,7 @@ public interface LockBasedTransaction {
      * @param data bucket state to persists
      * @param newState new state of bucket - can be used to extract additional data is useful for persistence or logging.
      */
-    void update(byte[] data, RemoteBucketState newState);
+    void update(byte[] data, RemoteBucketState newState, Optional<Long> timeoutNanos);
 
     /**
      * Frees resources associated with this transaction

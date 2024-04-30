@@ -29,8 +29,8 @@ import java.util.concurrent.CompletableFuture;
  * Describes the set of operations that {@link AbstractCompareAndSwapBasedProxyManager} typically performs in reaction to user request.
  * The typical flow is following:
  * <ol>
- *     <li>getStateData - {@link #getStateData()}</li>
- *     <li>compareAndSwap - {@link #compareAndSwap(byte[], byte[])}</li>
+ *     <li>getStateData - {@link #getStateData(Optional)}</li>
+ *     <li>compareAndSwap - {@link #compareAndSwap(byte[], byte[], RemoteBucketState, Optional)}</li>
  *     <li>Return to first step if CAS was unsuccessful</li>
  * </ol>
  */
@@ -39,9 +39,11 @@ public interface AsyncCompareAndSwapOperation {
     /**
      * Reads data if it exists
      *
+     * @param timeoutNanos optional timeout in nanoseconds
+     *
      * @return persisted data or empty optional if data not exists
      */
-    CompletableFuture<Optional<byte[]>> getStateData();
+    CompletableFuture<Optional<byte[]>> getStateData(Optional<Long> timeoutNanos);
 
     /**
      * Compares and swap data associated with key
@@ -49,9 +51,10 @@ public interface AsyncCompareAndSwapOperation {
      * @param originalData previous bucket state(can be null).
      * @param newData new bucket state
      * @param newState new state of bucket - can be used to extract additional data is useful for persistence or logging.
+     * @param timeoutNanos optional timeout in nanoseconds
      *
      * @return {@code true} if data changed, {@code false} if another parallel transaction achieved success instead of current transaction
      */
-    CompletableFuture<Boolean> compareAndSwap(byte[] originalData, byte[] newData, RemoteBucketState newState);
+    CompletableFuture<Boolean> compareAndSwap(byte[] originalData, byte[] newData, RemoteBucketState newState, Optional<Long> timeoutNanos);
 
 }

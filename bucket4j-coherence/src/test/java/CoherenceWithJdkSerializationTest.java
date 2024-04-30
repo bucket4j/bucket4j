@@ -1,8 +1,6 @@
 import com.tangosol.net.CacheFactory;
 import com.tangosol.net.NamedCache;
-import io.github.bucket4j.distributed.proxy.ClientSideConfig;
-import io.github.bucket4j.distributed.proxy.ProxyManager;
-import io.github.bucket4j.grid.coherence.CoherenceProxyManager;
+import io.github.bucket4j.grid.coherence.Bucket4jCoherence;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
 import io.github.bucket4j.tck.ProxyManagerSpec;
 
@@ -43,8 +41,8 @@ public class CoherenceWithJdkSerializationTest extends AbstractDistributedBucket
             new ProxyManagerSpec<>(
                 "CoherenceProxyManager_JdkSerialization",
                 () -> UUID.randomUUID().toString(),
-                new CoherenceProxyManager<String>(cache, ClientSideConfig.getDefault())
-            )
+                () -> Bucket4jCoherence.entryProcessorBasedBuilder(cache)
+            ).checkExpiration()
         );
     }
 

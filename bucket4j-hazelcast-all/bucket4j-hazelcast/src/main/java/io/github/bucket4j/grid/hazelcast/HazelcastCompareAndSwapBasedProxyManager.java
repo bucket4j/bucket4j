@@ -25,6 +25,7 @@ import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AbstractCom
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AsyncCompareAndSwapOperation;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.CompareAndSwapOperation;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
+import io.github.bucket4j.grid.hazelcast.Bucket4jHazelcast.HazelcastCompareAndSwapBasedProxyManagerBuilder;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -34,10 +35,23 @@ public class HazelcastCompareAndSwapBasedProxyManager<K> extends AbstractCompare
 
     private final IMap<K, byte[]> map;
 
+    HazelcastCompareAndSwapBasedProxyManager(HazelcastCompareAndSwapBasedProxyManagerBuilder<K> builder) {
+        super(builder.getClientSideConfig());
+        this.map = builder.map;
+    }
+
+    /**
+     * @deprecated use {@link Bucket4jHazelcast#casBasedBuilder(IMap)}
+     */
+    @Deprecated
     public HazelcastCompareAndSwapBasedProxyManager(IMap<K, byte[]> map) {
         this(map, ClientSideConfig.getDefault());
     }
 
+    /**
+     * @deprecated use {@link Bucket4jHazelcast#casBasedBuilder(IMap)}
+     */
+    @Deprecated
     public HazelcastCompareAndSwapBasedProxyManager(IMap<K, byte[]> map, ClientSideConfig clientSideConfig) {
         super(clientSideConfig);
         this.map = Objects.requireNonNull(map);
@@ -63,13 +77,13 @@ public class HazelcastCompareAndSwapBasedProxyManager<K> extends AbstractCompare
     protected CompareAndSwapOperation beginCompareAndSwapOperation(K key) {
         return new CompareAndSwapOperation() {
             @Override
-            public Optional<byte[]> getStateData() {
+            public Optional<byte[]> getStateData(Optional<Long> timeoutNanos) {
                 byte[] data = map.get(key);
                 return Optional.ofNullable(data);
             }
 
             @Override
-            public boolean compareAndSwap(byte[] originalData, byte[] newData, RemoteBucketState newState) {
+            public boolean compareAndSwap(byte[] originalData, byte[] newData, RemoteBucketState newState, Optional<Long> timeoutNanos) {
                 if (originalData == null) {
                     return map.putIfAbsent(key, newData) == null;
                 } else {

@@ -129,6 +129,9 @@ class PredictiveCommandExecutor implements CommandExecutor, AsyncCommandExecutor
         // execute local command
         MutableBucketEntry entry = new MutableBucketEntry(state.copy());
         MultiResult multiResult = multiCommand.execute(entry, currentTimeNanos).getData();
+        if (multiResult.getResults().get(1).isConfigurationNeedToBeReplaced()) {
+            return null;
+        }
 
         if (multiCommand.getConsumedTokens(multiResult) == Long.MAX_VALUE) {
             return null;

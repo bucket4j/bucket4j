@@ -27,8 +27,6 @@ import io.github.bucket4j.BandwidthBuilder.BandwidthBuilderCapacityStage;
 import java.util.Objects;
 import java.util.function.Function;
 
-import static io.github.bucket4j.BucketExceptions.nullBuilder;
-
 /**
  * This builder creates in-memory buckets ({@link LockFreeBucket}).
  */
@@ -62,7 +60,7 @@ public class LocalBucketBuilder {
 
     private TimeMeter timeMeter = TimeMeter.SYSTEM_MILLISECONDS;
     private SynchronizationStrategy synchronizationStrategy = SynchronizationStrategy.LOCK_FREE;
-    private MathType mathType = MathType.INTEGER_64_BITS;
+    private BucketListener listener = BucketListener.NOPE;
 
     /**
      * Specifies {@link TimeMeter#SYSTEM_NANOTIME} as time meter for buckets that will be created by this builder.
@@ -115,16 +113,14 @@ public class LocalBucketBuilder {
     }
 
     /**
-     * <b>Warnings:</b> this is not a part of Public API.
+     * Specifies {@code listener} for buckets that will be created by this builder.
      *
-     * This method is intended to be used strongly by internal code and can be removed at any time without prior notice.
+     * @param listener the listener of bucket events.
      *
-     * @param mathType
-     * @return
+     * @return this builder instance
      */
-    @Experimental
-    public LocalBucketBuilder withMath(MathType mathType) {
-        this.mathType = Objects.requireNonNull(mathType);
+    public LocalBucketBuilder withListener(BucketListener listener) {
+        this.listener = Objects.requireNonNull(listener);
         return this;
     }
 
@@ -135,12 +131,11 @@ public class LocalBucketBuilder {
      */
     public LocalBucket build() {
         BucketConfiguration configuration = buildConfiguration();
-        switch (synchronizationStrategy) {
-            case LOCK_FREE: return new LockFreeBucket(configuration, mathType, timeMeter);
-            case SYNCHRONIZED: return new SynchronizedBucket(configuration, mathType, timeMeter);
-            case NONE: return new ThreadUnsafeBucket(configuration, mathType, timeMeter);
-            default: throw new IllegalStateException();
-        }
+        return switch (synchronizationStrategy) {
+            case LOCK_FREE -> new LockFreeBucket(configuration, MathType.INTEGER_64_BITS, timeMeter, listener);
+            case SYNCHRONIZED -> new SynchronizedBucket(configuration, MathType.INTEGER_64_BITS, timeMeter, listener);
+            case NONE -> new ThreadUnsafeBucket(configuration, MathType.INTEGER_64_BITS, timeMeter, listener);
+        };
     }
 
     private BucketConfiguration buildConfiguration() {

@@ -27,6 +27,7 @@ import io.github.bucket4j.distributed.remote.RemoteBucketState;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 public class SelectForUpdateBasedProxyManagerMock<K> extends AbstractSelectForUpdateBasedProxyManager<K> {
 
@@ -37,19 +38,19 @@ public class SelectForUpdateBasedProxyManagerMock<K> extends AbstractSelectForUp
     }
 
     @Override
-    protected SelectForUpdateBasedTransaction allocateTransaction(K key) {
+    protected SelectForUpdateBasedTransaction allocateTransaction(K key, Optional<Long> requestTimeoutNanos) {
         boolean existBeforeTransaction = stateMap.containsKey(key);
         byte[] backup = stateMap.get(key);
 
         return new SelectForUpdateBasedTransaction() {
 
             @Override
-            public void begin() {
+            public void begin(Optional<Long> requestTimeoutNanos) {
                 // do nothing
             }
 
             @Override
-            public void update(byte[] data, RemoteBucketState newState) {
+            public void update(byte[] data, RemoteBucketState newState, Optional<Long> requestTimeoutNanos) {
                 if (!existBeforeTransaction) {
                     throw new IllegalStateException();
                 }
@@ -67,12 +68,12 @@ public class SelectForUpdateBasedProxyManagerMock<K> extends AbstractSelectForUp
             }
 
             @Override
-            public void commit() {
+            public void commit(Optional<Long> requestTimeoutNanos) {
                 // do nothing
             }
 
             @Override
-            public LockAndGetResult tryLockAndGet() {
+            public LockAndGetResult tryLockAndGet(Optional<Long> requestTimeoutNanos) {
                 if (!existBeforeTransaction) {
                     return LockAndGetResult.notLocked();
                 }
@@ -80,7 +81,7 @@ public class SelectForUpdateBasedProxyManagerMock<K> extends AbstractSelectForUp
             }
 
             @Override
-            public boolean tryInsertEmptyData() {
+            public boolean tryInsertEmptyData(Optional<Long> requestTimeoutNanos) {
                 if (existBeforeTransaction) {
                     throw new IllegalStateException();
                 }

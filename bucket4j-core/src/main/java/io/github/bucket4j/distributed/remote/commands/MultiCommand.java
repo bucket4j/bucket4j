@@ -39,10 +39,10 @@ import static io.github.bucket4j.distributed.versioning.Versions.v_7_0_0;
 public class MultiCommand implements RemoteCommand<MultiResult>, ComparableByContent<MultiCommand> {
 
     public static final int MERGING_THRESHOLD = Integer.getInteger("bucket4j.batching.merging-threshold", 5);
-    private List<RemoteCommand<?>> commands;
+    private final List<RemoteCommand<?>> commands;
     private int mergedCommands;
 
-    public static SerializationHandle<MultiCommand> SERIALIZATION_HANDLE = new SerializationHandle<MultiCommand>() {
+    public static final SerializationHandle<MultiCommand> SERIALIZATION_HANDLE = new SerializationHandle<>() {
         @Override
         public <S> MultiCommand deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             int formatNumber = adapter.readInt(input);
@@ -253,7 +253,7 @@ public class MultiCommand implements RemoteCommand<MultiResult>, ComparableByCon
         long sum = 0;
         for (RemoteCommand<?> command : commands) {
             sum += command.estimateTokensToConsume();
-            if (sum < 0l) {
+            if (sum < 0L) {
                 // math overflow
                 return Long.MAX_VALUE;
             }
@@ -269,7 +269,7 @@ public class MultiCommand implements RemoteCommand<MultiResult>, ComparableByCon
             RemoteCommand command = commands.get(i);
             CommandResult result = multiResult.getResults().get(i);
             sum += result.isError()? 0: command.getConsumedTokens(result.getData());
-            if (sum < 0l) {
+            if (sum < 0L) {
                 // math overflow
                 return Long.MAX_VALUE;
             }

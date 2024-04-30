@@ -28,15 +28,15 @@ import java.util.Map;
 
 public class PrimitiveSerializationHandles {
 
-    public static SerializationHandle<Nothing> NULL_HANDLE = new SerializationHandle<Nothing>() {
+    public static final SerializationHandle<Nothing> NULL_HANDLE = new SerializationHandle<>() {
 
         @Override
-        public <I> Nothing deserialize(DeserializationAdapter<I> adapter, I input) throws IOException {
+        public <I> Nothing deserialize(DeserializationAdapter<I> adapter, I input) {
             return null;
         }
 
         @Override
-        public <O> void serialize(SerializationAdapter<O> adapter, O output, Nothing serializableObject, Version backwardCompatibilityVersion, Scope scope) throws IOException {
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, Nothing serializableObject, Version backwardCompatibilityVersion, Scope scope) {
 
         }
 
@@ -66,7 +66,7 @@ public class PrimitiveSerializationHandles {
         }
     };
 
-    public static SerializationHandle<Long> LONG_HANDLE = new SerializationHandle<Long>() {
+    public static final SerializationHandle<Long> LONG_HANDLE = new SerializationHandle<>() {
         @Override
         public <I> Long deserialize(DeserializationAdapter<I> adapter, I input) throws IOException {
             return adapter.readLong(input);
@@ -105,7 +105,7 @@ public class PrimitiveSerializationHandles {
         }
     };
 
-    public static SerializationHandle<Boolean> BOOLEAN_HANDLE = new SerializationHandle<Boolean>() {
+    public static final SerializationHandle<Boolean> BOOLEAN_HANDLE = new SerializationHandle<>() {
         @Override
         public <I> Boolean deserialize(DeserializationAdapter<I> adapter, I input) throws IOException {
             return adapter.readBoolean(input);

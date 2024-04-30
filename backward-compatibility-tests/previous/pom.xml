@@ -8,7 +8,7 @@
     <parent>
         <groupId>com.bucket4j</groupId>
         <artifactId>backward-compatibility-tests</artifactId>
-        <version>8.7.0</version>
+        <version>8.12.0</version>
         <relativePath>../../backward-compatibility-tests</relativePath>
     </parent>
     <artifactId>backward-compatibility-tests-prevoius</artifactId>
@@ -16,7 +16,7 @@
 
     <properties>
         <modular-name>backward_compatibility_tests_prevoius</modular-name>
-        <prevoius.version>8.0.1</prevoius.version>
+        <prevoius.version>8.8.0</prevoius.version>
         <maven.deploy.skip>true</maven.deploy.skip>
         <skipNexusStagingDeployMojo>true</skipNexusStagingDeployMojo>
     </properties>
@@ -24,17 +24,17 @@
     <dependencies>
         <dependency>
             <groupId>com.bucket4j</groupId>
-            <artifactId>bucket4j-core</artifactId>
+            <artifactId>bucket4j_jdk17-core</artifactId>
             <version>${prevoius.version}</version>
         </dependency>
         <dependency>
             <groupId>com.bucket4j</groupId>
-            <artifactId>bucket4j-hazelcast</artifactId>
+            <artifactId>bucket4j_jdk17-hazelcast</artifactId>
             <version>${prevoius.version}</version>
         </dependency>
         <dependency>
             <groupId>com.bucket4j</groupId>
-            <artifactId>bucket4j-postgresql</artifactId>
+            <artifactId>bucket4j_jdk17-postgresql</artifactId>
             <version>${prevoius.version}</version>
         </dependency>
         <dependency>
@@ -47,7 +47,7 @@
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
-            <version>42.4.3</version>
+            <version>42.7.2</version>
         </dependency>
 
         <!-- For Hazelcast examples -->

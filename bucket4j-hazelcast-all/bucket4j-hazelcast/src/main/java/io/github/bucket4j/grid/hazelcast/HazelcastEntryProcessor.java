@@ -20,17 +20,24 @@
 package io.github.bucket4j.grid.hazelcast;
 
 import com.hazelcast.map.EntryProcessor;
+import com.hazelcast.map.ExtendedMapEntry;
+
+import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
 import io.github.bucket4j.distributed.remote.AbstractBinaryTransaction;
+import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.distributed.remote.Request;
 import io.github.bucket4j.util.ComparableByContent;
 
+import java.io.Serial;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import static io.github.bucket4j.distributed.serialization.InternalSerializationHelper.serializeRequest;
 
 public class HazelcastEntryProcessor<K, T> implements EntryProcessor<K, byte[], byte[]>, ComparableByContent<HazelcastEntryProcessor> {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     private final byte[] requestBytes;
@@ -58,9 +65,17 @@ public class HazelcastEntryProcessor<K, T> implements EntryProcessor<K, byte[], 
             }
 
             @Override
-            protected void setRawState(byte[] stateBytes) {
-                entry.setValue(stateBytes);
-                backupProcessor = new SimpleBackupProcessor<>(stateBytes);
+            protected void setRawState(byte[] newStateBytes, RemoteBucketState newState) {
+                ExpirationAfterWriteStrategy expirationStrategy = getExpirationStrategy();
+                long ttlMillis = expirationStrategy == null ? -1 : expirationStrategy.calculateTimeToLiveMillis(newState, getCurrentTimeNanos());
+                if (ttlMillis > 0) {
+                    ExtendedMapEntry<K, byte[]> extendedEntry = (ExtendedMapEntry<K, byte[]>) entry;
+                    extendedEntry.setValue(newStateBytes, ttlMillis, TimeUnit.MILLISECONDS);
+                    backupProcessor = new VersionedBackupProcessor<>(newStateBytes, ttlMillis);
+                } else {
+                    entry.setValue(newStateBytes);
+                    backupProcessor = new SimpleBackupProcessor<>(newStateBytes);
+                }
             }
         }.execute();
     }

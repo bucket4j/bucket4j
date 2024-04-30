@@ -26,7 +26,7 @@ import java.io.IOException;
 
 public class DataOutputSerializationAdapter implements SerializationAdapter<DataOutput>, DeserializationAdapter<DataInput> {
 
-    public static DataOutputSerializationAdapter INSTANCE = new DataOutputSerializationAdapter();
+    public static final DataOutputSerializationAdapter INSTANCE = new DataOutputSerializationAdapter();
 
     private DataOutputSerializationAdapter() {}
 
@@ -53,7 +53,7 @@ public class DataOutputSerializationAdapter implements SerializationAdapter<Data
     @Override
     public long[] readLongArray(DataInput source) throws IOException {
         int size = source.readInt();
-        long array[] = new long[size];
+        long[] array = new long[size];
         for (int i = 0; i < size; i++) {
             array[i] = source.readLong();
         }
@@ -63,7 +63,7 @@ public class DataOutputSerializationAdapter implements SerializationAdapter<Data
     @Override
     public double[] readDoubleArray(DataInput source) throws IOException {
         int size = source.readInt();
-        double array[] = new double[size];
+        double[] array = new double[size];
         for (int i = 0; i < size; i++) {
             array[i] = source.readDouble();
         }

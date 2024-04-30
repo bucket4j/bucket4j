@@ -62,10 +62,9 @@ public interface BucketState {
     MathType getMathType();
 
     static BucketState createInitialState(BucketConfiguration configuration, MathType mathType, long currentTimeNanos) {
-        switch (mathType) {
-            case INTEGER_64_BITS: return new BucketState64BitsInteger(configuration, currentTimeNanos);
-            default: throw new IllegalStateException("Unsupported mathType:" + mathType);
-        }
+        return switch (mathType) {
+            case INTEGER_64_BITS -> new BucketState64BitsInteger(configuration, currentTimeNanos);
+        };
     }
 
     static <S> BucketState deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {

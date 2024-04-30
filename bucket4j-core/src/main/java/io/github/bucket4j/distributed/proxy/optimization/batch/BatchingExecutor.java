@@ -36,42 +36,36 @@ public class BatchingExecutor implements CommandExecutor {
 
     private final BatchHelper<RemoteCommand<?>, CommandResult<?>, MultiCommand, CommandResult<MultiResult>> batchingHelper;
     private final CommandExecutor wrappedExecutor;
-    private final OptimizationListener listener;
-
-    private final Function<List<RemoteCommand<?>>, MultiCommand> taskCombiner = new Function<>() {
-        @Override
-        public MultiCommand apply(List<RemoteCommand<?>> commands) {
-            if (commands.size() > 1) {
-                listener.incrementMergeCount(commands.size() - 1);
-            }
-            return MultiCommand.merge(commands);
-        }
-    };
-
-    private final Function<MultiCommand, CommandResult<MultiResult>> combinedTaskExecutor = new Function<>() {
-        @Override
-        public CommandResult<MultiResult> apply(MultiCommand multiCommand) {
-            return wrappedExecutor.execute(multiCommand);
-        }
-    };
-
-    private final Function<RemoteCommand<?>, CommandResult<?>> taskExecutor = new Function<>() {
-        @Override
-        public CommandResult<?> apply(RemoteCommand<?> remoteCommand) {
-            return wrappedExecutor.execute(remoteCommand);
-        }
-    };
-
-    private final BiFunction<MultiCommand, CommandResult<MultiResult>, List<CommandResult<?>>> combinedResultSplitter = new BiFunction<>() {
-        @Override
-        public List<CommandResult<?>> apply(MultiCommand multiCommand, CommandResult<MultiResult> multiResult) {
-            return multiCommand.unwrap(multiResult);
-        }
-    };
 
     public BatchingExecutor(CommandExecutor originalExecutor, OptimizationListener listener) {
         this.wrappedExecutor = originalExecutor;
-        this.listener = listener;
+        Function<List<RemoteCommand<?>>, MultiCommand> taskCombiner = new Function<>() {
+            @Override
+            public MultiCommand apply(List<RemoteCommand<?>> commands) {
+                if (commands.size() > 1) {
+                    listener.incrementMergeCount(commands.size() - 1);
+                }
+                return MultiCommand.merge(commands);
+            }
+        };
+        Function<MultiCommand, CommandResult<MultiResult>> combinedTaskExecutor = new Function<>() {
+            @Override
+            public CommandResult<MultiResult> apply(MultiCommand multiCommand) {
+                return wrappedExecutor.execute(multiCommand);
+            }
+        };
+        Function<RemoteCommand<?>, CommandResult<?>> taskExecutor = new Function<>() {
+            @Override
+            public CommandResult<?> apply(RemoteCommand<?> remoteCommand) {
+                return wrappedExecutor.execute(remoteCommand);
+            }
+        };
+        BiFunction<MultiCommand, CommandResult<MultiResult>, List<CommandResult<?>>> combinedResultSplitter = new BiFunction<>() {
+            @Override
+            public List<CommandResult<?>> apply(MultiCommand multiCommand, CommandResult<MultiResult> multiResult) {
+                return multiCommand.unwrap(multiResult);
+            }
+        };
         this.batchingHelper = BatchHelper.create(taskCombiner, combinedTaskExecutor, taskExecutor, combinedResultSplitter);
     }
 

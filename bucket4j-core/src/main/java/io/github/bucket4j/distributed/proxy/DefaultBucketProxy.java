@@ -55,8 +55,9 @@ public class DefaultBucketProxy extends AbstractBucket implements BucketProxy, O
         execute(new SyncCommand(unsynchronizedTokens, timeSinceLastSync.toNanos()));
     }
 
-    public DefaultBucketProxy(Supplier<BucketConfiguration> configurationSupplier, CommandExecutor commandExecutor, RecoveryStrategy recoveryStrategy, ImplicitConfigurationReplacement implicitConfigurationReplacement) {
-        this(configurationSupplier, commandExecutor, recoveryStrategy, new AtomicBoolean(false), implicitConfigurationReplacement, BucketListener.NOPE);
+    public DefaultBucketProxy(Supplier<BucketConfiguration> configurationSupplier, CommandExecutor commandExecutor, RecoveryStrategy recoveryStrategy,
+                              ImplicitConfigurationReplacement implicitConfigurationReplacement, BucketListener listener) {
+        this(configurationSupplier, commandExecutor, recoveryStrategy, new AtomicBoolean(false), implicitConfigurationReplacement, listener);
     }
 
     private DefaultBucketProxy(Supplier<BucketConfiguration> configurationSupplier, CommandExecutor commandExecutor, RecoveryStrategy recoveryStrategy, AtomicBoolean wasInitialized, ImplicitConfigurationReplacement implicitConfigurationReplacement, BucketListener listener) {

@@ -24,11 +24,12 @@ import io.github.bucket4j.distributed.BucketProxy;
 
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
- * Represents an extension point of bucket4j library.
+ * Represents an extension point of Bucket4j library.
  * {@link ProxyManager} provides API for building and managing the collection of {@link BucketProxy} in backing storage.
- * Typically an instance of {@link ProxyManager} is organized around RDBMS table, GRID cache, or some similarly isolated part of external storage.
+ * Typically, an instance of {@link ProxyManager} is organized around RDBMS table, GRID cache, or some similarly isolated part of external storage.
  * Primary keys are used to distinguish persisted state of different buckets.
  *
  * @param <K> type of primary key
@@ -38,6 +39,28 @@ import java.util.function.Function;
  */
 public interface ProxyManager<K> {
 
+    /**
+     * Creates bucket-proxy that configured by default parameters that set on proxy-manager level.
+     * In case if you need to configure something special for bucket like implicit config replacement you should to use {@link #builder()} instead of this method.
+     *
+     * @param key the key that used in external storage to distinguish one bucket from another.
+     * @param configurationSupplier provider for bucket configuration
+     *
+     * @return new instance of {@link BucketProxy}
+     */
+    default BucketProxy getProxy(K key, Supplier<BucketConfiguration> configurationSupplier) {
+        return builder().build(key, configurationSupplier);
+    }
+
+    /**
+     * Creates new instance of {@link RemoteBucketBuilder}.
+     *
+     * <p>
+     * Use this method only if you need to create bucket with parameters that can not be specified via {@link AbstractProxyManagerBuilder},
+     * otherwise prefer {@link #getProxy(Object, Supplier)}
+     *
+     * @return new instance of {@link RemoteBucketBuilder}
+     */
     RemoteBucketBuilder<K> builder();
 
     /**
@@ -57,12 +80,21 @@ public interface ProxyManager<K> {
     void removeProxy(K key);
 
     /**
-     * Describes whether or not this manager supports asynchronous API.
+     * Describes whether this manager supports asynchronous API.
      * If this method returns <code>false</code> then any invocation of {@link #asAsync()} will throw {@link UnsupportedOperationException}.
      *
-     * @return <code>true</code> if this extension supports asynchronous API
+     * @return <code>true</code> if this manager supports asynchronous API
      */
     boolean isAsyncModeSupported();
+
+    /**
+     * Describes whether this manager supports expire-after-write feature.
+     *
+     * @return <code>true</code> if this manager supports expire-after-write feature.
+     */
+    default boolean isExpireAfterWriteSupported() {
+        return false;
+    }
 
     /**
      * Returns asynchronous API for this proxy manager.
@@ -83,37 +115,7 @@ public interface ProxyManager<K> {
      * @param <K1> the type of key accepted by returned ProxyManager
      */
     default <K1> ProxyManager<K1> withMapper(Function<? super K1, ? extends K> mapper) {
-        return new ProxyManager<>() {
-            @Override
-            public RemoteBucketBuilder<K1> builder() {
-                return ProxyManager.this.builder().withMapper(mapper);
-            }
-
-            @Override
-            public Optional<BucketConfiguration> getProxyConfiguration(K1 key) {
-                return ProxyManager.this.getProxyConfiguration(mapper.apply(key));
-            }
-
-            @Override
-            public void removeProxy(K1 key) {
-                ProxyManager.this.removeProxy(mapper.apply(key));
-            }
-
-            @Override
-            public boolean isAsyncModeSupported() {
-                return ProxyManager.this.isAsyncModeSupported();
-            }
-
-            @Override
-            public AsyncProxyManager<K1> asAsync() throws UnsupportedOperationException {
-                return ProxyManager.this.asAsync().withMapper(mapper);
-            }
-
-            // To prevent nesting of anonymous class instances, directly map the original instance.
-            @Override
-            public <K2> ProxyManager<K2> withMapper(Function<? super K2, ? extends K1> innerMapper) {
-                return ProxyManager.this.withMapper(mapper.compose(innerMapper));
-            }
-        };
+        return new ProxyManagerView(this, mapper);
     }
+
 }

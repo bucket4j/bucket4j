@@ -40,6 +40,8 @@ import io.github.bucket4j.distributed.proxy.AbstractProxyManager;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.remote.*;
 import io.github.bucket4j.distributed.versioning.Version;
+import io.github.bucket4j.grid.ignite.Bucket4jIgnite;
+
 import org.apache.ignite.IgniteCache;
 import org.apache.ignite.cache.CacheEntryProcessor;
 import org.apache.ignite.lang.IgniteFuture;
@@ -47,6 +49,8 @@ import org.apache.ignite.lang.IgniteInClosure;
 
 import javax.cache.processor.EntryProcessorException;
 import javax.cache.processor.MutableEntry;
+
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
@@ -61,10 +65,23 @@ public class IgniteProxyManager<K> extends AbstractProxyManager<K> {
 
     private final IgniteCache<K, byte[]> cache;
 
+    IgniteProxyManager(Bucket4jIgniteThick.IgniteProxyManagerBuilder<K> builder) {
+        super(builder.getClientSideConfig());
+        cache = builder.cache;
+    }
+
+    /**
+     * @deprecated use {@link Bucket4jIgnite#thickClient()#builderFor()}
+     */
+    @Deprecated
     public IgniteProxyManager(IgniteCache<K, byte[]> cache) {
         this(cache, ClientSideConfig.getDefault());
     }
 
+    /**
+     * @deprecated use {@link Bucket4jIgnite#thickClient()#builderFor()}
+     */
+    @Deprecated
     public IgniteProxyManager(IgniteCache<K, byte[]> cache, ClientSideConfig clientSideConfig) {
         super(clientSideConfig);
         this.cache = Objects.requireNonNull(cache);
@@ -122,6 +139,7 @@ public class IgniteProxyManager<K> extends AbstractProxyManager<K> {
 
     private static class IgniteProcessor<K> implements Serializable, CacheEntryProcessor<K, byte[], byte[]> {
 
+        @Serial
         private static final long serialVersionUID = 1;
 
         private final byte[] requestBytes;
@@ -144,8 +162,8 @@ public class IgniteProxyManager<K> extends AbstractProxyManager<K> {
                 }
 
                 @Override
-                protected void setRawState(byte[] stateBytes) {
-                    entry.setValue(stateBytes);
+                protected void setRawState(byte[] newStateBytes, RemoteBucketState newState) {
+                    entry.setValue(newStateBytes);
                 }
             }.execute();
         }

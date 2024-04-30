@@ -34,7 +34,7 @@ public class BucketTableSettings {
     private final String tableName;
 
     private BucketTableSettings(String tableName, String idName, String stateName) {
-        this.tableName = Objects.requireNonNull(tableName, "TableName is null");;
+        this.tableName = Objects.requireNonNull(tableName, "TableName is null");
         this.idName = Objects.requireNonNull(idName, "idName is null");
         this.stateName = Objects.requireNonNull(stateName, "StateName is null");
     }

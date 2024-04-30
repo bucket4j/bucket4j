@@ -34,7 +34,7 @@ public class InfinispanProcessorMarshaller implements MessageMarshaller<Infinisp
 
     @Override
     public InfinispanProcessor readFrom(ProtoStreamReader reader) throws IOException {
-        byte bytes[] = reader.readBytes("data");
+        byte[] bytes = reader.readBytes("data");
         return new InfinispanProcessor(bytes);
     }
 

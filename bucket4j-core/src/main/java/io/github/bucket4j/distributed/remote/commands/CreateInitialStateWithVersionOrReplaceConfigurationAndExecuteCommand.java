@@ -41,12 +41,12 @@ import static io.github.bucket4j.distributed.versioning.Versions.v_8_1_0;
 
 public class CreateInitialStateWithVersionOrReplaceConfigurationAndExecuteCommand<T> implements RemoteCommand<T>, ComparableByContent<CreateInitialStateWithVersionOrReplaceConfigurationAndExecuteCommand> {
 
-    private RemoteCommand<T> targetCommand;
-    private BucketConfiguration configuration;
-    private long desiredConfigurationVersion;
-    private TokensInheritanceStrategy tokensInheritanceStrategy;
+    private final RemoteCommand<T> targetCommand;
+    private final BucketConfiguration configuration;
+    private final long desiredConfigurationVersion;
+    private final TokensInheritanceStrategy tokensInheritanceStrategy;
 
-    public static SerializationHandle<CreateInitialStateWithVersionOrReplaceConfigurationAndExecuteCommand<?>> SERIALIZATION_HANDLE = new SerializationHandle<>() {
+    public static final SerializationHandle<CreateInitialStateWithVersionOrReplaceConfigurationAndExecuteCommand<?>> SERIALIZATION_HANDLE = new SerializationHandle<>() {
         @Override
         public <S> CreateInitialStateWithVersionOrReplaceConfigurationAndExecuteCommand<?> deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             int formatNumber = adapter.readInt(input);

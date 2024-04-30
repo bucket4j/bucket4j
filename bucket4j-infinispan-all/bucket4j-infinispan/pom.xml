@@ -7,12 +7,12 @@
 
     <parent>
         <groupId>com.bucket4j</groupId>
-        <artifactId>bucket4j-infinispan-all</artifactId>
-        <version>8.7.0</version>
+        <artifactId>bucket4j_jdk17-infinispan-all</artifactId>
+        <version>8.12.0</version>
         <relativePath>../../bucket4j-infinispan-all</relativePath>
     </parent>
-    <artifactId>bucket4j-infinispan</artifactId>
-    <name>bucket4j-infinispan</name>
+    <artifactId>bucket4j_jdk17-infinispan</artifactId>
+    <name>bucket4j_jdk17-infinispan</name>
     <description>Bucket4j integration with Infinispan</description>
 
     <properties>
@@ -23,12 +23,12 @@
     <dependencies>
         <dependency>
             <groupId>com.bucket4j</groupId>
-            <artifactId>bucket4j-core</artifactId>
+            <artifactId>bucket4j_jdk17-core</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.bucket4j</groupId>
-            <artifactId>bucket4j-core</artifactId>
+            <artifactId>bucket4j_jdk17-core</artifactId>
             <version>${project.version}</version>
             <type>test-jar</type>
             <scope>test</scope>

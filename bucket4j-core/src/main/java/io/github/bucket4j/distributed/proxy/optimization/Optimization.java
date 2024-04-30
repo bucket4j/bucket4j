@@ -27,7 +27,7 @@ import io.github.bucket4j.distributed.proxy.CommandExecutor;
 
 /**
  * Specifies request optimization strategy for {@link BucketProxy} and {@link AsyncBucketProxy}.
- * By default an interaction with {@link BucketProxy} and {@link AsyncBucketProxy} leads to immediately request to remote storage,
+ * By default, an interaction with {@link BucketProxy} and {@link AsyncBucketProxy} leads to immediately request to remote storage,
  * various implementations of {@link Optimization} interface can optimize this behavior.
  *
  * @see Optimizations

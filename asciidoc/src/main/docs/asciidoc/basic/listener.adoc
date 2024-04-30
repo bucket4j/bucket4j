@@ -1,7 +1,7 @@
 === Listening for bucket events
 
 ==== What can be listened
-.You can decorate the bucket by listener to track following events:
+.You can attach a listener to bucket by to track following events:
 - When tokens are consumed from a bucket.
 - When consumption requests were rejected by the bucket.
 - When the thread was parked to wait for tokens refill as a result of interaction with ``BlockingBucket``.
@@ -12,7 +12,7 @@
 ========
 **Question:** How many listeners are needed to create an application that uses many buckets?
 
-**Answer:**  it depends:
+**Answer:**  it depends on:
 
 - If you want to have aggregated statistics for all buckets then create a single listener per application and reuse this listener for all buckets.
 - If you want to measure statistics independently per bucket then use a listener per bucket model.
@@ -33,16 +33,84 @@ to avoid inconsistency between different back-ends in the future.
 You can do post-aggregation of monitoring statistics via features built into your monitoring database or via mediator(like StatsD) between your application and the monitoring database.
 ========
 
-==== How to attach a listener to a bucket?
-The bucket can be decorated by the listener via the ``toListenable`` method.
+==== Specify listener to local bucket at build time
 [source, java]
 ----
 BucketListener listener = new MyListener();
 
 Bucket bucket = Bucket.builder()
     .addLimit(limit -> limit,capacity(100).refillGreedy(100, ofMinutes(1)))
+    .withListener(listener)
     .build()
-    .toListenable(listener);
+----
+
+==== Specify listener to distributed bucket at build time
+[source, java]
+----
+BucketListener listener = new MyListener();
+
+Bucket bucket = proxyManager.builder()
+     .withListener(listener)
+     .build(key, configSupplier);
+----
+
+==== Specify listener to async distributed bucket at build time
+[source, java]
+----
+BucketListener listener = new MyListener();
+
+AsyncBucketProxy bucket = proxyManager.asAsync().builder()
+     .withListener(listener)
+     .build(key, configSupplier);
+----
+
+==== Specify listener to distributed bucket at proxy-manager build time
+You can configure default listener at proxy-manager build time. And this listener will be used for all bucket that belong to this proxy-manager.
+Bellow example for Hazelcast, the way to configure listener for other backends is the same.
+[source, java]
+----
+BucketListener listener = new MyListener();
+
+// listener will be attached to all buckets that belong to this proxy manager
+HazelcastLockBasedProxyManager proxyManager = Bucket4jHazelcast.entryProcessorBasedBuilder(map)
+    .defaultListener(listener)
+    .build();
+----
+
+==== Specify listener to bucket at use time.
+Sometimes listener is not known at bucket build time, and you want to clarify listener later.
+For example, it can happen when you want to share same bucket per multiple users,
+but in same time it needs to have dedicated listener per each user.
+
+In such case you can build bucket without listener and attach it later via the ``toListenable`` method,
+this way will create a decorator to original bucket
+[source, java]
+----
+
+public void doSomethingProtected(User user, Bucket bucket) {
+    bucket = decorate(user, bucket).tryConsume(1)
+    if (bucket.tryConsume(1)) {
+        doSomething(user);
+    } else {
+        handleRateLimitError(user);
+    }
+}
+
+...
+private Bucket decorate(User user, Bucket originalbucket) {
+    BucketListener listener = new BucketListener() {
+        @Override
+        public void onConsumed(long tokens) {
+            // log something related for user or increase user related metrics
+        }
+        @Override
+        public void onRejected(long tokens) {
+            // log something related for user or increase user related metrics
+        }
+        ...
+    }
+    return originalbucket.toListenable(listener);
+}
 ----
 
 ==== Example of integration with Dropwizard metrics-core

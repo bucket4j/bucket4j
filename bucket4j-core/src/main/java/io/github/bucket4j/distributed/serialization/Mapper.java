@@ -29,12 +29,12 @@ public interface Mapper<T> {
 
     String toString(T value);
 
-    Mapper<Long> LONG = new Mapper<Long>() {
+    Mapper<Long> LONG = new Mapper<>() {
         @Override
         public byte[] toBytes(Long value) {
             byte[] result = new byte[8];
             for (int i = 7; i >= 0; i--) {
-                result[i] = (byte)(value & 0xFF);
+                result[i] = (byte) (value & 0xFF);
                 value >>= 8;
             }
             return result;
@@ -46,12 +46,12 @@ public interface Mapper<T> {
         }
     };
 
-    Mapper<Integer> INT = new Mapper<Integer>() {
+    Mapper<Integer> INT = new Mapper<>() {
         @Override
         public byte[] toBytes(Integer value) {
             byte[] result = new byte[4];
             for (int i = 3; i >= 0; i--) {
-                result[i] = (byte)(value & 0xFF);
+                result[i] = (byte) (value & 0xFF);
                 value >>= 8;
             }
             return result;
@@ -63,7 +63,7 @@ public interface Mapper<T> {
         }
     };
 
-    Mapper<String> STRING = new Mapper<String>() {
+    Mapper<String> STRING = new Mapper<>() {
         @Override
         public byte[] toBytes(String value) {
             return value.getBytes(StandardCharsets.UTF_8);
@@ -75,7 +75,7 @@ public interface Mapper<T> {
         }
     };
 
-    Mapper<byte[]> BYTES = new Mapper<byte[]>() {
+    Mapper<byte[]> BYTES = new Mapper<>() {
         @Override
         public byte[] toBytes(byte[] value) {
             return value;

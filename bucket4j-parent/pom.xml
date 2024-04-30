@@ -7,10 +7,10 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.bucket4j</groupId>
-    <version>8.7.0</version>
-    <artifactId>bucket4j-parent</artifactId>
+    <version>8.12.0</version>
+    <artifactId>bucket4j_jdk17-parent</artifactId>
     <packaging>pom</packaging>
-    <name>bucket4j-parent</name>
+    <name>bucket4j_jdk17-parent</name>
 
     <description>bucket4j - is a java implementation of token bucket algorithm for rate limiting</description>
     <url>http://github.com/bucket4j/bucket4j</url>
@@ -38,18 +38,18 @@
         <modular-name>parent</modular-name>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <maven.compiler.source>11</maven.compiler.source>
-        <maven.compiler.target>11</maven.compiler.target>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
         <VERSION-FOR-REVAPI-COMPARISION>4.10.0</VERSION-FOR-REVAPI-COMPARISION>
 
         <benchmark.jar.name>benchmarks</benchmark.jar.name>
         <argLine/>
         <maven.build.timestamp.format>yyyy-MM-dd HH</maven.build.timestamp.format>
         <jcache.version>1.0.0</jcache.version>
-        <ignite.version>2.10.0</ignite.version>
+        <ignite.version>2.16.0</ignite.version>
 
-        <hazelcast.3.version>3.8</hazelcast.3.version>
-        <hazelcast.latest.version>5.3.0</hazelcast.latest.version>
+        <hazelcast.4.version>4.1</hazelcast.4.version>
+        <hazelcast.latest.version>5.3.6</hazelcast.latest.version>
 
         <infinispan-8.version>8.2.12.Final</infinispan-8.version>
         <infinispan.latest.version>11.0.1.Final</infinispan.latest.version>
@@ -63,6 +63,7 @@
         <caffeine.version>2.9.3</caffeine.version>
         <mssql.version>12.4.2.jre8</mssql.version>
         <ojdbc.version>23.2.0.0</ojdbc.version>
+        <junit.jupiter.version>5.10.2</junit.jupiter.version>
     </properties>
 
     <scm>
@@ -77,8 +78,8 @@
             <name>Vladimir Bukhtoyarov</name>
             <email>jsecoder@mail.ru</email>
             <url>https://github.com/vladimir-bukhtoyarov</url>
-            <organization>edna</organization>
-            <organizationUrl>https://edna.ru/</organizationUrl>
+            <organization>Vkontakte</organization>
+            <organizationUrl>https://vk.com/</organizationUrl>
             <roles>
                 <role>Software developer</role>
             </roles>
@@ -117,12 +118,12 @@
             <plugin>
                 <groupId>org.codehaus.gmavenplus</groupId>
                 <artifactId>gmavenplus-plugin</artifactId>
-                <version>1.5</version>
+                <version>3.0.2</version>
                 <executions>
                     <execution>
                         <goals>
                             <goal>compile</goal>
-                            <goal>testCompile</goal>
+                            <goal>compileTests</goal>
                         </goals>
                     </execution>
                 </executions>
@@ -140,10 +141,10 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.1</version>
+                <version>3.13.0</version>
                 <configuration>
-                    <source>11</source>
-                    <target>11</target>
+                    <source>17</source>
+                    <target>17</target>
                     <compilerArgument>-parameters</compilerArgument>
                 </configuration>
             </plugin>
@@ -159,13 +160,24 @@
                         <logback.configurationFile>${basedir}/src/test/resources/logback-test.xml</logback.configurationFile>
                     </systemPropertyVariables>
                     <!-- Travis build workaround -->
-                    <argLine>-Xms1024m -Xmx2048m</argLine>
+                    <argLine>-Xms1024m -Xmx2048m
+                        --add-opens=java.base/jdk.internal.misc=ALL-UNNAMED
+                        --add-opens=java.base/sun.nio.ch=ALL-UNNAMED
+                        --add-opens=java.management/com.sun.jmx.mbeanserver=ALL-UNNAMED
+                        --add-opens=jdk.internal.jvmstat/sun.jvmstat.monitor=ALL-UNNAMED
+                        --add-opens=java.base/sun.reflect.generics.reflectiveObjects=ALL-UNNAMED
+                        --add-opens=jdk.management/com.sun.management.internal=ALL-UNNAMED
+                        --add-opens=java.base/java.io=ALL-UNNAMED
+                        --add-opens=java.base/java.nio=ALL-UNNAMED
+                        --add-opens=java.base/java.util=ALL-UNNAMED
+                        --add-opens=java.base/java.lang=ALL-UNNAMED
+                    </argLine>
                 </configuration>
                 <dependencies>
                     <dependency>
                         <groupId>org.junit.jupiter</groupId>
                         <artifactId>junit-jupiter-engine</artifactId>
-                        <version>5.9.3</version>
+                        <version>${junit.jupiter.version}</version>
                     </dependency>
                 </dependencies>
             </plugin>
@@ -343,44 +355,6 @@
                 </plugins>
             </reporting>
         </profile>
-        <profile>
-            <id>coverage</id>
-            <activation>
-                <activeByDefault>false</activeByDefault>
-            </activation>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.jacoco</groupId>
-                        <artifactId>jacoco-maven-plugin</artifactId>
-                        <version>0.8.5</version>
-                        <executions>
-                            <execution>
-                                <id>prepare-agent</id>
-                                <goals>
-                                    <goal>prepare-agent</goal>
-                                </goals>
-                            </execution>
-                            <execution>
-                                <id>report</id>
-                                <phase>verify</phase>
-                                <goals>
-                                    <goal>report</goal>
-                                    <goal>report-aggregate</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <plugin>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <version>3.1.0</version>
-                        <configuration>
-                            <argLine>@{argLine} -Xms1024m -Xmx2048m</argLine>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
     </profiles>
 
     <dependencies>
@@ -388,33 +362,35 @@
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
-            <version>5.9.3</version>
+            <version>${junit.jupiter.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-params</artifactId>
-            <version>5.9.3</version>
+            <version>${junit.jupiter.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>
-            <version>5.9.3</version>
+            <version>${junit.jupiter.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.spockframework</groupId>
             <artifactId>spock-core</artifactId>
-            <version>2.1-groovy-2.5</version>
+            <version>2.4-M4-groovy-3.0</version>
             <scope>test</scope>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/org.codehaus.groovy/groovy-all -->
         <dependency>
             <groupId>org.codehaus.groovy</groupId>
             <artifactId>groovy</artifactId>
-            <version>2.5.15</version>
+            <version>3.0.21</version>
             <scope>test</scope>
         </dependency>
+
         <dependency>
             <groupId>cglib</groupId>
             <artifactId>cglib-nodep</artifactId>

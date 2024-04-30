@@ -1,0 +1,45 @@
+[[bucket4j-redisson, Bucket4j-Redisson]]
+==== Redisson integration
+===== Dependencies
+To use ``bucket4j-redisson`` extension you need to add following dependency:
+[source, xml, subs=attributes+]
+----
+<!-- For java 17 -->
+<dependency>
+    <groupId>com.bucket4j</groupId>
+    <artifactId>bucket4j_jdk17-redis-common</artifactId>
+    <version>{revnumber}</version>
+</dependency>
+<dependency>
+    <groupId>com.bucket4j</groupId>
+    <artifactId>bucket4j_jdk17-redisson</artifactId>
+    <version>{revnumber}</version>
+</dependency>
+
+<!-- For java 17 -->
+<dependency>
+    <groupId>com.bucket4j</groupId>
+    <artifactId>bucket4j_jdk11-redis-common</artifactId>
+    <version>{revnumber}</version>
+</dependency>
+<dependency>
+    <groupId>com.bucket4j</groupId>
+    <artifactId>bucket4j_jdk11-redisson</artifactId>
+    <version>{revnumber}</version>
+</dependency>
+----
+
+===== Example of Bucket instantiation via RedissonBasedProxyManager
+[source, java]
+----
+RedissonBasedProxyManager<String> proxyManager = Bucket4jRedisson.casBasedBuilder(jedisPool)
+    .expirationAfterWrite(ExpirationAfterWriteStrategy.basedOnTimeForRefillingBucketUpToMax(ofSeconds(10)))
+    .keyMapper(Mapper.STRING)
+    .build();
+...
+
+BucketConfiguration configuration = BucketConfiguration.builder()
+    .addLimit(limit -> capacity(1_000).refillGreedy(1_000, ofMinutes(1)))
+    .build();
+Bucket bucket = proxyManager.getProxy(key, () -> configuration);
+----

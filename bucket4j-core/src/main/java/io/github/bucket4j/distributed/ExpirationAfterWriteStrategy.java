@@ -19,9 +19,20 @@
  */
 package io.github.bucket4j.distributed;
 
+import io.github.bucket4j.distributed.expiration.FixedTtlExpirationAfterWriteStrategy;
+import io.github.bucket4j.distributed.expiration.NoneExpirationAfterWriteStrategy;
+import io.github.bucket4j.distributed.expiration.BasedOnTimeForRefillingBucketUpToMaxExpirationAfterWriteStrategy;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
+import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
+import io.github.bucket4j.distributed.serialization.Scope;
+import io.github.bucket4j.distributed.serialization.SerializationAdapter;
+import io.github.bucket4j.distributed.serialization.SerializationHandle;
+import io.github.bucket4j.distributed.serialization.SerializationHandles;
+import io.github.bucket4j.distributed.versioning.Version;
 
+import java.io.IOException;
 import java.time.Duration;
+import java.util.Map;
 
 /**
  * Represents the strategy for choosing time to live for buckets in the cache.
@@ -48,7 +59,7 @@ public interface ExpirationAfterWriteStrategy {
      * @see #basedOnTimeForRefillingBucketUpToMax(Duration)
      */
     static ExpirationAfterWriteStrategy none() {
-        return (state, currentTimeNanos)  -> -1;
+        return NoneExpirationAfterWriteStrategy.INSTANCE;
     }
 
     /**
@@ -65,11 +76,7 @@ public interface ExpirationAfterWriteStrategy {
      * @see #basedOnTimeForRefillingBucketUpToMax(Duration)
      */
     static ExpirationAfterWriteStrategy fixedTimeToLive(Duration ttl) {
-        long ttlMillis = ttl.toMillis();
-        if (ttlMillis <= 0) {
-            throw new IllegalArgumentException("ttl should be positive");
-        }
-        return (state, currentTimeNanos) -> ttlMillis;
+        return new FixedTtlExpirationAfterWriteStrategy(ttl);
     }
 
     /**
@@ -85,15 +92,34 @@ public interface ExpirationAfterWriteStrategy {
      * @see #basedOnTimeForRefillingBucketUpToMax(Duration)
      */
     static ExpirationAfterWriteStrategy basedOnTimeForRefillingBucketUpToMax(Duration keepAfterRefillDuration) {
-        long keepAfterRefillDurationMillis = keepAfterRefillDuration.toMillis();
-        if (keepAfterRefillDurationMillis < 0) {
-            throw new IllegalArgumentException("keepAfterRefillDurationMillis should be positive");
-        }
-        return (state, currentTimeNanos) -> {
-            long millisToFullRefill = state.calculateFullRefillingTime(currentTimeNanos) / 1_000_000;
-            long result = keepAfterRefillDurationMillis + millisToFullRefill;
-            return result <= 0 ? 1 : result;
-        };
+        return new BasedOnTimeForRefillingBucketUpToMaxExpirationAfterWriteStrategy(keepAfterRefillDuration);
     }
+
+    static <O> void serialize(SerializationAdapter<O> adapter, O output, ExpirationAfterWriteStrategy expirationStrategy, Version backwardCompatibilityVersion, Scope scope) throws IOException {
+        SerializationHandle<ExpirationAfterWriteStrategy> serializer = expirationStrategy.getSerializationHandle();
+        adapter.writeInt(output, serializer.getTypeId());
+        serializer.serialize(adapter, output, expirationStrategy, backwardCompatibilityVersion, scope);
+    }
+
+    static <S> ExpirationAfterWriteStrategy deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
+        int typeId = adapter.readInt(input);
+        SerializationHandle<?> serializer = SerializationHandles.CORE_HANDLES.getHandleByTypeId(typeId);
+        return (ExpirationAfterWriteStrategy) serializer.deserialize(adapter, input);
+    }
+
+    static ExpirationAfterWriteStrategy fromJsonCompatibleSnapshot(Map<String, Object> snapshot) throws IOException {
+        String typeName = (String) snapshot.get("type");
+        SerializationHandle<?> serializer = SerializationHandles.CORE_HANDLES.getHandleByTypeName(typeName);
+        return (ExpirationAfterWriteStrategy) serializer.fromJsonCompatibleSnapshot(snapshot);
+    }
+
+    static Map<String, Object> toJsonCompatibleSnapshot(ExpirationAfterWriteStrategy expirationStrategy, Version backwardCompatibilityVersion, Scope scope) throws IOException {
+        SerializationHandle<ExpirationAfterWriteStrategy> serializer = expirationStrategy.getSerializationHandle();
+        Map<String, Object> result = expirationStrategy.getSerializationHandle().toJsonCompatibleSnapshot(expirationStrategy, backwardCompatibilityVersion, scope);
+        result.put("type", serializer.getTypeName());
+        return result;
+    }
+
+    SerializationHandle<ExpirationAfterWriteStrategy> getSerializationHandle();
 
 }

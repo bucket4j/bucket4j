@@ -48,7 +48,7 @@ public class Optimizations {
     /**
      * Creates optimization that can serve requests locally without synchronization with external storage until thresholds are not violated.
      *
-     * @param delayParameters thresholds that control whether or not request can be served locally without synchronization with external storage
+     * @param delayParameters thresholds that control whether request can be served locally without synchronization with external storage
      *
      * @return new instance of {@link DelayOptimization}
      *
@@ -62,7 +62,7 @@ public class Optimizations {
      * Creates optimization that can serve requests locally without synchronization with external storage until thresholds are not violated,
      * and additionally tries to predict aggregated consumption rate in whole cluster in order to reduce the risk of overconsumption that caused by {@link DelayOptimization}.
      *
-     * @param delayParameters thresholds that control whether or not request can be served locally without synchronization with external storage
+     * @param delayParameters thresholds that control whether request can be served locally without synchronization with external storage
      * @param predictionParameters parameters that control the quality of prediction of distributed consumption rate
      *
      * @return new instance of {@link PredictiveOptimization}
@@ -78,7 +78,7 @@ public class Optimizations {
     /**
      * Has the same semantic as {@link #predicting(DelayParameters, PredictionParameters)} but uses default {@link PredictionParameters}.
      *
-     * @param delayParameters thresholds that control whether or not request can be served locally without synchronization with external storage
+     * @param delayParameters thresholds that control whether request can be served locally without synchronization with external storage
      *
      * @return new instance of {@link PredictiveOptimization}
      *

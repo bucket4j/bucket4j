@@ -109,14 +109,14 @@ public class VerboseCommand<T> implements RemoteCommand<RemoteVerboseResult<T>>,
         return (SerializationHandle) SERIALIZATION_HANDLE;
     }
 
-    public static final SerializationHandle<VerboseCommand<?>> SERIALIZATION_HANDLE = new SerializationHandle<VerboseCommand<?>>() {
+    public static final SerializationHandle<VerboseCommand<?>> SERIALIZATION_HANDLE = new SerializationHandle<>() {
 
         @Override
         public <I> VerboseCommand<?> deserialize(DeserializationAdapter<I> adapter, I input) throws IOException {
             int formatNumber = adapter.readInt(input);
             Versions.check(formatNumber, v_7_0_0, v_7_0_0);
 
-            RemoteCommand<?> targetCommand  = RemoteCommand.deserialize(adapter, input);
+            RemoteCommand<?> targetCommand = RemoteCommand.deserialize(adapter, input);
             return VerboseCommand.from(targetCommand);
         }
 

@@ -39,7 +39,7 @@ public class PredictionParameters {
     /**
      * Creates new instance of {@link PredictionParameters}
      *
-     * @param minSamples the minimum amount of samples that requred to make prediction about distributed consumption rate.
+     * @param minSamples the minimum amount of samples that required to make prediction about distributed consumption rate.
      * @param maxSamples the maximum amount of samples to store.
      * @param sampleMaxAge the maximum period of time that sample is stored.
      */

@@ -3,7 +3,10 @@ package io.github.bucket4j.tck;
 import io.github.bucket4j.*;
 import io.github.bucket4j.distributed.AsyncBucketProxy;
 import io.github.bucket4j.distributed.BucketProxy;
+import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
+import io.github.bucket4j.distributed.proxy.AbstractProxyManagerBuilder;
 import io.github.bucket4j.distributed.proxy.BucketNotFoundException;
+import io.github.bucket4j.distributed.proxy.ExpiredEntriesCleaner;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.distributed.proxy.optimization.DelayParameters;
 import io.github.bucket4j.distributed.proxy.optimization.NopeOptimizationListener;
@@ -20,6 +23,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
 
+import java.sql.SQLException;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
@@ -35,9 +39,22 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public abstract class AbstractDistributedBucketTest {
 
-    protected static List<ProxyManagerSpec<?>> specs;
+    public static List<String> ADD_OPENS = Arrays.asList(
+      "--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED",
+      "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED",
+      "--add-opens=java.management/com.sun.jmx.mbeanserver=ALL-UNNAMED",
+      "--add-opens=jdk.internal.jvmstat/sun.jvmstat.monitor=ALL-UNNAMED",
+      "--add-opens=java.base/sun.reflect.generics.reflectiveObjects=ALL-UNNAMED",
+      "--add-opens=jdk.management/com.sun.management.internal=ALL-UNNAMED",
+      "--add-opens=java.base/java.io=ALL-UNNAMED",
+      "--add-opens=java.base/java.nio=ALL-UNNAMED",
+      "--add-opens=java.base/java.util=ALL-UNNAMED",
+      "--add-opens=java.base/java.lang=ALL-UNNAMED"
+    );
 
-    public static Stream<ProxyManagerSpec<?>> specs() {
+    protected static List<ProxyManagerSpec<?, ?, ?>> specs;
+
+    public static Stream<ProxyManagerSpec<?, ?, ?>> specs() {
         return specs.stream();
     }
 
@@ -49,38 +66,40 @@ public abstract class AbstractDistributedBucketTest {
 
     @MethodSource("specs")
     @ParameterizedTest
-    public <K> void testReconstructRecoveryStrategy(ProxyManagerSpec<K> spec) {
+    public <K, P extends ProxyManager<K>, B extends AbstractProxyManagerBuilder<K, P, B>> void testReconstructRecoveryStrategy(ProxyManagerSpec<K, P, B> spec) {
         K key = spec.generateRandomKey();
         BucketConfiguration configuration = BucketConfiguration.builder()
                 .addLimit(Bandwidth.simple(1_000, Duration.ofMinutes(1)))
                 .addLimit(Bandwidth.simple(200, Duration.ofSeconds(10)))
                 .build();
 
-        Bucket bucket = spec.proxyManager.builder().build(key, configuration);
+        ProxyManager<K> proxyManager = spec.builder.get().build();
+        Bucket bucket = proxyManager.builder().build(key, configuration);
 
         assertTrue(bucket.tryConsume(1));
 
         // simulate crash
-        spec.proxyManager.removeProxy(key);
+        proxyManager.removeProxy(key);
 
         assertTrue(bucket.tryConsume(1));
     }
 
     @MethodSource("specs")
     @ParameterizedTest
-    public <K> void testThrowExceptionRecoveryStrategy(ProxyManagerSpec<K> spec) {
+    public <K, P extends ProxyManager<K>, B extends AbstractProxyManagerBuilder<K, P, B>> void testThrowExceptionRecoveryStrategy(ProxyManagerSpec<K, P, B> spec) {
         K key = spec.generateRandomKey();
         BucketConfiguration configuration = BucketConfiguration.builder()
                 .addLimit(Bandwidth.simple(1_000, Duration.ofMinutes(1)))
                 .build();
-        Bucket bucket = spec.proxyManager.builder()
+        ProxyManager<K> proxyManager = spec.builder.get().build();
+        Bucket bucket = proxyManager.builder()
                 .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
                 .build(key, configuration);
 
         assertTrue(bucket.tryConsume(1));
 
         // simulate crash
-        spec.proxyManager.removeProxy(key);
+        proxyManager.removeProxy(key);
 
         try {
             bucket.tryConsume(1);
@@ -92,48 +111,209 @@ public abstract class AbstractDistributedBucketTest {
 
     @MethodSource("specs")
     @ParameterizedTest
-    public <K> void testLocateConfigurationThroughProxyManager(ProxyManagerSpec<K> spec) {
+    public <K, P extends ProxyManager<K>, B extends AbstractProxyManagerBuilder<K, P, B>> void testLocateConfigurationThroughProxyManager(ProxyManagerSpec<K, P, B> spec) {
         K key = spec.generateRandomKey();
         // should return empty optional if bucket is not stored
-        Optional<BucketConfiguration> remoteConfiguration = spec.proxyManager.getProxyConfiguration(key);
+        ProxyManager<K> proxyManager = spec.builder.get().build();
+        Optional<BucketConfiguration> remoteConfiguration = proxyManager.getProxyConfiguration(key);
         assertFalse(remoteConfiguration.isPresent());
 
         // should return not empty options if bucket is stored
         BucketConfiguration configuration = BucketConfiguration.builder()
                 .addLimit(Bandwidth.simple(1_000, Duration.ofMinutes(1)))
                 .build();
-        spec.proxyManager.builder()
+        proxyManager.builder()
                 .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
                 .build(key, configuration)
                 .getAvailableTokens();
-        remoteConfiguration = spec.proxyManager.getProxyConfiguration(key);
+        remoteConfiguration = proxyManager.getProxyConfiguration(key);
         assertTrue(remoteConfiguration.isPresent());
 
         // should return empty optional if bucket is removed
-        spec.proxyManager.removeProxy(key);
-        remoteConfiguration = spec.proxyManager.getProxyConfiguration(key);
+        proxyManager.removeProxy(key);
+        remoteConfiguration = proxyManager.getProxyConfiguration(key);
         assertFalse(remoteConfiguration.isPresent());
     }
 
     @MethodSource("specs")
     @ParameterizedTest
-    public <K> void testBucketRemoval(ProxyManagerSpec<K> spec) {
+    public <K, P extends ProxyManager<K>, B extends AbstractProxyManagerBuilder<K, P, B>> void testBucketRemoval(ProxyManagerSpec<K, P, B> spec) {
         K key = spec.generateRandomKey();
 
         BucketConfiguration configuration = BucketConfiguration.builder()
                 .addLimit(Bandwidth.simple(4, Duration.ofHours(1)))
                 .build();
-        BucketProxy bucket = spec.proxyManager.builder().build(key, configuration);
+        ProxyManager<K> proxyManager = spec.builder.get().build();
+        BucketProxy bucket = proxyManager.builder().build(key, configuration);
         bucket.getAvailableTokens();
 
-        assertTrue(spec.proxyManager.getProxyConfiguration(key).isPresent());
-        spec.proxyManager.removeProxy(key);
-        assertFalse(spec.proxyManager.getProxyConfiguration(key).isPresent());
+        assertTrue(proxyManager.getProxyConfiguration(key).isPresent());
+        proxyManager.removeProxy(key);
+        assertFalse(proxyManager.getProxyConfiguration(key).isPresent());
     }
 
     @MethodSource("specs")
     @ParameterizedTest
-    public <K> void testOptimizations(ProxyManagerSpec<K> spec) {
+    public <K, P extends ProxyManager<K>, B extends AbstractProxyManagerBuilder<K, P, B>> void testNoExpirationAfterWrite(ProxyManagerSpec<K, P, B> spec) throws InterruptedException, SQLException {
+        if (!spec.expirationSupported) {
+            return;
+        }
+        BucketConfiguration configuration = BucketConfiguration.builder()
+            .addLimit(Bandwidth.simple(10, Duration.ofSeconds (1)))
+            .build();
+        ProxyManager<K> proxyManager = spec.builder.get()
+                .expirationAfterWrite(ExpirationAfterWriteStrategy.none())
+                .build();;
+
+        K key = spec.generateRandomKey();
+        BucketProxy bucket = proxyManager.builder().build(key, () -> configuration);
+        assertEquals(10, bucket.tryConsumeAsMuchAsPossible());
+        Thread.sleep(3000);
+        if (proxyManager instanceof ExpiredEntriesCleaner cleaner) {
+            assertEquals(0, cleaner.removeExpired(1));
+        }
+        assertTrue(proxyManager.getProxyConfiguration(key).isPresent());
+    }
+
+    @MethodSource("specs")
+    @ParameterizedTest
+    public <K, P extends ProxyManager<K>, B extends AbstractProxyManagerBuilder<K, P, B>> void testNoExpirationAfterWrite_Async(ProxyManagerSpec<K, P, B> spec) throws InterruptedException, ExecutionException, SQLException {
+        if (!spec.expirationSupported) {
+            return;
+        }
+        BucketConfiguration configuration = BucketConfiguration.builder()
+            .addLimit(Bandwidth.simple(10, Duration.ofSeconds (1)))
+            .build();
+        ProxyManager<K> proxyManager = spec.builder.get()
+                .expirationAfterWrite(ExpirationAfterWriteStrategy.none())
+                .build();
+
+        if (!proxyManager.isAsyncModeSupported()) {
+            return;
+        }
+
+        K key = spec.generateRandomKey();
+        AsyncBucketProxy bucket = proxyManager.asAsync().builder().build(key, () -> CompletableFuture.completedFuture(configuration));
+        assertEquals(10, bucket.tryConsumeAsMuchAsPossible().get());
+        Thread.sleep(3000);
+        if (proxyManager instanceof ExpiredEntriesCleaner cleaner) {
+            assertEquals(0, cleaner.removeExpired(1));
+        }
+        assertTrue(proxyManager.getProxyConfiguration(key).isPresent());
+    }
+
+    @MethodSource("specs")
+    @ParameterizedTest
+    public <K, P extends ProxyManager<K>, B extends AbstractProxyManagerBuilder<K, P, B>> void testFixedTtlExpirationAfterWrite(ProxyManagerSpec<K, P, B> spec) throws InterruptedException, SQLException {
+        if (!spec.expirationSupported) {
+            return;
+        }
+        BucketConfiguration configuration = BucketConfiguration.builder()
+            .addLimit(Bandwidth.simple(10, Duration.ofSeconds (100)))
+            .build();
+        ProxyManager<K> proxyManager = spec.builder.get()
+            .expirationAfterWrite(ExpirationAfterWriteStrategy.fixedTimeToLive(Duration.ofSeconds(1)))
+            .build();
+
+        K key = spec.generateRandomKey();
+        BucketProxy bucket = proxyManager.builder().build(key, () -> configuration);
+        assertEquals(10, bucket.tryConsumeAsMuchAsPossible());
+        Thread.sleep(3000);
+        if (proxyManager instanceof ExpiredEntriesCleaner cleaner) {
+            assertEquals(1, cleaner.removeExpired(1));
+        }
+        assertTrue(proxyManager.getProxyConfiguration(key).isEmpty());
+    }
+
+    @MethodSource("specs")
+    @ParameterizedTest
+    public <K, P extends ProxyManager<K>, B extends AbstractProxyManagerBuilder<K, P, B>> void testFixedTtlExpirationAfterWrite_Async(ProxyManagerSpec<K, P, B> spec) throws InterruptedException, ExecutionException, SQLException {
+        if (!spec.expirationSupported) {
+            return;
+        }
+        BucketConfiguration configuration = BucketConfiguration.builder()
+            .addLimit(Bandwidth.simple(10, Duration.ofSeconds (100)))
+            .build();
+        ProxyManager<K> proxyManager = spec.builder.get()
+            .expirationAfterWrite(ExpirationAfterWriteStrategy.fixedTimeToLive(Duration.ofSeconds(1)))
+            .build();
+        if (!proxyManager.isAsyncModeSupported()) {
+            return;
+        }
+
+        K key = spec.generateRandomKey();
+        AsyncBucketProxy bucket = proxyManager.asAsync().builder().build(key, () -> CompletableFuture.completedFuture(configuration));
+        assertEquals(10, bucket.tryConsumeAsMuchAsPossible().get());
+        Thread.sleep(3000);
+        if (proxyManager instanceof ExpiredEntriesCleaner cleaner) {
+            assertEquals(1, cleaner.removeExpired(1));
+        }
+        assertTrue(proxyManager.getProxyConfiguration(key).isEmpty());
+    }
+
+    @MethodSource("specs")
+    @ParameterizedTest
+    public <K, P extends ProxyManager<K>, B extends AbstractProxyManagerBuilder<K, P, B>> void testRefillBasedExpirationAfterWrite(ProxyManagerSpec<K, P, B> spec) throws InterruptedException, SQLException {
+        if (!spec.expirationSupported) {
+            return;
+        }
+        BucketConfiguration configuration = BucketConfiguration.builder()
+            .addLimit(Bandwidth.simple(10, Duration.ofSeconds (10)))
+            .build();
+        ProxyManager<K> proxyManager = spec.builder.get()
+                .expirationAfterWrite(ExpirationAfterWriteStrategy.basedOnTimeForRefillingBucketUpToMax(Duration.ofSeconds(1)))
+                .build();
+
+        K key = spec.generateRandomKey();
+        BucketProxy bucket = proxyManager.builder().build(key, () -> configuration);
+        assertTrue(bucket.tryConsume(1));
+        Thread.sleep(100);
+        if (proxyManager instanceof ExpiredEntriesCleaner cleaner) {
+            assertEquals(0, cleaner.removeExpired(1));
+        }
+        assertFalse(proxyManager.getProxyConfiguration(key).isEmpty());
+        Thread.sleep(3000);
+        if (proxyManager instanceof ExpiredEntriesCleaner cleaner) {
+            assertEquals(1, cleaner.removeExpired(1));
+        }
+        assertTrue(proxyManager.getProxyConfiguration(key).isEmpty());
+    }
+
+    @MethodSource("specs")
+    @ParameterizedTest
+    public <K, P extends ProxyManager<K>, B extends AbstractProxyManagerBuilder<K, P, B>> void testRefillBasedExpirationAfterWrite_Async(ProxyManagerSpec<K, P, B> spec) throws InterruptedException, ExecutionException, SQLException {
+        if (!spec.expirationSupported) {
+            return;
+        }
+        BucketConfiguration configuration = BucketConfiguration.builder()
+            .addLimit(Bandwidth.simple(10, Duration.ofSeconds (10)))
+            .build();
+        ProxyManager<K> proxyManager = spec.builder.get()
+            .expirationAfterWrite(ExpirationAfterWriteStrategy.basedOnTimeForRefillingBucketUpToMax(Duration.ofSeconds(1)))
+            .build();
+
+        if (!proxyManager.isAsyncModeSupported()) {
+            return;
+        }
+
+        K key = spec.generateRandomKey();
+        AsyncBucketProxy bucket = proxyManager.asAsync().builder().build(key, () -> CompletableFuture.completedFuture(configuration));
+        assertEquals(true, bucket.tryConsume(1).get());
+        Thread.sleep(100);
+        if (proxyManager instanceof ExpiredEntriesCleaner cleaner) {
+            assertEquals(0, cleaner.removeExpired(1));
+        }
+        assertFalse(proxyManager.getProxyConfiguration(key).isEmpty());
+        Thread.sleep(3000);
+        if (proxyManager instanceof ExpiredEntriesCleaner cleaner) {
+            assertEquals(1, cleaner.removeExpired(1));
+        }
+        assertTrue(proxyManager.getProxyConfiguration(key).isEmpty());
+    }
+
+    @MethodSource("specs")
+    @ParameterizedTest
+    public <K, P extends ProxyManager<K>, B extends AbstractProxyManagerBuilder<K, P, B>> void testOptimizations(ProxyManagerSpec<K, P, B> spec) {
         BucketConfiguration configuration = BucketConfiguration.builder()
             .addLimit(Bandwidth.simple(10, Duration.ofSeconds (1)))
             .build();
@@ -152,7 +332,8 @@ public abstract class AbstractDistributedBucketTest {
         for (Optimization optimization : optimizations) {
             try {
                 K key = spec.generateRandomKey();
-                BucketProxy bucket = spec.proxyManager.builder()
+                ProxyManager<K> proxyManager = spec.builder.get().build();
+                BucketProxy bucket = proxyManager.builder()
                     .withOptimization(optimization)
                     .build(key, configuration);
 
@@ -160,13 +341,13 @@ public abstract class AbstractDistributedBucketTest {
                 for (int i = 0; i < 5; i++) {
                     assertTrue(bucket.tryConsume(1));
                 }
-                spec.proxyManager.removeProxy(key);
+                proxyManager.removeProxy(key);
 
                 bucket.forceAddTokens(90);
                 assertEquals(100, bucket.getAvailableTokens());
 
 
-                spec.proxyManager.removeProxy(key);
+                proxyManager.removeProxy(key);
                 bucket.asVerbose().forceAddTokens(90);
 
                 assertEquals(100, bucket.asVerbose().getAvailableTokens().getValue());
@@ -178,8 +359,9 @@ public abstract class AbstractDistributedBucketTest {
 
     @MethodSource("specs")
     @ParameterizedTest
-    public <K> void testOptimizationsAsync(ProxyManagerSpec<K> spec) {
-        if (!spec.proxyManager.isAsyncModeSupported()) {
+    public <K, P extends ProxyManager<K>, B extends AbstractProxyManagerBuilder<K, P, B>> void testOptimizationsAsync(ProxyManagerSpec<K, P, B> spec) {
+        ProxyManager<K> proxyManager = spec.builder.get().build();
+        if (!proxyManager.isAsyncModeSupported()) {
             return;
         }
 
@@ -201,7 +383,7 @@ public abstract class AbstractDistributedBucketTest {
         for (Optimization optimization : optimizations) {
             try {
                 K key = spec.generateRandomKey();
-                AsyncBucketProxy bucket = spec.proxyManager.asAsync().builder()
+                AsyncBucketProxy bucket = proxyManager.asAsync().builder()
                     .withOptimization(optimization)
                     .build(key, configuration);
 
@@ -209,13 +391,13 @@ public abstract class AbstractDistributedBucketTest {
                 for (int i = 0; i < 5; i++) {
                     assertTrue(bucket.tryConsume(1).get());
                 }
-                spec.proxyManager.removeProxy(key);
+                proxyManager.removeProxy(key);
 
                 bucket.forceAddTokens(90).get();
                 assertEquals(100, bucket.getAvailableTokens().get());
 
 
-                spec.proxyManager.removeProxy(key);
+                proxyManager.removeProxy(key);
                 bucket.asVerbose().forceAddTokens(90).get();
 
                 assertEquals(100, bucket.asVerbose().getAvailableTokens().get() .getValue());
@@ -227,11 +409,12 @@ public abstract class AbstractDistributedBucketTest {
 
     @MethodSource("specs")
     @ParameterizedTest
-    public <K> void testParallelInitialization(ProxyManagerSpec<K> spec) throws InterruptedException {
+    public <K, P extends ProxyManager<K>, B extends AbstractProxyManagerBuilder<K, P, B>> void testParallelInitialization(ProxyManagerSpec<K, P, B> spec) throws InterruptedException {
         K key = spec.generateRandomKey();
         BucketConfiguration configuration = BucketConfiguration.builder()
                 .addLimit(Bandwidth.classic(10, Refill.intervally(1, Duration.ofMinutes(1))))
                 .build();
+        ProxyManager<K> proxyManager = spec.builder.get().build();
 
         int PARALLELISM = 4;
         CountDownLatch startLatch = new CountDownLatch(PARALLELISM);
@@ -245,7 +428,7 @@ public abstract class AbstractDistributedBucketTest {
                     e.printStackTrace();
                 }
                 try {
-                    spec.proxyManager.builder().build(key, () -> configuration).tryConsume(1);
+                    proxyManager.builder().build(key, () -> configuration).tryConsume(1);
                 } catch (Throwable t) {
                     t.printStackTrace();
                 } finally {
@@ -255,15 +438,16 @@ public abstract class AbstractDistributedBucketTest {
         }
         stopLatch.await();
 
-        BucketProxy bucket = spec.proxyManager.builder().build(key, () -> configuration);
+        BucketProxy bucket = proxyManager.builder().build(key, () -> configuration);
         assertEquals(10 - PARALLELISM, bucket.getAvailableTokens());
     }
 
     @MethodSource("specs")
     @ParameterizedTest
-    public <K> void testAsyncParallelInitialization(ProxyManagerSpec<K> spec) throws InterruptedException {
+    public <K, P extends ProxyManager<K>, B extends AbstractProxyManagerBuilder<K, P, B>> void testAsyncParallelInitialization(ProxyManagerSpec<K, P, B> spec) throws InterruptedException {
+        ProxyManager<K> proxyManager = spec.builder.get().build();
         K key = spec.generateRandomKey();
-        if (!spec.proxyManager.isAsyncModeSupported()) {
+        if (!proxyManager.isAsyncModeSupported()) {
             return;
         }
 
@@ -284,7 +468,7 @@ public abstract class AbstractDistributedBucketTest {
                 }
                 try {
                     try {
-                        spec.proxyManager.asAsync().builder().build(key, () -> CompletableFuture.completedFuture(configuration)).tryConsume(1).get();
+                        proxyManager.asAsync().builder().build(key, () -> CompletableFuture.completedFuture(configuration)).tryConsume(1).get();
                     } catch (Throwable e) {
                         e.printStackTrace();
                     }
@@ -295,32 +479,110 @@ public abstract class AbstractDistributedBucketTest {
         }
         stopLatch.await();
 
-        BucketProxy bucket = spec.proxyManager.builder().build(key, () -> configuration);
+        BucketProxy bucket = proxyManager.builder().build(key, () -> configuration);
         assertEquals(10 - PARALLELISM, bucket.getAvailableTokens());
     }
 
     @MethodSource("specs")
     @ParameterizedTest
-    public <K> void testUnconditionalConsume(ProxyManagerSpec<K> spec) throws Exception {
+    public <K, P extends ProxyManager<K>, B extends AbstractProxyManagerBuilder<K, P, B>> void testParallelInitialization_withTimeout(ProxyManagerSpec<K, P, B> spec) throws InterruptedException {
+        K key = spec.generateRandomKey();
+        BucketConfiguration configuration = BucketConfiguration.builder()
+            .addLimit(Bandwidth.classic(10, Refill.intervally(1, Duration.ofMinutes(1))))
+            .build();
+        ProxyManager<K> proxyManager = spec.builder.get().requestTimeout(Duration.ofSeconds(3)).build();
+
+        int PARALLELISM = 4;
+        CountDownLatch startLatch = new CountDownLatch(PARALLELISM);
+        CountDownLatch stopLatch = new CountDownLatch(PARALLELISM);
+        for (int i = 0; i < PARALLELISM; i++) {
+            new Thread(() -> {
+                startLatch.countDown();
+                try {
+                    startLatch.await();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                try {
+                    proxyManager.builder().build(key, () -> configuration).tryConsume(1);
+                } catch (Throwable t) {
+                    t.printStackTrace();
+                } finally {
+                    stopLatch.countDown();
+                }
+            }).start();
+        }
+        stopLatch.await();
+
+        BucketProxy bucket = proxyManager.builder().build(key, () -> configuration);
+        assertEquals(10 - PARALLELISM, bucket.getAvailableTokens());
+    }
+
+    @MethodSource("specs")
+    @ParameterizedTest
+    public <K, P extends ProxyManager<K>, B extends AbstractProxyManagerBuilder<K, P, B>> void testAsyncParallelInitialization_withTimeout(ProxyManagerSpec<K, P, B> spec) throws InterruptedException {
+        ProxyManager<K> proxyManager = spec.builder.get().requestTimeout(Duration.ofSeconds(3)).build();
+        K key = spec.generateRandomKey();
+        if (!proxyManager.isAsyncModeSupported()) {
+            return;
+        }
+
+        final BucketConfiguration configuration = BucketConfiguration.builder()
+            .addLimit(Bandwidth.classic(10, Refill.intervally(1, Duration.ofMinutes(1))))
+            .build();
+
+        int PARALLELISM = 4;
+        CountDownLatch startLatch = new CountDownLatch(PARALLELISM);
+        CountDownLatch stopLatch = new CountDownLatch(PARALLELISM);
+        for (int i = 0; i < PARALLELISM; i++) {
+            new Thread(() -> {
+                startLatch.countDown();
+                try {
+                    startLatch.await();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                try {
+                    try {
+                        proxyManager.asAsync().builder().build(key, () -> CompletableFuture.completedFuture(configuration)).tryConsume(1).get();
+                    } catch (Throwable e) {
+                        e.printStackTrace();
+                    }
+                } finally {
+                    stopLatch.countDown();
+                }
+            }).start();
+        }
+        stopLatch.await();
+
+        BucketProxy bucket = proxyManager.builder().build(key, () -> configuration);
+        assertEquals(10 - PARALLELISM, bucket.getAvailableTokens());
+    }
+
+    @MethodSource("specs")
+    @ParameterizedTest
+    public <K, P extends ProxyManager<K>, B extends AbstractProxyManagerBuilder<K, P, B>> void testUnconditionalConsume(ProxyManagerSpec<K, P, B> spec) throws Exception {
+        ProxyManager<K> proxyManager = spec.builder.get().build();
         K key = spec.generateRandomKey();
         BucketConfiguration configuration = BucketConfiguration.builder()
                 .addLimit(Bandwidth.simple(1_000, Duration.ofMinutes(1)))
                 .build();
 
-        Bucket bucket = spec.proxyManager.builder().build(key, () -> configuration);
+        Bucket bucket = proxyManager.builder().build(key, () -> configuration);
         long overdraftNanos = bucket.consumeIgnoringRateLimits(121_000);
         assertEquals(overdraftNanos, TimeUnit.MINUTES.toNanos(120));
     }
 
     @MethodSource("specs")
     @ParameterizedTest
-    public <K> void testUnconditionalConsumeVerbose(ProxyManagerSpec<K> spec) throws Exception {
+    public <K, P extends ProxyManager<K>, B extends AbstractProxyManagerBuilder<K, P, B>> void testUnconditionalConsumeVerbose(ProxyManagerSpec<K, P, B> spec) throws Exception {
+        ProxyManager<K> proxyManager = spec.builder.get().build();
         K key = spec.generateRandomKey();
         BucketConfiguration configuration = BucketConfiguration.builder()
                 .addLimit(Bandwidth.simple(1_000, Duration.ofMinutes(1)))
                 .build();
 
-        Bucket bucket = spec.proxyManager.builder().build(key, () -> configuration);
+        Bucket bucket = proxyManager.builder().build(key, () -> configuration);
         VerboseResult<Long> result = bucket.asVerbose().consumeIgnoringRateLimits(121_000);
         long overdraftNanos = result.getValue();
 
@@ -330,10 +592,11 @@ public abstract class AbstractDistributedBucketTest {
 
     @MethodSource("specs")
     @ParameterizedTest
-    public <K> void testTryConsume(ProxyManagerSpec<K> spec) throws Throwable {
+    public <K, P extends ProxyManager<K>, B extends AbstractProxyManagerBuilder<K, P, B>> void testTryConsume(ProxyManagerSpec<K, P, B> spec) throws Throwable {
+        ProxyManager<K> proxyManager = spec.builder.get().build();
         K key = spec.generateRandomKey();
         Function<Bucket, Long> action = bucket -> bucket.tryConsume(1)? 1L : 0L;
-        Supplier<Bucket> bucketSupplier = () -> spec.proxyManager.builder()
+        Supplier<Bucket> bucketSupplier = () -> proxyManager.builder()
                 .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
                 .build(key, configurationForLongRunningTests);
         int durationSeconds = System.getenv("CI") == null ? 5 : 1;
@@ -343,10 +606,11 @@ public abstract class AbstractDistributedBucketTest {
 
     @MethodSource("specs")
     @ParameterizedTest
-    public <K> void testTryConsumeWithLimit(ProxyManagerSpec<K> spec) throws Throwable {
+    public <K, P extends ProxyManager<K>, B extends AbstractProxyManagerBuilder<K, P, B>> void testTryConsumeWithLimit(ProxyManagerSpec<K, P, B> spec) throws Throwable {
+        ProxyManager<K> proxyManager = spec.builder.get().build();
         K key = spec.generateRandomKey();
         Function<Bucket, Long> action = bucket -> bucket.asBlocking().tryConsumeUninterruptibly(1, TimeUnit.MILLISECONDS.toNanos(50), UninterruptibleBlockingStrategy.PARKING) ? 1L : 0L;
-        Supplier<Bucket> bucketSupplier = () -> spec.proxyManager.builder()
+        Supplier<Bucket> bucketSupplier = () -> proxyManager.builder()
                 .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
                 .build(key, configurationForLongRunningTests);
         int durationSeconds = System.getenv("CI") == null ? 5 : 1;
@@ -356,8 +620,9 @@ public abstract class AbstractDistributedBucketTest {
 
     @MethodSource("specs")
     @ParameterizedTest
-    public <K> void testTryConsumeAsync(ProxyManagerSpec<K> spec) throws Exception {
-        if (!spec.proxyManager.isAsyncModeSupported()) {
+    public <K, P extends ProxyManager<K>, B extends AbstractProxyManagerBuilder<K, P, B>> void testTryConsumeAsync(ProxyManagerSpec<K, P, B> spec) throws Exception {
+        ProxyManager<K> proxyManager = spec.builder.get().build();
+        if (!proxyManager.isAsyncModeSupported()) {
             return;
         }
         K key = spec.generateRandomKey();
@@ -369,7 +634,7 @@ public abstract class AbstractDistributedBucketTest {
                 throw new RuntimeException(e);
             }
         };
-        Supplier<AsyncBucketProxy> bucketSupplier = () -> spec.proxyManager.asAsync().builder()
+        Supplier<AsyncBucketProxy> bucketSupplier = () -> proxyManager.asAsync().builder()
                 .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
                 .build(key, configurationForLongRunningTests);
         int durationSeconds = System.getenv("CI") == null ? 5 : 1;
@@ -379,8 +644,9 @@ public abstract class AbstractDistributedBucketTest {
 
     @MethodSource("specs")
     @ParameterizedTest
-    public <K> void testTryConsumeAsyncWithLimit(ProxyManagerSpec<K> spec) throws Exception {
-        if (!spec.proxyManager.isAsyncModeSupported()) {
+    public <K, P extends ProxyManager<K>, B extends AbstractProxyManagerBuilder<K, P, B>> void testTryConsumeAsyncWithLimit(ProxyManagerSpec<K, P, B> spec) throws Exception {
+        ProxyManager<K> proxyManager = spec.builder.get().build();
+        if (!proxyManager.isAsyncModeSupported()) {
             return;
         }
 
@@ -393,7 +659,7 @@ public abstract class AbstractDistributedBucketTest {
                 throw new RuntimeException(e);
             }
         };
-        Supplier<AsyncBucketProxy> bucketSupplier = () -> spec.proxyManager.asAsync().builder()
+        Supplier<AsyncBucketProxy> bucketSupplier = () -> proxyManager.asAsync().builder()
                 .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
                 .build(key, configurationForLongRunningTests);
         int durationSeconds = System.getenv("CI") == null ? 5 : 1;
@@ -403,31 +669,33 @@ public abstract class AbstractDistributedBucketTest {
 
     @MethodSource("specs")
     @ParameterizedTest
-    public <K> void testBucketRegistryWithKeyIndependentConfiguration(ProxyManagerSpec<K> spec) {
+    public <K, P extends ProxyManager<K>, B extends AbstractProxyManagerBuilder<K, P, B>> void testBucketRegistryWithKeyIndependentConfiguration(ProxyManagerSpec<K, P, B> spec) {
+        ProxyManager<K> proxyManager = spec.builder.get().build();
         K key = spec.generateRandomKey();
         BucketConfiguration configuration = BucketConfiguration.builder()
                 .addLimit(Bandwidth.simple(10, Duration.ofDays(1)))
                 .build();
 
-        Bucket bucket1 = spec.proxyManager.builder().build(key, configuration);
+        Bucket bucket1 = proxyManager.builder().build(key, configuration);
         assertTrue(bucket1.tryConsume(10));
         assertFalse(bucket1.tryConsume(1));
 
         K anotherKey = spec.generateRandomKey();
-        Bucket bucket2 = spec.proxyManager.builder().build(anotherKey, () -> configuration);
+        Bucket bucket2 = proxyManager.builder().build(anotherKey, () -> configuration);
         assertTrue(bucket2.tryConsume(10));
         assertFalse(bucket2.tryConsume(1));
     }
 
     @MethodSource("specs")
     @ParameterizedTest
-    public <K> void testBucketWithNotLazyConfiguration(ProxyManagerSpec<K> spec) {
+    public <K, P extends ProxyManager<K>, B extends AbstractProxyManagerBuilder<K, P, B>> void testBucketWithNotLazyConfiguration(ProxyManagerSpec<K, P, B> spec) {
+        ProxyManager<K> proxyManager = spec.builder.get().build();
         K key = spec.generateRandomKey();
         BucketConfiguration configuration = BucketConfiguration.builder()
                 .addLimit(Bandwidth.simple(10, Duration.ofDays(1)))
                 .build();
 
-        Bucket bucket = spec.proxyManager.builder().build(key, configuration);
+        Bucket bucket = proxyManager.builder().build(key, configuration);
         assertTrue(bucket.tryConsume(10));
         assertFalse(bucket.tryConsume(1));
     }
@@ -435,7 +703,7 @@ public abstract class AbstractDistributedBucketTest {
     // https://github.com/bucket4j/bucket4j/issues/279
     @MethodSource("specs")
     @ParameterizedTest
-    public <K> void testVerboseBucket(ProxyManagerSpec<K> spec) {
+    public <K, P extends ProxyManager<K>, B extends AbstractProxyManagerBuilder<K, P, B>> void testVerboseBucket(ProxyManagerSpec<K, P, B> spec) {
         int MIN_CAPACITY = 4;
         int MAX_CAPACITY = 10;
         BucketConfiguration configuration = BucketConfiguration.builder()
@@ -443,8 +711,9 @@ public abstract class AbstractDistributedBucketTest {
                 .addLimit(Bandwidth.classic(MAX_CAPACITY, Refill.intervally(10, Duration.ofMinutes(60))))
                 .build();
 
+        ProxyManager<K> proxyManager = spec.builder.get().build();
         K key = spec.generateRandomKey();
-        Bucket bucket = spec.proxyManager.builder().build(key, configuration);
+        Bucket bucket = proxyManager.builder().build(key, configuration);
 
         for (int i = 1; i <= 4; i++) {
             VerboseResult<ConsumptionProbe> verboseResult = bucket.asVerbose().tryConsumeAndReturnRemaining(1);
@@ -460,14 +729,15 @@ public abstract class AbstractDistributedBucketTest {
 
     @MethodSource("specs")
     @ParameterizedTest
-    public <K> void testWithMapper(ProxyManagerSpec<K> spec) {
+    public <K, P extends ProxyManager<K>, B extends AbstractProxyManagerBuilder<K, P, B>> void testWithMapper(ProxyManagerSpec<K, P, B> spec) {
         K key = spec.generateRandomKey();
         BucketConfiguration configuration = BucketConfiguration.builder()
                 .addLimit(Bandwidth.simple(10, Duration.ofDays(1)))
                 .build();
 
-        ProxyManager<String> mappedProxyManager = spec.proxyManager.withMapper(dummy -> key);
-        Bucket unmappedBucket = spec.proxyManager.builder().build(key, configuration);
+        ProxyManager<K> proxyManager = spec.builder.get().build();
+        ProxyManager<String> mappedProxyManager = proxyManager.withMapper(dummy -> key);
+        Bucket unmappedBucket = proxyManager.builder().build(key, configuration);
         Bucket mappedBucket = mappedProxyManager.builder().build("dummy", configuration);
         Bucket mappedBucket2 = mappedProxyManager.builder().build("dummy2", configuration);
 
@@ -484,8 +754,9 @@ public abstract class AbstractDistributedBucketTest {
 
     @MethodSource("specs")
     @ParameterizedTest
-    public <K> void testWithMapperAsync(ProxyManagerSpec<K> spec) throws Exception {
-        if (!spec.proxyManager.isAsyncModeSupported()) {
+    public <K, P extends ProxyManager<K>, B extends AbstractProxyManagerBuilder<K, P, B>> void testWithMapperAsync(ProxyManagerSpec<K, P, B> spec) throws Exception {
+        ProxyManager<K> proxyManager = spec.builder.get().build();
+        if (!proxyManager.isAsyncModeSupported()) {
             return;
         }
 
@@ -494,8 +765,8 @@ public abstract class AbstractDistributedBucketTest {
                 .addLimit(Bandwidth.simple(10, Duration.ofDays(1)))
                 .build();
 
-        ProxyManager<String> mappedProxyManager = spec.proxyManager.withMapper(dummy -> key);
-        AsyncBucketProxy unmappedBucket = spec.proxyManager.asAsync().builder().build(key, configuration);
+        ProxyManager<String> mappedProxyManager = proxyManager.withMapper(dummy -> key);
+        AsyncBucketProxy unmappedBucket = proxyManager.asAsync().builder().build(key, configuration);
         AsyncBucketProxy mappedBucket = mappedProxyManager.asAsync().builder().build("dummy", configuration);
         AsyncBucketProxy mappedBucket2 = mappedProxyManager.asAsync().builder().build("dummy2", configuration);
 
@@ -512,7 +783,8 @@ public abstract class AbstractDistributedBucketTest {
 
     @MethodSource("specs")
     @ParameterizedTest
-    public <K> void test_1000_tokens_consumption(ProxyManagerSpec<K> spec) throws InterruptedException {
+    public <K, P extends ProxyManager<K>, B extends AbstractProxyManagerBuilder<K, P, B>> void test_1000_tokens_consumption(ProxyManagerSpec<K, P, B> spec) throws InterruptedException {
+        ProxyManager<K> proxyManager = spec.builder.get().build();
         K key = spec.generateRandomKey();
         int threadCount = 8;
         int opsCount = 1_000;
@@ -528,7 +800,7 @@ public abstract class AbstractDistributedBucketTest {
         ConcurrentHashMap<Integer, Integer> updatesByThread = new ConcurrentHashMap<>();
         ConcurrentHashMap<Integer, Throwable> errors = new ConcurrentHashMap<>();
         for (int i = 0; i < threadCount; i++) {
-            Bucket bucket = spec.proxyManager.builder().build(key, () -> configuration);
+            Bucket bucket = proxyManager.builder().build(key, () -> configuration);
             final int threadId = i;
             new Thread(() -> {
                 try {
@@ -552,7 +824,7 @@ public abstract class AbstractDistributedBucketTest {
         }
         stopLatch.await();
 
-        long availableTokens = spec.proxyManager.builder().build(key, () -> configuration).getAvailableTokens();
+        long availableTokens = proxyManager.builder().build(key, () -> configuration).getAvailableTokens();
         System.out.println("availableTokens " + availableTokens);
         System.out.println("Failed threads " + errors.keySet());
         System.out.println("Updates by thread " + updatesByThread);
@@ -562,8 +834,9 @@ public abstract class AbstractDistributedBucketTest {
 
     @MethodSource("specs")
     @ParameterizedTest
-    public <K> void test_1000_tokens_consumption_async(ProxyManagerSpec<K> spec) throws InterruptedException {
-        if (!spec.proxyManager.isAsyncModeSupported()) {
+    public <K, P extends ProxyManager<K>, B extends AbstractProxyManagerBuilder<K, P, B>> void test_1000_tokens_consumption_async(ProxyManagerSpec<K, P, B> spec) throws InterruptedException {
+        ProxyManager<K> proxyManager = spec.builder.get().build();
+        if (!proxyManager.isAsyncModeSupported()) {
             return;
         }
 
@@ -582,14 +855,13 @@ public abstract class AbstractDistributedBucketTest {
         ConcurrentHashMap<Integer, Integer> updatesByThread = new ConcurrentHashMap<>();
         ConcurrentHashMap<Integer, Throwable> errors = new ConcurrentHashMap<>();
         for (int i = 0; i < threadCount; i++) {
-            AsyncBucketProxy bucket = spec.proxyManager.asAsync().builder().build(key, () -> CompletableFuture.completedFuture(configuration));
+            AsyncBucketProxy bucket = proxyManager.asAsync().builder().build(key, () -> CompletableFuture.completedFuture(configuration));
             final int threadId = i;
             new Thread(() -> {
                 try {
                     startLatch.countDown();
                     startLatch.await();
                     while (opsCounter.decrementAndGet() >= 0) {
-                        Integer currenValue = null;
                         if (bucket.tryConsume(1).get()) {
                             updatesByThread.compute(threadId, (k, current) -> current == null ? 1 : current + 1);
                         } else {
@@ -606,7 +878,7 @@ public abstract class AbstractDistributedBucketTest {
         }
         stopLatch.await();
 
-        long availableTokens = spec.proxyManager.builder().build(key, () -> configuration).getAvailableTokens();
+        long availableTokens = proxyManager.builder().build(key, () -> configuration).getAvailableTokens();
         System.out.println("availableTokens " + availableTokens);
         System.out.println("Failed threads " + errors.keySet());
         System.out.println("Updates by thread " + updatesByThread);

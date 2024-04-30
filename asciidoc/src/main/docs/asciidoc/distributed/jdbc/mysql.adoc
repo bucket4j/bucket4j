@@ -1,0 +1,41 @@
+[[bucket4j-mysql, Bucket4j-MySQL]]
+==== MySQL integration
+===== Dependencies
+To use ``bucket4j-coherence`` extension you need to add the following dependency:
+[source, xml, subs=attributes+]
+----
+<!-- For java 17 -->
+<dependency>
+    <groupId>com.bucket4j</groupId>
+    <artifactId>bucket4j_jdk17-coherence</artifactId>
+    <version>{revnumber}</version>
+</dependency>
+
+<!-- For java 11 -->
+<dependency>
+    <groupId>com.bucket4j</groupId>
+    <artifactId>bucket4j_jdk11-coherence</artifactId>
+    <version>{revnumber}</version>
+</dependency>
+----
+
+===== DDL example
+[source,sql]
+----
+CREATE TABLE IF NOT EXISTS bucket(id BIGINT PRIMARY KEY, state BLOB);
+----
+
+===== Example of Bucket instantiation
+[source, java]
+----
+MySQLSelectForUpdateBasedProxyManager<Long> proxyManager = Bucket4jMySQL
+    .selectForUpdateBasedBuilder(dataSource)
+    .build();
+
+...
+Long key = 1L;
+BucketConfiguration bucketConfiguration = BucketConfiguration.builder()
+        .addLimit(limit -> limit.capacity(10).refillGreedy(10, ofSeconds(1)))
+        .build();
+BucketProxy bucket = proxyManager.getProxy(key, () -> bucketConfiguration);
+----

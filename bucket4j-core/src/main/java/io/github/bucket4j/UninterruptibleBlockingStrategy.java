@@ -25,7 +25,7 @@ import java.util.concurrent.locks.LockSupport;
 
 /**
  * Specifies the way to block current thread to amount of time required to refill missed number of tokens in the bucket.
- *
+ * <p>
  * There is default implementation {@link #PARKING},
  * also you can provide any other implementation which for example does something useful instead of blocking(acts as co-routine) or does spin loop.
  */

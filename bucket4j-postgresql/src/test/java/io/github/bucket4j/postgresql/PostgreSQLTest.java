@@ -4,8 +4,6 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import io.github.bucket4j.distributed.jdbc.BucketTableSettings;
 import io.github.bucket4j.distributed.jdbc.PrimaryKeyMapper;
-import io.github.bucket4j.distributed.jdbc.SQLProxyConfiguration;
-import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
 import io.github.bucket4j.tck.ProxyManagerSpec;
 
@@ -32,47 +30,49 @@ public class PostgreSQLTest extends AbstractDistributedBucketTest {
         container = startPostgreSQLContainer();
         dataSource = createJdbcDataSource(container);
         BucketTableSettings tableSettings_1 = BucketTableSettings.getDefault();
-        final String INIT_TABLE_SCRIPT_1 = "CREATE TABLE IF NOT EXISTS {0}({1} BIGINT PRIMARY KEY, {2} BYTEA)";
+        final String INIT_TABLE_SCRIPT_1 = "CREATE TABLE IF NOT EXISTS {0}({1} BIGINT PRIMARY KEY, {2} BYTEA, expires_at BIGINT, explicit_lock BIGINT)";
         try (Connection connection = dataSource.getConnection()) {
             try (Statement statement = connection.createStatement()) {
                 String query = MessageFormat.format(INIT_TABLE_SCRIPT_1, tableSettings_1.getTableName(), tableSettings_1.getIdName(), tableSettings_1.getStateName());
                 statement.execute(query);
             }
         }
-        SQLProxyConfiguration<Long> configuration_1 = SQLProxyConfiguration.builder()
-            .withTableSettings(tableSettings_1)
-            .build(dataSource);
-
 
         BucketTableSettings tableSettings_2 = BucketTableSettings.customSettings("buckets_String_key", "id", "state");
-        final String INIT_TABLE_SCRIPT_2 = "CREATE TABLE IF NOT EXISTS {0}({1} VARCHAR PRIMARY KEY, {2} BYTEA)";
+        final String INIT_TABLE_SCRIPT_2 = "CREATE TABLE IF NOT EXISTS {0}({1} VARCHAR PRIMARY KEY, {2} BYTEA, expires_at BIGINT, explicit_lock BIGINT)";
         try (Connection connection = dataSource.getConnection()) {
             try (Statement statement = connection.createStatement()) {
                 String query = MessageFormat.format(INIT_TABLE_SCRIPT_2, tableSettings_2.getTableName(), tableSettings_2.getIdName(), tableSettings_2.getStateName());
                 statement.execute(query);
             }
         }
-        SQLProxyConfiguration<String> configuration_2 = SQLProxyConfiguration.builder()
-            .withPrimaryKeyMapper(PrimaryKeyMapper.STRING)
-            .withTableSettings(tableSettings_2)
-            .build(dataSource);
 
         specs = Arrays.asList(
             new ProxyManagerSpec<>(
                 "PostgreSQLadvisoryLockBasedProxyManager",
                 () -> ThreadLocalRandom.current().nextLong(1_000_000_000),
-                new PostgreSQLadvisoryLockBasedProxyManager<>(configuration_1)
-            ),
+                () -> Bucket4jPostgreSQL.advisoryLockBasedBuilder(dataSource)
+                    .table("bucket")
+                    .idColumn("id")
+                    .stateColumn("state")
+            ).checkExpiration(),
             new ProxyManagerSpec<>(
                 "PostgreSQLSelectForUpdateBasedProxyManager",
                 () -> ThreadLocalRandom.current().nextLong(1_000_000_000),
-                new PostgreSQLSelectForUpdateBasedProxyManager<>(configuration_1)
-            ),
+                () -> Bucket4jPostgreSQL.selectForUpdateBasedBuilder(dataSource)
+                    .table("bucket")
+                    .idColumn("id")
+                    .stateColumn("state")
+            ).checkExpiration(),
             new ProxyManagerSpec<>(
                 "PostgreSQLadvisoryLockBasedProxyManager_StringKey",
                 () -> UUID.randomUUID().toString(),
-                new PostgreSQLadvisoryLockBasedProxyManager<>(configuration_2)
-            )
+                () -> Bucket4jPostgreSQL.advisoryLockBasedBuilder(dataSource)
+                    .table("buckets_String_key")
+                    .idColumn("id")
+                    .stateColumn("state")
+                    .primaryKeyMapper(PrimaryKeyMapper.STRING)
+            ).checkExpiration()
         );
     }
 

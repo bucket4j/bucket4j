@@ -7,7 +7,7 @@ ProxyManager proxyManager = ...;
 AsyncProxyManager asyncProxyManager = proxyManager.asAsync();
 
 BucketConfiguration configuration = ...;
-AsyncBucketProxy asyncBucket = asyncProxyManager.builder().build(key, configuration);
+AsyncBucketProxy asyncBucket = asyncProxyManager.getProxy(key, () -> configuration);
 ----
 Each method of class ```AsyncBucketProxy``` has full equivalence with the same semantic in asynchronous version in the ```Bucket``` class.
 
@@ -20,7 +20,7 @@ You want your architecture to be protected from overloading, clustered, and full
 > To prevent fraud and service overloading you want to introduce the following limit for any outbound phone number: The bucket size is 20 SMS (which cannot be exceeded at any given time), with a "refill rate" of 10 SMS per minute that continually increases tokens in the bucket.
 In other words, if a client sends 10 SMS per minute, it will never be throttled,
 and moreover, the client has overdraft equals to 20 SMS which can be used if the average is a little bit higher than 10 SMS/minute on short time period.
-**Solution:** let's use bucket4j for this.
+**Solution:** let's use Bucket4j for this.
 
 **Clustering requirement:**
 
@@ -33,16 +33,17 @@ Hazelcast and Apache Ignite will be also well-chosen, Infinispan just selected a
 **Asynchronous processing requirement:**
 Also for maximum scalability, you want from architecture to be fully non-blocking,
 non-blocking architecture means that both sms sending and limit checking should be asynchronous.
-**Solution:** let's use asynchronous features provided by bucket4j and Servlet-API.
+**Solution:** let's use asynchronous features provided by Bucket4j and Servlet-API.
 
 **Mockup of service based on top of Servlet API and bucket4j-infinispan**:
-[source, java]
+
+[source,java]
 ----
 public class SmsServlet extends javax.servlet.http.HttpServlet {
 
     private SmsSender smsSender;
     private AsyncProxyManager<String> buckets;
-    private Supplier<BucketConfiguration> configuration;
+    private Supplier<BucketConfiguration> configurationSupplier;
        
     @Override
     public void init(ServletConfig config) throws ServletException {
@@ -54,7 +55,7 @@ public class SmsServlet extends javax.servlet.http.HttpServlet {
         FunctionalMapImpl<String, byte[]> bucketMap = (FunctionalMapImpl<String, byte[]>) ctx.getAttribute("bucket-map");
         this.buckets = new InfinispanProxyManager(bucketMap).asAsync();
         
-        this.configuration = () -> {
+        this.configurationSupplier = () -> {
             return BucketConfiguratiion.builder()
                 .addLimit(limit -> limit.capacity(20).refillGreedy(10, Duration.ofMinutes(1)))
                 .build();
@@ -69,7 +70,7 @@ public class SmsServlet extends javax.servlet.http.HttpServlet {
         String toNumber = req.getParameter("to");
         String text = req.getParameter("text");
         
-        AsyncBucketProxy bucket = buckets.builder().build(fromNumber, configuration);
+        AsyncBucketProxy bucket = buckets.getProxy(fromNumber, configurationSupplier);
         CompletableFuture<ConsumptionProbe> limitCheckingFuture = bucket.asAsync().tryConsumeAndReturnRemaining(1);
         final AsyncContext asyncContext = req.startAsync();
         limitCheckingFuture.thenCompose(probe -> {

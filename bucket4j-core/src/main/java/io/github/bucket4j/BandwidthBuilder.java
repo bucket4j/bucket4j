@@ -30,7 +30,6 @@ import static io.github.bucket4j.Bandwidth.UNSPECIFIED_TIME_OF_FIRST_REFILL;
 /**
  * Provides API for bandwidth builder
  *
- * @author Vladimir Bukhtoyarov
  */
 public class BandwidthBuilder {
 
@@ -206,11 +205,11 @@ public class BandwidthBuilder {
 
         /**
          * By default, new created bandwidth has no ID.
-         * This method allows to specify unique identifier of bandwidth that can be used for bandwidth comparision during configuration replacement {@link Bucket#replaceConfiguration(BucketConfiguration, TokensInheritanceStrategy)}
+         * This method allows to specify unique identifier of bandwidth that can be used for bandwidth comparison during configuration replacement {@link Bucket#replaceConfiguration(BucketConfiguration, TokensInheritanceStrategy)}
          *
-         * @param id unique identifier of bandwidth that can be used for bandwidth comparision during configuration replacement {@link Bucket#replaceConfiguration(BucketConfiguration, TokensInheritanceStrategy)}
+         * @param id unique identifier of bandwidth that can be used for bandwidth comparison during configuration replacement {@link Bucket#replaceConfiguration(BucketConfiguration, TokensInheritanceStrategy)}
          *
-         * @return the copy of this bandwidth with new value ofof initial tokens.
+         * @return the copy of this bandwidth with new value of initial tokens.
          */
         BandwidthBuilderBuildStage id(String id);
 
@@ -220,7 +219,7 @@ public class BandwidthBuilder {
          *
          * @param initialTokens
          *
-         * @return the copy of this bandwidth with new value ofof initial tokens.
+         * @return the copy of this bandwidth with new value of initial tokens.
          */
         BandwidthBuilderBuildStage initialTokens(long initialTokens);
 

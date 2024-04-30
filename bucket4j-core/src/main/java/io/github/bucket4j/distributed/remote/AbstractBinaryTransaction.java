@@ -19,6 +19,7 @@
  */
 package io.github.bucket4j.distributed.remote;
 
+import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
 import io.github.bucket4j.distributed.serialization.InternalSerializationHelper;
 import io.github.bucket4j.distributed.versioning.*;
 
@@ -27,14 +28,14 @@ import static io.github.bucket4j.distributed.serialization.InternalSerialization
 public abstract class AbstractBinaryTransaction {
 
     private final byte[] requestBytes;
-    private Version backwardCompatibilityVersion;
+    private Request<?> request;
+    private long currentTimeNanos;
 
     protected AbstractBinaryTransaction(byte[] requestBytes) {
         this.requestBytes = requestBytes;
     }
 
     public byte[] execute() {
-        Request<?> request;
         try {
             request = InternalSerializationHelper.deserializeRequest(requestBytes);
         } catch (UnsupportedTypeException e) {
@@ -45,7 +46,7 @@ public abstract class AbstractBinaryTransaction {
             return serializeResult(CommandResult.usageOfObsoleteApiException(e.getRequestedFormatNumber(), e.getMinSupportedFormatNumber()), Versions.getOldest());
         }
 
-        backwardCompatibilityVersion = request.getBackwardCompatibilityVersion();
+        Version backwardCompatibilityVersion = request.getBackwardCompatibilityVersion();
 
         try {
             RemoteBucketState currentState = null;
@@ -55,13 +56,13 @@ public abstract class AbstractBinaryTransaction {
             }
             MutableBucketEntry entryWrapper = new MutableBucketEntry(currentState);
 
-            long time = request.getClientSideTime() != null? request.getClientSideTime(): System.currentTimeMillis() * 1_000_000;
+            currentTimeNanos = request.getClientSideTime() != null? request.getClientSideTime(): System.currentTimeMillis() * 1_000_000;
             RemoteCommand<?> command = request.getCommand();
-            CommandResult<?> result = command.execute(entryWrapper, time);
+            CommandResult<?> result = command.execute(entryWrapper, currentTimeNanos);
 
             if (entryWrapper.isStateModified()) {
                 RemoteBucketState newState = entryWrapper.get();
-                setRawState(serializeState(newState, backwardCompatibilityVersion));
+                setRawState(serializeState(newState, backwardCompatibilityVersion), newState);
             }
 
             return serializeResult(result, request.getBackwardCompatibilityVersion());
@@ -76,9 +77,19 @@ public abstract class AbstractBinaryTransaction {
 
     protected abstract byte[] getRawState();
 
-    protected abstract void setRawState(byte[] stateBytes);
+    protected abstract void setRawState(byte[] newStateBytes, RemoteBucketState newState);
 
     public abstract boolean exists();
 
+    protected Request<?> getRequest() {
+        return request;
+    }
 
+    protected ExpirationAfterWriteStrategy getExpirationStrategy() {
+        return request.getExpirationStrategy();
+    }
+
+    protected long getCurrentTimeNanos() {
+        return currentTimeNanos;
+    }
 }

@@ -56,7 +56,7 @@ public class UnsupportedTypeError implements CommandError, ComparableByContent<U
         return other.typeId == typeId;
     }
 
-    public static SerializationHandle<UnsupportedTypeError> SERIALIZATION_HANDLE = new SerializationHandle<UnsupportedTypeError>() {
+    public static final SerializationHandle<UnsupportedTypeError> SERIALIZATION_HANDLE = new SerializationHandle<>() {
         @Override
         public <S> UnsupportedTypeError deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             int formatNumber = adapter.readInt(input);
@@ -79,11 +79,11 @@ public class UnsupportedTypeError implements CommandError, ComparableByContent<U
 
         @Override
         public Class<UnsupportedTypeError> getSerializedType() {
-            return (Class) UnsupportedTypeError.class;
+            return UnsupportedTypeError.class;
         }
 
         @Override
-        public UnsupportedTypeError fromJsonCompatibleSnapshot(Map<String, Object> snapshot) throws IOException {
+        public UnsupportedTypeError fromJsonCompatibleSnapshot(Map<String, Object> snapshot) {
             int formatNumber = readIntValue(snapshot, "version");
             Versions.check(formatNumber, v_7_0_0, v_7_0_0);
             int typeId = readIntValue(snapshot, "typeId");
@@ -91,7 +91,7 @@ public class UnsupportedTypeError implements CommandError, ComparableByContent<U
         }
 
         @Override
-        public Map<String, Object> toJsonCompatibleSnapshot(UnsupportedTypeError error, Version backwardCompatibilityVersion, Scope scope) throws IOException {
+        public Map<String, Object> toJsonCompatibleSnapshot(UnsupportedTypeError error, Version backwardCompatibilityVersion, Scope scope) {
             Map<String, Object> result = new HashMap<>();
             result.put("version", v_7_0_0.getNumber());
             result.put("typeId", error.typeId);

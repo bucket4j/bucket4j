@@ -43,7 +43,7 @@ public enum SynchronizationStrategy {
      *
      * <p>Advantages: Never allocates memory.
      * <br>Disadvantages: Thread which acquired the lock(and superseded from CPU by OS scheduler) can block another threads for significant time.
-     * <br>Usage recommendations: when your primary goal is avoiding of memory allocation and you do not care about contention.
+     * <br>Usage recommendations: when your primary goal is avoiding of memory allocation, and you do not care about contention.
      */
     SYNCHRONIZED,
 
@@ -55,7 +55,7 @@ public enum SynchronizationStrategy {
      *
      * <p>Advantages: Never allocates memory and never acquires any locks, in other words you pay nothing for synchronization.
      * <br>Disadvantages: If your code or third-party library code has errors then bucket state will be corrupted.
-     * <br>Usage recommendations: iff you have guarantees that bucket will be never used from multiple threads,
+     * <br>Usage recommendations: iff you have guarantees that bucket will never be used from multiple threads,
      * for example in cases where your third-party library(like akka or rx-java) prevents concurrent access and provide guarantees of visibility,
      * or when you are so senior guy that can manage synchronization by yourself.
      */

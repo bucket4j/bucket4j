@@ -113,7 +113,7 @@ public class VerboseResult<T> implements ComparableByContent<VerboseResult<?>> {
 
         /**
          * Returns currently available tokens per each bandwidth.
-         * Element's order inside resulted array depends from order in which bandwidth is specified inside {@link BucketConfiguration}.
+         * Element's order inside resulted array depends on from order in which bandwidth is specified inside {@link BucketConfiguration}.
          *
          * @return currently available tokens per each bandwidth
          */
@@ -122,7 +122,7 @@ public class VerboseResult<T> implements ComparableByContent<VerboseResult<?>> {
     }
 
     public <R> VerboseResult<R> map(Function<T, R> mapper) {
-        return new VerboseResult<R>(operationTimeNanos, mapper.apply(value), state);
+        return new VerboseResult<>(operationTimeNanos, mapper.apply(value), state);
     }
 
     @Override

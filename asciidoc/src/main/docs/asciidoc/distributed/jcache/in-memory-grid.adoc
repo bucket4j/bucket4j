@@ -1,0 +1,11 @@
+=== Integrations with in-memory grids
+
+include::jcache-usage.adoc[]
+
+include::hazelcast.adoc[]
+
+include::ignite.adoc[]
+
+include::infinispan.adoc[]
+
+include::coherence.adoc[]

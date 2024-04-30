@@ -51,7 +51,7 @@ public class GetConfigurationCommand implements RemoteCommand<BucketConfiguratio
         return CommandResult.success(state.getConfiguration(), BucketConfiguration.SERIALIZATION_HANDLE);
     }
 
-    public static SerializationHandle<GetConfigurationCommand> SERIALIZATION_HANDLE = new SerializationHandle<GetConfigurationCommand>() {
+    public static final SerializationHandle<GetConfigurationCommand> SERIALIZATION_HANDLE = new SerializationHandle<>() {
 
         @Override
         public <S> GetConfigurationCommand deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
@@ -79,7 +79,7 @@ public class GetConfigurationCommand implements RemoteCommand<BucketConfiguratio
         }
 
         @Override
-        public GetConfigurationCommand fromJsonCompatibleSnapshot(Map<String, Object> snapshot) throws IOException {
+        public GetConfigurationCommand fromJsonCompatibleSnapshot(Map<String, Object> snapshot) {
             int formatNumber = readIntValue(snapshot, "version");
             Versions.check(formatNumber, v_7_0_0, v_7_0_0);
 
@@ -87,7 +87,7 @@ public class GetConfigurationCommand implements RemoteCommand<BucketConfiguratio
         }
 
         @Override
-        public Map<String, Object> toJsonCompatibleSnapshot(GetConfigurationCommand command, Version backwardCompatibilityVersion, Scope scope) throws IOException {
+        public Map<String, Object> toJsonCompatibleSnapshot(GetConfigurationCommand command, Version backwardCompatibilityVersion, Scope scope) {
             Map<String, Object> result = new HashMap<>();
             result.put("version", v_7_0_0.getNumber());
             return result;

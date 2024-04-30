@@ -37,44 +37,38 @@ public class AsyncBatchingExecutor implements AsyncCommandExecutor {
 
     private final AsyncBatchHelper<RemoteCommand<?>, CommandResult<?>, MultiCommand, CommandResult<MultiResult>> batchingHelper;
     private final AsyncCommandExecutor wrappedExecutor;
-    private final OptimizationListener listener;
-
-    private final Function<List<RemoteCommand<?>>, MultiCommand> taskCombiner = new Function<>() {
-        @Override
-        public MultiCommand apply(List<RemoteCommand<?>> commands) {
-            if (commands.size() > 1) {
-                listener.incrementMergeCount(commands.size() - 1);
-            }
-            return MultiCommand.merge(commands);
-        }
-    };
-
-    private final Function<MultiCommand, CompletableFuture<CommandResult<MultiResult>>> combinedTaskExecutor = new Function<>() {
-        @Override
-        public CompletableFuture<CommandResult<MultiResult>> apply(MultiCommand multiCommand) {
-            return wrappedExecutor.executeAsync(multiCommand);
-        }
-    };
-
-    private final Function<RemoteCommand<?>, CompletableFuture<CommandResult<?>>> taskExecutor = new Function<>() {
-        @Override
-        public CompletableFuture<CommandResult<?>> apply(RemoteCommand<?> remoteCommand) {
-            CompletableFuture<? extends CommandResult<?>> future = wrappedExecutor.executeAsync(remoteCommand);
-            return (CompletableFuture<CommandResult<?>>) future;
-        }
-    };
-
-    private final BiFunction<MultiCommand, CommandResult<MultiResult>, List<CommandResult<?>>> combinedResultSplitter = new BiFunction<>() {
-        @Override
-        public List<CommandResult<?>> apply(MultiCommand multiCommand, CommandResult<MultiResult> multiResult) {
-            return multiCommand.unwrap(multiResult);
-        }
-    };
 
 
     public AsyncBatchingExecutor(AsyncCommandExecutor originalExecutor, OptimizationListener listener) {
         this.wrappedExecutor = originalExecutor;
-        this.listener = listener;
+        BiFunction<MultiCommand, CommandResult<MultiResult>, List<CommandResult<?>>> combinedResultSplitter = new BiFunction<>() {
+            @Override
+            public List<CommandResult<?>> apply(MultiCommand multiCommand, CommandResult<MultiResult> multiResult) {
+                return multiCommand.unwrap(multiResult);
+            }
+        };
+        Function<RemoteCommand<?>, CompletableFuture<CommandResult<?>>> taskExecutor = new Function<>() {
+            @Override
+            public CompletableFuture<CommandResult<?>> apply(RemoteCommand<?> remoteCommand) {
+                CompletableFuture<? extends CommandResult<?>> future = wrappedExecutor.executeAsync(remoteCommand);
+                return (CompletableFuture<CommandResult<?>>) future;
+            }
+        };
+        Function<MultiCommand, CompletableFuture<CommandResult<MultiResult>>> combinedTaskExecutor = new Function<>() {
+            @Override
+            public CompletableFuture<CommandResult<MultiResult>> apply(MultiCommand multiCommand) {
+                return wrappedExecutor.executeAsync(multiCommand);
+            }
+        };
+        Function<List<RemoteCommand<?>>, MultiCommand> taskCombiner = new Function<>() {
+            @Override
+            public MultiCommand apply(List<RemoteCommand<?>> commands) {
+                if (commands.size() > 1) {
+                    listener.incrementMergeCount(commands.size() - 1);
+                }
+                return MultiCommand.merge(commands);
+            }
+        };
         this.batchingHelper = AsyncBatchHelper.create(taskCombiner, combinedTaskExecutor, taskExecutor, combinedResultSplitter);
     }
 

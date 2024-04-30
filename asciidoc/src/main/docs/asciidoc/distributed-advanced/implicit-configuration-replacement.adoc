@@ -4,13 +4,13 @@
 distributed bucket operates with configuration that was provided at the time of its creation. Providing the new configuration via RemoteBucketBuilder takes no effect if bucket already exists in the persistent storage, because configuration is stored together with state of bucket. There is only one way to replace configuration of bucket - is explicit calling of replaceConfiguration(or its async analog).
 
 .Explicit config replacement can be awkward in the following cases:
-* It requires for library client to write the code for configuration replacement. It is unnecessary job, that is especially hard when bucket4j is used behind of high-level frameworks like bucket4j-spring-boot-starter, when end-clients are not mentally prepared to work directly with low-level API of Bucket4j.
-* It can confuse the user in the following scenario: user stores limits in the configuration for example in proerties or yaml file, user updates configuration files and restarts application and he becomes surprised because new limits are not applied for buckets that survive application restart in the storage, because as was mentioned above only one way to change the config for already persisted bucket is explicitly calling of replaceConfiguration for each persisted bucket.
+* It requires for library client to write the code for configuration replacement. It is unnecessary job, that is especially hard when Bucket4j is used behind of high-level frameworks like bucket4j-spring-boot-starter, when end-clients are not mentally prepared to work directly with low-level API of Bucket4j.
+* It can confuse the user in the following scenario: user stores limits in the configuration for example in properties or yaml file, user updates configuration files and restarts application, and he becomes surprised because new limits are not applied for buckets that survive application restart in the storage, because as was mentioned above only one way to change the config for already persisted bucket is explicitly calling of replaceConfiguration for each persisted bucket.
 * For some persistent technologies like Redis it is costly to identify all buckets that are persisted in the storage, because lack of mechanisms for grouping like tables or caches leads to scan all keys, even keys that points to data that not related to rate-limiting.
 
 .Implicit configuration replacement solution:
 
-`Implicit configuration replacement feature` is addressed to solve the awkwards described above. It works based on configuration version,
+`Implicit configuration replacement feature` is addressed to solve the awkward described above. It works based on configuration version,
 when bucket detects that persisted configuration version is less that provided through builder API then persisted configuration is being replaced automatically without disturbing the client. Both `RemoteBucketBuilder` and `RemoteAsyncBucketBuilder` contains the API to configure desired configuration version.
 
 .Example of usage

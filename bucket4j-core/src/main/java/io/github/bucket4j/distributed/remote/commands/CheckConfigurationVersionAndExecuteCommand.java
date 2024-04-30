@@ -46,10 +46,9 @@ public class CheckConfigurationVersionAndExecuteCommand<T> implements RemoteComm
 
     @Override
     public boolean canBeMerged(RemoteCommand<?> another) {
-        if (!(another instanceof CheckConfigurationVersionAndExecuteCommand)) {
+        if (!(another instanceof CheckConfigurationVersionAndExecuteCommand<?> anotherCmd)) {
             return false;
         }
-        CheckConfigurationVersionAndExecuteCommand<?> anotherCmd = (CheckConfigurationVersionAndExecuteCommand<?>) another;
         return desiredConfigurationVersion == anotherCmd.desiredConfigurationVersion && targetCommand.canBeMerged(anotherCmd.targetCommand);
     }
 
@@ -106,14 +105,14 @@ public class CheckConfigurationVersionAndExecuteCommand<T> implements RemoteComm
         return (SerializationHandle) SERIALIZATION_HANDLE;
     }
 
-    public static final SerializationHandle<CheckConfigurationVersionAndExecuteCommand<?>> SERIALIZATION_HANDLE = new SerializationHandle<CheckConfigurationVersionAndExecuteCommand<?>>() {
+    public static final SerializationHandle<CheckConfigurationVersionAndExecuteCommand<?>> SERIALIZATION_HANDLE = new SerializationHandle<>() {
 
         @Override
         public <I> CheckConfigurationVersionAndExecuteCommand<?> deserialize(DeserializationAdapter<I> adapter, I input) throws IOException {
             int formatNumber = adapter.readInt(input);
             Versions.check(formatNumber, v_8_1_0, v_8_1_0);
 
-            RemoteCommand<?> targetCommand  = RemoteCommand.deserialize(adapter, input);
+            RemoteCommand<?> targetCommand = RemoteCommand.deserialize(adapter, input);
             long desiredConfigurationVersion = adapter.readLong(input);
             return new CheckConfigurationVersionAndExecuteCommand<>(targetCommand, desiredConfigurationVersion);
         }

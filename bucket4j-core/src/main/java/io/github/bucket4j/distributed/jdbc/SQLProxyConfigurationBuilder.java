@@ -29,6 +29,7 @@ import java.util.Objects;
  * @author Maxim Bartkov
  * The class to build {@link SQLProxyConfiguration}
  */
+@Deprecated
 public final class SQLProxyConfigurationBuilder<K> {
     ClientSideConfig clientSideConfig;
     BucketTableSettings tableSettings;

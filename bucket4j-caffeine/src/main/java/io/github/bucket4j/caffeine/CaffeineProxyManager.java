@@ -23,7 +23,8 @@ package io.github.bucket4j.caffeine;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.Expiry;
-import io.github.bucket4j.TimeMeter;
+
+import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
 import io.github.bucket4j.distributed.proxy.AbstractProxyManager;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.remote.CommandResult;
@@ -32,7 +33,6 @@ import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.distributed.remote.Request;
 
 import java.time.Duration;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -42,42 +42,77 @@ public class CaffeineProxyManager<K> extends AbstractProxyManager<K> {
 
     private final Cache<K, RemoteBucketState> cache;
 
+    CaffeineProxyManager(Bucket4jCaffeine.CaffeineProxyManagerBuilder<K> builder) {
+        super(builder.getClientSideConfig());
+
+        this.cache = builder.cacheBuilder.expireAfter(new Expiry<K, RemoteBucketState>() {
+                private final ExpirationAfterWriteStrategy expiration = getClientSideConfig().getExpirationAfterWriteStrategy()
+                    .orElse(ExpirationAfterWriteStrategy.none());
+
+                @Override
+                public long expireAfterCreate(K key, RemoteBucketState bucketState, long currentTime) {
+                    long ttlNanos = expiration.calculateTimeToLiveMillis(bucketState, currentTimeNanos()) * 1_000_000;
+                    return ttlNanos < 0 ? Long.MAX_VALUE : ttlNanos;
+                }
+
+                @Override
+                public long expireAfterUpdate(K key, RemoteBucketState bucketState, long currentTime, long currentDuration) {
+                    long ttlNanos = expiration.calculateTimeToLiveMillis(bucketState, currentTimeNanos()) * 1_000_000;
+                    return ttlNanos < 0 ? Long.MAX_VALUE : ttlNanos;
+                }
+
+                @Override
+                public long expireAfterRead(K key, RemoteBucketState bucketState, long currentTime, long currentDuration) {
+                    long ttlNanos = expiration.calculateTimeToLiveMillis(bucketState, currentTimeNanos()) * 1_000_000;
+                    return ttlNanos < 0 ? Long.MAX_VALUE : ttlNanos;
+                }
+            })
+            .build();
+    }
+
     /**
-     * Creates new instance of {@link CaffeineProxyManager}
-     *
-     * @param builder the builder that will be used for cache creation
-     * @param keepAfterRefillDuration specifies how long bucket should be held in the cache after all consumed tokens have been refilled.
+     * @deprecated use {@link Bucket4jCaffeine#builderFor(Caffeine)}
      */
+    @Deprecated
     public CaffeineProxyManager(Caffeine<? super K, ? super RemoteBucketState> builder, Duration keepAfterRefillDuration) {
         this(builder, keepAfterRefillDuration, ClientSideConfig.getDefault());
     }
 
+    /**
+     * @deprecated use {@link Bucket4jCaffeine#builderFor(Caffeine)}
+     */
+    @Deprecated
     public CaffeineProxyManager(Caffeine<? super K, ? super RemoteBucketState> builder, Duration keepAfterRefillDuration, ClientSideConfig clientSideConfig) {
         super(clientSideConfig);
         this.cache = builder
             .expireAfter(new Expiry<K, RemoteBucketState>() {
                 @Override
                 public long expireAfterCreate(K key, RemoteBucketState bucketState, long currentTime) {
-                    long currentTimeNanos = getCurrentTime(clientSideConfig);
+                    long currentTimeNanos = currentTimeNanos();
                     long nanosToFullRefill = bucketState.calculateFullRefillingTime(currentTimeNanos);
                     return nanosToFullRefill + keepAfterRefillDuration.toNanos();
                 }
 
                 @Override
                 public long expireAfterUpdate(K key, RemoteBucketState bucketState, long currentTime, long currentDuration) {
-                    long currentTimeNanos = getCurrentTime(clientSideConfig);
+                    long currentTimeNanos = currentTimeNanos();
                     long nanosToFullRefill = bucketState.calculateFullRefillingTime(currentTimeNanos);
                     return nanosToFullRefill + keepAfterRefillDuration.toNanos();
                 }
 
                 @Override
                 public long expireAfterRead(K key, RemoteBucketState bucketState, long currentTime, long currentDuration) {
-                    long currentTimeNanos = getCurrentTime(clientSideConfig);
+                    long currentTimeNanos = currentTimeNanos();
                     long nanosToFullRefill = bucketState.calculateFullRefillingTime(currentTimeNanos);
                     return nanosToFullRefill + keepAfterRefillDuration.toNanos();
                 }
             })
             .build();
+    }
+
+    @Override
+    public boolean isExpireAfterWriteSupported() {
+        return true;
     }
 
     /**
@@ -124,11 +159,6 @@ public class CaffeineProxyManager<K> extends AbstractProxyManager<K> {
     protected CompletableFuture<Void> removeAsync(K key) {
         cache.asMap().remove(key);
         return CompletableFuture.completedFuture(null);
-    }
-
-    private static long getCurrentTime(ClientSideConfig clientSideConfig) {
-        Optional<TimeMeter> clock = clientSideConfig.getClientSideClock();
-        return clock.isPresent() ? clock.get().currentTimeNanos() : System.currentTimeMillis() * 1_000_000;
     }
 
 }

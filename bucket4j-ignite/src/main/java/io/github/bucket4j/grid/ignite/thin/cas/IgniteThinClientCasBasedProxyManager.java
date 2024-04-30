@@ -25,6 +25,8 @@ import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AbstractCom
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AsyncCompareAndSwapOperation;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.CompareAndSwapOperation;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
+import io.github.bucket4j.grid.ignite.Bucket4jIgnite;
+import io.github.bucket4j.grid.ignite.thin.Bucket4jIgniteThin.IgniteThinClientCasBasedProxyManagerBuilder;
 import io.github.bucket4j.grid.ignite.thin.ThinClientUtils;
 import org.apache.ignite.client.ClientCache;
 import org.apache.ignite.client.IgniteClientFuture;
@@ -38,10 +40,23 @@ public class IgniteThinClientCasBasedProxyManager<K> extends AbstractCompareAndS
 
     private final ClientCache<K, ByteBuffer> cache;
 
+    public IgniteThinClientCasBasedProxyManager(IgniteThinClientCasBasedProxyManagerBuilder<K> builder) {
+        super(builder.getClientSideConfig());
+        this.cache = builder.getCache();
+    }
+
+    /**
+     * @deprecated use {@link Bucket4jIgnite#thinClient()#builderForCasBasedProxyManager()}
+     */
+    @Deprecated
     public IgniteThinClientCasBasedProxyManager(ClientCache<K, ByteBuffer> cache) {
         this(cache, ClientSideConfig.getDefault());
     }
 
+    /**
+     * @deprecated use {@link Bucket4jIgnite#thinClient()#builderForCasBasedProxyManager()}
+     */
+    @Deprecated
     public IgniteThinClientCasBasedProxyManager(ClientCache<K, ByteBuffer> cache, ClientSideConfig clientSideConfig) {
         super(clientSideConfig);
         this.cache = Objects.requireNonNull(cache);
@@ -51,7 +66,7 @@ public class IgniteThinClientCasBasedProxyManager<K> extends AbstractCompareAndS
     protected CompareAndSwapOperation beginCompareAndSwapOperation(K key) {
         return new CompareAndSwapOperation() {
             @Override
-            public Optional<byte[]> getStateData() {
+            public Optional<byte[]> getStateData(Optional<Long> timeoutNanos) {
                 ByteBuffer persistedState = cache.get(key);
                 if (persistedState == null) {
                     return Optional.empty();
@@ -60,7 +75,7 @@ public class IgniteThinClientCasBasedProxyManager<K> extends AbstractCompareAndS
                 return Optional.of(persistedStateBytes);
             }
             @Override
-            public boolean compareAndSwap(byte[] originalDataBytes, byte[] newDataBytes, RemoteBucketState newState) {
+            public boolean compareAndSwap(byte[] originalDataBytes, byte[] newDataBytes, RemoteBucketState newState, Optional<Long> timeoutNanos) {
                 ByteBuffer newData = ByteBuffer.wrap(newDataBytes);
                 if (originalDataBytes == null) {
                     return cache.putIfAbsent(key, newData);
@@ -75,7 +90,7 @@ public class IgniteThinClientCasBasedProxyManager<K> extends AbstractCompareAndS
     protected AsyncCompareAndSwapOperation beginAsyncCompareAndSwapOperation(K key) {
         return new AsyncCompareAndSwapOperation() {
             @Override
-            public CompletableFuture<Optional<byte[]>> getStateData() {
+            public CompletableFuture<Optional<byte[]>> getStateData(Optional<Long> timeoutNanos) {
                 IgniteClientFuture<ByteBuffer> igniteFuture = cache.getAsync(key);
                 CompletableFuture<ByteBuffer> resultFuture = ThinClientUtils.convertFuture(igniteFuture);
                 return resultFuture.thenApply((ByteBuffer persistedState) -> {
@@ -87,7 +102,7 @@ public class IgniteThinClientCasBasedProxyManager<K> extends AbstractCompareAndS
                 });
             }
             @Override
-            public CompletableFuture<Boolean> compareAndSwap(byte[] originalDataBytes, byte[] newDataBytes, RemoteBucketState newState) {
+            public CompletableFuture<Boolean> compareAndSwap(byte[] originalDataBytes, byte[] newDataBytes, RemoteBucketState newState, Optional<Long> timeoutNanos) {
                 ByteBuffer newData = ByteBuffer.wrap(newDataBytes);
                 if (originalDataBytes == null) {
                     IgniteClientFuture<Boolean> igniteFuture = cache.putIfAbsentAsync(key, newData);

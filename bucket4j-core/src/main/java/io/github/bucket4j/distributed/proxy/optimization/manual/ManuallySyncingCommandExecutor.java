@@ -50,7 +50,7 @@ class ManuallySyncingCommandExecutor implements CommandExecutor, AsyncCommandExe
 
     private final ReentrantLock localStateMutationLock = new ReentrantLock();
     private final ReentrantLock remoteExecutionLock = new ReentrantLock();
-    private CompletableFuture<?> inProgressSynchronizationFuture;
+    private CompletableFuture<?> inProgressSynchronizationFuture = CompletableFuture.completedFuture(null);
 
     ManuallySyncingCommandExecutor(CommandExecutor originalExecutor, OptimizationListener listener, TimeMeter timeMeter) {
         this.originalExecutor = originalExecutor;
@@ -115,15 +115,8 @@ class ManuallySyncingCommandExecutor implements CommandExecutor, AsyncCommandExe
         remoteExecutionLock.lock();
         CompletableFuture<CommandResult<MultiResult>> resultFuture;
         try {
-            if (inProgressSynchronizationFuture == null) {
-                resultFuture = originalAsyncExecutor.executeAsync(remoteCommand);
-            } else {
-                resultFuture = inProgressSynchronizationFuture.thenCompose(f -> {
-                    assert originalAsyncExecutor != null;
-                    return originalAsyncExecutor.executeAsync(remoteCommand);
-                });
-            }
-            inProgressSynchronizationFuture = resultFuture;
+            resultFuture = inProgressSynchronizationFuture.thenCompose(f -> originalAsyncExecutor.executeAsync(remoteCommand));
+            inProgressSynchronizationFuture = resultFuture.exceptionally((Throwable ex) -> null);
         } finally {
             remoteExecutionLock.unlock();
         }
@@ -145,6 +138,9 @@ class ManuallySyncingCommandExecutor implements CommandExecutor, AsyncCommandExe
         // execute local command
         MutableBucketEntry entry = new MutableBucketEntry(state.copy());
         CommandResult<T> result = command.execute(entry, currentTimeNanos);
+        if (result.isConfigurationNeedToBeReplaced()) {
+            return null;
+        }
         long locallyConsumedTokens = command.getConsumedTokens(result.getData());
         if (locallyConsumedTokens == Long.MAX_VALUE) {
             return null;
@@ -163,11 +159,8 @@ class ManuallySyncingCommandExecutor implements CommandExecutor, AsyncCommandExe
     }
 
     private boolean isLocalExecutionResultSatisfiesThreshold(long locallyConsumedTokens) {
-        if (locallyConsumedTokens == Long.MAX_VALUE || postponedToConsumeTokens + locallyConsumedTokens < 0) {
-            // math overflow
-            return false;
-        }
-        return true;
+        // check math overflow
+        return locallyConsumedTokens != Long.MAX_VALUE && postponedToConsumeTokens + locallyConsumedTokens >= 0;
     }
 
     private <T> boolean isNeedToExecuteRemoteImmediately(RemoteCommand<T> command, long currentTimeNanos) {

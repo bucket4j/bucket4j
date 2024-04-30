@@ -1,0 +1,41 @@
+[[bucket4j-oracle, Bucket4j-Oracle]]
+==== Oracle database integration
+===== Dependencies
+To use Bucket4j extension for Oracle you need to add following dependency:
+
+[source, xml, subs=attributes+]
+----
+<!-- For java 17 -->
+<dependency>
+    <groupId>com.bucket4j</groupId>
+    <artifactId>bucket4j_jdk17-oracle</artifactId>
+    <version>{revnumber}</version>
+</dependency>
+
+<!-- For java 11 -->
+<dependency>
+    <groupId>com.bucket4j</groupId>
+    <artifactId>bucket4j_jdk11-oracle</artifactId>
+    <version>{revnumber}</version>
+</dependency>
+----
+
+===== DDL example
+[source,sql]
+----
+CREATE TABLE bucket(id NUMBER NOT NULL PRIMARY KEY, state RAW(255));
+----
+
+===== Example of Bucket instantiation
+[source, java]
+----
+OracleSelectForUpdateBasedProxyManager<Long> proxyManager = Bucket4jOracle
+    .selectForUpdateBasedBuilder(dataSource)
+    .build();
+...
+Long key = 1L;
+BucketConfiguration bucketConfiguration = BucketConfiguration.builder()
+    .addLimit(limit -> limit.capacity(10).refillGreedy(10, ofSeconds(1)))
+    .build();
+BucketProxy bucket = proxyManager.getProxy(key, () -> bucketConfiguration);
+----

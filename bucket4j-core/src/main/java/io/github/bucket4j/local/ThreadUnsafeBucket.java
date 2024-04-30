@@ -43,8 +43,8 @@ public class ThreadUnsafeBucket extends AbstractBucket implements LocalBucket, C
     private final TimeMeter timeMeter;
     private BucketState state;
 
-    public ThreadUnsafeBucket(BucketConfiguration configuration, MathType mathType, TimeMeter timeMeter) {
-        this(BucketListener.NOPE, timeMeter, BucketState.createInitialState(configuration, mathType, timeMeter.currentTimeNanos()));
+    public ThreadUnsafeBucket(BucketConfiguration configuration, MathType mathType, TimeMeter timeMeter, BucketListener listener) {
+        this(listener, timeMeter, BucketState.createInitialState(configuration, mathType, timeMeter.currentTimeNanos()));
     }
 
     private ThreadUnsafeBucket(BucketListener listener, TimeMeter timeMeter, BucketState initialState) {
@@ -314,7 +314,7 @@ public class ThreadUnsafeBucket extends AbstractBucket implements LocalBucket, C
         }
     }
 
-    public static final SerializationHandle<ThreadUnsafeBucket> SERIALIZATION_HANDLE = new SerializationHandle<ThreadUnsafeBucket>() {
+    public static final SerializationHandle<ThreadUnsafeBucket> SERIALIZATION_HANDLE = new SerializationHandle<>() {
         @Override
         public <S> ThreadUnsafeBucket deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             int formatNumber = adapter.readInt(input);

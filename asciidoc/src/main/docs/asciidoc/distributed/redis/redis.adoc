@@ -1,81 +1,27 @@
 [[bucket4j-redis, Bucket4j-Redis]]
-=== Bucket4j-Redis integration
+=== Bucket4j-Redis
 Bucket4j provides integration with four Redis libraries:
 [cols="1,1,1"]
 |===
-|Library | Async supported | Proxy manager class
+|Library | Async supported | Redis cluster supported
 
 |``Redisson``
 | Yes
-| RedissonBasedProxyManager
+| Yes
 
 |``Lettuce``
 | Yes
-| LettuceBasedProxyManager
+| Yes
 
 |``Jedis``
 | No
-| JedisBasedProxyManager
+| Yes
 
 |===
-IMPORTANT: For all libraries mentioned above concurrent access to Redis is solved by Compare&Swap pattern, this can be improved in the future via switching to Lua stored procedures.
+IMPORTANT: For all libraries mentioned above concurrent access to Redis is solved by Compare&Swap pattern, this can be improved in the future via switching to Javascript stored procedures.
 
-==== Dependencies
-To use ``bucket4j-redis`` extension you need to add following dependency:
-[,xml,subs=attributes+]
-----
-<dependency>
-    <groupId>com.bucket4j</groupId>
-    <artifactId>bucket4j-redis</artifactId>
-    <version>{revnumber}</version>
-</dependency>
-----
-NOTE: see https://github.com/bucket4j/bucket4j/tree/8.0#java-compatibility-matrix[Java compatibility matrix] if you need for build that is compatible with Java 8
+include::lettuce.adoc[]
 
-==== Example of Bucket instantiation via RedissonBasedProxyManager
-[source, java]
-----
-org.redisson.command.CommandExecutor commandExecutor = ...;
-RedissonBasedProxyManager<String> proxyManager = RedissonBasedProxyManager.builderFor(commandExecutor)
-    .withExpirationStrategy(ExpirationAfterWriteStrategy.basedOnTimeForRefillingBucketUpToMax(Duration.ofSeconds(10)))
-    .withKeyMapper(Mapper.STRING)
-    .build();
-...
+include::redisson.adoc[]
 
-BucketConfiguration configuration = BucketConfiguration.builder()
-    .addLimit(limit -> capacity(1_000).refillGreedy(1_000, ofMinutes(1)))
-    .build();
-Bucket bucket = proxyManager.builder().build(key, configuration);
-----
-
-==== Example of Bucket instantiation via LettuceBasedProxyManager
-[source, java]
-----
-io.lettuce.core.RedisClient redisClient = ...;
-StatefulRedisConnection<String, byte[]> redisConnection = redisClient.connect(RedisCodec.of(StringCodec.UTF8, ByteArrayCodec.INSTANCE));
-LettuceBasedProxyManager<String> proxyManager = LettuceBasedProxyManager.builderFor(redisConnection)
-    .withExpirationStrategy(ExpirationAfterWriteStrategy.basedOnTimeForRefillingBucketUpToMax(ofSeconds(10)))
-    .build();
-...
-
-BucketConfiguration configuration = BucketConfiguration.builder()
-    .addLimit(limit -> capacity(1_000).refillGreedy(1_000, ofMinutes(1)))
-    .build();
-Bucket bucket = proxyManager.builder().build(key, configuration);
-----
-
-==== Example of Bucket instantiation via JedisBasedProxyManager
-[source, java]
-----
-redis.clients.jedis.JedisPool jedisPool = ...;
-JedisBasedProxyManager<String> proxyManager = JedisBasedProxyManager.builderFor(jedisPool)
-    .withExpirationStrategy(ExpirationAfterWriteStrategy.basedOnTimeForRefillingBucketUpToMax(ofSeconds(10)))
-    .withKeyMapper(Mapper.STRING)
-    .build();
-...
-
-BucketConfiguration configuration = BucketConfiguration.builder()
-    .addLimit(limit -> capacity(1_000).refillGreedy(1_000, ofMinutes(1)))
-    .build();
-Bucket bucket = proxyManager.builder().build(key, configuration);
-----
+include::jedis.adoc[]

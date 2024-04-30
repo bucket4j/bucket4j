@@ -20,21 +20,39 @@
 package io.github.bucket4j.grid.hazelcast;
 
 import com.hazelcast.map.IMap;
+
+import io.github.bucket4j.TimeMeter;
+import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.generic.pessimistic_locking.AbstractLockBasedProxyManager;
 import io.github.bucket4j.distributed.proxy.generic.pessimistic_locking.LockBasedTransaction;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 
 import java.util.Objects;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 public class HazelcastLockBasedProxyManager<K> extends AbstractLockBasedProxyManager<K> {
 
     private final IMap<K, byte[]> map;
 
+    public HazelcastLockBasedProxyManager(Bucket4jHazelcast.HazelcastLockBasedProxyManagerBuilder<K> builder) {
+        super(builder.getClientSideConfig());
+        this.map = builder.map;
+    }
+
+    /**
+     * @deprecated use {@link Bucket4jHazelcast#lockBasedBuilder(IMap)}
+     */
+    @Deprecated
     public HazelcastLockBasedProxyManager(IMap<K, byte[]> map) {
         this(map, ClientSideConfig.getDefault());
     }
 
+    /**
+     * @deprecated use {@link Bucket4jHazelcast#lockBasedBuilder(IMap)}
+     */
+    @Deprecated
     public HazelcastLockBasedProxyManager(IMap<K, byte[]> map, ClientSideConfig clientSideConfig) {
         super(clientSideConfig);
         this.map = Objects.requireNonNull(map);
@@ -52,11 +70,16 @@ public class HazelcastLockBasedProxyManager<K> extends AbstractLockBasedProxyMan
     }
 
     @Override
-    protected LockBasedTransaction allocateTransaction(K key) {
+    public boolean isExpireAfterWriteSupported() {
+        return true;
+    }
+
+    @Override
+    protected LockBasedTransaction allocateTransaction(K key, Optional<Long> requestTimeout) {
         return new LockBasedTransaction() {
 
             @Override
-            public void begin() {
+            public void begin(Optional<Long> requestTimeout) {
                 // do nothing
             }
 
@@ -66,12 +89,12 @@ public class HazelcastLockBasedProxyManager<K> extends AbstractLockBasedProxyMan
             }
 
             @Override
-            public void commit() {
+            public void commit(Optional<Long> requestTimeout) {
                 // do nothing
             }
 
             @Override
-            public byte[] lockAndGet() {
+            public byte[] lockAndGet(Optional<Long> requestTimeout) {
                 map.lock(key);
                 return map.get(key);
             }
@@ -82,13 +105,28 @@ public class HazelcastLockBasedProxyManager<K> extends AbstractLockBasedProxyMan
             }
 
             @Override
-            public void create(byte[] data, RemoteBucketState newState) {
-                map.put(key, data);
+            public void create(byte[] data, RemoteBucketState newState, Optional<Long> requestTimeout) {
+                save(data, newState);
             }
 
             @Override
-            public void update(byte[] data, RemoteBucketState newState) {
-                map.put(key, data);
+            public void update(byte[] data, RemoteBucketState newState, Optional<Long> requestTimeout) {
+                save(data, newState);
+            }
+
+            private void save(byte[] data, RemoteBucketState newState) {
+                ExpirationAfterWriteStrategy expiration = getClientSideConfig().getExpirationAfterWriteStrategy().orElse(null);
+                if (expiration == null) {
+                    map.put(key, data);
+                } else {
+                    long currentTimeNanos = getClientSideConfig().getClientSideClock().orElse(TimeMeter.SYSTEM_MILLISECONDS).currentTimeNanos();
+                    long ttlMillis = expiration.calculateTimeToLiveMillis(newState, currentTimeNanos);
+                    if (ttlMillis > 0) {
+                        map.put(key, data, ttlMillis, TimeUnit.MILLISECONDS);
+                    } else {
+                        map.put(key, data);
+                    }
+                }
             }
 
             @Override

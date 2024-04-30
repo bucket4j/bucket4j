@@ -3,15 +3,14 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.bucket4j</groupId>
-    <artifactId>bucket4j</artifactId>
-    <version>8.7.0</version>
+    <artifactId>bucket4j_jdk17</artifactId>
+    <version>8.12.0</version>
     <packaging>pom</packaging>
 
     <parent>
         <groupId>com.bucket4j</groupId>
-        <artifactId>bucket4j-parent</artifactId>
-        <version>8.7.0</version>
+        <artifactId>bucket4j_jdk17-parent</artifactId>
+        <version>8.12.0</version>
         <relativePath>./bucket4j-parent</relativePath>
     </parent>
 
@@ -24,7 +23,6 @@
         <module>bucket4j-ignite</module>
         <module>bucket4j-infinispan-all</module>
         <module>bucket4j-hazelcast-all</module>
-<!--        <module>experimental</module>-->
         <module>bucket4j-benchmarks</module>
         <module>bucket4j-examples</module>
         <module>lincheck-tests</module>
@@ -33,6 +31,7 @@
         <module>bucket4j-postgresql</module>
         <module>bucket4j-oracle</module>
         <module>bucket4j-mysql</module>
+        <module>bucket4j-mariadb</module>
         <module>bucket4j-mssql</module>
         <module>bucket4j-caffeine</module>
 <!--        <module>backward-compatibility-tests</module>-->

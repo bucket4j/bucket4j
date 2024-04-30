@@ -44,7 +44,7 @@ class TryConsumeSpecification extends Specification {
     @Unroll
     def "#type verbose=#verbose test listener for tryConsume"(BucketType type, boolean verbose) {
         setup:
-            Bucket bucket = type.createBucket(configuration, clock).toListenable(listener)
+            Bucket bucket = type.createBucket(configuration, clock, listener)
 
         boolean consumed
         when:
@@ -75,7 +75,7 @@ class TryConsumeSpecification extends Specification {
     @Unroll
     def "#type verbose=#verbose test listener for async tryConsume"(BucketType type, boolean verbose) {
         setup:
-            AsyncBucketProxy bucket = type.createAsyncBucket(configuration, clock).toListenable(listener)
+            AsyncBucketProxy bucket = type.createAsyncBucket(configuration, clock, listener)
 
         when:
             if (!verbose) {

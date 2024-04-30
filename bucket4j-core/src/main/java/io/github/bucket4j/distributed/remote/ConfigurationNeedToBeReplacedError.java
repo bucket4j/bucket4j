@@ -19,7 +19,7 @@
  */
 package io.github.bucket4j.distributed.remote;
 
-import io.github.bucket4j.distributed.proxy.BucketNotFoundException;
+import io.github.bucket4j.distributed.proxy.ConfigurationNeedToBeReplacedException;
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
 import io.github.bucket4j.distributed.serialization.Scope;
 import io.github.bucket4j.distributed.serialization.SerializationAdapter;
@@ -40,10 +40,10 @@ public class ConfigurationNeedToBeReplacedError implements CommandError, Compara
 
     @Override
     public RuntimeException asException() {
-        return new BucketNotFoundException();
+        return new ConfigurationNeedToBeReplacedException();
     }
 
-    public static SerializationHandle<ConfigurationNeedToBeReplacedError> SERIALIZATION_HANDLE = new SerializationHandle<>() {
+    public static final SerializationHandle<ConfigurationNeedToBeReplacedError> SERIALIZATION_HANDLE = new SerializationHandle<>() {
         @Override
         public <S> ConfigurationNeedToBeReplacedError deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             int formatNumber = adapter.readInt(input);
@@ -63,18 +63,18 @@ public class ConfigurationNeedToBeReplacedError implements CommandError, Compara
 
         @Override
         public Class<ConfigurationNeedToBeReplacedError> getSerializedType() {
-            return (Class) ConfigurationNeedToBeReplacedError.class;
+            return ConfigurationNeedToBeReplacedError.class;
         }
 
         @Override
-        public ConfigurationNeedToBeReplacedError fromJsonCompatibleSnapshot(Map<String, Object> snapshot) throws IOException {
+        public ConfigurationNeedToBeReplacedError fromJsonCompatibleSnapshot(Map<String, Object> snapshot) {
             int formatNumber = readIntValue(snapshot, "version");
             Versions.check(formatNumber, v_8_1_0, v_8_1_0);
             return INSTANCE;
         }
 
         @Override
-        public Map<String, Object> toJsonCompatibleSnapshot(ConfigurationNeedToBeReplacedError error, Version backwardCompatibilityVersion, Scope scope) throws IOException {
+        public Map<String, Object> toJsonCompatibleSnapshot(ConfigurationNeedToBeReplacedError error, Version backwardCompatibilityVersion, Scope scope) {
             Map<String, Object> result = new HashMap<>();
             result.put("version", v_8_1_0.getNumber());
             return result;

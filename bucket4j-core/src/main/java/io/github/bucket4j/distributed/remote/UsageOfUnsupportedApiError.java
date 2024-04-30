@@ -63,7 +63,7 @@ public class UsageOfUnsupportedApiError implements CommandError, ComparableByCon
                 maxSupportedFormatNumber == other.maxSupportedFormatNumber;
     }
 
-    public static SerializationHandle<UsageOfUnsupportedApiError> SERIALIZATION_HANDLE = new SerializationHandle<UsageOfUnsupportedApiError>() {
+    public static final SerializationHandle<UsageOfUnsupportedApiError> SERIALIZATION_HANDLE = new SerializationHandle<>() {
         @Override
         public <S> UsageOfUnsupportedApiError deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             int formatNumber = adapter.readInt(input);
@@ -88,11 +88,11 @@ public class UsageOfUnsupportedApiError implements CommandError, ComparableByCon
 
         @Override
         public Class<UsageOfUnsupportedApiError> getSerializedType() {
-            return (Class) UsageOfUnsupportedApiError.class;
+            return UsageOfUnsupportedApiError.class;
         }
 
         @Override
-        public UsageOfUnsupportedApiError fromJsonCompatibleSnapshot(Map<String, Object> snapshot) throws IOException {
+        public UsageOfUnsupportedApiError fromJsonCompatibleSnapshot(Map<String, Object> snapshot) {
             int formatNumber = readIntValue(snapshot, "version");
             Versions.check(formatNumber, v_7_0_0, v_7_0_0);
 
@@ -103,7 +103,7 @@ public class UsageOfUnsupportedApiError implements CommandError, ComparableByCon
         }
 
         @Override
-        public Map<String, Object> toJsonCompatibleSnapshot(UsageOfUnsupportedApiError error, Version backwardCompatibilityVersion, Scope scope) throws IOException {
+        public Map<String, Object> toJsonCompatibleSnapshot(UsageOfUnsupportedApiError error, Version backwardCompatibilityVersion, Scope scope) {
             Map<String, Object> result = new HashMap<>();
             result.put("version", v_7_0_0.getNumber());
             result.put("requestedFormatNumber", error.requestedFormatNumber);

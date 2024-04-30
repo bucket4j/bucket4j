@@ -19,6 +19,7 @@
  */
 package io.github.bucket4j.distributed.remote;
 
+import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
 import io.github.bucket4j.distributed.serialization.Scope;
 import io.github.bucket4j.distributed.serialization.SerializationAdapter;
@@ -33,18 +34,20 @@ import java.util.Map;
 import java.util.Objects;
 
 import static io.github.bucket4j.distributed.versioning.Versions.v_7_0_0;
-import static io.github.bucket4j.distributed.versioning.Versions.v_8_1_0;
+import static io.github.bucket4j.distributed.versioning.Versions.v_8_10_0;
 
 public class Request<T> implements ComparableByContent<Request<T>> {
 
     private final Version backwardCompatibilityVersion;
     private final RemoteCommand<T> command;
     private final Long clientSideTime;
+    private final ExpirationAfterWriteStrategy expirationStrategy;
 
-    public Request(RemoteCommand<T> command, Version backwardCompatibilityVersion, Long clientSideTime) {
+    public Request(RemoteCommand<T> command, Version backwardCompatibilityVersion, Long clientSideTime, ExpirationAfterWriteStrategy expirationStrategy) {
         this.command = command;
         this.clientSideTime = clientSideTime;
         this.backwardCompatibilityVersion = backwardCompatibilityVersion;
+        this.expirationStrategy = expirationStrategy;
     }
 
     public RemoteCommand<T> getCommand() {
@@ -59,11 +62,15 @@ public class Request<T> implements ComparableByContent<Request<T>> {
         return clientSideTime;
     }
 
-    public static SerializationHandle<Request<?>> SERIALIZATION_HANDLE = new SerializationHandle<Request<?>>() {
+    public ExpirationAfterWriteStrategy getExpirationStrategy() {
+        return expirationStrategy;
+    }
+
+    public static final SerializationHandle<Request<?>> SERIALIZATION_HANDLE = new SerializationHandle<>() {
         @Override
         public <S> Request<?> deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             int formatNumber = adapter.readInt(input);
-            Versions.check(formatNumber, v_7_0_0, v_7_0_0);
+            Versions.check(formatNumber, v_7_0_0, v_8_10_0);
 
             int backwardCompatibilityNumber = adapter.readInt(input);
             Version requestBackwardCompatibilityVersion = Versions.byNumber(backwardCompatibilityNumber);
@@ -76,15 +83,24 @@ public class Request<T> implements ComparableByContent<Request<T>> {
                 clientTime = adapter.readLong(input);
             }
 
-            return new Request<>(command, requestBackwardCompatibilityVersion, clientTime);
+            ExpirationAfterWriteStrategy expireStrategy = null;
+            if (formatNumber >= v_8_10_0.getNumber()) {
+                boolean hasExpireStrategy = adapter.readBoolean(input);
+                if (hasExpireStrategy) {
+                    expireStrategy = ExpirationAfterWriteStrategy.deserialize(adapter, input);
+                }
+            }
+
+            return new Request<>(command, requestBackwardCompatibilityVersion, clientTime, expireStrategy);
         }
 
         @Override
         public <O> void serialize(SerializationAdapter<O> adapter, O output, Request<?> request, Version backwardCompatibilityVersion, Scope scope) throws IOException {
-            Version effectiveVersion = request.command.getRequiredVersion();
+            Version selfVersion = request.getSelfVersion();
+            Version effectiveVersion = Versions.max(request.command.getRequiredVersion(), selfVersion);
             Versions.check(effectiveVersion.getNumber(), v_7_0_0, request.backwardCompatibilityVersion);
 
-            adapter.writeInt(output, v_7_0_0.getNumber());
+            adapter.writeInt(output, selfVersion.getNumber());
             adapter.writeInt(output, effectiveVersion.getNumber());
 
             RemoteCommand.serialize(adapter, output, request.command, backwardCompatibilityVersion, scope);
@@ -94,6 +110,14 @@ public class Request<T> implements ComparableByContent<Request<T>> {
                 adapter.writeLong(output, request.clientSideTime);
             } else {
                 adapter.writeBoolean(output, false);
+            }
+            if (selfVersion.getNumber() >= v_8_10_0.getNumber()) {
+                if (request.expirationStrategy != null) {
+                    adapter.writeBoolean(output, true);
+                    ExpirationAfterWriteStrategy.serialize(adapter, output, request.expirationStrategy, backwardCompatibilityVersion, scope);
+                } else {
+                    adapter.writeBoolean(output, false);
+                }
             }
         }
 
@@ -110,7 +134,7 @@ public class Request<T> implements ComparableByContent<Request<T>> {
         @Override
         public Request<?> fromJsonCompatibleSnapshot(Map<String, Object> snapshot) throws IOException {
             int formatNumber = readIntValue(snapshot, "version");
-            Versions.check(formatNumber, v_7_0_0, v_7_0_0);
+            Versions.check(formatNumber, v_7_0_0, v_8_10_0);
 
             int backwardCompatibilityNumber = readIntValue(snapshot, "backwardCompatibilityNumber");
             Version requestBackwardCompatibilityVersion = Versions.byNumber(backwardCompatibilityNumber);
@@ -122,20 +146,29 @@ public class Request<T> implements ComparableByContent<Request<T>> {
                 clientTime = readLongValue(snapshot, "clientTime");
             }
 
-            return new Request<>(command, requestBackwardCompatibilityVersion, clientTime);
+            ExpirationAfterWriteStrategy expireStrategy = null;
+            if (snapshot.containsKey("expireAfterWriteStrategy")) {
+                expireStrategy = ExpirationAfterWriteStrategy.fromJsonCompatibleSnapshot((Map<String, Object>) snapshot.get("expireAfterWriteStrategy"));
+            }
+
+            return new Request<>(command, requestBackwardCompatibilityVersion, clientTime, expireStrategy);
         }
 
         @Override
         public Map<String, Object> toJsonCompatibleSnapshot(Request<?> request, Version backwardCompatibilityVersion, Scope scope) throws IOException {
-            Version effectiveVersion = request.command.getRequiredVersion();
+            Version effectiveVersion = Versions.max(request.command.getRequiredVersion(), request.getSelfVersion());
             Versions.check(effectiveVersion.getNumber(), v_7_0_0, request.backwardCompatibilityVersion);
 
+            Version selfVersion = request.getSelfVersion();
             Map<String, Object> result = new HashMap<>();
-            result.put("version", v_7_0_0.getNumber());
+            result.put("version", selfVersion.getNumber());
             result.put("backwardCompatibilityNumber", effectiveVersion.getNumber());
             result.put("command", RemoteCommand.toJsonCompatibleSnapshot(request.command, backwardCompatibilityVersion, scope));
             if (request.clientSideTime != null) {
                 result.put("clientTime", request.clientSideTime);
+            }
+            if (request.expirationStrategy != null) {
+                result.put("expireAfterWriteStrategy", ExpirationAfterWriteStrategy.toJsonCompatibleSnapshot(request.expirationStrategy, backwardCompatibilityVersion, scope));
             }
             return result;
         }
@@ -146,6 +179,10 @@ public class Request<T> implements ComparableByContent<Request<T>> {
         }
 
     };
+
+    private Version getSelfVersion() {
+        return expirationStrategy != null ? v_8_10_0 : v_7_0_0;
+    }
 
     @Override
     public boolean equalsByContent(Request<T> other) {

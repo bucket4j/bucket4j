@@ -22,7 +22,7 @@ package io.github.bucket4j.distributed.proxy;
 
 /**
  * Specifies the reaction which should be applied in case of previously saved state of bucket has been lost.
- *
+ * <p>
  * The state of bucket can be lost by many reasons, for example:
  * <ul>
  *     <li>Split-brain happen.</li>

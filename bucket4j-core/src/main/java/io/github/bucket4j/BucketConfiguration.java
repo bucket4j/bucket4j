@@ -86,7 +86,7 @@ public final class BucketConfiguration implements ComparableByContent<BucketConf
                 '}';
     }
 
-    public static final SerializationHandle<BucketConfiguration> SERIALIZATION_HANDLE = new SerializationHandle<BucketConfiguration>() {
+    public static final SerializationHandle<BucketConfiguration> SERIALIZATION_HANDLE = new SerializationHandle<>() {
         @Override
         public <S> BucketConfiguration deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             int formatNumber = adapter.readInt(input);

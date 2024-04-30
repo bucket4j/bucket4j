@@ -49,7 +49,7 @@ public class ConsumptionProbe implements ComparableByContent<ConsumptionProbe> {
     private final long nanosToWaitForRefill;
     private final long nanosToWaitForReset;
 
-    public static final SerializationHandle<ConsumptionProbe> SERIALIZATION_HANDLE = new SerializationHandle<ConsumptionProbe>() {
+    public static final SerializationHandle<ConsumptionProbe> SERIALIZATION_HANDLE = new SerializationHandle<>() {
         @Override
         public <S> ConsumptionProbe deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             int formatNumber = adapter.readInt(input);

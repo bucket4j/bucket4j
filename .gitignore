@@ -19,5 +19,5 @@
 target/
 reports/
 .flattened-pom.xml
+/js/dist/
 /js/node_modules/
-/js/dist

@@ -47,7 +47,7 @@ public class EstimationProbe implements ComparableByContent<EstimationProbe> {
     private final long remainingTokens;
     private final long nanosToWaitForRefill;
 
-    public static final SerializationHandle<EstimationProbe> SERIALIZATION_HANDLE = new SerializationHandle<EstimationProbe>() {
+    public static final SerializationHandle<EstimationProbe> SERIALIZATION_HANDLE = new SerializationHandle<>() {
         @Override
         public <S> EstimationProbe deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             int formatNumber = adapter.readInt(input);
