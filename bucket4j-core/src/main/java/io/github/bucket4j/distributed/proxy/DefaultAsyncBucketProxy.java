@@ -39,7 +39,7 @@ import java.util.function.Supplier;
 
 import static io.github.bucket4j.LimitChecker.*;
 
-public class DefaultAsyncBucketProxy implements AsyncBucketProxy, AsyncOptimizationController, SchedulingBucket {
+public class DefaultAsyncBucketProxy implements AsyncBucketProxy, AsyncOptimizationController {
 
     private final AsyncCommandExecutor commandExecutor;
     private final RecoveryStrategy recoveryStrategy;
@@ -60,7 +60,7 @@ public class DefaultAsyncBucketProxy implements AsyncBucketProxy, AsyncOptimizat
 
     @Override
     public SchedulingBucket asScheduler() {
-        return this;
+        return schedulingBucketView;
     }
 
     public DefaultAsyncBucketProxy(AsyncCommandExecutor commandExecutor, RecoveryStrategy recoveryStrategy, Supplier<CompletableFuture<BucketConfiguration>> configurationSupplier,
@@ -195,6 +195,153 @@ public class DefaultAsyncBucketProxy implements AsyncBucketProxy, AsyncOptimizat
         }
     };
 
+    private final SchedulingBucket schedulingBucketView = new SchedulingBucket() {
+        @Override
+        public CompletableFuture<Boolean> tryConsume(long tokensToConsume, long maxWaitTimeNanos, ScheduledExecutorService scheduler) {
+            checkMaxWaitTime(maxWaitTimeNanos);
+            checkTokensToConsume(tokensToConsume);
+            checkScheduler(scheduler);
+            CompletableFuture<Boolean> resultFuture = new CompletableFuture<>();
+            ReserveAndCalculateTimeToSleepCommand consumeCommand = new ReserveAndCalculateTimeToSleepCommand(tokensToConsume, maxWaitTimeNanos);
+            CompletableFuture<Long> reservationFuture = execute(consumeCommand);
+            reservationFuture.whenComplete((nanosToSleep, exception) -> {
+                if (exception != null) {
+                    resultFuture.completeExceptionally(exception);
+                    return;
+                }
+                if (nanosToSleep == INFINITY_DURATION) {
+                    resultFuture.complete(false);
+                    listener.onRejected(tokensToConsume);
+                    return;
+                }
+                if (nanosToSleep == 0L) {
+                    resultFuture.complete(true);
+                    listener.onConsumed(tokensToConsume);
+                    return;
+                }
+                try {
+                    listener.onConsumed(tokensToConsume);
+                    listener.onDelayed(nanosToSleep);
+                    Runnable delayedCompletion = () -> resultFuture.complete(true);
+                    scheduler.schedule(delayedCompletion, nanosToSleep, TimeUnit.NANOSECONDS);
+                } catch (Throwable t) {
+                    resultFuture.completeExceptionally(t);
+                }
+            });
+            return resultFuture;
+        }
+
+        @Override
+        public CompletableFuture<Void> consume(long tokensToConsume, ScheduledExecutorService scheduler) {
+            checkTokensToConsume(tokensToConsume);
+            checkScheduler(scheduler);
+            CompletableFuture<Void> resultFuture = new CompletableFuture<>();
+            ReserveAndCalculateTimeToSleepCommand consumeCommand = new ReserveAndCalculateTimeToSleepCommand(tokensToConsume, INFINITY_DURATION);
+            CompletableFuture<Long> reservationFuture = execute(consumeCommand);
+            reservationFuture.whenComplete((nanosToSleep, exception) -> {
+                if (exception != null) {
+                    resultFuture.completeExceptionally(exception);
+                    return;
+                }
+                if (nanosToSleep == INFINITY_DURATION) {
+                    resultFuture.completeExceptionally(BucketExceptions.reservationOverflow());
+                    return;
+                }
+                if (nanosToSleep == 0L) {
+                    resultFuture.complete(null);
+                    listener.onConsumed(tokensToConsume);
+                    return;
+                }
+                try {
+                    listener.onConsumed(tokensToConsume);
+                    listener.onDelayed(nanosToSleep);
+                    Runnable delayedCompletion = () -> resultFuture.complete(null);
+                    scheduler.schedule(delayedCompletion, nanosToSleep, TimeUnit.NANOSECONDS);
+                } catch (Throwable t) {
+                    resultFuture.completeExceptionally(t);
+                }
+            });
+            return resultFuture;
+        }
+
+        @Override
+        public VerboseSchedulingBucket asVerbose() {
+            return verboseSchedulingView;
+        }
+    };
+
+    private final VerboseSchedulingBucket verboseSchedulingView = new VerboseSchedulingBucket() {
+        @Override
+        public CompletableFuture<VerboseResult<Boolean>> tryConsume(long tokensToConsume, long maxWaitTimeNanos, ScheduledExecutorService scheduler) {
+            checkMaxWaitTime(maxWaitTimeNanos);
+            checkTokensToConsume(tokensToConsume);
+            checkScheduler(scheduler);
+            CompletableFuture<VerboseResult<Boolean>> resultFuture = new CompletableFuture<>();
+            ReserveAndCalculateTimeToSleepCommand consumeCommand = new ReserveAndCalculateTimeToSleepCommand(tokensToConsume, maxWaitTimeNanos);
+            CompletableFuture<RemoteVerboseResult<Long>> reservationFuture = execute(consumeCommand.asVerbose());
+            reservationFuture.whenComplete((RemoteVerboseResult<Long> nanosToSleepVerbose, Throwable exception) -> {
+                if (exception != null) {
+                    resultFuture.completeExceptionally(exception);
+                    return;
+                }
+                long nanosToSleep = nanosToSleepVerbose.getValue();
+                if (nanosToSleep == INFINITY_DURATION) {
+                    resultFuture.complete(nanosToSleepVerbose.withValue(false).asLocal());
+                    listener.onRejected(tokensToConsume);
+                    return;
+                }
+                if (nanosToSleep == 0L) {
+                    resultFuture.complete(nanosToSleepVerbose.withValue(true).asLocal());
+                    listener.onConsumed(tokensToConsume);
+                    return;
+                }
+                try {
+                    listener.onConsumed(tokensToConsume);
+                    listener.onDelayed(nanosToSleep);
+                    Runnable delayedCompletion = () -> resultFuture.complete(nanosToSleepVerbose.withValue(true).asLocal());
+                    scheduler.schedule(delayedCompletion, nanosToSleep, TimeUnit.NANOSECONDS);
+                } catch (Throwable t) {
+                    resultFuture.completeExceptionally(t);
+                }
+            });
+            return resultFuture;
+        }
+
+        @Override
+        public CompletableFuture<VerboseResult<Void>> consume(long tokensToConsume, ScheduledExecutorService scheduler) {
+            checkTokensToConsume(tokensToConsume);
+            checkScheduler(scheduler);
+            CompletableFuture<VerboseResult<Void>> resultFuture = new CompletableFuture<>();
+            ReserveAndCalculateTimeToSleepCommand consumeCommand = new ReserveAndCalculateTimeToSleepCommand(tokensToConsume, INFINITY_DURATION);
+            CompletableFuture<RemoteVerboseResult<Long>> reservationFuture = execute(consumeCommand.asVerbose());
+            reservationFuture.whenComplete((RemoteVerboseResult<Long> nanosToSleepVerbose, Throwable exception) -> {
+                if (exception != null) {
+                    resultFuture.completeExceptionally(exception);
+                    return;
+                }
+                long nanosToSleep = nanosToSleepVerbose.getValue();
+                if (nanosToSleep == INFINITY_DURATION) {
+                    resultFuture.completeExceptionally(BucketExceptions.reservationOverflow());
+                    return;
+                }
+                if (nanosToSleep == 0L) {
+                    resultFuture.complete(nanosToSleepVerbose.withValue((Void) null).asLocal());
+                    listener.onConsumed(tokensToConsume);
+                    return;
+                }
+                try {
+                    listener.onConsumed(tokensToConsume);
+                    listener.onDelayed(nanosToSleep);
+                    Runnable delayedCompletion = () -> resultFuture.complete(nanosToSleepVerbose.withValue((Void) null).asLocal());
+                    scheduler.schedule(delayedCompletion, nanosToSleep, TimeUnit.NANOSECONDS);
+                } catch (Throwable t) {
+                    resultFuture.completeExceptionally(t);
+                }
+            });
+            return resultFuture;
+        }
+    };
+
     @Override
     public CompletableFuture<Long> consumeIgnoringRateLimits(long tokensToConsume) {
         checkTokensToConsume(tokensToConsume);
@@ -261,74 +408,6 @@ public class DefaultAsyncBucketProxy implements AsyncBucketProxy, AsyncOptimizat
             }
             return consumedTokens;
         });
-    }
-
-    @Override
-    public CompletableFuture<Boolean> tryConsume(long tokensToConsume, long maxWaitTimeNanos, ScheduledExecutorService scheduler) {
-        checkMaxWaitTime(maxWaitTimeNanos);
-        checkTokensToConsume(tokensToConsume);
-        checkScheduler(scheduler);
-        CompletableFuture<Boolean> resultFuture = new CompletableFuture<>();
-        ReserveAndCalculateTimeToSleepCommand consumeCommand = new ReserveAndCalculateTimeToSleepCommand(tokensToConsume, maxWaitTimeNanos);
-        CompletableFuture<Long> reservationFuture = execute(consumeCommand);
-        reservationFuture.whenComplete((nanosToSleep, exception) -> {
-            if (exception != null) {
-                resultFuture.completeExceptionally(exception);
-                return;
-            }
-            if (nanosToSleep == INFINITY_DURATION) {
-                resultFuture.complete(false);
-                listener.onRejected(tokensToConsume);
-                return;
-            }
-            if (nanosToSleep == 0L) {
-                resultFuture.complete(true);
-                listener.onConsumed(tokensToConsume);
-                return;
-            }
-            try {
-                listener.onConsumed(tokensToConsume);
-                listener.onDelayed(nanosToSleep);
-                Runnable delayedCompletion = () -> resultFuture.complete(true);
-                scheduler.schedule(delayedCompletion, nanosToSleep, TimeUnit.NANOSECONDS);
-            } catch (Throwable t) {
-                resultFuture.completeExceptionally(t);
-            }
-        });
-        return resultFuture;
-    }
-
-    @Override
-    public CompletableFuture<Void> consume(long tokensToConsume, ScheduledExecutorService scheduler) {
-        checkTokensToConsume(tokensToConsume);
-        checkScheduler(scheduler);
-        CompletableFuture<Void> resultFuture = new CompletableFuture<>();
-        ReserveAndCalculateTimeToSleepCommand consumeCommand = new ReserveAndCalculateTimeToSleepCommand(tokensToConsume, INFINITY_DURATION);
-        CompletableFuture<Long> reservationFuture = execute(consumeCommand);
-        reservationFuture.whenComplete((nanosToSleep, exception) -> {
-            if (exception != null) {
-                resultFuture.completeExceptionally(exception);
-                return;
-            }
-            if (nanosToSleep == INFINITY_DURATION) {
-                resultFuture.completeExceptionally(BucketExceptions.reservationOverflow());
-                return;
-            }
-            if (nanosToSleep == 0L) {
-                resultFuture.complete(null);
-                listener.onConsumed(tokensToConsume);
-                return;
-            }
-            try {
-                listener.onConsumed(tokensToConsume);
-                listener.onDelayed(nanosToSleep);
-                Runnable delayedCompletion = () -> resultFuture.complete(null);
-                scheduler.schedule(delayedCompletion, nanosToSleep, TimeUnit.NANOSECONDS);
-            } catch (Throwable t) {
-                resultFuture.completeExceptionally(t);
-            }
-        });
-        return resultFuture;
     }
 
     @Override

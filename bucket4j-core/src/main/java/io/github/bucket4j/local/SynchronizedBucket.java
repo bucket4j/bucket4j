@@ -164,6 +164,25 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket, C
     }
 
     @Override
+    protected VerboseResult<Long> reserveAndCalculateTimeToSleepVerboseImpl(long tokensToConsume, long maxWaitTimeNanos) {
+        long currentTimeNanos = timeMeter.currentTimeNanos();
+        lock.lock();
+        try {
+            state.refillAllBandwidth(currentTimeNanos);
+            long nanosToCloseDeficit = state.calculateDelayNanosAfterWillBePossibleToConsume(tokensToConsume, currentTimeNanos, false);
+
+            if (nanosToCloseDeficit == Long.MAX_VALUE || nanosToCloseDeficit > maxWaitTimeNanos) {
+                return new VerboseResult<>(currentTimeNanos, Long.MAX_VALUE, state.copy());
+            }
+
+            state.consume(tokensToConsume);
+            return new VerboseResult<>(currentTimeNanos, nanosToCloseDeficit, state.copy()) ;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    @Override
     protected long consumeIgnoringRateLimitsImpl(long tokensToConsume) {
         long currentTimeNanos = timeMeter.currentTimeNanos();
         lock.lock();

@@ -80,6 +80,10 @@ public class RemoteVerboseResult<T> implements ComparableByContent<RemoteVerbose
         return new RemoteVerboseResult<>(operationTimeNanos, resultTypeId, mapper.apply(value), state);
     }
 
+    public <R> RemoteVerboseResult<R> withValue(R newValue) {
+        return new RemoteVerboseResult<>(operationTimeNanos, resultTypeId, newValue, state);
+    }
+
     public static final SerializationHandle<RemoteVerboseResult<?>> SERIALIZATION_HANDLE = new SerializationHandle<>() {
 
         @Override

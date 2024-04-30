@@ -131,6 +131,20 @@ public class ThreadUnsafeBucket extends AbstractBucket implements LocalBucket, C
     }
 
     @Override
+    protected VerboseResult<Long> reserveAndCalculateTimeToSleepVerboseImpl(long tokensToConsume, long maxWaitTimeNanos) {
+        long currentTimeNanos = timeMeter.currentTimeNanos();
+        state.refillAllBandwidth(currentTimeNanos);
+        long nanosToCloseDeficit = state.calculateDelayNanosAfterWillBePossibleToConsume(tokensToConsume, currentTimeNanos, false);
+
+        if (nanosToCloseDeficit == Long.MAX_VALUE || nanosToCloseDeficit > maxWaitTimeNanos) {
+            return new VerboseResult<>(currentTimeNanos, Long.MAX_VALUE, state.copy());
+        }
+
+        state.consume(tokensToConsume);
+        return new VerboseResult<>(currentTimeNanos, nanosToCloseDeficit, state.copy());
+    }
+
+    @Override
     protected long consumeIgnoringRateLimitsImpl(long tokensToConsume) {
         long currentTimeNanos = timeMeter.currentTimeNanos();
         state.refillAllBandwidth(currentTimeNanos);

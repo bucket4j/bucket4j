@@ -226,4 +226,11 @@ public interface BlockingBucket {
         consumeUninterruptibly(numTokens, UninterruptibleBlockingStrategy.PARKING);
     }
 
+    /**
+     * Returns the verbose API for this bucket.
+     *
+     * @return the verbose API for this bucket.
+     */
+    VerboseBlockingBucket asVerbose();
+
 }

@@ -178,6 +178,38 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket, Compa
     }
 
     @Override
+    protected VerboseResult<Long> reserveAndCalculateTimeToSleepVerboseImpl(long tokensToConsume, long maxWaitTimeNanos) {
+        BucketState previousState = stateRef.get();
+        BucketState newState = previousState.copy();
+        long currentTimeNanos = timeMeter.currentTimeNanos();
+
+        while (true) {
+            newState.refillAllBandwidth(currentTimeNanos);
+            long nanosToCloseDeficit = newState.calculateDelayNanosAfterWillBePossibleToConsume(tokensToConsume, currentTimeNanos, false);
+            if (nanosToCloseDeficit == 0) {
+                newState.consume(tokensToConsume);
+                if (stateRef.compareAndSet(previousState, newState)) {
+                    return new VerboseResult<>(currentTimeNanos, 0L, newState.copy());
+                }
+                previousState = stateRef.get();
+                newState.copyStateFrom(previousState);
+                continue;
+            }
+
+            if (nanosToCloseDeficit == Long.MAX_VALUE || nanosToCloseDeficit > maxWaitTimeNanos) {
+                return new VerboseResult<>(currentTimeNanos, Long.MAX_VALUE, newState);
+            }
+
+            newState.consume(tokensToConsume);
+            if (stateRef.compareAndSet(previousState, newState)) {
+                return new VerboseResult<>(currentTimeNanos, nanosToCloseDeficit, newState.copy());
+            }
+            previousState = stateRef.get();
+            newState.copyStateFrom(previousState);
+        }
+    }
+
+    @Override
     protected void addTokensImpl(long tokensToAdd) {
         BucketState previousState = stateRef.get();
         BucketState newState = previousState.copy();

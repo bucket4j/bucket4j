@@ -95,9 +95,15 @@ public class DefaultBucketProxy extends AbstractBucket implements BucketProxy, O
     }
 
     @Override
-    protected long reserveAndCalculateTimeToSleepImpl(long tokensToConsume, long waitIfBusyNanosLimit) {
-        ReserveAndCalculateTimeToSleepCommand consumeCommand = new ReserveAndCalculateTimeToSleepCommand(tokensToConsume, waitIfBusyNanosLimit);
+    protected long reserveAndCalculateTimeToSleepImpl(long tokensToConsume, long maxWaitTimeNanos) {
+        ReserveAndCalculateTimeToSleepCommand consumeCommand = new ReserveAndCalculateTimeToSleepCommand(tokensToConsume, maxWaitTimeNanos);
         return execute(consumeCommand);
+    }
+
+    @Override
+    protected VerboseResult<Long> reserveAndCalculateTimeToSleepVerboseImpl(long tokensToConsume, long maxWaitTimeNanos) {
+        ReserveAndCalculateTimeToSleepCommand consumeCommand = new ReserveAndCalculateTimeToSleepCommand(tokensToConsume, maxWaitTimeNanos);
+        return execute(consumeCommand.asVerbose()).asLocal();
     }
 
     @Override

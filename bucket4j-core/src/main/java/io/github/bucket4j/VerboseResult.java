@@ -125,6 +125,10 @@ public class VerboseResult<T> implements ComparableByContent<VerboseResult<?>> {
         return new VerboseResult<>(operationTimeNanos, mapper.apply(value), state);
     }
 
+    public <R> VerboseResult<R> withValue(R newValue) {
+        return new VerboseResult<>(operationTimeNanos, newValue, state);
+    }
+
     @Override
     public boolean equalsByContent(VerboseResult<?> other) {
         return operationTimeNanos == other.operationTimeNanos

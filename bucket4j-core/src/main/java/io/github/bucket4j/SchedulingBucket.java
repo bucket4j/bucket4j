@@ -113,4 +113,11 @@ public interface SchedulingBucket {
      */
     CompletableFuture<Void> consume(long numTokens, ScheduledExecutorService scheduler);
 
+    /**
+     * Returns the verbose API for this bucket.
+     *
+     * @return the verbose API for this bucket.
+     */
+    VerboseSchedulingBucket asVerbose();
+
 }
