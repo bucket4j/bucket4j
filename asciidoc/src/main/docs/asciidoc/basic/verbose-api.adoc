@@ -1,38 +1,29 @@
 [[verbose-api]]
-=== Verbose API
+=== Verbose/Debug API
 Verbose API:: is the API whose intent is in injecting low-level diagnostic information into the results of any interaction with a bucket. Verbose API provides the same functionality as Regular API, with one exception - a result of any method always decorated by `VerboseResult` wrapper.
 
 VerboseResult:: is the wrapper for interaction result that provides the snapshot of a bucket and its configuration that was actual at the moment of interaction with a bucket.
 
 ==== Verbose API entry-points
 The way to get access for `Verbose API` is the same for all types of buckets, just call `asVerbose()` method:
+----
+[source, java]
+----
+// for io.github.bucket4j.Bucket
+Bucket bucket = ...;
+VerboseBucket verboseBucket = bucket.asVerbose();
+VerboseSchedulingBucket verboseSchedulingBucket = bucket.asScheduler().asVerbose();
+VerboseBlockingBucket VerboseBlockingBucket = bucket.asBlocking().asVerbose();
+----
 
-[source, java]
-----
-// for io.github.bucket4j.Bucket
-Bucket bucket = ...;
-bucket.asVerbose();
-----
-[source, java]
-----
-// for io.github.bucket4j.Bucket
-Bucket bucket = ...;
-VerboseBucket verboseBucket = bucket.asVerbose();
-----
-[source, java]
-----
-// for io.github.bucket4j.distributed.BucketProxy
-BucketProxy bucket = ...;
-VerboseBucket verboseBucket = bucket.asVerbose();
 ----
 [source, java]
 ----
 // for io.github.bucket4j.distributed.AsyncBucketProxy
 AsyncBucketProxy bucket = ...;
 AsyncVerboseBucket verboseBucket = bucket.asVerbose();
+VerboseSchedulingBucket verboseSchedulingBucket = bucket.asScheduler().asVerbose();
 ----
-
-NOTE: BlockingBucket and ScheduledBucket do not provide the verbose analogs. VerboseResult has no sense for this kind of buckets because interactions with them can be followed by thread sleep or delayed execution, so VerboseResult can be stale and irrelevant to the moment when control over execution is being returned to your code.
 
 ==== Principles of result decoration
 * void return type always decorated by `VerboseResult<Void>`
