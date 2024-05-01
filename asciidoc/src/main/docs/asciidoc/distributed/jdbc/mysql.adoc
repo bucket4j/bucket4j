@@ -22,7 +22,13 @@ To use ``bucket4j-coherence`` extension you need to add the following dependency
 ===== DDL example
 [source,sql]
 ----
+// in case of expiration feature is not required
 CREATE TABLE IF NOT EXISTS bucket(id BIGINT PRIMARY KEY, state BLOB);
+----
+[source,sql]
+----
+// in case of expiration feature is required
+CREATE TABLE IF NOT EXISTS bucket(id BIGINT PRIMARY KEY, state BLOB, expires_at BIGINT);
 ----
 
 ===== Example of Bucket instantiation

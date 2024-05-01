@@ -23,7 +23,13 @@ To use Bucket4j extension for Oracle you need to add following dependency:
 ===== DDL example
 [source,sql]
 ----
+// in case of expiration feature is not required
 CREATE TABLE bucket(id NUMBER NOT NULL PRIMARY KEY, state RAW(255));
+----
+[source,sql]
+----
+// in case of expiration feature is required
+CREATE TABLE bucket(id NUMBER NOT NULL PRIMARY KEY, state RAW(255), expires_at NUMBER);
 ----
 
 ===== Example of Bucket instantiation

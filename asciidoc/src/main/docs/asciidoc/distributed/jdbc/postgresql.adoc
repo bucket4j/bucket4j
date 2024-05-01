@@ -22,7 +22,18 @@ To use Bucket4j extension for PostgreSQL you need to add following dependency:
 ===== DDL example
 [source,sql]
 ----
+// in case of expiration feature is not required
 CREATE TABLE IF NOT EXISTS bucket(id BIGINT PRIMARY KEY, state BYTEA);
+----
+[source,sql]
+----
+// in case of expiration feature is required for PostgreSQLSelectForUpdateBasedProxyManager
+CREATE TABLE IF NOT EXISTS bucket(id BIGINT PRIMARY KEY, state BYTEA, expires_at BIGINT);
+----
+[source,sql]
+----
+// in case of expiration feature is required for PostgreSQLAdvisoryLockBasedProxyManager
+CREATE TABLE IF NOT EXISTS bucket(id BIGINT PRIMARY KEY, state BYTEA, expires_at BIGINT, explicit_lock BIGINT);
 ----
 
 ===== PostgreSQLSelectForUpdateBasedProxyManager

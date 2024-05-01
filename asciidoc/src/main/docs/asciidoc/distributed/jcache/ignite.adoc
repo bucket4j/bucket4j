@@ -82,3 +82,8 @@ BucketConfiguration configuration = BucketConfiguration.builder()
 Bucket bucket = proxyManager.getProxy(key, () -> configuration);
 ----
 IMPORTANT: IgniteThinClientCasBasedProxyManager does not require all nodes in the cluster to contain Bucket4j Jars in classpath, but it operates with more latency, so choose it over IgniteThinClientProxyManager if and only if you have no control over cluster classpath.
+
+===== Notes about expiration-policy
+In opposite to Infinispan, Coherence and Hazelcast, Ignite does not provide API to configure per-entry expiration.
+So, there is only one way to do something according the issue - configure per cache expiration, https://apacheignite.readme.io/docs/expiry-policies[for example like there].
+If this is not acceptable, then switch to another in-memory grid, like one of mentioned above.

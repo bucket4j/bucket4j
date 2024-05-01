@@ -45,6 +45,41 @@ PostgreSQLSelectForUpdateBasedProxyManager<String> proxyManager = Bucket4jPostgr
 There are several predefined mappers defined inside `io.github.bucket4j.distributed.jdbc.PrimaryKeyMapper`,
 if nothing suitable then you can define own by implementing this interface.
 
+==== Expiration Policy
+Relational databases have no built-in auto-expiration functionality like for example Redis has.
+For all Jdbc integrations Bucket4j just calculates `expires_at` column if expire-policy is configured.
+Then, you need to manually trigger the removing of expired bucket, like bellow
+[source,sql]
+----
+CREATE TABLE IF NOT EXISTS bucket(id BIGINT PRIMARY KEY, state BYTEA, expires_at BIGINT);
+----
+[source, java]
+----
+PostgreSQLSelectForUpdateBasedProxyManager<Long> proxyManager = Bucket4jPostgreSQL
+    .selectForUpdateBasedBuilder(dataSource)
+    .expirationAfterWrite(ExpirationAfterWriteStrategy.basedOnTimeForRefillingBucketUpToMax(Duration.ofSeconds(60)))
+    .build();
+
+...
+
+private static final int MAX_TO_REMOVE_IN_ONE_TRANSACTION = 1_000;
+private static final int THRESHOLD_TO_CONTINUE_REMOVING = 50;
+
+// once per day at 4:30 morning
+@Scheduled(cron = "0 30 4 * * *")
+public void scheduleFixedDelayTask() {
+    int removedKeysCount;
+    do {
+        removedCount = proxyManager.removeExpired(MAX_TO_REMOVE_IN_ONE_TRANSACTION);
+        if (removedKeysCount > 0) {
+            logger.info("Removed {} expired buckets", removedCount);
+        } else {
+            logger.info("There are no expired buckets to remove");
+        }
+   } while (removedCount > THRESHOLD_TO_CONTINUE_REMOVING)
+}
+----
+
 include::postgresql.adoc[]
 
 include::mysql.adoc[]

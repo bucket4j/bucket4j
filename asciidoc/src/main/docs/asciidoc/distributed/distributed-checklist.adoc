@@ -16,10 +16,11 @@ If the state of any bucket should survive the restart/crash of the grid node tha
 .Retention tuning is your responsibility
 When dealing with multi-tenant scenarios like a bucket per user or a bucket per IP address,
 the number of buckets in the cache will continuously increase. This is because a new bucket will be created each time a new key is detected.
-To prevent exhausting the available memory of your cluster you need to configure the following aspects:
 
-* **Expiration since last access** - in order to allow the grid to remove the keys which haven't been used in a long time. For example, see how to https://apacheignite.readme.io/docs/expiry-policies[configure expiration policy for Apache Ignite].
+To prevent exhausting the available memory of your cluster you need to configure the following aspects:
 * **Maximum cache size(in units of bytes)** - Obviously it is preferable to lose bucket data than lose the whole cluster due to memory exception.
+* **Expiration policy** Bucket4j provides way to configure flexible per-entry expiration for mostly integrations(excepting Apache Ignite).
+You need to read Bucket4j documentation for your particular backend in order tp find-out the way to configure expire policy.
 
 .High availability(HA) tuning and testing is your responsibility
 There are no special settings for HA supported by Bucket4j because Bucket4j does nothing more than just invoking EntryProcessors on the cache.
