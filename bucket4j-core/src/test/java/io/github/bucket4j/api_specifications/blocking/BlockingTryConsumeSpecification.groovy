@@ -1,27 +1,22 @@
 package io.github.bucket4j.api_specifications.blocking
 
-import io.github.bucket4j.Bandwidth
 import io.github.bucket4j.BlockingStrategy
 import io.github.bucket4j.Bucket
 import io.github.bucket4j.BucketConfiguration
 import io.github.bucket4j.SimpleBucketListener
 import io.github.bucket4j.TimeMeter
-import io.github.bucket4j.distributed.AsyncBucketProxy
 import io.github.bucket4j.mock.BlockingStrategyMock
 import io.github.bucket4j.mock.BucketType
-import io.github.bucket4j.mock.ProxyManagerMock
-import io.github.bucket4j.mock.SchedulerMock
-import io.github.bucket4j.mock.TimeMeterMock;
+import io.github.bucket4j.mock.TimeMeterMock
+import io.github.bucket4j.util.PipeGenerator;
 import spock.lang.Specification
 import spock.lang.Timeout
 import spock.lang.Unroll
 
 import java.time.Duration
-import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
 
 import static io.github.bucket4j.TimeMeter.SYSTEM_MILLISECONDS
-import static io.github.bucket4j.distributed.proxy.RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION;
 
 class BlockingTryConsumeSpecification extends Specification {
 
@@ -34,11 +29,6 @@ class BlockingTryConsumeSpecification extends Specification {
             beforeParkingNanos += nanos
         }
     }
-    SchedulerMock scheduler = new SchedulerMock(clock)
-
-    BucketConfiguration configuration = BucketConfiguration.builder()
-            .addLimit({limit -> limit.capacity(10).refillGreedy(10, Duration.ofSeconds(1))})
-            .build()
 
     @Timeout(value = 2, unit = TimeUnit.SECONDS)
     @Unroll
@@ -48,31 +38,49 @@ class BlockingTryConsumeSpecification extends Specification {
         for (BucketType type : BucketType.values()) {
             for (boolean uniterruptible : [true, false]) {
                 for (boolean limitAsDuration: [true, false]) {
-                    TimeMeterMock meter = new TimeMeterMock(0)
-                    Bucket bucket = type.createBucket(configuration, meter)
-                    BlockingStrategyMock sleepStrategy = new BlockingStrategyMock(meter)
-                    if (uniterruptible) {
-                        if (limitAsDuration) {
-                            bucket.asBlocking().tryConsumeUninterruptibly(toConsume, Duration.ofHours(1), sleepStrategy)
+                    for (boolean verbose: [true, false]) {
+                        TimeMeterMock meter = new TimeMeterMock(0)
+                        Bucket bucket = type.createBucket(configuration, meter)
+                        BlockingStrategyMock sleepStrategy = new BlockingStrategyMock(meter)
+                        if (uniterruptible) {
+                            if (limitAsDuration) {
+                                if (verbose) {
+                                    bucket.asBlocking().asVerbose().tryConsumeUninterruptibly(toConsume, Duration.ofHours(1), sleepStrategy)
+                                } else {
+                                    bucket.asBlocking().tryConsumeUninterruptibly(toConsume, Duration.ofHours(1), sleepStrategy)
+                                }
+                            } else {
+                                if (verbose) {
+                                    bucket.asBlocking().asVerbose().tryConsumeUninterruptibly(toConsume, TimeUnit.HOURS.toNanos(1), sleepStrategy)
+                                } else {
+                                    bucket.asBlocking().tryConsumeUninterruptibly(toConsume, TimeUnit.HOURS.toNanos(1), sleepStrategy)
+                                }
+                            }
                         } else {
-                            bucket.asBlocking().tryConsumeUninterruptibly(toConsume, TimeUnit.HOURS.toNanos(1), sleepStrategy)
+                            if (limitAsDuration) {
+                                if (verbose) {
+                                    bucket.asBlocking().asVerbose().tryConsume(toConsume, Duration.ofHours(1), sleepStrategy)
+                                } else {
+                                    bucket.asBlocking().tryConsume(toConsume, Duration.ofHours(1), sleepStrategy)
+                                }
+                            } else {
+                                if (verbose) {
+                                    bucket.asBlocking().asVerbose().tryConsume(toConsume, TimeUnit.HOURS.toNanos(1), sleepStrategy)
+                                } else {
+                                    bucket.asBlocking().tryConsume(toConsume, TimeUnit.HOURS.toNanos(1), sleepStrategy)
+                                }
+                            }
                         }
-                    } else {
-                        if (limitAsDuration) {
-                            bucket.asBlocking().tryConsume(toConsume, Duration.ofHours(1), sleepStrategy)
-                        } else {
-                            bucket.asBlocking().tryConsume(toConsume, TimeUnit.HOURS.toNanos(1), sleepStrategy)
-                        }
+                        assert sleepStrategy.parkedNanos == requiredSleep
                     }
-                    assert sleepStrategy.parkedNanos == requiredSleep
                 }
             }
         }
         where:
         n | requiredSleep | toConsume | configuration
-        1 |      10       |     1     | BucketConfiguration.builder().addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(0)).build()
-        2 |       0       |     1     | BucketConfiguration.builder().addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(1)).build()
-        3 |    9990       |  1000     | BucketConfiguration.builder().addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(1)).build()
+        1 |      10       |     1     | BucketConfiguration.builder().addLimit({limit -> limit.capacity(10).refillGreedy(10, Duration.ofNanos(100)).initialTokens(0)}).build()
+        2 |       0       |     1     | BucketConfiguration.builder().addLimit({limit -> limit.capacity(10).refillGreedy(10, Duration.ofNanos(100)).initialTokens(1)}).build()
+        3 |    9990       |  1000     | BucketConfiguration.builder().addLimit({limit -> limit.capacity(10).refillGreedy(10, Duration.ofNanos(100)).initialTokens(1)}).build()
     }
 
     @Timeout(value = 2, unit = TimeUnit.SECONDS)
@@ -83,120 +91,100 @@ class BlockingTryConsumeSpecification extends Specification {
         for (BucketType type : BucketType.values()) {
             for (boolean uniterruptible : [true, false]) {
                 for (boolean limitAsDuration: [true, false]) {
-                    TimeMeterMock meter = new TimeMeterMock(0)
-                    Bucket bucket = type.createBucket(configuration, meter)
-                    BlockingStrategyMock sleepStrategy = new BlockingStrategyMock(meter)
-                    if (uniterruptible) {
-                        if (limitAsDuration) {
-                            assert bucket.asBlocking().tryConsumeUninterruptibly(toConsume, Duration.ofNanos(sleepLimit), sleepStrategy) == requiredResult
+                    for (boolean verbose: [true, false]) {
+                        TimeMeterMock meter = new TimeMeterMock(0)
+                        Bucket bucket = type.createBucket(configuration, meter)
+                        BlockingStrategyMock sleepStrategy = new BlockingStrategyMock(meter)
+                        if (uniterruptible) {
+                            if (limitAsDuration) {
+                                if (verbose) {
+                                    assert bucket.asBlocking().asVerbose().tryConsumeUninterruptibly(toConsume, Duration.ofNanos(sleepLimit), sleepStrategy).value == requiredResult
+                                } else {
+                                    assert bucket.asBlocking().tryConsumeUninterruptibly(toConsume, Duration.ofNanos(sleepLimit), sleepStrategy) == requiredResult
+                                }
+                            } else {
+                                if (verbose) {
+                                    assert bucket.asBlocking().asVerbose().tryConsumeUninterruptibly(toConsume, sleepLimit, sleepStrategy).value == requiredResult
+                                } else {
+                                    assert bucket.asBlocking().tryConsumeUninterruptibly(toConsume, sleepLimit, sleepStrategy) == requiredResult
+                                }
+                            }
                         } else {
-                            assert bucket.asBlocking().tryConsumeUninterruptibly(toConsume, sleepLimit, sleepStrategy) == requiredResult
+                            if (limitAsDuration) {
+                                if (verbose) {
+                                    assert bucket.asBlocking().asVerbose().tryConsume(toConsume, Duration.ofNanos(sleepLimit), sleepStrategy).value == requiredResult
+                                } else {
+                                    assert bucket.asBlocking().tryConsume(toConsume, Duration.ofNanos(sleepLimit), sleepStrategy) == requiredResult
+                                }
+                            } else {
+                                if (verbose) {
+                                    assert bucket.asBlocking().asVerbose().tryConsume(toConsume, sleepLimit, sleepStrategy).value == requiredResult
+                                } else {
+                                    assert bucket.asBlocking().tryConsume(toConsume, sleepLimit, sleepStrategy) == requiredResult
+                                }
+                            }
                         }
-                    } else {
-                        if (limitAsDuration) {
-                            assert bucket.asBlocking().tryConsume(toConsume, Duration.ofNanos(sleepLimit), sleepStrategy) == requiredResult
-                        } else {
-                            assert bucket.asBlocking().tryConsume(toConsume, sleepLimit, sleepStrategy) == requiredResult
-                        }
+                        assert sleepStrategy.parkedNanos == requiredSleep
                     }
-                    assert sleepStrategy.parkedNanos == requiredSleep
                 }
             }
         }
         where:
         n | requiredSleep | requiredResult | toConsume | sleepLimit |  configuration
-        1 |      10       |     true       |     1     |     11     |  BucketConfiguration.builder().addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(0)).build()
-        2 |      10       |     true       |     1     |     11     |  BucketConfiguration.builder().addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(0)).build()
-        3 |       0       |     true       |     1     |     11     |  BucketConfiguration.builder().addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(1)).build()
-        4 |       0       |     false      |   1000    |     11     |  BucketConfiguration.builder().addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(1)).build()
-        5 |      40       |     true       |     5     |     40     |  BucketConfiguration.builder().addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(1)).build()
-        6 |      40       |     true       |     5     |     41     |  BucketConfiguration.builder().addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(1)).build()
-        6 |       0       |     false      |     5     |     39     |  BucketConfiguration.builder().addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(1)).build()
+        1 |      10       |     true       |     1     |     11     |  BucketConfiguration.builder().addLimit({limit -> limit.capacity(10).refillGreedy(10, Duration.ofNanos(100)).initialTokens(0)}).build()
+        2 |      10       |     true       |     1     |     11     |  BucketConfiguration.builder().addLimit({limit -> limit.capacity(10).refillGreedy(10, Duration.ofNanos(100)).initialTokens(0)}).build()
+        3 |       0       |     true       |     1     |     11     |  BucketConfiguration.builder().addLimit({limit -> limit.capacity(10).refillGreedy(10, Duration.ofNanos(100)).initialTokens(1)}).build()
+        4 |       0       |     false      |   1000    |     11     |  BucketConfiguration.builder().addLimit({limit -> limit.capacity(10).refillGreedy(10, Duration.ofNanos(100)).initialTokens(1)}).build()
+        5 |      40       |     true       |     5     |     40     |  BucketConfiguration.builder().addLimit({limit -> limit.capacity(10).refillGreedy(10, Duration.ofNanos(100)).initialTokens(1)}).build()
+        6 |      40       |     true       |     5     |     41     |  BucketConfiguration.builder().addLimit({limit -> limit.capacity(10).refillGreedy(10, Duration.ofNanos(100)).initialTokens(1)}).build()
+        6 |       0       |     false      |     5     |     39     |  BucketConfiguration.builder().addLimit({limit -> limit.capacity(10).refillGreedy(10, Duration.ofNanos(100)).initialTokens(1)}).build()
     }
 
+    @Unroll
     @Timeout(value = 2, unit = TimeUnit.SECONDS)
-    def "Should throw InterruptedException when thread interrupted during waiting for token refill"() {
+    def "#type Should throw InterruptedException when thread interrupted during waiting for token refill #verbose #meter"(BucketType type, boolean verbose, TimeMeter meter) {
         expect:
-        for (TimeMeter meter : [SYSTEM_MILLISECONDS, TimeMeter.SYSTEM_NANOTIME]) {
-            Bucket bucket = Bucket.builder()
-                    .withCustomTimePrecision(meter)
-                    .addLimit(Bandwidth.simple(1, Duration.ofMinutes(1)).withInitialTokens(0))
-                    .build()
+            BucketConfiguration config = BucketConfiguration.builder()
+                .addLimit({ limit -> limit.capacity(1).refillGreedy(1, Duration.ofMinutes(1)).initialTokens(0)})
+                .build()
+            Bucket bucket = type.createBucket(config, meter)
 
             Thread.currentThread().interrupt()
-            InterruptedException thrown
+            InterruptedException thrown1
             try {
                 bucket.asBlocking().tryConsume(1, TimeUnit.HOURS.toNanos(1000), BlockingStrategy.PARKING)
             } catch (InterruptedException e) {
-                thrown = e
+                thrown1 = e
             }
-            assert thrown != null
+            assert thrown1 != null
 
-            thrown = null
+            InterruptedException thrown2
             Thread.currentThread().interrupt()
             try {
                 bucket.asBlocking().tryConsume(1, TimeUnit.HOURS.toNanos(1), BlockingStrategy.PARKING)
             } catch (InterruptedException e) {
-                thrown = e
+                thrown2 = e
             }
-            assert thrown != null
-        }
-    }
+            assert thrown2 != null
 
-    @Timeout(value = 2, unit = TimeUnit.SECONDS)
-    @Unroll
-    def "#n Should sleep #requiredSleep and return #requiredResult when trying to synchronous consume #toConsume tokens with limit #sleepLimit from Bucket #configuration"(
-            int n, long requiredSleep, boolean requiredResult, long toConsume, long sleepLimit, BucketConfiguration configuration) {
-        expect:
-        for (BucketType type : BucketType.values()) {
-            for (boolean limitAsDuration: [true, false]) {
-                TimeMeterMock meter = new TimeMeterMock(0)
-                AsyncBucketProxy bucket = type.createAsyncBucket(configuration, meter)
-                SchedulerMock scheduler = new SchedulerMock()
-                if (limitAsDuration) {
-                    assert bucket.asScheduler().tryConsume(toConsume, Duration.ofNanos(sleepLimit), scheduler).get() == requiredResult
-                } else {
-                    assert bucket.asScheduler().tryConsume(toConsume, sleepLimit, scheduler).get() == requiredResult
-                }
-                assert scheduler.acummulatedDelayNanos == requiredSleep
-            }
-        }
         where:
-        n | requiredSleep | requiredResult | toConsume | sleepLimit |  configuration
-        1 |      10       |     true       |     1     |     11     |  BucketConfiguration.builder().addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(0)).build()
-        2 |      10       |     true       |     1     |     11     |  BucketConfiguration.builder().addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(0)).build()
-        3 |       0       |     true       |     1     |     11     |  BucketConfiguration.builder().addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(1)).build()
-        4 |       0       |     false      |   1000    |     11     |  BucketConfiguration.builder().addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(1)).build()
-        5 |      40       |     true       |     5     |     40     |  BucketConfiguration.builder().addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(1)).build()
-        6 |      40       |     true       |     5     |     41     |  BucketConfiguration.builder().addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(1)).build()
-        6 |       0       |     false      |     5     |     39     |  BucketConfiguration.builder().addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(1)).build()
+            [type, verbose, meter] << PipeGenerator.сartesianProduct(BucketType.values() as List, [false, true], [SYSTEM_MILLISECONDS, TimeMeter.SYSTEM_NANOTIME])
     }
 
-    @Timeout(value = 2, unit = TimeUnit.SECONDS)
-    def "should complete future exceptionally if scheduler failed to schedule the task"() {
+    @Unroll
+    def "#type test listener for blocking tryConsume #verbose"(BucketType type, boolean verbose) {
         setup:
             BucketConfiguration configuration = BucketConfiguration.builder()
-                .addLimit(Bandwidth.simple(1, Duration.ofNanos(1)))
+                .addLimit({limit -> limit.capacity(10).refillGreedy(10, Duration.ofSeconds(1))})
                 .build()
-            ProxyManagerMock mockProxy = new ProxyManagerMock(SYSTEM_MILLISECONDS)
-            SchedulerMock schedulerMock = new SchedulerMock()
-            AsyncBucketProxy bucket = mockProxy.asAsync().builder()
-                .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
-                .build("66", configuration)
-        when:
-            schedulerMock.setException(new RuntimeException())
-            CompletableFuture<Boolean> future = bucket.asScheduler().tryConsume(10, Duration.ofNanos(100000), schedulerMock)
-        then:
-            future.isCompletedExceptionally()
-    }
-
-    @Unroll
-    def "#type test listener for blocking tryConsume"(BucketType type) {
-        setup:
             Bucket bucket = type.createBucket(configuration, clock, listener)
 
         when:
-            bucket.asBlocking().tryConsume(9, Duration.ofSeconds(1), blocker)
+            if (verbose) {
+                bucket.asBlocking().asVerbose().tryConsume(9, Duration.ofSeconds(1), blocker)
+            } else {
+                bucket.asBlocking().tryConsume(9, Duration.ofSeconds(1), blocker)
+            }
         then:
             listener.getConsumed() == 9
             listener.getRejected() == 0
@@ -205,7 +193,11 @@ class BlockingTryConsumeSpecification extends Specification {
             listener.getInterrupted() == 0
 
         when:
-            bucket.asBlocking().tryConsume(1000, Duration.ofSeconds(1), blocker)
+            if (verbose) {
+                bucket.asBlocking().asVerbose().tryConsume(1000, Duration.ofSeconds(1), blocker)
+            } else {
+                bucket.asBlocking().tryConsume(1000, Duration.ofSeconds(1), blocker)
+            }
         then:
             listener.getConsumed() == 9
             listener.getRejected() == 1000
@@ -214,7 +206,11 @@ class BlockingTryConsumeSpecification extends Specification {
             listener.getInterrupted() == 0
 
         when:
-            bucket.asBlocking().tryConsume(2, Duration.ofSeconds(1), blocker)
+            if (verbose) {
+                bucket.asBlocking().asVerbose().tryConsume(2, Duration.ofSeconds(1), blocker)
+            } else {
+                bucket.asBlocking().tryConsume(2, Duration.ofSeconds(1), blocker)
+            }
         then:
             listener.getConsumed() == 11
             listener.getRejected() == 1000
@@ -224,7 +220,11 @@ class BlockingTryConsumeSpecification extends Specification {
 
         when:
             Thread.currentThread().interrupt()
-            bucket.asBlocking().tryConsume(1, Duration.ofSeconds(1), blocker)
+            if (verbose) {
+                bucket.asBlocking().asVerbose().tryConsume(1, Duration.ofSeconds(1), blocker)
+            } else {
+                bucket.asBlocking().tryConsume(1, Duration.ofSeconds(1), blocker)
+            }
         then:
             thrown(InterruptedException)
             listener.getConsumed() == 12
@@ -234,16 +234,23 @@ class BlockingTryConsumeSpecification extends Specification {
             listener.getInterrupted() == 1
 
         where:
-            type << BucketType.values()
+            [type, verbose] << PipeGenerator.сartesianProduct(BucketType.values() as List, [false, true])
     }
 
     @Unroll
-    def "#type test listener for blocking tryConsumeUninterruptibly"(BucketType type) {
+    def "#type test listener for blocking tryConsumeUninterruptibly #verbose"(BucketType type, boolean verbose) {
         setup:
+            BucketConfiguration configuration = BucketConfiguration.builder()
+                .addLimit({limit -> limit.capacity(10).refillGreedy(10, Duration.ofSeconds(1))})
+                .build()
             Bucket bucket = type.createBucket(configuration, clock, listener)
 
         when:
-            bucket.asBlocking().tryConsume(9, Duration.ofSeconds(1), blocker)
+            if (verbose) {
+                bucket.asBlocking().asVerbose().tryConsume(9, Duration.ofSeconds(1), blocker)
+            } else {
+                bucket.asBlocking().tryConsume(9, Duration.ofSeconds(1), blocker)
+            }
         then:
             listener.getConsumed() == 9
             listener.getRejected() == 0
@@ -252,7 +259,11 @@ class BlockingTryConsumeSpecification extends Specification {
             listener.getInterrupted() == 0
 
         when:
-            bucket.asBlocking().tryConsume(1000, Duration.ofSeconds(1), blocker)
+            if (verbose) {
+                bucket.asBlocking().asVerbose().tryConsume(1000, Duration.ofSeconds(1), blocker)
+            } else {
+                bucket.asBlocking().tryConsume(1000, Duration.ofSeconds(1), blocker)
+            }
         then:
             listener.getConsumed() == 9
             listener.getRejected() == 1000
@@ -261,7 +272,11 @@ class BlockingTryConsumeSpecification extends Specification {
             listener.getInterrupted() == 0
 
         when:
-            bucket.asBlocking().tryConsume(2, Duration.ofSeconds(1), blocker)
+            if (verbose) {
+                bucket.asBlocking().asVerbose().tryConsume(2, Duration.ofSeconds(1), blocker)
+            } else {
+                bucket.asBlocking().tryConsume(2, Duration.ofSeconds(1), blocker)
+            }
         then:
             listener.getConsumed() == 11
             listener.getRejected() == 1000
@@ -271,7 +286,11 @@ class BlockingTryConsumeSpecification extends Specification {
 
         when:
             Thread.currentThread().interrupt()
-            bucket.asBlocking().tryConsumeUninterruptibly(1, Duration.ofSeconds(1), blocker)
+            if (verbose) {
+                bucket.asBlocking().asVerbose().tryConsumeUninterruptibly(1, Duration.ofSeconds(1), blocker)
+            } else {
+                bucket.asBlocking().tryConsumeUninterruptibly(1, Duration.ofSeconds(1), blocker)
+            }
             Thread.interrupted()
         then:
             listener.getConsumed() == 12
@@ -281,41 +300,7 @@ class BlockingTryConsumeSpecification extends Specification {
             listener.getInterrupted() == 0
 
         where:
-            type << BucketType.values()
+            [type, verbose] << PipeGenerator.сartesianProduct(BucketType.values() as List, [false, true])
     }
-
-    @Unroll
-    def "#type test listener for async scheduled tryConsume"(BucketType type) {
-        setup:
-            AsyncBucketProxy bucket = type.createAsyncBucket(configuration, clock, listener)
-
-        when:
-            bucket.asScheduler().tryConsume(9, Duration.ofSeconds(1).toNanos(), scheduler)
-        then:
-            listener.getConsumed() == 9
-            listener.getRejected() == 0
-            listener.getDelayedNanos() == 0
-            listener.getInterrupted() == 0
-
-        when:
-            bucket.asScheduler().tryConsume(1000, Duration.ofSeconds(1).toNanos(), scheduler)
-        then:
-            listener.getConsumed() == 9
-            listener.getRejected() == 1000
-            listener.getDelayedNanos() == 0
-            listener.getInterrupted() == 0
-
-        when:
-            bucket.asScheduler().tryConsume(2, Duration.ofSeconds(1).toNanos(), scheduler)
-        then:
-            listener.getConsumed() == 11
-            listener.getRejected() == 1000
-            listener.getDelayedNanos() == 100_000_000
-            listener.getInterrupted() == 0
-
-        where:
-            type << BucketType.values()
-    }
-
 
 }
