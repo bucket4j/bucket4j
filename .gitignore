@@ -21,3 +21,5 @@ reports/
 .flattened-pom.xml
 /js/dist/
 /js/node_modules/
+/typescript/dist/
+/typescript/node_modules/
