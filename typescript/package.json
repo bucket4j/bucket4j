@@ -1,10 +1,10 @@
 {
-  "name": "webpack-typescript-jasmine-boilerplate",
+  "name": "bucket4j-typescript",
   "version": "8.12.0",
-  "description": "it does not work with codesandbox.",
+  "description": "Typescript fork of Bucket4j.",
   "scripts": {
-    "start": "webpack-dev-server --port 9000 --progress --colors --hot --content-base",
-    "build": "webpack"
+    "test": "karma start",
+    "build": "webpack --config webpack.config.js"
   },
   "license": "Apache-2.0",
   "dependencies": {

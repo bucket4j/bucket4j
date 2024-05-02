@@ -5,18 +5,18 @@ const path = require('path');
 module.exports = {
   mode: 'development',
 
-  devtool: '#source-map',
+  devtool: 'inline-source-map',
 
   entry: ['./src/Bucket4j.ts'],
 
   output: {
     path: path.resolve(__dirname, 'dist'),
     publicPath: '/',
-    filename: 'dist/js/bundle.min.js',
+    filename: 'dist/js/bucket4j.min.js',
   },
 
   resolve: {
-    extensions: ['.ts', '.js', '.scss'],
+    extensions: ['.ts', '.js'],
   },
 
   plugins: [

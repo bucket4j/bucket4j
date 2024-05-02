@@ -1,12 +1,8 @@
-import { Greeter } from './greeter';
+import { Bandwidth } from '../bucket4j/common/Bandwidth';
 
-describe('Greeter', () => {
-  it('should greet', () => {
-    const greeter = new Greeter('Juri');
-    spyOn(console, 'log');
-
-    greeter.greet();
-
-    expect(console.log).toHaveBeenCalled();
+describe('Dummy test', () => {
+  it('Should successfully import', () => {
+    const bandwidth:Bandwidth = new Bandwidth();
+    expect(bandwidth).toBeDefined();
   });
 });

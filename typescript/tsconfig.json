@@ -10,8 +10,7 @@
     "esModuleInterop": true,
     "rootDir": ".",
     "lib": [
-      "es2017",
-      "dom"
+      "es2017"
     ]
   },
   "include": [
