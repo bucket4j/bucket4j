@@ -38,8 +38,7 @@ can affect your application and if so then think about adding more limits.
 Limitations that are used by bucket can be denoted in terms of bandwidths. Bandwidth is denoted by the following terms:
 
 Capacity::
-`Capacity` is the term that is directly inherited from the classic interpretation of the token-bucket algorithm, this specifies how many tokens your bucket has. Refill must be configured during building stage
-Capacity must be configured during building stage
+`Capacity` is the term that is directly inherited from the classic interpretation of the token-bucket algorithm, this specifies how many tokens your bucket has. Capacity must be configured during building stage
 [source, java]
 ----
 Bucket bucket = Bucket.builder()
