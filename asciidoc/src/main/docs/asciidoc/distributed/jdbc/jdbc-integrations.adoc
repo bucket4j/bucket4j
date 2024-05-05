@@ -57,10 +57,8 @@ CREATE TABLE IF NOT EXISTS bucket(id BIGINT PRIMARY KEY, state BYTEA, expires_at
 ----
 PostgreSQLSelectForUpdateBasedProxyManager<Long> proxyManager = Bucket4jPostgreSQL
     .selectForUpdateBasedBuilder(dataSource)
-    .expirationAfterWrite(ExpirationAfterWriteStrategy.basedOnTimeForRefillingBucketUpToMax(Duration.ofSeconds(60)))
+    .expirationAfterWrite(basedOnTimeForRefillingBucketUpToMax(Duration.ofSeconds(60)))
     .build();
-
-...
 
 private static final int MAX_TO_REMOVE_IN_ONE_TRANSACTION = 1_000;
 private static final int THRESHOLD_TO_CONTINUE_REMOVING = 50;
