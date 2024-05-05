@@ -2,7 +2,7 @@ const path = require('path')
 
 module.exports = {
   mode: 'production',
-  entry: './src/index.ts',
+  entry: './src/Bucket4j.ts',
   output: {
     path: path.resolve(__dirname, '../dist/umd'),
     filename: 'index.js',
