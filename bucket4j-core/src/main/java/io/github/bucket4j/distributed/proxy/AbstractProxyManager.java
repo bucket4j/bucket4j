@@ -41,18 +41,35 @@ import java.util.function.Supplier;
 
 import static java.util.Objects.requireNonNull;
 
-public abstract class AbstractProxyManager<K> implements ProxyManager<K> {
+public abstract class AbstractProxyManager<K> implements ProxyManager<K>, AsyncBackend<K>, Backend<K> {
 
     private static final RecoveryStrategy DEFAULT_RECOVERY_STRATEGY = RecoveryStrategy.RECONSTRUCT;
     private static final Optimization DEFAULT_REQUEST_OPTIMIZER = Optimization.NONE_OPTIMIZED;
 
     private final ClientSideConfig clientSideConfig;
 
+    private final Backend<K> originalBackend;
+    private final Backend<K> optimizedBackend;
+    private final AsyncBackend<K> optimizedAsyncBackend;
+    private final AsyncBackend<K> originalAsyncBackend;
+
     protected AbstractProxyManager(ClientSideConfig clientSideConfig) {
         if (clientSideConfig.getExpirationAfterWriteStrategy().isPresent() && !isExpireAfterWriteSupported()) {
             throw BucketExceptions.expirationAfterWriteIsNotSupported();
         }
         this.clientSideConfig = requireNonNull(clientSideConfig);
+        this.originalBackend = new Backend<K>() {
+            @Override
+            public <T> CommandResult<T> execute(K key, Request<T> request) {
+                return AbstractProxyManager.this.execute(key, request);
+            }
+        };
+        this.optimizedAsyncBackend = !isAsyncModeSupported() ? null : new AsyncBackend<K>() {
+            @Override
+            public <T> CompletableFuture<CommandResult<T>> executeAsync(K key, Request<T> request) {
+                return AbstractProxyManager.this.executeAsync(key, request);
+            }
+        };
     }
 
     private final AsyncProxyManager<K> asyncView = new AsyncProxyManager<>() {
@@ -227,9 +244,11 @@ public abstract class AbstractProxyManager<K> implements ProxyManager<K> {
 
     }
 
-    abstract protected <T> CommandResult<T> execute(K key, Request<T> request);
+    @Override
+    public abstract <T> CommandResult<T> execute(K key, Request<T> request);
 
-    abstract protected <T> CompletableFuture<CommandResult<T>> executeAsync(K key, Request<T> request);
+    @Override
+    public abstract <T> CompletableFuture<CommandResult<T>> executeAsync(K key, Request<T> request);
 
     abstract protected CompletableFuture<Void> removeAsync(K key);
 
