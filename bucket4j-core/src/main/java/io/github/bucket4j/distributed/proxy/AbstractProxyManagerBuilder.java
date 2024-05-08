@@ -27,6 +27,8 @@ import io.github.bucket4j.BucketExceptions;
 import io.github.bucket4j.BucketListener;
 import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
+import io.github.bucket4j.distributed.proxy.synchronization.nope.DirectSynchronization;
+import io.github.bucket4j.distributed.proxy.synchronization.Synchronization;
 import io.github.bucket4j.distributed.versioning.Version;
 import io.github.bucket4j.distributed.versioning.Versions;
 
@@ -47,6 +49,8 @@ public abstract class AbstractProxyManagerBuilder<K, P extends ProxyManager<K>, 
 
     private BucketListener defaultListener = BucketListener.NOPE;
     private RecoveryStrategy defaultRecoveryStrategy = RecoveryStrategy.RECONSTRUCT;
+
+    private Synchronization synchronization = DirectSynchronization.instance;
 
     /**
      * Configures {@code backwardCompatibilityVersion}.
@@ -169,6 +173,11 @@ public abstract class AbstractProxyManagerBuilder<K, P extends ProxyManager<K>, 
         return (B) this;
     }
 
+    public B synchronization(Synchronization synchronization) {
+        this.synchronization = Objects.requireNonNull(synchronization);
+        return (B) this;
+    }
+
     /**
      * Returns the strategy for choosing time to live for buckets.
      *
@@ -232,8 +241,12 @@ public abstract class AbstractProxyManagerBuilder<K, P extends ProxyManager<K>, 
         return false;
     }
 
+    public Synchronization getSynchronization() {
+        return synchronization;
+    }
+
     public ClientSideConfig getClientSideConfig() {
-        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, requestTimeoutNanos, expirationStrategy, defaultListener, defaultRecoveryStrategy);
+        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, requestTimeoutNanos, expirationStrategy, synchronization, defaultListener, defaultRecoveryStrategy);
     }
 
 }

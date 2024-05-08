@@ -7,6 +7,7 @@ import io.github.bucket4j.distributed.AsyncBucketProxyAdapter;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.distributed.proxy.optimization.Optimizations;
+import io.github.bucket4j.distributed.proxy.synchronization.batch.BatchingSynchronization;
 import io.github.bucket4j.local.LocalBucketBuilder;
 import io.github.bucket4j.local.SynchronizationStrategy;
 
@@ -181,6 +182,49 @@ public enum BucketType {
                     .build(42, configuration);
         }
     },
+    GRID_WITH_PER_MANAGER_BATCHING_OPTIMIZATION {
+        @Override
+        public Bucket createBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
+            ProxyManagerMock<Integer> proxyManager = new ProxyManagerMock<>(ClientSideConfig.getDefault()
+                .withClientClock(timeMeter)
+                .withSynchronization(new BatchingSynchronization())
+            );
+            return proxyManager.builder()
+                .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
+                .withOptimization(Optimizations.batching())
+                .build(42, configuration);
+        }
+
+        @Override
+        public Bucket createBucket(BucketConfiguration configuration, TimeMeter timeMeter, BucketListener listener) {
+            ProxyManagerMock<Integer> proxyManager = new ProxyManagerMock<>(ClientSideConfig.getDefault()
+                .withClientClock(timeMeter)
+                .withSynchronization(new BatchingSynchronization())
+            );
+            return proxyManager.builder()
+                .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
+                .withListener(listener)
+                .build(42, configuration);
+        }
+
+        @Override
+        public ProxyManager<Integer> createProxyManager(TimeMeter timeMeter) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public AsyncBucketProxy createAsyncBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
+            ProxyManagerMock<Integer> proxyManager = new ProxyManagerMock<>(ClientSideConfig.getDefault()
+                .withClientClock(timeMeter)
+                .withSynchronization(new BatchingSynchronization())
+            );
+            return proxyManager.asAsync().builder()
+                .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
+                .withOptimization(Optimizations.batching())
+                .build(42, configuration);
+        }
+    },
+
     COMPARE_AND_SWAP {
         @Override
         public Bucket createBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
