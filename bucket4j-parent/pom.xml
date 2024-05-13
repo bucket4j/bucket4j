@@ -7,7 +7,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.bucket4j</groupId>
-    <version>8.12.0</version>
+    <version>8.12.1</version>
     <artifactId>bucket4j_jdk17-parent</artifactId>
     <packaging>pom</packaging>
     <name>bucket4j_jdk17-parent</name>

@@ -42,9 +42,6 @@ public class MySQLSelectForUpdateLockBasedTransactionTest extends AbstractDistri
                 "MySQLSelectForUpdateBasedProxyManager",
                 () -> ThreadLocalRandom.current().nextLong(1_000_000_000),
                 () -> Bucket4jMySQL.selectForUpdateBasedBuilder(dataSource)
-                    .table("test.bucket")
-                    .idColumn("id")
-                    .stateColumn("state")
             ).checkExpiration()
         );
     }

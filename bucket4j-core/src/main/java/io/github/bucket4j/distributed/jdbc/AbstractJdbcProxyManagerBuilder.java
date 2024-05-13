@@ -43,8 +43,8 @@ public abstract class AbstractJdbcProxyManagerBuilder<K, P extends ProxyManager<
     protected PrimaryKeyMapper<K> primaryKeyMapper;
 
     private String tableName = "bucket";
-    private String idColumnName = "state";
-    private String stateColumnName = "id";
+    private String idColumnName = "id";
+    private String stateColumnName = "state";
     private String expiresAtColumnName = "expires_at";
     private final List<CustomColumnProvider<K>> customColumns = new ArrayList<>();
 
