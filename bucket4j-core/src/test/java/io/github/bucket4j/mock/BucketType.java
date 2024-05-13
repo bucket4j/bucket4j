@@ -11,8 +11,6 @@ import io.github.bucket4j.distributed.proxy.synchronization.batch.BatchingSynchr
 import io.github.bucket4j.local.LocalBucketBuilder;
 import io.github.bucket4j.local.SynchronizationStrategy;
 
-import static io.github.bucket4j.distributed.proxy.RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION;
-
 public enum BucketType {
 
     LOCAL_LOCK_FREE {
@@ -112,16 +110,13 @@ public enum BucketType {
         @Override
         public Bucket createBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
             ProxyManagerMock<Integer> proxyManager = new ProxyManagerMock<>(timeMeter);
-            return proxyManager.builder()
-                .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
-                .build(42, configuration);
+            return proxyManager.builder().build(42, configuration);
         }
 
         @Override
         public Bucket createBucket(BucketConfiguration configuration, TimeMeter timeMeter, BucketListener listener) {
             ProxyManagerMock<Integer> proxyManager = new ProxyManagerMock<>(timeMeter);
             return proxyManager.builder()
-                .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
                 .withListener(listener)
                 .build(42, configuration);
         }
@@ -135,7 +130,6 @@ public enum BucketType {
         public AsyncBucketProxy createAsyncBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
             ProxyManagerMock<Integer> proxyManager = new ProxyManagerMock<>(timeMeter);
             return proxyManager.asAsync().builder()
-                    .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
                     .build(42, configuration);
         }
 
@@ -143,7 +137,6 @@ public enum BucketType {
         public AsyncBucketProxy createAsyncBucket(BucketConfiguration configuration, TimeMeter timeMeter, BucketListener listener) {
             ProxyManagerMock<Integer> proxyManager = new ProxyManagerMock<>(timeMeter);
             return proxyManager.asAsync().builder()
-                .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
                 .withListener(listener)
                 .build(42, configuration);
         }
@@ -153,7 +146,6 @@ public enum BucketType {
         public Bucket createBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
             ProxyManagerMock<Integer> proxyManager = new ProxyManagerMock<>(timeMeter);
             return proxyManager.builder()
-                .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
                 .withOptimization(Optimizations.batching())
                 .build(42, configuration);
         }
@@ -162,7 +154,6 @@ public enum BucketType {
         public Bucket createBucket(BucketConfiguration configuration, TimeMeter timeMeter, BucketListener listener) {
             ProxyManagerMock<Integer> proxyManager = new ProxyManagerMock<>(timeMeter);
             return proxyManager.builder()
-                .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
                 .withOptimization(Optimizations.batching())
                 .withListener(listener)
                 .build(42, configuration);
@@ -177,7 +168,6 @@ public enum BucketType {
         public AsyncBucketProxy createAsyncBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
             ProxyManagerMock<Integer> proxyManager = new ProxyManagerMock<>(timeMeter);
             return proxyManager.asAsync().builder()
-                    .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
                     .withOptimization(Optimizations.batching())
                     .build(42, configuration);
         }
@@ -190,7 +180,6 @@ public enum BucketType {
                 .withSynchronization(new BatchingSynchronization())
             );
             return proxyManager.builder()
-                .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
                 .withOptimization(Optimizations.batching())
                 .build(42, configuration);
         }
@@ -202,7 +191,6 @@ public enum BucketType {
                 .withSynchronization(new BatchingSynchronization())
             );
             return proxyManager.builder()
-                .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
                 .withListener(listener)
                 .build(42, configuration);
         }
@@ -219,7 +207,6 @@ public enum BucketType {
                 .withSynchronization(new BatchingSynchronization())
             );
             return proxyManager.asAsync().builder()
-                .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
                 .withOptimization(Optimizations.batching())
                 .build(42, configuration);
         }
@@ -230,7 +217,6 @@ public enum BucketType {
         public Bucket createBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
             CompareAndSwapBasedProxyManagerMock<Integer> proxyManager = new CompareAndSwapBasedProxyManagerMock<>(ClientSideConfig.getDefault().withClientClock(timeMeter));
             return proxyManager.builder()
-                    .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
                     .build(42, configuration);
         }
 
@@ -238,7 +224,6 @@ public enum BucketType {
         public Bucket createBucket(BucketConfiguration configuration, TimeMeter timeMeter, BucketListener listener) {
             CompareAndSwapBasedProxyManagerMock<Integer> proxyManager = new CompareAndSwapBasedProxyManagerMock<>(ClientSideConfig.getDefault().withClientClock(timeMeter));
             return proxyManager.builder()
-                .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
                 .withListener(listener)
                 .build(42, configuration);
         }
@@ -252,7 +237,6 @@ public enum BucketType {
         public AsyncBucketProxy createAsyncBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
             CompareAndSwapBasedProxyManagerMock<Integer> proxyManager = new CompareAndSwapBasedProxyManagerMock<>(ClientSideConfig.getDefault().withClientClock(timeMeter));
             return proxyManager.asAsync().builder()
-                .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
                 .build(42, configuration);
         }
 
@@ -260,7 +244,6 @@ public enum BucketType {
         public AsyncBucketProxy createAsyncBucket(BucketConfiguration configuration, TimeMeter timeMeter, BucketListener listener) {
             CompareAndSwapBasedProxyManagerMock<Integer> proxyManager = new CompareAndSwapBasedProxyManagerMock<>(ClientSideConfig.getDefault().withClientClock(timeMeter));
             return proxyManager.asAsync().builder()
-                .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
                 .withListener(listener)
                 .build(42, configuration);
         }
@@ -271,7 +254,6 @@ public enum BucketType {
         public Bucket createBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
             LockBasedProxyManagerMock<Integer> proxyManager = new LockBasedProxyManagerMock<>(ClientSideConfig.getDefault().withClientClock(timeMeter));
             return proxyManager.builder()
-                    .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
                     .build(42, configuration);
         }
 
@@ -279,7 +261,6 @@ public enum BucketType {
         public Bucket createBucket(BucketConfiguration configuration, TimeMeter timeMeter, BucketListener listener) {
             LockBasedProxyManagerMock<Integer> proxyManager = new LockBasedProxyManagerMock<>(ClientSideConfig.getDefault().withClientClock(timeMeter));
             return proxyManager.builder()
-                .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
                 .withListener(listener)
                 .build(42, configuration);
         }
@@ -295,7 +276,6 @@ public enum BucketType {
         public Bucket createBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
             SelectForUpdateBasedProxyManagerMock<Integer> proxyManager = new SelectForUpdateBasedProxyManagerMock<>(ClientSideConfig.getDefault().withClientClock(timeMeter));
             return proxyManager.builder()
-                .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
                 .build(42, configuration);
         }
 
@@ -303,7 +283,6 @@ public enum BucketType {
         public Bucket createBucket(BucketConfiguration configuration, TimeMeter timeMeter, BucketListener listener) {
             SelectForUpdateBasedProxyManagerMock<Integer> proxyManager = new SelectForUpdateBasedProxyManagerMock<>(ClientSideConfig.getDefault().withClientClock(timeMeter));
             return proxyManager.builder()
-                .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
                 .withListener(listener)
                 .build(42, configuration);
         }

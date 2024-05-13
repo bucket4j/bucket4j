@@ -34,7 +34,6 @@ import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
 import static io.github.bucket4j.LimitChecker.*;
@@ -42,11 +41,9 @@ import static io.github.bucket4j.LimitChecker.*;
 public class DefaultAsyncBucketProxy implements AsyncBucketProxy, AsyncOptimizationController {
 
     private final AsyncCommandExecutor commandExecutor;
-    private final RecoveryStrategy recoveryStrategy;
     private final Supplier<CompletableFuture<BucketConfiguration>> configurationSupplier;
     private final BucketListener listener;
     private final ImplicitConfigurationReplacement implicitConfigurationReplacement;
-    private final AtomicBoolean wasInitialized;
 
     @Override
     public AsyncVerboseBucket asVerbose() {
@@ -55,7 +52,7 @@ public class DefaultAsyncBucketProxy implements AsyncBucketProxy, AsyncOptimizat
 
     @Override
     public AsyncBucketProxy toListenable(BucketListener listener) {
-        return new DefaultAsyncBucketProxy(commandExecutor, recoveryStrategy, configurationSupplier, implicitConfigurationReplacement, wasInitialized, listener);
+        return new DefaultAsyncBucketProxy(commandExecutor, configurationSupplier, implicitConfigurationReplacement, listener);
     }
 
     @Override
@@ -63,17 +60,10 @@ public class DefaultAsyncBucketProxy implements AsyncBucketProxy, AsyncOptimizat
         return schedulingBucketView;
     }
 
-    public DefaultAsyncBucketProxy(AsyncCommandExecutor commandExecutor, RecoveryStrategy recoveryStrategy, Supplier<CompletableFuture<BucketConfiguration>> configurationSupplier,
-                                   ImplicitConfigurationReplacement implicitConfigurationReplacement, BucketListener listener) {
-        this(commandExecutor, recoveryStrategy, configurationSupplier, implicitConfigurationReplacement, new AtomicBoolean(false), listener);
-    }
-
-    private DefaultAsyncBucketProxy(AsyncCommandExecutor commandExecutor, RecoveryStrategy recoveryStrategy, Supplier<CompletableFuture<BucketConfiguration>> configurationSupplier, ImplicitConfigurationReplacement implicitConfigurationReplacement, AtomicBoolean wasInitialized, BucketListener listener) {
+    public DefaultAsyncBucketProxy(AsyncCommandExecutor commandExecutor, Supplier<CompletableFuture<BucketConfiguration>> configurationSupplier, ImplicitConfigurationReplacement implicitConfigurationReplacement, BucketListener listener) {
         this.commandExecutor = Objects.requireNonNull(commandExecutor);
-        this.recoveryStrategy = recoveryStrategy;
         this.configurationSupplier = configurationSupplier;
         this.implicitConfigurationReplacement = implicitConfigurationReplacement;
-        this.wasInitialized = wasInitialized;
 
         if (listener == null) {
             throw BucketExceptions.nullListener();
@@ -458,19 +448,11 @@ public class DefaultAsyncBucketProxy implements AsyncBucketProxy, AsyncOptimizat
         RemoteCommand<T> commandToExecute = implicitConfigurationReplacement == null? command :
             new CheckConfigurationVersionAndExecuteCommand<>(command, implicitConfigurationReplacement.getDesiredConfigurationVersion());
 
-        boolean wasInitializedBeforeExecution = wasInitialized.get();
         CompletableFuture<CommandResult<T>> futureResult = commandExecutor.executeAsync(commandToExecute);
         return futureResult.thenCompose(cmdResult -> {
             if (!cmdResult.isBucketNotFound() && !cmdResult.isConfigurationNeedToBeReplaced()) {
                 T resultDate = cmdResult.getData();
                 return CompletableFuture.completedFuture(resultDate);
-            }
-
-            // the bucket was removed or lost, or not initialized yet, or needs to upgrade configuration
-            if (cmdResult.isBucketNotFound() && recoveryStrategy == RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION && wasInitializedBeforeExecution) {
-                CompletableFuture<T> failedFuture = new CompletableFuture<>();
-                failedFuture.completeExceptionally(new BucketNotFoundException());
-                return failedFuture;
             }
 
             // fetch actual configuration
@@ -499,10 +481,7 @@ public class DefaultAsyncBucketProxy implements AsyncBucketProxy, AsyncOptimizat
                         new CreateInitialStateAndExecuteCommand<>(configuration, command) :
                         new CreateInitialStateWithVersionOrReplaceConfigurationAndExecuteCommand<>(configuration, command, implicitConfigurationReplacement.getDesiredConfigurationVersion(), implicitConfigurationReplacement.getTokensInheritanceStrategy());
 
-                return commandExecutor.executeAsync(initAndExecuteCommand).thenApply(initAndExecuteCmdResult -> {
-                    wasInitialized.set(true);
-                    return initAndExecuteCmdResult.getData();
-                });
+                return commandExecutor.executeAsync(initAndExecuteCommand).thenApply(CommandResult::getData);
             });
         });
     }

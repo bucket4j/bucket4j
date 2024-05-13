@@ -9,7 +9,6 @@ import java.time.Duration
 import java.util.concurrent.CompletableFuture
 
 import static io.github.bucket4j.TimeMeter.SYSTEM_MILLISECONDS
-import static io.github.bucket4j.distributed.proxy.RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION
 
 class RemoteCornerCases extends Specification {
 
@@ -21,7 +20,6 @@ class RemoteCornerCases extends Specification {
                 .build()
 
             AsyncBucketProxy bucket = proxyManagerMock.asAsync().builder()
-                .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
                 .build("66", configuration)
         when:
             proxyManagerMock.setException(new RuntimeException())

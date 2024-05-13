@@ -40,15 +40,6 @@ import java.util.function.Supplier;
 public interface RemoteBucketBuilder<K> {
 
     /**
-     * Configures custom recovery strategy instead of {@link RecoveryStrategy#RECONSTRUCT} that is used by default.
-     *
-     * @param recoveryStrategy specifies the reaction which should be applied in case of previously saved state of bucket has been lost, explicitly removed or expired.
-     *
-     * @return {@code this}
-     */
-    RemoteBucketBuilder<K> withRecoveryStrategy(RecoveryStrategy recoveryStrategy);
-
-    /**
      * Configures the optimization strategy that will be applied for buckets that are built by this builder.
      *
      * <p>

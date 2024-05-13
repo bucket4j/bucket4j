@@ -20,7 +20,6 @@ import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
 
 import static io.github.bucket4j.TimeMeter.SYSTEM_MILLISECONDS
-import static io.github.bucket4j.distributed.proxy.RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION
 
 class ScheduledBucketSpecification extends Specification {
 
@@ -157,8 +156,8 @@ class ScheduledBucketSpecification extends Specification {
             SchedulerMock schedulerMock = new SchedulerMock()
 
             SchedulingBucket bucket = async ?
-                proxyManagerMock.asAsync().builder().withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION).build("66", {configuration}).asScheduler() :
-                proxyManagerMock.builder().withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION).build("66", {configuration}).asScheduler()
+                proxyManagerMock.asAsync().builder().build("66", {configuration}).asScheduler() :
+                proxyManagerMock.builder().build("66", {configuration}).asScheduler()
 
         when:
             schedulerMock.setException(new RuntimeException())

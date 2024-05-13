@@ -21,8 +21,7 @@
 package io.github.bucket4j.distributed.proxy;
 
 /**
- * Exception which thrown each time when {@link DefaultBucketProxy} found that bucket state has been lost,
- * and {@link DefaultBucketProxy} is unable to repair bucket state or recovery strategy is {@link RecoveryStrategy#THROW_BUCKET_NOT_FOUND_EXCEPTION}.
+ * Exception which thrown each time when {@link DefaultBucketProxy} found that bucket state has been lost.
  */
 public class BucketNotFoundException extends IllegalStateException {
 

@@ -35,14 +35,12 @@ import java.util.function.Supplier;
 public class DefaultBucketProxy extends AbstractBucket implements BucketProxy, OptimizationController {
 
     private final CommandExecutor commandExecutor;
-    private final RecoveryStrategy recoveryStrategy;
     private final Supplier<BucketConfiguration> configurationSupplier;
     private final ImplicitConfigurationReplacement implicitConfigurationReplacement;
-    private final AtomicBoolean wasInitialized;
 
     @Override
     public BucketProxy toListenable(BucketListener listener) {
-        return new DefaultBucketProxy(configurationSupplier, commandExecutor, recoveryStrategy, wasInitialized, implicitConfigurationReplacement, listener);
+        return new DefaultBucketProxy(configurationSupplier, commandExecutor, implicitConfigurationReplacement, listener);
     }
 
     @Override
@@ -55,23 +53,15 @@ public class DefaultBucketProxy extends AbstractBucket implements BucketProxy, O
         execute(new SyncCommand(unsynchronizedTokens, timeSinceLastSync.toNanos()));
     }
 
-    public DefaultBucketProxy(Supplier<BucketConfiguration> configurationSupplier, CommandExecutor commandExecutor, RecoveryStrategy recoveryStrategy,
-                              ImplicitConfigurationReplacement implicitConfigurationReplacement, BucketListener listener) {
-        this(configurationSupplier, commandExecutor, recoveryStrategy, new AtomicBoolean(false), implicitConfigurationReplacement, listener);
-    }
-
-    private DefaultBucketProxy(Supplier<BucketConfiguration> configurationSupplier, CommandExecutor commandExecutor, RecoveryStrategy recoveryStrategy, AtomicBoolean wasInitialized, ImplicitConfigurationReplacement implicitConfigurationReplacement, BucketListener listener) {
+    public DefaultBucketProxy(Supplier<BucketConfiguration> configurationSupplier, CommandExecutor commandExecutor,
+                               ImplicitConfigurationReplacement implicitConfigurationReplacement, BucketListener listener) {
         super(listener);
-
         this.commandExecutor = Objects.requireNonNull(commandExecutor);
-        this.recoveryStrategy = Objects.requireNonNull(recoveryStrategy);
-
         if (configurationSupplier == null) {
             throw BucketExceptions.nullConfigurationSupplier();
         }
         this.configurationSupplier = configurationSupplier;
         this.implicitConfigurationReplacement = implicitConfigurationReplacement;
-        this.wasInitialized = wasInitialized;
     }
 
     @Override
@@ -211,15 +201,9 @@ public class DefaultBucketProxy extends AbstractBucket implements BucketProxy, O
             command = new CheckConfigurationVersionAndExecuteCommand<>(command, implicitConfigurationReplacement.getDesiredConfigurationVersion());
         }
 
-        boolean wasInitializedBeforeExecution = wasInitialized.get();
         CommandResult<T> result = commandExecutor.execute(command);
         if (!result.isBucketNotFound() && !result.isConfigurationNeedToBeReplaced()) {
             return result.getData();
-        }
-
-        // the bucket was removed or lost, or not initialized yet, or needs to upgrade configuration
-        if (result.isBucketNotFound() && recoveryStrategy == RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION && wasInitializedBeforeExecution) {
-            throw new BucketNotFoundException();
         }
 
         // retry command execution
@@ -230,9 +214,7 @@ public class DefaultBucketProxy extends AbstractBucket implements BucketProxy, O
         if (resultAfterInitialization.isBucketNotFound()) {
             throw new IllegalStateException("Bucket is not initialized properly");
         }
-        T data = resultAfterInitialization.getData();
-        wasInitialized.set(true);
-        return data;
+        return resultAfterInitialization.getData();
     }
 
 }

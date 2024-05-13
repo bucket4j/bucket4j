@@ -48,7 +48,6 @@ public abstract class AbstractProxyManagerBuilder<K, P extends ProxyManager<K>, 
     private Optional<ExpirationAfterWriteStrategy> expirationStrategy = Optional.empty();
 
     private BucketListener defaultListener = BucketListener.NOPE;
-    private RecoveryStrategy defaultRecoveryStrategy = RecoveryStrategy.RECONSTRUCT;
 
     private Synchronization synchronization = DirectSynchronization.instance;
 
@@ -161,18 +160,6 @@ public abstract class AbstractProxyManagerBuilder<K, P extends ProxyManager<K>, 
         return (B) this;
     }
 
-    /**
-     * Configures custom recovery strategy  at proxy-manager level, this strategy will be used for buckets in case of it will not be specified during bucket build time.
-     *
-     * @param recoveryStrategy specifies the reaction which should be applied in case of previously saved state of bucket has been lost, explicitly removed or expired.
-     *
-     * @return {@code this}
-     */
-    public B defaultRecoveryStrategy(RecoveryStrategy recoveryStrategy) {
-        this.defaultRecoveryStrategy = Objects.requireNonNull(recoveryStrategy);
-        return (B) this;
-    }
-
     public B synchronization(Synchronization synchronization) {
         this.synchronization = Objects.requireNonNull(synchronization);
         return (B) this;
@@ -246,7 +233,7 @@ public abstract class AbstractProxyManagerBuilder<K, P extends ProxyManager<K>, 
     }
 
     public ClientSideConfig getClientSideConfig() {
-        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, requestTimeoutNanos, expirationStrategy, synchronization, defaultListener, defaultRecoveryStrategy);
+        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, requestTimeoutNanos, expirationStrategy, synchronization, defaultListener);
     }
 
 }

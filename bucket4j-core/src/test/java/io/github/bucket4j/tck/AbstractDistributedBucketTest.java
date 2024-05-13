@@ -5,7 +5,6 @@ import io.github.bucket4j.distributed.AsyncBucketProxy;
 import io.github.bucket4j.distributed.BucketProxy;
 import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
 import io.github.bucket4j.distributed.proxy.AbstractProxyManagerBuilder;
-import io.github.bucket4j.distributed.proxy.BucketNotFoundException;
 import io.github.bucket4j.distributed.proxy.ExpiredEntriesCleaner;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.distributed.proxy.optimization.DelayParameters;
@@ -34,7 +33,6 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-import static io.github.bucket4j.distributed.proxy.RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION;
 import static org.junit.jupiter.api.Assertions.*;
 
 public abstract class AbstractDistributedBucketTest {
@@ -66,51 +64,6 @@ public abstract class AbstractDistributedBucketTest {
 
     @MethodSource("specs")
     @ParameterizedTest
-    public <K, P extends ProxyManager<K>, B extends AbstractProxyManagerBuilder<K, P, B>> void testReconstructRecoveryStrategy(ProxyManagerSpec<K, P, B> spec) {
-        K key = spec.generateRandomKey();
-        BucketConfiguration configuration = BucketConfiguration.builder()
-                .addLimit(Bandwidth.simple(1_000, Duration.ofMinutes(1)))
-                .addLimit(Bandwidth.simple(200, Duration.ofSeconds(10)))
-                .build();
-
-        ProxyManager<K> proxyManager = spec.builder.get().build();
-        Bucket bucket = proxyManager.builder().build(key, configuration);
-
-        assertTrue(bucket.tryConsume(1));
-
-        // simulate crash
-        proxyManager.removeProxy(key);
-
-        assertTrue(bucket.tryConsume(1));
-    }
-
-    @MethodSource("specs")
-    @ParameterizedTest
-    public <K, P extends ProxyManager<K>, B extends AbstractProxyManagerBuilder<K, P, B>> void testThrowExceptionRecoveryStrategy(ProxyManagerSpec<K, P, B> spec) {
-        K key = spec.generateRandomKey();
-        BucketConfiguration configuration = BucketConfiguration.builder()
-                .addLimit(Bandwidth.simple(1_000, Duration.ofMinutes(1)))
-                .build();
-        ProxyManager<K> proxyManager = spec.builder.get().build();
-        Bucket bucket = proxyManager.builder()
-                .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
-                .build(key, configuration);
-
-        assertTrue(bucket.tryConsume(1));
-
-        // simulate crash
-        proxyManager.removeProxy(key);
-
-        try {
-            bucket.tryConsume(1);
-            fail();
-        } catch (BucketNotFoundException e) {
-            // ok
-        }
-    }
-
-    @MethodSource("specs")
-    @ParameterizedTest
     public <K, P extends ProxyManager<K>, B extends AbstractProxyManagerBuilder<K, P, B>> void testLocateConfigurationThroughProxyManager(ProxyManagerSpec<K, P, B> spec) {
         K key = spec.generateRandomKey();
         // should return empty optional if bucket is not stored
@@ -123,7 +76,6 @@ public abstract class AbstractDistributedBucketTest {
                 .addLimit(Bandwidth.simple(1_000, Duration.ofMinutes(1)))
                 .build();
         proxyManager.builder()
-                .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
                 .build(key, configuration)
                 .getAvailableTokens();
         remoteConfiguration = proxyManager.getProxyConfiguration(key);
@@ -597,7 +549,6 @@ public abstract class AbstractDistributedBucketTest {
         K key = spec.generateRandomKey();
         Function<Bucket, Long> action = bucket -> bucket.tryConsume(1)? 1L : 0L;
         Supplier<Bucket> bucketSupplier = () -> proxyManager.builder()
-                .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
                 .build(key, configurationForLongRunningTests);
         int durationSeconds = System.getenv("CI") == null ? 5 : 1;
         ConsumptionScenario scenario = new ConsumptionScenario(4, TimeUnit.SECONDS.toNanos(durationSeconds), bucketSupplier, action, permittedRatePerSecond);
@@ -611,7 +562,6 @@ public abstract class AbstractDistributedBucketTest {
         K key = spec.generateRandomKey();
         Function<Bucket, Long> action = bucket -> bucket.asBlocking().tryConsumeUninterruptibly(1, TimeUnit.MILLISECONDS.toNanos(50), UninterruptibleBlockingStrategy.PARKING) ? 1L : 0L;
         Supplier<Bucket> bucketSupplier = () -> proxyManager.builder()
-                .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
                 .build(key, configurationForLongRunningTests);
         int durationSeconds = System.getenv("CI") == null ? 5 : 1;
         ConsumptionScenario scenario = new ConsumptionScenario(4, TimeUnit.SECONDS.toNanos(durationSeconds), bucketSupplier, action, permittedRatePerSecond);
@@ -635,7 +585,6 @@ public abstract class AbstractDistributedBucketTest {
             }
         };
         Supplier<AsyncBucketProxy> bucketSupplier = () -> proxyManager.asAsync().builder()
-                .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
                 .build(key, configurationForLongRunningTests);
         int durationSeconds = System.getenv("CI") == null ? 5 : 1;
         AsyncConsumptionScenario scenario = new AsyncConsumptionScenario(4, TimeUnit.SECONDS.toNanos(durationSeconds), bucketSupplier, action, permittedRatePerSecond);
@@ -660,7 +609,6 @@ public abstract class AbstractDistributedBucketTest {
             }
         };
         Supplier<AsyncBucketProxy> bucketSupplier = () -> proxyManager.asAsync().builder()
-                .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
                 .build(key, configurationForLongRunningTests);
         int durationSeconds = System.getenv("CI") == null ? 5 : 1;
         AsyncConsumptionScenario scenario = new AsyncConsumptionScenario(4, TimeUnit.SECONDS.toNanos(durationSeconds), bucketSupplier, action, permittedRatePerSecond);

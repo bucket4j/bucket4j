@@ -39,12 +39,6 @@ public class RemoteAsyncBucketBuilderView<K, KeyOld> implements RemoteAsyncBucke
     }
 
     @Override
-    public RemoteAsyncBucketBuilder<K> withRecoveryStrategy(RecoveryStrategy recoveryStrategy) {
-        target.withRecoveryStrategy(recoveryStrategy);
-        return this;
-    }
-
-    @Override
     public RemoteAsyncBucketBuilder<K> withOptimization(Optimization optimization) {
         target.withOptimization(optimization);
         return this;

@@ -38,12 +38,6 @@ public class RemoteBucketBuilderView<K, KeyOld> implements RemoteBucketBuilder<K
     }
 
     @Override
-    public RemoteBucketBuilder<K> withRecoveryStrategy(RecoveryStrategy recoveryStrategy) {
-        target.withRecoveryStrategy(recoveryStrategy);
-        return this;
-    }
-
-    @Override
     public RemoteBucketBuilder<K> withOptimization(Optimization optimization) {
         target.withOptimization(optimization);
         return this;

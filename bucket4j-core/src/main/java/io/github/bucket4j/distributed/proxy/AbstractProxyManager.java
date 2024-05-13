@@ -43,7 +43,6 @@ import static java.util.Objects.requireNonNull;
 
 public abstract class AbstractProxyManager<K> implements ProxyManager<K> {
 
-    private static final RecoveryStrategy DEFAULT_RECOVERY_STRATEGY = RecoveryStrategy.RECONSTRUCT;
     private static final Optimization DEFAULT_REQUEST_OPTIMIZER = Optimization.NONE_OPTIMIZED;
 
     private final ClientSideConfig clientSideConfig;
@@ -133,16 +132,9 @@ public abstract class AbstractProxyManager<K> implements ProxyManager<K> {
 
     class DefaultAsyncRemoteBucketBuilder implements RemoteAsyncBucketBuilder<K> {
 
-        private RecoveryStrategy recoveryStrategy = DEFAULT_RECOVERY_STRATEGY;
         private Optimization asyncRequestOptimizer = DEFAULT_REQUEST_OPTIMIZER;
         private ImplicitConfigurationReplacement implicitConfigurationReplacement;
         private BucketListener listener = BucketListener.NOPE;
-
-        @Override
-        public DefaultAsyncRemoteBucketBuilder withRecoveryStrategy(RecoveryStrategy recoveryStrategy) {
-            this.recoveryStrategy = requireNonNull(recoveryStrategy);
-            return this;
-        }
 
         @Override
         public DefaultAsyncRemoteBucketBuilder withOptimization(Optimization requestOptimizer) {
@@ -186,23 +178,15 @@ public abstract class AbstractProxyManager<K> implements ProxyManager<K> {
             };
             commandExecutor = asyncRequestOptimizer.apply(commandExecutor);
 
-            return new DefaultAsyncBucketProxy(commandExecutor, recoveryStrategy, configurationSupplier, implicitConfigurationReplacement, listener);
+            return new DefaultAsyncBucketProxy(commandExecutor, configurationSupplier, implicitConfigurationReplacement, listener);
         }
 
     }
 
     class DefaultRemoteBucketBuilder implements RemoteBucketBuilder<K> {
-
-        private RecoveryStrategy recoveryStrategy = DEFAULT_RECOVERY_STRATEGY;
         private Optimization requestOptimizer = DEFAULT_REQUEST_OPTIMIZER;
         private ImplicitConfigurationReplacement implicitConfigurationReplacement;
         private BucketListener listener = BucketListener.NOPE;
-
-        @Override
-        public RemoteBucketBuilder<K> withRecoveryStrategy(RecoveryStrategy recoveryStrategy) {
-            this.recoveryStrategy = requireNonNull(recoveryStrategy);
-            return this;
-        }
 
         @Override
         public RemoteBucketBuilder<K> withOptimization(Optimization optimization) {
@@ -246,7 +230,7 @@ public abstract class AbstractProxyManager<K> implements ProxyManager<K> {
             };
             commandExecutor = requestOptimizer.apply(commandExecutor);
 
-            return new DefaultBucketProxy(configurationSupplier, commandExecutor, recoveryStrategy, implicitConfigurationReplacement, listener);
+            return new DefaultBucketProxy(configurationSupplier, commandExecutor, implicitConfigurationReplacement, listener);
         }
 
     }
