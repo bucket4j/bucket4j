@@ -7,11 +7,8 @@ import io.github.bucket4j.distributed.proxy.ProxyManager
 import io.github.bucket4j.distributed.proxy.optimization.DefaultOptimizationListener
 import io.github.bucket4j.distributed.proxy.optimization.Optimization
 import io.github.bucket4j.distributed.remote.MultiResult
-import io.github.bucket4j.distributed.remote.RemoteCommand
 import io.github.bucket4j.distributed.remote.Request
 import io.github.bucket4j.distributed.remote.commands.MultiCommand
-import io.github.bucket4j.distributed.serialization.Scope
-import io.github.bucket4j.distributed.versioning.Versions
 import io.github.bucket4j.mock.ProxyManagerMock
 import io.github.bucket4j.mock.TimeMeterMock
 import spock.lang.Specification
@@ -292,12 +289,12 @@ class BatchingCommandExecutorSpecification extends Specification {
         if (verbose) {
             return proxyManager.builder()
                     .withOptimization(optimization)
-                    .build(1L, configuration)
+                    .build(1L, () -> configuration)
         } else {
             return proxyManager.builder()
                     .withOptimization(optimization)
                     .withImplicitConfigurationReplacement(1, TokensInheritanceStrategy.AS_IS)
-                    .build(1L, configuration)
+                    .build(1L, () -> configuration)
         }
     }
 

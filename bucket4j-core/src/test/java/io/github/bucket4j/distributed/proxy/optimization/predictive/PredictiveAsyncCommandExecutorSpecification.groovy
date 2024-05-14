@@ -13,6 +13,7 @@ import io.github.bucket4j.mock.TimeMeterMock
 import spock.lang.Specification
 
 import java.time.Duration
+import java.util.concurrent.CompletableFuture
 
 class PredictiveAsyncCommandExecutorSpecification extends Specification {
 
@@ -27,9 +28,9 @@ class PredictiveAsyncCommandExecutorSpecification extends Specification {
     private Optimization optimization = new PredictiveOptimization(prediction, delay, listener, clock)
     private AsyncBucketProxy optimizedBucket = proxyManager.asAsync().builder()
         .withOptimization(optimization)
-        .build(1L, configuration)
+        .build(1L, () -> CompletableFuture.completedFuture(configuration))
     private Bucket notOptimizedBucket = proxyManager.builder()
-        .build(1L, configuration)
+        .build(1L, () -> configuration)
 
     def "Should delay sync consumption"() {
         when: "first tryAcquire(1) happened"

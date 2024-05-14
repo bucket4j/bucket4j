@@ -14,6 +14,7 @@ import io.github.bucket4j.mock.TimeMeterMock
 import spock.lang.Specification
 
 import java.time.Duration
+import java.util.concurrent.CompletableFuture
 
 class SkipSyncOnZeroAsyncCommandExecutorSpecification extends Specification {
 
@@ -26,7 +27,7 @@ class SkipSyncOnZeroAsyncCommandExecutorSpecification extends Specification {
     private Optimization optimization = new SkipSyncOnZeroOptimization(listener, clock)
     private AsyncBucketProxy optimizedBucket = proxyManager.asAsync().builder()
         .withOptimization(optimization)
-        .build(1L, configuration);
+        .build(1L, () -> CompletableFuture.completedFuture(configuration));
 
     def "should skip synchronization with storage when bucket is empty"() {
         when: "bucket becomes empty"

@@ -37,6 +37,7 @@ import java.io.Serializable;
 import java.time.Duration;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
@@ -100,12 +101,12 @@ public class HazelcastWithManualSyningPerformanceExample {
 
         BucketProxy bucket = proxyManager.builder()
                 .withOptimization(new ManuallySyncingOptimization())
-                .build("13", configuration);
+                .build("13", () -> configuration);
         // Fetching available tokens is fully enough init bucket in storage
         bucket.getAvailableTokens();
 
         BucketProxy nonOptimizedBucket = proxyManager.builder()
-                .build("13", configuration);
+                .build("13", () -> configuration);
 
         // sync bucket manually each seconds
         Executors.newScheduledThreadPool(1).scheduleAtFixedRate(() -> {
@@ -170,11 +171,11 @@ public class HazelcastWithManualSyningPerformanceExample {
 
         AsyncBucketProxy bucket = proxyManager.asAsync().builder()
                 .withOptimization(new ManuallySyncingOptimization())
-                .build("13", configuration);
+                .build("13", () -> CompletableFuture.completedFuture(configuration));
         bucket.getAvailableTokens().join();
 
         BucketProxy nonOptimizedBucket = proxyManager.builder()
-                .build("13", configuration);
+                .build("13", () -> configuration);
 
         // sync bucket manually each second
         Executors.newScheduledThreadPool(1).scheduleAtFixedRate(() -> {

@@ -1,6 +1,8 @@
 
 package io.github.bucket4j.mock;
 
+import java.util.concurrent.CompletableFuture;
+
 import io.github.bucket4j.*;
 import io.github.bucket4j.distributed.AsyncBucketProxy;
 import io.github.bucket4j.distributed.AsyncBucketProxyAdapter;
@@ -110,7 +112,7 @@ public enum BucketType {
         @Override
         public Bucket createBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
             ProxyManagerMock<Integer> proxyManager = new ProxyManagerMock<>(timeMeter);
-            return proxyManager.builder().build(42, configuration);
+            return proxyManager.builder().build(42, () -> configuration);
         }
 
         @Override
@@ -118,7 +120,7 @@ public enum BucketType {
             ProxyManagerMock<Integer> proxyManager = new ProxyManagerMock<>(timeMeter);
             return proxyManager.builder()
                 .withListener(listener)
-                .build(42, configuration);
+                .build(42, () -> configuration);
         }
 
         @Override
@@ -130,7 +132,7 @@ public enum BucketType {
         public AsyncBucketProxy createAsyncBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
             ProxyManagerMock<Integer> proxyManager = new ProxyManagerMock<>(timeMeter);
             return proxyManager.asAsync().builder()
-                    .build(42, configuration);
+                    .build(42, () -> CompletableFuture.completedFuture(configuration));
         }
 
         @Override
@@ -138,7 +140,7 @@ public enum BucketType {
             ProxyManagerMock<Integer> proxyManager = new ProxyManagerMock<>(timeMeter);
             return proxyManager.asAsync().builder()
                 .withListener(listener)
-                .build(42, configuration);
+                .build(42, () -> CompletableFuture.completedFuture(configuration));
         }
     },
     GRID_WITH_BATCHING_OPTIMIZATION {
@@ -147,7 +149,7 @@ public enum BucketType {
             ProxyManagerMock<Integer> proxyManager = new ProxyManagerMock<>(timeMeter);
             return proxyManager.builder()
                 .withOptimization(Optimizations.batching())
-                .build(42, configuration);
+                .build(42, () -> configuration);
         }
 
         @Override
@@ -156,7 +158,7 @@ public enum BucketType {
             return proxyManager.builder()
                 .withOptimization(Optimizations.batching())
                 .withListener(listener)
-                .build(42, configuration);
+                .build(42, () -> configuration);
         }
 
         @Override
@@ -169,7 +171,7 @@ public enum BucketType {
             ProxyManagerMock<Integer> proxyManager = new ProxyManagerMock<>(timeMeter);
             return proxyManager.asAsync().builder()
                     .withOptimization(Optimizations.batching())
-                    .build(42, configuration);
+                    .build(42, () -> CompletableFuture.completedFuture(configuration));
         }
     },
     GRID_WITH_PER_MANAGER_BATCHING_OPTIMIZATION {
@@ -181,7 +183,7 @@ public enum BucketType {
             );
             return proxyManager.builder()
                 .withOptimization(Optimizations.batching())
-                .build(42, configuration);
+                .build(42, () -> configuration);
         }
 
         @Override
@@ -192,7 +194,7 @@ public enum BucketType {
             );
             return proxyManager.builder()
                 .withListener(listener)
-                .build(42, configuration);
+                .build(42, () -> configuration);
         }
 
         @Override
@@ -208,7 +210,7 @@ public enum BucketType {
             );
             return proxyManager.asAsync().builder()
                 .withOptimization(Optimizations.batching())
-                .build(42, configuration);
+                .build(42, () -> CompletableFuture.completedFuture(configuration));
         }
     },
 
@@ -217,7 +219,7 @@ public enum BucketType {
         public Bucket createBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
             CompareAndSwapBasedProxyManagerMock<Integer> proxyManager = new CompareAndSwapBasedProxyManagerMock<>(ClientSideConfig.getDefault().withClientClock(timeMeter));
             return proxyManager.builder()
-                    .build(42, configuration);
+                    .build(42, () -> configuration);
         }
 
         @Override
@@ -225,7 +227,7 @@ public enum BucketType {
             CompareAndSwapBasedProxyManagerMock<Integer> proxyManager = new CompareAndSwapBasedProxyManagerMock<>(ClientSideConfig.getDefault().withClientClock(timeMeter));
             return proxyManager.builder()
                 .withListener(listener)
-                .build(42, configuration);
+                .build(42, () -> configuration);
         }
 
         @Override
@@ -237,7 +239,7 @@ public enum BucketType {
         public AsyncBucketProxy createAsyncBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
             CompareAndSwapBasedProxyManagerMock<Integer> proxyManager = new CompareAndSwapBasedProxyManagerMock<>(ClientSideConfig.getDefault().withClientClock(timeMeter));
             return proxyManager.asAsync().builder()
-                .build(42, configuration);
+                .build(42, () -> CompletableFuture.completedFuture(configuration));
         }
 
         @Override
@@ -245,7 +247,7 @@ public enum BucketType {
             CompareAndSwapBasedProxyManagerMock<Integer> proxyManager = new CompareAndSwapBasedProxyManagerMock<>(ClientSideConfig.getDefault().withClientClock(timeMeter));
             return proxyManager.asAsync().builder()
                 .withListener(listener)
-                .build(42, configuration);
+                .build(42, () -> CompletableFuture.completedFuture(configuration));
         }
     },
 
@@ -254,7 +256,7 @@ public enum BucketType {
         public Bucket createBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
             LockBasedProxyManagerMock<Integer> proxyManager = new LockBasedProxyManagerMock<>(ClientSideConfig.getDefault().withClientClock(timeMeter));
             return proxyManager.builder()
-                    .build(42, configuration);
+                    .build(42, () -> configuration);
         }
 
         @Override
@@ -262,7 +264,7 @@ public enum BucketType {
             LockBasedProxyManagerMock<Integer> proxyManager = new LockBasedProxyManagerMock<>(ClientSideConfig.getDefault().withClientClock(timeMeter));
             return proxyManager.builder()
                 .withListener(listener)
-                .build(42, configuration);
+                .build(42, () -> configuration);
         }
 
         @Override
@@ -276,7 +278,7 @@ public enum BucketType {
         public Bucket createBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
             SelectForUpdateBasedProxyManagerMock<Integer> proxyManager = new SelectForUpdateBasedProxyManagerMock<>(ClientSideConfig.getDefault().withClientClock(timeMeter));
             return proxyManager.builder()
-                .build(42, configuration);
+                .build(42, () -> configuration);
         }
 
         @Override
@@ -284,7 +286,7 @@ public enum BucketType {
             SelectForUpdateBasedProxyManagerMock<Integer> proxyManager = new SelectForUpdateBasedProxyManagerMock<>(ClientSideConfig.getDefault().withClientClock(timeMeter));
             return proxyManager.builder()
                 .withListener(listener)
-                .build(42, configuration);
+                .build(42, () -> configuration);
         }
 
         @Override

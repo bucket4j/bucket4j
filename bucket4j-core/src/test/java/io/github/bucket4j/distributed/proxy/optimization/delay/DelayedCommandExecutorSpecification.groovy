@@ -24,9 +24,9 @@ class DelayedCommandExecutorSpecification extends Specification {
     private Optimization optimization = new DelayOptimization(parameters, listener, clock)
     private Bucket optimizedBucket = proxyManager.builder()
         .withOptimization(optimization)
-        .build(1L, configuration)
+        .build(1L, () -> configuration)
     private Bucket notOptimizedBucket = proxyManager.builder()
-        .build(1L, configuration)
+        .build(1L, () -> configuration)
 
     def "Should delay sync consumption"() {
         when: "first tryAcquire(1) happened"
@@ -99,7 +99,7 @@ class DelayedCommandExecutorSpecification extends Specification {
         when: "too many optimized bucket overconsumed the bucket"
             List<Bucket> buckets = new ArrayList<>();
             for (int i = 0; i < 10; i++) {
-                buckets.add(proxyManager.builder().withOptimization(optimization).build(1L, configuration))
+                buckets.add(proxyManager.builder().withOptimization(optimization).build(1L, () -> configuration))
             }
             for (int i = 0; i < 10; i++) {
                 buckets.get(i).getAvailableTokens() // just request needed to sync bucket with proxyManager

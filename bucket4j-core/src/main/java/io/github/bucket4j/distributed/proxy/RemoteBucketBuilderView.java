@@ -60,11 +60,6 @@ public class RemoteBucketBuilderView<K, KeyOld> implements RemoteBucketBuilder<K
         return target.build(mapper.apply(key), configurationSupplier);
     }
 
-    @Override
-    public BucketProxy build(K key, BucketConfiguration configuration) {
-        return target.build(mapper.apply(key), configuration);
-    }
-
     // To prevent nesting of anonymous class instances, directly map the original instance.
     @Override
     public <K2> RemoteBucketBuilder<K2> withMapper(Function<? super K2, ? extends K> innerMapper) {

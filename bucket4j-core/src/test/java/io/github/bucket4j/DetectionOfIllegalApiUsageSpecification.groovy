@@ -311,18 +311,10 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
             ProxyManagerMock mockProxy = new ProxyManagerMock(TimeMeter.SYSTEM_MILLISECONDS)
         when:
             mockProxy.builder()
-                .build("66", (BucketConfiguration) null)
-
-        then:
-            Exception ex = thrown()
-            ex.message == nullConfiguration().message
-
-        when:
-            mockProxy.builder()
                 .build("66", { null })
                 .getAvailableTokens()
         then:
-            ex = thrown()
+            Exception ex = thrown()
             ex.message == nullConfiguration().message
 
         when:
@@ -332,14 +324,6 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
         then:
             ex = thrown()
             ex.message == nullConfigurationSupplier().message
-
-        when:
-            mockProxy.asAsync().builder()
-                .build("66", (BucketConfiguration) null)
-
-        then:
-            ex = thrown()
-            ex.message == nullConfiguration().message
 
         when:
             mockProxy.asAsync().builder()

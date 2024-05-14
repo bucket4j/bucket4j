@@ -57,11 +57,6 @@ public class RemoteAsyncBucketBuilderView<K, KeyOld> implements RemoteAsyncBucke
     }
 
     @Override
-    public AsyncBucketProxy build(K key, BucketConfiguration configuration) {
-        return target.build(mapper.apply(key), configuration);
-    }
-
-    @Override
     public AsyncBucketProxy build(K key, Supplier<CompletableFuture<BucketConfiguration>> configurationSupplier) {
         return target.build(mapper.apply(key), configurationSupplier);
     }

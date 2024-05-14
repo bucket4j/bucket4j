@@ -155,14 +155,6 @@ public abstract class AbstractProxyManager<K> implements ProxyManager<K> {
         }
 
         @Override
-        public AsyncBucketProxy build(K key, BucketConfiguration configuration) {
-            if (configuration == null) {
-                throw BucketExceptions.nullConfiguration();
-            }
-            return build(key, () -> CompletableFuture.completedFuture(configuration));
-        }
-
-        @Override
         public AsyncBucketProxy build(K key, Supplier<CompletableFuture<BucketConfiguration>> configurationSupplier) {
             if (configurationSupplier == null) {
                 throw BucketExceptions.nullConfigurationSupplier();
@@ -204,14 +196,6 @@ public abstract class AbstractProxyManager<K> implements ProxyManager<K> {
         public RemoteBucketBuilder<K> withListener(BucketListener listener) {
             this.listener = Objects.requireNonNull(listener);
             return this;
-        }
-
-        @Override
-        public BucketProxy build(K key, BucketConfiguration configuration) {
-            if (configuration == null) {
-                throw BucketExceptions.nullConfiguration();
-            }
-            return build(key, () -> configuration);
         }
 
         @Override

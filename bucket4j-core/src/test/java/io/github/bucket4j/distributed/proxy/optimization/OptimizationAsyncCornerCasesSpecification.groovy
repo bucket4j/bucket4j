@@ -14,6 +14,7 @@ import spock.lang.Specification
 import spock.lang.Unroll
 
 import java.time.Duration
+import java.util.concurrent.CompletableFuture
 
 class OptimizationAsyncCornerCasesSpecification extends Specification {
 
@@ -34,7 +35,7 @@ class OptimizationAsyncCornerCasesSpecification extends Specification {
 
             AsyncBucketProxy bucket = proxyManagerMock.asAsync().builder()
                     .withOptimization(optimization)
-                    .build("66", configuration)
+                    .build("66", {() -> CompletableFuture.completedFuture(configuration)})
         when:
             bucket.getAvailableTokens().get() == 10
             for (int i = 0; i < 5; i++) {
@@ -73,7 +74,7 @@ class OptimizationAsyncCornerCasesSpecification extends Specification {
 
             AsyncBucketProxy bucket = proxyManagerMock.asAsync().builder()
                     .withOptimization(optimization)
-                    .build("66", configuration)
+                    .build("66", () -> CompletableFuture.completedFuture(configuration))
         when:
             bucket.getAvailableTokens().get() == 10
             for (int i = 0; i < 5; i++) {

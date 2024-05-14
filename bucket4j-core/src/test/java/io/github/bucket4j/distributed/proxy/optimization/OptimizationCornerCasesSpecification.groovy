@@ -35,7 +35,7 @@ import java.util.concurrent.CompletableFuture
 
 class OptimizationCornerCasesSpecification extends Specification {
 
-    private static final DelayParameters delayParameters = new DelayParameters(1, Duration.ofNanos(1));
+    private static final DelayParameters delayParameters = new DelayParameters(1, Duration.ofNanos(1))
 
     @Shared
     private TimeMeterMock clock = new TimeMeterMock()
@@ -52,7 +52,7 @@ class OptimizationCornerCasesSpecification extends Specification {
 
             BucketProxy bucket = proxyManagerMock.builder()
                     .withOptimization(optimization)
-                    .build("66", configuration)
+                    .build("66", () -> configuration)
         when:
             bucket.getAvailableTokens() == 10
             for (int i = 0; i < 5; i++) {
@@ -91,7 +91,7 @@ class OptimizationCornerCasesSpecification extends Specification {
 
             BucketProxy bucket = proxyManagerMock.builder()
                     .withOptimization(optimization)
-                    .build("66", configuration)
+                    .build("66", () -> configuration)
         when:
             bucket.getAvailableTokens() == 10
             for (int i = 0; i < 5; i++) {
@@ -130,7 +130,7 @@ class OptimizationCornerCasesSpecification extends Specification {
 
             BucketProxy bucket = proxyManagerMock.builder()
                     .withOptimization(optimization)
-                    .build("66", configuration)
+                    .build("66", () -> configuration)
         when:
             bucket.getAvailableTokens() == 10
             for (int i = 0; i < 5; i++) {
@@ -168,7 +168,7 @@ class OptimizationCornerCasesSpecification extends Specification {
 
             BucketProxy bucket = proxyManagerMock.builder()
                 .withOptimization(optimization)
-                .build("66", configuration)
+                .build("66", () -> configuration)
         when:
             bucket.getAvailableTokens() == 10
             for (int i = 0; i < 5; i++) {
@@ -206,7 +206,7 @@ class OptimizationCornerCasesSpecification extends Specification {
             Bucket bucket10 = proxyManagerMock.builder()
                 .withOptimization(optimization)
                 .withImplicitConfigurationReplacement(PREVIOUS_VERSION, TokensInheritanceStrategy.RESET)
-                .build(KEY, BucketConfiguration.builder()
+                .build(KEY, () -> BucketConfiguration.builder()
                     .addLimit({limit -> limit.capacity(10).refillGreedy(10, Duration.ofSeconds(1))})
                     .build())
 
@@ -216,7 +216,7 @@ class OptimizationCornerCasesSpecification extends Specification {
             CommandExecutor executor = optimization.apply(new CommandExecutor() {
                 @Override
                 CommandResult execute(RemoteCommand command) {
-                    Request request = new Request(command, Versions.latest, clock.currentTimeNanos(), null);
+                    Request request = new Request(command, Versions.latest, clock.currentTimeNanos(), null)
                     return proxyManagerMock.execute(KEY, request)
                 }
             })
@@ -258,7 +258,7 @@ class OptimizationCornerCasesSpecification extends Specification {
             Bucket bucket10 = proxyManagerMock.builder()
                     .withOptimization(optimization)
                     .withImplicitConfigurationReplacement(PREVIOUS_VERSION, TokensInheritanceStrategy.RESET)
-                    .build(KEY, BucketConfiguration.builder()
+                    .build(KEY, () -> BucketConfiguration.builder()
                             .addLimit({limit -> limit.capacity(10).refillGreedy(10, Duration.ofSeconds(1))})
                             .build())
 
@@ -268,7 +268,7 @@ class OptimizationCornerCasesSpecification extends Specification {
             AsyncCommandExecutor executor = optimization.apply (new AsyncCommandExecutor() {
                 @Override
                 CompletableFuture<CommandResult> executeAsync(RemoteCommand command) {
-                    Request request = new Request(command, Versions.latest, clock.currentTimeNanos(), null);
+                    Request request = new Request(command, Versions.latest, clock.currentTimeNanos(), null)
                     return proxyManagerMock.executeAsync(KEY, request)
                 }
             })

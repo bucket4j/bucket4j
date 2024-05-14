@@ -83,25 +83,6 @@ public interface RemoteAsyncBucketBuilder<K> {
 
     /**
      * Builds the {@link AsyncBucketProxy}. Proxy is being created in lazy mode, its state is not persisted in external storage until first interaction,
-     * so if you want to save bucket state immediately then just call {@link AsyncBucketProxy#getAvailableTokens()}.
-     *
-     * <p>
-     *     If you had not used {@link #withOptimization(Optimization)} during construction then created proxy can be treated as cheap object,
-     *     feel free just build, use and forget as many proxies under the same key as you need, do not cache the built instances.
-     * </p>
-     *
-     * @param key the key that used in external storage to distinguish one bucket from another.
-     * @param configuration limits configuration
-     *
-     * @return new instance of {@link AsyncBucketProxy} created in lazy mode.
-     * @deprecated use {@link #build(Object, Supplier)} instead. This method will be removed soon
-     */
-    AsyncBucketProxy build(K key, BucketConfiguration configuration);
-
-    /**
-     * Has the same semantic with {@link #build(Object, BucketConfiguration)},
-     * but additionally provides ability to provide configuration lazily, that can be helpful when figuring-out the right configuration parameters
-     * is costly, for example because parameters for particular {@code key} are stored in external database,
      * {@code configurationSupplier} will be called if and only if bucket has not been persisted before.
      *
      * @param key the key that used in external storage to distinguish one bucket from another.
@@ -110,7 +91,6 @@ public interface RemoteAsyncBucketBuilder<K> {
      * @return new instance of {@link AsyncBucketProxy} created in lazy mode.
      */
     AsyncBucketProxy build(K key, Supplier<CompletableFuture<BucketConfiguration>> configurationSupplier);
-
 
     /**
      * Returns a proxy object that wraps this RemoteAsyncBucketBuilder such that keys are first mapped using the specified mapping function

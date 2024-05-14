@@ -12,6 +12,7 @@ import spock.lang.Specification
 import spock.lang.Unroll
 
 import java.time.Duration
+import java.util.concurrent.CompletableFuture
 
 class ImplicitConfigurationReplacementSpecification extends Specification {
 
@@ -43,11 +44,11 @@ class ImplicitConfigurationReplacementSpecification extends Specification {
                         if (batching) {
                             builder.withOptimization(Optimizations.batching())
                         }
-                        Bucket bucket1 = builder.build(key, oldConfiguration)
+                        Bucket bucket1 = builder.build(key, () -> oldConfiguration)
                         assert bucket1.getAvailableTokens() == 60
 
                         builder.withImplicitConfigurationReplacement(1L, TokensInheritanceStrategy.AS_IS)
-                        Bucket bucket2 = builder.build(key, newConfiguration)
+                        Bucket bucket2 = builder.build(key, () -> newConfiguration)
 
                         if (!verbose) {
                             assert bucket2.getAvailableTokens() == 3
@@ -60,11 +61,11 @@ class ImplicitConfigurationReplacementSpecification extends Specification {
                             builder.withOptimization(Optimizations.batching())
                         }
 
-                        AsyncBucketProxy bucket1 = builder.build(key, oldConfiguration)
+                        AsyncBucketProxy bucket1 = builder.build(key, {CompletableFuture.completedFuture(oldConfiguration)})
                         assert bucket1.getAvailableTokens().get() == 60
 
                         builder.withImplicitConfigurationReplacement(1L, TokensInheritanceStrategy.AS_IS)
-                        AsyncBucketProxy bucket2 = builder.build(key, newConfiguration)
+                        AsyncBucketProxy bucket2 = builder.build(key, {CompletableFuture.completedFuture(newConfiguration)})
 
                         if (!verbose) {
                             assert bucket2.getAvailableTokens().get() == 3
@@ -105,11 +106,11 @@ class ImplicitConfigurationReplacementSpecification extends Specification {
                         if (batching) {
                             builder.withOptimization(Optimizations.batching())
                         }
-                        Bucket bucket1 = builder.withImplicitConfigurationReplacement(1L, TokensInheritanceStrategy.AS_IS).build(key, oldConfiguration)
+                        Bucket bucket1 = builder.withImplicitConfigurationReplacement(1L, TokensInheritanceStrategy.AS_IS).build(key, {oldConfiguration})
                         assert bucket1.getAvailableTokens() == 60
 
                         builder.withImplicitConfigurationReplacement(2L, TokensInheritanceStrategy.AS_IS)
-                        Bucket bucket2 = builder.build(key, newConfiguration)
+                        Bucket bucket2 = builder.build(key, {newConfiguration})
 
                         if (!verbose) {
                             assert bucket2.getAvailableTokens() == 3
@@ -122,11 +123,12 @@ class ImplicitConfigurationReplacementSpecification extends Specification {
                             builder.withOptimization(Optimizations.batching())
                         }
 
-                        AsyncBucketProxy bucket1 = builder.withImplicitConfigurationReplacement(1L, TokensInheritanceStrategy.AS_IS).build(key, oldConfiguration)
+                        AsyncBucketProxy bucket1 = builder.withImplicitConfigurationReplacement(1L, TokensInheritanceStrategy.AS_IS)
+                                .build(key, {CompletableFuture.completedFuture(oldConfiguration)})
                         assert bucket1.getAvailableTokens().get() == 60
 
                         builder.withImplicitConfigurationReplacement(2L, TokensInheritanceStrategy.AS_IS)
-                        AsyncBucketProxy bucket2 = builder.build(key, newConfiguration)
+                        AsyncBucketProxy bucket2 = builder.build(key, {newConfiguration})
 
                         if (!verbose) {
                             assert bucket2.getAvailableTokens().get() == 3
@@ -167,11 +169,11 @@ class ImplicitConfigurationReplacementSpecification extends Specification {
                         if (batching) {
                             builder.withOptimization(Optimizations.batching())
                         }
-                        Bucket bucket1 = builder.withImplicitConfigurationReplacement(1L, TokensInheritanceStrategy.AS_IS).build(key, oldConfiguration)
+                        Bucket bucket1 = builder.withImplicitConfigurationReplacement(1L, TokensInheritanceStrategy.AS_IS).build(key, {oldConfiguration})
                         assert bucket1.getAvailableTokens() == 60
 
                         builder.withImplicitConfigurationReplacement(1L, TokensInheritanceStrategy.AS_IS)
-                        Bucket bucket2 = builder.build(key, newConfiguration)
+                        Bucket bucket2 = builder.build(key, {newConfiguration})
 
                         if (!verbose) {
                             assert bucket2.getAvailableTokens() == 60
@@ -184,11 +186,12 @@ class ImplicitConfigurationReplacementSpecification extends Specification {
                             builder.withOptimization(Optimizations.batching())
                         }
 
-                        AsyncBucketProxy bucket1 = builder.withImplicitConfigurationReplacement(1L, TokensInheritanceStrategy.AS_IS).build(key, oldConfiguration)
+                        AsyncBucketProxy bucket1 = builder.withImplicitConfigurationReplacement(1L, TokensInheritanceStrategy.AS_IS)
+                                .build(key, {CompletableFuture.completedFuture(oldConfiguration)})
                         assert bucket1.getAvailableTokens().get() == 60
 
                         builder.withImplicitConfigurationReplacement(1L, TokensInheritanceStrategy.AS_IS)
-                        AsyncBucketProxy bucket2 = builder.build(key, newConfiguration)
+                        AsyncBucketProxy bucket2 = builder.build(key, {CompletableFuture.completedFuture(newConfiguration)})
 
                         if (!verbose) {
                             assert bucket2.getAvailableTokens().get() == 60

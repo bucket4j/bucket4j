@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.time.Duration;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
@@ -106,7 +107,7 @@ public class HazelcastSkipSyncOnZeroExample {
 
         Bucket bucket = proxyManager.builder()
                 .withOptimization(optimization)
-                .build("13", configuration);
+                .build("13", () -> configuration);
 
         Timer statLogTimer = new Timer();
         statLogTimer.schedule(new TimerTask() {
@@ -171,7 +172,7 @@ public class HazelcastSkipSyncOnZeroExample {
 
         AsyncBucketProxy bucket = proxyManager.asAsync().builder()
                 .withOptimization(optimization)
-                .build("13", configuration);
+                .build("13", () -> CompletableFuture.completedFuture(configuration));
 
         // We need a backpressure for ougoing work because it obviously that OOM can be happen in asycnhrouous bucket mode
         // when tasks incoming rate is greater then Hazelcast can process

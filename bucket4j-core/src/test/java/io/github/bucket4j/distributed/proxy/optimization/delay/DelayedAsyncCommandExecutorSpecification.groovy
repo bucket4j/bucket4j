@@ -12,6 +12,7 @@ import io.github.bucket4j.mock.TimeMeterMock
 import spock.lang.Specification
 
 import java.time.Duration
+import java.util.concurrent.CompletableFuture
 
 class DelayedAsyncCommandExecutorSpecification extends Specification {
 
@@ -25,9 +26,9 @@ class DelayedAsyncCommandExecutorSpecification extends Specification {
     private Optimization optimization = new DelayOptimization(parameters, listener, clock)
     private AsyncBucketProxy optimizedBucket = proxyManager.asAsync().builder()
         .withOptimization(optimization)
-        .build(1L, configuration)
+        .build(1L, () -> CompletableFuture.completedFuture(configuration))
     private Bucket notOptimizedBucket = proxyManager.builder()
-        .build(1L, configuration)
+        .build(1L, () -> configuration)
 
     def "Should delay async consumption"() {
         when: "first tryAcquire(1) happened"
@@ -100,7 +101,7 @@ class DelayedAsyncCommandExecutorSpecification extends Specification {
         when: "too many optimized bucket overconsumed the bucket"
             List<Bucket> buckets = new ArrayList<>();
             for (int i = 0; i < 10; i++) {
-                buckets.add(proxyManager.asAsync().builder().withOptimization(optimization).build(1L, configuration))
+                buckets.add(proxyManager.asAsync().builder().withOptimization(optimization).build(1L, {CompletableFuture.completedFuture(configuration)}))
             }
             for (int i = 0; i < 10; i++) {
                 buckets.get(i).getAvailableTokens() // just request needed to sync bucket with proxyManager

@@ -25,7 +25,7 @@ class SkipSyncOnZeroCommandExecutorSpecification extends Specification {
     private Optimization optimization = new SkipSyncOnZeroOptimization(listener, clock)
     private Bucket optimizedBucket = proxyManager.builder()
         .withOptimization(optimization)
-        .build(1L, configuration)
+        .build(1L, () -> configuration)
 
     def "should skip synchronization with storage when bucket is empty"() {
         when: "bucket becomes empty"
