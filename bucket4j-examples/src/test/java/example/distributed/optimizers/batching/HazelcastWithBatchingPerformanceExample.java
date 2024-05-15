@@ -12,6 +12,7 @@ import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.distributed.AsyncBucketProxy;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.optimization.Optimizations;
+import io.github.bucket4j.grid.hazelcast.Bucket4jHazelcast;
 import io.github.bucket4j.grid.hazelcast.HazelcastProxyManager;
 import org.gridkit.nanocloud.Cloud;
 import org.gridkit.nanocloud.CloudFactory;
@@ -84,7 +85,7 @@ public class HazelcastWithBatchingPerformanceExample {
         Meter consumptionRate = new Meter();
         com.codahale.metrics.Timer latencyTimer = buildLatencyTimer();
 
-        HazelcastProxyManager<String> proxyManager = new HazelcastProxyManager<>(map, ClientSideConfig.getDefault());
+        HazelcastProxyManager<String> proxyManager = Bucket4jHazelcast.entryProcessorBasedBuilder(map).build();;
         BucketConfiguration configuration = BucketConfiguration.builder()
                 .addLimit(
                     Bandwidth.simple(10, Duration.ofSeconds(1)).withInitialTokens(0))
@@ -135,7 +136,7 @@ public class HazelcastWithBatchingPerformanceExample {
         Meter consumptionRate = new Meter();
         com.codahale.metrics.Timer latencyTimer = buildLatencyTimer();
 
-        HazelcastProxyManager<String> proxyManager = new HazelcastProxyManager<>(map, ClientSideConfig.getDefault());
+        HazelcastProxyManager<String> proxyManager = Bucket4jHazelcast.entryProcessorBasedBuilder(map).build();;
         BucketConfiguration configuration = BucketConfiguration.builder()
                 .addLimit(
                         Bandwidth.simple(10, Duration.ofSeconds(1)).withInitialTokens(0))

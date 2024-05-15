@@ -40,6 +40,7 @@ import io.github.bucket4j.distributed.proxy.optimization.DefaultOptimizationList
 import io.github.bucket4j.distributed.proxy.optimization.Optimization;
 import io.github.bucket4j.distributed.proxy.optimization.skiponzero.SkipSyncOnZeroOptimization;
 import io.github.bucket4j.grid.hazelcast.HazelcastProxyManager;
+import io.github.bucket4j.redis.lettuce.Bucket4jLettuce;
 import io.github.bucket4j.redis.lettuce.cas.LettuceBasedProxyManager;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.codec.ByteArrayCodec;
@@ -87,8 +88,8 @@ public class RedisSkipSyncOnZeroExample {
         Meter consumptionRate = new Meter();
         com.codahale.metrics.Timer latencyTimer = buildLatencyTimer();
 
-        ProxyManager<String> proxyManager = LettuceBasedProxyManager.builderFor(redisClient)
-            .withExpirationStrategy(ExpirationAfterWriteStrategy.none())
+        ProxyManager<String> proxyManager = Bucket4jLettuce.casBasedBuilder(redisClient)
+            .expirationAfterWrite(ExpirationAfterWriteStrategy.none())
             .build()
             .withMapper(str -> str.getBytes(Charsets.UTF_8));
         BucketConfiguration configuration = BucketConfiguration.builder()
@@ -156,8 +157,8 @@ public class RedisSkipSyncOnZeroExample {
         Meter consumptionRate = new Meter();
         com.codahale.metrics.Timer latencyTimer = buildLatencyTimer();
 
-        ProxyManager<String> proxyManager = LettuceBasedProxyManager.builderFor(redisClient)
-            .withExpirationStrategy(ExpirationAfterWriteStrategy.none())
+        ProxyManager<String> proxyManager = Bucket4jLettuce.casBasedBuilder(redisClient)
+            .expirationAfterWrite(ExpirationAfterWriteStrategy.none())
             .build()
             .withMapper(str -> str.getBytes(Charsets.UTF_8));
         BucketConfiguration configuration = BucketConfiguration.builder()

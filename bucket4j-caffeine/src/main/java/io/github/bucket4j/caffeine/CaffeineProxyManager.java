@@ -70,46 +70,6 @@ public class CaffeineProxyManager<K> extends AbstractProxyManager<K> {
             .build();
     }
 
-    /**
-     * @deprecated use {@link Bucket4jCaffeine#builderFor(Caffeine)}
-     */
-    @Deprecated
-    public CaffeineProxyManager(Caffeine<? super K, ? super RemoteBucketState> builder, Duration keepAfterRefillDuration) {
-        this(builder, keepAfterRefillDuration, ClientSideConfig.getDefault());
-    }
-
-    /**
-     * @deprecated use {@link Bucket4jCaffeine#builderFor(Caffeine)}
-     */
-    @Deprecated
-    public CaffeineProxyManager(Caffeine<? super K, ? super RemoteBucketState> builder, Duration keepAfterRefillDuration, ClientSideConfig clientSideConfig) {
-        super(clientSideConfig);
-        this.cache = builder
-            .expireAfter(new Expiry<K, RemoteBucketState>() {
-                @Override
-                public long expireAfterCreate(K key, RemoteBucketState bucketState, long currentTime) {
-                    long currentTimeNanos = currentTimeNanos();
-                    long nanosToFullRefill = bucketState.calculateFullRefillingTime(currentTimeNanos);
-                    return nanosToFullRefill + keepAfterRefillDuration.toNanos();
-                }
-
-                @Override
-                public long expireAfterUpdate(K key, RemoteBucketState bucketState, long currentTime, long currentDuration) {
-                    long currentTimeNanos = currentTimeNanos();
-                    long nanosToFullRefill = bucketState.calculateFullRefillingTime(currentTimeNanos);
-                    return nanosToFullRefill + keepAfterRefillDuration.toNanos();
-                }
-
-                @Override
-                public long expireAfterRead(K key, RemoteBucketState bucketState, long currentTime, long currentDuration) {
-                    long currentTimeNanos = currentTimeNanos();
-                    long nanosToFullRefill = bucketState.calculateFullRefillingTime(currentTimeNanos);
-                    return nanosToFullRefill + keepAfterRefillDuration.toNanos();
-                }
-            })
-            .build();
-    }
-
     @Override
     public boolean isExpireAfterWriteSupported() {
         return true;

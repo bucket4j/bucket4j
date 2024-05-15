@@ -59,19 +59,6 @@ public class CoherenceProxyManager<K> extends AbstractProxyManager<K> {
 
     private final NamedCache<K, byte[]> cache;
 
-    public CoherenceProxyManager(NamedCache<K, byte[]> cache) {
-        this(cache, ClientSideConfig.getDefault());
-    }
-
-    /**
-     * @deprecated use {@link Bucket4jCoherence#entryProcessorBasedBuilder(NamedCache)}
-     */
-    @Deprecated
-    public CoherenceProxyManager(NamedCache<K, byte[]> cache, ClientSideConfig clientSideConfig) {
-        super(clientSideConfig);
-        this.cache = cache;
-    }
-
     CoherenceProxyManager(Bucket4jCoherence.CoherenceProxyManagerBuilder<K> builder) {
         super(builder.getClientSideConfig());
         this.cache = builder.cache;

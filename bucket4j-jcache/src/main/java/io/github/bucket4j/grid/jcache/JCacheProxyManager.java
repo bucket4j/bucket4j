@@ -75,25 +75,6 @@ public class JCacheProxyManager<K> extends AbstractProxyManager<K> {
         this.preferLambdaStyle = preferLambdaStyle(cache);
     }
 
-    /**
-     * @deprecated use {@link Bucket4jJCache#entryProcessorBasedBuilder(Cache)}
-     */
-    @Deprecated
-    public JCacheProxyManager(Cache<K, byte[]> cache) {
-        this(cache, ClientSideConfig.getDefault());
-    }
-
-    /**
-     * @deprecated use {@link Bucket4jJCache#entryProcessorBasedBuilder(Cache)}
-     */
-    @Deprecated
-    public JCacheProxyManager(Cache<K, byte[]> cache, ClientSideConfig clientSideConfig) {
-        super(clientSideConfig);
-        checkCompatibilityWithProvider(cache);
-        this.cache = Objects.requireNonNull(cache);
-        this.preferLambdaStyle = preferLambdaStyle(cache);
-    }
-
     @Override
     public <T> CommandResult<T> execute(K key, Request<T> request) {
         EntryProcessor<K, byte[], byte[]> entryProcessor = preferLambdaStyle? createLambdaProcessor(request) : new BucketProcessor<>(request);

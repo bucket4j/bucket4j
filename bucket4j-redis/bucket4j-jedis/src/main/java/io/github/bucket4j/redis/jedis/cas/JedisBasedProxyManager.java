@@ -21,7 +21,6 @@
 package io.github.bucket4j.redis.jedis.cas;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -31,14 +30,9 @@ import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AsyncCompar
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.CompareAndSwapOperation;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.distributed.serialization.Mapper;
-import io.github.bucket4j.redis.AbstractRedisProxyManagerBuilder;
 import io.github.bucket4j.redis.consts.LuaScripts;
 import io.github.bucket4j.redis.jedis.Bucket4jJedis;
 import io.github.bucket4j.redis.jedis.RedisApi;
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisCluster;
-import redis.clients.jedis.UnifiedJedis;
-import redis.clients.jedis.util.Pool;
 
 public class JedisBasedProxyManager<K> extends AbstractCompareAndSwapBasedProxyManager<K> {
 
@@ -46,107 +40,9 @@ public class JedisBasedProxyManager<K> extends AbstractCompareAndSwapBasedProxyM
     private final ExpirationAfterWriteStrategy expirationStrategy;
     private final Mapper<K> keyMapper;
 
-    /**
-     * @deprecated use {@link Bucket4jJedis#casBasedBuilder(Pool)}
-     */
-    @Deprecated
-    public static JedisBasedProxyManagerBuilder<byte[]> builderFor(Pool<Jedis> jedisPool) {
-        Objects.requireNonNull(jedisPool);
-        RedisApi redisApi = new RedisApi() {
-            @Override
-            public Object eval(byte[] script, int keyCount, byte[]... params) {
-                try (Jedis jedis = jedisPool.getResource()) {
-                    return jedis.eval(script, 1, params);
-                }
-            }
-            @Override
-            public byte[] get(byte[] key) {
-                try (Jedis jedis = jedisPool.getResource()) {
-                    return jedis.get(key);
-                }
-            }
-            @Override
-            public void delete(byte[] key) {
-                try (Jedis jedis = jedisPool.getResource()) {
-                    jedis.del(key);
-                }
-            }
-        };
-        return new JedisBasedProxyManagerBuilder<>(Mapper.BYTES, redisApi);
-    }
-
-    /**
-     * @deprecated use {@link Bucket4jJedis#casBasedBuilder(UnifiedJedis)}
-     */
-    @Deprecated
-    public static JedisBasedProxyManagerBuilder<byte[]> builderFor(UnifiedJedis unifiedJedis) {
-        Objects.requireNonNull(unifiedJedis);
-        RedisApi redisApi = new RedisApi() {
-            @Override
-            public Object eval(byte[] script, int keyCount, byte[]... params) {
-                return unifiedJedis.eval(script, keyCount, params);
-            }
-
-            @Override
-            public byte[] get(byte[] key) {
-                return unifiedJedis.get(key);
-            }
-
-            @Override
-            public void delete(byte[] key) {
-                unifiedJedis.del(key);
-            }
-        };
-        return new JedisBasedProxyManagerBuilder<>(Mapper.BYTES, redisApi);
-
-    }
-
-    /**
-     * @deprecated use {@link Bucket4jJedis#casBasedBuilder(JedisCluster)}
-     */
-    public static JedisBasedProxyManagerBuilder<byte[]> builderFor(JedisCluster jedisCluster) {
-        Objects.requireNonNull(jedisCluster);
-        RedisApi redisApi = new RedisApi() {
-            @Override
-            public Object eval(byte[] script, int keyCount, byte[]... params) {
-                return jedisCluster.eval(script, keyCount, params);
-            }
-            @Override
-            public byte[] get(byte[] key) {
-                return jedisCluster.get(key);
-            }
-            @Override
-            public void delete(byte[] key) {
-                jedisCluster.del(key);
-            }
-        };
-        return new JedisBasedProxyManagerBuilder<>(Mapper.BYTES, redisApi);
-    }
-
     @Override
     public boolean isExpireAfterWriteSupported() {
         return true;
-    }
-
-    public static class JedisBasedProxyManagerBuilder<K> extends AbstractRedisProxyManagerBuilder<JedisBasedProxyManagerBuilder<K>> {
-
-        private final RedisApi redisApi;
-        private Mapper<K> keyMapper;
-
-        public <Key> JedisBasedProxyManagerBuilder<Key> withKeyMapper(Mapper<Key> keyMapper) {
-            this.keyMapper = (Mapper) Objects.requireNonNull(keyMapper);
-            return (JedisBasedProxyManagerBuilder) this;
-        }
-
-        private JedisBasedProxyManagerBuilder(Mapper<K> keyMapper, RedisApi redisApi) {
-            this.keyMapper = Objects.requireNonNull(keyMapper);
-            this.redisApi = Objects.requireNonNull(redisApi);
-        }
-
-        public JedisBasedProxyManager<K> build() {
-            return new JedisBasedProxyManager<>(this);
-        }
-
     }
 
     public JedisBasedProxyManager(Bucket4jJedis.JedisBasedProxyManagerBuilder<K> builder) {
@@ -154,13 +50,6 @@ public class JedisBasedProxyManager<K> extends AbstractCompareAndSwapBasedProxyM
         this.keyMapper = builder.getKeyMapper();
         this.expirationStrategy = builder.getExpirationAfterWrite().orElse(ExpirationAfterWriteStrategy.none());
         this.redisApi = builder.getRedisApi();
-    }
-
-    private JedisBasedProxyManager(JedisBasedProxyManagerBuilder<K> builder) {
-        super(builder.getClientSideConfig());
-        this.redisApi = builder.redisApi;
-        this.expirationStrategy = builder.getNotNullExpirationStrategy();
-        this.keyMapper = builder.keyMapper;
     }
 
     @Override

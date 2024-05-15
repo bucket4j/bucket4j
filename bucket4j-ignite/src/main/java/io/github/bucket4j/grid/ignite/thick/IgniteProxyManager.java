@@ -70,23 +70,6 @@ public class IgniteProxyManager<K> extends AbstractProxyManager<K> {
         cache = builder.cache;
     }
 
-    /**
-     * @deprecated use {@link Bucket4jIgnite#thickClient()#builderFor()}
-     */
-    @Deprecated
-    public IgniteProxyManager(IgniteCache<K, byte[]> cache) {
-        this(cache, ClientSideConfig.getDefault());
-    }
-
-    /**
-     * @deprecated use {@link Bucket4jIgnite#thickClient()#builderFor()}
-     */
-    @Deprecated
-    public IgniteProxyManager(IgniteCache<K, byte[]> cache, ClientSideConfig clientSideConfig) {
-        super(clientSideConfig);
-        this.cache = Objects.requireNonNull(cache);
-    }
-
     @Override
     public <T> CommandResult<T> execute(K key, Request<T> request) {
         IgniteProcessor<K> entryProcessor = new IgniteProcessor<>(request);

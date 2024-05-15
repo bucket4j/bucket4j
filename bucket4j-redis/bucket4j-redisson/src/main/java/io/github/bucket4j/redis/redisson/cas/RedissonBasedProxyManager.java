@@ -23,7 +23,6 @@ package io.github.bucket4j.redis.redisson.cas;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -44,7 +43,6 @@ import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AsyncCompar
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.CompareAndSwapOperation;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.distributed.serialization.Mapper;
-import io.github.bucket4j.redis.AbstractRedisProxyManagerBuilder;
 import io.github.bucket4j.redis.consts.LuaScripts;
 import io.github.bucket4j.redis.redisson.Bucket4jRedisson;
 import io.netty.buffer.ByteBuf;
@@ -58,47 +56,11 @@ public class RedissonBasedProxyManager<K> extends AbstractCompareAndSwapBasedPro
 
     private final Mapper<K> keyMapper;
 
-    /**
-     * @deprecated use {@link Bucket4jRedisson#casBasedBuilder(CommandAsyncExecutor)}
-     */
-    @Deprecated
-    public static RedissonBasedProxyManagerBuilder<String> builderFor(CommandAsyncExecutor commandExecutor) {
-        return new RedissonBasedProxyManagerBuilder<>(Mapper.STRING, commandExecutor);
-    }
-
-    public static class RedissonBasedProxyManagerBuilder<K> extends AbstractRedisProxyManagerBuilder<RedissonBasedProxyManagerBuilder<K>> {
-
-        private final CommandAsyncExecutor commandExecutor;
-        private Mapper<K> keyMapper;
-
-        private RedissonBasedProxyManagerBuilder(Mapper<K> keyMapper, CommandAsyncExecutor commandExecutor) {
-            this.keyMapper = Objects.requireNonNull(keyMapper);
-            this.commandExecutor = Objects.requireNonNull(commandExecutor);
-        }
-
-        public <Key> RedissonBasedProxyManagerBuilder<Key> withKeyMapper(Mapper<Key> keyMapper) {
-            this.keyMapper = (Mapper) Objects.requireNonNull(keyMapper);
-            return (RedissonBasedProxyManagerBuilder) this;
-        }
-
-        public RedissonBasedProxyManager<K> build() {
-            return new RedissonBasedProxyManager<>(this);
-        }
-
-    }
-
     public RedissonBasedProxyManager(Bucket4jRedisson.RedissonBasedProxyManagerBuilder<K> builder) {
         super(builder.getClientSideConfig());
         this.commandExecutor = builder.getCommandExecutor();
         this.expirationStrategy = builder.getExpirationAfterWrite().orElse(ExpirationAfterWriteStrategy.none());
         this.keyMapper = builder.getKeyMapper();
-    }
-
-    private RedissonBasedProxyManager(RedissonBasedProxyManagerBuilder<K> builder) {
-        super(builder.getClientSideConfig());
-        this.commandExecutor = builder.commandExecutor;
-        this.expirationStrategy = builder.getNotNullExpirationStrategy();
-        this.keyMapper = builder.keyMapper;
     }
 
     @Override

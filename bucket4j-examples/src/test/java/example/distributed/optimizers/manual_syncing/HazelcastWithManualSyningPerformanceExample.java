@@ -21,6 +21,7 @@ import io.github.bucket4j.distributed.proxy.optimization.OptimizationListener;
 import io.github.bucket4j.distributed.proxy.optimization.Optimizations;
 import io.github.bucket4j.distributed.proxy.optimization.batch.BatchingOptimization;
 import io.github.bucket4j.distributed.proxy.optimization.manual.ManuallySyncingOptimization;
+import io.github.bucket4j.grid.hazelcast.Bucket4jHazelcast;
 import io.github.bucket4j.grid.hazelcast.HazelcastProxyManager;
 import io.github.bucket4j.mock.ProxyManagerMock;
 import org.gridkit.nanocloud.Cloud;
@@ -93,7 +94,7 @@ public class HazelcastWithManualSyningPerformanceExample {
         SmoothlyDecayingRollingCounter consumptionRate = new SmoothlyDecayingRollingCounter(Duration.ofSeconds(10), 5);
         com.codahale.metrics.Timer latencyTimer = buildLatencyTimer();
 
-        HazelcastProxyManager<String> proxyManager = new HazelcastProxyManager<>(map, ClientSideConfig.getDefault());
+        HazelcastProxyManager<String> proxyManager = Bucket4jHazelcast.entryProcessorBasedBuilder(map).build();
 //        ProxyManagerMock<String> proxyManager = new ProxyManagerMock<>(TimeMeter.SYSTEM_MILLISECONDS);
         BucketConfiguration configuration = BucketConfiguration.builder()
                 .addLimit(limit -> limit.capacity(10000).refillGreedy(10000, Duration.ofNanos(1)).initialTokens(0))
@@ -162,7 +163,7 @@ public class HazelcastWithManualSyningPerformanceExample {
         SmoothlyDecayingRollingCounter consumptionRate = new SmoothlyDecayingRollingCounter(Duration.ofSeconds(10), 5);
         com.codahale.metrics.Timer latencyTimer = buildLatencyTimer();
 
-        HazelcastProxyManager<String> proxyManager = new HazelcastProxyManager<>(map, ClientSideConfig.getDefault());
+        HazelcastProxyManager<String> proxyManager = Bucket4jHazelcast.entryProcessorBasedBuilder(map).build();;
 //        ProxyManagerMock<String> proxyManager = new ProxyManagerMock<>(TimeMeter.SYSTEM_MILLISECONDS);
         BucketConfiguration configuration = BucketConfiguration.builder()
                 .addLimit(

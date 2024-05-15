@@ -40,23 +40,6 @@ public class HazelcastCompareAndSwapBasedProxyManager<K> extends AbstractCompare
         this.map = builder.map;
     }
 
-    /**
-     * @deprecated use {@link Bucket4jHazelcast#casBasedBuilder(IMap)}
-     */
-    @Deprecated
-    public HazelcastCompareAndSwapBasedProxyManager(IMap<K, byte[]> map) {
-        this(map, ClientSideConfig.getDefault());
-    }
-
-    /**
-     * @deprecated use {@link Bucket4jHazelcast#casBasedBuilder(IMap)}
-     */
-    @Deprecated
-    public HazelcastCompareAndSwapBasedProxyManager(IMap<K, byte[]> map, ClientSideConfig clientSideConfig) {
-        super(clientSideConfig);
-        this.map = Objects.requireNonNull(map);
-    }
-
     @Override
     protected CompletableFuture<Void> removeAsync(K key) {
         throw new UnsupportedOperationException();

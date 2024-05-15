@@ -41,23 +41,6 @@ public class HazelcastLockBasedProxyManager<K> extends AbstractLockBasedProxyMan
         this.map = builder.map;
     }
 
-    /**
-     * @deprecated use {@link Bucket4jHazelcast#lockBasedBuilder(IMap)}
-     */
-    @Deprecated
-    public HazelcastLockBasedProxyManager(IMap<K, byte[]> map) {
-        this(map, ClientSideConfig.getDefault());
-    }
-
-    /**
-     * @deprecated use {@link Bucket4jHazelcast#lockBasedBuilder(IMap)}
-     */
-    @Deprecated
-    public HazelcastLockBasedProxyManager(IMap<K, byte[]> map, ClientSideConfig clientSideConfig) {
-        super(clientSideConfig);
-        this.map = Objects.requireNonNull(map);
-    }
-
     @Override
     public void removeProxy(K key) {
         map.remove(key);

@@ -41,6 +41,7 @@ import io.github.bucket4j.distributed.proxy.optimization.Optimization;
 import io.github.bucket4j.distributed.proxy.optimization.OptimizationListener;
 import io.github.bucket4j.distributed.proxy.optimization.Optimizations;
 import io.github.bucket4j.distributed.proxy.optimization.skiponzero.SkipSyncOnZeroOptimization;
+import io.github.bucket4j.grid.hazelcast.Bucket4jHazelcast;
 import io.github.bucket4j.grid.hazelcast.HazelcastProxyManager;
 
 public class HazelcastSkipSyncOnZeroExample {
@@ -92,7 +93,7 @@ public class HazelcastSkipSyncOnZeroExample {
         Meter consumptionRate = new Meter();
         com.codahale.metrics.Timer latencyTimer = buildLatencyTimer();
 
-        HazelcastProxyManager<String> proxyManager = new HazelcastProxyManager<>(map, ClientSideConfig.getDefault());
+        HazelcastProxyManager<String> proxyManager = Bucket4jHazelcast.entryProcessorBasedBuilder(map).build();
         BucketConfiguration configuration = BucketConfiguration.builder()
                 .addLimit(
                     Bandwidth.simple(50, Duration.ofSeconds(60)))
@@ -158,7 +159,7 @@ public class HazelcastSkipSyncOnZeroExample {
         Meter consumptionRate = new Meter();
         com.codahale.metrics.Timer latencyTimer = buildLatencyTimer();
 
-        HazelcastProxyManager<String> proxyManager = new HazelcastProxyManager<>(map, ClientSideConfig.getDefault());
+        HazelcastProxyManager<String> proxyManager = Bucket4jHazelcast.entryProcessorBasedBuilder(map).build();;
         BucketConfiguration configuration = BucketConfiguration.builder()
                 .addLimit(
                         Bandwidth.simple(10, Duration.ofSeconds(1)).withInitialTokens(0))

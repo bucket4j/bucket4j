@@ -68,24 +68,6 @@ public class IgniteThinClientProxyManager<K> extends AbstractProxyManager<K> {
         clientCompute = builder.getClientCompute();
     }
 
-    /**
-     * @deprecated use {@link Bucket4jIgnite#thinClient()#builderForClientComputeBasedProxyManager()}
-     */
-    @Deprecated
-    public IgniteThinClientProxyManager(ClientCache<K, byte[]> cache, ClientCompute clientCompute) {
-        this(cache, clientCompute, ClientSideConfig.getDefault());
-    }
-
-    /**
-     * @deprecated use {@link Bucket4jIgnite#thinClient()#builderForClientComputeBasedProxyManager()}
-     */
-    @Deprecated
-    public IgniteThinClientProxyManager(ClientCache<K, byte[]> cache, ClientCompute clientCompute, ClientSideConfig clientSideConfig) {
-        super(clientSideConfig);
-        this.cache = Objects.requireNonNull(cache);
-        this.clientCompute = Objects.requireNonNull(clientCompute);
-    }
-
     @Override
     public <T> CommandResult<T> execute(K key, Request<T> request) {
         IgniteEntryProcessor<K> entryProcessor = new IgniteEntryProcessor<>(request);

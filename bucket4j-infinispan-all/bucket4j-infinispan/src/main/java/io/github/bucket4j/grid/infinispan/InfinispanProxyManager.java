@@ -60,23 +60,6 @@ public class InfinispanProxyManager<K> extends AbstractProxyManager<K> {
         this.readWriteMap = builder.readWriteMap;
     }
 
-    /**
-     * @deprecated use {@link Bucket4jInfinispan#entryProcessorBasedBuilder(ReadWriteMap)}
-     */
-    @Deprecated
-    public InfinispanProxyManager(ReadWriteMap<K, byte[]> readWriteMap) {
-        this(readWriteMap, ClientSideConfig.getDefault());
-    }
-
-    /**
-     * @deprecated use {@link Bucket4jInfinispan#entryProcessorBasedBuilder(ReadWriteMap)}
-     */
-    @Deprecated
-    public InfinispanProxyManager(ReadWriteMap<K, byte[]> readWriteMap, ClientSideConfig clientSideConfig) {
-        super(clientSideConfig);
-        this.readWriteMap = Objects.requireNonNull(readWriteMap);
-    }
-
     @Override
     public <T> CommandResult<T> execute(K key, Request<T> request) {
         InfinispanProcessor<K, T> entryProcessor = new InfinispanProcessor<>(request);

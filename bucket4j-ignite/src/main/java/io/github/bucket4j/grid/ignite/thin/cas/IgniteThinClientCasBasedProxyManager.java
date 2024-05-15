@@ -45,23 +45,6 @@ public class IgniteThinClientCasBasedProxyManager<K> extends AbstractCompareAndS
         this.cache = builder.getCache();
     }
 
-    /**
-     * @deprecated use {@link Bucket4jIgnite#thinClient()#builderForCasBasedProxyManager()}
-     */
-    @Deprecated
-    public IgniteThinClientCasBasedProxyManager(ClientCache<K, ByteBuffer> cache) {
-        this(cache, ClientSideConfig.getDefault());
-    }
-
-    /**
-     * @deprecated use {@link Bucket4jIgnite#thinClient()#builderForCasBasedProxyManager()}
-     */
-    @Deprecated
-    public IgniteThinClientCasBasedProxyManager(ClientCache<K, ByteBuffer> cache, ClientSideConfig clientSideConfig) {
-        super(clientSideConfig);
-        this.cache = Objects.requireNonNull(cache);
-    }
-
     @Override
     protected CompareAndSwapOperation beginCompareAndSwapOperation(K key) {
         return new CompareAndSwapOperation() {

@@ -72,34 +72,6 @@ public class HazelcastProxyManager<K> extends AbstractProxyManager<K> {
         this.offloadableExecutorName = builder.offloadableExecutorName;
     }
 
-    /**
-     * @deprecated use {@link Bucket4jHazelcast#entryProcessorBasedBuilder(IMap)}
-     */
-    @Deprecated
-    public HazelcastProxyManager(IMap<K, byte[]> map) {
-        this(map, ClientSideConfig.getDefault());
-    }
-
-    /**
-     * @deprecated use {@link Bucket4jHazelcast#entryProcessorBasedBuilder(IMap)}
-     */
-    @Deprecated
-    public HazelcastProxyManager(IMap<K, byte[]> map, ClientSideConfig clientSideConfig) {
-        super(clientSideConfig);
-        this.map = Objects.requireNonNull(map);
-        this.offloadableExecutorName = null;
-    }
-
-    /**
-     * @deprecated use {@link Bucket4jHazelcast#entryProcessorBasedBuilder(IMap)}
-     */
-    @Deprecated
-    public HazelcastProxyManager(IMap<K, byte[]> map, ClientSideConfig clientSideConfig, String offlodableExecutorName) {
-        super(clientSideConfig);
-        this.map = Objects.requireNonNull(map);
-        this.offloadableExecutorName = Objects.requireNonNull(offlodableExecutorName);
-    }
-
     @Override
     public <T> CommandResult<T> execute(K key, Request<T> request) {
         HazelcastEntryProcessor<K, T> entryProcessor = offloadableExecutorName == null?
