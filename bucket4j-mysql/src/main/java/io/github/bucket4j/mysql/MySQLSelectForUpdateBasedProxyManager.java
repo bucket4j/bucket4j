@@ -23,7 +23,6 @@ import com.mysql.cj.jdbc.exceptions.MySQLTransactionRollbackException;
 import io.github.bucket4j.BucketExceptions;
 import io.github.bucket4j.distributed.jdbc.CustomColumnProvider;
 import io.github.bucket4j.distributed.jdbc.PrimaryKeyMapper;
-import io.github.bucket4j.distributed.jdbc.SQLProxyConfiguration;
 import io.github.bucket4j.distributed.proxy.ExpiredEntriesCleaner;
 import io.github.bucket4j.distributed.proxy.generic.select_for_update.AbstractSelectForUpdateBasedProxyManager;
 import io.github.bucket4j.distributed.proxy.generic.select_for_update.LockAndGetResult;
@@ -39,7 +38,6 @@ import java.sql.SQLException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -86,25 +84,6 @@ public class MySQLSelectForUpdateBasedProxyManager<K> extends AbstractSelectForU
                 {1} IN(SELECT * FROM (SELECT {1} FROM {0} WHERE {2} < ? LIMIT ? FOR UPDATE SKIP LOCKED) as subquery)
             """, builder.getTableName(), builder.getIdColumnName(), builder.getExpiresAtColumnName()
         );
-    }
-
-    /**
-     * @deprecated use {@link Bucket4jMySQL#selectForUpdateBasedBuilder(DataSource)}
-     */
-    @Deprecated
-    public MySQLSelectForUpdateBasedProxyManager(SQLProxyConfiguration<K> configuration) {
-        super(configuration.getClientSideConfig());
-        this.clearExpiredSqlQuery = null;
-        this.dataSource = Objects.requireNonNull(configuration.getDataSource());
-        this.primaryKeyMapper = configuration.getPrimaryKeyMapper();
-        this.removeSqlQuery = MessageFormat.format("DELETE FROM {0} WHERE {1} = ?", configuration.getTableName(), configuration.getIdName());
-        updateSqlQuery = MessageFormat.format("UPDATE {0} SET {1}=? WHERE {2}=?", configuration.getTableName(), configuration.getStateName(), configuration.getIdName());
-        insertSqlQuery = MessageFormat.format("INSERT IGNORE INTO {0}({1}, {2}) VALUES(?, null)",
-                configuration.getTableName(), configuration.getIdName(), configuration.getStateName());
-        selectSqlQuery = MessageFormat.format("SELECT {0} as state FROM {1} WHERE {2} = ? FOR UPDATE", configuration.getStateName(), configuration.getTableName(), configuration.getIdName());
-        if (getClientSideConfig().getExpirationAfterWriteStrategy().isPresent()) {
-            throw new IllegalArgumentException();
-        }
     }
 
     @Override

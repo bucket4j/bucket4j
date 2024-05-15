@@ -22,7 +22,6 @@ package io.github.bucket4j.mssql;
 import io.github.bucket4j.BucketExceptions;
 import io.github.bucket4j.distributed.jdbc.CustomColumnProvider;
 import io.github.bucket4j.distributed.jdbc.PrimaryKeyMapper;
-import io.github.bucket4j.distributed.jdbc.SQLProxyConfiguration;
 import io.github.bucket4j.distributed.proxy.ExpiredEntriesCleaner;
 import io.github.bucket4j.distributed.proxy.generic.select_for_update.AbstractSelectForUpdateBasedProxyManager;
 import io.github.bucket4j.distributed.proxy.generic.select_for_update.LockAndGetResult;
@@ -37,7 +36,6 @@ import java.sql.SQLException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -83,23 +81,6 @@ public class MSSQLSelectForUpdateBasedProxyManager<K> extends AbstractSelectForU
             "DELETE TOP(?) FROM {0} WHERE {1} < ?",
             builder.getTableName(), builder.getExpiresAtColumnName()
         );
-    }
-
-    /**
-     * @deprecated use {@link Bucket4jMSSQL#selectForUpdateBasedBuilder(DataSource)} instead
-     */
-    @Deprecated
-    public MSSQLSelectForUpdateBasedProxyManager(SQLProxyConfiguration<K> configuration) {
-        super(configuration.getClientSideConfig());
-        this.clearExpiredSqlQuery = null;
-        this.dataSource = Objects.requireNonNull(configuration.getDataSource());
-        this.primaryKeyMapper = configuration.getPrimaryKeyMapper();
-        this.removeSqlQuery = MessageFormat.format("DELETE FROM {0} WHERE {1} = ?", configuration.getTableName(), configuration.getIdName());
-        this.updateSqlQuery = MessageFormat.format("UPDATE {0} SET {1}=? WHERE {2}=?", configuration.getTableName(), configuration.getStateName(), configuration.getIdName());
-        this.insertSqlQuery = MessageFormat.format(
-            "INSERT INTO {0}({1},{2}) VALUES(?, null)",
-            configuration.getTableName(), configuration.getIdName(), configuration.getStateName());
-        this.selectSqlQuery = MessageFormat.format("SELECT {0} as state FROM {1} WITH(ROWLOCK, UPDLOCK) WHERE {2} = ?", configuration.getStateName(), configuration.getTableName(), configuration.getIdName());
     }
 
     @Override
