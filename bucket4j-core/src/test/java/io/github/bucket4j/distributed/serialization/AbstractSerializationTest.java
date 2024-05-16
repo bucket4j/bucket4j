@@ -57,21 +57,27 @@ public abstract class AbstractSerializationTest {
 
     @Test
     public void serializeClassicBandwidthWithIntervallyAlignedRefill() throws IOException {
-        Bandwidth bandwidth = classic(40, intervallyAligned(300, Duration.ofSeconds(4200), Instant.now(), true));
-        testSerialization(bandwidth);
+        Bandwidth limit = Bandwidth.builder()
+            .capacity(40)
+            .refillIntervallyAlignedWithAdaptiveInitialTokens(300, Duration.ofSeconds(4200), Instant.now())
+            .build();
+        testSerialization(limit);
     }
 
     @Test
     public void serializeBandwidthWithId() throws IOException {
-        Bandwidth bandwidth = classic(40, intervallyAligned(300, Duration.ofSeconds(4200), Instant.now(), true))
-                .withId("123");
+        Bandwidth bandwidth = Bandwidth.builder()
+            .capacity(40)
+            .refillIntervallyAlignedWithAdaptiveInitialTokens(300, Duration.ofSeconds(4200), Instant.now())
+            .id("123")
+            .build();
         testSerialization(bandwidth);
     }
 
     @Test
     public void serializeBucketConfiguration_withSingleBandwidth() throws IOException {
         Bandwidth[] bandwidths = new Bandwidth[] {
-                simple(10, ofSeconds(42))
+            Bandwidth.builder().capacity(10).refillGreedy(10, ofSeconds(42)).build(),
         };
         BucketConfiguration bucketConfiguration = new BucketConfiguration(Arrays.asList(bandwidths));
         testSerialization(bucketConfiguration);
@@ -80,9 +86,9 @@ public abstract class AbstractSerializationTest {
     @Test
     public void serializeBucketConfiguration_withMultipleBandwidths() throws IOException {
         Bandwidth[] bandwidths = new Bandwidth[] {
-                simple(10, ofSeconds(42)),
-                classic(20, greedy(300, ofHours(2))),
-                classic(400, intervallyAligned(1000, ofDays(2), Instant.now().plusNanos(1), true))
+            Bandwidth.builder().capacity(10).refillGreedy(10, ofSeconds(42)).build(),
+            Bandwidth.builder().capacity(20).refillGreedy(300, ofHours(2)).build(),
+            Bandwidth.builder().capacity(400).refillIntervallyAlignedWithAdaptiveInitialTokens (1000, ofDays(2), Instant.now()).build()
         };
         BucketConfiguration bucketConfiguration = new BucketConfiguration(Arrays.asList(bandwidths));
         testSerialization(bucketConfiguration);
@@ -90,8 +96,8 @@ public abstract class AbstractSerializationTest {
 
     @Test
     public void serializeBucketState_withSingleBandwidth_withoutState() throws IOException {
-        Bandwidth[] bandwidths = new Bandwidth[]{
-                simple(10, ofSeconds(42))
+        Bandwidth[] bandwidths = new Bandwidth[] {
+            Bandwidth.builder().capacity(10).refillGreedy(10, ofSeconds(42)).build(),
         };
         BucketConfiguration bucketConfiguration = new BucketConfiguration(Arrays.asList(bandwidths));
         BucketState bucketState = BucketState.createInitialState(bucketConfiguration, MathType.INTEGER_64_BITS, System.nanoTime());
@@ -103,7 +109,7 @@ public abstract class AbstractSerializationTest {
     public void serializeBucketState_withSingleBandwidth_withState() throws IOException {
         for (MathType mathType : MathType.values()) {
             Bandwidth[] bandwidths = new Bandwidth[] {
-                    simple(10, ofSeconds(42))
+                Bandwidth.builder().capacity(10).refillGreedy(10, ofSeconds(42)).build()
             };
             BucketConfiguration bucketConfiguration = new BucketConfiguration(Arrays.asList(bandwidths));
             BucketState bucketState = BucketState.createInitialState(bucketConfiguration, mathType, System.nanoTime());
@@ -117,10 +123,10 @@ public abstract class AbstractSerializationTest {
     @Test
     public void serializeBucketState_withMultipleBandwidths_withState() throws IOException {
         for (MathType mathType : MathType.values()) {
-            Bandwidth[] bandwidths = new Bandwidth[]{
-                    simple(10, ofSeconds(42)),
-                    classic(20, greedy(300, ofHours(2))),
-                    classic(400, intervallyAligned(1000, ofDays(2), Instant.now(), false))
+            Bandwidth[] bandwidths = new Bandwidth[] {
+                Bandwidth.builder().capacity(10).refillGreedy(10, ofSeconds(42)).build(),
+                Bandwidth.builder().capacity(20).refillGreedy(300, ofHours(2)).build(),
+                Bandwidth.builder().capacity(400).refillIntervallyAlignedWithAdaptiveInitialTokens (1000, ofDays(2), Instant.now()).build()
             };
             BucketConfiguration bucketConfiguration = new BucketConfiguration(Arrays.asList(bandwidths));
             BucketState bucketState = BucketState.createInitialState(bucketConfiguration, mathType, System.nanoTime());
@@ -136,7 +142,7 @@ public abstract class AbstractSerializationTest {
     public void serializeGridBucketState_withSingleBandwidth_withoutState() throws IOException {
         for (MathType mathType : MathType.values()) {
             Bandwidth[] bandwidths = new Bandwidth[] {
-                    simple(10, ofSeconds(42))
+                Bandwidth.builder().capacity(10).refillGreedy(10, ofSeconds(42)).build()
             };
             BucketConfiguration bucketConfiguration = new BucketConfiguration(Arrays.asList(bandwidths));
             BucketState bucketState = BucketState.createInitialState(bucketConfiguration, mathType, System.nanoTime());
@@ -150,7 +156,7 @@ public abstract class AbstractSerializationTest {
     public void serializeGridBucketState_withSingleBandwidth_withState() throws IOException {
         for (MathType mathType : MathType.values()) {
             Bandwidth[] bandwidths = new Bandwidth[] {
-                    simple(10, ofSeconds(42))
+                Bandwidth.builder().capacity(10).refillGreedy(10, ofSeconds(42)).build()
             };
             BucketConfiguration bucketConfiguration = new BucketConfiguration(Arrays.asList(bandwidths));
             BucketState bucketState = BucketState.createInitialState(bucketConfiguration, mathType, System.nanoTime());
@@ -167,9 +173,9 @@ public abstract class AbstractSerializationTest {
     public void serializeGridBucketState_withMultipleBandwidths_withState() throws IOException {
         for (MathType mathType : MathType.values()) {
             Bandwidth[] bandwidths = new Bandwidth[] {
-                    simple(10, ofSeconds(42)),
-                    classic(20, greedy(300, ofHours(2))),
-                    classic(400, intervallyAligned(1000, ofDays(2), Instant.now(), false))
+                    Bandwidth.builder().capacity(10).refillGreedy(10, ofSeconds(42)).build(),
+                    Bandwidth.builder().capacity(20).refillGreedy(300, ofHours(2)).build(),
+                    Bandwidth.builder().capacity(400).refillIntervallyAlignedWithAdaptiveInitialTokens (1000, ofDays(2), Instant.now()).build()
             };
             BucketConfiguration bucketConfiguration = new BucketConfiguration(Arrays.asList(bandwidths));
             BucketState bucketState = BucketState.createInitialState(bucketConfiguration, mathType, System.nanoTime());
@@ -195,7 +201,7 @@ public abstract class AbstractSerializationTest {
         // with long payload
         testSerialization(CommandResult.success(42L, LONG_HANDLE));
         Bandwidth[] bandwidths = new Bandwidth[] {
-            simple(10, ofSeconds(42))
+            Bandwidth.builder().capacity(10).refillGreedy(10, ofSeconds(42)).build(),
         };
         BucketConfiguration bucketConfiguration = new BucketConfiguration(Arrays.asList(bandwidths));
         BucketState bucketState = BucketState.createInitialState(bucketConfiguration, MathType.INTEGER_64_BITS, System.nanoTime());

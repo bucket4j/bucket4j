@@ -25,14 +25,16 @@ class IntervallyAlignedRefillSpecification extends Specification {
         setup:
             Instant firstRefillTime = new Date(firstRefillTimeMillis).toInstant()
             Duration refillPeriod = Duration.ofMillis(refillPeriodMillis)
-        Refill refill = Refill.intervallyAligned(refillTokens, refillPeriod, firstRefillTime, true)
-        Bandwidth bandwidth = Bandwidth.classic(capacity, refill)
             TimeMeterMock mockTimer = new TimeMeterMock(currentTimeMillis * 1_000_000)
 
-        Bucket bucket = Bucket.builder()
-                    .withCustomTimePrecision(mockTimer)
-                    .addLimit(bandwidth)
-                    .build()
+            Bandwidth bandwidth = Bandwidth.builder()
+                .capacity(capacity)
+                .refillIntervallyAlignedWithAdaptiveInitialTokens(refillTokens, refillPeriod, firstRefillTime)
+                .build()
+            Bucket bucket = Bucket.builder()
+                .withCustomTimePrecision(mockTimer)
+                .addLimit(bandwidth)
+                .build()
 
         expect:
             assert bucket.getAvailableTokens() == requiredInitialTokens
@@ -59,8 +61,10 @@ class IntervallyAlignedRefillSpecification extends Specification {
                   first refill planned to next minute
                """
             Instant firstRefillTime = new Date(TimeUnit.SECONDS.toMillis(120)).toInstant()
-            Refill refill = Refill.intervallyAligned(200, Duration.ofMinutes(1), firstRefillTime, false)
-            Bandwidth bandwidth = Bandwidth.classic(400, refill)
+            Bandwidth bandwidth = Bandwidth.builder()
+                .capacity(400)
+                .refillIntervallyAligned(200, Duration.ofMinutes(1), firstRefillTime)
+                .build()
             TimeMeterMock mockTimer = new TimeMeterMock()
             mockTimer.setCurrentTimeSeconds(80)
 
@@ -118,8 +122,10 @@ class IntervallyAlignedRefillSpecification extends Specification {
                   first refill planned to next minute
                """
             Instant firstRefillTime = new Date(TimeUnit.SECONDS.toMillis(120)).toInstant()
-            Refill refill = Refill.intervallyAligned(200, Duration.ofMinutes(1), firstRefillTime, true)
-            Bandwidth bandwidth = Bandwidth.classic(400, refill)
+            Bandwidth bandwidth = Bandwidth.builder()
+                .capacity(400)
+                .refillIntervallyAlignedWithAdaptiveInitialTokens(200, Duration.ofMinutes(1), firstRefillTime)
+                .build()
             TimeMeterMock mockTimer = new TimeMeterMock()
             mockTimer.setCurrentTimeSeconds(80)
 
@@ -173,12 +179,15 @@ class IntervallyAlignedRefillSpecification extends Specification {
     def "check that boundary of interval is not missed during long time of inactivity mathType = #mathType"(MathType mathType) {
         setup:
             TimeMeterMock timeMeter = new TimeMeterMock(TimeUnit.MILLISECONDS.toNanos(103))
+            Bandwidth bandwidth = Bandwidth.builder()
+                .capacity(400)
+                .refillIntervallyAligned(400, Duration.ofMillis(100), new Date(200).toInstant())
+                .build()
 
-            Refill refill = Refill.intervallyAligned(400, Duration.ofMillis(100), new Date(200).toInstant(), false);
             LocalBucket bucket = Bucket.builder()
-                    .withCustomTimePrecision(timeMeter)
-                    .addLimit(Bandwidth.classic(400, refill))
-                    .build()
+                .withCustomTimePrecision(timeMeter)
+                .addLimit(bandwidth)
+                .build()
 
             bucket.tryConsumeAsMuchAsPossible()
 

@@ -187,11 +187,11 @@ class HandlingArithmeticOverflowSpecification extends Specification {
             long bandwidthPeriodNanos = (long) Long.MAX_VALUE / 2
             long capacity = (long) Long.MAX_VALUE / 2
             long timeOfFirstRefillMillis = (Long.MAX_VALUE - 1) / 1_000_000
-            Refill refill = Refill.intervallyAligned(capacity,
-                    Duration.ofNanos(bandwidthPeriodNanos),
-                    Instant.ofEpochMilli(timeOfFirstRefillMillis),
-                    true)
-            Bandwidth limit = Bandwidth.classic(capacity, refill)
+            Bandwidth limit = Bandwidth.builder()
+                .capacity(capacity)
+                .refillIntervallyAlignedWithAdaptiveInitialTokens(capacity, Duration.ofNanos(bandwidthPeriodNanos), Instant.ofEpochMilli(timeOfFirstRefillMillis))
+                .build()
+
             TimeMeterMock meter = new TimeMeterMock(0)
             Bucket bucket = Bucket.builder()
                     .addLimit(limit)

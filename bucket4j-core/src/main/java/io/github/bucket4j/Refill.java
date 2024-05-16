@@ -21,7 +21,6 @@
 package io.github.bucket4j;
 
 import java.time.Duration;
-import java.time.Instant;
 
 import io.github.bucket4j.BandwidthBuilder.BandwidthBuilderRefillStage;
 
@@ -89,22 +88,6 @@ public class Refill {
     @Deprecated
     public static Refill intervally(long tokens, Duration period) {
         return new Refill(tokens, period, true, Bandwidth.UNSPECIFIED_TIME_OF_FIRST_REFILL, false);
-    }
-
-
-    /**
-     * This method is deprecated, you should use {@link BandwidthBuilderRefillStage#refillIntervallyAligned(long, Duration, Instant)} or 
-     * {@link BandwidthBuilderRefillStage#refillIntervallyAlignedWithAdaptiveInitialTokens(long, Duration, Instant)}
-     *
-     * @deprecated
-     */
-    @Deprecated
-    public static Refill intervallyAligned(long tokens, Duration period, Instant timeOfFirstRefill, boolean useAdaptiveInitialTokens) {
-        long timeOfFirstRefillMillis = timeOfFirstRefill.toEpochMilli();
-        if (timeOfFirstRefillMillis < 0) {
-            throw BucketExceptions.nonPositiveTimeOfFirstRefill(timeOfFirstRefill);
-        }
-        return new Refill(tokens, period, true, timeOfFirstRefillMillis, useAdaptiveInitialTokens);
     }
 
     @Override

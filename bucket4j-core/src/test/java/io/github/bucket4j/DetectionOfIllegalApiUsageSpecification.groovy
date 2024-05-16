@@ -197,8 +197,8 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
 
     def "Should detect the negative time of first refill"() {
         when:
-            Instant timeOfFirstRefill = new Date(-10).toInstant();
-            Bandwidth.classic(2, Refill.intervallyAligned(2, ofMinutes(2), timeOfFirstRefill, true))
+            Instant timeOfFirstRefill = new Date(-10).toInstant()
+            Bandwidth.builder().capacity(2).refillIntervallyAlignedWithAdaptiveInitialTokens(2, ofMinutes(2), timeOfFirstRefill).build()
         then:
             IllegalArgumentException ex = thrown()
             ex.message == nonPositiveTimeOfFirstRefill(timeOfFirstRefill).message
@@ -207,8 +207,12 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
     def "Should prevent specification of initial tokens if intervally aligned refill used with useAdaptiveInitialTokens=true"() {
         when:
             Instant timeOfFirstRefill = Instant.now()
-            Bandwidth.classic(2, Refill.intervallyAligned(2, ofMinutes(2), timeOfFirstRefill, true))
-                    .withInitialTokens(1)
+            Bandwidth.builder()
+                .capacity(2)
+                .refillIntervallyAlignedWithAdaptiveInitialTokens(2, ofMinutes(2), timeOfFirstRefill)
+                .initialTokens(1)
+                .build()
+
         then:
             IllegalArgumentException ex = thrown()
             ex.message == intervallyAlignedRefillWithAdaptiveInitialTokensIncompatipleWithManualSpecifiedInitialTokens().message
@@ -216,10 +220,11 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
 
     def "Should prevent specification of nanoTime based clock if intervally aligned refill used"() {
         setup:
-            Instant timeOfFirstRefill = Instant.now()
-            Refill refill = Refill.intervallyAligned(2, ofMinutes(2), timeOfFirstRefill, true)
-            Bandwidth bandwidth = Bandwidth.classic(2, refill)
-
+            Bandwidth bandwidth = Bandwidth.builder()
+                .capacity(40)
+                .refillIntervallyAlignedWithAdaptiveInitialTokens(300, Duration.ofSeconds(4200), Instant.now())
+                .id("123")
+                .build()
         when:
             Bucket.builder().withNanosecondPrecision().addLimit(bandwidth).build()
         then:
