@@ -84,23 +84,6 @@ public class Bandwidth implements ComparableByContent<Bandwidth> {
     }
 
     /**
-     * This method is deprecated, you should use {@link Bandwidth#builder()}
-     *
-     * @deprecated
-     */
-    @Deprecated
-    public static Bandwidth classic(long capacity, Refill refill) {
-        if (capacity <= 0) {
-            throw BucketExceptions.nonPositiveCapacity(capacity);
-        }
-        if (refill == null) {
-            throw BucketExceptions.nullBandwidthRefill();
-        }
-        return new Bandwidth(capacity, refill.periodNanos, refill.tokens, capacity, refill.refillIntervally,
-                refill.timeOfFirstRefillMillis, refill.useAdaptiveInitialTokens, UNDEFINED_ID);
-    }
-
-    /**
      * This method is deprecated, you should use {@link BandwidthBuilder.BandwidthBuilderBuildStage#initialTokens(long)}
      *
      * @deprecated

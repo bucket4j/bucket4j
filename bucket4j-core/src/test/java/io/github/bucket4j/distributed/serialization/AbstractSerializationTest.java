@@ -18,7 +18,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
 
-import static io.github.bucket4j.Bandwidth.simple;
 import static io.github.bucket4j.distributed.serialization.PrimitiveSerializationHandles.*;
 import static java.time.Duration.*;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -37,7 +36,7 @@ public abstract class AbstractSerializationTest {
 
     @Test
     public void serializeSimpleBandwidth() throws IOException {
-        Bandwidth bandwidth = simple(10, ofSeconds(20));
+        Bandwidth bandwidth = Bandwidth.builder().capacity(10).refillGreedy(10, ofSeconds(20)).build();
         testSerialization(bandwidth);
     }
 
@@ -252,7 +251,7 @@ public abstract class AbstractSerializationTest {
     @Test
     public void serializationOfCommands() throws IOException {
         BucketConfiguration configuration = BucketConfiguration.builder()
-                .addLimit(simple(10, ofSeconds(1)))
+                .addLimit(Bandwidth.builder().capacity(10).refillGreedy(10, ofSeconds(1)).build())
                 .build();
 
         testSerialization(new CreateInitialStateWithVersionOrReplaceConfigurationAndExecuteCommand<>(configuration, new ConsumeAsMuchAsPossibleCommand(13), 1, TokensInheritanceStrategy.AS_IS));
@@ -309,18 +308,18 @@ public abstract class AbstractSerializationTest {
     @Test
     public void serializationOfBuckets() throws IOException {
         LockFreeBucket lockFreeBucket = (LockFreeBucket) Bucket.builder()
-                .addLimit(Bandwidth.simple(1, Duration.ofSeconds(1)))
+                .addLimit(Bandwidth.builder().capacity(1).refillGreedy(1, Duration.ofSeconds(1)).build())
                 .build();
         testSerialization(lockFreeBucket);
 
         SynchronizedBucket synchronizedBucket = (SynchronizedBucket) Bucket.builder()
-                .addLimit(Bandwidth.simple(1, Duration.ofSeconds(1)))
+                .addLimit(Bandwidth.builder().capacity(1).refillGreedy(1, Duration.ofSeconds(1)).build())
                 .withSynchronizationStrategy(SynchronizationStrategy.SYNCHRONIZED)
                 .build();
         testSerialization(synchronizedBucket);
 
         ThreadUnsafeBucket unsafeBucket = (ThreadUnsafeBucket) Bucket.builder()
-                .addLimit(Bandwidth.simple(1, Duration.ofSeconds(1)))
+                .addLimit(Bandwidth.builder().capacity(1).refillGreedy(1, Duration.ofSeconds(1)).build())
                 .withSynchronizationStrategy(SynchronizationStrategy.NONE)
                 .build();
         testSerialization(unsafeBucket);

@@ -22,7 +22,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
 
-import java.sql.SQLException;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
@@ -57,8 +56,8 @@ public abstract class AbstractDistributedBucketTest {
     }
 
     private BucketConfiguration configurationForLongRunningTests = BucketConfiguration.builder()
-            .addLimit(Bandwidth.simple(1_000, Duration.ofMinutes(1)).withInitialTokens(0))
-            .addLimit(Bandwidth.simple(200, Duration.ofSeconds(10)).withInitialTokens(0))
+            .addLimit(Bandwidth.builder().capacity(1_000).refillGreedy(1_000, Duration.ofMinutes(1)).build().withInitialTokens(0))
+            .addLimit(Bandwidth.builder().capacity(200).refillGreedy(200, Duration.ofSeconds(10)).build().withInitialTokens(0))
             .build();
     private double permittedRatePerSecond = Math.min(1_000d / 60, 200.0 / 10);
 
@@ -73,7 +72,7 @@ public abstract class AbstractDistributedBucketTest {
 
         // should return not empty options if bucket is stored
         BucketConfiguration configuration = BucketConfiguration.builder()
-                .addLimit(Bandwidth.simple(1_000, Duration.ofMinutes(1)))
+                .addLimit(Bandwidth.builder().capacity(1_000).refillGreedy(1_000, Duration.ofMinutes(1)).build())
                 .build();
         proxyManager.builder()
                 .build(key, () -> configuration)
@@ -93,7 +92,7 @@ public abstract class AbstractDistributedBucketTest {
         K key = spec.generateRandomKey();
 
         BucketConfiguration configuration = BucketConfiguration.builder()
-                .addLimit(Bandwidth.simple(4, Duration.ofHours(1)))
+                .addLimit(Bandwidth.builder().capacity(4).refillGreedy(4, Duration.ofHours(1)).build())
                 .build();
         ProxyManager<K> proxyManager = spec.builder.get().build();
         BucketProxy bucket = proxyManager.builder().build(key, () -> configuration);
@@ -111,7 +110,7 @@ public abstract class AbstractDistributedBucketTest {
             return;
         }
         BucketConfiguration configuration = BucketConfiguration.builder()
-            .addLimit(Bandwidth.simple(10, Duration.ofSeconds (1)))
+            .addLimit(Bandwidth.builder().capacity(10).refillGreedy(10, Duration.ofSeconds(1)).build())
             .build();
         ProxyManager<K> proxyManager = spec.builder.get()
                 .expirationAfterWrite(ExpirationAfterWriteStrategy.none())
@@ -134,7 +133,7 @@ public abstract class AbstractDistributedBucketTest {
             return;
         }
         BucketConfiguration configuration = BucketConfiguration.builder()
-            .addLimit(Bandwidth.simple(10, Duration.ofSeconds (1)))
+            .addLimit(Bandwidth.builder().capacity(10).refillGreedy(10, Duration.ofSeconds(1)).build())
             .build();
         ProxyManager<K> proxyManager = spec.builder.get()
                 .expirationAfterWrite(ExpirationAfterWriteStrategy.none())
@@ -161,7 +160,7 @@ public abstract class AbstractDistributedBucketTest {
             return;
         }
         BucketConfiguration configuration = BucketConfiguration.builder()
-            .addLimit(Bandwidth.simple(10, Duration.ofSeconds (100)))
+            .addLimit(Bandwidth.builder().capacity(10).refillGreedy(10, Duration.ofSeconds(100)).build())
             .build();
         ProxyManager<K> proxyManager = spec.builder.get()
             .expirationAfterWrite(ExpirationAfterWriteStrategy.fixedTimeToLive(Duration.ofSeconds(1)))
@@ -184,7 +183,7 @@ public abstract class AbstractDistributedBucketTest {
             return;
         }
         BucketConfiguration configuration = BucketConfiguration.builder()
-            .addLimit(Bandwidth.simple(10, Duration.ofSeconds (100)))
+            .addLimit(Bandwidth.builder().capacity(10).refillGreedy(10, Duration.ofSeconds(100)).build())
             .build();
         ProxyManager<K> proxyManager = spec.builder.get()
             .expirationAfterWrite(ExpirationAfterWriteStrategy.fixedTimeToLive(Duration.ofSeconds(1)))
@@ -210,7 +209,7 @@ public abstract class AbstractDistributedBucketTest {
             return;
         }
         BucketConfiguration configuration = BucketConfiguration.builder()
-            .addLimit(Bandwidth.simple(10, Duration.ofSeconds (10)))
+            .addLimit(Bandwidth.builder().capacity(10).refillGreedy(10, Duration.ofSeconds(10)).build())
             .build();
         ProxyManager<K> proxyManager = spec.builder.get()
                 .expirationAfterWrite(ExpirationAfterWriteStrategy.basedOnTimeForRefillingBucketUpToMax(Duration.ofSeconds(1)))
@@ -238,7 +237,7 @@ public abstract class AbstractDistributedBucketTest {
             return;
         }
         BucketConfiguration configuration = BucketConfiguration.builder()
-            .addLimit(Bandwidth.simple(10, Duration.ofSeconds (10)))
+            .addLimit(Bandwidth.builder().capacity(10).refillGreedy(10, Duration.ofSeconds(10)).build())
             .build();
         ProxyManager<K> proxyManager = spec.builder.get()
             .expirationAfterWrite(ExpirationAfterWriteStrategy.basedOnTimeForRefillingBucketUpToMax(Duration.ofSeconds(1)))
@@ -267,7 +266,7 @@ public abstract class AbstractDistributedBucketTest {
     @ParameterizedTest
     public <K, P extends ProxyManager<K>, B extends AbstractProxyManagerBuilder<K, P, B>> void testOptimizations(ProxyManagerSpec<K, P, B> spec) {
         BucketConfiguration configuration = BucketConfiguration.builder()
-            .addLimit(Bandwidth.simple(10, Duration.ofSeconds (1)))
+            .addLimit(Bandwidth.builder().capacity(10).refillGreedy(10, Duration.ofSeconds(1)).build())
             .build();
 
         TimeMeter clock = TimeMeter.SYSTEM_MILLISECONDS;
@@ -318,7 +317,7 @@ public abstract class AbstractDistributedBucketTest {
         }
 
         BucketConfiguration configuration = BucketConfiguration.builder()
-            .addLimit(Bandwidth.simple(10, Duration.ofSeconds (1)))
+            .addLimit(Bandwidth.builder().capacity(10).refillGreedy(10, Duration.ofSeconds(1)).build())
             .build();
 
         TimeMeter clock = TimeMeter.SYSTEM_MILLISECONDS;
@@ -517,7 +516,7 @@ public abstract class AbstractDistributedBucketTest {
         ProxyManager<K> proxyManager = spec.builder.get().build();
         K key = spec.generateRandomKey();
         BucketConfiguration configuration = BucketConfiguration.builder()
-                .addLimit(Bandwidth.simple(1_000, Duration.ofMinutes(1)))
+                .addLimit(Bandwidth.builder().capacity(1_000).refillGreedy(1_000, Duration.ofMinutes(1)).build())
                 .build();
 
         Bucket bucket = proxyManager.builder().build(key, () -> configuration);
@@ -531,7 +530,7 @@ public abstract class AbstractDistributedBucketTest {
         ProxyManager<K> proxyManager = spec.builder.get().build();
         K key = spec.generateRandomKey();
         BucketConfiguration configuration = BucketConfiguration.builder()
-                .addLimit(Bandwidth.simple(1_000, Duration.ofMinutes(1)))
+                .addLimit(Bandwidth.builder().capacity(1_000).refillGreedy(1_000, Duration.ofMinutes(1)).build())
                 .build();
 
         Bucket bucket = proxyManager.builder().build(key, () -> configuration);
@@ -621,7 +620,7 @@ public abstract class AbstractDistributedBucketTest {
         ProxyManager<K> proxyManager = spec.builder.get().build();
         K key = spec.generateRandomKey();
         BucketConfiguration configuration = BucketConfiguration.builder()
-                .addLimit(Bandwidth.simple(10, Duration.ofDays(1)))
+                .addLimit(Bandwidth.builder().capacity(10).refillGreedy(10, Duration.ofDays(1)).build())
                 .build();
 
         Bucket bucket1 = proxyManager.builder().build(key, () -> configuration);
@@ -640,7 +639,7 @@ public abstract class AbstractDistributedBucketTest {
         ProxyManager<K> proxyManager = spec.builder.get().build();
         K key = spec.generateRandomKey();
         BucketConfiguration configuration = BucketConfiguration.builder()
-                .addLimit(Bandwidth.simple(10, Duration.ofDays(1)))
+                .addLimit(Bandwidth.builder().capacity(10).refillGreedy(10, Duration.ofDays(1)).build())
                 .build();
 
         Bucket bucket = proxyManager.builder().build(key, () -> configuration);
@@ -680,7 +679,7 @@ public abstract class AbstractDistributedBucketTest {
     public <K, P extends ProxyManager<K>, B extends AbstractProxyManagerBuilder<K, P, B>> void testWithMapper(ProxyManagerSpec<K, P, B> spec) {
         K key = spec.generateRandomKey();
         BucketConfiguration configuration = BucketConfiguration.builder()
-                .addLimit(Bandwidth.simple(10, Duration.ofDays(1)))
+                .addLimit(Bandwidth.builder().capacity(10).refillGreedy(10, Duration.ofDays(1)).build())
                 .build();
 
         ProxyManager<K> proxyManager = spec.builder.get().build();
@@ -710,7 +709,7 @@ public abstract class AbstractDistributedBucketTest {
 
         K key = spec.generateRandomKey();
         BucketConfiguration configuration = BucketConfiguration.builder()
-                .addLimit(Bandwidth.simple(10, Duration.ofDays(1)))
+                .addLimit(Bandwidth.builder().capacity(10).refillGreedy(10, Duration.ofDays(1)).build())
                 .build();
 
         ProxyManager<String> mappedProxyManager = proxyManager.withMapper(dummy -> key);

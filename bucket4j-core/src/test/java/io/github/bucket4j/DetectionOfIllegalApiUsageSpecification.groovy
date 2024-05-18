@@ -62,14 +62,6 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
             period << [-10, -1, 0]
     }
 
-    def "Should check that refill is not null"() {
-        when:
-            builder.addLimit(Bandwidth.classic(42, null))
-        then:
-            IllegalArgumentException ex = thrown()
-            ex.message == nullBandwidthRefill().message
-    }
-
     def "Should check that bandwidth is not null"() {
         when:
             builder.addLimit((Bandwidth) null)

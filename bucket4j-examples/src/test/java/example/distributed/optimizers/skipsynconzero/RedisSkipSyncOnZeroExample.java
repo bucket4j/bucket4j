@@ -1,6 +1,5 @@
 package example.distributed.optimizers.skipsynconzero;
 
-import java.io.Serializable;
 import java.time.Duration;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -9,15 +8,9 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.gridkit.nanocloud.Cloud;
-import org.gridkit.nanocloud.CloudFactory;
-import org.gridkit.nanocloud.VX;
-import org.gridkit.vicluster.ViNode;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
@@ -39,12 +32,8 @@ import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.distributed.proxy.optimization.DefaultOptimizationListener;
 import io.github.bucket4j.distributed.proxy.optimization.Optimization;
 import io.github.bucket4j.distributed.proxy.optimization.skiponzero.SkipSyncOnZeroOptimization;
-import io.github.bucket4j.grid.hazelcast.HazelcastProxyManager;
 import io.github.bucket4j.redis.lettuce.Bucket4jLettuce;
-import io.github.bucket4j.redis.lettuce.cas.LettuceBasedProxyManager;
 import io.lettuce.core.RedisClient;
-import io.lettuce.core.codec.ByteArrayCodec;
-import io.lettuce.core.codec.StringCodec;
 
 public class RedisSkipSyncOnZeroExample {
 
@@ -94,7 +83,7 @@ public class RedisSkipSyncOnZeroExample {
             .withMapper(str -> str.getBytes(Charsets.UTF_8));
         BucketConfiguration configuration = BucketConfiguration.builder()
                 .addLimit(
-                    Bandwidth.simple(50, Duration.ofSeconds(60)))
+                    Bandwidth.builder().capacity(50).refillGreedy(50, Duration.ofSeconds(60)).build())
                 .build();
 
         AtomicLong totalMergedRequestCount = new AtomicLong();
@@ -163,7 +152,7 @@ public class RedisSkipSyncOnZeroExample {
             .withMapper(str -> str.getBytes(Charsets.UTF_8));
         BucketConfiguration configuration = BucketConfiguration.builder()
                 .addLimit(
-                        Bandwidth.simple(10, Duration.ofSeconds(1)).withInitialTokens(0))
+                        Bandwidth.builder().capacity(10).refillGreedy(10, Duration.ofSeconds(1)).build().withInitialTokens(0))
                 .build();
 
         AtomicLong totalMergedRequestCount = new AtomicLong();

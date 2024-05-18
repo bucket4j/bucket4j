@@ -1,13 +1,10 @@
 package io.github.bucket4j.distributed.proxy.optimization.skipsynconzero
 
 import io.github.bucket4j.Bandwidth
-import io.github.bucket4j.Bucket
 import io.github.bucket4j.BucketConfiguration
 import io.github.bucket4j.distributed.AsyncBucketProxy
 import io.github.bucket4j.distributed.proxy.optimization.DefaultOptimizationListener
-import io.github.bucket4j.distributed.proxy.optimization.DelayParameters
 import io.github.bucket4j.distributed.proxy.optimization.Optimization
-import io.github.bucket4j.distributed.proxy.optimization.delay.DelayOptimization
 import io.github.bucket4j.distributed.proxy.optimization.skiponzero.SkipSyncOnZeroOptimization
 import io.github.bucket4j.mock.ProxyManagerMock
 import io.github.bucket4j.mock.TimeMeterMock

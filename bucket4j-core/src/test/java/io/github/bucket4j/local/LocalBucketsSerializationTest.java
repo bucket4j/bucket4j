@@ -18,7 +18,7 @@ public class LocalBucketsSerializationTest {
     public void testBinarySerialization() throws IOException {
         for (SynchronizationStrategy strategy : SynchronizationStrategy.values()) {
             LocalBucket sourceBucket = Bucket.builder()
-                    .addLimit(Bandwidth.simple(1, Duration.ofSeconds(1)))
+                    .addLimit(Bandwidth.builder().capacity(1).refillGreedy(1, Duration.ofSeconds(1)).build())
                     .withSynchronizationStrategy(strategy)
                     .build();
             byte[] snapshot = sourceBucket.toBinarySnapshot();
@@ -32,7 +32,7 @@ public class LocalBucketsSerializationTest {
     public void testJsonCompatibleSerialization() throws IOException {
         for (SynchronizationStrategy strategy : SynchronizationStrategy.values()) {
             LocalBucket sourceBucket = Bucket.builder()
-                    .addLimit(Bandwidth.simple(1, Duration.ofSeconds(1)))
+                    .addLimit(Bandwidth.builder().capacity(1).refillGreedy(1, Duration.ofSeconds(1)).build())
                     .withSynchronizationStrategy(strategy)
                     .build();
             Map<String, Object> snapshot = sourceBucket.toJsonCompatibleSnapshot();

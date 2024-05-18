@@ -34,7 +34,7 @@ public class LocalUnsafeState {
     public final Bucket bucket = Bucket.builder()
             .withMillisecondPrecision()
             .addLimit(
-                    Bandwidth.simple(Long.MAX_VALUE / 2, Duration.ofNanos(Long.MAX_VALUE / 2))
+                Bandwidth.builder().capacity(Long.MAX_VALUE / 2).refillGreedy(Long.MAX_VALUE / 2, Duration.ofNanos(Long.MAX_VALUE / 2)).build()
             )
             .withSynchronizationStrategy(SynchronizationStrategy.NONE)
             .build();
@@ -54,7 +54,7 @@ public class LocalUnsafeState {
                 }
             })
             .addLimit(
-                    Bandwidth.simple(Long.MAX_VALUE / 2, Duration.ofNanos(Long.MAX_VALUE / 2))
+                Bandwidth.builder().capacity(Long.MAX_VALUE / 2).refillGreedy(Long.MAX_VALUE / 2, Duration.ofNanos(Long.MAX_VALUE / 2)).build()
             )
             .withSynchronizationStrategy(SynchronizationStrategy.NONE)
             .build();

@@ -34,12 +34,8 @@ import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.AsyncBucketProxy;
-import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.optimization.DefaultOptimizationListener;
-import io.github.bucket4j.distributed.proxy.optimization.NopeOptimizationListener;
 import io.github.bucket4j.distributed.proxy.optimization.Optimization;
-import io.github.bucket4j.distributed.proxy.optimization.OptimizationListener;
-import io.github.bucket4j.distributed.proxy.optimization.Optimizations;
 import io.github.bucket4j.distributed.proxy.optimization.skiponzero.SkipSyncOnZeroOptimization;
 import io.github.bucket4j.grid.hazelcast.Bucket4jHazelcast;
 import io.github.bucket4j.grid.hazelcast.HazelcastProxyManager;
@@ -96,7 +92,7 @@ public class HazelcastSkipSyncOnZeroExample {
         HazelcastProxyManager<String> proxyManager = Bucket4jHazelcast.entryProcessorBasedBuilder(map).build();
         BucketConfiguration configuration = BucketConfiguration.builder()
                 .addLimit(
-                    Bandwidth.simple(50, Duration.ofSeconds(60)))
+                    Bandwidth.builder().capacity(50).refillGreedy(50, Duration.ofSeconds(60)).build())
                 .build();
 
         AtomicLong totalMergedRequestCount = new AtomicLong();
@@ -162,7 +158,7 @@ public class HazelcastSkipSyncOnZeroExample {
         HazelcastProxyManager<String> proxyManager = Bucket4jHazelcast.entryProcessorBasedBuilder(map).build();;
         BucketConfiguration configuration = BucketConfiguration.builder()
                 .addLimit(
-                        Bandwidth.simple(10, Duration.ofSeconds(1)).withInitialTokens(0))
+                        Bandwidth.builder().capacity(10).refillGreedy(10, Duration.ofSeconds(1)).build().withInitialTokens(0))
                 .build();
 
         AtomicLong totalMergedRequestCount = new AtomicLong();

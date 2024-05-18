@@ -1,6 +1,5 @@
 package example.distributed.optimizers.manual_syncing;
 
-import com.codahale.metrics.Meter;
 import com.codahale.metrics.Snapshot;
 import com.github.rollingmetrics.counter.SmoothlyDecayingRollingCounter;
 import com.github.rollingmetrics.dropwizard.Dropwizard;
@@ -11,19 +10,13 @@ import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.map.IMap;
 import io.github.bucket4j.Bandwidth;
-import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketConfiguration;
-import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.AsyncBucketProxy;
 import io.github.bucket4j.distributed.BucketProxy;
-import io.github.bucket4j.distributed.proxy.ClientSideConfig;
-import io.github.bucket4j.distributed.proxy.optimization.OptimizationListener;
-import io.github.bucket4j.distributed.proxy.optimization.Optimizations;
-import io.github.bucket4j.distributed.proxy.optimization.batch.BatchingOptimization;
 import io.github.bucket4j.distributed.proxy.optimization.manual.ManuallySyncingOptimization;
 import io.github.bucket4j.grid.hazelcast.Bucket4jHazelcast;
 import io.github.bucket4j.grid.hazelcast.HazelcastProxyManager;
-import io.github.bucket4j.mock.ProxyManagerMock;
+
 import org.gridkit.nanocloud.Cloud;
 import org.gridkit.nanocloud.CloudFactory;
 import org.gridkit.nanocloud.VX;
@@ -167,7 +160,7 @@ public class HazelcastWithManualSyningPerformanceExample {
 //        ProxyManagerMock<String> proxyManager = new ProxyManagerMock<>(TimeMeter.SYSTEM_MILLISECONDS);
         BucketConfiguration configuration = BucketConfiguration.builder()
                 .addLimit(
-                        Bandwidth.simple(10000, Duration.ofSeconds(1)).withInitialTokens(0))
+                        Bandwidth.builder().capacity(10000).refillGreedy(10000, Duration.ofSeconds(1)).build().withInitialTokens(0))
                 .build();
 
         AsyncBucketProxy bucket = proxyManager.asAsync().builder()

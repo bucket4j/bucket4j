@@ -33,13 +33,13 @@ public class LocalSynchronizedState {
     public final Bucket unlimitedBucket = Bucket.builder()
             .withMillisecondPrecision()
             .addLimit(
-                    Bandwidth.simple(Long.MAX_VALUE / 2, Duration.ofNanos(Long.MAX_VALUE / 2))
+                Bandwidth.builder().capacity(Long.MAX_VALUE / 2).refillGreedy(Long.MAX_VALUE / 2, Duration.ofNanos(Long.MAX_VALUE / 2)).build()
             )
             .withSynchronizationStrategy(SynchronizationStrategy.SYNCHRONIZED)
             .build();
 
     public final Bucket _10_milion_rps_Bucket = Bucket.builder()
-            .addLimit(Bandwidth.simple(10_000_000, Duration.ofSeconds(1)).withInitialTokens(0))
+            .addLimit(Bandwidth.builder().capacity(10_000_000).refillGreedy(10_000_000, Duration.ofSeconds(1)).build().withInitialTokens(0))
             .withSynchronizationStrategy(SynchronizationStrategy.SYNCHRONIZED)
             .build();
 }
