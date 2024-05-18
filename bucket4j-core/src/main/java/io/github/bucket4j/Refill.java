@@ -60,16 +60,6 @@ public class Refill {
         this.useAdaptiveInitialTokens = useAdaptiveInitialTokens;
     }
 
-    @Deprecated
-    public static Refill of(long tokens, Duration period) {
-        return greedy(tokens, period);
-    }
-
-    @Deprecated
-    public static Refill smooth(long tokens, Duration period) {
-        return greedy(tokens, period);
-    }
-
     /**
      * This method is deprecated, you should use {@link BandwidthBuilderRefillStage#refillGreedy(long, Duration)}
      *

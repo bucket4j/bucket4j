@@ -51,7 +51,7 @@ public abstract class AbstractSerializationTest {
 
     @Test
     public void serializeClassicBandwidthWithIntervallyRefill() throws IOException {
-        Bandwidth bandwidth = classic(30, intervally(200, Duration.ofSeconds(420)));
+        Bandwidth bandwidth = Bandwidth.builder().capacity(30).refillIntervally(200, Duration.ofSeconds(420)).build();
         testSerialization(bandwidth);
     }
 

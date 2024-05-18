@@ -14,13 +14,13 @@ class FixedIntervalRefillSpecification extends Specification {
 
     def "Basic test of fixed interval refill"() {
         setup:
-        Refill refill = Refill.intervally(9, Duration.ofNanos(10))
-        Bandwidth bandwidth = Bandwidth.classic(9, refill)
-                .withInitialTokens(0)
             TimeMeterMock mockTimer = new TimeMeterMock(0)
         Bucket bucket = Bucket.builder()
                 .withCustomTimePrecision(mockTimer)
-                .addLimit(bandwidth)
+                .addLimit(limit -> limit.capacity(9)
+                        .refillIntervally(9, Duration.ofNanos(10))
+                        .initialTokens(0)
+                )
                 .build()
 
         expect:
@@ -44,10 +44,18 @@ class FixedIntervalRefillSpecification extends Specification {
 
     def "Complex test of fixed interval refill"() {
         setup:
-            Bandwidth bandwidth1 = Bandwidth.classic(9, Refill.intervally(5, Duration.ofNanos(6)))
-                    .withInitialTokens(0)
-            Bandwidth bandwidth2 = Bandwidth.classic(12, Refill.intervally(4, Duration.ofNanos(5)))
-                    .withInitialTokens(0)
+            Bandwidth bandwidth1 = Bandwidth.builder()
+                .capacity(9)
+                .refillIntervally(5, Duration.ofNanos(6))
+                .initialTokens(0)
+                .build()
+
+            Bandwidth bandwidth2 = Bandwidth.builder()
+                .capacity(12)
+                .refillIntervally(4, Duration.ofNanos(5))
+                .initialTokens(0)
+                .build()
+
             TimeMeterMock mockTimer = new TimeMeterMock(0)
             Bucket bucket = Bucket.builder()
                     .withCustomTimePrecision(mockTimer)
@@ -91,9 +99,11 @@ class FixedIntervalRefillSpecification extends Specification {
 
     def "Test for refill time estimation https://github.com/bucket4j/bucket4j/issues/71"() {
         setup:
-            Refill refill = Refill.intervally(10, Duration.ofMinutes(1))
-            Bandwidth bandwidth = Bandwidth.classic(10, refill)
-                    .withInitialTokens(0)
+            Bandwidth bandwidth = Bandwidth.builder()
+                .capacity(10)
+                .refillIntervally(10, Duration.ofMinutes(1))
+                .initialTokens(0)
+                .build()
             TimeMeterMock mockTimer = new TimeMeterMock(0)
             Bucket bucket = Bucket.builder()
                     .withCustomTimePrecision(mockTimer)

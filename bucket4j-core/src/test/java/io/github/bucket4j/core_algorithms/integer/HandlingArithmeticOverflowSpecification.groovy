@@ -151,10 +151,11 @@ class HandlingArithmeticOverflowSpecification extends Specification {
     def "Should detect overflow during deficit calculation for interval refill"() {
         setup:
             long bandwidthPeriodNanos = (long) Long.MAX_VALUE / 2
-            Refill refill = Refill.intervally((long) (Long.MAX_VALUE / 4), Duration.ofNanos(bandwidthPeriodNanos))
-            Bandwidth limit = Bandwidth
-                    .classic((long) (Long.MAX_VALUE / 2), refill)
-                    .withInitialTokens(0)
+            Bandwidth limit = Bandwidth.builder()
+                .capacity((long) (Long.MAX_VALUE / 2))
+                .refillIntervally((long) (Long.MAX_VALUE / 4), Duration.ofNanos(bandwidthPeriodNanos))
+                .initialTokens(0)
+                .build()
             TimeMeterMock meter = new TimeMeterMock(0)
             Bucket bucket = Bucket.builder()
                     .addLimit(limit)

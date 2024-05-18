@@ -364,8 +364,8 @@ public abstract class AbstractDistributedBucketTest {
     public <K, P extends ProxyManager<K>, B extends AbstractProxyManagerBuilder<K, P, B>> void testParallelInitialization(ProxyManagerSpec<K, P, B> spec) throws InterruptedException {
         K key = spec.generateRandomKey();
         BucketConfiguration configuration = BucketConfiguration.builder()
-                .addLimit(Bandwidth.classic(10, Refill.intervally(1, Duration.ofMinutes(1))))
-                .build();
+            .addLimit(limit -> limit.capacity(10).refillIntervally(1, Duration.ofMinutes(1)))
+            .build();
         ProxyManager<K> proxyManager = spec.builder.get().build();
 
         int PARALLELISM = 4;
@@ -404,8 +404,8 @@ public abstract class AbstractDistributedBucketTest {
         }
 
         final BucketConfiguration configuration = BucketConfiguration.builder()
-                .addLimit(Bandwidth.classic(10, Refill.intervally(1, Duration.ofMinutes(1))))
-                .build();
+            .addLimit(limit -> limit.capacity(10).refillIntervally(1, Duration.ofMinutes(1)))
+            .build();
 
         int PARALLELISM = 4;
         CountDownLatch startLatch = new CountDownLatch(PARALLELISM);
@@ -440,7 +440,7 @@ public abstract class AbstractDistributedBucketTest {
     public <K, P extends ProxyManager<K>, B extends AbstractProxyManagerBuilder<K, P, B>> void testParallelInitialization_withTimeout(ProxyManagerSpec<K, P, B> spec) throws InterruptedException {
         K key = spec.generateRandomKey();
         BucketConfiguration configuration = BucketConfiguration.builder()
-            .addLimit(Bandwidth.classic(10, Refill.intervally(1, Duration.ofMinutes(1))))
+            .addLimit(limit -> limit.capacity(10).refillIntervally(1, Duration.ofMinutes(1)))
             .build();
         ProxyManager<K> proxyManager = spec.builder.get().requestTimeout(Duration.ofSeconds(3)).build();
 
@@ -480,7 +480,7 @@ public abstract class AbstractDistributedBucketTest {
         }
 
         final BucketConfiguration configuration = BucketConfiguration.builder()
-            .addLimit(Bandwidth.classic(10, Refill.intervally(1, Duration.ofMinutes(1))))
+            .addLimit(limit -> limit.capacity(10).refillIntervally(1, Duration.ofMinutes(1)))
             .build();
 
         int PARALLELISM = 4;
@@ -655,9 +655,9 @@ public abstract class AbstractDistributedBucketTest {
         int MIN_CAPACITY = 4;
         int MAX_CAPACITY = 10;
         BucketConfiguration configuration = BucketConfiguration.builder()
-                .addLimit(Bandwidth.classic(MIN_CAPACITY, Refill.intervally(4, Duration.ofMinutes(20))))
-                .addLimit(Bandwidth.classic(MAX_CAPACITY, Refill.intervally(10, Duration.ofMinutes(60))))
-                .build();
+            .addLimit(limit -> limit.capacity(MIN_CAPACITY).refillIntervally(4, Duration.ofMinutes(20)))
+            .addLimit(limit -> limit.capacity(MAX_CAPACITY).refillIntervally(10, Duration.ofMinutes(60)))
+            .build();
 
         ProxyManager<K> proxyManager = spec.builder.get().build();
         K key = spec.generateRandomKey();

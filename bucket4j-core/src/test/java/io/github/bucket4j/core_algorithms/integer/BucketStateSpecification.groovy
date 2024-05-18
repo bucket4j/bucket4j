@@ -227,67 +227,67 @@ class BucketStateSpecification extends Specification {
                         0,
                         0,
                         BucketConfiguration.builder()
-                                .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(1))
-                                .build()
+                            .addLimit(limit -> limit.capacity(10).refillGreedy(10, Duration.ofNanos(100)).initialTokens(1))
+                            .build()
                 ], [
                         "#2",
                         100,
                         0,
                         0,
                         BucketConfiguration.builder()
-                                .addLimit(Bandwidth.classic(10, Refill.intervally(10, Duration.ofNanos(100))).withInitialTokens(1))
-                                .build()
+                            .addLimit(limit -> limit.capacity(10).refillIntervally(10, Duration.ofNanos(100)).initialTokens(1))
+                            .build()
                 ], [
                         "#3",
                         1650,
                         0,
                         23,
                         BucketConfiguration.builder()
-                                .addLimit(Bandwidth.classic(10, Refill.greedy(2, Duration.ofNanos(100))).withInitialTokens(0))
-                                .build()
+                            .addLimit(limit -> limit.capacity(10).refillGreedy(2, Duration.ofNanos(100)).initialTokens(0))
+                            .build()
                 ], [
                         "#4",
                         1700,
                         0,
                         23,
                         BucketConfiguration.builder()
-                                .addLimit(Bandwidth.classic(10, Refill.intervally(2, Duration.ofNanos(100))).withInitialTokens(0))
-                                .build()
+                            .addLimit(limit -> limit.capacity(10).refillIntervally(2, Duration.ofNanos(100)).initialTokens(0))
+                            .build()
                 ], [
                         "#5",
                         60,
                         0,
                         0,
                         BucketConfiguration.builder()
-                                .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(4))
-                                .build()
+                            .addLimit(limit -> limit.capacity(10).refillGreedy(10, Duration.ofNanos(100)).initialTokens(4))
+                            .build()
                 ], [
                         "#6",
                         90,
                         0,
                         0,
                         BucketConfiguration.builder()
-                                .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(1))
-                                .addLimit(Bandwidth.simple(5, Duration.ofNanos(10)).withInitialTokens(2))
-                                .build()
+                            .addLimit(limit -> limit.capacity(10).refillGreedy(10, Duration.ofNanos(100)).initialTokens(1))
+                            .addLimit(limit -> limit.capacity(5).refillGreedy(5, Duration.ofNanos(10)).initialTokens(2))
+                            .build()
                 ], [
                         "#7",
                         90,
                         0,
                         0,
                         BucketConfiguration.builder()
-                                .addLimit(Bandwidth.simple(5, Duration.ofNanos(10)).withInitialTokens(2))
-                                .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(1))
-                                .build()
+                            .addLimit(limit -> limit.capacity(5).refillGreedy(5, Duration.ofNanos(10)).initialTokens(2))
+                            .addLimit(limit -> limit.capacity(10).refillGreedy(10, Duration.ofNanos(100)).initialTokens(1))
+                            .build()
                 ], [
                         "#8",
                         70,
                         0,
                         0,
                         BucketConfiguration.builder()
-                                .addLimit(Bandwidth.simple(5, Duration.ofNanos(10)).withInitialTokens(5))
-                                .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(3))
-                                .build()
+                            .addLimit(limit -> limit.capacity(5).refillGreedy(5, Duration.ofNanos(10)).initialTokens(5))
+                            .addLimit(limit -> limit.capacity(10).refillGreedy(10, Duration.ofNanos(100)).initialTokens(3))
+                            .build()
                 ]
         ]
     }

@@ -309,10 +309,9 @@ class ConfigurationReplacementSpecification extends Specification {
                 BucketConfiguration configuration = BucketConfiguration.builder()
                     .addLimit(Bandwidth.simple(3, Duration.ofNanos(5)).withInitialTokens(0))
                     .build()
-                Refill refill = Refill.intervally(60, Duration.ofNanos(1000))
                 BucketConfiguration newConfiguration = BucketConfiguration.builder()
-                        .addLimit(Bandwidth.classic(60, refill))
-                        .build()
+                    .addLimit(limit -> limit.capacity(60).refillIntervally(60, Duration.ofNanos(1000)))
+                    .build()
                 if (sync) {
                     Bucket bucket = bucketType.createBucket(configuration, clock)
                     bucket.getAvailableTokens();

@@ -41,14 +41,14 @@ class EstimateAbilityToConsumeSpecification extends Specification {
         }
         where:
         n | toEstimate | result  |  expectedWait | configuration
-        1 |    49      |   true  |        0      | BucketConfiguration.builder().addLimit(Bandwidth.simple(100, Duration.ofNanos(100)).withInitialTokens(100)).build()
-        2 |     1      |   true  |        0      | BucketConfiguration.builder().addLimit(Bandwidth.simple(100, Duration.ofNanos(100)).withInitialTokens(1)).build()
-        3 |    80      |   false |       10      | BucketConfiguration.builder().addLimit(Bandwidth.simple(100, Duration.ofNanos(100)).withInitialTokens(70)).build()
-        4 |    10      |   false |       10      | BucketConfiguration.builder().addLimit(Bandwidth.simple(100, Duration.ofNanos(100)).withInitialTokens(0)).build()
-        5 |   120      |   false |    MAX_VALUE  | BucketConfiguration.builder().addLimit(Bandwidth.simple(100, Duration.ofNanos(100)).withInitialTokens(10)).build()
-        6 |    80      |   false |      100      | BucketConfiguration.builder().addLimit(Bandwidth.classic(100, Refill.intervally(100, Duration.ofNanos(100))).withInitialTokens(70)).build()
-        7 |    10      |   false |      100      | BucketConfiguration.builder().addLimit(Bandwidth.classic(100, Refill.intervally(100, Duration.ofNanos(100))).withInitialTokens(0)).build()
-        8 |   120      |   false |   MAX_VALUE   | BucketConfiguration.builder().addLimit(Bandwidth.classic(100, Refill.intervally(100, Duration.ofNanos(100))).withInitialTokens(10)).build()
+        1 |    49      |   true  |        0      | BucketConfiguration.builder().addLimit(limit -> limit.capacity(100).refillGreedy(100, Duration.ofNanos(100)).initialTokens(100)).build()
+        2 |     1      |   true  |        0      | BucketConfiguration.builder().addLimit(limit -> limit.capacity(100).refillGreedy(100, Duration.ofNanos(100)).initialTokens(1)).build()
+        3 |    80      |   false |       10      | BucketConfiguration.builder().addLimit(limit -> limit.capacity(100).refillGreedy(100, Duration.ofNanos(100)).initialTokens(70)).build()
+        4 |    10      |   false |       10      | BucketConfiguration.builder().addLimit(limit -> limit.capacity(100).refillGreedy(100, Duration.ofNanos(100)).initialTokens(0)).build()
+        5 |   120      |   false |    MAX_VALUE  | BucketConfiguration.builder().addLimit(limit -> limit.capacity(100).refillGreedy(100, Duration.ofNanos(100)).initialTokens(10)).build()
+        6 |    80      |   false |      100      | BucketConfiguration.builder().addLimit(limit -> limit.capacity(100).refillIntervally(100, Duration.ofNanos(100)).initialTokens(70)).build()
+        7 |    10      |   false |      100      | BucketConfiguration.builder().addLimit(limit -> limit.capacity(100).refillIntervally(100, Duration.ofNanos(100)).initialTokens(0)).build()
+        8 |   120      |   false |   MAX_VALUE   | BucketConfiguration.builder().addLimit(limit -> limit.capacity(100).refillIntervally(100, Duration.ofNanos(100)).initialTokens(10)).build()
     }
 
 }
