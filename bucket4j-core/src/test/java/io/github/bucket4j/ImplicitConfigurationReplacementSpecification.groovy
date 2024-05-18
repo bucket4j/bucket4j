@@ -128,7 +128,7 @@ class ImplicitConfigurationReplacementSpecification extends Specification {
                         assert bucket1.getAvailableTokens().get() == 60
 
                         builder.withImplicitConfigurationReplacement(2L, TokensInheritanceStrategy.AS_IS)
-                        AsyncBucketProxy bucket2 = builder.build(key, {newConfiguration})
+                        AsyncBucketProxy bucket2 = builder.build(key, {CompletableFuture.completedFuture(newConfiguration)})
 
                         if (!verbose) {
                             assert bucket2.getAvailableTokens().get() == 3

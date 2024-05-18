@@ -3,7 +3,6 @@ package io.github.bucket4j.core_algorithms
 
 import io.github.bucket4j.Bandwidth
 import io.github.bucket4j.Bucket
-import io.github.bucket4j.Refill
 import io.github.bucket4j.mock.TimeMeterMock
 import spock.lang.Specification
 

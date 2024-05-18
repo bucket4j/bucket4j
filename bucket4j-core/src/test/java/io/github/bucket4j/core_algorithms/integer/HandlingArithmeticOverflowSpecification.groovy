@@ -4,7 +4,6 @@ package io.github.bucket4j.core_algorithms.integer
 import io.github.bucket4j.Bandwidth
 import io.github.bucket4j.Bucket
 import io.github.bucket4j.BucketState
-import io.github.bucket4j.Refill
 import io.github.bucket4j.mock.TimeMeterMock
 import spock.lang.Specification
 
@@ -71,9 +70,11 @@ class HandlingArithmeticOverflowSpecification extends Specification {
 
     def "Should check ArithmeticOverflow when refilling by completed periods"() {
         setup:
-            Bandwidth limit = Bandwidth
-                    .classic((long) Long.MAX_VALUE - 10, Refill.greedy(1, Duration.ofNanos(1)))
-                    .withInitialTokens((long) Long.MAX_VALUE - 13)
+            Bandwidth limit = Bandwidth.builder()
+                .capacity((long) Long.MAX_VALUE - 10)
+                .refillGreedy(1, Duration.ofNanos(1))
+                .initialTokens((long) Long.MAX_VALUE - 13)
+                .build()
             TimeMeterMock meter = new TimeMeterMock(0)
             Bucket bucket = Bucket.builder()
                 .addLimit(limit)
@@ -108,9 +109,11 @@ class HandlingArithmeticOverflowSpecification extends Specification {
 
     def "Should check ArithmeticOverflow when refilling by uncompleted periods"() {
         setup:
-            Bandwidth limit = Bandwidth
-                    .classic((long) Long.MAX_VALUE - 10, Refill.greedy(100, Duration.ofNanos(100)))
-                    .withInitialTokens((long) Long.MAX_VALUE - 13)
+            Bandwidth limit = Bandwidth.builder()
+                    .capacity((long) Long.MAX_VALUE - 10)
+                    .refillGreedy(100, Duration.ofNanos(100))
+                    .initialTokens((long) Long.MAX_VALUE - 13)
+                    .build()
             TimeMeterMock meter = new TimeMeterMock(0)
             Bucket bucket = Bucket.builder()
                 .addLimit(limit)

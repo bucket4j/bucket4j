@@ -22,8 +22,6 @@ package io.github.bucket4j;
 
 import java.time.Duration;
 
-import io.github.bucket4j.BandwidthBuilder.BandwidthBuilderRefillStage;
-
 /**
  * Specifies the speed of tokens regeneration.
  * <p>
@@ -58,16 +56,6 @@ public class Refill {
         this.refillIntervally = refillIntervally;
         this.timeOfFirstRefillMillis = timeOfFirstRefillMillis;
         this.useAdaptiveInitialTokens = useAdaptiveInitialTokens;
-    }
-
-    /**
-     * This method is deprecated, you should use {@link BandwidthBuilderRefillStage#refillGreedy(long, Duration)}
-     *
-     * @deprecated
-     */
-    @Deprecated
-    public static Refill greedy(long tokens, Duration period) {
-        return new Refill(tokens, period, false, Bandwidth.UNSPECIFIED_TIME_OF_FIRST_REFILL, false);
     }
 
     @Override

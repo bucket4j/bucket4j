@@ -234,11 +234,11 @@ class ConfigurationReplacementSpecification extends Specification {
         for (boolean sync : [true, false]) {
             TimeMeterMock clock = new TimeMeterMock(0)
             BucketConfiguration configuration = BucketConfiguration.builder()
-                    .addLimit(Bandwidth.classic(500, Refill.greedy(100, Duration.ofNanos(100))))
-                    .build()
+                .addLimit(limit -> limit.capacity(500).refillGreedy(100, Duration.ofNanos(100)))
+                .build()
             BucketConfiguration newConfiguration = BucketConfiguration.builder()
-                    .addLimit(Bandwidth.classic (200, Refill.greedy(100, Duration.ofNanos(100)) ))
-                    .build()
+                .addLimit(limit -> limit.capacity(200).refillGreedy(100, Duration.ofNanos(100)))
+                .build()
             if (sync) {
                 Bucket bucket = bucketType.createBucket(configuration, clock)
                 bucket.replaceConfiguration(newConfiguration, TokensInheritanceStrategy.AS_IS)
@@ -357,11 +357,11 @@ class ConfigurationReplacementSpecification extends Specification {
         for (boolean sync : [true, false]) {
             TimeMeterMock clock = new TimeMeterMock(0)
             BucketConfiguration configuration = BucketConfiguration.builder()
-                    .addLimit(Bandwidth.classic(500, Refill.greedy(100, Duration.ofNanos(100))))
-                    .build()
+                .addLimit(limit -> limit.capacity(500).refillGreedy(100, Duration.ofNanos(100)))
+                .build()
             BucketConfiguration newConfiguration = BucketConfiguration.builder()
-                    .addLimit(Bandwidth.classic (200, Refill.greedy(100, Duration.ofNanos(100)) ))
-                    .build()
+                .addLimit(limit -> limit.capacity(200).refillGreedy(100, Duration.ofNanos(100)))
+                .build()
             if (sync) {
                 Bucket bucket = bucketType.createBucket(configuration, clock)
                 bucket.getAvailableTokens()
@@ -384,10 +384,11 @@ class ConfigurationReplacementSpecification extends Specification {
             TimeMeterMock clock = new TimeMeterMock(0)
 
             def configuration = BucketConfiguration.builder()
-                    .addLimit(Bandwidth.classic(500, Refill.greedy(100, Duration.ofNanos(100))).withInitialTokens(200)).build()
+                .addLimit(limit -> limit.capacity(500).refillGreedy(100, Duration.ofNanos(100)).initialTokens(200))
+                .build()
             BucketConfiguration newConfiguration = BucketConfiguration.builder()
-                    .addLimit(Bandwidth.classic (900, Refill.greedy(100, Duration.ofNanos(100)) ))
-                    .build()
+                .addLimit(limit -> limit.capacity(900).refillGreedy(100, Duration.ofNanos(100)))
+                .build()
             if (sync) {
                 Bucket bucket = bucketType.createBucket(configuration, clock)
                 bucket.getAvailableTokens()
@@ -410,10 +411,10 @@ class ConfigurationReplacementSpecification extends Specification {
             for (boolean sync : [true, false]) {
                 TimeMeterMock clock = new TimeMeterMock(0)
                 BucketConfiguration configuration = BucketConfiguration.builder()
-                    .addLimit(Bandwidth.classic(500, Refill.greedy(100, Duration.ofNanos(100))))
+                    .addLimit(limit -> limit.capacity(500).refillGreedy(100, Duration.ofNanos(100)))
                     .build()
                 BucketConfiguration newConfiguration = BucketConfiguration.builder()
-                    .addLimit(Bandwidth.classic (200, Refill.greedy(100, Duration.ofNanos(100))))
+                    .addLimit(limit -> limit.capacity(200).refillGreedy(100, Duration.ofNanos(100)))
                     .build()
                 if (sync) {
                     Bucket bucket = bucketType.createBucket(configuration, clock)

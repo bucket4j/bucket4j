@@ -80,8 +80,7 @@ public class Bandwidth implements ComparableByContent<Bandwidth> {
      */
     @Deprecated
     public static Bandwidth simple(long capacity, Duration period) {
-        Refill refill = Refill.greedy(capacity, period);
-        return classic(capacity, refill);
+        return Bandwidth.builder().capacity(capacity).refillGreedy(capacity, period).build();
     }
 
     /**

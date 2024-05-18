@@ -127,21 +127,21 @@ class VerboseApiTest extends Specification {
                         "#1",
                         3,
                         BucketConfiguration.builder()
-                                .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(3))
-                                .build()
+                            .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(3))
+                            .build()
                 ], [
                         "#2",
                         10,
                         BucketConfiguration.builder()
-                                .addLimit(limit -> limit.capacity(10).refillIntervally(10, Duration.ofNanos(100)))
-                                .build()
+                            .addLimit(limit -> limit.capacity(10).refillIntervally(10, Duration.ofNanos(100)))
+                            .build()
                 ], [
                         "#3",
                         1,
                         BucketConfiguration.builder()
-                                .addLimit(Bandwidth.classic(10, Refill.greedy(2, Duration.ofNanos(100))).withInitialTokens(1))
-                                .addLimit(Bandwidth.classic(100, Refill.greedy(20, Duration.ofNanos(100))))
-                                .build()
+                            .addLimit(limit -> limit.capacity(20).refillGreedy(2, Duration.ofNanos(100)).initialTokens(1))
+                            .addLimit(limit -> limit.capacity(20).refillGreedy(20, Duration.ofNanos(100)))
+                            .build()
                 ]
         ]
     }
@@ -174,16 +174,16 @@ class VerboseApiTest extends Specification {
                         "#3",
                         [ 1l, 100l ] as List,
                         BucketConfiguration.builder()
-                                .addLimit(Bandwidth.classic(10, Refill.greedy(2, Duration.ofNanos(100))).withInitialTokens(1))
-                                .addLimit(Bandwidth.classic(100, Refill.greedy(20, Duration.ofNanos(100))))
-                                .build()
+                            .addLimit(limit -> limit.capacity(10).refillGreedy(2, Duration.ofNanos(100)).initialTokens(1))
+                            .addLimit(limit -> limit.capacity(100).refillGreedy(20, Duration.ofNanos(100)))
+                            .build()
                 ], [
-                        "#3",
+                        "#4",
                         [ 100l, 1l ] as List,
                         BucketConfiguration.builder()
-                                .addLimit(Bandwidth.classic(100, Refill.greedy(20, Duration.ofNanos(100))))
-                                .addLimit(Bandwidth.classic(10, Refill.greedy(2, Duration.ofNanos(100))).withInitialTokens(1))
-                                .build()
+                            .addLimit(limit -> limit.capacity(100).refillGreedy(20, Duration.ofNanos(100)))
+                            .addLimit(limit -> limit.capacity(100).refillGreedy(2, Duration.ofNanos(100)).initialTokens(1))
+                            .build()
                 ]
         ]
     }

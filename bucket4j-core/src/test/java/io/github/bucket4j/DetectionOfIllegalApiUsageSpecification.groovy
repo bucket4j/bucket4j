@@ -94,7 +94,7 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
 
     def "Should check that refill period is not null"() {
         when:
-            builder.addLimit(Bandwidth.classic( 32, Refill.greedy(1, null)))
+            builder.addLimit(limit -> limit.capacity(32).refillGreedy(1, null))
         then:
             IllegalArgumentException ex = thrown()
             ex.message == nullRefillPeriod().message

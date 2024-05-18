@@ -18,9 +18,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
 
-import static io.github.bucket4j.Bandwidth.classic;
 import static io.github.bucket4j.Bandwidth.simple;
-import static io.github.bucket4j.Refill.*;
 import static io.github.bucket4j.distributed.serialization.PrimitiveSerializationHandles.*;
 import static java.time.Duration.*;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -45,7 +43,7 @@ public abstract class AbstractSerializationTest {
 
     @Test
     public void serializeClassicBandwidthWithGreedyRefill() throws IOException {
-        Bandwidth bandwidth = classic(20, greedy(100, Duration.ofSeconds(42)));
+        Bandwidth bandwidth = Bandwidth.builder().capacity(20).refillGreedy(100, Duration.ofSeconds(42)).build();
         testSerialization(bandwidth);
     }
 

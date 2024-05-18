@@ -6,7 +6,6 @@ import io.github.bucket4j.Bucket
 import io.github.bucket4j.BucketConfiguration
 import io.github.bucket4j.BucketState
 import io.github.bucket4j.MathType
-import io.github.bucket4j.Refill
 import io.github.bucket4j.TimeMeter
 import io.github.bucket4j.mock.TimeMeterMock
 import spock.lang.Shared
@@ -64,7 +63,7 @@ class BucketStateSpecification extends Specification {
                         "#5",
                         10,
                         Bucket.builder()
-                            .addLimit(Bandwidth.classic(10, Refill.greedy(1, Duration.ofSeconds(1))))
+                            .addLimit(limit -> limit.capacity(10).refillGreedy(1, Duration.ofSeconds(1)))
                             .build()
                 ]
             ]
@@ -119,9 +118,9 @@ class BucketStateSpecification extends Specification {
                         4,
                         5,
                         Bucket.builder()
-                                .addLimit(Bandwidth.classic(10, Refill.greedy(1, Duration.ofSeconds(1))).withInitialTokens(1))
-                                .withCustomTimePrecision(timeMeter)
-                                .build()
+                            .addLimit(limit -> limit.capacity(10).refillGreedy(1, Duration.ofSeconds(1)).initialTokens(1))
+                            .withCustomTimePrecision(timeMeter)
+                            .build()
                 ]
         ]
     }
@@ -151,7 +150,7 @@ class BucketStateSpecification extends Specification {
                         100,
                         Bucket.builder()
                             .withCustomTimePrecision(new TimeMeterMock(0))
-                            .addLimit(Bandwidth.classic(10, Refill.greedy(10, Duration.ofNanos(100))).withInitialTokens(0))
+                            .addLimit(limit -> limit.capacity(10).refillGreedy(10, Duration.ofNanos(100)).initialTokens(0))
                             .build()
                 ], [
                         "#3",
@@ -159,7 +158,7 @@ class BucketStateSpecification extends Specification {
                         500,
                         Bucket.builder()
                             .withCustomTimePrecision(new TimeMeterMock(0))
-                            .addLimit(Bandwidth.classic(10, Refill.greedy(2, Duration.ofNanos(100))).withInitialTokens(0))
+                            .addLimit(limit -> limit.capacity(10).refillGreedy(2, Duration.ofNanos(100)).initialTokens(0))
                             .build()
                 ], [
                         "#4",
@@ -328,11 +327,10 @@ class BucketStateSpecification extends Specification {
                                                        long initTime, long timeOnRefill, long tokensAfterRefill, long roundingError) {
         setup:
             TimeMeterMock mockTimer = new TimeMeterMock(initTime)
-            def refill = Refill.greedy(refillTokens, Duration.ofNanos(refillPeriod))
             Bucket bucket = Bucket.builder()
-                    .addLimit(Bandwidth.classic(capacity, refill).withInitialTokens(initialTokens))
-                    .withCustomTimePrecision(mockTimer)
-                    .build()
+                .addLimit(limit -> limit.capacity(capacity).refillGreedy(refillTokens, Duration.ofNanos(refillPeriod)).initialTokens(initialTokens))
+                .withCustomTimePrecision(mockTimer)
+                .build()
             BucketState state = bucket.asVerbose().getAvailableTokens().getState()
         when:
             mockTimer.setCurrentTimeNanos(timeOnRefill)
