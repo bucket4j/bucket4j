@@ -118,17 +118,6 @@ public class Bandwidth implements ComparableByContent<Bandwidth> {
                 timeOfFirstRefillMillis, useAdaptiveInitialTokens, UNDEFINED_ID);
     }
 
-    /**
-     * This method is deprecated, you should use {@link BandwidthBuilder.BandwidthBuilderBuildStage#id(String)}
-     *
-     * @deprecated
-     */
-    @Deprecated
-    public Bandwidth withId(String id) {
-        return new Bandwidth(capacity, refillPeriodNanos, refillTokens, initialTokens, refillIntervally,
-                timeOfFirstRefillMillis, useAdaptiveInitialTokens, id);
-    }
-
     public boolean isIntervallyAligned() {
         return timeOfFirstRefillMillis != UNSPECIFIED_TIME_OF_FIRST_REFILL;
     }

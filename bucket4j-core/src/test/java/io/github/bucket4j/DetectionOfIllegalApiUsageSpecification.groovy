@@ -242,8 +242,8 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
     def "#type should detect that all bandwidth has unique id"(BucketType type) {
         when:
             Bucket.builder()
-                .addLimit(Bandwidth.simple(1, Duration.ofSeconds(10)).withId("xyz"))
-                .addLimit(Bandwidth.simple(100, Duration.ofSeconds(3600)).withId("xyz"))
+                .addLimit(limit -> limit.capacity(10).refillGreedy(1, Duration.ofSeconds(10)).id("xyz"))
+                .addLimit(limit -> limit.capacity(100).refillGreedy(100, Duration.ofSeconds(3600)).id("xyz"))
                 .build()
         then:
             IllegalArgumentException ex = thrown()

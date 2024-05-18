@@ -70,16 +70,6 @@ public class Refill {
         return new Refill(tokens, period, false, Bandwidth.UNSPECIFIED_TIME_OF_FIRST_REFILL, false);
     }
 
-    /**
-     * This method is deprecated, you should use {@link BandwidthBuilderRefillStage#refillIntervally(long, Duration)}
-     *
-     * @deprecated
-     */
-    @Deprecated
-    public static Refill intervally(long tokens, Duration period) {
-        return new Refill(tokens, period, true, Bandwidth.UNSPECIFIED_TIME_OF_FIRST_REFILL, false);
-    }
-
     @Override
     public String toString() {
         return "Refill{" + "periodNanos=" + periodNanos +
