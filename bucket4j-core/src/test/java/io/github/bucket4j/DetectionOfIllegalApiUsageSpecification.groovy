@@ -181,7 +181,7 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
 
     def "Should detect the high rate of refill"() {
         when:
-           Bucket.builder().addLimit(Bandwidth.simple(2, ofNanos(1)))
+           Bucket.builder().addLimit({it.capacity(2).refillGreedy(2, ofNanos(1))})
         then:
             IllegalArgumentException ex = thrown()
             ex.message == tooHighRefillRate(1, 2).message
@@ -246,9 +246,9 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
 
     def "Should check that time units to wait should be positive"() {
         setup:
-            def bucket = Bucket.builder().addLimit(
-                    Bandwidth.simple(VALID_CAPACITY, VALID_PERIOD)
-            ).build()
+            def bucket = Bucket.builder()
+                .addLimit({it.capacity(VALID_CAPACITY).refillGreedy(VALID_CAPACITY, VALID_PERIOD)})
+                .build()
         when:
             bucket.asBlocking().tryConsume(1, 0, BlockingStrategy.PARKING)
         then:
@@ -265,9 +265,9 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
     @Unroll
     def "Should check that #tokens tokens is not positive to add"(long tokens) {
         setup:
-            def bucket = Bucket.builder().addLimit(
-                    Bandwidth.simple(VALID_CAPACITY, VALID_PERIOD)
-            ).build()
+            def bucket = Bucket.builder()
+                .addLimit({it.capacity(VALID_CAPACITY).refillGreedy(VALID_CAPACITY, VALID_PERIOD)})
+                .build()
         when:
             bucket.addTokens(tokens)
         then:
@@ -279,9 +279,9 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
     @Unroll
     def "Should check that #tokens tokens is not positive to force add"(long tokens) {
         setup:
-            def bucket = Bucket.builder().addLimit(
-                    Bandwidth.simple(VALID_CAPACITY, VALID_PERIOD)
-            ).build()
+            def bucket = Bucket.builder()
+                .addLimit({it.capacity(VALID_CAPACITY).refillGreedy(VALID_CAPACITY, VALID_PERIOD)})
+                .build()
         when:
             bucket.forceAddTokens(tokens)
         then:
@@ -293,8 +293,9 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
     def "Should that scheduler passed to tryConsume is not null"() {
         setup:
             BucketConfiguration configuration = BucketConfiguration.builder()
-                    .addLimit(Bandwidth.simple(VALID_CAPACITY, VALID_PERIOD))
-                    .build()
+                .addLimit({it.capacity(VALID_CAPACITY).refillGreedy(VALID_CAPACITY, VALID_PERIOD)})
+                .build()
+
             AsyncBucketProxy asyncBucket = BucketType.GRID.createAsyncBucket(configuration)
         when:
             asyncBucket.asScheduler().tryConsume(32, 1000_000, null)
@@ -350,7 +351,9 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
     @Unroll
     def "#type should detect that configuration is null during configuration replacement"(BucketType type) {
         setup:
-            def configuration = BucketConfiguration.builder().addLimit(Bandwidth.simple(1, Duration.ofSeconds(10))).build()
+            def configuration = BucketConfiguration.builder()
+                .addLimit({it.capacity(1).refillGreedy(1, Duration.ofSeconds(10))})
+                .build()
             def bucket = type.createBucket(configuration, TimeMeter.SYSTEM_MILLISECONDS)
             def asyncBucket = type.createAsyncBucket(configuration, TimeMeter.SYSTEM_MILLISECONDS)
 
@@ -385,7 +388,8 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
     @Unroll
     def "#type should detect that tokenMigrationMode is null during configuration replacement"(BucketType type) {
         setup:
-            def builder = BucketConfiguration.builder().addLimit(Bandwidth.simple(1, Duration.ofSeconds(10)))
+            def builder = BucketConfiguration.builder()
+                .addLimit({it.capacity(1).refillGreedy(1, Duration.ofSeconds(10))})
             def bucket = type.createBucket(builder.build(), TimeMeter.SYSTEM_MILLISECONDS)
             def asyncBucket = type.createAsyncBucket(builder.build(), TimeMeter.SYSTEM_MILLISECONDS)
             def newConfiguration = builder.build()

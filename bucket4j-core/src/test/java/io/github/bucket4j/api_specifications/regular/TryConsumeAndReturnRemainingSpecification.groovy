@@ -22,8 +22,8 @@ class TryConsumeAndReturnRemainingSpecification extends Specification {
     SimpleBucketListener listener = new SimpleBucketListener()
 
     BucketConfiguration configuration = BucketConfiguration.builder()
-            .addLimit(Bandwidth.simple(10, Duration.ofSeconds(1)))
-            .build()
+        .addLimit({it.capacity(10).refillGreedy(10, Duration.ofSeconds(1))})
+        .build()
 
     @Unroll
     def "#n tryConsumeAndReturnRemaining specification"(int n, long toConsume, boolean result, long expectedRemaining, long expectedWait, BucketConfiguration configuration) {

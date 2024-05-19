@@ -19,7 +19,7 @@ class SkipSyncOnZeroAsyncCommandExecutorSpecification extends Specification {
     private ProxyManagerMock proxyManager = new ProxyManagerMock(clock)
     private DefaultOptimizationListener listener = new DefaultOptimizationListener();
     private BucketConfiguration configuration = BucketConfiguration.builder()
-        .addLimit(Bandwidth.simple(100, Duration.ofMillis(1000)))
+        .addLimit({it.capacity(100).refillGreedy(100, Duration.ofMillis(1000))})
         .build()
     private Optimization optimization = new SkipSyncOnZeroOptimization(listener, clock)
     private AsyncBucketProxy optimizedBucket = proxyManager.asAsync().builder()

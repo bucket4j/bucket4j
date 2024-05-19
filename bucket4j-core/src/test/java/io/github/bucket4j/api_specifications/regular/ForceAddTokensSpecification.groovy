@@ -59,9 +59,9 @@ class ForceAddTokensSpecification extends Specification {
         setup:
             TimeMeterMock timeMeter = new TimeMeterMock(0)
             Bucket bucket = Bucket.builder()
-                    .addLimit(Bandwidth.simple(100, Duration.ofNanos(100)))
-                    .withCustomTimePrecision(timeMeter)
-                    .build()
+                .addLimit({it.capacity(100).refillGreedy(100, Duration.ofNanos(100))})
+                .withCustomTimePrecision(timeMeter)
+                .build()
         when:
             bucket.forceAddTokens(10)
         then:

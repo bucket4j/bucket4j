@@ -264,8 +264,8 @@ class ConfigurationReplacementSpecification extends Specification {
                     .addLimit({it.capacity(3).refillGreedy(3, Duration.ofNanos(5)).initialTokens(0)})
                     .build()
                 BucketConfiguration newConfiguration = BucketConfiguration.builder()
-                        .addLimit(Bandwidth.simple(60, Duration.ofNanos(1000)))
-                        .build()
+                    .addLimit({it.capacity(60).refillGreedy(60, Duration.ofNanos(1000))})
+                    .build()
                 if (sync) {
                     Bucket bucket = bucketType.createBucket(configuration, clock)
                     bucket.getAvailableTokens()
@@ -500,8 +500,8 @@ class ConfigurationReplacementSpecification extends Specification {
                     .build()
 
                 BucketConfiguration newConfiguration = BucketConfiguration.builder()
-                        .addLimit(Bandwidth.simple(60, Duration.ofNanos(1000)))
-                        .build()
+                    .addLimit({it.capacity(60).refillGreedy(60, Duration.ofNanos(1000))})
+                    .build()
                 if (sync) {
                     Bucket bucket = bucketType.createBucket(configuration, clock)
                     bucket.forceAddTokens(10000000)

@@ -19,8 +19,8 @@ class ConsumeAsMuchAsPossibleSpecification extends Specification {
     SimpleBucketListener listener = new SimpleBucketListener()
 
     BucketConfiguration configuration = BucketConfiguration.builder()
-            .addLimit(Bandwidth.simple(10, Duration.ofSeconds(1)))
-            .build()
+        .addLimit({it.capacity(10).refillGreedy(10, Duration.ofSeconds(1))})
+        .build()
 
     @Unroll
     def "#n Should return #requiredResult when consumeAsMuchAsPossible tokens from Bucket #configuration"(int n, long requiredResult, BucketConfiguration configuration) {

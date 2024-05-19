@@ -29,9 +29,9 @@ class HandlingArithmeticOverflowSpecification extends Specification {
 
     def "regression test for https://github.com/bucket4j/bucket4j/issues/51"() {
         setup:
-            Bandwidth limit1 = Bandwidth.simple(700000, Duration.ofHours(1))
-            Bandwidth limit2 = Bandwidth.simple(14500, Duration.ofMinutes(1))
-            Bandwidth limit3 = Bandwidth.simple(300, Duration.ofSeconds(1))
+            Bandwidth limit1 = Bandwidth.builder().capacity(700000).refillGreedy(700000, Duration.ofHours(1)).build()
+            Bandwidth limit2 = Bandwidth.builder().capacity(14500).refillGreedy(14500, Duration.ofMinutes(1)).build()
+            Bandwidth limit3 = Bandwidth.builder().capacity(300).refillGreedy(300, Duration.ofSeconds(1)).build()
             TimeMeterMock customTimeMeter = new TimeMeterMock(0)
             long twelveHourNanos = 12 * 60 * 60 * 1_000_000_000L;
             Bucket bucket = Bucket.builder()

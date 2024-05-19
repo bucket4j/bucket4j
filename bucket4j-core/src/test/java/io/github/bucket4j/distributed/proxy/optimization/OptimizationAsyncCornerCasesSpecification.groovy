@@ -30,8 +30,8 @@ class OptimizationAsyncCornerCasesSpecification extends Specification {
         setup:
             ProxyManagerMock proxyManagerMock = new ProxyManagerMock(clock)
             BucketConfiguration configuration = BucketConfiguration.builder()
-                    .addLimit(Bandwidth.simple(10, Duration.ofSeconds (1)))
-                    .build()
+                .addLimit({it.capacity(10).refillGreedy(10, Duration.ofSeconds (1))})
+                .build()
 
             AsyncBucketProxy bucket = proxyManagerMock.asAsync().builder()
                     .withOptimization(optimization)
@@ -69,8 +69,8 @@ class OptimizationAsyncCornerCasesSpecification extends Specification {
         setup:
             CompareAndSwapBasedProxyManagerMock proxyManagerMock = new CompareAndSwapBasedProxyManagerMock(ClientSideConfig.default.withClientClock(clock))
             BucketConfiguration configuration = BucketConfiguration.builder()
-                    .addLimit(Bandwidth.simple(10, Duration.ofSeconds (1)))
-                    .build()
+                .addLimit({it.capacity(10).refillGreedy(10, Duration.ofSeconds (1))})
+                .build()
 
             AsyncBucketProxy bucket = proxyManagerMock.asAsync().builder()
                     .withOptimization(optimization)

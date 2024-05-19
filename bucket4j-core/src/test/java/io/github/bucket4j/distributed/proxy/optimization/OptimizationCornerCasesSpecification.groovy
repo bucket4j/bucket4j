@@ -47,8 +47,8 @@ class OptimizationCornerCasesSpecification extends Specification {
         setup:
             ProxyManagerMock proxyManagerMock = new ProxyManagerMock(clock)
             BucketConfiguration configuration = BucketConfiguration.builder()
-                    .addLimit(Bandwidth.simple(10, Duration.ofSeconds (1)))
-                    .build()
+                .addLimit({it.capacity(10).refillGreedy(10, Duration.ofSeconds (1))})
+                .build()
 
             BucketProxy bucket = proxyManagerMock.builder()
                     .withOptimization(optimization)
@@ -86,8 +86,8 @@ class OptimizationCornerCasesSpecification extends Specification {
         setup:
             CompareAndSwapBasedProxyManagerMock proxyManagerMock = new CompareAndSwapBasedProxyManagerMock(ClientSideConfig.default.withClientClock(clock))
             BucketConfiguration configuration = BucketConfiguration.builder()
-                    .addLimit(Bandwidth.simple(10, Duration.ofSeconds (1)))
-                    .build()
+                .addLimit({it.capacity(10).refillGreedy(10, Duration.ofSeconds (1))})
+                .build()
 
             BucketProxy bucket = proxyManagerMock.builder()
                     .withOptimization(optimization)
@@ -125,8 +125,8 @@ class OptimizationCornerCasesSpecification extends Specification {
         setup:
             LockBasedProxyManagerMock proxyManagerMock = new LockBasedProxyManagerMock(ClientSideConfig.default.withClientClock(clock))
             BucketConfiguration configuration = BucketConfiguration.builder()
-                    .addLimit(Bandwidth.simple(10, Duration.ofSeconds (1)))
-                    .build()
+                .addLimit({it.capacity(10).refillGreedy(10, Duration.ofSeconds (1))})
+                .build()
 
             BucketProxy bucket = proxyManagerMock.builder()
                     .withOptimization(optimization)
@@ -163,8 +163,8 @@ class OptimizationCornerCasesSpecification extends Specification {
         setup:
             SelectForUpdateBasedProxyManagerMock proxyManagerMock = new SelectForUpdateBasedProxyManagerMock(ClientSideConfig.default.withClientClock(clock))
             BucketConfiguration configuration = BucketConfiguration.builder()
-                    .addLimit(Bandwidth.simple(10, Duration.ofSeconds (1)))
-                    .build()
+                .addLimit({it.capacity(10).refillGreedy(10, Duration.ofSeconds (1))})
+                .build()
 
             BucketProxy bucket = proxyManagerMock.builder()
                 .withOptimization(optimization)

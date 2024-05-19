@@ -34,7 +34,7 @@ class BucketStateSpecification extends Specification {
                         "#1",
                         10,
                         Bucket.builder()
-                            .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)))
+                            .addLimit({it.capacity(10).refillGreedy(10, Duration.ofNanos(100))})
                             .withCustomTimePrecision(timeMeter)
                             .build()
                 ], [

@@ -16,7 +16,7 @@ class RemoteCornerCases extends Specification {
         setup:
             ProxyManagerMock proxyManagerMock = new ProxyManagerMock(SYSTEM_MILLISECONDS)
             BucketConfiguration configuration = BucketConfiguration.builder()
-                .addLimit(Bandwidth.simple(1, Duration.ofNanos(1)))
+                .addLimit({it.capacity(1).refillGreedy(1, Duration.ofNanos(1))})
                 .build()
 
             AsyncBucketProxy bucket = proxyManagerMock.asAsync().builder()

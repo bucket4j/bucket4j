@@ -29,7 +29,6 @@ import io.github.bucket4j.distributed.versioning.Versions;
 import io.github.bucket4j.util.ComparableByContent;
 
 import java.io.IOException;
-import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -71,16 +70,6 @@ public class Bandwidth implements ComparableByContent<Bandwidth> {
         this.timeOfFirstRefillMillis = timeOfFirstRefillMillis;
         this.useAdaptiveInitialTokens = useAdaptiveInitialTokens;
         this.id = id;
-    }
-
-    /**
-     * This method is deprecated, you should use {@link Bandwidth#builder()}
-     *
-     * @deprecated
-     */
-    @Deprecated
-    public static Bandwidth simple(long capacity, Duration period) {
-        return Bandwidth.builder().capacity(capacity).refillGreedy(capacity, period).build();
     }
 
     public boolean isIntervallyAligned() {

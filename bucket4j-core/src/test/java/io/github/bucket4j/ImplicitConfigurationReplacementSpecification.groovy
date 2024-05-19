@@ -26,11 +26,11 @@ class ImplicitConfigurationReplacementSpecification extends Specification {
                 for (boolean batching: [true, false]) {
                     // System.err.println("sync: $sync verbose: $verbose $batching")
                     BucketConfiguration oldConfiguration = BucketConfiguration.builder()
-                            .addLimit(Bandwidth.simple(60, Duration.ofNanos(1000)))
-                            .build()
+                        .addLimit({it.capacity(60).refillGreedy(60, Duration.ofNanos(1000))})
+                        .build()
                     BucketConfiguration newConfiguration = BucketConfiguration.builder()
-                            .addLimit(Bandwidth.simple(3, Duration.ofNanos(5)))
-                            .build()
+                        .addLimit({it.capacity(3).refillGreedy(3, Duration.ofNanos(5))})
+                        .build()
 
                     TimeMeterMock clock = new TimeMeterMock(0)
                     ProxyManager<Integer> proxyManager = bucketType.createProxyManager(clock)
@@ -88,11 +88,11 @@ class ImplicitConfigurationReplacementSpecification extends Specification {
                 for (boolean batching: [true, false]) {
                     // System.err.println("sync: $sync verbose: $verbose $batching")
                     BucketConfiguration oldConfiguration = BucketConfiguration.builder()
-                            .addLimit(Bandwidth.simple(60, Duration.ofNanos(1000)))
-                            .build()
+                        .addLimit({it.capacity(60).refillGreedy(60, Duration.ofNanos(1000))})
+                        .build()
                     BucketConfiguration newConfiguration = BucketConfiguration.builder()
-                            .addLimit(Bandwidth.simple(3, Duration.ofNanos(5)))
-                            .build()
+                        .addLimit({it.capacity(3).refillGreedy(3, Duration.ofNanos(5))})
+                        .build()
 
                     TimeMeterMock clock = new TimeMeterMock(0)
                     ProxyManager<Integer> proxyManager = bucketType.createProxyManager(clock)
@@ -151,11 +151,11 @@ class ImplicitConfigurationReplacementSpecification extends Specification {
                 for (boolean batching: [true, false]) {
                     // System.err.println("sync: $sync verbose: $verbose $batching")
                     BucketConfiguration oldConfiguration = BucketConfiguration.builder()
-                            .addLimit(Bandwidth.simple(60, Duration.ofNanos(1000)))
-                            .build()
+                        .addLimit({it.capacity(60).refillGreedy(60, Duration.ofNanos(1000))})
+                        .build()
                     BucketConfiguration newConfiguration = BucketConfiguration.builder()
-                            .addLimit(Bandwidth.simple(3, Duration.ofNanos(5)))
-                            .build()
+                        .addLimit({it.capacity(3).refillGreedy(3, Duration.ofNanos(5))})
+                        .build()
 
                     TimeMeterMock clock = new TimeMeterMock(0)
                     ProxyManager<Integer> proxyManager = bucketType.createProxyManager(clock)

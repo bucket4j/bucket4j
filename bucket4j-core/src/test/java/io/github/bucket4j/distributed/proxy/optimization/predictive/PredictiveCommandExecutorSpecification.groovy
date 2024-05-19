@@ -19,7 +19,7 @@ class PredictiveCommandExecutorSpecification extends Specification {
     private ProxyManagerMock proxyManager = new ProxyManagerMock(clock)
     private DefaultOptimizationListener listener = new DefaultOptimizationListener();
     private BucketConfiguration configuration = BucketConfiguration.builder()
-        .addLimit(Bandwidth.simple(100, Duration.ofMillis(1000)))
+        .addLimit({it.capacity(100).refillGreedy(100, Duration.ofMillis(1000))})
         .build()
     private DelayParameters delay = new DelayParameters(20, Duration.ofMillis(500))
     private PredictionParameters prediction = PredictionParameters.createDefault(delay)
