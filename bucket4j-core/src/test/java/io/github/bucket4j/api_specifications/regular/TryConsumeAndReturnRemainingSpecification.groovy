@@ -45,11 +45,11 @@ class TryConsumeAndReturnRemainingSpecification extends Specification {
         }
         where:
         n | toConsume | result  |  expectedRemaining | expectedWait | configuration
-        1 |    49     |   true  |           51       |       0      | BucketConfiguration.builder().addLimit(Bandwidth.simple(100, Duration.ofNanos(100)).withInitialTokens(100)).build()
-        2 |     1     |   true  |            0       |       0      | BucketConfiguration.builder().addLimit(Bandwidth.simple(100, Duration.ofNanos(100)).withInitialTokens(1)).build()
-        3 |    80     |   false |           70       |      10      | BucketConfiguration.builder().addLimit(Bandwidth.simple(100, Duration.ofNanos(100)).withInitialTokens(70)).build()
-        4 |    10     |   false |            0       |      10      | BucketConfiguration.builder().addLimit(Bandwidth.simple(100, Duration.ofNanos(100)).withInitialTokens(0)).build()
-        5 |   120     |   false |           10       |   MAX_VALUE  | BucketConfiguration.builder().addLimit(Bandwidth.simple(100, Duration.ofNanos(100)).withInitialTokens(10)).build()
+        1 |    49     |   true  |           51       |       0      | BucketConfiguration.builder().addLimit({it.capacity(100).refillGreedy(100, Duration.ofNanos(100)).initialTokens(100)}).build()
+        2 |     1     |   true  |            0       |       0      | BucketConfiguration.builder().addLimit({it.capacity(100).refillGreedy(100, Duration.ofNanos(100)).initialTokens(1)}).build()
+        3 |    80     |   false |           70       |      10      | BucketConfiguration.builder().addLimit({it.capacity(100).refillGreedy(100, Duration.ofNanos(100)).initialTokens(70)}).build()
+        4 |    10     |   false |            0       |      10      | BucketConfiguration.builder().addLimit({it.capacity(100).refillGreedy(100, Duration.ofNanos(100)).initialTokens(0)}).build()
+        5 |   120     |   false |           10       |   MAX_VALUE  | BucketConfiguration.builder().addLimit({it.capacity(100).refillGreedy(100, Duration.ofNanos(100)).initialTokens(10)}).build()
     }
 
     @Unroll

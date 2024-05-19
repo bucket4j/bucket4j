@@ -37,8 +37,8 @@ class TryConsumeSpecification extends Specification {
         }
         where:
         n | requiredResult | toConsume | configuration
-        1 |     false      |     1     | BucketConfiguration.builder().addLimit(Bandwidth.simple(10, Duration.ofMinutes(100)).withInitialTokens(0)).build()
-        2 |      true      |     1     | BucketConfiguration.builder().addLimit(Bandwidth.simple(10, Duration.ofMinutes(100)).withInitialTokens(1)).build()
+        1 |     false      |     1     | BucketConfiguration.builder().addLimit(limit -> limit.capacity(10).refillGreedy(10, Duration.ofMinutes(100)).initialTokens(0)).build()
+        2 |      true      |     1     | BucketConfiguration.builder().addLimit(limit -> limit.capacity(10).refillGreedy(10, Duration.ofMinutes(100)).initialTokens(1)).build()
     }
 
     @Unroll

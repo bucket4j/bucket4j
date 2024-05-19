@@ -151,9 +151,8 @@ public class RedisSkipSyncOnZeroExample {
             .build()
             .withMapper(str -> str.getBytes(Charsets.UTF_8));
         BucketConfiguration configuration = BucketConfiguration.builder()
-                .addLimit(
-                        Bandwidth.builder().capacity(10).refillGreedy(10, Duration.ofSeconds(1)).build().withInitialTokens(0))
-                .build();
+            .addLimit(limit -> limit.capacity(10).refillGreedy(10, Duration.ofSeconds(1)).initialTokens(0))
+            .build();
 
         AtomicLong totalMergedRequestCount = new AtomicLong();
         AtomicLong totalSkippedRequestCount = new AtomicLong();

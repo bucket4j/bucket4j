@@ -47,8 +47,8 @@ class VerboseApiTest extends Specification {
                         0,
                         0,
                         BucketConfiguration.builder()
-                                .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(1))
-                                .build()
+                            .addLimit({it.capacity(10).refillGreedy(10, Duration.ofNanos(100)).initialTokens(1)})
+                            .build()
                 ], [
                         "#2",
                         100,
@@ -79,35 +79,35 @@ class VerboseApiTest extends Specification {
                         0,
                         0,
                         BucketConfiguration.builder()
-                                .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(4))
-                                .build()
+                            .addLimit({it.capacity(10).refillGreedy(10, Duration.ofNanos(100)).initialTokens(4)})
+                            .build()
                 ], [
                         "#6",
                         90,
                         0,
                         0,
                         BucketConfiguration.builder()
-                                .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(1))
-                                .addLimit(Bandwidth.simple(5, Duration.ofNanos(10)).withInitialTokens(2))
-                                .build()
+                            .addLimit({it.capacity(10).refillGreedy(10, Duration.ofNanos(100)).initialTokens(1)})
+                            .addLimit({it.capacity(5).refillGreedy(5, Duration.ofNanos(10)).initialTokens(2)})
+                            .build()
                 ], [
                         "#7",
                         90,
                         0,
                         0,
                         BucketConfiguration.builder()
-                                .addLimit(Bandwidth.simple(5, Duration.ofNanos(10)).withInitialTokens(2))
-                                .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(1))
-                                .build()
+                            .addLimit({it.capacity(5).refillGreedy(5, Duration.ofNanos(10)).initialTokens(2)})
+                            .addLimit({it.capacity(10).refillGreedy(10, Duration.ofNanos(100)).initialTokens(1)})
+                            .build()
                 ], [
                         "#8",
                         70,
                         0,
                         0,
                         BucketConfiguration.builder()
-                                .addLimit(Bandwidth.simple(5, Duration.ofNanos(10)).withInitialTokens(5))
-                                .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(3))
-                                .build()
+                            .addLimit({it.capacity(5).refillGreedy(5, Duration.ofNanos(10)).initialTokens(5)})
+                            .addLimit({it.capacity(10).refillGreedy(10, Duration.ofNanos(100)).initialTokens(3)})
+                            .build()
                 ]
             ]
     }
@@ -124,24 +124,24 @@ class VerboseApiTest extends Specification {
         where:
             [testNumber, requiredAvailableTokens, configuration] << [
                 [
-                        "#1",
-                        3,
-                        BucketConfiguration.builder()
-                            .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(3))
-                            .build()
+                    "#1",
+                    3,
+                    BucketConfiguration.builder()
+                        .addLimit({it.capacity(10).refillGreedy(10, Duration.ofNanos(100)).initialTokens(3)})
+                        .build()
                 ], [
-                        "#2",
-                        10,
-                        BucketConfiguration.builder()
-                            .addLimit(limit -> limit.capacity(10).refillIntervally(10, Duration.ofNanos(100)))
-                            .build()
+                    "#2",
+                    10,
+                    BucketConfiguration.builder()
+                        .addLimit(limit -> limit.capacity(10).refillIntervally(10, Duration.ofNanos(100)))
+                        .build()
                 ], [
-                        "#3",
-                        1,
-                        BucketConfiguration.builder()
-                            .addLimit(limit -> limit.capacity(20).refillGreedy(2, Duration.ofNanos(100)).initialTokens(1))
-                            .addLimit(limit -> limit.capacity(20).refillGreedy(20, Duration.ofNanos(100)))
-                            .build()
+                    "#3",
+                    1,
+                    BucketConfiguration.builder()
+                        .addLimit(limit -> limit.capacity(20).refillGreedy(2, Duration.ofNanos(100)).initialTokens(1))
+                        .addLimit(limit -> limit.capacity(20).refillGreedy(20, Duration.ofNanos(100)))
+                        .build()
                 ]
         ]
     }
@@ -162,8 +162,8 @@ class VerboseApiTest extends Specification {
                         "#1",
                         [ 3l ] as List,
                         BucketConfiguration.builder()
-                                .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(3))
-                                .build()
+                            .addLimit({it.capacity(10).refillGreedy(10, Duration.ofNanos(100)).initialTokens(3)})
+                            .build()
                 ], [
                         "#2",
                         [ 10l ] as List,

@@ -35,7 +35,7 @@ public class LocalLockFreeState {
             ).build();
 
     public final Bucket _10_milion_rps_Bucket = Bucket.builder()
-            .addLimit(Bandwidth.builder().capacity(10_000_000).refillGreedy(10_000_000, Duration.ofSeconds(1)).build().withInitialTokens(0))
+            .addLimit(Bandwidth.builder().capacity(10_000_000).refillGreedy(10_000_000, Duration.ofSeconds(1)).initialTokens(0).build())
             .build();
 
 

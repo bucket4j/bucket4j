@@ -157,9 +157,9 @@ public class HazelcastSkipSyncOnZeroExample {
 
         HazelcastProxyManager<String> proxyManager = Bucket4jHazelcast.entryProcessorBasedBuilder(map).build();;
         BucketConfiguration configuration = BucketConfiguration.builder()
-                .addLimit(
-                        Bandwidth.builder().capacity(10).refillGreedy(10, Duration.ofSeconds(1)).build().withInitialTokens(0))
-                .build();
+            .addLimit(
+                Bandwidth.builder().capacity(10).refillGreedy(10, Duration.ofSeconds(1)).initialTokens(0).build())
+            .build();
 
         AtomicLong totalMergedRequestCount = new AtomicLong();
         AtomicLong totalSkippedRequestCount = new AtomicLong();

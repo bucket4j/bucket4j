@@ -53,9 +53,9 @@ class ConsumeAsMuchAsPossibleSpecification extends Specification {
         }
         where:
         n | requiredResult |   limit   | configuration
-        1 |       4        |     5     | BucketConfiguration.builder().addLimit(Bandwidth.simple(10, Duration.ofMinutes(100)).withInitialTokens(4)).build()
-        2 |       5        |     5     | BucketConfiguration.builder().addLimit(Bandwidth.simple(10, Duration.ofMinutes(100)).withInitialTokens(5)).build()
-        3 |       5        |     5     | BucketConfiguration.builder().addLimit(Bandwidth.simple(10, Duration.ofMinutes(100)).withInitialTokens(5)).build()
+        1 |       4        |     5     | BucketConfiguration.builder().addLimit({it.capacity(10).refillGreedy(10, Duration.ofMinutes(100)).initialTokens(4)}).build()
+        2 |       5        |     5     | BucketConfiguration.builder().addLimit({it.capacity(10).refillGreedy(10, Duration.ofMinutes(100)).initialTokens(5)}).build()
+        3 |       5        |     5     | BucketConfiguration.builder().addLimit({it.capacity(10).refillGreedy(10, Duration.ofMinutes(100)).initialTokens(5)}).build()
     }
 
     @Unroll

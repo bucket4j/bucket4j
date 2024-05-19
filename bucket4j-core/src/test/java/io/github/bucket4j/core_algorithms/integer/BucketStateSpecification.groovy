@@ -41,22 +41,22 @@ class BucketStateSpecification extends Specification {
                         "#2",
                         0,
                         Bucket.builder()
-                            .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(0))
+                            .addLimit({it.capacity(10).refillGreedy(10, Duration.ofNanos(100)).initialTokens(0)})
                             .withCustomTimePrecision(timeMeter)
                             .build()
                 ], [
                         "#3",
                         5,
                         Bucket.builder()
-                            .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(5))
+                            .addLimit({it.capacity(10).refillGreedy(10, Duration.ofNanos(100)).initialTokens(5)})
                             .withCustomTimePrecision(timeMeter)
                             .build()
                 ], [
                         "#4",
                         2,
                         Bucket.builder()
-                            .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(5))
-                            .addLimit(Bandwidth.simple(2, Duration.ofNanos(100)))
+                            .addLimit({it.capacity(10).refillGreedy(10, Duration.ofNanos(100)).initialTokens(5)})
+                            .addLimit({it.capacity(2).refillGreedy(2, Duration.ofNanos(100))})
                             .withCustomTimePrecision(timeMeter)
                             .build()
                 ], [
@@ -81,46 +81,46 @@ class BucketStateSpecification extends Specification {
         where:
             [testNumber, tokensToAdd, requiredAvailableTokens, bucket] << [
                 [
-                        "#1",
-                        10,
-                        10,
-                        Bucket.builder()
-                                .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(0))
-                                .withCustomTimePrecision(timeMeter)
-                                .build()
+                    "#1",
+                    10,
+                    10,
+                    Bucket.builder()
+                        .addLimit(limit -> limit.capacity(10).refillGreedy(10, Duration.ofNanos(100)).initialTokens(0))
+                        .withCustomTimePrecision(timeMeter)
+                        .build()
                 ], [
-                        "#2",
-                        1,
-                        10,
-                        Bucket.builder()
-                                .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)))
-                                .withCustomTimePrecision(timeMeter)
-                                .build()
+                    "#2",
+                    1,
+                    10,
+                    Bucket.builder()
+                        .addLimit(limit -> limit.capacity(10).refillGreedy(10, Duration.ofNanos(100)))
+                        .withCustomTimePrecision(timeMeter)
+                        .build()
                 ], [
-                        "#3",
-                        6,
-                        10,
-                        Bucket.builder()
-                                .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(5))
-                                .withCustomTimePrecision(timeMeter)
-                                .build()
+                    "#3",
+                    6,
+                    10,
+                    Bucket.builder()
+                        .addLimit(limit -> limit.capacity(10).refillGreedy(10, Duration.ofNanos(100)).initialTokens(5))
+                        .withCustomTimePrecision(timeMeter)
+                        .build()
                 ], [
-                        "#4",
-                        3,
-                        2,
-                        Bucket.builder()
-                                .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(5))
-                                .addLimit(Bandwidth.simple(2, Duration.ofNanos(100)))
-                                .withCustomTimePrecision(timeMeter)
-                                .build()
+                    "#4",
+                    3,
+                    2,
+                    Bucket.builder()
+                        .addLimit(limit -> limit.capacity(10).refillGreedy(10, Duration.ofNanos(100)).initialTokens(5))
+                        .addLimit(limit -> limit.capacity(2).refillGreedy(2, Duration.ofNanos(100)))
+                        .withCustomTimePrecision(timeMeter)
+                        .build()
                 ], [
-                        "#5",
-                        4,
-                        5,
-                        Bucket.builder()
-                            .addLimit(limit -> limit.capacity(10).refillGreedy(1, Duration.ofSeconds(1)).initialTokens(1))
-                            .withCustomTimePrecision(timeMeter)
-                            .build()
+                    "#5",
+                    4,
+                    5,
+                    Bucket.builder()
+                        .addLimit(limit -> limit.capacity(10).refillGreedy(1, Duration.ofSeconds(1)).initialTokens(1))
+                        .withCustomTimePrecision(timeMeter)
+                        .build()
                 ]
         ]
     }
@@ -137,72 +137,72 @@ class BucketStateSpecification extends Specification {
         where:
             [testNumber, toConsume, requiredTime, bucket] << [
                 [
-                        "#1",
-                        10,
-                        100,
-                        Bucket.builder()
-                            .withCustomTimePrecision(new TimeMeterMock(0))
-                            .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(0))
-                            .build()
+                    "#1",
+                    10,
+                    100,
+                    Bucket.builder()
+                        .withCustomTimePrecision(new TimeMeterMock(0))
+                        .addLimit(limit -> limit.capacity(10).refillGreedy(10, Duration.ofNanos(100)).initialTokens(0))
+                        .build()
                 ], [
-                        "#2",
-                        10,
-                        100,
-                        Bucket.builder()
-                            .withCustomTimePrecision(new TimeMeterMock(0))
-                            .addLimit(limit -> limit.capacity(10).refillGreedy(10, Duration.ofNanos(100)).initialTokens(0))
-                            .build()
+                    "#2",
+                    10,
+                    100,
+                    Bucket.builder()
+                        .withCustomTimePrecision(new TimeMeterMock(0))
+                        .addLimit(limit -> limit.capacity(10).refillGreedy(10, Duration.ofNanos(100)).initialTokens(0))
+                        .build()
                 ], [
-                        "#3",
-                        10,
-                        500,
-                        Bucket.builder()
-                            .withCustomTimePrecision(new TimeMeterMock(0))
-                            .addLimit(limit -> limit.capacity(10).refillGreedy(2, Duration.ofNanos(100)).initialTokens(0))
-                            .build()
+                    "#3",
+                    10,
+                    500,
+                    Bucket.builder()
+                        .withCustomTimePrecision(new TimeMeterMock(0))
+                        .addLimit(limit -> limit.capacity(10).refillGreedy(2, Duration.ofNanos(100)).initialTokens(0))
+                        .build()
                 ], [
-                        "#4",
-                        7,
-                        30,
-                        Bucket.builder()
-                            .withCustomTimePrecision(new TimeMeterMock(0))
-                            .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(4))
-                            .build()
+                    "#4",
+                    7,
+                    30,
+                    Bucket.builder()
+                        .withCustomTimePrecision(new TimeMeterMock(0))
+                        .addLimit(limit -> limit.capacity(10).refillGreedy(10, Duration.ofNanos(100)).initialTokens(4))
+                        .build()
                 ], [
-                        "#5",
-                        11,
-                        70,
-                        Bucket.builder()
-                            .withCustomTimePrecision(new TimeMeterMock(0))
-                            .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(4))
-                            .build()
+                    "#5",
+                    11,
+                    70,
+                    Bucket.builder()
+                        .withCustomTimePrecision(new TimeMeterMock(0))
+                        .addLimit(limit -> limit.capacity(10).refillGreedy(10, Duration.ofNanos(100)).initialTokens(4))
+                        .build()
                 ], [
-                        "#6",
-                        3,
-                        20,
-                        Bucket.builder()
-                            .withCustomTimePrecision(new TimeMeterMock(0))
-                            .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(1))
-                            .addLimit(Bandwidth.simple(5, Duration.ofNanos(10)).withInitialTokens(2))
-                            .build()
+                    "#6",
+                    3,
+                    20,
+                    Bucket.builder()
+                        .withCustomTimePrecision(new TimeMeterMock(0))
+                        .addLimit(limit -> limit.capacity(10).refillGreedy(10, Duration.ofNanos(100)).initialTokens(1))
+                        .addLimit(limit -> limit.capacity(5).refillGreedy(5, Duration.ofNanos(10)).initialTokens(2))
+                        .build()
                 ], [
-                        "#7",
-                        3,
-                        20,
-                        Bucket.builder()
-                            .withCustomTimePrecision(new TimeMeterMock(0))
-                            .addLimit(Bandwidth.simple(5, Duration.ofNanos(10)).withInitialTokens(2))
-                            .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(1))
-                            .build()
+                    "#7",
+                    3,
+                    20,
+                    Bucket.builder()
+                        .withCustomTimePrecision(new TimeMeterMock(0))
+                        .addLimit(limit -> limit.capacity(5).refillGreedy(5, Duration.ofNanos(10)).initialTokens(2))
+                        .addLimit(limit -> limit.capacity(10).refillGreedy(10, Duration.ofNanos(100)).initialTokens(1))
+                        .build()
                 ], [
-                        "#8",
-                        3,
-                        0,
-                        Bucket.builder()
-                            .withCustomTimePrecision(new TimeMeterMock(0))
-                            .addLimit(Bandwidth.simple(5, Duration.ofNanos(10)).withInitialTokens(5))
-                            .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(3))
-                            .build()
+                    "#8",
+                    3,
+                    0,
+                    Bucket.builder()
+                        .withCustomTimePrecision(new TimeMeterMock(0))
+                        .addLimit(limit -> limit.capacity(5).refillGreedy(5, Duration.ofNanos(10)).initialTokens(5))
+                        .addLimit(limit -> limit.capacity(10).refillGreedy(10, Duration.ofNanos(100)).initialTokens(3))
+                        .build()
                 ]
             ]
     }
@@ -355,7 +355,7 @@ class BucketStateSpecification extends Specification {
                                        ) {
         setup:
             Bucket bucket = Bucket.builder()
-                .addLimit(Bandwidth.simple(capacity, Duration.ofNanos(period)).withInitialTokens(initialTokens))
+                .addLimit(limit -> limit.capacity(capacity).refillGreedy(capacity, Duration.ofNanos(period)).initialTokens(initialTokens))
                 .withCustomTimePrecision(new TimeMeterMock(0))
                 .build()
             BucketState state = bucket.asVerbose().getAvailableTokens().getState()

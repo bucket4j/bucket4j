@@ -36,9 +36,10 @@ class HandlingArithmeticOverflowSpecification extends Specification {
 
     def "Should check ArithmeticOverflow when add tokens to bucket"() {
         setup:
-            Bandwidth limit = Bandwidth
-                    .simple(10, Duration.ofSeconds(1))
-                    .withInitialTokens(9)
+            Bandwidth limit = Bandwidth.builder().capacity(10)
+                    .refillGreedy(10, Duration.ofSeconds(1))
+                    .initialTokens(9)
+                    .build()
             TimeMeterMock customTimeMeter = new TimeMeterMock(0)
             Bucket bucket = Bucket.builder()
                 .addLimit(limit)
@@ -53,8 +54,12 @@ class HandlingArithmeticOverflowSpecification extends Specification {
 
     def "Should firstly do refill by completed periods"() {
         setup:
-            Bandwidth limit = Bandwidth.simple((long) (Long.MAX_VALUE / 16), Duration.ofNanos((long) (Long.MAX_VALUE / 8)))
-                    .withInitialTokens(7)
+            long capacity = (long) (Long.MAX_VALUE / 16)
+            Bandwidth limit = Bandwidth.builder()
+                .capacity(capacity)
+                .refillGreedy(capacity, Duration.ofNanos((long) (Long.MAX_VALUE / 8)))
+                .initialTokens(7)
+                .build()
             TimeMeterMock meter = new TimeMeterMock(0)
             Bucket bucket = Bucket.builder()
                 .addLimit(limit)
@@ -89,10 +94,13 @@ class HandlingArithmeticOverflowSpecification extends Specification {
     }
 
     def "Should down to floating point arithmetic if necessary during refill"() {
+        def capacity = (long) (Long.MAX_VALUE / 16)
         setup:
-            Bandwidth limit = Bandwidth
-                    .simple((long) (Long.MAX_VALUE / 16), Duration.ofNanos((long) (Long.MAX_VALUE / 8)))
-                    .withInitialTokens(0)
+            Bandwidth limit = Bandwidth.builder()
+                .capacity(capacity)
+                .refillGreedy(capacity, Duration.ofNanos((long) (Long.MAX_VALUE / 8)))
+                .initialTokens(0)
+                .build()
             TimeMeterMock meter = new TimeMeterMock(0)
             Bucket bucket = Bucket.builder()
                 .addLimit(limit)
@@ -129,9 +137,12 @@ class HandlingArithmeticOverflowSpecification extends Specification {
 
     def "Should down to floating point arithmetic when having deal with big number during deficit calculation"() {
         setup:
-            Bandwidth limit = Bandwidth
-                    .simple((long) (Long.MAX_VALUE / 2), Duration.ofNanos((long) (Long.MAX_VALUE / 2)))
-                    .withInitialTokens(0)
+            long capacity = (long) (Long.MAX_VALUE / 2)
+            Bandwidth limit = Bandwidth.builder()
+                .capacity(capacity)
+                .refillGreedy(capacity, Duration.ofNanos((long) (Long.MAX_VALUE / 2)))
+                .initialTokens(0)
+                .build()
             TimeMeterMock meter = new TimeMeterMock(0)
             Bucket bucket = Bucket.builder()
                 .addLimit(limit)

@@ -59,10 +59,10 @@ class ConsumeIgnoringLimitsSpecification extends Specification {
         }
         where:
         n | tokensToConsume | nanosIncrement | remainedTokens | configuration
-        1 |     49          |     50         |        1       | BucketConfiguration.builder().addLimit(Bandwidth.simple(100, Duration.ofNanos(100)).withInitialTokens(0)).build()
-        2 |     50          |     50         |        0       | BucketConfiguration.builder().addLimit(Bandwidth.simple(100, Duration.ofNanos(100)).withInitialTokens(0)).build()
-        3 |     51          |     120        |        49      | BucketConfiguration.builder().addLimit(Bandwidth.simple(100, Duration.ofNanos(100)).withInitialTokens(0)).build()
-        4 |     100         |     101        |        0       | BucketConfiguration.builder().addLimit(Bandwidth.simple(100, Duration.ofNanos(100)).withInitialTokens(0)).build()
+        1 |     49          |     50         |        1       | BucketConfiguration.builder().addLimit(limit -> limit.capacity(100).refillGreedy(100, Duration.ofNanos(100)).initialTokens(0)).build()
+        2 |     50          |     50         |        0       | BucketConfiguration.builder().addLimit(limit -> limit.capacity(100).refillGreedy(100, Duration.ofNanos(100)).initialTokens(0)).build()
+        3 |     51          |     120        |        49      | BucketConfiguration.builder().addLimit(limit -> limit.capacity(100).refillGreedy(100, Duration.ofNanos(100)).initialTokens(0)).build()
+        4 |     100         |     101        |        0       | BucketConfiguration.builder().addLimit(limit -> limit.capacity(100).refillGreedy(100, Duration.ofNanos(100)).initialTokens(0)).build()
     }
 
     @Unroll
@@ -104,16 +104,16 @@ class ConsumeIgnoringLimitsSpecification extends Specification {
         }
         where:
         n | tokensToConsume | nanosIncrement | remainedTokens | overflowNanos   | configuration
-        1 |     52          |      50        |       -2       |      2          | BucketConfiguration.builder().addLimit(Bandwidth.simple(100, Duration.ofNanos(100)).withInitialTokens(0)).build()
-        2 |     50          |      0         |      -50       |      50         | BucketConfiguration.builder().addLimit(Bandwidth.simple(100, Duration.ofNanos(100)).withInitialTokens(0)).build()
-        3 |    151          |      120       |      -51       |      51         | BucketConfiguration.builder().addLimit(Bandwidth.simple(100, Duration.ofNanos(100)).withInitialTokens(0)).build()
-        4 |    400          |      201       |      -300      |      300        | BucketConfiguration.builder().addLimit(Bandwidth.simple(100, Duration.ofNanos(100)).withInitialTokens(0)).build()
+        1 |     52          |      50        |       -2       |      2          | BucketConfiguration.builder().addLimit({it.capacity(100).refillGreedy(100, Duration.ofNanos(100)).initialTokens(0)}).build()
+        2 |     50          |      0         |      -50       |      50         | BucketConfiguration.builder().addLimit({it.capacity(100).refillGreedy(100, Duration.ofNanos(100)).initialTokens(0)}).build()
+        3 |    151          |      120       |      -51       |      51         | BucketConfiguration.builder().addLimit({it.capacity(100).refillGreedy(100, Duration.ofNanos(100)).initialTokens(0)}).build()
+        4 |    400          |      201       |      -300      |      300        | BucketConfiguration.builder().addLimit({it.capacity(100).refillGreedy(100, Duration.ofNanos(100)).initialTokens(0)}).build()
     }
 
     def "Reservation overflow case"() {
         setup:
             BucketConfiguration configuration = BucketConfiguration.builder()
-                .addLimit(Bandwidth.simple(1, Duration.ofMinutes(1)).withInitialTokens(0))
+                .addLimit({it.capacity(1).refillGreedy(1, Duration.ofMinutes(1)).initialTokens(0)})
                 .build()
             long veryBigAmountOfTokensWhichCannotBeReserved = Long.MAX_VALUE / 2
         expect:

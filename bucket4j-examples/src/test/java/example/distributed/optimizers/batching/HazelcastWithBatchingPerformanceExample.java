@@ -86,8 +86,7 @@ public class HazelcastWithBatchingPerformanceExample {
 
         HazelcastProxyManager<String> proxyManager = Bucket4jHazelcast.entryProcessorBasedBuilder(map).build();;
         BucketConfiguration configuration = BucketConfiguration.builder()
-                .addLimit(
-                    Bandwidth.builder().capacity(10).refillGreedy(10, Duration.ofSeconds(1)).build().withInitialTokens(0))
+                .addLimit(Bandwidth.builder().capacity(10).refillGreedy(10, Duration.ofSeconds(1)).initialTokens(0).build())
                 .build();
 
         Bucket bucket = proxyManager.builder()
@@ -137,9 +136,9 @@ public class HazelcastWithBatchingPerformanceExample {
 
         HazelcastProxyManager<String> proxyManager = Bucket4jHazelcast.entryProcessorBasedBuilder(map).build();;
         BucketConfiguration configuration = BucketConfiguration.builder()
-                .addLimit(
-                        Bandwidth.builder().capacity(10).refillGreedy(10, Duration.ofSeconds(1)).build().withInitialTokens(0))
-                .build();
+            .addLimit(
+                Bandwidth.builder().capacity(10).refillGreedy(10, Duration.ofSeconds(1)).initialTokens(0).build())
+            .build();
 
         AsyncBucketProxy bucket = proxyManager.asAsync().builder()
                 .withOptimization(Optimizations.batching())

@@ -83,23 +83,6 @@ public class Bandwidth implements ComparableByContent<Bandwidth> {
         return Bandwidth.builder().capacity(capacity).refillGreedy(capacity, period).build();
     }
 
-    /**
-     * This method is deprecated, you should use {@link BandwidthBuilder.BandwidthBuilderBuildStage#initialTokens(long)}
-     *
-     * @deprecated
-     */
-    @Deprecated
-    public Bandwidth withInitialTokens(long initialTokens) {
-        if (initialTokens < 0) {
-            throw BucketExceptions.nonPositiveInitialTokens(initialTokens);
-        }
-        if (isIntervallyAligned() && useAdaptiveInitialTokens) {
-            throw BucketExceptions.intervallyAlignedRefillWithAdaptiveInitialTokensIncompatipleWithManualSpecifiedInitialTokens();
-        }
-        return new Bandwidth(capacity, refillPeriodNanos, refillTokens, initialTokens, refillIntervally,
-                timeOfFirstRefillMillis, useAdaptiveInitialTokens, UNDEFINED_ID);
-    }
-
     public boolean isIntervallyAligned() {
         return timeOfFirstRefillMillis != UNSPECIFIED_TIME_OF_FIRST_REFILL;
     }

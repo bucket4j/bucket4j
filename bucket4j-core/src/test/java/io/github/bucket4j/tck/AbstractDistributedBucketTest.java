@@ -56,9 +56,9 @@ public abstract class AbstractDistributedBucketTest {
     }
 
     private BucketConfiguration configurationForLongRunningTests = BucketConfiguration.builder()
-            .addLimit(Bandwidth.builder().capacity(1_000).refillGreedy(1_000, Duration.ofMinutes(1)).build().withInitialTokens(0))
-            .addLimit(Bandwidth.builder().capacity(200).refillGreedy(200, Duration.ofSeconds(10)).build().withInitialTokens(0))
-            .build();
+        .addLimit(Bandwidth.builder().capacity(1_000).refillGreedy(1_000, Duration.ofMinutes(1)).initialTokens(0).build())
+        .addLimit(Bandwidth.builder().capacity(200).refillGreedy(200, Duration.ofSeconds(10)).initialTokens(0).build())
+        .build();
     private double permittedRatePerSecond = Math.min(1_000d / 60, 200.0 / 10);
 
     @MethodSource("specs")

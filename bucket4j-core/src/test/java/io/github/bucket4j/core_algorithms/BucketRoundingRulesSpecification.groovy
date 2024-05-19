@@ -20,9 +20,9 @@ class BucketRoundingRulesSpecification extends Specification {
         setup:
             TimeMeterMock meter = new TimeMeterMock(0)
         Bucket bucket = Bucket.builder()
-                                .withCustomTimePrecision(meter)
-                                .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(0))
-                                .build()
+            .withCustomTimePrecision(meter)
+            .addLimit(limit -> limit.capacity(10).refillGreedy(10, Duration.ofNanos(100)).initialTokens(0))
+            .build()
         when:
             meter.setCurrentTimeNanos(97)
         then:
@@ -39,9 +39,9 @@ class BucketRoundingRulesSpecification extends Specification {
         setup:
             TimeMeterMock meter = new TimeMeterMock(0)
             Bucket bucket = Bucket.builder()
-                    .withCustomTimePrecision(meter)
-                    .addLimit(Bandwidth.simple(10, Duration.ofNanos(100)).withInitialTokens(0))
-                    .build()
+                .withCustomTimePrecision(meter)
+                .addLimit({it.capacity(10).refillGreedy(10, Duration.ofNanos(100)).initialTokens(0)})
+                .build()
         when:
             meter.setCurrentTimeNanos(97)
         then:
