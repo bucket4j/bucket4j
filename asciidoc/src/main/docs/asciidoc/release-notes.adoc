@@ -1,7 +1,8 @@
 === Bucket4j {revnumber} release notes
 Release `{revnumber}`
 
+==== The bugfixes in release scope are following:
+* https://github.com/bucket4j/bucket4j/issues/494[#494 Remove unnecessary logback configuration from maven artifacts]
+
 ==== The features/enhancements in release scope are following:
-* https://github.com/bucket4j/bucket4j/issues/465[#465 cleaner of expired buckets for RDBMS integrations(postgresql, oracle, mysql, mssql, mariadb)]
-* https://github.com/bucket4j/bucket4j/issues/461[#461 Support flexible per-entry expiration(similar to Redis and Hazelcast) for Ignite, Infinispan and Coherence]
-* https://github.com/bucket4j/bucket4j/issues/483[#483 Verbose API for scheduled and blocking bucket]
+* https://github.com/bucket4j/bucket4j/issues/495[#495 support for Infinispan Hotrod Client]
