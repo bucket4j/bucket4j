@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.util.Arrays;
+import java.util.UUID;
 
 import org.infinispan.Cache;
 import org.infinispan.client.hotrod.RemoteCache;
@@ -12,15 +13,19 @@ import org.infinispan.client.hotrod.configuration.Configuration;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.global.GlobalConfiguration;
 import org.infinispan.configuration.global.GlobalConfigurationBuilder;
+import org.infinispan.factories.GlobalComponentRegistry;
 import org.infinispan.manager.DefaultCacheManager;
+import org.infinispan.server.Extensions;
 import org.infinispan.server.hotrod.HotRodServer;
 import org.infinispan.server.hotrod.configuration.HotRodServerConfiguration;
 import org.infinispan.server.hotrod.configuration.HotRodServerConfigurationBuilder;
+import org.infinispan.tasks.TaskManager;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 
 import io.github.bucket4j.grid.infinispan.serialization.Bucket4jProtobufContextInitializer;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
+import io.github.bucket4j.tck.ProxyManagerSpec;
 
 public class InfinispanHotrodTest extends AbstractDistributedBucketTest {
 
@@ -41,6 +46,13 @@ public class InfinispanHotrodTest extends AbstractDistributedBucketTest {
         );
         cache = cacheManager.getCache("my-cache");
 
+        // it needs to load remote-tasks
+        GlobalComponentRegistry gcr = GlobalComponentRegistry.of(cacheManager);
+        Extensions extensions = new Extensions();
+        extensions.load(InfinispanHotrodTest.class.getClassLoader());
+        TaskManager taskManager = gcr.getComponent(TaskManager.class);
+        taskManager.registerTaskEngine(extensions.getServerTaskEngine(cacheManager));
+
         // Create a Hot Rod server which exposes the cache manager
         HotRodServerConfiguration hotrodServerConfig = new HotRodServerConfigurationBuilder().build();
         hotrodServer = new HotRodServer();
@@ -54,14 +66,12 @@ public class InfinispanHotrodTest extends AbstractDistributedBucketTest {
         RemoteCache<String, byte[]> remoteCache = remoteCacheManager.getCache("my-cache");
 
         specs = Arrays.asList(
-//            new ProxyManagerSpec<>(
-//                "InfinispanProxyManager",
-//                () -> UUID.randomUUID().toString(),
-//                () -> Bucket4jInfinispan.entryProcessorBasedBuilder(readWriteMap)
-//            ).checkExpiration()
+            new ProxyManagerSpec<>(
+                "HotrodInfinispanProxyManager",
+                () -> UUID.randomUUID().toString(),
+                () -> Bucket4jInfinispan.hotrodClientBasedBuilder(remoteCache)
+            ).checkExpiration()
         );
-
-
     }
 
     private static GlobalConfiguration getGlobalConfiguration() {
