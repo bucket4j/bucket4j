@@ -25,10 +25,6 @@ public class Bucket4jTask implements ServerTask<byte[]> {
     public static final String REQUEST_PARAM = "request";
     public static final String KEY_PARAM = "key";
 
-    public Bucket4jTask() {
-        System.out.println("I am instantiated");
-    }
-
     private static final class CacheContext {
 
         private final ReadWriteMap<Object, byte[]> readWriteMap;
