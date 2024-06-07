@@ -25,8 +25,6 @@ The Bucket4j is distributed through [Maven Central](http://search.maven.org/):
   <version>8.12.1</version>
 </dependency>
 ```
-##### Java 8 dependency
-To get the builds for `Java 8` follow to [these instructions](https://bucket4j.com/commercial/java8.html).
 
 #### Quick start
 ```java
@@ -123,6 +121,3 @@ Feel free to ask via:
 ## License
 Copyright 2015-2024 Vladimir Bukhtoyarov
 Licensed under the Apache Software License, Version 2.0: <http://www.apache.org/licenses/LICENSE-2.0>.
-
-## :beer: Want to support?
-[Make donate](https://app.lava.top/ru/2716741203?donate=open) to increase motivation of maintainer.
