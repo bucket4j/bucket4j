@@ -38,28 +38,28 @@ public class LocalTest {
     public void testTryConsume_Synchronized() throws Throwable {
         int threadCount = 4;
         Function<Bucket, Long> action = b -> b.tryConsume(1)? 1L : 0L;
-        testScenario(() -> builder.withSynchronizationStrategy(SynchronizationStrategy.SYNCHRONIZED).build(), threadCount, action);
+        testScenario(() -> builder.withSynchronizationStrategy(ConcurrencyStrategy.SYNCHRONIZED).build(), threadCount, action);
     }
 
     @Test
     public void testTryConsume_SynchronizedLimited() throws Throwable {
         int threadCount = 4;
         Function<Bucket, Long> action = b -> b.asBlocking().tryConsumeUninterruptibly(1, Duration.ofMillis(50), UninterruptibleBlockingStrategy.PARKING)? 1L : 0L;
-        testScenario(() -> builder.withSynchronizationStrategy(SynchronizationStrategy.SYNCHRONIZED).build(), threadCount, action);
+        testScenario(() -> builder.withSynchronizationStrategy(ConcurrencyStrategy.SYNCHRONIZED).build(), threadCount, action);
     }
 
     @Test
     public void testTryConsume_Unsafe() throws Throwable {
         int threadCount = 1;
         Function<Bucket, Long> action = b -> b.tryConsume(1)? 1L : 0L;
-        testScenario(() -> builder.withSynchronizationStrategy(SynchronizationStrategy.NONE).build(), threadCount, action);
+        testScenario(() -> builder.withSynchronizationStrategy(ConcurrencyStrategy.UNSAFE).build(), threadCount, action);
     }
 
     @Test
     public void testTryConsume_UnsafeLimited() throws Throwable {
         int threadCount = 1;
         Function<Bucket, Long> action = b -> b.asBlocking().tryConsumeUninterruptibly(1, TimeUnit.MILLISECONDS.toNanos(50))? 1L: 0L;
-        testScenario(() -> builder.withSynchronizationStrategy(SynchronizationStrategy.NONE).build(), threadCount, action);
+        testScenario(() -> builder.withSynchronizationStrategy(ConcurrencyStrategy.UNSAFE).build(), threadCount, action);
     }
 
     private void testScenario(Supplier<Bucket> bucket, int threadCount, Function<Bucket, Long> action) throws Throwable {

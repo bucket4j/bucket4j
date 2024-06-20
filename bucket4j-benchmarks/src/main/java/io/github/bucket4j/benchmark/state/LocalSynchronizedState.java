@@ -21,7 +21,7 @@ package io.github.bucket4j.benchmark.state;
 
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
-import io.github.bucket4j.local.SynchronizationStrategy;
+import io.github.bucket4j.local.ConcurrencyStrategy;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.State;
 
@@ -35,11 +35,11 @@ public class LocalSynchronizedState {
             .addLimit(
                 Bandwidth.builder().capacity(Long.MAX_VALUE / 2).refillGreedy(Long.MAX_VALUE / 2, Duration.ofNanos(Long.MAX_VALUE / 2)).build()
             )
-            .withSynchronizationStrategy(SynchronizationStrategy.SYNCHRONIZED)
+            .withSynchronizationStrategy(ConcurrencyStrategy.SYNCHRONIZED)
             .build();
 
     public final Bucket _10_milion_rps_Bucket = Bucket.builder()
         .addLimit(Bandwidth.builder().capacity(10_000_000).refillGreedy(10_000_000, Duration.ofSeconds(1)).initialTokens(0).build())
-        .withSynchronizationStrategy(SynchronizationStrategy.SYNCHRONIZED)
+        .withSynchronizationStrategy(ConcurrencyStrategy.SYNCHRONIZED)
         .build();
 }

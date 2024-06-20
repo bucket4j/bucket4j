@@ -11,7 +11,7 @@ import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.distributed.proxy.optimization.Optimizations;
 import io.github.bucket4j.distributed.proxy.synchronization.batch.BatchingSynchronization;
 import io.github.bucket4j.local.LocalBucketBuilder;
-import io.github.bucket4j.local.SynchronizationStrategy;
+import io.github.bucket4j.local.ConcurrencyStrategy;
 
 public enum BucketType {
 
@@ -54,7 +54,7 @@ public enum BucketType {
             }
             return builder
                     .withCustomTimePrecision(timeMeter)
-                    .withSynchronizationStrategy(SynchronizationStrategy.SYNCHRONIZED)
+                    .withSynchronizationStrategy(ConcurrencyStrategy.SYNCHRONIZED)
                     .build();
         }
 
@@ -66,7 +66,7 @@ public enum BucketType {
             }
             return builder
                 .withCustomTimePrecision(timeMeter)
-                .withSynchronizationStrategy(SynchronizationStrategy.SYNCHRONIZED)
+                .withSynchronizationStrategy(ConcurrencyStrategy.SYNCHRONIZED)
                 .withListener(listener)
                 .build();
         }
@@ -86,7 +86,7 @@ public enum BucketType {
             }
             return builder
                     .withCustomTimePrecision(timeMeter)
-                    .withSynchronizationStrategy(SynchronizationStrategy.NONE)
+                    .withSynchronizationStrategy(ConcurrencyStrategy.UNSAFE)
                     .build();
         }
 
@@ -98,7 +98,7 @@ public enum BucketType {
             }
             return builder
                 .withCustomTimePrecision(timeMeter)
-                .withSynchronizationStrategy(SynchronizationStrategy.NONE)
+                .withSynchronizationStrategy(ConcurrencyStrategy.UNSAFE)
                 .withListener(listener)
                 .build();
         }

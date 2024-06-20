@@ -66,7 +66,7 @@ public abstract class AbstractProxyManager<K> implements ProxyManager<K> {
                 return clientSideConfig.getExecutionStrategy().execute(resultSupplier);
             }
         };
-        optimizedBackend = clientSideConfig.getSynchronization().apply(backend);
+        optimizedBackend = clientSideConfig.getSynchronization().apply(backend, clientSideConfig.getSynchronizationListener());
 
         this.asyncBackend = !isAsyncModeSupported() ? null : new AsyncBackend<K>() {
             @Override
@@ -77,7 +77,7 @@ public abstract class AbstractProxyManager<K> implements ProxyManager<K> {
                 return clientSideConfig.getExecutionStrategy().executeAsync(futureSupplier);
             }
         };
-        optimizedAsyncBackend = asyncBackend == null ? null : clientSideConfig.getSynchronization().apply(asyncBackend);
+        optimizedAsyncBackend = asyncBackend == null ? null : clientSideConfig.getSynchronization().apply(asyncBackend, clientSideConfig.getSynchronizationListener());
     }
 
     private final AsyncProxyManager<K> asyncView = new AsyncProxyManager<>() {

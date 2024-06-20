@@ -1,4 +1,4 @@
-package io.github.bucket4j.distributed.proxy.synchronization.batch;
+package io.github.bucket4j.distributed.proxy.synchronization.delay;
 
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
@@ -8,7 +8,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import io.github.bucket4j.BucketExceptions;
 import io.github.bucket4j.distributed.proxy.AsyncBackend;
 import io.github.bucket4j.distributed.proxy.AsyncCommandExecutor;
-import io.github.bucket4j.distributed.proxy.optimization.NopeOptimizationListener;
 import io.github.bucket4j.distributed.proxy.optimization.OptimizationListener;
 import io.github.bucket4j.distributed.proxy.optimization.batch.AsyncBatchingExecutor;
 import io.github.bucket4j.distributed.proxy.synchronization.OptimizationListenerAdapter;
@@ -16,14 +15,14 @@ import io.github.bucket4j.distributed.proxy.synchronization.SynchronizationListe
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 
-public class AsyncBatchingBackend<K> implements AsyncBackend<K> {
+public class AsyncDelayingBackend<K> implements AsyncBackend<K> {
 
     private final AsyncBackend<K> target;
-    private final ConcurrentHashMap<K, BatchingExecutorEntry> executors = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<K, DelayingExecutorEntry> executors = new ConcurrentHashMap<>();
     private final SynchronizationListener synchronizationListener;
     private final OptimizationListener optimizationListener;
 
-    public AsyncBatchingBackend(AsyncBackend<K> target, SynchronizationListener synchronizationListener) {
+    public AsyncDelayingBackend(AsyncBackend<K> target, SynchronizationListener synchronizationListener) {
         this.target = Objects.requireNonNull(target);
         this.synchronizationListener = synchronizationListener;
         this.optimizationListener = new OptimizationListenerAdapter(synchronizationListener);
@@ -31,12 +30,12 @@ public class AsyncBatchingBackend<K> implements AsyncBackend<K> {
 
     @Override
     public <T> CompletableFuture<CommandResult<T>> execute(K key, RemoteCommand<T> command) {
-        BatchingExecutorEntry entry = executors.compute(key, (k, previous) -> {
+        DelayingExecutorEntry entry = executors.compute(key, (k, previous) -> {
             if (previous != null) {
                 previous.inProgressCount++;
                 return previous;
             } else {
-                return new BatchingExecutorEntry(key, 1);
+                return new DelayingExecutorEntry(key, 1);
             }
         });
         AtomicBoolean decrementFlag = new AtomicBoolean();
@@ -64,12 +63,12 @@ public class AsyncBatchingBackend<K> implements AsyncBackend<K> {
         }
     }
 
-    private final class BatchingExecutorEntry {
+    private final class DelayingExecutorEntry {
 
         private int inProgressCount;
         private final AsyncBatchingExecutor executor;
 
-        private BatchingExecutorEntry(K key, int inProgressCount) {
+        private DelayingExecutorEntry(K key, int inProgressCount) {
             this.inProgressCount = inProgressCount;
             AsyncCommandExecutor originalExecutor = new AsyncCommandExecutor() {
                 @Override

@@ -7,16 +7,24 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
+import static io.github.bucket4j.local.ConcurrencyStrategy.LOCK_FREE;
+import static io.github.bucket4j.local.ConcurrencyStrategy.REENTRANT_LOCK_PROTECTED;
+import static io.github.bucket4j.local.ConcurrencyStrategy.SYNCHRONIZED;
+import static io.github.bucket4j.local.ConcurrencyStrategy.UNSAFE;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 public class LocalBucketsSerializationTest {
 
+    private static final List<ConcurrencyStrategy> knownTypes = Arrays.asList(LOCK_FREE, SYNCHRONIZED, REENTRANT_LOCK_PROTECTED, UNSAFE);
+
     @Test
     public void testBinarySerialization() throws IOException {
-        for (SynchronizationStrategy strategy : SynchronizationStrategy.values()) {
+        for (ConcurrencyStrategy strategy : knownTypes) {
             LocalBucket sourceBucket = Bucket.builder()
                     .addLimit(Bandwidth.builder().capacity(1).refillGreedy(1, Duration.ofSeconds(1)).build())
                     .withSynchronizationStrategy(strategy)
@@ -30,7 +38,7 @@ public class LocalBucketsSerializationTest {
 
     @Test
     public void testJsonCompatibleSerialization() throws IOException {
-        for (SynchronizationStrategy strategy : SynchronizationStrategy.values()) {
+        for (ConcurrencyStrategy strategy : knownTypes) {
             LocalBucket sourceBucket = Bucket.builder()
                     .addLimit(Bandwidth.builder().capacity(1).refillGreedy(1, Duration.ofSeconds(1)).build())
                     .withSynchronizationStrategy(strategy)

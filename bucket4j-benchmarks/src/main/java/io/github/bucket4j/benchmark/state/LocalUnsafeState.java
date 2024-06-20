@@ -22,7 +22,7 @@ package io.github.bucket4j.benchmark.state;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.TimeMeter;
-import io.github.bucket4j.local.SynchronizationStrategy;
+import io.github.bucket4j.local.ConcurrencyStrategy;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.State;
 
@@ -36,7 +36,7 @@ public class LocalUnsafeState {
             .addLimit(
                 Bandwidth.builder().capacity(Long.MAX_VALUE / 2).refillGreedy(Long.MAX_VALUE / 2, Duration.ofNanos(Long.MAX_VALUE / 2)).build()
             )
-            .withSynchronizationStrategy(SynchronizationStrategy.NONE)
+            .withSynchronizationStrategy(ConcurrencyStrategy.UNSAFE)
             .build();
 
 
@@ -56,7 +56,7 @@ public class LocalUnsafeState {
             .addLimit(
                 Bandwidth.builder().capacity(Long.MAX_VALUE / 2).refillGreedy(Long.MAX_VALUE / 2, Duration.ofNanos(Long.MAX_VALUE / 2)).build()
             )
-            .withSynchronizationStrategy(SynchronizationStrategy.NONE)
+            .withSynchronizationStrategy(ConcurrencyStrategy.UNSAFE)
             .build();
 
 

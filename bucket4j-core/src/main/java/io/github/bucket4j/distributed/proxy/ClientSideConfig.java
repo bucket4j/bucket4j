@@ -29,7 +29,9 @@ import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
 import io.github.bucket4j.distributed.proxy.AbstractProxyManager.DefaultAsyncRemoteBucketBuilder;
 import io.github.bucket4j.distributed.proxy.AbstractProxyManager.DefaultRemoteBucketBuilder;
-import io.github.bucket4j.distributed.proxy.synchronization.nope.DirectSynchronization;
+import io.github.bucket4j.distributed.proxy.synchronization.NopeSynchronizationListener;
+import io.github.bucket4j.distributed.proxy.synchronization.SynchronizationListener;
+import io.github.bucket4j.distributed.proxy.synchronization.direct.DirectSynchronization;
 import io.github.bucket4j.distributed.proxy.synchronization.Synchronization;
 import io.github.bucket4j.distributed.versioning.Version;
 import io.github.bucket4j.distributed.versioning.Versions;
@@ -44,7 +46,7 @@ import io.github.bucket4j.distributed.versioning.Versions;
 public class ClientSideConfig {
 
     private static final ClientSideConfig defaultConfig = new ClientSideConfig(Versions.getLatest(), Optional.empty(),
-            ExecutionStrategy.SAME_TREAD, Optional.empty(), Optional.empty(), DirectSynchronization.instance, BucketListener.NOPE);
+            ExecutionStrategy.SAME_TREAD, Optional.empty(), Optional.empty(), DirectSynchronization.instance, BucketListener.NOPE, NopeSynchronizationListener.instance);
 
     private final Version backwardCompatibilityVersion;
     private final Optional<TimeMeter> clientSideClock;
@@ -58,13 +60,15 @@ public class ClientSideConfig {
     private final BucketListener defaultListener;
 
     private final Synchronization synchronization;
+    private final SynchronizationListener synchronizationListener;
 
     protected ClientSideConfig(Version backwardCompatibilityVersion, Optional<TimeMeter> clientSideClock,
                                ExecutionStrategy executionStrategy,
                                Optional<Long> requestTimeoutNanos,
                                Optional<ExpirationAfterWriteStrategy> expirationStrategy,
                                Synchronization synchronization,
-                               BucketListener defaultListener) {
+                               BucketListener defaultListener,
+                               SynchronizationListener synchronizationListener) {
         this.backwardCompatibilityVersion = Objects.requireNonNull(backwardCompatibilityVersion);
         this.clientSideClock = Objects.requireNonNull(clientSideClock);
         this.executionStrategy = executionStrategy;
@@ -72,6 +76,7 @@ public class ClientSideConfig {
         this.expirationStrategy = expirationStrategy;
         this.defaultListener = Objects.requireNonNull(defaultListener);
         this.synchronization = Objects.requireNonNull(synchronization);
+        this.synchronizationListener = Objects.requireNonNull(synchronizationListener);
     }
 
     /**
@@ -101,7 +106,7 @@ public class ClientSideConfig {
      * @return new instance of {@link ClientSideConfig} with configured {@code backwardCompatibilityVersion}.
      */
     public ClientSideConfig backwardCompatibleWith(Version backwardCompatibilityVersion) {
-        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, requestTimeoutNanos, expirationStrategy, synchronization, defaultListener);
+        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, requestTimeoutNanos, expirationStrategy, synchronization, defaultListener, synchronizationListener);
     }
 
     /**
@@ -119,7 +124,7 @@ public class ClientSideConfig {
      * @return new instance of {@link ClientSideConfig} with configured {@code clientClock}.
      */
     public ClientSideConfig withClientClock(TimeMeter clientClock) {
-        return new ClientSideConfig(backwardCompatibilityVersion, Optional.of(clientClock), executionStrategy, requestTimeoutNanos, expirationStrategy, synchronization, defaultListener);
+        return new ClientSideConfig(backwardCompatibilityVersion, Optional.of(clientClock), executionStrategy, requestTimeoutNanos, expirationStrategy, synchronization, defaultListener, synchronizationListener);
     }
 
     /**
@@ -133,11 +138,11 @@ public class ClientSideConfig {
      * @return new instance of {@link ClientSideConfig} with configured {@code clientClock}.
      */
     public ClientSideConfig withExecutionStrategy(ExecutionStrategy executionStrategy) {
-        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, requestTimeoutNanos, expirationStrategy, synchronization, defaultListener);
+        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, requestTimeoutNanos, expirationStrategy, synchronization, defaultListener, synchronizationListener);
     }
 
     public ClientSideConfig withSynchronization(Synchronization synchronization) {
-        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, requestTimeoutNanos, expirationStrategy, synchronization, defaultListener);
+        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, requestTimeoutNanos, expirationStrategy, synchronization, defaultListener, synchronizationListener);
     }
 
     /**
@@ -160,7 +165,7 @@ public class ClientSideConfig {
             throw BucketExceptions.nonPositiveRequestTimeout(requestTimeout);
         }
         long requestTimeoutNanos = requestTimeout.toNanos();
-        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, Optional.of(requestTimeoutNanos), expirationStrategy, synchronization, defaultListener);
+        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, Optional.of(requestTimeoutNanos), expirationStrategy, synchronization, defaultListener, synchronizationListener);
     }
 
     /**
@@ -173,7 +178,7 @@ public class ClientSideConfig {
      * @return new instance of {@link ClientSideConfig} with configured {@code expirationStrategy}.
      */
     public ClientSideConfig withExpirationAfterWriteStrategy(ExpirationAfterWriteStrategy expirationStrategy) {
-        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, requestTimeoutNanos, Optional.of(expirationStrategy), synchronization, defaultListener);
+        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, requestTimeoutNanos, Optional.of(expirationStrategy), synchronization, defaultListener, synchronizationListener);
     }
 
     /**
@@ -235,5 +240,9 @@ public class ClientSideConfig {
 
     public <K> RemoteAsyncBucketBuilder<K> apply(DefaultAsyncRemoteBucketBuilder builder) {
         return builder.withListener(defaultListener);
+    }
+
+    public SynchronizationListener getSynchronizationListener() {
+        return synchronizationListener;
     }
 }

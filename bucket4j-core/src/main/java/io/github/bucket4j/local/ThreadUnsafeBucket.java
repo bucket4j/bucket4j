@@ -314,8 +314,13 @@ public class ThreadUnsafeBucket extends AbstractBucket implements LocalBucket, C
     }
 
     @Override
-    public SynchronizationStrategy getSynchronizationStrategy() {
-        return SynchronizationStrategy.NONE;
+    public ConcurrencyStrategy getSynchronizationStrategy() {
+        return ConcurrencyStrategy.UNSAFE;
+    }
+
+    @Override
+    public SerializationHandle<LocalBucket> getSerializationHandle() {
+        return (SerializationHandle) SERIALIZATION_HANDLE;
     }
 
     @Override

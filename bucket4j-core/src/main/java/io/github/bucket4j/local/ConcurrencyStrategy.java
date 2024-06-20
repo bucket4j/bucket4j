@@ -20,12 +20,16 @@
 
 package io.github.bucket4j.local;
 
+import io.github.bucket4j.BucketConfiguration;
+import io.github.bucket4j.BucketListener;
+import io.github.bucket4j.MathType;
+import io.github.bucket4j.TimeMeter;
+
 /**
  * Defines the strategy of synchronization which need to be applied to prevent data-races in multithreading usage scenario.
  *
- * @since 1.3
  */
-public enum SynchronizationStrategy {
+public interface ConcurrencyStrategy {
 
     /**
      * Lock-free algorithm based on CAS(compare and swap) of immutable objects.
@@ -36,16 +40,40 @@ public enum SynchronizationStrategy {
      *
      * <p> The {@link LocalBucketBuilder#build()} without parameters uses this strategy.
      */
-    LOCK_FREE,
+    ConcurrencyStrategy LOCK_FREE = new ConcurrencyStrategy() {
+        @Override
+        public LocalBucket createBucket(BucketConfiguration configuration, MathType mathType, TimeMeter timeMeter, BucketListener listener) {
+            return new LockFreeBucket(configuration, MathType.INTEGER_64_BITS, timeMeter, listener);
+        }
+    };
 
     /**
-     * Blocking strategy based on java <code>synchronized</code> keyword.
+     * This concurrency strategy based on <code>Reentrant lock</code>.
      *
      * <p>Advantages: Never allocates memory.
      * <br>Disadvantages: Thread which acquired the lock(and superseded from CPU by OS scheduler) can block another threads for significant time.
      * <br>Usage recommendations: when your primary goal is avoiding of memory allocation, and you do not care about contention.
      */
-    SYNCHRONIZED,
+    ConcurrencyStrategy REENTRANT_LOCK_PROTECTED = new ConcurrencyStrategy() {
+        @Override
+        public LocalBucket createBucket(BucketConfiguration configuration, MathType mathType, TimeMeter timeMeter, BucketListener listener) {
+            return new ReentrantLockProtectedBucket(configuration, MathType.INTEGER_64_BITS, timeMeter, listener);
+        }
+    };
+
+    /**
+     * This concurrency strategy based on java <code>synchronized</code> keyword.
+     *
+     * <p>Advantages: Never allocates memory.
+     * <br>Disadvantages: Thread which acquired the lock(and superseded from CPU by OS scheduler) can block another threads for significant time.
+     * <br>Usage recommendations: when your primary goal is avoiding of memory allocation, and you do not care about contention.
+     */
+    ConcurrencyStrategy SYNCHRONIZED = new ConcurrencyStrategy() {
+        @Override
+        public LocalBucket createBucket(BucketConfiguration configuration, MathType mathType, TimeMeter timeMeter, BucketListener listener) {
+            return null;
+        }
+    };
 
     /**
      * This is fake strategy which does not perform synchronization at all.
@@ -59,6 +87,13 @@ public enum SynchronizationStrategy {
      * for example in cases where your third-party library(like akka or rx-java) prevents concurrent access and provide guarantees of visibility,
      * or when you are so senior guy that can manage synchronization by yourself.
      */
-    NONE
+    ConcurrencyStrategy UNSAFE = new ConcurrencyStrategy() {
+        @Override
+        public LocalBucket createBucket(BucketConfiguration configuration, MathType mathType, TimeMeter timeMeter, BucketListener listener) {
+            return new ThreadUnsafeBucket(configuration, MathType.INTEGER_64_BITS, timeMeter, listener);
+        }
+    };
+
+    LocalBucket createBucket(BucketConfiguration configuration, MathType mathType, TimeMeter timeMeter, BucketListener listener);
 
 }

@@ -21,24 +21,7 @@
 package io.github.bucket4j.local;
 
 
-import java.io.IOException;
-import java.io.NotSerializableException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.locks.ReentrantLock;
-
-import io.github.bucket4j.AbstractBucket;
-import io.github.bucket4j.Bucket;
-import io.github.bucket4j.BucketConfiguration;
-import io.github.bucket4j.BucketListener;
-import io.github.bucket4j.BucketState;
-import io.github.bucket4j.ConsumptionProbe;
-import io.github.bucket4j.EstimationProbe;
-import io.github.bucket4j.MathType;
-import io.github.bucket4j.Nothing;
-import io.github.bucket4j.TimeMeter;
-import io.github.bucket4j.TokensInheritanceStrategy;
-import io.github.bucket4j.VerboseResult;
+import io.github.bucket4j.*;
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
 import io.github.bucket4j.distributed.serialization.Scope;
 import io.github.bucket4j.distributed.serialization.SerializationAdapter;
@@ -47,24 +30,31 @@ import io.github.bucket4j.distributed.versioning.Version;
 import io.github.bucket4j.distributed.versioning.Versions;
 import io.github.bucket4j.util.ComparableByContent;
 
+import java.io.IOException;
+import java.io.NotSerializableException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
 import static io.github.bucket4j.distributed.versioning.Versions.v_7_0_0;
 
-public class SynchronizedBucket extends AbstractBucket implements LocalBucket, ComparableByContent<SynchronizedBucket> {
+public class ReentrantLockProtectedBucket extends AbstractBucket implements LocalBucket, ComparableByContent<ReentrantLockProtectedBucket> {
 
     private BucketConfiguration configuration;
     private final TimeMeter timeMeter;
     private BucketState state;
-    private final Object lock;
+    private final Lock lock;
 
-    public SynchronizedBucket(BucketConfiguration configuration, MathType mathType, TimeMeter timeMeter, BucketListener listener) {
+    public ReentrantLockProtectedBucket(BucketConfiguration configuration, MathType mathType, TimeMeter timeMeter, BucketListener listener) {
         this(configuration, mathType, timeMeter, listener, new ReentrantLock());
     }
 
-    SynchronizedBucket(BucketConfiguration configuration, MathType mathType, TimeMeter timeMeter, BucketListener listener, Object lock) {
+    ReentrantLockProtectedBucket(BucketConfiguration configuration, MathType mathType, TimeMeter timeMeter, BucketListener listener, Lock lock) {
         this(listener, timeMeter, lock, BucketState.createInitialState(configuration, mathType, timeMeter.currentTimeNanos()));
     }
 
-    private SynchronizedBucket(BucketListener listener, TimeMeter timeMeter, Object lock, BucketState initialState) {
+    private ReentrantLockProtectedBucket(BucketListener listener, TimeMeter timeMeter, Lock lock, BucketState initialState) {
         super(listener);
         this.configuration = initialState.getConfiguration();
         this.timeMeter = timeMeter;
@@ -78,13 +68,14 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket, C
 
     @Override
     public Bucket toListenable(BucketListener listener) {
-        return new SynchronizedBucket(listener, timeMeter, lock, state);
+        return new ReentrantLockProtectedBucket(listener, timeMeter, lock, state);
     }
 
     @Override
     protected long consumeAsMuchAsPossibleImpl(long limit) {
         long currentTimeNanos = timeMeter.currentTimeNanos();
-        synchronized (lock) {
+        lock.lock();
+        try {
             state.refillAllBandwidth(currentTimeNanos);
             long availableToConsume = state.getAvailableTokens();
             long toConsume = Math.min(limit, availableToConsume);
@@ -93,13 +84,16 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket, C
             }
             state.consume(toConsume);
             return toConsume;
+        } finally {
+            lock.unlock();
         }
     }
 
     @Override
     protected boolean tryConsumeImpl(long tokensToConsume) {
         long currentTimeNanos = timeMeter.currentTimeNanos();
-        synchronized (lock) {
+        lock.lock();
+        try {
             state.refillAllBandwidth(currentTimeNanos);
             long availableToConsume = state.getAvailableTokens();
             if (tokensToConsume > availableToConsume) {
@@ -107,13 +101,16 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket, C
             }
             state.consume(tokensToConsume);
             return true;
+        } finally {
+            lock.unlock();
         }
     }
 
     @Override
     protected ConsumptionProbe tryConsumeAndReturnRemainingTokensImpl(long tokensToConsume) {
         long currentTimeNanos = timeMeter.currentTimeNanos();
-        synchronized (lock) {
+        lock.lock();
+        try {
             state.refillAllBandwidth(currentTimeNanos);
             long availableToConsume = state.getAvailableTokens();
             if (tokensToConsume > availableToConsume) {
@@ -125,13 +122,16 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket, C
             long remainingTokens = availableToConsume - tokensToConsume;
             long nanosToWaitForReset = state.calculateFullRefillingTime(currentTimeNanos);
             return ConsumptionProbe.consumed(remainingTokens, nanosToWaitForReset);
+        } finally {
+            lock.unlock();
         }
     }
 
     @Override
     protected EstimationProbe estimateAbilityToConsumeImpl(long tokensToEstimate) {
         long currentTimeNanos = timeMeter.currentTimeNanos();
-        synchronized (lock) {
+        lock.lock();
+        try {
             state.refillAllBandwidth(currentTimeNanos);
             long availableToConsume = state.getAvailableTokens();
             if (tokensToEstimate > availableToConsume) {
@@ -139,13 +139,16 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket, C
                 return EstimationProbe.canNotBeConsumed(availableToConsume, nanosToWaitForRefill);
             }
             return EstimationProbe.canBeConsumed(availableToConsume);
+        } finally {
+            lock.unlock();
         }
     }
 
     @Override
     protected long reserveAndCalculateTimeToSleepImpl(long tokensToConsume, long waitIfBusyNanosLimit) {
         long currentTimeNanos = timeMeter.currentTimeNanos();
-        synchronized (lock) {
+        lock.lock();
+        try {
             state.refillAllBandwidth(currentTimeNanos);
             long nanosToCloseDeficit = state.calculateDelayNanosAfterWillBePossibleToConsume(tokensToConsume, currentTimeNanos, false);
 
@@ -155,13 +158,16 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket, C
 
             state.consume(tokensToConsume);
             return nanosToCloseDeficit;
+        } finally {
+            lock.unlock();
         }
     }
 
     @Override
     protected VerboseResult<Long> reserveAndCalculateTimeToSleepVerboseImpl(long tokensToConsume, long maxWaitTimeNanos) {
         long currentTimeNanos = timeMeter.currentTimeNanos();
-        synchronized (lock) {
+        lock.lock();
+        try {
             state.refillAllBandwidth(currentTimeNanos);
             long nanosToCloseDeficit = state.calculateDelayNanosAfterWillBePossibleToConsume(tokensToConsume, currentTimeNanos, false);
 
@@ -171,13 +177,16 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket, C
 
             state.consume(tokensToConsume);
             return new VerboseResult<>(currentTimeNanos, nanosToCloseDeficit, state.copy()) ;
+        } finally {
+            lock.unlock();
         }
     }
 
     @Override
     protected long consumeIgnoringRateLimitsImpl(long tokensToConsume) {
         long currentTimeNanos = timeMeter.currentTimeNanos();
-        synchronized (lock) {
+        lock.lock();
+        try {
             state.refillAllBandwidth(currentTimeNanos);
             long nanosToCloseDeficit = state.calculateDelayNanosAfterWillBePossibleToConsume(tokensToConsume, currentTimeNanos, false);
 
@@ -186,13 +195,16 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket, C
             }
             state.consume(tokensToConsume);
             return nanosToCloseDeficit;
+        } finally {
+            lock.unlock();
         }
     }
 
     @Override
     protected VerboseResult<Long> consumeAsMuchAsPossibleVerboseImpl(long limit) {
         long currentTimeNanos = timeMeter.currentTimeNanos();
-        synchronized (lock) {
+        lock.lock();
+        try {
             state.refillAllBandwidth(currentTimeNanos);
             long availableToConsume = state.getAvailableTokens();
             long toConsume = Math.min(limit, availableToConsume);
@@ -201,13 +213,16 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket, C
             }
             state.consume(toConsume);
             return new VerboseResult<>(currentTimeNanos, toConsume, state.copy());
+        } finally {
+            lock.unlock();
         }
     }
 
     @Override
     protected VerboseResult<Boolean> tryConsumeVerboseImpl(long tokensToConsume) {
         long currentTimeNanos = timeMeter.currentTimeNanos();
-        synchronized (lock) {
+        lock.lock();
+        try {
             state.refillAllBandwidth(currentTimeNanos);
             long availableToConsume = state.getAvailableTokens();
             if (tokensToConsume > availableToConsume) {
@@ -215,13 +230,16 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket, C
             }
             state.consume(tokensToConsume);
             return new VerboseResult<>(currentTimeNanos, true, state.copy());
+        } finally {
+            lock.unlock();
         }
     }
 
     @Override
     protected VerboseResult<ConsumptionProbe> tryConsumeAndReturnRemainingTokensVerboseImpl(long tokensToConsume) {
         long currentTimeNanos = timeMeter.currentTimeNanos();
-        synchronized (lock) {
+        lock.lock();
+        try {
             state.refillAllBandwidth(currentTimeNanos);
             long availableToConsume = state.getAvailableTokens();
             if (tokensToConsume > availableToConsume) {
@@ -234,13 +252,16 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket, C
             long nanosToWaitForReset = state.calculateFullRefillingTime(currentTimeNanos);
             ConsumptionProbe probe = ConsumptionProbe.consumed(availableToConsume - tokensToConsume, nanosToWaitForReset);
             return new VerboseResult<>(currentTimeNanos, probe, state.copy());
+        } finally {
+            lock.unlock();
         }
     }
 
     @Override
     protected VerboseResult<EstimationProbe> estimateAbilityToConsumeVerboseImpl(long tokensToEstimate) {
         long currentTimeNanos = timeMeter.currentTimeNanos();
-        synchronized (lock) {
+        lock.lock();
+        try {
             state.refillAllBandwidth(currentTimeNanos);
             long availableToConsume = state.getAvailableTokens();
             if (tokensToEstimate > availableToConsume) {
@@ -250,64 +271,82 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket, C
             }
             EstimationProbe estimationProbe = EstimationProbe.canBeConsumed(availableToConsume);
             return new VerboseResult<>(currentTimeNanos, estimationProbe, state.copy());
+        } finally {
+            lock.unlock();
         }
     }
 
     @Override
     protected VerboseResult<Long> getAvailableTokensVerboseImpl() {
         long currentTimeNanos = timeMeter.currentTimeNanos();
-        synchronized (lock) {
+        lock.lock();
+        try {
             state.refillAllBandwidth(currentTimeNanos);
             long availableTokens = state.getAvailableTokens();
             return new VerboseResult<>(currentTimeNanos, availableTokens, state.copy());
+        } finally {
+            lock.unlock();
         }
     }
 
     @Override
     protected VerboseResult<Nothing> addTokensVerboseImpl(long tokensToAdd) {
         long currentTimeNanos = timeMeter.currentTimeNanos();
-        synchronized (lock) {
+        lock.lock();
+        try {
             state.refillAllBandwidth(currentTimeNanos);
             state.addTokens(tokensToAdd);
             return new VerboseResult<>(currentTimeNanos, Nothing.INSTANCE, state.copy());
+        } finally {
+            lock.unlock();
         }
     }
 
     @Override
     protected VerboseResult<Nothing> forceAddTokensVerboseImpl(long tokensToAdd) {
         long currentTimeNanos = timeMeter.currentTimeNanos();
-        synchronized (lock) {
+        lock.lock();
+        try {
             state.refillAllBandwidth(currentTimeNanos);
             state.forceAddTokens(tokensToAdd);
             return new VerboseResult<>(currentTimeNanos, Nothing.INSTANCE, state.copy());
+        } finally {
+            lock.unlock();
         }
     }
 
     @Override
     protected VerboseResult<Nothing> resetVerboseImpl() {
         long currentTimeNanos = timeMeter.currentTimeNanos();
-        synchronized (lock) {
+        lock.lock();
+        try {
             state.refillAllBandwidth(currentTimeNanos);
             state.reset();
             return new VerboseResult<>(currentTimeNanos, Nothing.INSTANCE, state.copy());
+        } finally {
+            lock.unlock();
         }
     }
 
     @Override
     protected VerboseResult<Nothing> replaceConfigurationVerboseImpl(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy) {
         long currentTimeNanos = timeMeter.currentTimeNanos();
-        synchronized (lock) {
+        lock.lock();
+        try {
             this.state.refillAllBandwidth(currentTimeNanos);
             this.state = this.state.replaceConfiguration(newConfiguration, tokensInheritanceStrategy, currentTimeNanos);
             this.configuration = newConfiguration;
             return new VerboseResult<>(currentTimeNanos, null, state.copy());
+        } finally {
+            lock.unlock();
         }
     }
 
     @Override
     protected VerboseResult<Long> consumeIgnoringRateLimitsVerboseImpl(long tokensToConsume) {
         long currentTimeNanos = timeMeter.currentTimeNanos();
-        synchronized (lock) {
+        lock.lock();
+        try {
             state.refillAllBandwidth(currentTimeNanos);
             long nanosToCloseDeficit = state.calculateDelayNanosAfterWillBePossibleToConsume(tokensToConsume, currentTimeNanos, false);
 
@@ -316,52 +355,69 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket, C
             }
             state.consume(tokensToConsume);
             return new VerboseResult<>(currentTimeNanos, nanosToCloseDeficit, state.copy());
+        } finally {
+            lock.unlock();
         }
     }
 
     @Override
     protected void addTokensImpl(long tokensToAdd) {
         long currentTimeNanos = timeMeter.currentTimeNanos();
-        synchronized (lock) {
+        lock.lock();
+        try {
             state.refillAllBandwidth(currentTimeNanos);
             state.addTokens(tokensToAdd);
+        } finally {
+            lock.unlock();
         }
     }
 
     @Override
     protected void forceAddTokensImpl(long tokensToAdd) {
         long currentTimeNanos = timeMeter.currentTimeNanos();
-        synchronized (lock) {
+        lock.lock();
+        try {
             state.refillAllBandwidth(currentTimeNanos);
             state.forceAddTokens(tokensToAdd);
+        } finally {
+            lock.unlock();
         }
     }
 
     @Override
     public void reset() {
         long currentTimeNanos = timeMeter.currentTimeNanos();
-        synchronized (lock) {
+        lock.lock();
+        try {
             state.refillAllBandwidth(currentTimeNanos);
             state.reset();
+        } finally {
+            lock.unlock();
         }
     }
 
     @Override
     public long getAvailableTokens() {
         long currentTimeNanos = timeMeter.currentTimeNanos();
-        synchronized (lock) {
+        lock.lock();
+        try {
             state.refillAllBandwidth(currentTimeNanos);
             return state.getAvailableTokens();
+        } finally {
+            lock.unlock();
         }
     }
 
     @Override
     protected void replaceConfigurationImpl(BucketConfiguration newConfiguration, TokensInheritanceStrategy tokensInheritanceStrategy) {
         long currentTimeNanos = timeMeter.currentTimeNanos();
-        synchronized (lock) {
+        lock.lock();
+        try {
             this.state.refillAllBandwidth(currentTimeNanos);
             this.state = this.state.replaceConfiguration(newConfiguration, tokensInheritanceStrategy, currentTimeNanos);
             this.configuration = newConfiguration;
+        } finally {
+            lock.unlock();
         }
     }
 
@@ -395,9 +451,9 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket, C
         }
     }
 
-    public static final SerializationHandle<SynchronizedBucket> SERIALIZATION_HANDLE = new SerializationHandle<>() {
+    public static final SerializationHandle<ReentrantLockProtectedBucket> SERIALIZATION_HANDLE = new SerializationHandle<>() {
         @Override
-        public <S> SynchronizedBucket deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
+        public <S> ReentrantLockProtectedBucket deserialize(DeserializationAdapter<S> adapter, S input) throws IOException {
             int formatNumber = adapter.readInt(input);
             Versions.check(formatNumber, v_7_0_0, v_7_0_0);
 
@@ -405,11 +461,11 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket, C
             BucketState bucketState = BucketState.deserialize(adapter, input);
             bucketState.setConfiguration(bucketConfiguration);
 
-            return new SynchronizedBucket(BucketListener.NOPE, TimeMeter.SYSTEM_MILLISECONDS, new ReentrantLock(), bucketState);
+            return new ReentrantLockProtectedBucket(BucketListener.NOPE, TimeMeter.SYSTEM_MILLISECONDS, new ReentrantLock(), bucketState);
         }
 
         @Override
-        public <O> void serialize(SerializationAdapter<O> adapter, O output, SynchronizedBucket bucket, Version backwardCompatibilityVersion, Scope scope) throws IOException {
+        public <O> void serialize(SerializationAdapter<O> adapter, O output, ReentrantLockProtectedBucket bucket, Version backwardCompatibilityVersion, Scope scope) throws IOException {
             if (bucket.timeMeter != TimeMeter.SYSTEM_MILLISECONDS) {
                 throw new NotSerializableException("Only TimeMeter.SYSTEM_MILLISECONDS can be serialized safely");
             }
@@ -420,27 +476,27 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket, C
 
         @Override
         public int getTypeId() {
-            return 63;
+            return 61;
         }
 
         @Override
-        public Class<SynchronizedBucket> getSerializedType() {
-            return SynchronizedBucket.class;
+        public Class<ReentrantLockProtectedBucket> getSerializedType() {
+            return ReentrantLockProtectedBucket.class;
         }
 
         @Override
-        public SynchronizedBucket fromJsonCompatibleSnapshot(Map<String, Object> snapshot) throws IOException {
+        public ReentrantLockProtectedBucket fromJsonCompatibleSnapshot(Map<String, Object> snapshot) throws IOException {
             int formatNumber = readIntValue(snapshot, "version");
             Versions.check(formatNumber, v_7_0_0, v_7_0_0);
 
             Map<String, Object> stateSnapshot = (Map<String, Object>) snapshot.get("state");
             BucketState state = BucketState.fromJsonCompatibleSnapshot(stateSnapshot);
 
-            return new SynchronizedBucket(BucketListener.NOPE, TimeMeter.SYSTEM_MILLISECONDS, new ReentrantLock(), state);
+            return new ReentrantLockProtectedBucket(BucketListener.NOPE, TimeMeter.SYSTEM_MILLISECONDS, new ReentrantLock(), state);
         }
 
         @Override
-        public Map<String, Object> toJsonCompatibleSnapshot(SynchronizedBucket bucket, Version backwardCompatibilityVersion, Scope scope) throws IOException {
+        public Map<String, Object> toJsonCompatibleSnapshot(ReentrantLockProtectedBucket bucket, Version backwardCompatibilityVersion, Scope scope) throws IOException {
             if (bucket.timeMeter != TimeMeter.SYSTEM_MILLISECONDS) {
                 throw new NotSerializableException("Only TimeMeter.SYSTEM_MILLISECONDS can be serialized safely");
             }
@@ -458,7 +514,7 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket, C
     };
 
     @Override
-    public boolean equalsByContent(SynchronizedBucket other) {
+    public boolean equalsByContent(ReentrantLockProtectedBucket other) {
         return ComparableByContent.equals(state, other.state) &&
                 ComparableByContent.equals(state.getConfiguration(), other.getConfiguration()) &&
                 timeMeter == other.timeMeter;

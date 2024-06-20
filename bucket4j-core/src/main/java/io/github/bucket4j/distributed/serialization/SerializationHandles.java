@@ -28,6 +28,7 @@ import io.github.bucket4j.distributed.remote.commands.*;
 import io.github.bucket4j.distributed.versioning.UnsupportedNamedTypeException;
 import io.github.bucket4j.distributed.versioning.UnsupportedTypeException;
 import io.github.bucket4j.local.LockFreeBucket;
+import io.github.bucket4j.local.ReentrantLockProtectedBucket;
 import io.github.bucket4j.local.SynchronizedBucket;
 import io.github.bucket4j.local.ThreadUnsafeBucket;
 
@@ -77,8 +78,9 @@ public class SerializationHandles {
             CheckConfigurationVersionAndExecuteCommand.SERIALIZATION_HANDLE, // 42
 
             LockFreeBucket.SERIALIZATION_HANDLE, // 60
-            SynchronizedBucket.SERIALIZATION_HANDLE, // 61
+            ReentrantLockProtectedBucket.SERIALIZATION_HANDLE, // 61
             ThreadUnsafeBucket.SERIALIZATION_HANDLE, // 62
+            SynchronizedBucket.SERIALIZATION_HANDLE, // 63
 
             BasedOnTimeForRefillingBucketUpToMaxExpirationAfterWriteStrategy.SERIALIZATION_HANDLE, // 70
             FixedTtlExpirationAfterWriteStrategy.SERIALIZATION_HANDLE, // 71

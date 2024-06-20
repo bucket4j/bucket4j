@@ -1,36 +1,34 @@
-package io.github.bucket4j.distributed.proxy.synchronization.batch;
+package io.github.bucket4j.distributed.proxy.synchronization.delay;
 
-import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 import io.github.bucket4j.distributed.proxy.Backend;
 import io.github.bucket4j.distributed.proxy.CommandExecutor;
 import io.github.bucket4j.distributed.proxy.optimization.NopeOptimizationListener;
 import io.github.bucket4j.distributed.proxy.optimization.batch.BatchingExecutor;
-import io.github.bucket4j.distributed.proxy.synchronization.NopeSynchronizationListener;
 import io.github.bucket4j.distributed.proxy.synchronization.SynchronizationListener;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 
-public class BatchingBackend<K> implements Backend<K> {
+public class DelayingBackend<K> implements Backend<K> {
 
     private final Backend<K> target;
-    private final ConcurrentHashMap<K, BatchingExecutorEntry> executors = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<K, DelayingExecutorEntry> executors = new ConcurrentHashMap<>();
     private final SynchronizationListener synchronizationListener;
 
-    public BatchingBackend(Backend<K> target, SynchronizationListener synchronizationListener) {
+    public DelayingBackend(Backend<K> target, SynchronizationListener synchronizationListener) {
         this.target = target;
         this.synchronizationListener = synchronizationListener;
     }
 
     @Override
     public <T> CommandResult<T> execute(K key, RemoteCommand<T> command) {
-        BatchingExecutorEntry entry = executors.compute(key, (k, previous) -> {
+        DelayingExecutorEntry entry = executors.compute(key, (k, previous) -> {
             if (previous != null) {
                 previous.inProgressCount++;
                 return previous;
             } else {
-                return new BatchingExecutorEntry(key, 1);
+                return new DelayingExecutorEntry(key, 1);
             }
         });
         try {
@@ -48,12 +46,12 @@ public class BatchingBackend<K> implements Backend<K> {
         }
     }
 
-    private final class BatchingExecutorEntry {
+    private final class DelayingExecutorEntry {
 
         private int inProgressCount;
         private final BatchingExecutor executor;
 
-        private BatchingExecutorEntry(K key, int inProgressCount) {
+        private DelayingExecutorEntry(K key, int inProgressCount) {
             this.inProgressCount = inProgressCount;
 
             CommandExecutor originalExecutor = new CommandExecutor() {

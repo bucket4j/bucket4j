@@ -23,6 +23,7 @@ package io.github.bucket4j.local;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.TimeMeter;
+import io.github.bucket4j.distributed.serialization.SerializationHandle;
 
 import java.io.IOException;
 import java.util.Map;
@@ -51,7 +52,7 @@ public interface LocalBucket extends Bucket {
      *
      * @return synchronization strategy that is used by this bucket
      */
-    SynchronizationStrategy getSynchronizationStrategy();
+    ConcurrencyStrategy getSynchronizationStrategy();
 
     /**
      * Takes the binary snapshot of this bucket that later can be used as parameter for {@link #fromBinarySnapshot(byte[])} to restore bucket from snapshot.
@@ -92,5 +93,7 @@ public interface LocalBucket extends Bucket {
     static LocalBucket fromJsonCompatibleSnapshot(Map<String, Object> snapshot) throws IOException {
         return LocalBucketSerializationHelper.fromJsonCompatibleSnapshot(snapshot);
     }
+
+    SerializationHandle<LocalBucket> getSerializationHandle();
 
 }

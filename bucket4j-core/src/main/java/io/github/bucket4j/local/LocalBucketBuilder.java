@@ -59,7 +59,7 @@ public class LocalBucketBuilder {
     }
 
     private TimeMeter timeMeter = TimeMeter.SYSTEM_MILLISECONDS;
-    private SynchronizationStrategy synchronizationStrategy = SynchronizationStrategy.LOCK_FREE;
+    private ConcurrencyStrategy concurrencyStrategy = ConcurrencyStrategy.LOCK_FREE;
     private BucketListener listener = BucketListener.NOPE;
 
     /**
@@ -100,15 +100,15 @@ public class LocalBucketBuilder {
     /**
      * Specifies {@code synchronizationStrategy} for buckets that will be created by this builder.
      *
-     * @param synchronizationStrategy the strategy of synchronization which need to be applied to prevent data-races in multi-threading usage scenario.
+     * @param concurrencyStrategy the strategy of synchronization which need to be applied to prevent data-races in multi-threading usage scenario.
      *
      * @return this builder instance
      */
-    public LocalBucketBuilder withSynchronizationStrategy(SynchronizationStrategy synchronizationStrategy) {
-        if (synchronizationStrategy == null) {
+    public LocalBucketBuilder withSynchronizationStrategy(ConcurrencyStrategy concurrencyStrategy) {
+        if (concurrencyStrategy == null) {
             throw BucketExceptions.nullSynchronizationStrategy();
         }
-        this.synchronizationStrategy = synchronizationStrategy;
+        this.concurrencyStrategy = concurrencyStrategy;
         return this;
     }
 
@@ -131,11 +131,7 @@ public class LocalBucketBuilder {
      */
     public LocalBucket build() {
         BucketConfiguration configuration = buildConfiguration();
-        return switch (synchronizationStrategy) {
-            case LOCK_FREE -> new LockFreeBucket(configuration, MathType.INTEGER_64_BITS, timeMeter, listener);
-            case SYNCHRONIZED -> new SynchronizedBucket(configuration, MathType.INTEGER_64_BITS, timeMeter, listener);
-            case NONE -> new ThreadUnsafeBucket(configuration, MathType.INTEGER_64_BITS, timeMeter, listener);
-        };
+        return concurrencyStrategy.createBucket(configuration, MathType.INTEGER_64_BITS, timeMeter, listener);
     }
 
     private BucketConfiguration buildConfiguration() {

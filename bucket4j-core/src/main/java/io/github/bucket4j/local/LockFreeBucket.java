@@ -516,8 +516,13 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket, Compa
     }
 
     @Override
-    public SynchronizationStrategy getSynchronizationStrategy() {
-        return SynchronizationStrategy.LOCK_FREE;
+    public ConcurrencyStrategy getSynchronizationStrategy() {
+        return ConcurrencyStrategy.LOCK_FREE;
+    }
+
+    @Override
+    public SerializationHandle<LocalBucket> getSerializationHandle() {
+        return (SerializationHandle) SERIALIZATION_HANDLE;
     }
 
     private static BucketState createStateWithConfiguration(BucketConfiguration configuration, MathType mathType, TimeMeter timeMeter) {

@@ -32,7 +32,7 @@ public class LocalBucketSerializationHelper {
     private static final DataOutputSerializationAdapter adapter = DataOutputSerializationAdapter.INSTANCE;
 
     static byte[] toBinarySnapshot(LocalBucket localBucket) throws IOException {
-        SerializationHandle<LocalBucket> serializationHandle = getSerializationHandle(localBucket);
+        SerializationHandle<LocalBucket> serializationHandle = localBucket.getSerializationHandle();
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         DataOutputStream output = new DataOutputStream(baos);
         adapter.writeInt(output, serializationHandle.getTypeId());
@@ -49,7 +49,7 @@ public class LocalBucketSerializationHelper {
     }
 
     static Map<String, Object> toJsonCompatibleSnapshot(LocalBucket bucket) throws IOException {
-        SerializationHandle<LocalBucket> serializationHandle = getSerializationHandle(bucket);
+        SerializationHandle<LocalBucket> serializationHandle = bucket.getSerializationHandle();
         Map<String, Object> jsonMap = serializationHandle.toJsonCompatibleSnapshot(bucket, Versions.getLatest(), Scope.PERSISTED_STATE);
         jsonMap.put("type", serializationHandle.getTypeName());
         return jsonMap;
@@ -61,21 +61,15 @@ public class LocalBucketSerializationHelper {
         return serializationHandle.fromJsonCompatibleSnapshot(snapshot);
     }
 
-    private static SerializationHandle<LocalBucket> getSerializationHandle(LocalBucket localBucket) {
-        return switch (localBucket.getSynchronizationStrategy()) {
-            case LOCK_FREE -> (SerializationHandle) LockFreeBucket.SERIALIZATION_HANDLE;
-            case SYNCHRONIZED -> (SerializationHandle) SynchronizedBucket.SERIALIZATION_HANDLE;
-            case NONE -> (SerializationHandle) ThreadUnsafeBucket.SERIALIZATION_HANDLE;
-        };
-    }
-
     private static SerializationHandle<LocalBucket> getSerializationHandle(int typeId) throws IOException {
         if (typeId == LockFreeBucket.SERIALIZATION_HANDLE.getTypeId()) {
             return (SerializationHandle) LockFreeBucket.SERIALIZATION_HANDLE;
-        } else if (typeId == SynchronizedBucket.SERIALIZATION_HANDLE.getTypeId()) {
-            return (SerializationHandle) SynchronizedBucket.SERIALIZATION_HANDLE;
+        } else if (typeId == ReentrantLockProtectedBucket.SERIALIZATION_HANDLE.getTypeId()) {
+            return (SerializationHandle) ReentrantLockProtectedBucket.SERIALIZATION_HANDLE;
         } else if (typeId == ThreadUnsafeBucket.SERIALIZATION_HANDLE.getTypeId()) {
             return (SerializationHandle) ThreadUnsafeBucket.SERIALIZATION_HANDLE;
+        } else if (typeId == SynchronizedBucket.SERIALIZATION_HANDLE.getTypeId()) {
+            return   (SerializationHandle) SynchronizedBucket.SERIALIZATION_HANDLE;
         } else {
             throw new IOException("Unknown typeId=" + typeId);
         }
@@ -84,8 +78,8 @@ public class LocalBucketSerializationHelper {
     private static SerializationHandle<LocalBucket> getSerializationHandle(String typeName) throws IOException {
         if (LockFreeBucket.SERIALIZATION_HANDLE.getTypeName().equals(typeName)) {
             return (SerializationHandle) LockFreeBucket.SERIALIZATION_HANDLE;
-        } else if (SynchronizedBucket.SERIALIZATION_HANDLE.getTypeName().equals(typeName)) {
-            return (SerializationHandle) SynchronizedBucket.SERIALIZATION_HANDLE;
+        } else if (ReentrantLockProtectedBucket.SERIALIZATION_HANDLE.getTypeName().equals(typeName)) {
+            return (SerializationHandle) ReentrantLockProtectedBucket.SERIALIZATION_HANDLE;
         } else if (ThreadUnsafeBucket.SERIALIZATION_HANDLE.getTypeName().equals(typeName)) {
             return (SerializationHandle) ThreadUnsafeBucket.SERIALIZATION_HANDLE;
         } else {

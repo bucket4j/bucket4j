@@ -5,6 +5,7 @@ import io.github.bucket4j.BucketState;
 import io.github.bucket4j.distributed.proxy.DefaultBucketProxy;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.local.LockFreeBucket;
+import io.github.bucket4j.local.ReentrantLockProtectedBucket;
 import io.github.bucket4j.local.SynchronizedBucket;
 import io.github.bucket4j.local.ThreadUnsafeBucket;
 
@@ -17,7 +18,7 @@ public class PackageAccessor {
         if (bucket instanceof LockFreeBucket) {
             AtomicReference<BucketState> stateRef = getFieldValue(bucket, "stateRef");
             return stateRef.get();
-        } else if (bucket instanceof SynchronizedBucket || bucket instanceof ThreadUnsafeBucket) {
+        } else if (bucket instanceof ReentrantLockProtectedBucket || bucket instanceof ThreadUnsafeBucket || bucket instanceof SynchronizedBucket) {
             return getFieldValue(bucket, "state");
         } else if (bucket instanceof DefaultBucketProxy) {
             DefaultBucketProxy proxy = getFieldValue(bucket, "gridProxy");
