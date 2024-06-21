@@ -6,6 +6,7 @@ import io.github.bucket4j.TokensInheritanceStrategy
 import io.github.bucket4j.distributed.proxy.ProxyManager
 import io.github.bucket4j.distributed.proxy.optimization.DefaultOptimizationListener
 import io.github.bucket4j.distributed.proxy.optimization.Optimization
+import io.github.bucket4j.distributed.proxy.optimization.Optimizations
 import io.github.bucket4j.distributed.remote.MultiResult
 import io.github.bucket4j.distributed.remote.RemoteCommand
 import io.github.bucket4j.distributed.remote.Request
@@ -21,6 +22,8 @@ import java.time.Duration
 import java.util.concurrent.Callable
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CountDownLatch
+import java.util.concurrent.atomic.AtomicLong
+import java.util.function.Supplier
 
 import static org.junit.jupiter.api.Assertions.fail
 
@@ -36,7 +39,7 @@ class BatchingCommandExecutorSpecification extends Specification {
         setup:
             DefaultOptimizationListener listener = new DefaultOptimizationListener();
             ProxyManagerMock proxyManager = new ProxyManagerMock(clock)
-            Bucket bucket = createBucket(verbose, proxyManager, listener)
+            Bucket bucket = createBucket(versioned, proxyManager, listener)
         when:
             bucket.getAvailableTokens()
 
@@ -78,7 +81,7 @@ class BatchingCommandExecutorSpecification extends Specification {
         setup:
             DefaultOptimizationListener listener = new DefaultOptimizationListener();
             ProxyManagerMock proxyManager = new ProxyManagerMock(clock)
-            Bucket bucket = createBucket(verbose, proxyManager, listener)
+            Bucket bucket = createBucket(versioned, proxyManager, listener)
         when:
             bucket.getAvailableTokens()
 
@@ -124,7 +127,7 @@ class BatchingCommandExecutorSpecification extends Specification {
         setup:
             DefaultOptimizationListener listener = new DefaultOptimizationListener();
             ProxyManagerMock proxyManager = new ProxyManagerMock(clock)
-            Bucket bucket = createBucket(verbose, proxyManager, listener)
+            Bucket bucket = createBucket(versioned, proxyManager, listener)
         when:
             bucket.getAvailableTokens()
 
@@ -170,7 +173,7 @@ class BatchingCommandExecutorSpecification extends Specification {
         setup:
             DefaultOptimizationListener listener = new DefaultOptimizationListener();
             ProxyManagerMock proxyManager = new ProxyManagerMock(clock)
-            Bucket bucket = createBucket(verbose, proxyManager, listener)
+            Bucket bucket = createBucket(versioned, proxyManager, listener)
         when:
             bucket.getAvailableTokens()
 
@@ -220,7 +223,7 @@ class BatchingCommandExecutorSpecification extends Specification {
         when:
             DefaultOptimizationListener listener = new DefaultOptimizationListener();
             ProxyManagerMock proxyManager = new ProxyManagerMock(clock)
-            Bucket bucket = createBucket(verbose, proxyManager, listener)
+            Bucket bucket = createBucket(versioned, proxyManager, listener)
             bucket.getAvailableTokens()
 
             proxyManager.blockExecution()
@@ -287,9 +290,9 @@ class BatchingCommandExecutorSpecification extends Specification {
         return future
     }
 
-    Bucket createBucket(boolean verbose, ProxyManager proxyManager, DefaultOptimizationListener listener) {
+    Bucket createBucket(boolean versioned, ProxyManager proxyManager, DefaultOptimizationListener listener) {
         Optimization optimization = new BatchingOptimization(listener)
-        if (verbose) {
+        if (versioned) {
             return proxyManager.builder()
                     .withOptimization(optimization)
                     .build(1L, configuration)
@@ -299,6 +302,61 @@ class BatchingCommandExecutorSpecification extends Specification {
                     .withImplicitConfigurationReplacement(1, TokensInheritanceStrategy.AS_IS)
                     .build(1L, configuration)
         }
+    }
+
+    @Unroll
+    def "#n regression test for https://github.com/bucket4j/bucket4j/issues/501"(int n, boolean verbose, boolean versioned) {
+        setup:
+            ProxyManagerMock proxyManager = new ProxyManagerMock(clock)
+            Bucket bucket = null
+
+            Supplier<BucketConfiguration> configSupplier = () -> BucketConfiguration.builder()
+                // configure always empty bucket
+                .addLimit(limit -> limit.capacity(100).refillGreedy(1, Duration.ofDays(1)).initialTokens(0))
+                .build()
+            if (versioned) {
+                bucket = proxyManager.builder()
+                    .withOptimization(Optimizations.batching())
+                    .withImplicitConfigurationReplacement(1, TokensInheritanceStrategy.AS_IS)
+                    .build(42, configSupplier)
+            } else {
+                bucket = proxyManager.builder()
+                    .withOptimization(Optimizations.batching())
+                    .build(42, configSupplier)
+            }
+            AtomicLong consumedTokens = new AtomicLong()
+        when:
+            int processors = Runtime.getRuntime().availableProcessors()
+            CountDownLatch startLatch = new CountDownLatch(processors)
+            CountDownLatch stopLatch = new CountDownLatch(processors)
+            for (int i = 0; i < processors; i++) {
+                new Thread(() -> {
+                    startLatch.countDown()
+                    startLatch.await()
+                    try {
+                        for (int j = 0; j < 1_000; j++) {
+                            boolean consumed = verbose ? bucket.asVerbose().tryConsume(1).value : bucket.tryConsume(1)
+                            if (consumed) {
+                                consumedTokens.addAndGet(1)
+                            }
+                        }
+                    } catch (Throwable t) {
+                        t.printStackTrace()
+                    } finally {
+                        stopLatch.countDown()
+                    }
+                }).start()
+            }
+            stopLatch.await()
+        then:
+            consumedTokens.get() == 0
+        where:
+        [n, verbose, versioned] << [
+                [1, false, false],
+                [2, true, false],
+                [3, false, true],
+                [4, true, true]
+        ]
     }
 
 }

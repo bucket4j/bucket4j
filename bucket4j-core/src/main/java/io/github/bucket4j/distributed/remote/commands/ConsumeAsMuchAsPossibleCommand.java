@@ -170,8 +170,8 @@ public class ConsumeAsMuchAsPossibleCommand implements RemoteCommand<Long>, Comp
 
     @Override
     public CommandResult<?> unwrapOneResult(Long consumedTokens, int indice) {
-        boolean wasConsumed = indice <= consumedTokens;
-        return CommandResult.success(wasConsumed, BOOLEAN_HANDLE);
+        boolean wasConsumed = indice < consumedTokens;
+        return wasConsumed ?  CommandResult.TRUE : CommandResult.FALSE;
     }
 
     public void setMerged(boolean merged) {
