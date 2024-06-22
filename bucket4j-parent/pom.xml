@@ -7,7 +7,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.bucket4j</groupId>
-    <version>8.12.1</version>
+    <version>8.13.1</version>
     <artifactId>bucket4j_jdk17-parent</artifactId>
     <packaging>pom</packaging>
     <name>bucket4j_jdk17-parent</name>
@@ -50,9 +50,7 @@
 
         <hazelcast.4.version>4.1</hazelcast.4.version>
         <hazelcast.latest.version>5.3.6</hazelcast.latest.version>
-
-        <infinispan-8.version>8.2.12.Final</infinispan-8.version>
-        <infinispan.latest.version>13.0.0.Final</infinispan.latest.version>
+        <infinispan.latest.version>15.0.4.Final</infinispan.latest.version>
         <ehcache.version>3.8.1</ehcache.version>
 
         <testcontainers.version>1.18.1</testcontainers.version>

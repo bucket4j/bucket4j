@@ -9,7 +9,7 @@ It is not possible to add, remove or change the limits for already created confi
 * <<tokens-inheritance-strategy-as-is, TokensInheritanceStrategy.AS_IS>>
 * <<tokens-inheritance-strategy-additive, TokensInheritanceStrategy.ADDITIVE>>
 
-2. There is another problem when you are choosing <<tokens-inheritance-strategy-proportionally, PROPORTIONALLY>>, <<tokens-inheritance-strategy-as-is, AS_IS>> or <<tokens-inheritance-strategy-additive, ADDITIVE>> or <<tokens-inheritance-strategy-as-is, AS_IS>>  and a bucket has more than one bandwidth. For example, how does replaceConfiguration implementation bind bandwidths to each other in the following example?
+2. There is another problem when you are choosing <<tokens-inheritance-strategy-proportionally, PROPORTIONALLY>>, <<tokens-inheritance-strategy-as-is, AS_IS>> or <<tokens-inheritance-strategy-additive, ADDITIVE>> and a bucket has more than one bandwidth. For example, how does replaceConfiguration implementation bind bandwidths to each other in the following example?
 +
 [source, java]
 ----

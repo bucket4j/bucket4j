@@ -1,7 +1,5 @@
 === Bucket4j {revnumber} release notes
 Release `{revnumber}`
 
-==== The features/enhancements in release scope are following:
-* https://github.com/bucket4j/bucket4j/issues/465[#465 cleaner of expired buckets for RDBMS integrations(postgresql, oracle, mysql, mssql, mariadb)]
-* https://github.com/bucket4j/bucket4j/issues/461[#461 Support flexible per-entry expiration(similar to Redis and Hazelcast) for Ignite, Infinispan and Coherence]
-* https://github.com/bucket4j/bucket4j/issues/483[#483 Verbose API for scheduled and blocking bucket]
+==== The bugfixes in release scope are following:
+* https://github.com/bucket4j/bucket4j/issues/501[#501 Wrong behavior of batching optimization]

@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="REVAPI report" type="MavenRunConfiguration" factoryName="Maven">
+  <configuration default="false" name="Build MAVEN CENTRAL" type="MavenRunConfiguration" factoryName="Maven">
     <MavenSettings>
       <option name="myGeneralSettings" />
       <option name="myRunnerSettings" />
@@ -10,15 +10,15 @@
           </option>
           <option name="goals">
             <list>
-              <option value="revapi:report" />
-              <option value="revapi:report-aggregate" />
+              <option value="clean" />
+              <option value="install" />
               <option value="-DskipTests" />
             </list>
           </option>
           <option name="pomFileName" />
           <option name="profilesMap">
             <map>
-              <entry key="bintray" value="true" />
+              <entry key="release" value="true" />
             </map>
           </option>
           <option name="resolveToWorkspace" value="false" />
