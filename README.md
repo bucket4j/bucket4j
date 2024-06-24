@@ -13,7 +13,7 @@ The Bucket4j is distributed through [Maven Central](http://search.maven.org/):
 <dependency>
   <groupId>com.bucket4j</groupId>
   <artifactId>bucket4j_jdk17-core</artifactId>
-  <version>8.13.0</version>
+  <version>8.13.1</version>
 </dependency>
 ```
 ##### Java 11 dependency
@@ -22,7 +22,7 @@ The Bucket4j is distributed through [Maven Central](http://search.maven.org/):
 <dependency>
   <groupId>com.bucket4j</groupId>
   <artifactId>bucket4j_jdk11-core</artifactId>
-  <version>8.13.0</version>
+  <version>8.13.1</version>
 </dependency>
 ```
 
@@ -44,11 +44,11 @@ private void doSomethingProtected() {
    }
 }
 ```
-More examples [can be found there](https://bucket4j.github.io/8.13.0/toc.html#quick-start-examples)
+More examples [can be found there](https://bucket4j.github.io/8.13.1/toc.html#quick-start-examples)
 
 ## [Documentation](https://bucket4j.github.io)
-* [Reference](https://bucket4j.github.io/8.13.0/toc.html)
-* [Quick start examples](https://bucket4j.github.io/8.13.0/toc.html#quick-start-examples)
+* [Reference](https://bucket4j.github.io/8.13.1/toc.html)
+* [Quick start examples](https://bucket4j.github.io/8.13.1/toc.html#quick-start-examples)
 * [Third-party articles](https://bucket4j.github.io/#third-party-articles)
 
 ## Bucket4j basic features
@@ -77,27 +77,27 @@ In addition to local in-memory buckets, the Bucket4j supports clustered usage sc
 
 | Back-end                   |  Async supported | Flexible per-entry expiration | Optimized serialization | Thin-client support |                                  Documentation link                                   | 
 | :---                       | :---:            |:-----------------------------:|:-----------------------:|:-------------------:|:-------------------------------------------------------------------------------------:|
-| ```JCache API (JSR 107)``` |  No              |              No               |          No             |         No          |     [bucket4j-jcache](https://bucket4j.github.io/8.13.0/toc.html#bucket4j-jcache)     |
-| ```Hazelcast```            |  Yes             |              Yes              |           Yes           |         No          |  [bucket4j-hazelcast](https://bucket4j.github.io/8.13.0/toc.html#bucket4j-hazelcast)  |
-| ```Apache Ignite```        |  Yes             |              No               |           n/a           |         Yes         |     [bucket4j-ignite](https://bucket4j.github.io/8.13.0/toc.html#bucket4j-ignite)     |
-| ```Inifinispan```          |  Yes             |              Yes              |           Yes           |         No          | [bucket4j-infinispan](https://bucket4j.github.io/8.13.0/toc.html#bucket4j-infinispan) |
-| ```Oracle Coherence```     |  Yes             |              Yes              |           Yes           |         No          |  [bucket4j-coherence](https://bucket4j.github.io/8.13.0/toc.html#bucket4j-coherence)  |
+| ```JCache API (JSR 107)``` |  No              |              No               |          No             |         No          |     [bucket4j-jcache](https://bucket4j.github.io/8.13.1/toc.html#bucket4j-jcache)     |
+| ```Hazelcast```            |  Yes             |              Yes              |           Yes           |         No          |  [bucket4j-hazelcast](https://bucket4j.github.io/8.13.1/toc.html#bucket4j-hazelcast)  |
+| ```Apache Ignite```        |  Yes             |              No               |           n/a           |         Yes         |     [bucket4j-ignite](https://bucket4j.github.io/8.13.1/toc.html#bucket4j-ignite)     |
+| ```Inifinispan```          |  Yes             |              Yes              |           Yes           |         No          | [bucket4j-infinispan](https://bucket4j.github.io/8.13.1/toc.html#bucket4j-infinispan) |
+| ```Oracle Coherence```     |  Yes             |              Yes              |           Yes           |         No          |  [bucket4j-coherence](https://bucket4j.github.io/8.13.1/toc.html#bucket4j-coherence)  |
 
 ### Redis back-ends
 | Back-end                   |  Async supported | Redis cluster supported |                                       Documentation link                                       |
 | :---                       | :---:            |:-----------------------:|:----------------------------------------------------------------------------------------------:|
-| ```Redis/Redisson```       |  Yes             |           Yes           |    [bucket4j-redis/Redisson](https://bucket4j.github.io/8.13.0/toc.html#bucket4j-redisson)     |
-| ```Redis/Jedis```          |  No              |           Yes           |  [bucket4j-redis/Jedis](https://bucket4j.github.io/8.13.0/toc.html#toc.html#bucket4j-jedis)    |
-| ```Redis/Lettuce```        |  Yes             |           Yes           | [bucket4j-redis/Lettuce](https://bucket4j.github.io/8.13.0/toc.html#toc.html#bucket4j-lettuce) |
+| ```Redis/Redisson```       |  Yes             |           Yes           |    [bucket4j-redis/Redisson](https://bucket4j.github.io/8.13.1/toc.html#bucket4j-redisson)     |
+| ```Redis/Jedis```          |  No              |           Yes           |  [bucket4j-redis/Jedis](https://bucket4j.github.io/8.13.1/toc.html#toc.html#bucket4j-jedis)    |
+| ```Redis/Lettuce```        |  Yes             |           Yes           | [bucket4j-redis/Lettuce](https://bucket4j.github.io/8.13.1/toc.html#toc.html#bucket4j-lettuce) |
 
 ### JDBC back-ends
 | Back-end                   |                                  Documentation link                                   |
 |:---------------------------|:-------------------------------------------------------------------------------------:|
-| ```MySQL```                |    [bucket4j-mysql](https://bucket4j.github.io/8.13.0/toc.html#bucket4j-mysql)        |
-| ```PostgreSQL```           | [bucket4j-postgresql](https://bucket4j.github.io/8.13.0/toc.html#bucket4j-postgresql) |
-| ```Oracle```               |     [bucket4j-oracle](https://bucket4j.github.io/8.13.0/toc.html#bucket4j-oracle)     |
-| ```Microsoft SQL Server``` |      [bucket4j-mssql](https://bucket4j.github.io/8.13.0/toc.html#bucket4j-mssql)      |
-| ```MariaDB```              |    [bucket4j-mariadb](https://bucket4j.github.io/8.13.0/toc.html#bucket4j-mariadb)    |
+| ```MySQL```                |    [bucket4j-mysql](https://bucket4j.github.io/8.13.1/toc.html#bucket4j-mysql)        |
+| ```PostgreSQL```           | [bucket4j-postgresql](https://bucket4j.github.io/8.13.1/toc.html#bucket4j-postgresql) |
+| ```Oracle```               |     [bucket4j-oracle](https://bucket4j.github.io/8.13.1/toc.html#bucket4j-oracle)     |
+| ```Microsoft SQL Server``` |      [bucket4j-mssql](https://bucket4j.github.io/8.13.1/toc.html#bucket4j-mssql)      |
+| ```MariaDB```              |    [bucket4j-mariadb](https://bucket4j.github.io/8.13.1/toc.html#bucket4j-mariadb)    |
 
 
 ### Local caches support
