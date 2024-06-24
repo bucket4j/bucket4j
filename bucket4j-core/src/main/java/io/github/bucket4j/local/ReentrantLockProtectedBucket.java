@@ -508,7 +508,7 @@ public class ReentrantLockProtectedBucket extends AbstractBucket implements Loca
 
         @Override
         public String getTypeName() {
-            return "SynchronizedBucket";
+            return "ReentrantLockProtectedBucket";
         }
 
     };

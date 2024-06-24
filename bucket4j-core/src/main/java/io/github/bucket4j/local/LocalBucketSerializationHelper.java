@@ -82,7 +82,9 @@ public class LocalBucketSerializationHelper {
             return (SerializationHandle) ReentrantLockProtectedBucket.SERIALIZATION_HANDLE;
         } else if (ThreadUnsafeBucket.SERIALIZATION_HANDLE.getTypeName().equals(typeName)) {
             return (SerializationHandle) ThreadUnsafeBucket.SERIALIZATION_HANDLE;
-        } else {
+        } else if (SynchronizedBucket.SERIALIZATION_HANDLE.getTypeName().equals(typeName))
+            return (SerializationHandle) SynchronizedBucket.SERIALIZATION_HANDLE;
+        else {
             throw new IOException("Unknown typeName=" + typeName);
         }
     }

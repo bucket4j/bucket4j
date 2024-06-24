@@ -71,7 +71,7 @@ public interface ConcurrencyStrategy {
     ConcurrencyStrategy SYNCHRONIZED = new ConcurrencyStrategy() {
         @Override
         public LocalBucket createBucket(BucketConfiguration configuration, MathType mathType, TimeMeter timeMeter, BucketListener listener) {
-            return null;
+            return new SynchronizedBucket(configuration, MathType.INTEGER_64_BITS, timeMeter, listener);
         }
     };
 

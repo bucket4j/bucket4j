@@ -9,6 +9,7 @@ import io.github.bucket4j.distributed.versioning.Versions;
 import io.github.bucket4j.local.LockFreeBucket;
 import io.github.bucket4j.local.ConcurrencyStrategy;
 import io.github.bucket4j.local.ReentrantLockProtectedBucket;
+import io.github.bucket4j.local.SynchronizedBucket;
 import io.github.bucket4j.local.ThreadUnsafeBucket;
 import io.github.bucket4j.util.ComparableByContent;
 import org.junit.jupiter.api.Test;
@@ -313,10 +314,16 @@ public abstract class AbstractSerializationTest {
         testSerialization(lockFreeBucket);
 
         ReentrantLockProtectedBucket reentrantLockProtectedBucket = (ReentrantLockProtectedBucket) Bucket.builder()
+            .addLimit(Bandwidth.builder().capacity(1).refillGreedy(1, Duration.ofSeconds(1)).build())
+            .withSynchronizationStrategy(ConcurrencyStrategy.REENTRANT_LOCK_PROTECTED)
+            .build();
+        testSerialization(reentrantLockProtectedBucket);
+
+        SynchronizedBucket synchronizedBucket = (SynchronizedBucket) Bucket.builder()
                 .addLimit(Bandwidth.builder().capacity(1).refillGreedy(1, Duration.ofSeconds(1)).build())
                 .withSynchronizationStrategy(ConcurrencyStrategy.SYNCHRONIZED)
                 .build();
-        testSerialization(reentrantLockProtectedBucket);
+        testSerialization(synchronizedBucket);
 
         ThreadUnsafeBucket unsafeBucket = (ThreadUnsafeBucket) Bucket.builder()
                 .addLimit(Bandwidth.builder().capacity(1).refillGreedy(1, Duration.ofSeconds(1)).build())
