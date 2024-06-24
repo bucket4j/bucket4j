@@ -75,14 +75,9 @@ public class RedisBatchingExample {
 
     @Test
     public void benchmarkSyncBucket() throws InterruptedException {
-        // without this property Batching Optimization behaves wrong
-        System.setProperty("bucket4j.batching.merging-threshold", "1000");
-
-        int PARALLEL_THREADS = 8;
+        int PARALLEL_THREADS = 10;
         int TOKENS_PER_SEC = 300;
 
-        AtomicLong consumed = new AtomicLong();
-        AtomicLong rejected = new AtomicLong();
         SmoothlyDecayingRollingCounter consumptionRatePerSecond = new SmoothlyDecayingRollingCounter(Duration.ofSeconds(1), 10);
         SmoothlyDecayingRollingCounter rejectionRatePerSecond = new SmoothlyDecayingRollingCounter(Duration.ofSeconds(1), 10);
         com.codahale.metrics.Timer latencyTimer = buildLatencyTimer();
@@ -109,8 +104,8 @@ public class RedisBatchingExample {
         statLogTimer.schedule(new TimerTask() {
             @Override
             public void run() {
-                System.out.println("Consumption rate " + consumptionRatePerSecond.getSum() + " tokens/sec " + consumed.getAndSet(0));
-                System.out.println("Rejection rate " + rejectionRatePerSecond.getSum() + " tokens/sec " + rejected.getAndSet(0));
+                System.out.println("Consumption rate " + consumptionRatePerSecond.getSum() + " tokens/sec ");
+                System.out.println("Rejection rate " + rejectionRatePerSecond.getSum() + " tokens/sec ");
                 long skippedRequestCountSnapshot = optimizationListener.getSkipCount();
                 long mergedRequestCountSnapshot = optimizationListener.getMergeCount();
                 System.out.println("Optimization stat: " +
@@ -134,10 +129,8 @@ public class RedisBatchingExample {
                     try (com.codahale.metrics.Timer.Context ctx = latencyTimer.time()) {
                         if (bucket.tryConsume(1)) {
                             consumptionRatePerSecond.add(1);
-                            consumed.addAndGet(1);
                         } else {
                             rejectionRatePerSecond.add(1);
-                            rejected.addAndGet(1);
                         }
                     } catch (Throwable t) {
                         logger.error("Failed to consume tokens from bucket", t);
