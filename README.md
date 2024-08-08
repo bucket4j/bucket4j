@@ -25,6 +25,8 @@ The Bucket4j is distributed through [Maven Central](http://search.maven.org/):
   <version>8.13.1</version>
 </dependency>
 ```
+##### Java 8 dependencies
+Builds for Java 8 are not distributed through Maven Central. For direct downloading of Bucket4j builds for Java 8 [visit this page](https://bucket4j.com/commercial/java8.html).
 
 #### Quick start
 ```java
