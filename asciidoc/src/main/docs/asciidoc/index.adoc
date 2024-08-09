@@ -8,6 +8,9 @@ Release date: `07 June 2024`
 * http://bucket4j.com/{revnumber}/release-notes.html[{revnumber} Release notes]
 * http://bucket4j.com/{revnumber}/toc.html[{revnumber} Reference]
 
+== Java 8 notes
+Follow thees instructions https://bucket4j.com/commercial/java8.html[Java compatibility matrix] if you need for builds that is compatible with Java 8
+
 == How to support
 https://app.lava.top/ru/2716741203?donate=open[Make donate] to increase motivation of project maintainer to develop new features,
 write documentation and answer user questions.
