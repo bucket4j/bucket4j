@@ -120,6 +120,11 @@ public class Bucket4jHazelcast {
         public HazelcastLockBasedProxyManager<K> build() {
             return new HazelcastLockBasedProxyManager<>(this);
         }
+
+        @Override
+        public boolean isExpireAfterWriteSupported() {
+            return true;
+        }
     }
 
 }
