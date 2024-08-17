@@ -16,7 +16,7 @@ https://app.lava.top/ru/2716741203?donate=open[Make donate] to increase motivati
 write documentation and answer user questions.
 
 == Documentation archive
-If you are looking for documentation related to a previous version then http://bucket4j.com/previos-releases.html[ see there]
+If you are looking for documentation related to a previous version then http://bucket4j.com/previous-releases.html[ see there]
 
 == About the authors
 Vladimir Bukhtoyarov::
