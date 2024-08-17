@@ -81,10 +81,8 @@ public class Db2SelectForUpdateBasedProxyManager<K> extends AbstractSelectForUpd
         }
         this.clearExpiredSqlQuery = MessageFormat.format(
             """
-            DELETE FROM {0} WHERE
-                {2} < ? AND
-                {1} IN(SELECT {1} FROM {0} WHERE {2} < ? LIMIT ? FOR UPDATE SKIP LOCKED)
-            """, builder.getTableName(), builder.getIdColumnName(), builder.getExpiresAtColumnName()
+            DELETE FROM (SELECT * FROM {0} WHERE {1} < ? FETCH FIRST ? ROWS ONLY)
+            """, builder.getTableName(), builder.getExpiresAtColumnName()
         );
     }
 
@@ -212,8 +210,7 @@ public class Db2SelectForUpdateBasedProxyManager<K> extends AbstractSelectForUpd
             long currentTimeMillis = System.currentTimeMillis();
             try(PreparedStatement clearStatement = connection.prepareStatement(clearExpiredSqlQuery)) {
                 clearStatement.setLong(1, currentTimeMillis);
-                clearStatement.setLong(2, currentTimeMillis);
-                clearStatement.setInt(3, batchSize);
+                clearStatement.setInt(2, batchSize);
                 return clearStatement.executeUpdate();
             }
         } catch (SQLException e) {
