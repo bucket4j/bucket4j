@@ -95,11 +95,12 @@ In addition to local in-memory buckets, the Bucket4j supports clustered usage sc
 ### JDBC back-ends
 | Back-end                   |                                  Documentation link                                   |
 |:---------------------------|:-------------------------------------------------------------------------------------:|
-| ```MySQL```                |    [bucket4j-mysql](https://bucket4j.github.io/8.14.0/toc.html#bucket4j-mysql)        |
+| ```MySQL```                |      [bucket4j-mysql](https://bucket4j.github.io/8.14.0/toc.html#bucket4j-mysql)      |
 | ```PostgreSQL```           | [bucket4j-postgresql](https://bucket4j.github.io/8.14.0/toc.html#bucket4j-postgresql) |
 | ```Oracle```               |     [bucket4j-oracle](https://bucket4j.github.io/8.14.0/toc.html#bucket4j-oracle)     |
 | ```Microsoft SQL Server``` |      [bucket4j-mssql](https://bucket4j.github.io/8.14.0/toc.html#bucket4j-mssql)      |
 | ```MariaDB```              |    [bucket4j-mariadb](https://bucket4j.github.io/8.14.0/toc.html#bucket4j-mariadb)    |
+| ```DB2```                  |        [bucket4j-db2](https://bucket4j.github.io/8.14.0/toc.html#bucket4j-db2)        |
 
 
 ### Local caches support
