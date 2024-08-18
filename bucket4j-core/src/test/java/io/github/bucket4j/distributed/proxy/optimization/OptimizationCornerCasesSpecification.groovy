@@ -1,6 +1,6 @@
 package io.github.bucket4j.distributed.proxy.optimization
 
-import io.github.bucket4j.Bandwidth
+
 import io.github.bucket4j.Bucket
 import io.github.bucket4j.BucketConfiguration
 import io.github.bucket4j.TokensInheritanceStrategy
@@ -8,10 +8,15 @@ import io.github.bucket4j.distributed.BucketProxy
 import io.github.bucket4j.distributed.proxy.AsyncCommandExecutor
 import io.github.bucket4j.distributed.proxy.ClientSideConfig
 import io.github.bucket4j.distributed.proxy.CommandExecutor
-import io.github.bucket4j.distributed.proxy.optimization.delay.DelayOptimization
-import io.github.bucket4j.distributed.proxy.optimization.manual.ManuallySyncingOptimization
-import io.github.bucket4j.distributed.proxy.optimization.predictive.PredictiveOptimization
-import io.github.bucket4j.distributed.proxy.optimization.skiponzero.SkipSyncOnZeroOptimization
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.DelayParameters
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.NopeOptimizationListener
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.Optimization
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.Optimizations
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.PredictionParameters
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.delay.DelayOptimization
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.manual.ManuallySyncingOptimization
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.predictive.PredictiveOptimization
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.skiponzero.SkipSyncOnZeroOptimization
 import io.github.bucket4j.distributed.remote.CommandResult
 import io.github.bucket4j.distributed.remote.RemoteCommand
 import io.github.bucket4j.distributed.remote.Request
@@ -72,11 +77,11 @@ class OptimizationCornerCasesSpecification extends Specification {
 
         where:
             [testNumber, optimization] << [
-                [1, Optimizations.batching()],
-                [2, new DelayOptimization(delayParameters, NopeOptimizationListener.INSTANCE, clock)],
-                [3, new PredictiveOptimization(PredictionParameters.createDefault(delayParameters), delayParameters, NopeOptimizationListener.INSTANCE, clock)],
-                [4, new SkipSyncOnZeroOptimization(NopeOptimizationListener.INSTANCE, clock)],
-                [5, new ManuallySyncingOptimization(NopeOptimizationListener.INSTANCE, clock)]
+                    [1, Optimizations.batching()],
+                    [2, new DelayOptimization(delayParameters, NopeOptimizationListener.INSTANCE, clock)],
+                    [3, new PredictiveOptimization(PredictionParameters.createDefault(delayParameters), delayParameters, NopeOptimizationListener.INSTANCE, clock)],
+                    [4, new SkipSyncOnZeroOptimization(NopeOptimizationListener.INSTANCE, clock)],
+                    [5, new ManuallySyncingOptimization(NopeOptimizationListener.INSTANCE, clock)]
         ]
     }
 

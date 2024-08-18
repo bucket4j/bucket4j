@@ -24,7 +24,8 @@ import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.BucketListener;
 import io.github.bucket4j.TokensInheritanceStrategy;
 import io.github.bucket4j.distributed.BucketProxy;
-import io.github.bucket4j.distributed.proxy.optimization.Optimization;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.Optimization;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.Optimizations;
 
 
 import java.util.function.Function;
@@ -47,7 +48,7 @@ public interface RemoteBucketBuilder<K> {
      * In other words, if any request optimization strategy has been applied to the bucket proxy then proxy can not be treated as a cheap object.
      *
      * <p>
- *   * The full list of built-in optimizations can be found there {@link io.github.bucket4j.distributed.proxy.optimization.Optimizations}
+ *   * The full list of built-in optimizations can be found there {@link Optimizations}
      *
      * @param optimization optimization strategy
      *

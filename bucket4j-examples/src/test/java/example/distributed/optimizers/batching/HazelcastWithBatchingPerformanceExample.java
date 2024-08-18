@@ -10,7 +10,7 @@ import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.distributed.AsyncBucketProxy;
-import io.github.bucket4j.distributed.proxy.optimization.Optimizations;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.Optimizations;
 import io.github.bucket4j.grid.hazelcast.Bucket4jHazelcast;
 import io.github.bucket4j.grid.hazelcast.HazelcastProxyManager;
 import org.gridkit.nanocloud.Cloud;

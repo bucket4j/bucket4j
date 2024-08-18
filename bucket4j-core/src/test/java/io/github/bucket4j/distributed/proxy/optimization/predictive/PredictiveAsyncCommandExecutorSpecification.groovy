@@ -1,13 +1,14 @@
 package io.github.bucket4j.distributed.proxy.optimization.predictive
 
-import io.github.bucket4j.Bandwidth
+
 import io.github.bucket4j.Bucket
 import io.github.bucket4j.BucketConfiguration
 import io.github.bucket4j.distributed.AsyncBucketProxy
-import io.github.bucket4j.distributed.proxy.optimization.DefaultOptimizationListener
-import io.github.bucket4j.distributed.proxy.optimization.DelayParameters
-import io.github.bucket4j.distributed.proxy.optimization.Optimization
-import io.github.bucket4j.distributed.proxy.optimization.PredictionParameters
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.DefaultOptimizationListener
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.DelayParameters
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.Optimization
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.PredictionParameters
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.predictive.PredictiveOptimization
 import io.github.bucket4j.mock.ProxyManagerMock
 import io.github.bucket4j.mock.TimeMeterMock
 import spock.lang.Specification

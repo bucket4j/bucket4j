@@ -18,12 +18,12 @@
  * =========================LICENSE_END==================================
  */
 
-package io.github.bucket4j.distributed.proxy.optimization.batch;
+package io.github.bucket4j.distributed.proxy.synchronization.per_bucket.batch;
 
 import io.github.bucket4j.distributed.proxy.AsyncCommandExecutor;
 import io.github.bucket4j.distributed.proxy.CommandExecutor;
-import io.github.bucket4j.distributed.proxy.optimization.Optimization;
-import io.github.bucket4j.distributed.proxy.optimization.OptimizationListener;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.Optimization;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.OptimizationListener;
 
 import java.util.Objects;
 

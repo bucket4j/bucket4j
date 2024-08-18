@@ -17,10 +17,10 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package io.github.bucket4j.distributed.proxy.optimization;
+package io.github.bucket4j.distributed.proxy.synchronization.per_bucket;
 
 import io.github.bucket4j.BucketExceptions;
-import io.github.bucket4j.distributed.proxy.optimization.delay.DelayOptimization;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.delay.DelayOptimization;
 
 import java.time.Duration;
 

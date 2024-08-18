@@ -22,7 +22,7 @@ package io.github.bucket4j.distributed;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketListener;
 import io.github.bucket4j.distributed.proxy.RemoteBucketBuilder;
-import io.github.bucket4j.distributed.proxy.optimization.Optimization;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.Optimization;
 
 /**
  * Provides a light-weight proxy to bucket which state actually stored in external storage, like in-memory jvm or relational database.

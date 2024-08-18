@@ -17,12 +17,15 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package io.github.bucket4j.distributed.proxy.optimization.predictive;
+package io.github.bucket4j.distributed.proxy.synchronization.per_bucket.predictive;
 
 import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.proxy.AsyncCommandExecutor;
 import io.github.bucket4j.distributed.proxy.CommandExecutor;
 import io.github.bucket4j.distributed.proxy.optimization.*;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.DelayParameters;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.OptimizationListener;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.PredictionParameters;
 import io.github.bucket4j.distributed.remote.*;
 import io.github.bucket4j.distributed.remote.commands.*;
 

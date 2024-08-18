@@ -24,8 +24,8 @@ import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.BucketListener;
 import io.github.bucket4j.TokensInheritanceStrategy;
 import io.github.bucket4j.distributed.AsyncBucketProxy;
-import io.github.bucket4j.distributed.proxy.optimization.Optimization;
-import io.github.bucket4j.distributed.proxy.optimization.Optimizations;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.Optimization;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.Optimizations;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;

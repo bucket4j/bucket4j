@@ -17,7 +17,7 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package io.github.bucket4j.distributed.proxy.optimization.skiponzero;
+package io.github.bucket4j.distributed.proxy.synchronization.per_bucket.skiponzero;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,7 +26,7 @@ import java.util.concurrent.CompletableFuture;
 import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.proxy.AsyncCommandExecutor;
 import io.github.bucket4j.distributed.proxy.CommandExecutor;
-import io.github.bucket4j.distributed.proxy.optimization.OptimizationListener;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.OptimizationListener;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.MultiResult;
 import io.github.bucket4j.distributed.remote.MutableBucketEntry;

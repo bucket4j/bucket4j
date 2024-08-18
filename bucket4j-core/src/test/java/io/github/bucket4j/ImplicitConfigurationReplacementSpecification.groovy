@@ -5,7 +5,7 @@ import io.github.bucket4j.distributed.AsyncBucketProxy
 import io.github.bucket4j.distributed.proxy.ProxyManager
 import io.github.bucket4j.distributed.proxy.RemoteAsyncBucketBuilder
 import io.github.bucket4j.distributed.proxy.RemoteBucketBuilder
-import io.github.bucket4j.distributed.proxy.optimization.Optimizations
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.Optimizations
 import io.github.bucket4j.mock.BucketType
 import io.github.bucket4j.mock.TimeMeterMock
 import spock.lang.Specification

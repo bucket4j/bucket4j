@@ -17,7 +17,7 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package io.github.bucket4j.distributed.proxy.optimization;
+package io.github.bucket4j.distributed.proxy.synchronization.per_bucket;
 
 /**
  * Monitoring listener for applied optimizations

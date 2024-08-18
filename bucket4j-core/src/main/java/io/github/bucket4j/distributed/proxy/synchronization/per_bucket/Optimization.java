@@ -18,7 +18,7 @@
  * =========================LICENSE_END==================================
  */
 
-package io.github.bucket4j.distributed.proxy.optimization;
+package io.github.bucket4j.distributed.proxy.synchronization.per_bucket;
 
 import io.github.bucket4j.distributed.AsyncBucketProxy;
 import io.github.bucket4j.distributed.BucketProxy;

@@ -17,12 +17,12 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package io.github.bucket4j.distributed.proxy.optimization;
+package io.github.bucket4j.distributed.proxy.synchronization.per_bucket;
 
 import io.github.bucket4j.TimeMeter;
-import io.github.bucket4j.distributed.proxy.optimization.batch.BatchingOptimization;
-import io.github.bucket4j.distributed.proxy.optimization.predictive.PredictiveOptimization;
-import io.github.bucket4j.distributed.proxy.optimization.delay.DelayOptimization;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.batch.BatchingOptimization;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.predictive.PredictiveOptimization;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.delay.DelayOptimization;
 
 /**
  * Provides factory methods for all request optimizations that are built-in into Bucket4j library.

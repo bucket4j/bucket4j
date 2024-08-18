@@ -1,6 +1,6 @@
 package io.github.bucket4j.distributed.proxy.synchronization;
 
-import io.github.bucket4j.distributed.proxy.optimization.OptimizationListener;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.OptimizationListener;
 
 public class OptimizationListenerAdapter implements OptimizationListener {
 

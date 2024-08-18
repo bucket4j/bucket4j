@@ -26,7 +26,7 @@ import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.BucketListener;
 import io.github.bucket4j.TokensInheritanceStrategy;
 import io.github.bucket4j.distributed.BucketProxy;
-import io.github.bucket4j.distributed.proxy.optimization.Optimization;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.Optimization;
 
 public class RemoteBucketBuilderView<K, KeyOld> implements RemoteBucketBuilder<K> {
     private final RemoteBucketBuilder<KeyOld> target;

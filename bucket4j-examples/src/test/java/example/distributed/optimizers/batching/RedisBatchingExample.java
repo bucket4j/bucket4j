@@ -3,7 +3,6 @@ package example.distributed.optimizers.batching;
 import java.time.Duration;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -15,24 +14,18 @@ import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.shaded.com.google.common.base.Charsets;
 
-import com.codahale.metrics.Meter;
 import com.codahale.metrics.Snapshot;
 import com.github.rollingmetrics.counter.SmoothlyDecayingRollingCounter;
 import com.github.rollingmetrics.dropwizard.Dropwizard;
 import com.github.rollingmetrics.histogram.OverflowResolver;
 import com.github.rollingmetrics.histogram.hdr.RollingHdrHistogram;
 
-import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketConfiguration;
-import io.github.bucket4j.TimeMeter;
-import io.github.bucket4j.distributed.AsyncBucketProxy;
-import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
-import io.github.bucket4j.distributed.proxy.optimization.DefaultOptimizationListener;
-import io.github.bucket4j.distributed.proxy.optimization.Optimization;
-import io.github.bucket4j.distributed.proxy.optimization.Optimizations;
-import io.github.bucket4j.distributed.proxy.optimization.skiponzero.SkipSyncOnZeroOptimization;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.DefaultOptimizationListener;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.Optimization;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.Optimizations;
 import io.github.bucket4j.redis.lettuce.cas.LettuceBasedProxyManager;
 import io.lettuce.core.RedisClient;
 

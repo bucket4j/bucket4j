@@ -18,16 +18,16 @@
  * =========================LICENSE_END==================================
  */
 
-package io.github.bucket4j.distributed.proxy.optimization.manual;
+package io.github.bucket4j.distributed.proxy.synchronization.per_bucket.manual;
 
 import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.OptimizationController;
 import io.github.bucket4j.distributed.proxy.AsyncCommandExecutor;
 import io.github.bucket4j.distributed.proxy.CommandExecutor;
-import io.github.bucket4j.distributed.proxy.optimization.DelayParameters;
-import io.github.bucket4j.distributed.proxy.optimization.NopeOptimizationListener;
-import io.github.bucket4j.distributed.proxy.optimization.Optimization;
-import io.github.bucket4j.distributed.proxy.optimization.OptimizationListener;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.DelayParameters;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.NopeOptimizationListener;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.Optimization;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.OptimizationListener;
 
 /**
  * Optimization that can serve requests locally without synchronization with external storage until explicit call of {@link OptimizationController#syncImmediately()}.

@@ -17,9 +17,9 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package io.github.bucket4j.distributed.proxy.optimization.predictive;
+package io.github.bucket4j.distributed.proxy.synchronization.per_bucket.predictive;
 
-import io.github.bucket4j.distributed.proxy.optimization.PredictionParameters;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.PredictionParameters;
 
 import java.util.Iterator;
 import java.util.LinkedList;

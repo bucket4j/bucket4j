@@ -20,7 +20,7 @@
 package io.github.bucket4j.distributed;
 
 import io.github.bucket4j.distributed.proxy.RemoteAsyncBucketBuilder;
-import io.github.bucket4j.distributed.proxy.optimization.Optimization;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.Optimization;
 
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;

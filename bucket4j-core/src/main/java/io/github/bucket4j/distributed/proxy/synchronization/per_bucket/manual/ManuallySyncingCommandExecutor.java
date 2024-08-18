@@ -17,17 +17,13 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package io.github.bucket4j.distributed.proxy.optimization.delay;
+package io.github.bucket4j.distributed.proxy.synchronization.per_bucket.manual;
 
 import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.proxy.AsyncCommandExecutor;
 import io.github.bucket4j.distributed.proxy.CommandExecutor;
-import io.github.bucket4j.distributed.proxy.optimization.*;
-import io.github.bucket4j.distributed.remote.CommandResult;
-import io.github.bucket4j.distributed.remote.MultiResult;
-import io.github.bucket4j.distributed.remote.MutableBucketEntry;
-import io.github.bucket4j.distributed.remote.RemoteBucketState;
-import io.github.bucket4j.distributed.remote.RemoteCommand;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.OptimizationListener;
+import io.github.bucket4j.distributed.remote.*;
 import io.github.bucket4j.distributed.remote.commands.ConsumeIgnoringRateLimitsCommand;
 import io.github.bucket4j.distributed.remote.commands.CreateSnapshotCommand;
 import io.github.bucket4j.distributed.remote.commands.MultiCommand;
@@ -35,15 +31,15 @@ import io.github.bucket4j.distributed.remote.commands.MultiCommand;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.locks.ReentrantLock;
 
-class DelayedCommandExecutor implements CommandExecutor, AsyncCommandExecutor {
+class ManuallySyncingCommandExecutor implements CommandExecutor, AsyncCommandExecutor {
 
     private static final int ORIGINAL_COMMAND_INDEX = 1;
     private static final int GET_SNAPSHOT_COMMAND_INDEX = 2;
 
     private final CommandExecutor originalExecutor;
     private final AsyncCommandExecutor originalAsyncExecutor;
-    private final DelayParameters delayParameters;
     private final OptimizationListener listener;
     private final TimeMeter timeMeter;
 
@@ -52,50 +48,79 @@ class DelayedCommandExecutor implements CommandExecutor, AsyncCommandExecutor {
     private long lastSyncTimeNanos;
     private long postponedToConsumeTokens;
 
-    DelayedCommandExecutor(CommandExecutor originalExecutor, DelayParameters delayParameters, OptimizationListener listener, TimeMeter timeMeter) {
+    private final ReentrantLock localStateMutationLock = new ReentrantLock();
+    private final ReentrantLock remoteExecutionLock = new ReentrantLock();
+    private CompletableFuture<?> inProgressSynchronizationFuture = CompletableFuture.completedFuture(null);
+
+    ManuallySyncingCommandExecutor(CommandExecutor originalExecutor, OptimizationListener listener, TimeMeter timeMeter) {
         this.originalExecutor = originalExecutor;
         this.originalAsyncExecutor = null;
-        this.delayParameters = delayParameters;
         this.listener = listener;
         this.timeMeter = timeMeter;
     }
 
-    DelayedCommandExecutor(AsyncCommandExecutor originalAsyncExecutor, DelayParameters delayParameters, OptimizationListener listener, TimeMeter timeMeter) {
+    ManuallySyncingCommandExecutor(AsyncCommandExecutor originalAsyncExecutor, OptimizationListener listener, TimeMeter timeMeter) {
         this.originalExecutor = null;
         this.originalAsyncExecutor = originalAsyncExecutor;
-        this.delayParameters = delayParameters;
         this.listener = listener;
         this.timeMeter = timeMeter;
     }
 
     @Override
     public <T> CommandResult<T> execute(RemoteCommand<T> command) {
-        CommandResult<T> localResult = tryConsumeLocally(command);
-        if (localResult != null) {
-            // remote call is not needed
-            listener.incrementSkipCount(1);
-            return localResult;
+        MultiCommand remoteCommand;
+        localStateMutationLock.lock();
+        try {
+            CommandResult<T> localResult = tryConsumeLocally(command);
+            if (localResult != null) {
+                // remote call is not needed
+                listener.incrementSkipCount(1);
+                return localResult;
+            } else {
+                remoteCommand = prepareRemoteCommand(command);
+            }
+        } finally {
+            localStateMutationLock.unlock();
         }
 
-        MultiCommand remoteCommand = prepareRemoteCommand(command);
-        CommandResult<MultiResult> commandResult = originalExecutor.execute(remoteCommand);
-        rememberRemoteCommandResult(commandResult);
-        return commandResult.isError() ?
-            (CommandResult<T>) commandResult :
-            (CommandResult<T>) commandResult.getData().getResults().get(ORIGINAL_COMMAND_INDEX);
+        remoteExecutionLock.lock();
+        try {
+            CommandResult<MultiResult> remoteResult = originalExecutor.execute(remoteCommand);
+            rememberRemoteCommandResult(remoteResult);
+            return remoteResult.isError() ?
+                (CommandResult<T>) remoteResult :
+                (CommandResult<T>) remoteResult.getData().getResults().get(ORIGINAL_COMMAND_INDEX);
+        } finally {
+            remoteExecutionLock.unlock();
+        }
     }
 
     @Override
     public <T> CompletableFuture<CommandResult<T>> executeAsync(RemoteCommand<T> command) {
-        CommandResult<T> result = tryConsumeLocally(command);
-        if (result != null) {
-            // remote call is not needed
-            listener.incrementSkipCount(1);
-            return CompletableFuture.completedFuture(result);
+        MultiCommand remoteCommand;
+        localStateMutationLock.lock();
+        try {
+            CommandResult<T> result = tryConsumeLocally(command);
+            if (result != null) {
+                // remote call is not needed
+                listener.incrementSkipCount(1);
+                return CompletableFuture.completedFuture(result);
+            } else {
+                remoteCommand = prepareRemoteCommand(command);
+            }
+        } finally {
+            localStateMutationLock.unlock();
         }
 
-        MultiCommand remoteCommand = prepareRemoteCommand(command);
-        CompletableFuture<CommandResult<MultiResult>> resultFuture = originalAsyncExecutor.executeAsync(remoteCommand);
+        remoteExecutionLock.lock();
+        CompletableFuture<CommandResult<MultiResult>> resultFuture;
+        try {
+            resultFuture = inProgressSynchronizationFuture.thenCompose(f -> originalAsyncExecutor.executeAsync(remoteCommand));
+            inProgressSynchronizationFuture = resultFuture.exceptionally((Throwable ex) -> null);
+        } finally {
+            remoteExecutionLock.unlock();
+        }
+
         return resultFuture.thenApply((CommandResult<MultiResult> remoteResult) -> {
             rememberRemoteCommandResult(remoteResult);
             return remoteResult.isError() ?
@@ -134,21 +159,13 @@ class DelayedCommandExecutor implements CommandExecutor, AsyncCommandExecutor {
     }
 
     private boolean isLocalExecutionResultSatisfiesThreshold(long locallyConsumedTokens) {
-        if (locallyConsumedTokens == Long.MAX_VALUE || postponedToConsumeTokens + locallyConsumedTokens < 0) {
-            // math overflow
-            return false;
-        }
-        return postponedToConsumeTokens + locallyConsumedTokens <= delayParameters.maxUnsynchronizedTokens;
+        // check math overflow
+        return locallyConsumedTokens != Long.MAX_VALUE && postponedToConsumeTokens + locallyConsumedTokens >= 0;
     }
 
     private <T> boolean isNeedToExecuteRemoteImmediately(RemoteCommand<T> command, long currentTimeNanos) {
         if (state == null) {
             // was never synchronized before
-            return true;
-        }
-
-        if (currentTimeNanos - lastSyncTimeNanos  > delayParameters.maxUnsynchronizedTimeoutNanos) {
-            // too long period passed since last sync
             return true;
         }
 
@@ -163,26 +180,36 @@ class DelayedCommandExecutor implements CommandExecutor, AsyncCommandExecutor {
             return true;
         }
 
-        return commandTokens + postponedToConsumeTokens > delayParameters.maxUnsynchronizedTokens;
+        return false;
     }
 
     private <T> MultiCommand prepareRemoteCommand(RemoteCommand<T> command) {
         List<RemoteCommand<?>> commands = new ArrayList<>(3);
         commands.add(new ConsumeIgnoringRateLimitsCommand(this.postponedToConsumeTokens));
+        this.postponedToConsumeTokens = 0;
         commands.add(command);
         commands.add(new CreateSnapshotCommand());
         return new MultiCommand(commands);
     }
 
-    private void rememberRemoteCommandResult(CommandResult<MultiResult> multiResult) {
-        postponedToConsumeTokens = 0;
-        lastSyncTimeNanos = timeMeter.currentTimeNanos();
-        CommandResult<?> snapshotResult = multiResult.isError() ? multiResult : multiResult.getData().getResults().get(GET_SNAPSHOT_COMMAND_INDEX);
-        if (snapshotResult.isError()) {
-            state = null;
-            return;
+    private void rememberRemoteCommandResult(CommandResult<MultiResult> remoteResult) {
+        localStateMutationLock.lock();
+        try {
+            lastSyncTimeNanos = timeMeter.currentTimeNanos();
+            CommandResult<?> snapshotResult = remoteResult.isError() ? remoteResult : remoteResult.getData().getResults().get(GET_SNAPSHOT_COMMAND_INDEX);
+            if (snapshotResult.isError()) {
+                state = null;
+                return;
+            }
+            this.state = (RemoteBucketState) snapshotResult.getData();
+
+            // decrease available tokens by amount that consumed while remote request was in progress
+            if (postponedToConsumeTokens > 0) {
+                this.state.consume(postponedToConsumeTokens);
+            }
+        } finally {
+            localStateMutationLock.unlock();
         }
-        this.state = (RemoteBucketState) snapshotResult.getData();
     }
 
 

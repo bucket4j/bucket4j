@@ -34,9 +34,9 @@ import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.AsyncBucketProxy;
-import io.github.bucket4j.distributed.proxy.optimization.DefaultOptimizationListener;
-import io.github.bucket4j.distributed.proxy.optimization.Optimization;
-import io.github.bucket4j.distributed.proxy.optimization.skiponzero.SkipSyncOnZeroOptimization;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.DefaultOptimizationListener;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.Optimization;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.skiponzero.SkipSyncOnZeroOptimization;
 import io.github.bucket4j.grid.hazelcast.Bucket4jHazelcast;
 import io.github.bucket4j.grid.hazelcast.HazelcastProxyManager;
 

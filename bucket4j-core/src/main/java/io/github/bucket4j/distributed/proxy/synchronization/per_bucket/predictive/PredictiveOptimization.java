@@ -18,19 +18,19 @@
  * =========================LICENSE_END==================================
  */
 
-package io.github.bucket4j.distributed.proxy.optimization.predictive;
+package io.github.bucket4j.distributed.proxy.synchronization.per_bucket.predictive;
 
 import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.proxy.AsyncCommandExecutor;
 import io.github.bucket4j.distributed.proxy.CommandExecutor;
-import io.github.bucket4j.distributed.proxy.optimization.Optimization;
-import io.github.bucket4j.distributed.proxy.optimization.DelayParameters;
-import io.github.bucket4j.distributed.proxy.optimization.OptimizationListener;
-import io.github.bucket4j.distributed.proxy.optimization.PredictionParameters;
-import io.github.bucket4j.distributed.proxy.optimization.batch.AsyncBatchingExecutor;
-import io.github.bucket4j.distributed.proxy.optimization.batch.BatchingExecutor;
-import io.github.bucket4j.distributed.proxy.optimization.batch.BatchingOptimization;
-import io.github.bucket4j.distributed.proxy.optimization.delay.DelayOptimization;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.Optimization;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.DelayParameters;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.OptimizationListener;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.PredictionParameters;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.batch.AsyncBatchingExecutor;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.batch.BatchingExecutor;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.batch.BatchingOptimization;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.delay.DelayOptimization;
 
 /**
  * Optimization that can serve requests locally without synchronization with external storage until thresholds are not violated.

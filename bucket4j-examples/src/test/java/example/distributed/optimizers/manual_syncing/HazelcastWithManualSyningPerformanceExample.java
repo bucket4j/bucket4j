@@ -13,7 +13,7 @@ import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.distributed.AsyncBucketProxy;
 import io.github.bucket4j.distributed.BucketProxy;
-import io.github.bucket4j.distributed.proxy.optimization.manual.ManuallySyncingOptimization;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.manual.ManuallySyncingOptimization;
 import io.github.bucket4j.grid.hazelcast.Bucket4jHazelcast;
 import io.github.bucket4j.grid.hazelcast.HazelcastProxyManager;
 

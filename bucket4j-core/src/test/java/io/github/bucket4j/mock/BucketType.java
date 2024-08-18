@@ -8,7 +8,7 @@ import io.github.bucket4j.distributed.AsyncBucketProxy;
 import io.github.bucket4j.distributed.AsyncBucketProxyAdapter;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
-import io.github.bucket4j.distributed.proxy.optimization.Optimizations;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.Optimizations;
 import io.github.bucket4j.distributed.proxy.synchronization.batch.BatchingSynchronization;
 import io.github.bucket4j.local.LocalBucketBuilder;
 import io.github.bucket4j.local.ConcurrencyStrategy;

@@ -4,8 +4,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import io.github.bucket4j.distributed.proxy.Backend;
 import io.github.bucket4j.distributed.proxy.CommandExecutor;
-import io.github.bucket4j.distributed.proxy.optimization.NopeOptimizationListener;
-import io.github.bucket4j.distributed.proxy.optimization.batch.BatchingExecutor;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.NopeOptimizationListener;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.batch.BatchingExecutor;
 import io.github.bucket4j.distributed.proxy.synchronization.SynchronizationListener;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.RemoteCommand;

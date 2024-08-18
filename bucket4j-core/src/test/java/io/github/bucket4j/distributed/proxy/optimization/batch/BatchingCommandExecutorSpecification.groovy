@@ -4,9 +4,10 @@ import io.github.bucket4j.Bucket
 import io.github.bucket4j.BucketConfiguration
 import io.github.bucket4j.TokensInheritanceStrategy
 import io.github.bucket4j.distributed.proxy.ProxyManager
-import io.github.bucket4j.distributed.proxy.optimization.DefaultOptimizationListener
-import io.github.bucket4j.distributed.proxy.optimization.Optimization
-import io.github.bucket4j.distributed.proxy.optimization.Optimizations
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.DefaultOptimizationListener
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.Optimization
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.Optimizations
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.batch.BatchingOptimization
 import io.github.bucket4j.distributed.remote.MultiResult
 import io.github.bucket4j.distributed.remote.Request
 import io.github.bucket4j.distributed.remote.commands.MultiCommand
