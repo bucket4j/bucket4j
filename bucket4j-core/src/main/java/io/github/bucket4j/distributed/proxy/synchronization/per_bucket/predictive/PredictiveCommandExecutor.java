@@ -23,7 +23,7 @@ import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.proxy.AsyncCommandExecutor;
 import io.github.bucket4j.distributed.proxy.CommandExecutor;
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.DelayParameters;
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.OptimizationListener;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronizationListener;
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.PredictionParameters;
 import io.github.bucket4j.distributed.remote.*;
 import io.github.bucket4j.distributed.remote.commands.*;
@@ -39,7 +39,7 @@ class PredictiveCommandExecutor implements CommandExecutor, AsyncCommandExecutor
     private final CommandExecutor originalExecutor;
     private final AsyncCommandExecutor originalAsyncExecutor;
     private final DelayParameters delayParameters;
-    private final OptimizationListener listener;
+    private final BucketSynchronizationListener listener;
     private final TimeMeter timeMeter;
     private final Sampling sampling;
 
@@ -48,7 +48,7 @@ class PredictiveCommandExecutor implements CommandExecutor, AsyncCommandExecutor
     private long speculativelyConsumedByPredictionTokens;
 
     PredictiveCommandExecutor(CommandExecutor originalExecutor, DelayParameters delayParameters,
-                              PredictionParameters predictionParameters, OptimizationListener listener,
+                              PredictionParameters predictionParameters, BucketSynchronizationListener listener,
                               TimeMeter timeMeter) {
         this.originalExecutor = originalExecutor;
         this.originalAsyncExecutor = null;
@@ -59,7 +59,7 @@ class PredictiveCommandExecutor implements CommandExecutor, AsyncCommandExecutor
     }
 
     PredictiveCommandExecutor(AsyncCommandExecutor originalAsyncExecutor, DelayParameters delayParameters,
-                              PredictionParameters predictionParameters, OptimizationListener listener,
+                              PredictionParameters predictionParameters, BucketSynchronizationListener listener,
                               TimeMeter timeMeter) {
         this.originalExecutor = null;
         this.originalAsyncExecutor = originalAsyncExecutor;

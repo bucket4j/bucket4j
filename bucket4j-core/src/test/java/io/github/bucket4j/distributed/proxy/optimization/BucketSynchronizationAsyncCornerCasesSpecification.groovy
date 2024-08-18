@@ -5,14 +5,14 @@ import io.github.bucket4j.BucketConfiguration
 import io.github.bucket4j.distributed.AsyncBucketProxy
 import io.github.bucket4j.distributed.proxy.ClientSideConfig
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.DelayParameters
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.NopeOptimizationListener
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.Optimization
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.Optimizations
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.NopeSynchronizationListener
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronization
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronizations
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.PredictionParameters
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.delay.DelayOptimization
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.manual.ManuallySyncingOptimization
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.predictive.PredictiveOptimization
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.skiponzero.SkipSyncOnZeroOptimization
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.delay.DelayBucketSynchronization
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.manual.ManuallySyncingBucketSynchronization
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.predictive.PredictiveBucketSynchronization
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.skiponzero.SkipSyncOnZeroBucketSynchronization
 import io.github.bucket4j.mock.*
 import spock.lang.Shared
 import spock.lang.Specification
@@ -21,7 +21,7 @@ import spock.lang.Unroll
 import java.time.Duration
 import java.util.concurrent.CompletableFuture
 
-class OptimizationAsyncCornerCasesSpecification extends Specification {
+class BucketSynchronizationAsyncCornerCasesSpecification extends Specification {
 
     private static final DelayParameters delayParameters = new DelayParameters(1, Duration.ofNanos(1));
 
@@ -31,7 +31,7 @@ class OptimizationAsyncCornerCasesSpecification extends Specification {
 
     // https://github.com/bucket4j/bucket4j/issues/398
     @Unroll
-    def "should correctly handle exceptions when optimization is used #testNumber ProxyManagerMock"(int testNumber, Optimization optimization) {
+    def "should correctly handle exceptions when optimization is used #testNumber ProxyManagerMock"(int testNumber, BucketSynchronization optimization) {
         setup:
             ProxyManagerMock proxyManagerMock = new ProxyManagerMock(clock)
             BucketConfiguration configuration = BucketConfiguration.builder()
@@ -60,17 +60,17 @@ class OptimizationAsyncCornerCasesSpecification extends Specification {
 
         where:
             [testNumber, optimization] << [
-                    [1, Optimizations.batching()],
-                    [2, new DelayOptimization(delayParameters, NopeOptimizationListener.INSTANCE, clock)],
-                    [3, new PredictiveOptimization(PredictionParameters.createDefault(delayParameters), delayParameters, NopeOptimizationListener.INSTANCE, clock)],
-                    [4, new SkipSyncOnZeroOptimization(NopeOptimizationListener.INSTANCE, clock)],
-                    [5, new ManuallySyncingOptimization(NopeOptimizationListener.INSTANCE, clock)]
+                    [1, BucketSynchronizations.batching()],
+                    [2, new DelayBucketSynchronization(delayParameters, NopeSynchronizationListener.INSTANCE, clock)],
+                    [3, new PredictiveBucketSynchronization(PredictionParameters.createDefault(delayParameters), delayParameters, NopeSynchronizationListener.INSTANCE, clock)],
+                    [4, new SkipSyncOnZeroBucketSynchronization(NopeSynchronizationListener.INSTANCE, clock)],
+                    [5, new ManuallySyncingBucketSynchronization(NopeSynchronizationListener.INSTANCE, clock)]
         ]
     }
 
     // https://github.com/bucket4j/bucket4j/issues/398
     @Unroll
-    def "should correctly handle exceptions when optimization is used #testNumber CompareAndSwapBasedProxyManagerMock"(int testNumber, Optimization optimization) {
+    def "should correctly handle exceptions when optimization is used #testNumber CompareAndSwapBasedProxyManagerMock"(int testNumber, BucketSynchronization optimization) {
         setup:
             CompareAndSwapBasedProxyManagerMock proxyManagerMock = new CompareAndSwapBasedProxyManagerMock(ClientSideConfig.default.withClientClock(clock))
             BucketConfiguration configuration = BucketConfiguration.builder()
@@ -99,11 +99,11 @@ class OptimizationAsyncCornerCasesSpecification extends Specification {
 
         where:
         [testNumber, optimization] << [
-                [1, Optimizations.batching()],
-                [2, new DelayOptimization(delayParameters, NopeOptimizationListener.INSTANCE, clock)],
-                [3, new PredictiveOptimization(PredictionParameters.createDefault(delayParameters), delayParameters, NopeOptimizationListener.INSTANCE, clock)],
-                [4, new SkipSyncOnZeroOptimization(NopeOptimizationListener.INSTANCE, clock)],
-                [5, new ManuallySyncingOptimization(NopeOptimizationListener.INSTANCE, clock)]
+                [1, BucketSynchronizations.batching()],
+                [2, new DelayBucketSynchronization(delayParameters, NopeSynchronizationListener.INSTANCE, clock)],
+                [3, new PredictiveBucketSynchronization(PredictionParameters.createDefault(delayParameters), delayParameters, NopeSynchronizationListener.INSTANCE, clock)],
+                [4, new SkipSyncOnZeroBucketSynchronization(NopeSynchronizationListener.INSTANCE, clock)],
+                [5, new ManuallySyncingBucketSynchronization(NopeSynchronizationListener.INSTANCE, clock)]
         ]
     }
 

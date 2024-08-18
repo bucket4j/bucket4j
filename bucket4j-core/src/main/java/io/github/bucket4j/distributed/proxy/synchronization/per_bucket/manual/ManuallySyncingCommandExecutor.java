@@ -22,7 +22,7 @@ package io.github.bucket4j.distributed.proxy.synchronization.per_bucket.manual;
 import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.proxy.AsyncCommandExecutor;
 import io.github.bucket4j.distributed.proxy.CommandExecutor;
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.OptimizationListener;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronizationListener;
 import io.github.bucket4j.distributed.remote.*;
 import io.github.bucket4j.distributed.remote.commands.ConsumeIgnoringRateLimitsCommand;
 import io.github.bucket4j.distributed.remote.commands.CreateSnapshotCommand;
@@ -40,7 +40,7 @@ class ManuallySyncingCommandExecutor implements CommandExecutor, AsyncCommandExe
 
     private final CommandExecutor originalExecutor;
     private final AsyncCommandExecutor originalAsyncExecutor;
-    private final OptimizationListener listener;
+    private final BucketSynchronizationListener listener;
     private final TimeMeter timeMeter;
 
     private RemoteBucketState state;
@@ -52,14 +52,14 @@ class ManuallySyncingCommandExecutor implements CommandExecutor, AsyncCommandExe
     private final ReentrantLock remoteExecutionLock = new ReentrantLock();
     private CompletableFuture<?> inProgressSynchronizationFuture = CompletableFuture.completedFuture(null);
 
-    ManuallySyncingCommandExecutor(CommandExecutor originalExecutor, OptimizationListener listener, TimeMeter timeMeter) {
+    ManuallySyncingCommandExecutor(CommandExecutor originalExecutor, BucketSynchronizationListener listener, TimeMeter timeMeter) {
         this.originalExecutor = originalExecutor;
         this.originalAsyncExecutor = null;
         this.listener = listener;
         this.timeMeter = timeMeter;
     }
 
-    ManuallySyncingCommandExecutor(AsyncCommandExecutor originalAsyncExecutor, OptimizationListener listener, TimeMeter timeMeter) {
+    ManuallySyncingCommandExecutor(AsyncCommandExecutor originalAsyncExecutor, BucketSynchronizationListener listener, TimeMeter timeMeter) {
         this.originalExecutor = null;
         this.originalAsyncExecutor = originalAsyncExecutor;
         this.listener = listener;

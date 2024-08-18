@@ -23,11 +23,10 @@ import com.github.rollingmetrics.histogram.hdr.RollingHdrHistogram;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.DefaultOptimizationListener;
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.Optimization;
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.Optimizations;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.DefaultSynchronizationListener;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronization;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronizations;
 import io.github.bucket4j.redis.lettuce.Bucket4jLettuce;
-import io.github.bucket4j.redis.lettuce.cas.LettuceBasedProxyManager;
 import io.lettuce.core.RedisClient;
 
 public class RedisBatchingExample {
@@ -86,12 +85,12 @@ public class RedisBatchingExample {
         AtomicLong totalMergedRequestCount = new AtomicLong();
         AtomicLong totalSkippedRequestCount = new AtomicLong();
 
-        DefaultOptimizationListener optimizationListener = new DefaultOptimizationListener();
-        Optimization optimization = Optimizations.batching()
+        DefaultSynchronizationListener optimizationListener = new DefaultSynchronizationListener();
+        BucketSynchronization bucketSynchronization = BucketSynchronizations.batching()
             .withListener(optimizationListener);
 
         Bucket bucket = proxyManager.builder()
-                .withOptimization(optimization)
+                .withOptimization(bucketSynchronization)
                 .build("13", () -> configuration);
 
         Timer statLogTimer = new Timer();

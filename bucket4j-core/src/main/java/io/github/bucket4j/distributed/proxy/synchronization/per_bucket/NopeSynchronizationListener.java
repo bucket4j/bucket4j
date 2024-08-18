@@ -19,32 +19,18 @@
  */
 package io.github.bucket4j.distributed.proxy.synchronization.per_bucket;
 
-import java.util.concurrent.atomic.AtomicLong;
+public class NopeSynchronizationListener implements BucketSynchronizationListener {
 
-/**
- * The simple listener that just stores all events as AtomicLong counters and provides getters for them.
- */
-public class DefaultOptimizationListener implements OptimizationListener {
-
-    private final AtomicLong mergeCount = new AtomicLong();
-    private final AtomicLong skipCount = new AtomicLong();
+    public static final NopeSynchronizationListener INSTANCE = new NopeSynchronizationListener();
 
     @Override
     public void incrementMergeCount(int count) {
-        mergeCount.addAndGet(count);
+        // do nothing
     }
 
     @Override
     public void incrementSkipCount(int count) {
-        skipCount.addAndGet(count);
-    }
-
-    public long getMergeCount() {
-        return mergeCount.get();
-    }
-
-    public long getSkipCount() {
-        return skipCount.get();
+        // do nothing
     }
 
 }

@@ -20,12 +20,12 @@
 package io.github.bucket4j.distributed.proxy.synchronization.per_bucket;
 
 import io.github.bucket4j.BucketExceptions;
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.predictive.PredictiveOptimization;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.predictive.PredictiveBucketSynchronization;
 
 import java.time.Duration;
 
 /**
- * Specifies the parameters for quality of distributes consumption rate prediction that are used by {@link PredictiveOptimization}
+ * Specifies the parameters for quality of distributes consumption rate prediction that are used by {@link PredictiveBucketSynchronization}
  */
 public class PredictionParameters {
 

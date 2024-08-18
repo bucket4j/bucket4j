@@ -23,7 +23,7 @@ import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.proxy.AsyncCommandExecutor;
 import io.github.bucket4j.distributed.proxy.CommandExecutor;
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.DelayParameters;
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.OptimizationListener;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronizationListener;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.MultiResult;
 import io.github.bucket4j.distributed.remote.MutableBucketEntry;
@@ -45,7 +45,7 @@ class DelayedCommandExecutor implements CommandExecutor, AsyncCommandExecutor {
     private final CommandExecutor originalExecutor;
     private final AsyncCommandExecutor originalAsyncExecutor;
     private final DelayParameters delayParameters;
-    private final OptimizationListener listener;
+    private final BucketSynchronizationListener listener;
     private final TimeMeter timeMeter;
 
     private RemoteBucketState state;
@@ -53,7 +53,7 @@ class DelayedCommandExecutor implements CommandExecutor, AsyncCommandExecutor {
     private long lastSyncTimeNanos;
     private long postponedToConsumeTokens;
 
-    DelayedCommandExecutor(CommandExecutor originalExecutor, DelayParameters delayParameters, OptimizationListener listener, TimeMeter timeMeter) {
+    DelayedCommandExecutor(CommandExecutor originalExecutor, DelayParameters delayParameters, BucketSynchronizationListener listener, TimeMeter timeMeter) {
         this.originalExecutor = originalExecutor;
         this.originalAsyncExecutor = null;
         this.delayParameters = delayParameters;
@@ -61,7 +61,7 @@ class DelayedCommandExecutor implements CommandExecutor, AsyncCommandExecutor {
         this.timeMeter = timeMeter;
     }
 
-    DelayedCommandExecutor(AsyncCommandExecutor originalAsyncExecutor, DelayParameters delayParameters, OptimizationListener listener, TimeMeter timeMeter) {
+    DelayedCommandExecutor(AsyncCommandExecutor originalAsyncExecutor, DelayParameters delayParameters, BucketSynchronizationListener listener, TimeMeter timeMeter) {
         this.originalExecutor = null;
         this.originalAsyncExecutor = originalAsyncExecutor;
         this.delayParameters = delayParameters;

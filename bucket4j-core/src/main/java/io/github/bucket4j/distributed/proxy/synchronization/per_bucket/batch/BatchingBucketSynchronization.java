@@ -22,26 +22,26 @@ package io.github.bucket4j.distributed.proxy.synchronization.per_bucket.batch;
 
 import io.github.bucket4j.distributed.proxy.AsyncCommandExecutor;
 import io.github.bucket4j.distributed.proxy.CommandExecutor;
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.Optimization;
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.OptimizationListener;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronization;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronizationListener;
 
 import java.util.Objects;
 
 /**
  * Optimization that combines independent requests to same bucket into batches in order to reduce request count to remote storage.
  */
-public class BatchingOptimization implements Optimization {
+public class BatchingBucketSynchronization implements BucketSynchronization {
 
-    private final OptimizationListener listener;
+    private final BucketSynchronizationListener listener;
 
-    public BatchingOptimization(OptimizationListener listener) {
+    public BatchingBucketSynchronization(BucketSynchronizationListener listener) {
         this.listener = Objects.requireNonNull(listener);
     }
 
     @Override
-    public Optimization withListener(OptimizationListener listener) {
+    public BucketSynchronization withListener(BucketSynchronizationListener listener) {
         Objects.requireNonNull(listener);
-        return new BatchingOptimization(listener);
+        return new BatchingBucketSynchronization(listener);
     }
 
     @Override

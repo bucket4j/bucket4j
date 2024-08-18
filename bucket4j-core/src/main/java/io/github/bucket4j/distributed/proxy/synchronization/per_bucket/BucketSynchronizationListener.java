@@ -22,17 +22,17 @@ package io.github.bucket4j.distributed.proxy.synchronization.per_bucket;
 /**
  * Monitoring listener for applied optimizations
  */
-public interface OptimizationListener {
+public interface BucketSynchronizationListener {
 
     /**
-     * Creates new instance of {@link DefaultOptimizationListener}
+     * Creates new instance of {@link DefaultSynchronizationListener}
      *
-     * @return new instance of {@link DefaultOptimizationListener}
+     * @return new instance of {@link DefaultSynchronizationListener}
      *
-     * @see DefaultOptimizationListener
+     * @see DefaultSynchronizationListener
      */
-    static OptimizationListener createDefault() {
-        return new DefaultOptimizationListener();
+    static BucketSynchronizationListener createDefault() {
+        return new DefaultSynchronizationListener();
     }
 
     /**

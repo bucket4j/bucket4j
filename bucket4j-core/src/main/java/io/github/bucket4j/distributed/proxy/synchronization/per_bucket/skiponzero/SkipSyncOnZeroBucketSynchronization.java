@@ -25,34 +25,34 @@ import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.proxy.AsyncCommandExecutor;
 import io.github.bucket4j.distributed.proxy.CommandExecutor;
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.DelayParameters;
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.Optimization;
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.OptimizationListener;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronization;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronizationListener;
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.batch.AsyncBatchingExecutor;
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.batch.BatchingExecutor;
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.batch.BatchingOptimization;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.batch.BatchingBucketSynchronization;
 
 /**
  * Optimization that can serve requests locally without synchronization with external storage when it detects that there is no tokens in remote storage,
  * in such case synchronization with storage is being postponed to proposed refill of first token.
- * This optimization is based on top of {@link BatchingOptimization}, so multiple parallel request to same bucket are grouped.
+ * This optimization is based on top of {@link BatchingBucketSynchronization}, so multiple parallel request to same bucket are grouped.
  *
  * <p>Usage of this optimization can lead to temporal under-consumption in case of tokens are being added to bucket via API like {@link Bucket#addTokens(long)} or {@link Bucket#reset()}.
  *
  * @see DelayParameters
  */
-public class SkipSyncOnZeroOptimization implements Optimization {
+public class SkipSyncOnZeroBucketSynchronization implements BucketSynchronization {
 
-    private final OptimizationListener listener;
+    private final BucketSynchronizationListener listener;
     private final TimeMeter timeMeter;
 
-    public SkipSyncOnZeroOptimization(OptimizationListener listener, TimeMeter timeMeter) {
+    public SkipSyncOnZeroBucketSynchronization(BucketSynchronizationListener listener, TimeMeter timeMeter) {
         this.timeMeter = timeMeter;
         this.listener = listener;
     }
 
     @Override
-    public Optimization withListener(OptimizationListener listener) {
-        return new SkipSyncOnZeroOptimization(listener, timeMeter);
+    public BucketSynchronization withListener(BucketSynchronizationListener listener) {
+        return new SkipSyncOnZeroBucketSynchronization(listener, timeMeter);
     }
 
     @Override

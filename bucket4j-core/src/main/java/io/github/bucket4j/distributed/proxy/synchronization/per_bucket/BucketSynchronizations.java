@@ -20,29 +20,29 @@
 package io.github.bucket4j.distributed.proxy.synchronization.per_bucket;
 
 import io.github.bucket4j.TimeMeter;
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.batch.BatchingOptimization;
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.predictive.PredictiveOptimization;
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.delay.DelayOptimization;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.batch.BatchingBucketSynchronization;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.predictive.PredictiveBucketSynchronization;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.delay.DelayBucketSynchronization;
 
 /**
  * Provides factory methods for all request optimizations that are built-in into Bucket4j library.
  *
- * @see BatchingOptimization
- * @see DelayOptimization
- * @see PredictiveOptimization
- * @see OptimizationListener
+ * @see BatchingBucketSynchronization
+ * @see DelayBucketSynchronization
+ * @see PredictiveBucketSynchronization
+ * @see BucketSynchronizationListener
  */
-public class Optimizations {
+public class BucketSynchronizations {
 
     /**
      * Creates optimization that combines independent requests to same bucket into batches in order to reduce request count to remote storage.
      *
-     * @return new instance of {@link BatchingOptimization}
+     * @return new instance of {@link BatchingBucketSynchronization}
      *
-     * @see BatchingOptimization
+     * @see BatchingBucketSynchronization
      */
-    public static Optimization batching() {
-        return new BatchingOptimization(NopeOptimizationListener.INSTANCE);
+    public static BucketSynchronization batching() {
+        return new BatchingBucketSynchronization(NopeSynchronizationListener.INSTANCE);
     }
 
     /**
@@ -50,29 +50,29 @@ public class Optimizations {
      *
      * @param delayParameters thresholds that control whether request can be served locally without synchronization with external storage
      *
-     * @return new instance of {@link DelayOptimization}
+     * @return new instance of {@link DelayBucketSynchronization}
      *
-     * @see DelayOptimization
+     * @see DelayBucketSynchronization
      */
-    public static Optimization delaying(DelayParameters delayParameters) {
-        return new DelayOptimization(delayParameters, NopeOptimizationListener.INSTANCE, TimeMeter.SYSTEM_MILLISECONDS);
+    public static BucketSynchronization delaying(DelayParameters delayParameters) {
+        return new DelayBucketSynchronization(delayParameters, NopeSynchronizationListener.INSTANCE, TimeMeter.SYSTEM_MILLISECONDS);
     }
 
     /**
      * Creates optimization that can serve requests locally without synchronization with external storage until thresholds are not violated,
-     * and additionally tries to predict aggregated consumption rate in whole cluster in order to reduce the risk of overconsumption that caused by {@link DelayOptimization}.
+     * and additionally tries to predict aggregated consumption rate in whole cluster in order to reduce the risk of overconsumption that caused by {@link DelayBucketSynchronization}.
      *
      * @param delayParameters thresholds that control whether request can be served locally without synchronization with external storage
      * @param predictionParameters parameters that control the quality of prediction of distributed consumption rate
      *
-     * @return new instance of {@link PredictiveOptimization}
+     * @return new instance of {@link PredictiveBucketSynchronization}
      *
-     * @see PredictiveOptimization
+     * @see PredictiveBucketSynchronization
      * @see PredictionParameters
      * @see DelayParameters
      */
-    public static Optimization predicting(DelayParameters delayParameters, PredictionParameters predictionParameters) {
-        return new PredictiveOptimization(predictionParameters, delayParameters, NopeOptimizationListener.INSTANCE, TimeMeter.SYSTEM_MILLISECONDS);
+    public static BucketSynchronization predicting(DelayParameters delayParameters, PredictionParameters predictionParameters) {
+        return new PredictiveBucketSynchronization(predictionParameters, delayParameters, NopeSynchronizationListener.INSTANCE, TimeMeter.SYSTEM_MILLISECONDS);
     }
 
     /**
@@ -80,14 +80,14 @@ public class Optimizations {
      *
      * @param delayParameters thresholds that control whether request can be served locally without synchronization with external storage
      *
-     * @return new instance of {@link PredictiveOptimization}
+     * @return new instance of {@link PredictiveBucketSynchronization}
      *
-     * @see PredictiveOptimization
+     * @see PredictiveBucketSynchronization
      * @see PredictionParameters
      */
-    public static Optimization predicting(DelayParameters delayParameters) {
+    public static BucketSynchronization predicting(DelayParameters delayParameters) {
         PredictionParameters defaultPrediction = PredictionParameters.createDefault(delayParameters);
-        return new PredictiveOptimization(defaultPrediction, delayParameters, NopeOptimizationListener.INSTANCE, TimeMeter.SYSTEM_MILLISECONDS);
+        return new PredictiveBucketSynchronization(defaultPrediction, delayParameters, NopeSynchronizationListener.INSTANCE, TimeMeter.SYSTEM_MILLISECONDS);
     }
 
 }

@@ -3,11 +3,11 @@ package io.github.bucket4j.distributed.proxy.optimization.predictive
 
 import io.github.bucket4j.Bucket
 import io.github.bucket4j.BucketConfiguration
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.DefaultOptimizationListener
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.DefaultSynchronizationListener
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.DelayParameters
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.Optimization
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronization
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.PredictionParameters
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.predictive.PredictiveOptimization
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.predictive.PredictiveBucketSynchronization
 import io.github.bucket4j.mock.ProxyManagerMock
 import io.github.bucket4j.mock.TimeMeterMock
 import spock.lang.Specification
@@ -18,13 +18,13 @@ class PredictiveCommandExecutorSpecification extends Specification {
 
     private TimeMeterMock clock = new TimeMeterMock()
     private ProxyManagerMock proxyManager = new ProxyManagerMock(clock)
-    private DefaultOptimizationListener listener = new DefaultOptimizationListener();
+    private DefaultSynchronizationListener listener = new DefaultSynchronizationListener();
     private BucketConfiguration configuration = BucketConfiguration.builder()
         .addLimit({it.capacity(100).refillGreedy(100, Duration.ofMillis(1000))})
         .build()
     private DelayParameters delay = new DelayParameters(20, Duration.ofMillis(500))
     private PredictionParameters prediction = PredictionParameters.createDefault(delay)
-    private Optimization optimization = new PredictiveOptimization(prediction, delay, listener, clock)
+    private BucketSynchronization optimization = new PredictiveBucketSynchronization(prediction, delay, listener, clock)
     private Bucket optimizedBucket = proxyManager.builder()
         .withOptimization(optimization)
         .build(1L, () -> configuration)

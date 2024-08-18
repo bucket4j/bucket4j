@@ -29,9 +29,9 @@ import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.AsyncBucketProxy;
 import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.DefaultOptimizationListener;
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.Optimization;
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.skiponzero.SkipSyncOnZeroOptimization;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.DefaultSynchronizationListener;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronization;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.skiponzero.SkipSyncOnZeroBucketSynchronization;
 import io.github.bucket4j.redis.lettuce.Bucket4jLettuce;
 import io.lettuce.core.RedisClient;
 
@@ -89,12 +89,12 @@ public class RedisSkipSyncOnZeroExample {
         AtomicLong totalMergedRequestCount = new AtomicLong();
         AtomicLong totalSkippedRequestCount = new AtomicLong();
 
-        DefaultOptimizationListener optimizationListener = new DefaultOptimizationListener();
-        Optimization optimization = new SkipSyncOnZeroOptimization(optimizationListener, TimeMeter.SYSTEM_MILLISECONDS)
+        DefaultSynchronizationListener optimizationListener = new DefaultSynchronizationListener();
+        BucketSynchronization bucketSynchronization = new SkipSyncOnZeroBucketSynchronization(optimizationListener, TimeMeter.SYSTEM_MILLISECONDS)
             .withListener(optimizationListener);
 
         Bucket bucket = proxyManager.builder()
-                .withOptimization(optimization)
+                .withOptimization(bucketSynchronization)
                 .build("13", () -> configuration);
 
         Timer statLogTimer = new Timer();
@@ -156,12 +156,12 @@ public class RedisSkipSyncOnZeroExample {
 
         AtomicLong totalMergedRequestCount = new AtomicLong();
         AtomicLong totalSkippedRequestCount = new AtomicLong();
-        DefaultOptimizationListener optimizationListener = new DefaultOptimizationListener();
-        Optimization optimization = new SkipSyncOnZeroOptimization(optimizationListener, TimeMeter.SYSTEM_MILLISECONDS)
+        DefaultSynchronizationListener optimizationListener = new DefaultSynchronizationListener();
+        BucketSynchronization bucketSynchronization = new SkipSyncOnZeroBucketSynchronization(optimizationListener, TimeMeter.SYSTEM_MILLISECONDS)
             .withListener(optimizationListener);
 
         AsyncBucketProxy bucket = proxyManager.asAsync().builder()
-                .withOptimization(optimization)
+                .withOptimization(bucketSynchronization)
                 .build("13", () -> CompletableFuture.completedFuture(configuration));
 
         // We need a backpressure for ougoing work because it obviously that OOM can be happen in asycnhrouous bucket mode

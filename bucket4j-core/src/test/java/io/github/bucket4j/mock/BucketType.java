@@ -8,7 +8,7 @@ import io.github.bucket4j.distributed.AsyncBucketProxy;
 import io.github.bucket4j.distributed.AsyncBucketProxyAdapter;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.Optimizations;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronizations;
 import io.github.bucket4j.distributed.proxy.synchronization.batch.BatchingSynchronization;
 import io.github.bucket4j.local.LocalBucketBuilder;
 import io.github.bucket4j.local.ConcurrencyStrategy;
@@ -148,7 +148,7 @@ public enum BucketType {
         public Bucket createBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
             ProxyManagerMock<Integer> proxyManager = new ProxyManagerMock<>(timeMeter);
             return proxyManager.builder()
-                .withOptimization(Optimizations.batching())
+                .withOptimization(BucketSynchronizations.batching())
                 .build(42, () -> configuration);
         }
 
@@ -156,7 +156,7 @@ public enum BucketType {
         public Bucket createBucket(BucketConfiguration configuration, TimeMeter timeMeter, BucketListener listener) {
             ProxyManagerMock<Integer> proxyManager = new ProxyManagerMock<>(timeMeter);
             return proxyManager.builder()
-                .withOptimization(Optimizations.batching())
+                .withOptimization(BucketSynchronizations.batching())
                 .withListener(listener)
                 .build(42, () -> configuration);
         }
@@ -170,7 +170,7 @@ public enum BucketType {
         public AsyncBucketProxy createAsyncBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
             ProxyManagerMock<Integer> proxyManager = new ProxyManagerMock<>(timeMeter);
             return proxyManager.asAsync().builder()
-                    .withOptimization(Optimizations.batching())
+                    .withOptimization(BucketSynchronizations.batching())
                     .build(42, () -> CompletableFuture.completedFuture(configuration));
         }
     },
@@ -182,7 +182,7 @@ public enum BucketType {
                 .withSynchronization(new BatchingSynchronization())
             );
             return proxyManager.builder()
-                .withOptimization(Optimizations.batching())
+                .withOptimization(BucketSynchronizations.batching())
                 .build(42, () -> configuration);
         }
 
@@ -209,7 +209,7 @@ public enum BucketType {
                 .withSynchronization(new BatchingSynchronization())
             );
             return proxyManager.asAsync().builder()
-                .withOptimization(Optimizations.batching())
+                .withOptimization(BucketSynchronizations.batching())
                 .build(42, () -> CompletableFuture.completedFuture(configuration));
         }
     },

@@ -23,36 +23,36 @@ package io.github.bucket4j.distributed.proxy.synchronization.per_bucket.delay;
 import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.proxy.AsyncCommandExecutor;
 import io.github.bucket4j.distributed.proxy.CommandExecutor;
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.Optimization;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronization;
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.DelayParameters;
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.OptimizationListener;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronizationListener;
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.batch.AsyncBatchingExecutor;
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.batch.BatchingExecutor;
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.batch.BatchingOptimization;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.batch.BatchingBucketSynchronization;
 
 /**
  * Optimization that can serve requests locally without synchronization with external storage until thresholds are not violated.
- * This optimization is based on top of {@link BatchingOptimization}, so multiple parallel request to same bucket are grouped.
+ * This optimization is based on top of {@link BatchingBucketSynchronization}, so multiple parallel request to same bucket are grouped.
  *
  * <p>Usage of this optimization can lead to temporal overconsumption because the synchronization with external storage is performed periodically when thresholds are violated.
  *
  * @see DelayParameters
  */
-public class DelayOptimization implements Optimization {
+public class DelayBucketSynchronization implements BucketSynchronization {
 
     private final DelayParameters delayParameters;
-    private final OptimizationListener listener;
+    private final BucketSynchronizationListener listener;
     private final TimeMeter timeMeter;
 
-    public DelayOptimization(DelayParameters delayParameters, OptimizationListener listener, TimeMeter timeMeter) {
+    public DelayBucketSynchronization(DelayParameters delayParameters, BucketSynchronizationListener listener, TimeMeter timeMeter) {
         this.delayParameters = delayParameters;
         this.timeMeter = timeMeter;
         this.listener = listener;
     }
 
     @Override
-    public Optimization withListener(OptimizationListener listener) {
-        return new DelayOptimization(delayParameters, listener, timeMeter);
+    public BucketSynchronization withListener(BucketSynchronizationListener listener) {
+        return new DelayBucketSynchronization(delayParameters, listener, timeMeter);
     }
 
     @Override

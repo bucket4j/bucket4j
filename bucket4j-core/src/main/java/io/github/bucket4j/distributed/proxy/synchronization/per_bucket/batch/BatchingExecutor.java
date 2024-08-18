@@ -21,7 +21,7 @@
 package io.github.bucket4j.distributed.proxy.synchronization.per_bucket.batch;
 
 import io.github.bucket4j.distributed.proxy.CommandExecutor;
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.OptimizationListener;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronizationListener;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.remote.commands.MultiCommand;
@@ -37,7 +37,7 @@ public class BatchingExecutor implements CommandExecutor {
     private final BatchHelper<RemoteCommand<?>, CommandResult<?>, MultiCommand, CommandResult<MultiResult>> batchingHelper;
     private final CommandExecutor wrappedExecutor;
 
-    public BatchingExecutor(CommandExecutor originalExecutor, OptimizationListener listener) {
+    public BatchingExecutor(CommandExecutor originalExecutor, BucketSynchronizationListener listener) {
         this.wrappedExecutor = originalExecutor;
         Function<List<RemoteCommand<?>>, MultiCommand> taskCombiner = new Function<>() {
             @Override

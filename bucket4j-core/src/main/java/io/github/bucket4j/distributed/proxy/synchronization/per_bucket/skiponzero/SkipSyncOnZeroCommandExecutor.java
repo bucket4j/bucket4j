@@ -26,7 +26,7 @@ import java.util.concurrent.CompletableFuture;
 import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.proxy.AsyncCommandExecutor;
 import io.github.bucket4j.distributed.proxy.CommandExecutor;
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.OptimizationListener;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronizationListener;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.MultiResult;
 import io.github.bucket4j.distributed.remote.MutableBucketEntry;
@@ -42,21 +42,21 @@ class SkipSyncOnZeroCommandExecutor implements CommandExecutor, AsyncCommandExec
 
     private final CommandExecutor originalExecutor;
     private final AsyncCommandExecutor originalAsyncExecutor;
-    private final OptimizationListener listener;
+    private final BucketSynchronizationListener listener;
     private final TimeMeter timeMeter;
 
     private RemoteBucketState state;
 
     private long lastSyncTimeNanos;
 
-    SkipSyncOnZeroCommandExecutor(CommandExecutor originalExecutor, OptimizationListener listener, TimeMeter timeMeter) {
+    SkipSyncOnZeroCommandExecutor(CommandExecutor originalExecutor, BucketSynchronizationListener listener, TimeMeter timeMeter) {
         this.originalExecutor = originalExecutor;
         this.originalAsyncExecutor = null;
         this.listener = listener;
         this.timeMeter = timeMeter;
     }
 
-    SkipSyncOnZeroCommandExecutor(AsyncCommandExecutor originalAsyncExecutor, OptimizationListener listener, TimeMeter timeMeter) {
+    SkipSyncOnZeroCommandExecutor(AsyncCommandExecutor originalAsyncExecutor, BucketSynchronizationListener listener, TimeMeter timeMeter) {
         this.originalExecutor = null;
         this.originalAsyncExecutor = originalAsyncExecutor;
         this.listener = listener;

@@ -22,17 +22,16 @@ package io.github.bucket4j.distributed.proxy;
 
 import io.github.bucket4j.*;
 import io.github.bucket4j.distributed.BucketProxy;
-import io.github.bucket4j.distributed.OptimizationController;
+import io.github.bucket4j.distributed.BucketOptimizationController;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.commands.*;
 
 import java.time.Duration;
 import java.util.Objects;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
-public class DefaultBucketProxy extends AbstractBucket implements BucketProxy, OptimizationController {
+public class DefaultBucketProxy extends AbstractBucket implements BucketProxy, BucketOptimizationController {
 
     private final CommandExecutor commandExecutor;
     private final Supplier<BucketConfiguration> configurationSupplier;
@@ -44,7 +43,7 @@ public class DefaultBucketProxy extends AbstractBucket implements BucketProxy, O
     }
 
     @Override
-    public OptimizationController getOptimizationController() {
+    public BucketOptimizationController getOptimizationController() {
         return this;
     }
 

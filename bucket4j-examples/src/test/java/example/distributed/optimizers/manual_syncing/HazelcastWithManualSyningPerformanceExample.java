@@ -13,7 +13,7 @@ import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.distributed.AsyncBucketProxy;
 import io.github.bucket4j.distributed.BucketProxy;
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.manual.ManuallySyncingOptimization;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.manual.ManuallySyncingBucketSynchronization;
 import io.github.bucket4j.grid.hazelcast.Bucket4jHazelcast;
 import io.github.bucket4j.grid.hazelcast.HazelcastProxyManager;
 
@@ -94,7 +94,7 @@ public class HazelcastWithManualSyningPerformanceExample {
                 .build();
 
         BucketProxy bucket = proxyManager.builder()
-                .withOptimization(new ManuallySyncingOptimization())
+                .withOptimization(new ManuallySyncingBucketSynchronization())
                 .build("13", () -> configuration);
         // Fetching available tokens is fully enough init bucket in storage
         bucket.getAvailableTokens();
@@ -164,7 +164,7 @@ public class HazelcastWithManualSyningPerformanceExample {
                 .build();
 
         AsyncBucketProxy bucket = proxyManager.asAsync().builder()
-                .withOptimization(new ManuallySyncingOptimization())
+                .withOptimization(new ManuallySyncingBucketSynchronization())
                 .build("13", () -> CompletableFuture.completedFuture(configuration));
         bucket.getAvailableTokens().join();
 

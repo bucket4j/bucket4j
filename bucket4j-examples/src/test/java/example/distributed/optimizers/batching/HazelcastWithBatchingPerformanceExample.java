@@ -10,7 +10,7 @@ import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.distributed.AsyncBucketProxy;
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.Optimizations;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronizations;
 import io.github.bucket4j.grid.hazelcast.Bucket4jHazelcast;
 import io.github.bucket4j.grid.hazelcast.HazelcastProxyManager;
 import org.gridkit.nanocloud.Cloud;
@@ -90,7 +90,7 @@ public class HazelcastWithBatchingPerformanceExample {
                 .build();
 
         Bucket bucket = proxyManager.builder()
-                .withOptimization(Optimizations.batching())
+                .withOptimization(BucketSynchronizations.batching())
                 .build("13", () -> configuration);
 
         Timer statLogTimer = new Timer();
@@ -141,7 +141,7 @@ public class HazelcastWithBatchingPerformanceExample {
             .build();
 
         AsyncBucketProxy bucket = proxyManager.asAsync().builder()
-                .withOptimization(Optimizations.batching())
+                .withOptimization(BucketSynchronizations.batching())
                 .build("13", () -> CompletableFuture.completedFuture(configuration));
 
         // We need a backpressure for ougoing work because it obviously that OOM can be happen in asycnhrouous bucket mode

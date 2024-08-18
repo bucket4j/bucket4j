@@ -28,7 +28,7 @@ import java.util.concurrent.CompletableFuture;
 import static io.github.bucket4j.AbstractBucket.completedFuture;
 
 @Experimental
-public class AsyncBucketProxyAdapter implements AsyncBucketProxy, AsyncOptimizationController {
+public class AsyncBucketProxyAdapter implements AsyncBucketProxy, AsyncBucketOptimizationController {
 
     private final Bucket target;
 
@@ -185,7 +185,7 @@ public class AsyncBucketProxyAdapter implements AsyncBucketProxy, AsyncOptimizat
     }
 
     @Override
-    public AsyncOptimizationController getOptimizationController() {
+    public AsyncBucketOptimizationController getOptimizationController() {
         return this;
     }
 

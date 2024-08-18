@@ -23,19 +23,19 @@ package io.github.bucket4j.distributed.proxy.synchronization.per_bucket.predicti
 import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.proxy.AsyncCommandExecutor;
 import io.github.bucket4j.distributed.proxy.CommandExecutor;
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.Optimization;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronization;
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.DelayParameters;
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.OptimizationListener;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronizationListener;
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.PredictionParameters;
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.batch.AsyncBatchingExecutor;
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.batch.BatchingExecutor;
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.batch.BatchingOptimization;
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.delay.DelayOptimization;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.batch.BatchingBucketSynchronization;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.delay.DelayBucketSynchronization;
 
 /**
  * Optimization that can serve requests locally without synchronization with external storage until thresholds are not violated.
- * This optimization is based on top of {@link BatchingOptimization} and {@link DelayOptimization},
- * and in additionally this optimization tries to predict aggregated consumption rate in whole cluster in order to reduce the risk of overconsumption that caused by {@link DelayOptimization}.
+ * This optimization is based on top of {@link BatchingBucketSynchronization} and {@link DelayBucketSynchronization},
+ * and in additionally this optimization tries to predict aggregated consumption rate in whole cluster in order to reduce the risk of overconsumption that caused by {@link DelayBucketSynchronization}.
  *
  * <p>Usage of this optimization can lead to temporal over-consumption because the synchronization with external storage is performed periodically when thresholds are violated,
  * as well as under-consumption in case of the wrong prediction of aggregated consumption rate.
@@ -43,14 +43,14 @@ import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.delay.Del
  * @see DelayParameters
  * @see PredictionParameters
  */
-public class PredictiveOptimization implements Optimization {
+public class PredictiveBucketSynchronization implements BucketSynchronization {
 
     private final DelayParameters delayParameters;
     private final PredictionParameters predictionParameters;
-    private final OptimizationListener listener;
+    private final BucketSynchronizationListener listener;
     private final TimeMeter timeMeter;
 
-    public PredictiveOptimization(PredictionParameters predictionParameters, DelayParameters delayParameters, OptimizationListener listener, TimeMeter timeMeter) {
+    public PredictiveBucketSynchronization(PredictionParameters predictionParameters, DelayParameters delayParameters, BucketSynchronizationListener listener, TimeMeter timeMeter) {
         this.delayParameters = delayParameters;
         this.predictionParameters = predictionParameters;
         this.listener = listener;
@@ -58,8 +58,8 @@ public class PredictiveOptimization implements Optimization {
     }
 
     @Override
-    public Optimization withListener(OptimizationListener listener) {
-        return new PredictiveOptimization(predictionParameters, delayParameters, listener, timeMeter);
+    public BucketSynchronization withListener(BucketSynchronizationListener listener) {
+        return new PredictiveBucketSynchronization(predictionParameters, delayParameters, listener, timeMeter);
     }
 
     @Override

@@ -21,7 +21,7 @@ package io.github.bucket4j.distributed;
 
 import io.github.bucket4j.*;
 import io.github.bucket4j.distributed.proxy.RemoteAsyncBucketBuilder;
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.Optimization;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronization;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -311,11 +311,11 @@ public interface AsyncBucketProxy {
      * Returns optimization controller for this proxy.
      *
      * <p>
-     * This method is actual only if an optimization was applied during bucket construction via {@link RemoteAsyncBucketBuilder#withOptimization(Optimization)}
+     * This method is actual only if an optimization was applied during bucket construction via {@link RemoteAsyncBucketBuilder#withOptimization(BucketSynchronization)}
      * otherwise returned controller will do nothing.
      *
      * @return optimization controller for this proxy
      */
-    AsyncOptimizationController getOptimizationController();
+    AsyncBucketOptimizationController getOptimizationController();
 
 }

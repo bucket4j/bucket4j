@@ -20,15 +20,15 @@
 package io.github.bucket4j.distributed.proxy.synchronization.per_bucket;
 
 import io.github.bucket4j.BucketExceptions;
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.delay.DelayOptimization;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.delay.DelayBucketSynchronization;
 
 import java.time.Duration;
 
 /**
- * Describes parameters for {@link DelayOptimization}.
+ * Describes parameters for {@link DelayBucketSynchronization}.
  *
- * @see DelayOptimization
- * @see Optimizations#delaying(DelayParameters)
+ * @see DelayBucketSynchronization
+ * @see BucketSynchronizations#delaying(DelayParameters)
  */
 public class DelayParameters {
 

@@ -26,7 +26,7 @@ import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.BucketListener;
 import io.github.bucket4j.TokensInheritanceStrategy;
 import io.github.bucket4j.distributed.BucketProxy;
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.Optimization;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronization;
 
 public class RemoteBucketBuilderView<K, KeyOld> implements RemoteBucketBuilder<K> {
     private final RemoteBucketBuilder<KeyOld> target;
@@ -38,8 +38,8 @@ public class RemoteBucketBuilderView<K, KeyOld> implements RemoteBucketBuilder<K
     }
 
     @Override
-    public RemoteBucketBuilder<K> withOptimization(Optimization optimization) {
-        target.withOptimization(optimization);
+    public RemoteBucketBuilder<K> withOptimization(BucketSynchronization bucketSynchronization) {
+        target.withOptimization(bucketSynchronization);
         return this;
     }
 

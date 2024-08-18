@@ -21,36 +21,36 @@
 package io.github.bucket4j.distributed.proxy.synchronization.per_bucket.manual;
 
 import io.github.bucket4j.TimeMeter;
-import io.github.bucket4j.distributed.OptimizationController;
+import io.github.bucket4j.distributed.BucketOptimizationController;
 import io.github.bucket4j.distributed.proxy.AsyncCommandExecutor;
 import io.github.bucket4j.distributed.proxy.CommandExecutor;
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.DelayParameters;
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.NopeOptimizationListener;
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.Optimization;
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.OptimizationListener;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.NopeSynchronizationListener;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronization;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronizationListener;
 
 /**
- * Optimization that can serve requests locally without synchronization with external storage until explicit call of {@link OptimizationController#syncImmediately()}.
+ * Optimization that can serve requests locally without synchronization with external storage until explicit call of {@link BucketOptimizationController#syncImmediately()}.
  *
  * @see DelayParameters
  */
-public class ManuallySyncingOptimization implements Optimization {
+public class ManuallySyncingBucketSynchronization implements BucketSynchronization {
 
-    private final OptimizationListener listener;
+    private final BucketSynchronizationListener listener;
     private final TimeMeter timeMeter;
 
-    public ManuallySyncingOptimization() {
-        this(NopeOptimizationListener.INSTANCE, TimeMeter.SYSTEM_MILLISECONDS);
+    public ManuallySyncingBucketSynchronization() {
+        this(NopeSynchronizationListener.INSTANCE, TimeMeter.SYSTEM_MILLISECONDS);
     }
 
-    public ManuallySyncingOptimization(OptimizationListener listener, TimeMeter timeMeter) {
+    public ManuallySyncingBucketSynchronization(BucketSynchronizationListener listener, TimeMeter timeMeter) {
         this.timeMeter = timeMeter;
         this.listener = listener;
     }
 
     @Override
-    public Optimization withListener(OptimizationListener listener) {
-        return new ManuallySyncingOptimization(listener, timeMeter);
+    public BucketSynchronization withListener(BucketSynchronizationListener listener) {
+        return new ManuallySyncingBucketSynchronization(listener, timeMeter);
     }
 
     @Override

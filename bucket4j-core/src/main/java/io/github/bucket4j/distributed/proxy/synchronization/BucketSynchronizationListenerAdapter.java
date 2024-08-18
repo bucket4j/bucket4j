@@ -1,12 +1,12 @@
 package io.github.bucket4j.distributed.proxy.synchronization;
 
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.OptimizationListener;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronizationListener;
 
-public class OptimizationListenerAdapter implements OptimizationListener {
+public class BucketSynchronizationListenerAdapter implements BucketSynchronizationListener {
 
     private final SynchronizationListener target;
 
-    public OptimizationListenerAdapter(SynchronizationListener target) {
+    public BucketSynchronizationListenerAdapter(SynchronizationListener target) {
         this.target = target;
     }
 

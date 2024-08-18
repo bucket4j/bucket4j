@@ -8,14 +8,14 @@ import io.github.bucket4j.distributed.proxy.AbstractProxyManagerBuilder;
 import io.github.bucket4j.distributed.proxy.ExpiredEntriesCleaner;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.DelayParameters;
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.NopeOptimizationListener;
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.Optimization;
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.Optimizations;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.NopeSynchronizationListener;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronization;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronizations;
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.PredictionParameters;
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.delay.DelayOptimization;
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.manual.ManuallySyncingOptimization;
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.predictive.PredictiveOptimization;
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.skiponzero.SkipSyncOnZeroOptimization;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.delay.DelayBucketSynchronization;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.manual.ManuallySyncingBucketSynchronization;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.predictive.PredictiveBucketSynchronization;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.skiponzero.SkipSyncOnZeroBucketSynchronization;
 import io.github.bucket4j.util.AsyncConsumptionScenario;
 import io.github.bucket4j.util.ConsumptionScenario;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -272,20 +272,20 @@ public abstract class AbstractDistributedBucketTest {
         TimeMeter clock = TimeMeter.SYSTEM_MILLISECONDS;
 
         DelayParameters delayParameters = new DelayParameters(1, Duration.ofNanos(1));
-        List<Optimization> optimizations = Arrays.asList(
-            Optimizations.batching(),
-            new DelayOptimization(delayParameters, NopeOptimizationListener.INSTANCE, clock),
-            new PredictiveOptimization(PredictionParameters.createDefault(delayParameters), delayParameters, NopeOptimizationListener.INSTANCE, clock),
-            new SkipSyncOnZeroOptimization(NopeOptimizationListener.INSTANCE, clock),
-            new ManuallySyncingOptimization(NopeOptimizationListener.INSTANCE, clock)
+        List<BucketSynchronization> bucketSynchronizations = Arrays.asList(
+            BucketSynchronizations.batching(),
+            new DelayBucketSynchronization(delayParameters, NopeSynchronizationListener.INSTANCE, clock),
+            new PredictiveBucketSynchronization(PredictionParameters.createDefault(delayParameters), delayParameters, NopeSynchronizationListener.INSTANCE, clock),
+            new SkipSyncOnZeroBucketSynchronization(NopeSynchronizationListener.INSTANCE, clock),
+            new ManuallySyncingBucketSynchronization(NopeSynchronizationListener.INSTANCE, clock)
         );
 
-        for (Optimization optimization : optimizations) {
+        for (BucketSynchronization bucketSynchronization : bucketSynchronizations) {
             try {
                 K key = spec.generateRandomKey();
                 ProxyManager<K> proxyManager = spec.builder.get().build();
                 BucketProxy bucket = proxyManager.builder()
-                    .withOptimization(optimization)
+                    .withOptimization(bucketSynchronization)
                     .build(key, () -> configuration);
 
                 assertEquals(10, bucket.getAvailableTokens());
@@ -303,7 +303,7 @@ public abstract class AbstractDistributedBucketTest {
 
                 assertEquals(100, bucket.asVerbose().getAvailableTokens().getValue());
             } catch (Exception e) {
-                throw new IllegalStateException("Failed to check optimization " + optimization, e);
+                throw new IllegalStateException("Failed to check optimization " + bucketSynchronization, e);
             }
         }
     }
@@ -323,19 +323,19 @@ public abstract class AbstractDistributedBucketTest {
         TimeMeter clock = TimeMeter.SYSTEM_MILLISECONDS;
 
         DelayParameters delayParameters = new DelayParameters(1, Duration.ofNanos(1));
-        List<Optimization> optimizations = Arrays.asList(
-            Optimizations.batching(),
-            new DelayOptimization(delayParameters, NopeOptimizationListener.INSTANCE, clock),
-            new PredictiveOptimization(PredictionParameters.createDefault(delayParameters), delayParameters, NopeOptimizationListener.INSTANCE, clock),
-            new SkipSyncOnZeroOptimization(NopeOptimizationListener.INSTANCE, clock),
-            new ManuallySyncingOptimization(NopeOptimizationListener.INSTANCE, clock)
+        List<BucketSynchronization> bucketSynchronizations = Arrays.asList(
+            BucketSynchronizations.batching(),
+            new DelayBucketSynchronization(delayParameters, NopeSynchronizationListener.INSTANCE, clock),
+            new PredictiveBucketSynchronization(PredictionParameters.createDefault(delayParameters), delayParameters, NopeSynchronizationListener.INSTANCE, clock),
+            new SkipSyncOnZeroBucketSynchronization(NopeSynchronizationListener.INSTANCE, clock),
+            new ManuallySyncingBucketSynchronization(NopeSynchronizationListener.INSTANCE, clock)
         );
 
-        for (Optimization optimization : optimizations) {
+        for (BucketSynchronization bucketSynchronization : bucketSynchronizations) {
             try {
                 K key = spec.generateRandomKey();
                 AsyncBucketProxy bucket = proxyManager.asAsync().builder()
-                    .withOptimization(optimization)
+                    .withOptimization(bucketSynchronization)
                     .build(key, () -> CompletableFuture.completedFuture(configuration));
 
                 assertEquals(10, bucket.getAvailableTokens().get());
@@ -353,7 +353,7 @@ public abstract class AbstractDistributedBucketTest {
 
                 assertEquals(100, bucket.asVerbose().getAvailableTokens().get() .getValue());
             } catch (Exception e) {
-                throw new IllegalStateException("Failed to check optimization " + optimization, e);
+                throw new IllegalStateException("Failed to check optimization " + bucketSynchronization, e);
             }
         }
     }

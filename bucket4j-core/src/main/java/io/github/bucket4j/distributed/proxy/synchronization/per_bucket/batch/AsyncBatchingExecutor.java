@@ -21,7 +21,7 @@
 package io.github.bucket4j.distributed.proxy.synchronization.per_bucket.batch;
 
 import io.github.bucket4j.distributed.proxy.AsyncCommandExecutor;
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.OptimizationListener;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronizationListener;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.remote.commands.MultiCommand;
@@ -39,7 +39,7 @@ public class AsyncBatchingExecutor implements AsyncCommandExecutor {
     private final AsyncCommandExecutor wrappedExecutor;
 
 
-    public AsyncBatchingExecutor(AsyncCommandExecutor originalExecutor, OptimizationListener listener) {
+    public AsyncBatchingExecutor(AsyncCommandExecutor originalExecutor, BucketSynchronizationListener listener) {
         this.wrappedExecutor = originalExecutor;
         BiFunction<MultiCommand, CommandResult<MultiResult>, List<CommandResult<?>>> combinedResultSplitter = new BiFunction<>() {
             @Override

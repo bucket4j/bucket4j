@@ -4,10 +4,10 @@ package io.github.bucket4j.distributed.proxy.optimization.delay
 import io.github.bucket4j.Bucket
 import io.github.bucket4j.BucketConfiguration
 import io.github.bucket4j.distributed.AsyncBucketProxy
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.DefaultOptimizationListener
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.DefaultSynchronizationListener
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.DelayParameters
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.Optimization
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.delay.DelayOptimization
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronization
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.delay.DelayBucketSynchronization
 import io.github.bucket4j.mock.ProxyManagerMock
 import io.github.bucket4j.mock.TimeMeterMock
 import spock.lang.Specification
@@ -19,12 +19,12 @@ class DelayedAsyncCommandExecutorSpecification extends Specification {
 
     private TimeMeterMock clock = new TimeMeterMock()
     private ProxyManagerMock proxyManager = new ProxyManagerMock(clock)
-    private DefaultOptimizationListener listener = new DefaultOptimizationListener();
+    private DefaultSynchronizationListener listener = new DefaultSynchronizationListener();
     private BucketConfiguration configuration = BucketConfiguration.builder()
         .addLimit({it.capacity(100).refillGreedy(100, Duration.ofMillis(1000))})
         .build()
     private DelayParameters parameters = new DelayParameters(20, Duration.ofMillis(500))
-    private Optimization optimization = new DelayOptimization(parameters, listener, clock)
+    private BucketSynchronization optimization = new DelayBucketSynchronization(parameters, listener, clock)
     private AsyncBucketProxy optimizedBucket = proxyManager.asAsync().builder()
         .withOptimization(optimization)
         .build(1L, () -> CompletableFuture.completedFuture(configuration))

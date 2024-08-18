@@ -22,7 +22,7 @@ package io.github.bucket4j.distributed.proxy;
 
 import io.github.bucket4j.*;
 import io.github.bucket4j.distributed.AsyncBucketProxy;
-import io.github.bucket4j.distributed.AsyncOptimizationController;
+import io.github.bucket4j.distributed.AsyncBucketOptimizationController;
 import io.github.bucket4j.distributed.AsyncVerboseBucket;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
@@ -38,7 +38,7 @@ import java.util.function.Supplier;
 
 import static io.github.bucket4j.LimitChecker.*;
 
-public class DefaultAsyncBucketProxy implements AsyncBucketProxy, AsyncOptimizationController {
+public class DefaultAsyncBucketProxy implements AsyncBucketProxy, AsyncBucketOptimizationController {
 
     private final AsyncCommandExecutor commandExecutor;
     private final Supplier<CompletableFuture<BucketConfiguration>> configurationSupplier;
@@ -435,7 +435,7 @@ public class DefaultAsyncBucketProxy implements AsyncBucketProxy, AsyncOptimizat
     }
 
     @Override
-    public AsyncOptimizationController getOptimizationController() {
+    public AsyncBucketOptimizationController getOptimizationController() {
         return this;
     }
 

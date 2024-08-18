@@ -22,7 +22,7 @@ package io.github.bucket4j.distributed;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketListener;
 import io.github.bucket4j.distributed.proxy.RemoteBucketBuilder;
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.Optimization;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronization;
 
 /**
  * Provides a light-weight proxy to bucket which state actually stored in external storage, like in-memory jvm or relational database.
@@ -36,11 +36,11 @@ public interface BucketProxy extends Bucket {
      * Returns optimization controller for this proxy.
      *
      * <p>
-     * This method is actual only if an optimization was applied during bucket construction via {@link RemoteBucketBuilder#withOptimization(Optimization)}
+     * This method is actual only if an optimization was applied during bucket construction via {@link RemoteBucketBuilder#withOptimization(BucketSynchronization)}
      * otherwise returned controller will do nothing.
      *
      * @return optimization controller for this proxy
      */
-    OptimizationController getOptimizationController();
+    BucketOptimizationController getOptimizationController();
 
 }

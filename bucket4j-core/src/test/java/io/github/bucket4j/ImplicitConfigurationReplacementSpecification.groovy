@@ -5,7 +5,7 @@ import io.github.bucket4j.distributed.AsyncBucketProxy
 import io.github.bucket4j.distributed.proxy.ProxyManager
 import io.github.bucket4j.distributed.proxy.RemoteAsyncBucketBuilder
 import io.github.bucket4j.distributed.proxy.RemoteBucketBuilder
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.Optimizations
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronizations
 import io.github.bucket4j.mock.BucketType
 import io.github.bucket4j.mock.TimeMeterMock
 import spock.lang.Specification
@@ -42,7 +42,7 @@ class ImplicitConfigurationReplacementSpecification extends Specification {
                     if (sync) {
                         RemoteBucketBuilder<Integer> builder = proxyManager.builder()
                         if (batching) {
-                            builder.withOptimization(Optimizations.batching())
+                            builder.withOptimization(BucketSynchronizations.batching())
                         }
                         Bucket bucket1 = builder.build(key, () -> oldConfiguration)
                         assert bucket1.getAvailableTokens() == 60
@@ -58,7 +58,7 @@ class ImplicitConfigurationReplacementSpecification extends Specification {
                     } else {
                         RemoteAsyncBucketBuilder<Integer> builder = proxyManager.asAsync().builder()
                         if (batching) {
-                            builder.withOptimization(Optimizations.batching())
+                            builder.withOptimization(BucketSynchronizations.batching())
                         }
 
                         AsyncBucketProxy bucket1 = builder.build(key, {CompletableFuture.completedFuture(oldConfiguration)})
@@ -104,7 +104,7 @@ class ImplicitConfigurationReplacementSpecification extends Specification {
                     if (sync) {
                         RemoteBucketBuilder<Integer> builder = proxyManager.builder()
                         if (batching) {
-                            builder.withOptimization(Optimizations.batching())
+                            builder.withOptimization(BucketSynchronizations.batching())
                         }
                         Bucket bucket1 = builder.withImplicitConfigurationReplacement(1L, TokensInheritanceStrategy.AS_IS).build(key, {oldConfiguration})
                         assert bucket1.getAvailableTokens() == 60
@@ -120,7 +120,7 @@ class ImplicitConfigurationReplacementSpecification extends Specification {
                     } else {
                         RemoteAsyncBucketBuilder<Integer> builder = proxyManager.asAsync().builder()
                         if (batching) {
-                            builder.withOptimization(Optimizations.batching())
+                            builder.withOptimization(BucketSynchronizations.batching())
                         }
 
                         AsyncBucketProxy bucket1 = builder.withImplicitConfigurationReplacement(1L, TokensInheritanceStrategy.AS_IS)
@@ -167,7 +167,7 @@ class ImplicitConfigurationReplacementSpecification extends Specification {
                     if (sync) {
                         RemoteBucketBuilder<Integer> builder = proxyManager.builder()
                         if (batching) {
-                            builder.withOptimization(Optimizations.batching())
+                            builder.withOptimization(BucketSynchronizations.batching())
                         }
                         Bucket bucket1 = builder.withImplicitConfigurationReplacement(1L, TokensInheritanceStrategy.AS_IS).build(key, {oldConfiguration})
                         assert bucket1.getAvailableTokens() == 60
@@ -183,7 +183,7 @@ class ImplicitConfigurationReplacementSpecification extends Specification {
                     } else {
                         RemoteAsyncBucketBuilder<Integer> builder = proxyManager.asAsync().builder()
                         if (batching) {
-                            builder.withOptimization(Optimizations.batching())
+                            builder.withOptimization(BucketSynchronizations.batching())
                         }
 
                         AsyncBucketProxy bucket1 = builder.withImplicitConfigurationReplacement(1L, TokensInheritanceStrategy.AS_IS)

@@ -27,7 +27,7 @@ import io.github.bucket4j.TokensInheritanceStrategy;
 import io.github.bucket4j.distributed.AsyncBucketProxy;
 import io.github.bucket4j.distributed.BucketProxy;
 import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.Optimization;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronization;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.remote.Request;
@@ -43,7 +43,7 @@ import static java.util.Objects.requireNonNull;
 
 public abstract class AbstractProxyManager<K> implements ProxyManager<K> {
 
-    private static final Optimization DEFAULT_REQUEST_OPTIMIZER = Optimization.NONE_OPTIMIZED;
+    private static final BucketSynchronization DEFAULT_REQUEST_OPTIMIZER = BucketSynchronization.NONE_OPTIMIZED;
 
     private final ClientSideConfig clientSideConfig;
 
@@ -132,12 +132,12 @@ public abstract class AbstractProxyManager<K> implements ProxyManager<K> {
 
     class DefaultAsyncRemoteBucketBuilder implements RemoteAsyncBucketBuilder<K> {
 
-        private Optimization asyncRequestOptimizer = DEFAULT_REQUEST_OPTIMIZER;
+        private BucketSynchronization asyncRequestOptimizer = DEFAULT_REQUEST_OPTIMIZER;
         private ImplicitConfigurationReplacement implicitConfigurationReplacement;
         private BucketListener listener = BucketListener.NOPE;
 
         @Override
-        public DefaultAsyncRemoteBucketBuilder withOptimization(Optimization requestOptimizer) {
+        public DefaultAsyncRemoteBucketBuilder withOptimization(BucketSynchronization requestOptimizer) {
             this.asyncRequestOptimizer = requireNonNull(requestOptimizer);
             return this;
         }
@@ -176,13 +176,13 @@ public abstract class AbstractProxyManager<K> implements ProxyManager<K> {
     }
 
     class DefaultRemoteBucketBuilder implements RemoteBucketBuilder<K> {
-        private Optimization requestOptimizer = DEFAULT_REQUEST_OPTIMIZER;
+        private BucketSynchronization requestOptimizer = DEFAULT_REQUEST_OPTIMIZER;
         private ImplicitConfigurationReplacement implicitConfigurationReplacement;
         private BucketListener listener = BucketListener.NOPE;
 
         @Override
-        public RemoteBucketBuilder<K> withOptimization(Optimization optimization) {
-            this.requestOptimizer = requireNonNull(optimization);
+        public RemoteBucketBuilder<K> withOptimization(BucketSynchronization bucketSynchronization) {
+            this.requestOptimizer = requireNonNull(bucketSynchronization);
             return this;
         }
 

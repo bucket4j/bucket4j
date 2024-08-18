@@ -4,10 +4,10 @@ import io.github.bucket4j.Bucket
 import io.github.bucket4j.BucketConfiguration
 import io.github.bucket4j.TokensInheritanceStrategy
 import io.github.bucket4j.distributed.proxy.ProxyManager
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.DefaultOptimizationListener
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.Optimization
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.Optimizations
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.batch.BatchingOptimization
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.DefaultSynchronizationListener
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronization
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronizations
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.batch.BatchingBucketSynchronization
 import io.github.bucket4j.distributed.remote.MultiResult
 import io.github.bucket4j.distributed.remote.Request
 import io.github.bucket4j.distributed.remote.commands.MultiCommand
@@ -35,7 +35,7 @@ class BatchingCommandExecutorSpecification extends Specification {
     @Unroll
     def "#n Should combine sequential tryConsume(1) requests into single TryConsumeAsMuchAsPossible verbose=#verbose versioned=#versioned"(int n, boolean verbose, boolean versioned) {
         setup:
-            DefaultOptimizationListener listener = new DefaultOptimizationListener();
+            DefaultSynchronizationListener listener = new DefaultSynchronizationListener();
             ProxyManagerMock proxyManager = new ProxyManagerMock(clock)
             Bucket bucket = createBucket(versioned, proxyManager, listener)
         when:
@@ -77,7 +77,7 @@ class BatchingCommandExecutorSpecification extends Specification {
     @Unroll
     def "#n Should combine sequential tryConsume(1) requests into single TryConsumeAsMuchAsPossible when none-mergeable command in first verbose=#verbose versioned=#versioned"(int n, boolean verbose, boolean versioned) {
         setup:
-            DefaultOptimizationListener listener = new DefaultOptimizationListener();
+            DefaultSynchronizationListener listener = new DefaultSynchronizationListener();
             ProxyManagerMock proxyManager = new ProxyManagerMock(clock)
             Bucket bucket = createBucket(versioned, proxyManager, listener)
         when:
@@ -123,7 +123,7 @@ class BatchingCommandExecutorSpecification extends Specification {
     @Unroll
     def "#n Should combine sequential tryConsume(1) requests into single TryConsumeAsMuchAsPossible  when none-mergeable command in end verbose=#verbose versioned=#versioned"(int n, boolean verbose, boolean versioned) {
         setup:
-            DefaultOptimizationListener listener = new DefaultOptimizationListener();
+            DefaultSynchronizationListener listener = new DefaultSynchronizationListener();
             ProxyManagerMock proxyManager = new ProxyManagerMock(clock)
             Bucket bucket = createBucket(versioned, proxyManager, listener)
         when:
@@ -169,7 +169,7 @@ class BatchingCommandExecutorSpecification extends Specification {
     @Unroll
     def "#n Should combine sequential tryConsume(1) requests into single TryConsumeAsMuchAsPossible when none-mergeable command in middle verbose=#verbose versioned=#versioned"(int n, boolean verbose, boolean versioned) {
         setup:
-            DefaultOptimizationListener listener = new DefaultOptimizationListener();
+            DefaultSynchronizationListener listener = new DefaultSynchronizationListener();
             ProxyManagerMock proxyManager = new ProxyManagerMock(clock)
             Bucket bucket = createBucket(versioned, proxyManager, listener)
         when:
@@ -219,7 +219,7 @@ class BatchingCommandExecutorSpecification extends Specification {
     @Unroll
     def "#n Should correctly handle exceptions while unwrapping failed results verbose=#verbose versioned=#versioned"(int n, boolean verbose, boolean versioned) {
         when:
-            DefaultOptimizationListener listener = new DefaultOptimizationListener();
+            DefaultSynchronizationListener listener = new DefaultSynchronizationListener();
             ProxyManagerMock proxyManager = new ProxyManagerMock(clock)
             Bucket bucket = createBucket(versioned, proxyManager, listener)
             bucket.getAvailableTokens()
@@ -288,8 +288,8 @@ class BatchingCommandExecutorSpecification extends Specification {
         return future
     }
 
-    Bucket createBucket(boolean versioned, ProxyManager proxyManager, DefaultOptimizationListener listener) {
-        Optimization optimization = new BatchingOptimization(listener)
+    Bucket createBucket(boolean versioned, ProxyManager proxyManager, DefaultSynchronizationListener listener) {
+        BucketSynchronization optimization = new BatchingBucketSynchronization(listener)
         if (versioned) {
             return proxyManager.builder()
                     .withOptimization(optimization)
@@ -314,12 +314,12 @@ class BatchingCommandExecutorSpecification extends Specification {
                 .build()
             if (versioned) {
                 bucket = proxyManager.builder()
-                    .withOptimization(Optimizations.batching())
+                    .withOptimization(BucketSynchronizations.batching())
                     .withImplicitConfigurationReplacement(1, TokensInheritanceStrategy.AS_IS)
                     .build(42, configSupplier)
             } else {
                 bucket = proxyManager.builder()
-                    .withOptimization(Optimizations.batching())
+                    .withOptimization(BucketSynchronizations.batching())
                     .build(42, configSupplier)
             }
             AtomicLong consumedTokens = new AtomicLong()

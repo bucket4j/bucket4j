@@ -3,9 +3,9 @@ package io.github.bucket4j.distributed.proxy.optimization.skipsynconzero
 
 import io.github.bucket4j.Bucket
 import io.github.bucket4j.BucketConfiguration
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.DefaultOptimizationListener
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.Optimization
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.skiponzero.SkipSyncOnZeroOptimization
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.DefaultSynchronizationListener
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronization
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.skiponzero.SkipSyncOnZeroBucketSynchronization
 import io.github.bucket4j.mock.ProxyManagerMock
 import io.github.bucket4j.mock.TimeMeterMock
 import spock.lang.Specification
@@ -16,11 +16,11 @@ class SkipSyncOnZeroCommandExecutorSpecification extends Specification {
 
     private TimeMeterMock clock = new TimeMeterMock()
     private ProxyManagerMock proxyManager = new ProxyManagerMock(clock)
-    private DefaultOptimizationListener listener = new DefaultOptimizationListener();
+    private DefaultSynchronizationListener listener = new DefaultSynchronizationListener();
     private BucketConfiguration configuration = BucketConfiguration.builder()
         .addLimit({it.capacity(100).refillGreedy(100, Duration.ofMillis(1000))})
         .build()
-    private Optimization optimization = new SkipSyncOnZeroOptimization(listener, clock)
+    private BucketSynchronization optimization = new SkipSyncOnZeroBucketSynchronization(listener, clock)
     private Bucket optimizedBucket = proxyManager.builder()
         .withOptimization(optimization)
         .build(1L, () -> configuration)
