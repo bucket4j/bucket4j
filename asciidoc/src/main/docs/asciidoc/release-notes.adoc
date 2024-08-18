@@ -1,5 +1,8 @@
 === Bucket4j {revnumber} release notes
 Release `{revnumber}`
 
+==== The feature in release scope are following:
+* https://github.com/bucket4j/bucket4j/issues/510[#510 Support for DB2]
+
 ==== The bugfixes in release scope are following:
-* https://github.com/bucket4j/bucket4j/issues/501[#501 Wrong behavior of batching optimization]
+* https://github.com/bucket4j/bucket4j/issues/504[#504 Hazelcast lockBasedBuilder and expirationAfterWrite do not work together]
