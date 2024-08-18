@@ -1,0 +1,46 @@
+[[bucket4j-db2, Bucket4j-Db2]]
+==== IBM Db2 integration
+===== Dependencies
+To use Bucket4j extension for IBM Db2 Server you need to add following dependency:
+
+[source, xml, subs=attributes+]
+----
+<!-- For java 17 -->
+<dependency>
+    <groupId>com.bucket4j</groupId>
+    <artifactId>bucket4j_jdk17-db2</artifactId>
+    <version>{revnumber}</version>
+</dependency>
+
+<!-- For java 11 -->
+<dependency>
+    <groupId>com.bucket4j</groupId>
+    <artifactId>bucket4j_jdk11-db2</artifactId>
+    <version>{revnumber}</version>
+</dependency>
+----
+
+===== DDL example
+[source,sql]
+----
+// in case of expiration feature is not required
+CREATE TABLE bucket(id BIGINT NOT NULL PRIMARY KEY, state VARCHAR(512))
+----
+[source,sql]
+----
+// in case of expiration feature is required
+CREATE TABLE bucket(id BIGINT NOT NULL PRIMARY KEY, state VARCHAR(512), expires_at BIGINT)
+----
+
+===== Example of Bucket instantiation
+[source, java]
+----
+Db2SelectForUpdateBasedProxyManager<Long> proxyManager = Bucket4jDb2
+    .selectForUpdateBasedBuilder(dataSource)
+    .build();
+...
+BucketConfiguration bucketConfiguration = BucketConfiguration.builder()
+        .addLimit(limit -> limit.capacity(10).refillGreedy(10, ofSeconds(1)))
+        .build();
+BucketProxy bucket = proxyManager.getProxy(key, () -> bucketConfiguration);
+----

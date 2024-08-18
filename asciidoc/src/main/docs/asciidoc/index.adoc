@@ -8,12 +8,15 @@ Release date: `07 June 2024`
 * http://bucket4j.com/{revnumber}/release-notes.html[{revnumber} Release notes]
 * http://bucket4j.com/{revnumber}/toc.html[{revnumber} Reference]
 
+== Java 8 notes
+Follow https://bucket4j.com/commercial/java8.html[these instructions] if you need for builds that is compatible with Java 8
+
 == How to support
 https://app.lava.top/ru/2716741203?donate=open[Make donate] to increase motivation of project maintainer to develop new features,
 write documentation and answer user questions.
 
 == Documentation archive
-If you are looking for documentation related to a previous version then http://bucket4j.com/previos-releases.html[ see there]
+If you are looking for documentation related to a previous version then http://bucket4j.com/previous-releases.html[ see there]
 
 == About the authors
 Vladimir Bukhtoyarov::

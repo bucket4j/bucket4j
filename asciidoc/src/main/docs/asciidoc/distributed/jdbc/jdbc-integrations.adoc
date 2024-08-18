@@ -88,3 +88,5 @@ include::oracle.adoc[]
 
 include::mssql.adoc[]
 
+include::db2.adoc[]
+

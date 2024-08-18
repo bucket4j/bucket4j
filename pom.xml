@@ -4,13 +4,13 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>bucket4j_jdk17</artifactId>
-    <version>8.13.1</version>
+    <version>8.14.0</version>
     <packaging>pom</packaging>
 
     <parent>
         <groupId>com.bucket4j</groupId>
         <artifactId>bucket4j_jdk17-parent</artifactId>
-        <version>8.13.1</version>
+        <version>8.14.0</version>
         <relativePath>./bucket4j-parent</relativePath>
     </parent>
 
@@ -33,6 +33,7 @@
         <module>bucket4j-mysql</module>
         <module>bucket4j-mariadb</module>
         <module>bucket4j-mssql</module>
+        <module>bucket4j-db2</module>
         <module>bucket4j-caffeine</module>
 <!--        <module>backward-compatibility-tests</module>-->
         <module>asciidoc</module>
