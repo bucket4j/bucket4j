@@ -26,6 +26,7 @@ import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.DefaultOptimizationListener;
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.Optimization;
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.Optimizations;
+import io.github.bucket4j.redis.lettuce.Bucket4jLettuce;
 import io.github.bucket4j.redis.lettuce.cas.LettuceBasedProxyManager;
 import io.lettuce.core.RedisClient;
 
@@ -75,7 +76,7 @@ public class RedisBatchingExample {
         SmoothlyDecayingRollingCounter rejectionRatePerSecond = new SmoothlyDecayingRollingCounter(Duration.ofSeconds(1), 10);
         com.codahale.metrics.Timer latencyTimer = buildLatencyTimer();
 
-        ProxyManager<String> proxyManager = LettuceBasedProxyManager.builderFor(redisClient)
+        ProxyManager<String> proxyManager = Bucket4jLettuce.casBasedBuilder(redisClient)
             .build()
             .withMapper(str -> str.getBytes(Charsets.UTF_8));
         BucketConfiguration configuration = BucketConfiguration.builder()
@@ -91,7 +92,7 @@ public class RedisBatchingExample {
 
         Bucket bucket = proxyManager.builder()
                 .withOptimization(optimization)
-                .build("13", configuration);
+                .build("13", () -> configuration);
 
         Timer statLogTimer = new Timer();
         statLogTimer.schedule(new TimerTask() {

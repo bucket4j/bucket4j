@@ -22,7 +22,6 @@ package io.github.bucket4j.distributed.proxy.synchronization.per_bucket.predicti
 import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.proxy.AsyncCommandExecutor;
 import io.github.bucket4j.distributed.proxy.CommandExecutor;
-import io.github.bucket4j.distributed.proxy.optimization.*;
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.DelayParameters;
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.OptimizationListener;
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.PredictionParameters;
