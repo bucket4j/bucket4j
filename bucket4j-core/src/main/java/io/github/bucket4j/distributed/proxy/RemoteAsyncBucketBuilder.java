@@ -39,19 +39,19 @@ import java.util.function.Supplier;
 public interface RemoteAsyncBucketBuilder<K> {
 
     /**
-     * Configures the optimization strategy that will be applied for buckets that are built by this builder.
+     * Configures the synchronization strategy that will be applied for buckets that are built by this builder.
      *
      * <p>
-     * It is worth mentioning that optimization will take effect only if you reuse the bucket, so you need to store a reference to the bucket anywhere in order to reuse it later. In other words, if any request optimization strategy has been applied to the bucket proxy then proxy can not be treated as a cheap object.
+     * It is worth mentioning that synchronization will take effect only if you reuse the bucket, so you need to store a reference to the bucket anywhere in order to reuse it later. In other words, if any request synchronization strategy has been applied to the bucket proxy then proxy can not be treated as a cheap object.
      *
      * <p>
-     * The full list of built-in optimizations can be found there {@link BucketSynchronizations}
+     * The full list of built-in synchronization can be found there {@link BucketSynchronizations}
      *
-     * @param bucketSynchronization optimization strategy
+     * @param bucketSynchronization synchronization strategy
      *
      * @return {@code this}
      */
-    RemoteAsyncBucketBuilder<K> withOptimization(BucketSynchronization bucketSynchronization);
+    RemoteAsyncBucketBuilder<K> withSynchronization(BucketSynchronization bucketSynchronization);
 
     /**
      * Activates implicit configuration replacement.

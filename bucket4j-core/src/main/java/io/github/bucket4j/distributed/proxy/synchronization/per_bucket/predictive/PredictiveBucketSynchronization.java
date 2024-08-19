@@ -33,11 +33,11 @@ import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.batch.Bat
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.delay.DelayBucketSynchronization;
 
 /**
- * Optimization that can serve requests locally without synchronization with external storage until thresholds are not violated.
- * This optimization is based on top of {@link BatchingBucketSynchronization} and {@link DelayBucketSynchronization},
- * and in additionally this optimization tries to predict aggregated consumption rate in whole cluster in order to reduce the risk of overconsumption that caused by {@link DelayBucketSynchronization}.
+ * Synchronization that can serve requests locally without synchronization with external storage until thresholds are not violated.
+ * This synchronization is based on top of {@link BatchingBucketSynchronization} and {@link DelayBucketSynchronization},
+ * and in additionally this synchronization tries to predict aggregated consumption rate in whole cluster in order to reduce the risk of overconsumption that caused by {@link DelayBucketSynchronization}.
  *
- * <p>Usage of this optimization can lead to temporal over-consumption because the synchronization with external storage is performed periodically when thresholds are violated,
+ * <p>Usage of this synchronization can lead to temporal over-consumption because the synchronization with external storage is performed periodically when thresholds are violated,
  * as well as under-consumption in case of the wrong prediction of aggregated consumption rate.
  *
  * @see DelayParameters

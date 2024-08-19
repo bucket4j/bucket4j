@@ -28,7 +28,7 @@ import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSyn
 import java.util.Objects;
 
 /**
- * Optimization that combines independent requests to same bucket into batches in order to reduce request count to remote storage.
+ * Synchronization that combines independent requests to same bucket into batches in order to reduce request count to remote storage.
  */
 public class BatchingBucketSynchronization implements BucketSynchronization {
 

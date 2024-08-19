@@ -264,7 +264,7 @@ public abstract class AbstractDistributedBucketTest {
 
     @MethodSource("specs")
     @ParameterizedTest
-    public <K, P extends ProxyManager<K>, B extends AbstractProxyManagerBuilder<K, P, B>> void testOptimizations(ProxyManagerSpec<K, P, B> spec) {
+    public <K, P extends ProxyManager<K>, B extends AbstractProxyManagerBuilder<K, P, B>> void testSynchronizations(ProxyManagerSpec<K, P, B> spec) {
         BucketConfiguration configuration = BucketConfiguration.builder()
             .addLimit(Bandwidth.builder().capacity(10).refillGreedy(10, Duration.ofSeconds(1)).build())
             .build();
@@ -285,7 +285,7 @@ public abstract class AbstractDistributedBucketTest {
                 K key = spec.generateRandomKey();
                 ProxyManager<K> proxyManager = spec.builder.get().build();
                 BucketProxy bucket = proxyManager.builder()
-                    .withOptimization(bucketSynchronization)
+                    .withSynchronization(bucketSynchronization)
                     .build(key, () -> configuration);
 
                 assertEquals(10, bucket.getAvailableTokens());
@@ -303,14 +303,14 @@ public abstract class AbstractDistributedBucketTest {
 
                 assertEquals(100, bucket.asVerbose().getAvailableTokens().getValue());
             } catch (Exception e) {
-                throw new IllegalStateException("Failed to check optimization " + bucketSynchronization, e);
+                throw new IllegalStateException("Failed to check synchronization " + bucketSynchronization, e);
             }
         }
     }
 
     @MethodSource("specs")
     @ParameterizedTest
-    public <K, P extends ProxyManager<K>, B extends AbstractProxyManagerBuilder<K, P, B>> void testOptimizationsAsync(ProxyManagerSpec<K, P, B> spec) {
+    public <K, P extends ProxyManager<K>, B extends AbstractProxyManagerBuilder<K, P, B>> void testSynchronizationsAsync(ProxyManagerSpec<K, P, B> spec) {
         ProxyManager<K> proxyManager = spec.builder.get().build();
         if (!proxyManager.isAsyncModeSupported()) {
             return;
@@ -335,7 +335,7 @@ public abstract class AbstractDistributedBucketTest {
             try {
                 K key = spec.generateRandomKey();
                 AsyncBucketProxy bucket = proxyManager.asAsync().builder()
-                    .withOptimization(bucketSynchronization)
+                    .withSynchronization(bucketSynchronization)
                     .build(key, () -> CompletableFuture.completedFuture(configuration));
 
                 assertEquals(10, bucket.getAvailableTokens().get());
@@ -353,7 +353,7 @@ public abstract class AbstractDistributedBucketTest {
 
                 assertEquals(100, bucket.asVerbose().getAvailableTokens().get() .getValue());
             } catch (Exception e) {
-                throw new IllegalStateException("Failed to check optimization " + bucketSynchronization, e);
+                throw new IllegalStateException("Failed to check synchronization " + bucketSynchronization, e);
             }
         }
     }

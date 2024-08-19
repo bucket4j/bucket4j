@@ -19,25 +19,29 @@
  */
 package io.github.bucket4j.distributed;
 
-import io.github.bucket4j.distributed.proxy.RemoteBucketBuilder;
+import io.github.bucket4j.distributed.proxy.RemoteAsyncBucketBuilder;
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronization;
 
 import java.time.Duration;
+import java.util.concurrent.CompletableFuture;
 
 /**
- * The optimization controller for {@link BucketProxy}.
+ * The synchronization controller for {@link AsyncBucketProxy}.
  *
  * <p>
- * This interface is actual only if an optimization was applied during bucket construction via {@link RemoteBucketBuilder#withOptimization(BucketSynchronization)}
+ * This interface is actual only if an synchronization was applied during bucket construction via {@link RemoteAsyncBucketBuilder#withSynchronization(BucketSynchronization)}
  * otherwise all methods of controller will do nothing.
  */
-public interface BucketOptimizationController {
+public interface AsyncBucketSynchronizationController {
 
     /**
      * Initiates immediate synchronization of local copy of bucket with remote storage
+     *
+     * @return future that will be completed when local copy of bucket will be synchronized with remote storage,
+     * or immediately completed future in case of this synchronization is not required.
      */
-    default void syncImmediately() {
-        syncByCondition(0L, Duration.ZERO);
+    default CompletableFuture<Void> syncImmediately() {
+        return syncByCondition(0L, Duration.ZERO);
     }
 
     /**
@@ -49,7 +53,10 @@ public interface BucketOptimizationController {
      *
      * @param unsynchronizedTokens criterion for accumulated amount of unsynchronized tokens
      * @param timeSinceLastSync criterion for time passed since last synchronization
+     *
+     * @return future that will be completed when local copy of bucket will be synchronized with remote storage,
+     * or immediately completed future in case of this synchronization is not required.
      */
-    void syncByCondition(long unsynchronizedTokens, Duration timeSinceLastSync);
+    CompletableFuture<Void> syncByCondition(long unsynchronizedTokens, Duration timeSinceLastSync);
 
 }

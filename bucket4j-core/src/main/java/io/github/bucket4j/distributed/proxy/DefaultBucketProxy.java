@@ -22,7 +22,7 @@ package io.github.bucket4j.distributed.proxy;
 
 import io.github.bucket4j.*;
 import io.github.bucket4j.distributed.BucketProxy;
-import io.github.bucket4j.distributed.BucketOptimizationController;
+import io.github.bucket4j.distributed.BucketSynchronizationController;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.commands.*;
@@ -31,7 +31,7 @@ import java.time.Duration;
 import java.util.Objects;
 import java.util.function.Supplier;
 
-public class DefaultBucketProxy extends AbstractBucket implements BucketProxy, BucketOptimizationController {
+public class DefaultBucketProxy extends AbstractBucket implements BucketProxy, BucketSynchronizationController {
 
     private final CommandExecutor commandExecutor;
     private final Supplier<BucketConfiguration> configurationSupplier;
@@ -43,7 +43,7 @@ public class DefaultBucketProxy extends AbstractBucket implements BucketProxy, B
     }
 
     @Override
-    public BucketOptimizationController getOptimizationController() {
+    public BucketSynchronizationController getSynchronizationController() {
         return this;
     }
 

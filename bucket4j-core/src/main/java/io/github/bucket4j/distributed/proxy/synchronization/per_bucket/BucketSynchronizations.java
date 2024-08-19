@@ -25,7 +25,7 @@ import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.predictiv
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.delay.DelayBucketSynchronization;
 
 /**
- * Provides factory methods for all request optimizations that are built-in into Bucket4j library.
+ * Provides factory methods for all request synchronization that are built-in into Bucket4j library.
  *
  * @see BatchingBucketSynchronization
  * @see DelayBucketSynchronization
@@ -35,7 +35,7 @@ import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.delay.Del
 public class BucketSynchronizations {
 
     /**
-     * Creates optimization that combines independent requests to same bucket into batches in order to reduce request count to remote storage.
+     * Creates synchronization that combines independent requests to same bucket into batches in order to reduce request count to remote storage.
      *
      * @return new instance of {@link BatchingBucketSynchronization}
      *
@@ -46,7 +46,7 @@ public class BucketSynchronizations {
     }
 
     /**
-     * Creates optimization that can serve requests locally without synchronization with external storage until thresholds are not violated.
+     * Creates synchronization that can serve requests locally without synchronization with external storage until thresholds are not violated.
      *
      * @param delayParameters thresholds that control whether request can be served locally without synchronization with external storage
      *
@@ -59,7 +59,7 @@ public class BucketSynchronizations {
     }
 
     /**
-     * Creates optimization that can serve requests locally without synchronization with external storage until thresholds are not violated,
+     * Creates synchronization that can serve requests locally without synchronization with external storage until thresholds are not violated,
      * and additionally tries to predict aggregated consumption rate in whole cluster in order to reduce the risk of overconsumption that caused by {@link DelayBucketSynchronization}.
      *
      * @param delayParameters thresholds that control whether request can be served locally without synchronization with external storage

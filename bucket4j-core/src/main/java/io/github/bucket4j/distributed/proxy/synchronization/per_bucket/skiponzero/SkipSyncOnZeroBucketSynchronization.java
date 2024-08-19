@@ -32,11 +32,11 @@ import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.batch.Bat
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.batch.BatchingBucketSynchronization;
 
 /**
- * Optimization that can serve requests locally without synchronization with external storage when it detects that there is no tokens in remote storage,
+ * Synchronization that can serve requests locally without synchronization with external storage when it detects that there is no tokens in remote storage,
  * in such case synchronization with storage is being postponed to proposed refill of first token.
- * This optimization is based on top of {@link BatchingBucketSynchronization}, so multiple parallel request to same bucket are grouped.
+ * This synchronization is based on top of {@link BatchingBucketSynchronization}, so multiple parallel request to same bucket are grouped.
  *
- * <p>Usage of this optimization can lead to temporal under-consumption in case of tokens are being added to bucket via API like {@link Bucket#addTokens(long)} or {@link Bucket#reset()}.
+ * <p>Usage of this synchronization can lead to temporal under-consumption in case of tokens are being added to bucket via API like {@link Bucket#addTokens(long)} or {@link Bucket#reset()}.
  *
  * @see DelayParameters
  */

@@ -1,4 +1,4 @@
-package io.github.bucket4j.distributed.proxy.optimization.delay
+package io.github.bucket4j.distributed.proxy.synchronization.delay
 
 
 import io.github.bucket4j.Bucket
@@ -24,9 +24,9 @@ class DelayedAsyncCommandExecutorSpecification extends Specification {
         .addLimit({it.capacity(100).refillGreedy(100, Duration.ofMillis(1000))})
         .build()
     private DelayParameters parameters = new DelayParameters(20, Duration.ofMillis(500))
-    private BucketSynchronization optimization = new DelayBucketSynchronization(parameters, listener, clock)
+    private BucketSynchronization synchronization = new DelayBucketSynchronization(parameters, listener, clock)
     private AsyncBucketProxy optimizedBucket = proxyManager.asAsync().builder()
-        .withOptimization(optimization)
+        .withSynchronization(synchronization)
         .build(1L, () -> CompletableFuture.completedFuture(configuration))
     private Bucket notOptimizedBucket = proxyManager.builder()
         .build(1L, () -> configuration)
@@ -102,7 +102,7 @@ class DelayedAsyncCommandExecutorSpecification extends Specification {
         when: "too many optimized bucket overconsumed the bucket"
             List<Bucket> buckets = new ArrayList<>();
             for (int i = 0; i < 10; i++) {
-                buckets.add(proxyManager.asAsync().builder().withOptimization(optimization).build(1L, {CompletableFuture.completedFuture(configuration)}))
+                buckets.add(proxyManager.asAsync().builder().withSynchronization(synchronization).build(1L, {CompletableFuture.completedFuture(configuration)}))
             }
             for (int i = 0; i < 10; i++) {
                 buckets.get(i).getAvailableTokens() // just request needed to sync bucket with proxyManager
@@ -124,7 +124,7 @@ class DelayedAsyncCommandExecutorSpecification extends Specification {
             notOptimizedBucket.getAvailableTokens() == 100
 
         when: "explicit synchronization request"
-            optimizedBucket.getOptimizationController().syncImmediately().get()
+            optimizedBucket.getSynchronizationController().syncImmediately().get()
         then: "synchronization performed"
             optimizedBucket.getAvailableTokens().get() == 99
             notOptimizedBucket.getAvailableTokens() == 99
@@ -139,25 +139,25 @@ class DelayedAsyncCommandExecutorSpecification extends Specification {
             notOptimizedBucket.getAvailableTokens() == 100
 
         when: "synchronization requested with thresholds 20 tokens"
-            optimizedBucket.getOptimizationController().syncByCondition(20, Duration.ZERO).get()
+            optimizedBucket.getSynchronizationController().syncByCondition(20, Duration.ZERO).get()
         then: "synchronization have not performed"
             optimizedBucket.getAvailableTokens().get() == 90
             notOptimizedBucket.getAvailableTokens() == 100
 
         when: "synchronization requested with thresholds 10 tokens"
-            optimizedBucket.getOptimizationController().syncByCondition(10, Duration.ZERO).get()
+            optimizedBucket.getSynchronizationController().syncByCondition(10, Duration.ZERO).get()
         then: "synchronization have not performed"
             optimizedBucket.getAvailableTokens().get() == 90
             notOptimizedBucket.getAvailableTokens() == 90
 
         when: "synchronization requested with thresholds 10 tokens"
-            optimizedBucket.getOptimizationController().syncByCondition(10, Duration.ZERO).get()
+            optimizedBucket.getSynchronizationController().syncByCondition(10, Duration.ZERO).get()
         then: "synchronization have performed"
             optimizedBucket.getAvailableTokens().get() == 90
             notOptimizedBucket.getAvailableTokens() == 90
 
         when: "synchronization requested with thresholds 10 tokens"
-            optimizedBucket.getOptimizationController().syncByCondition(10, Duration.ZERO).get()
+            optimizedBucket.getSynchronizationController().syncByCondition(10, Duration.ZERO).get()
         then: "synchronization have performed"
             optimizedBucket.getAvailableTokens().get() == 90
             notOptimizedBucket.getAvailableTokens() == 90
@@ -165,19 +165,19 @@ class DelayedAsyncCommandExecutorSpecification extends Specification {
         when: "9 millis passed 10 tokens consumed and synchronization requested with 20 millis limit"
             clock.addMillis(9)
             optimizedBucket.tryConsume(10).get()
-            optimizedBucket.getOptimizationController().syncByCondition(10, Duration.ofMillis(20)).get()
+            optimizedBucket.getSynchronizationController().syncByCondition(10, Duration.ofMillis(20)).get()
         then: "synchronization have not performed"
             optimizedBucket.getAvailableTokens().get() == 80
             notOptimizedBucket.getAvailableTokens() == 90
 
         when: "synchronization requested with limit 10 millis + 9 tokens"
-            optimizedBucket.getOptimizationController().syncByCondition(9, Duration.ofMillis(10)).get()
+            optimizedBucket.getSynchronizationController().syncByCondition(9, Duration.ofMillis(10)).get()
         then: "synchronization have not performed"
             optimizedBucket.getAvailableTokens().get() == 80
             notOptimizedBucket.getAvailableTokens() == 90
 
         when: "synchronization requested with limit 9 millis + 10 tokens"
-            optimizedBucket.getOptimizationController().syncByCondition(10, Duration.ofMillis(9)).get()
+            optimizedBucket.getSynchronizationController().syncByCondition(10, Duration.ofMillis(9)).get()
         then: "synchronization have performed"
             optimizedBucket.getAvailableTokens().get() == 80
             notOptimizedBucket.getAvailableTokens() == 80

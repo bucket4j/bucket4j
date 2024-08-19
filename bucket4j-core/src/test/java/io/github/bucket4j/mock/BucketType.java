@@ -143,12 +143,12 @@ public enum BucketType {
                 .build(42, () -> CompletableFuture.completedFuture(configuration));
         }
     },
-    GRID_WITH_BATCHING_OPTIMIZATION {
+    GRID_WITH_BATCHING_SYNCHRONIZATION {
         @Override
         public Bucket createBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
             ProxyManagerMock<Integer> proxyManager = new ProxyManagerMock<>(timeMeter);
             return proxyManager.builder()
-                .withOptimization(BucketSynchronizations.batching())
+                .withSynchronization(BucketSynchronizations.batching())
                 .build(42, () -> configuration);
         }
 
@@ -156,7 +156,7 @@ public enum BucketType {
         public Bucket createBucket(BucketConfiguration configuration, TimeMeter timeMeter, BucketListener listener) {
             ProxyManagerMock<Integer> proxyManager = new ProxyManagerMock<>(timeMeter);
             return proxyManager.builder()
-                .withOptimization(BucketSynchronizations.batching())
+                .withSynchronization(BucketSynchronizations.batching())
                 .withListener(listener)
                 .build(42, () -> configuration);
         }
@@ -170,11 +170,11 @@ public enum BucketType {
         public AsyncBucketProxy createAsyncBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
             ProxyManagerMock<Integer> proxyManager = new ProxyManagerMock<>(timeMeter);
             return proxyManager.asAsync().builder()
-                    .withOptimization(BucketSynchronizations.batching())
+                    .withSynchronization(BucketSynchronizations.batching())
                     .build(42, () -> CompletableFuture.completedFuture(configuration));
         }
     },
-    GRID_WITH_PER_MANAGER_BATCHING_OPTIMIZATION {
+    GRID_WITH_PER_MANAGER_BATCHING_SYNCHRONIZATION {
         @Override
         public Bucket createBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
             ProxyManagerMock<Integer> proxyManager = new ProxyManagerMock<>(ProxyManagerConfig.getDefault()
@@ -182,7 +182,7 @@ public enum BucketType {
                 .withSynchronization(new BatchingSynchronization())
             );
             return proxyManager.builder()
-                .withOptimization(BucketSynchronizations.batching())
+                .withSynchronization(BucketSynchronizations.batching())
                 .build(42, () -> configuration);
         }
 
@@ -209,7 +209,7 @@ public enum BucketType {
                 .withSynchronization(new BatchingSynchronization())
             );
             return proxyManager.asAsync().builder()
-                .withOptimization(BucketSynchronizations.batching())
+                .withSynchronization(BucketSynchronizations.batching())
                 .build(42, () -> CompletableFuture.completedFuture(configuration));
         }
     },

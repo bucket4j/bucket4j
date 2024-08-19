@@ -89,12 +89,12 @@ public class RedisSkipSyncOnZeroExample {
         AtomicLong totalMergedRequestCount = new AtomicLong();
         AtomicLong totalSkippedRequestCount = new AtomicLong();
 
-        DefaultSynchronizationListener optimizationListener = new DefaultSynchronizationListener();
-        BucketSynchronization bucketSynchronization = new SkipSyncOnZeroBucketSynchronization(optimizationListener, TimeMeter.SYSTEM_MILLISECONDS)
-            .withListener(optimizationListener);
+        DefaultSynchronizationListener synchronizationListener = new DefaultSynchronizationListener();
+        BucketSynchronization bucketSynchronization = new SkipSyncOnZeroBucketSynchronization(synchronizationListener, TimeMeter.SYSTEM_MILLISECONDS)
+            .withListener(synchronizationListener);
 
         Bucket bucket = proxyManager.builder()
-                .withOptimization(bucketSynchronization)
+                .withSynchronization(bucketSynchronization)
                 .build("13", () -> configuration);
 
         Timer statLogTimer = new Timer();
@@ -104,9 +104,9 @@ public class RedisSkipSyncOnZeroExample {
                 System.out.println("Consumption rate " + consumptionRate.getOneMinuteRate() + " tokens/sec");
                 System.out.println("Operations with bucket rate " + latencyTimer.getOneMinuteRate() + " ops/sec");
                 System.out.println("Consumed since start " + consumptionRate.getCount() + " tokens");
-                long skippedRequestCountSnapshot = optimizationListener.getSkipCount();
-                long mergedRequestCountSnapshot = optimizationListener.getMergeCount();
-                System.out.println("Optimization stat: " +
+                long skippedRequestCountSnapshot = synchronizationListener.getSkipCount();
+                long mergedRequestCountSnapshot = synchronizationListener.getMergeCount();
+                System.out.println("Synchronization stat: " +
                     "skipped=" + (skippedRequestCountSnapshot - totalSkippedRequestCount.get()) + " " +
                     "merged=" + (mergedRequestCountSnapshot - totalMergedRequestCount.get()));
                 totalSkippedRequestCount.set(skippedRequestCountSnapshot);
@@ -156,12 +156,12 @@ public class RedisSkipSyncOnZeroExample {
 
         AtomicLong totalMergedRequestCount = new AtomicLong();
         AtomicLong totalSkippedRequestCount = new AtomicLong();
-        DefaultSynchronizationListener optimizationListener = new DefaultSynchronizationListener();
-        BucketSynchronization bucketSynchronization = new SkipSyncOnZeroBucketSynchronization(optimizationListener, TimeMeter.SYSTEM_MILLISECONDS)
-            .withListener(optimizationListener);
+        DefaultSynchronizationListener synchronizationListener = new DefaultSynchronizationListener();
+        BucketSynchronization bucketSynchronization = new SkipSyncOnZeroBucketSynchronization(synchronizationListener, TimeMeter.SYSTEM_MILLISECONDS)
+            .withListener(synchronizationListener);
 
         AsyncBucketProxy bucket = proxyManager.asAsync().builder()
-                .withOptimization(bucketSynchronization)
+                .withSynchronization(bucketSynchronization)
                 .build("13", () -> CompletableFuture.completedFuture(configuration));
 
         // We need a backpressure for ougoing work because it obviously that OOM can be happen in asycnhrouous bucket mode
@@ -175,9 +175,9 @@ public class RedisSkipSyncOnZeroExample {
                 System.out.println("Consumption rate " + consumptionRate.getOneMinuteRate() + " tokens/sec");
                 System.out.println("Operations with bucket rate " + latencyTimer.getOneMinuteRate() + " ops/sec");
                 System.out.println("Consumed since start " + consumptionRate.getCount() + " tokens");
-                long skippedRequestCountSnapshot = optimizationListener.getSkipCount();
-                long mergedRequestCountSnapshot = optimizationListener.getMergeCount();
-                System.out.println("Optimization stat: " +
+                long skippedRequestCountSnapshot = synchronizationListener.getSkipCount();
+                long mergedRequestCountSnapshot = synchronizationListener.getMergeCount();
+                System.out.println("Synchronization stat: " +
                     "skipped=" + (skippedRequestCountSnapshot - totalSkippedRequestCount.get()) + " " +
                     "merged=" + (mergedRequestCountSnapshot - totalMergedRequestCount.get()));
                 totalSkippedRequestCount.set(skippedRequestCountSnapshot);

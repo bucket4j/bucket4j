@@ -1,4 +1,4 @@
-package io.github.bucket4j.distributed.proxy.optimization.batch.mock;
+package io.github.bucket4j.distributed.proxy.synchronization.batch.mock;
 
 import io.github.bucket4j.util.concurrent.batch.AsyncBatchHelper;
 import io.github.bucket4j.util.concurrent.batch.BatchHelper;

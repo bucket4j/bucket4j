@@ -1,8 +1,8 @@
-package io.github.bucket4j.distributed.proxy.optimization.skipsynconzero
+package io.github.bucket4j.distributed.proxy.synchronization.skipsynconzero
 
 
+import io.github.bucket4j.Bucket
 import io.github.bucket4j.BucketConfiguration
-import io.github.bucket4j.distributed.AsyncBucketProxy
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.DefaultSynchronizationListener
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronization
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.skiponzero.SkipSyncOnZeroBucketSynchronization
@@ -11,9 +11,8 @@ import io.github.bucket4j.mock.TimeMeterMock
 import spock.lang.Specification
 
 import java.time.Duration
-import java.util.concurrent.CompletableFuture
 
-class SkipSyncOnZeroAsyncCommandExecutorSpecification extends Specification {
+class SkipSyncOnZeroCommandExecutorSpecification extends Specification {
 
     private TimeMeterMock clock = new TimeMeterMock()
     private ProxyManagerMock proxyManager = new ProxyManagerMock(clock)
@@ -21,16 +20,16 @@ class SkipSyncOnZeroAsyncCommandExecutorSpecification extends Specification {
     private BucketConfiguration configuration = BucketConfiguration.builder()
         .addLimit({it.capacity(100).refillGreedy(100, Duration.ofMillis(1000))})
         .build()
-    private BucketSynchronization optimization = new SkipSyncOnZeroBucketSynchronization(listener, clock)
-    private AsyncBucketProxy optimizedBucket = proxyManager.asAsync().builder()
-        .withOptimization(optimization)
-        .build(1L, () -> CompletableFuture.completedFuture(configuration));
+    private BucketSynchronization synchronization = new SkipSyncOnZeroBucketSynchronization(listener, clock)
+    private Bucket optimizedBucket = proxyManager.builder()
+        .withSynchronization(synchronization)
+        .build(1L, () -> configuration)
 
     def "should skip synchronization with storage when bucket is empty"() {
         when: "bucket becomes empty"
-            optimizedBucket.tryConsumeAsMuchAsPossible().get()
+            optimizedBucket.tryConsumeAsMuchAsPossible()
         and: "trying to consume again"
-            optimizedBucket.tryConsume(1).get()
+            optimizedBucket.tryConsume(1)
         then: "request should not be propogated to server"
             listener.getMergeCount() == 0
             listener.getSkipCount() == 1
@@ -38,9 +37,9 @@ class SkipSyncOnZeroAsyncCommandExecutorSpecification extends Specification {
 
     def "should correctly calculate the time of next sync with storage with storage"() {
         when: "bucket becomes empty"
-            optimizedBucket.tryConsumeAsMuchAsPossible().get()
+            optimizedBucket.tryConsumeAsMuchAsPossible()
         and: "trying to consume again"
-            optimizedBucket.tryConsume(1).get()
+            optimizedBucket.tryConsume(1)
         then: "request should not be propogated to server"
             listener.getMergeCount() == 0
             listener.getSkipCount() == 1
@@ -48,7 +47,7 @@ class SkipSyncOnZeroAsyncCommandExecutorSpecification extends Specification {
         when: "past enough time to generate single token"
             clock.addMillis(10)
         and: "trying to consume again"
-            boolean consumed = optimizedBucket.tryConsume(1).get()
+            boolean consumed = optimizedBucket.tryConsume(1)
         then: "consumption request should be propogated to storage"
             consumed == true
             listener.getMergeCount() == 0
@@ -57,13 +56,13 @@ class SkipSyncOnZeroAsyncCommandExecutorSpecification extends Specification {
 
     def "special commands should lead to immediately synchronization with server"() {
         when: "bucket becomes empty"
-            optimizedBucket.tryConsumeAsMuchAsPossible().get()
+            optimizedBucket.tryConsumeAsMuchAsPossible()
         and: "reset all limits"
             optimizedBucket.reset()
         then: "request should not be propogated to server"
             listener.getMergeCount() == 0
             listener.getSkipCount() == 0
-            optimizedBucket.getAvailableTokens().get() == 100
+            optimizedBucket.getAvailableTokens() == 100
     }
 
 }

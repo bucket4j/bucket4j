@@ -85,12 +85,12 @@ public class RedisBatchingExample {
         AtomicLong totalMergedRequestCount = new AtomicLong();
         AtomicLong totalSkippedRequestCount = new AtomicLong();
 
-        DefaultSynchronizationListener optimizationListener = new DefaultSynchronizationListener();
+        DefaultSynchronizationListener synchronizationListener = new DefaultSynchronizationListener();
         BucketSynchronization bucketSynchronization = BucketSynchronizations.batching()
-            .withListener(optimizationListener);
+            .withListener(synchronizationListener);
 
         Bucket bucket = proxyManager.builder()
-                .withOptimization(bucketSynchronization)
+                .withSynchronization(bucketSynchronization)
                 .build("13", () -> configuration);
 
         Timer statLogTimer = new Timer();
@@ -99,9 +99,9 @@ public class RedisBatchingExample {
             public void run() {
                 System.out.println("Consumption rate " + consumptionRatePerSecond.getSum() + " tokens/sec ");
                 System.out.println("Rejection rate " + rejectionRatePerSecond.getSum() + " tokens/sec ");
-                long skippedRequestCountSnapshot = optimizationListener.getSkipCount();
-                long mergedRequestCountSnapshot = optimizationListener.getMergeCount();
-                System.out.println("Optimization stat: " +
+                long skippedRequestCountSnapshot = synchronizationListener.getSkipCount();
+                long mergedRequestCountSnapshot = synchronizationListener.getMergeCount();
+                System.out.println("Synchronization stat: " +
                     "skipped=" + (skippedRequestCountSnapshot - totalSkippedRequestCount.get()) + " " +
                     "merged=" + (mergedRequestCountSnapshot - totalMergedRequestCount.get()));
                 totalSkippedRequestCount.set(skippedRequestCountSnapshot);

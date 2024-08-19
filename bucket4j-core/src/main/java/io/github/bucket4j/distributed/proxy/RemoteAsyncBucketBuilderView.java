@@ -39,8 +39,8 @@ public class RemoteAsyncBucketBuilderView<K, KeyOld> implements RemoteAsyncBucke
     }
 
     @Override
-    public RemoteAsyncBucketBuilder<K> withOptimization(BucketSynchronization bucketSynchronization) {
-        target.withOptimization(bucketSynchronization);
+    public RemoteAsyncBucketBuilder<K> withSynchronization(BucketSynchronization bucketSynchronization) {
+        target.withSynchronization(bucketSynchronization);
         return this;
     }
 

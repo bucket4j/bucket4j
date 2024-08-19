@@ -20,7 +20,7 @@
 package io.github.bucket4j.distributed.proxy.synchronization.per_bucket;
 
 /**
- * Monitoring listener for applied optimizations
+ * Monitoring listener for applied synchronization
  */
 public interface BucketSynchronizationListener {
 
@@ -43,7 +43,7 @@ public interface BucketSynchronizationListener {
     void incrementMergeCount(int count);
 
     /**
-     * This method is invoked every time when several requests were not propagated to external storage because optimization had decided that they can be served locally.
+     * This method is invoked every time when several requests were not propagated to external storage because synchronization had decided that they can be served locally.
      *
      * @param count number of requests that were served locally without synchronization with external storage
      */

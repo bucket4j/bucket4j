@@ -1,4 +1,4 @@
-package io.github.bucket4j.distributed.proxy.optimization.batch.mock;
+package io.github.bucket4j.distributed.proxy.synchronization.batch.mock;
 
 public class MockState {
 

@@ -31,10 +31,10 @@ import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.batch.Bat
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.batch.BatchingBucketSynchronization;
 
 /**
- * Optimization that can serve requests locally without synchronization with external storage until thresholds are not violated.
- * This optimization is based on top of {@link BatchingBucketSynchronization}, so multiple parallel request to same bucket are grouped.
+ * Synchronization that can serve requests locally without synchronization with external storage until thresholds are not violated.
+ * This synchronization is based on top of {@link BatchingBucketSynchronization}, so multiple parallel request to same bucket are grouped.
  *
- * <p>Usage of this optimization can lead to temporal overconsumption because the synchronization with external storage is performed periodically when thresholds are violated.
+ * <p>Usage of this synchronization can lead to temporal overconsumption because the synchronization with external storage is performed periodically when thresholds are violated.
  *
  * @see DelayParameters
  */

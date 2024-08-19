@@ -1,4 +1,4 @@
-package io.github.bucket4j.distributed.proxy.optimization
+package io.github.bucket4j.distributed.proxy.synchronization
 
 
 import io.github.bucket4j.Bucket
@@ -48,7 +48,7 @@ class BucketSynchronizationCornerCasesSpecification extends Specification {
 
     // https://github.com/bucket4j/bucket4j/issues/398
     @Unroll
-    def "should correctly handle exceptions when optimization is used #testNumber ProxyManagerMock"(int testNumber, BucketSynchronization optimization) {
+    def "should correctly handle exceptions when synchronization is used #testNumber ProxyManagerMock"(int testNumber, BucketSynchronization synchronization) {
         setup:
             ProxyManagerMock proxyManagerMock = new ProxyManagerMock(clock)
             BucketConfiguration configuration = BucketConfiguration.builder()
@@ -56,7 +56,7 @@ class BucketSynchronizationCornerCasesSpecification extends Specification {
                 .build()
 
             BucketProxy bucket = proxyManagerMock.builder()
-                    .withOptimization(optimization)
+                    .withSynchronization(synchronization)
                     .build("66", () -> configuration)
         when:
             bucket.getAvailableTokens() == 10
@@ -76,7 +76,7 @@ class BucketSynchronizationCornerCasesSpecification extends Specification {
             bucket.asVerbose().getAvailableTokens().getValue() == 100
 
         where:
-            [testNumber, optimization] << [
+            [testNumber, synchronization] << [
                     [1, BucketSynchronizations.batching()],
                     [2, new DelayBucketSynchronization(delayParameters, NopeSynchronizationListener.INSTANCE, clock)],
                     [3, new PredictiveBucketSynchronization(PredictionParameters.createDefault(delayParameters), delayParameters, NopeSynchronizationListener.INSTANCE, clock)],
@@ -87,7 +87,7 @@ class BucketSynchronizationCornerCasesSpecification extends Specification {
 
     // https://github.com/bucket4j/bucket4j/issues/398
     @Unroll
-    def "should correctly handle exceptions when optimization is used #testNumber CompareAndSwapBasedProxyManagerMock"(int testNumber, BucketSynchronization optimization) {
+    def "should correctly handle exceptions when synchronization is used #testNumber CompareAndSwapBasedProxyManagerMock"(int testNumber, BucketSynchronization synchronization) {
         setup:
             CompareAndSwapBasedProxyManagerMock proxyManagerMock = new CompareAndSwapBasedProxyManagerMock(ProxyManagerConfig.default.withClientClock(clock))
             BucketConfiguration configuration = BucketConfiguration.builder()
@@ -95,7 +95,7 @@ class BucketSynchronizationCornerCasesSpecification extends Specification {
                 .build()
 
             BucketProxy bucket = proxyManagerMock.builder()
-                    .withOptimization(optimization)
+                    .withSynchronization(synchronization)
                     .build("66", () -> configuration)
         when:
             bucket.getAvailableTokens() == 10
@@ -115,7 +115,7 @@ class BucketSynchronizationCornerCasesSpecification extends Specification {
             bucket.asVerbose().getAvailableTokens().getValue() == 100
 
         where:
-        [testNumber, optimization] << [
+        [testNumber, synchronization] << [
                 [1, BucketSynchronizations.batching()],
                 [2, new DelayBucketSynchronization(delayParameters, NopeSynchronizationListener.INSTANCE, clock)],
                 [3, new PredictiveBucketSynchronization(PredictionParameters.createDefault(delayParameters), delayParameters, NopeSynchronizationListener.INSTANCE, clock)],
@@ -126,7 +126,7 @@ class BucketSynchronizationCornerCasesSpecification extends Specification {
 
     // https://github.com/bucket4j/bucket4j/issues/398
     @Unroll
-    def "should correctly handle exceptions when optimization is used #testNumber LockBasedProxyManagerMock"(int testNumber, BucketSynchronization optimization) {
+    def "should correctly handle exceptions when synchronization is used #testNumber LockBasedProxyManagerMock"(int testNumber, BucketSynchronization synchronization) {
         setup:
             LockBasedProxyManagerMock proxyManagerMock = new LockBasedProxyManagerMock(ProxyManagerConfig.default.withClientClock(clock))
             BucketConfiguration configuration = BucketConfiguration.builder()
@@ -134,7 +134,7 @@ class BucketSynchronizationCornerCasesSpecification extends Specification {
                 .build()
 
             BucketProxy bucket = proxyManagerMock.builder()
-                    .withOptimization(optimization)
+                    .withSynchronization(synchronization)
                     .build("66", () -> configuration)
         when:
             bucket.getAvailableTokens() == 10
@@ -154,7 +154,7 @@ class BucketSynchronizationCornerCasesSpecification extends Specification {
             bucket.asVerbose().getAvailableTokens().getValue() == 100
 
         where:
-            [testNumber, optimization] << [
+            [testNumber, synchronization] << [
                     [1, BucketSynchronizations.batching()],
                     [2, new DelayBucketSynchronization(delayParameters, NopeSynchronizationListener.INSTANCE, clock)],
                     [3, new PredictiveBucketSynchronization(PredictionParameters.createDefault(delayParameters), delayParameters, NopeSynchronizationListener.INSTANCE, clock)],
@@ -164,7 +164,7 @@ class BucketSynchronizationCornerCasesSpecification extends Specification {
     }
 
     @Unroll
-    def "should correctly handle exceptions when optimization is used #testNumber SelectForUpdateBasedProxyManagerMock"(int testNumber, BucketSynchronization optimization) {
+    def "should correctly handle exceptions when synchronization is used #testNumber SelectForUpdateBasedProxyManagerMock"(int testNumber, BucketSynchronization synchronization) {
         setup:
             SelectForUpdateBasedProxyManagerMock proxyManagerMock = new SelectForUpdateBasedProxyManagerMock(ProxyManagerConfig.default.withClientClock(clock))
             BucketConfiguration configuration = BucketConfiguration.builder()
@@ -172,7 +172,7 @@ class BucketSynchronizationCornerCasesSpecification extends Specification {
                 .build()
 
             BucketProxy bucket = proxyManagerMock.builder()
-                .withOptimization(optimization)
+                .withSynchronization(synchronization)
                 .build("66", () -> configuration)
         when:
             bucket.getAvailableTokens() == 10
@@ -192,7 +192,7 @@ class BucketSynchronizationCornerCasesSpecification extends Specification {
             bucket.asVerbose().getAvailableTokens().getValue() == 100
 
         where:
-            [testNumber, optimization] << [
+            [testNumber, synchronization] << [
                     [1, BucketSynchronizations.batching()],
                     [2, new DelayBucketSynchronization(delayParameters, NopeSynchronizationListener.INSTANCE, clock)],
                     [3, new PredictiveBucketSynchronization(PredictionParameters.createDefault(delayParameters), delayParameters, NopeSynchronizationListener.INSTANCE, clock)],
@@ -202,14 +202,14 @@ class BucketSynchronizationCornerCasesSpecification extends Specification {
     }
 
     @Unroll
-    def "#testNumber implicit configuration replacement case for version increment"(int testNumber, BucketSynchronization optimization) {
+    def "#testNumber implicit configuration replacement case for version increment"(int testNumber, BucketSynchronization synchronization) {
         when:
             ProxyManagerMock proxyManagerMock = new ProxyManagerMock(clock)
 
             int KEY = 42
             int PREVIOUS_VERSION = 1
             Bucket bucket10 = proxyManagerMock.builder()
-                .withOptimization(optimization)
+                .withSynchronization(synchronization)
                 .withImplicitConfigurationReplacement(PREVIOUS_VERSION, TokensInheritanceStrategy.RESET)
                 .build(KEY, () -> BucketConfiguration.builder()
                     .addLimit({limit -> limit.capacity(10).refillGreedy(10, Duration.ofSeconds(1))})
@@ -218,7 +218,7 @@ class BucketSynchronizationCornerCasesSpecification extends Specification {
             // persist bucket with previous version
             bucket10.tryConsumeAsMuchAsPossible()
 
-            CommandExecutor executor = optimization.apply(new CommandExecutor() {
+            CommandExecutor executor = synchronization.apply(new CommandExecutor() {
                 @Override
                 CommandResult execute(RemoteCommand command) {
                     Request request = new Request(command, Versions.latest, clock.currentTimeNanos(), null)
@@ -244,7 +244,7 @@ class BucketSynchronizationCornerCasesSpecification extends Specification {
             getTokensResult2.getData() == 100L
 
         where:
-            [testNumber, optimization] << [
+            [testNumber, synchronization] << [
                     [1, BucketSynchronizations.batching()],
                     [2, new DelayBucketSynchronization(delayParameters, NopeSynchronizationListener.INSTANCE, clock)],
                     [3, new PredictiveBucketSynchronization(PredictionParameters.createDefault(delayParameters), delayParameters, NopeSynchronizationListener.INSTANCE, clock)],
@@ -254,14 +254,14 @@ class BucketSynchronizationCornerCasesSpecification extends Specification {
     }
 
     @Unroll
-    def "#testNumber implicit configuration replacement case for version increment - Async"(int testNumber, BucketSynchronization optimization) {
+    def "#testNumber implicit configuration replacement case for version increment - Async"(int testNumber, BucketSynchronization synchronization) {
         when:
             ProxyManagerMock proxyManagerMock = new ProxyManagerMock(clock)
 
             int KEY = 42
             int PREVIOUS_VERSION = 1
             Bucket bucket10 = proxyManagerMock.builder()
-                    .withOptimization(optimization)
+                    .withSynchronization(synchronization)
                     .withImplicitConfigurationReplacement(PREVIOUS_VERSION, TokensInheritanceStrategy.RESET)
                     .build(KEY, () -> BucketConfiguration.builder()
                             .addLimit({limit -> limit.capacity(10).refillGreedy(10, Duration.ofSeconds(1))})
@@ -270,7 +270,7 @@ class BucketSynchronizationCornerCasesSpecification extends Specification {
             // persist bucket with previous version
             bucket10.tryConsumeAsMuchAsPossible()
 
-            AsyncCommandExecutor executor = optimization.apply (new AsyncCommandExecutor() {
+            AsyncCommandExecutor executor = synchronization.apply (new AsyncCommandExecutor() {
                 @Override
                 CompletableFuture<CommandResult> executeAsync(RemoteCommand command) {
                     Request request = new Request(command, Versions.latest, clock.currentTimeNanos(), null)
@@ -296,7 +296,7 @@ class BucketSynchronizationCornerCasesSpecification extends Specification {
             getTokensResult2.getData() == 100L
 
         where:
-            [testNumber, optimization] << [
+            [testNumber, synchronization] << [
                     [1, BucketSynchronizations.batching()],
                     [2, new DelayBucketSynchronization(delayParameters, NopeSynchronizationListener.INSTANCE, clock)],
                     [3, new PredictiveBucketSynchronization(PredictionParameters.createDefault(delayParameters), delayParameters, NopeSynchronizationListener.INSTANCE, clock)],

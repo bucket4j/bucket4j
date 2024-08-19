@@ -1,7 +1,7 @@
 package io.github.bucket4j.util.concurrent
 
-import io.github.bucket4j.distributed.proxy.optimization.batch.mock.MockBatchExecutor
-import io.github.bucket4j.distributed.proxy.optimization.batch.mock.SingleMockCommand
+import io.github.bucket4j.distributed.proxy.synchronization.batch.mock.MockBatchExecutor
+import io.github.bucket4j.distributed.proxy.synchronization.batch.mock.SingleMockCommand
 import spock.lang.Specification
 import spock.lang.Timeout
 

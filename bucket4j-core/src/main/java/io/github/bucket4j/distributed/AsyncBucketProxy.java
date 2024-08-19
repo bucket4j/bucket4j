@@ -308,14 +308,14 @@ public interface AsyncBucketProxy {
     CompletableFuture<Long> getAvailableTokens();
 
     /**
-     * Returns optimization controller for this proxy.
+     * Returns synchronization controller for this proxy.
      *
      * <p>
-     * This method is actual only if an optimization was applied during bucket construction via {@link RemoteAsyncBucketBuilder#withOptimization(BucketSynchronization)}
+     * This method is actual only if a synchronization was applied during bucket construction via {@link RemoteAsyncBucketBuilder#withSynchronization(BucketSynchronization)}
      * otherwise returned controller will do nothing.
      *
-     * @return optimization controller for this proxy
+     * @return synchronization controller for this proxy
      */
-    AsyncBucketOptimizationController getOptimizationController();
+    AsyncBucketSynchronizationController getSynchronizationController();
 
 }

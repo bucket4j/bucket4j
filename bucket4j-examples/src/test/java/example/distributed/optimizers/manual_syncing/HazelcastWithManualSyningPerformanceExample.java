@@ -94,7 +94,7 @@ public class HazelcastWithManualSyningPerformanceExample {
                 .build();
 
         BucketProxy bucket = proxyManager.builder()
-                .withOptimization(new ManuallySyncingBucketSynchronization())
+                .withSynchronization(new ManuallySyncingBucketSynchronization())
                 .build("13", () -> configuration);
         // Fetching available tokens is fully enough init bucket in storage
         bucket.getAvailableTokens();
@@ -104,7 +104,7 @@ public class HazelcastWithManualSyningPerformanceExample {
 
         // sync bucket manually each seconds
         Executors.newScheduledThreadPool(1).scheduleAtFixedRate(() -> {
-            bucket.getOptimizationController().syncImmediately();
+            bucket.getSynchronizationController().syncImmediately();
             }, 1, 1, TimeUnit.SECONDS
         );
 
@@ -164,7 +164,7 @@ public class HazelcastWithManualSyningPerformanceExample {
                 .build();
 
         AsyncBucketProxy bucket = proxyManager.asAsync().builder()
-                .withOptimization(new ManuallySyncingBucketSynchronization())
+                .withSynchronization(new ManuallySyncingBucketSynchronization())
                 .build("13", () -> CompletableFuture.completedFuture(configuration));
         bucket.getAvailableTokens().join();
 
@@ -173,7 +173,7 @@ public class HazelcastWithManualSyningPerformanceExample {
 
         // sync bucket manually each second
         Executors.newScheduledThreadPool(1).scheduleAtFixedRate(() -> {
-                    bucket.getOptimizationController().syncImmediately();
+                    bucket.getSynchronizationController().syncImmediately();
                 }, 1, 1, TimeUnit.SECONDS
         );
 

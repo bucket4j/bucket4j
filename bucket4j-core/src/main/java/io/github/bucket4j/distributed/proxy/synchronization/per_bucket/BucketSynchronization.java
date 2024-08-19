@@ -26,7 +26,7 @@ import io.github.bucket4j.distributed.proxy.AsyncCommandExecutor;
 import io.github.bucket4j.distributed.proxy.CommandExecutor;
 
 /**
- * Specifies request optimization strategy for {@link BucketProxy} and {@link AsyncBucketProxy}.
+ * Specifies request synchronization strategy for {@link BucketProxy} and {@link AsyncBucketProxy}.
  * By default, an interaction with {@link BucketProxy} and {@link AsyncBucketProxy} leads to immediately request to remote storage,
  * various implementations of {@link BucketSynchronization} interface can optimize this behavior.
  *
@@ -53,16 +53,16 @@ public interface BucketSynchronization {
     };
 
     /**
-     * Specifies the listener for optimization events
+     * Specifies the listener for synchronization events
      *
-     * @param listener the listener for optimization events
+     * @param listener the listener for synchronization events
      *
      * @return the new instance of {@link BucketSynchronization} with configured listener
      */
     BucketSynchronization withListener(BucketSynchronizationListener listener);
 
     /**
-     * Decorates command executor in order to apply optimization strategy.
+     * Decorates command executor in order to apply synchronization strategy.
      *
      * @param originalExecutor command executor that need to be optimized
      *
@@ -71,7 +71,7 @@ public interface BucketSynchronization {
     CommandExecutor apply(CommandExecutor originalExecutor);
 
     /**
-     * Decorates command executor in order to apply optimization strategy.
+     * Decorates command executor in order to apply synchronization strategy.
      *
      * @param originalExecutor command executor that need to be optimized
      *

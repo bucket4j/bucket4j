@@ -1,4 +1,4 @@
-package io.github.bucket4j.distributed.proxy.optimization.batch
+package io.github.bucket4j.distributed.proxy.synchronization.batch
 
 import io.github.bucket4j.Bucket
 import io.github.bucket4j.BucketConfiguration
@@ -289,14 +289,14 @@ class BatchingCommandExecutorSpecification extends Specification {
     }
 
     Bucket createBucket(boolean versioned, ProxyManager proxyManager, DefaultSynchronizationListener listener) {
-        BucketSynchronization optimization = new BatchingBucketSynchronization(listener)
+        BucketSynchronization synchronization = new BatchingBucketSynchronization(listener)
         if (versioned) {
             return proxyManager.builder()
-                    .withOptimization(optimization)
+                    .withSynchronization(synchronization)
                     .build(1L, () -> configuration)
         } else {
             return proxyManager.builder()
-                    .withOptimization(optimization)
+                    .withSynchronization(synchronization)
                     .withImplicitConfigurationReplacement(1, TokensInheritanceStrategy.AS_IS)
                     .build(1L, () -> configuration)
         }
@@ -314,12 +314,12 @@ class BatchingCommandExecutorSpecification extends Specification {
                 .build()
             if (versioned) {
                 bucket = proxyManager.builder()
-                    .withOptimization(BucketSynchronizations.batching())
+                    .withSynchronization(BucketSynchronizations.batching())
                     .withImplicitConfigurationReplacement(1, TokensInheritanceStrategy.AS_IS)
                     .build(42, configSupplier)
             } else {
                 bucket = proxyManager.builder()
-                    .withOptimization(BucketSynchronizations.batching())
+                    .withSynchronization(BucketSynchronizations.batching())
                     .build(42, configSupplier)
             }
             AtomicLong consumedTokens = new AtomicLong()

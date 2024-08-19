@@ -38,8 +38,8 @@ public class RemoteBucketBuilderView<K, KeyOld> implements RemoteBucketBuilder<K
     }
 
     @Override
-    public RemoteBucketBuilder<K> withOptimization(BucketSynchronization bucketSynchronization) {
-        target.withOptimization(bucketSynchronization);
+    public RemoteBucketBuilder<K> withSynchronization(BucketSynchronization bucketSynchronization) {
+        target.withSynchronization(bucketSynchronization);
         return this;
     }
 

@@ -21,7 +21,7 @@
 package io.github.bucket4j.distributed.proxy.synchronization.per_bucket.manual;
 
 import io.github.bucket4j.TimeMeter;
-import io.github.bucket4j.distributed.BucketOptimizationController;
+import io.github.bucket4j.distributed.BucketSynchronizationController;
 import io.github.bucket4j.distributed.proxy.AsyncCommandExecutor;
 import io.github.bucket4j.distributed.proxy.CommandExecutor;
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.DelayParameters;
@@ -30,7 +30,7 @@ import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSyn
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronizationListener;
 
 /**
- * Optimization that can serve requests locally without synchronization with external storage until explicit call of {@link BucketOptimizationController#syncImmediately()}.
+ * Synchronization that can serve requests locally without synchronization with external storage until explicit call of {@link BucketSynchronizationController#syncImmediately()}.
  *
  * @see DelayParameters
  */

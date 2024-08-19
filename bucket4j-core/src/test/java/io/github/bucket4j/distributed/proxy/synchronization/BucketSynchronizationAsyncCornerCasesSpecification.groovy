@@ -1,4 +1,4 @@
-package io.github.bucket4j.distributed.proxy.optimization
+package io.github.bucket4j.distributed.proxy.synchronization
 
 
 import io.github.bucket4j.BucketConfiguration
@@ -31,7 +31,7 @@ class BucketSynchronizationAsyncCornerCasesSpecification extends Specification {
 
     // https://github.com/bucket4j/bucket4j/issues/398
     @Unroll
-    def "should correctly handle exceptions when optimization is used #testNumber ProxyManagerMock"(int testNumber, BucketSynchronization optimization) {
+    def "should correctly handle exceptions when synchronization is used #testNumber ProxyManagerMock"(int testNumber, BucketSynchronization synchronization) {
         setup:
             ProxyManagerMock proxyManagerMock = new ProxyManagerMock(clock)
             BucketConfiguration configuration = BucketConfiguration.builder()
@@ -39,7 +39,7 @@ class BucketSynchronizationAsyncCornerCasesSpecification extends Specification {
                 .build()
 
             AsyncBucketProxy bucket = proxyManagerMock.asAsync().builder()
-                    .withOptimization(optimization)
+                    .withSynchronization(synchronization)
                     .build("66", {CompletableFuture.completedFuture(configuration)})
         when:
             bucket.getAvailableTokens().get() == 10
@@ -59,7 +59,7 @@ class BucketSynchronizationAsyncCornerCasesSpecification extends Specification {
             bucket.asVerbose().getAvailableTokens().get().getValue() == 100
 
         where:
-            [testNumber, optimization] << [
+            [testNumber, synchronization] << [
                     [1, BucketSynchronizations.batching()],
                     [2, new DelayBucketSynchronization(delayParameters, NopeSynchronizationListener.INSTANCE, clock)],
                     [3, new PredictiveBucketSynchronization(PredictionParameters.createDefault(delayParameters), delayParameters, NopeSynchronizationListener.INSTANCE, clock)],
@@ -70,7 +70,7 @@ class BucketSynchronizationAsyncCornerCasesSpecification extends Specification {
 
     // https://github.com/bucket4j/bucket4j/issues/398
     @Unroll
-    def "should correctly handle exceptions when optimization is used #testNumber CompareAndSwapBasedProxyManagerMock"(int testNumber, BucketSynchronization optimization) {
+    def "should correctly handle exceptions when synchronization is used #testNumber CompareAndSwapBasedProxyManagerMock"(int testNumber, BucketSynchronization synchronization) {
         setup:
             CompareAndSwapBasedProxyManagerMock proxyManagerMock = new CompareAndSwapBasedProxyManagerMock(ProxyManagerConfig.default.withClientClock(clock))
             BucketConfiguration configuration = BucketConfiguration.builder()
@@ -78,7 +78,7 @@ class BucketSynchronizationAsyncCornerCasesSpecification extends Specification {
                 .build()
 
             AsyncBucketProxy bucket = proxyManagerMock.asAsync().builder()
-                    .withOptimization(optimization)
+                    .withSynchronization(synchronization)
                     .build("66", () -> CompletableFuture.completedFuture(configuration))
         when:
             bucket.getAvailableTokens().get() == 10
@@ -98,7 +98,7 @@ class BucketSynchronizationAsyncCornerCasesSpecification extends Specification {
             bucket.asVerbose().getAvailableTokens().get().getValue() == 100
 
         where:
-        [testNumber, optimization] << [
+        [testNumber, synchronization] << [
                 [1, BucketSynchronizations.batching()],
                 [2, new DelayBucketSynchronization(delayParameters, NopeSynchronizationListener.INSTANCE, clock)],
                 [3, new PredictiveBucketSynchronization(PredictionParameters.createDefault(delayParameters), delayParameters, NopeSynchronizationListener.INSTANCE, clock)],

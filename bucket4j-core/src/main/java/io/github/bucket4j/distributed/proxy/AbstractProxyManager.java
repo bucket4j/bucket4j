@@ -137,7 +137,7 @@ public abstract class AbstractProxyManager<K> implements ProxyManager<K> {
         private BucketListener listener = BucketListener.NOPE;
 
         @Override
-        public DefaultAsyncRemoteBucketBuilder withOptimization(BucketSynchronization requestOptimizer) {
+        public DefaultAsyncRemoteBucketBuilder withSynchronization(BucketSynchronization requestOptimizer) {
             this.asyncRequestOptimizer = requireNonNull(requestOptimizer);
             return this;
         }
@@ -181,7 +181,7 @@ public abstract class AbstractProxyManager<K> implements ProxyManager<K> {
         private BucketListener listener = BucketListener.NOPE;
 
         @Override
-        public RemoteBucketBuilder<K> withOptimization(BucketSynchronization bucketSynchronization) {
+        public RemoteBucketBuilder<K> withSynchronization(BucketSynchronization bucketSynchronization) {
             this.requestOptimizer = requireNonNull(bucketSynchronization);
             return this;
         }
