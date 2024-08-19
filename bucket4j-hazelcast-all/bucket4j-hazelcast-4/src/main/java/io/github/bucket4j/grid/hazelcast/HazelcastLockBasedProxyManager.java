@@ -19,7 +19,6 @@
  */
 package io.github.bucket4j.grid.hazelcast;
 
-import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
@@ -27,7 +26,6 @@ import com.hazelcast.map.IMap;
 
 import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
-import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.generic.pessimistic_locking.AbstractLockBasedProxyManager;
 import io.github.bucket4j.distributed.proxy.generic.pessimistic_locking.LockBasedTransaction;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;

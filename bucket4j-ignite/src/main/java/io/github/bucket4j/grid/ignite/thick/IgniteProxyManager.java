@@ -37,10 +37,8 @@
 package io.github.bucket4j.grid.ignite.thick;
 
 import io.github.bucket4j.distributed.proxy.AbstractProxyManager;
-import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.remote.*;
 import io.github.bucket4j.distributed.versioning.Version;
-import io.github.bucket4j.grid.ignite.Bucket4jIgnite;
 
 import org.apache.ignite.IgniteCache;
 import org.apache.ignite.cache.CacheEntryProcessor;
@@ -52,7 +50,6 @@ import javax.cache.processor.MutableEntry;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
 import static io.github.bucket4j.distributed.serialization.InternalSerializationHelper.*;

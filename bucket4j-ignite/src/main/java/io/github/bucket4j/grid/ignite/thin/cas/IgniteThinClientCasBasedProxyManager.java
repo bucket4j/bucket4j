@@ -20,19 +20,16 @@
 
 package io.github.bucket4j.grid.ignite.thin.cas;
 
-import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AbstractCompareAndSwapBasedProxyManager;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AsyncCompareAndSwapOperation;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.CompareAndSwapOperation;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
-import io.github.bucket4j.grid.ignite.Bucket4jIgnite;
 import io.github.bucket4j.grid.ignite.thin.Bucket4jIgniteThin.IgniteThinClientCasBasedProxyManagerBuilder;
 import io.github.bucket4j.grid.ignite.thin.ThinClientUtils;
 import org.apache.ignite.client.ClientCache;
 import org.apache.ignite.client.IgniteClientFuture;
 
 import java.nio.ByteBuffer;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 

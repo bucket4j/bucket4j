@@ -6,7 +6,7 @@ import io.github.bucket4j.BucketConfiguration
 import io.github.bucket4j.TokensInheritanceStrategy
 import io.github.bucket4j.distributed.BucketProxy
 import io.github.bucket4j.distributed.proxy.AsyncCommandExecutor
-import io.github.bucket4j.distributed.proxy.ClientSideConfig
+import io.github.bucket4j.distributed.proxy.ProxyManagerConfig
 import io.github.bucket4j.distributed.proxy.CommandExecutor
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.DelayParameters
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.NopeSynchronizationListener
@@ -89,7 +89,7 @@ class BucketSynchronizationCornerCasesSpecification extends Specification {
     @Unroll
     def "should correctly handle exceptions when optimization is used #testNumber CompareAndSwapBasedProxyManagerMock"(int testNumber, BucketSynchronization optimization) {
         setup:
-            CompareAndSwapBasedProxyManagerMock proxyManagerMock = new CompareAndSwapBasedProxyManagerMock(ClientSideConfig.default.withClientClock(clock))
+            CompareAndSwapBasedProxyManagerMock proxyManagerMock = new CompareAndSwapBasedProxyManagerMock(ProxyManagerConfig.default.withClientClock(clock))
             BucketConfiguration configuration = BucketConfiguration.builder()
                 .addLimit({it.capacity(10).refillGreedy(10, Duration.ofSeconds (1))})
                 .build()
@@ -128,7 +128,7 @@ class BucketSynchronizationCornerCasesSpecification extends Specification {
     @Unroll
     def "should correctly handle exceptions when optimization is used #testNumber LockBasedProxyManagerMock"(int testNumber, BucketSynchronization optimization) {
         setup:
-            LockBasedProxyManagerMock proxyManagerMock = new LockBasedProxyManagerMock(ClientSideConfig.default.withClientClock(clock))
+            LockBasedProxyManagerMock proxyManagerMock = new LockBasedProxyManagerMock(ProxyManagerConfig.default.withClientClock(clock))
             BucketConfiguration configuration = BucketConfiguration.builder()
                 .addLimit({it.capacity(10).refillGreedy(10, Duration.ofSeconds (1))})
                 .build()
@@ -166,7 +166,7 @@ class BucketSynchronizationCornerCasesSpecification extends Specification {
     @Unroll
     def "should correctly handle exceptions when optimization is used #testNumber SelectForUpdateBasedProxyManagerMock"(int testNumber, BucketSynchronization optimization) {
         setup:
-            SelectForUpdateBasedProxyManagerMock proxyManagerMock = new SelectForUpdateBasedProxyManagerMock(ClientSideConfig.default.withClientClock(clock))
+            SelectForUpdateBasedProxyManagerMock proxyManagerMock = new SelectForUpdateBasedProxyManagerMock(ProxyManagerConfig.default.withClientClock(clock))
             BucketConfiguration configuration = BucketConfiguration.builder()
                 .addLimit({it.capacity(10).refillGreedy(10, Duration.ofSeconds (1))})
                 .build()

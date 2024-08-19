@@ -38,17 +38,15 @@ package io.github.bucket4j.grid.ignite.thin.compute;
 
 import io.github.bucket4j.BucketExceptions;
 import io.github.bucket4j.distributed.proxy.AbstractProxyManager;
-import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.Request;
 import io.github.bucket4j.distributed.versioning.Version;
-import io.github.bucket4j.grid.ignite.Bucket4jIgnite;
 import io.github.bucket4j.grid.ignite.thin.Bucket4jIgniteThin;
 import io.github.bucket4j.grid.ignite.thin.ThinClientUtils;
 import org.apache.ignite.client.ClientCache;
 import org.apache.ignite.client.ClientCompute;
 import org.apache.ignite.client.IgniteClientFuture;
-import java.util.Objects;
+
 import java.util.concurrent.CompletableFuture;
 
 import static io.github.bucket4j.distributed.serialization.InternalSerializationHelper.deserializeResult;

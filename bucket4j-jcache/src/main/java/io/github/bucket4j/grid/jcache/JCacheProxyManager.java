@@ -37,7 +37,6 @@
 package io.github.bucket4j.grid.jcache;
 
 import io.github.bucket4j.distributed.proxy.AbstractProxyManager;
-import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.remote.*;
 import io.github.bucket4j.distributed.serialization.InternalSerializationHelper;
 

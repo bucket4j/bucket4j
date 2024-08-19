@@ -37,11 +37,10 @@
 package io.github.bucket4j.grid.infinispan;
 
 import io.github.bucket4j.distributed.proxy.AbstractProxyManager;
-import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.remote.*;
 import org.infinispan.commons.CacheException;
 import org.infinispan.functional.FunctionalMap.ReadWriteMap;
-import java.util.Objects;
+
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 

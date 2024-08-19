@@ -23,7 +23,7 @@ package io.github.bucket4j.distributed.proxy.generic.pessimistic_locking;
 import io.github.bucket4j.BucketExceptions;
 import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.proxy.AbstractProxyManager;
-import io.github.bucket4j.distributed.proxy.ClientSideConfig;
+import io.github.bucket4j.distributed.proxy.ProxyManagerConfig;
 import io.github.bucket4j.distributed.proxy.Timeout;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.MutableBucketEntry;
@@ -43,8 +43,8 @@ import java.util.concurrent.TimeUnit;
  */
 public abstract class AbstractLockBasedProxyManager<K> extends AbstractProxyManager<K> {
 
-    protected AbstractLockBasedProxyManager(ClientSideConfig clientSideConfig) {
-        super(injectTimeClock(clientSideConfig));
+    protected AbstractLockBasedProxyManager(ProxyManagerConfig proxyManagerConfig) {
+        super(injectTimeClock(proxyManagerConfig));
     }
 
     @Override
@@ -122,11 +122,11 @@ public abstract class AbstractLockBasedProxyManager<K> extends AbstractProxyMana
         }
     }
 
-    private static ClientSideConfig injectTimeClock(ClientSideConfig clientSideConfig) {
-        if (clientSideConfig.getClientSideClock().isPresent()) {
-            return clientSideConfig;
+    private static ProxyManagerConfig injectTimeClock(ProxyManagerConfig proxyManagerConfig) {
+        if (proxyManagerConfig.getClientSideClock().isPresent()) {
+            return proxyManagerConfig;
         }
-        return clientSideConfig.withClientClock(TimeMeter.SYSTEM_MILLISECONDS);
+        return proxyManagerConfig.withClientClock(TimeMeter.SYSTEM_MILLISECONDS);
     }
 
     protected void applyTimeout(PreparedStatement statement, Optional<Long> requestTimeoutNanos) throws SQLException {

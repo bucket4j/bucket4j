@@ -17,7 +17,7 @@
 
 package io.github.bucket4j.mock;
 
-import io.github.bucket4j.distributed.proxy.ClientSideConfig;
+import io.github.bucket4j.distributed.proxy.ProxyManagerConfig;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AbstractCompareAndSwapBasedProxyManager;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AsyncCompareAndSwapOperation;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.CompareAndSwapOperation;
@@ -32,8 +32,8 @@ public class CompareAndSwapBasedProxyManagerMock<K> extends AbstractCompareAndSw
 
     private final Map<K, byte[]> stateMap = new HashMap<>();
 
-    public CompareAndSwapBasedProxyManagerMock(ClientSideConfig clientSideConfig) {
-        super(clientSideConfig);
+    public CompareAndSwapBasedProxyManagerMock(ProxyManagerConfig proxyManagerConfig) {
+        super(proxyManagerConfig);
     }
 
     @Override

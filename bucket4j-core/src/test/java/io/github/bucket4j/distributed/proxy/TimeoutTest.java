@@ -15,10 +15,10 @@ public class TimeoutTest {
 
     private static Duration requestTimeout = Duration.ofSeconds(1);
     private TimeMeterMock clock = new TimeMeterMock();
-    private ClientSideConfig clientSideConfig = ClientSideConfig.getDefault()
+    private ProxyManagerConfig proxyManagerConfig = ProxyManagerConfig.getDefault()
         .withClientClock(clock)
         .withRequestTimeout(requestTimeout);
-    private Timeout timeout = Timeout.of(clientSideConfig);
+    private Timeout timeout = Timeout.of(proxyManagerConfig);
 
 
     @Test

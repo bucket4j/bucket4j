@@ -20,7 +20,7 @@ package io.github.bucket4j.mock;
 
 import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.proxy.AbstractProxyManager;
-import io.github.bucket4j.distributed.proxy.ClientSideConfig;
+import io.github.bucket4j.distributed.proxy.ProxyManagerConfig;
 import io.github.bucket4j.distributed.remote.*;
 import io.github.bucket4j.distributed.versioning.Version;
 
@@ -54,10 +54,10 @@ public class ProxyManagerMock<K> extends AbstractProxyManager<K> {
     private boolean allowReturnResult = true;
 
     public ProxyManagerMock(TimeMeter timeMeter) {
-        super(ClientSideConfig.getDefault().withClientClock(timeMeter));
+        super(ProxyManagerConfig.getDefault().withClientClock(timeMeter));
     }
 
-    public ProxyManagerMock(ClientSideConfig config) {
+    public ProxyManagerMock(ProxyManagerConfig config) {
         super(config);
     }
 

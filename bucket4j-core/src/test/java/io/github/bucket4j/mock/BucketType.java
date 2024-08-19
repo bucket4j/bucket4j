@@ -6,7 +6,7 @@ import java.util.concurrent.CompletableFuture;
 import io.github.bucket4j.*;
 import io.github.bucket4j.distributed.AsyncBucketProxy;
 import io.github.bucket4j.distributed.AsyncBucketProxyAdapter;
-import io.github.bucket4j.distributed.proxy.ClientSideConfig;
+import io.github.bucket4j.distributed.proxy.ProxyManagerConfig;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronizations;
 import io.github.bucket4j.distributed.proxy.synchronization.batch.BatchingSynchronization;
@@ -177,7 +177,7 @@ public enum BucketType {
     GRID_WITH_PER_MANAGER_BATCHING_OPTIMIZATION {
         @Override
         public Bucket createBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
-            ProxyManagerMock<Integer> proxyManager = new ProxyManagerMock<>(ClientSideConfig.getDefault()
+            ProxyManagerMock<Integer> proxyManager = new ProxyManagerMock<>(ProxyManagerConfig.getDefault()
                 .withClientClock(timeMeter)
                 .withSynchronization(new BatchingSynchronization())
             );
@@ -188,7 +188,7 @@ public enum BucketType {
 
         @Override
         public Bucket createBucket(BucketConfiguration configuration, TimeMeter timeMeter, BucketListener listener) {
-            ProxyManagerMock<Integer> proxyManager = new ProxyManagerMock<>(ClientSideConfig.getDefault()
+            ProxyManagerMock<Integer> proxyManager = new ProxyManagerMock<>(ProxyManagerConfig.getDefault()
                 .withClientClock(timeMeter)
                 .withSynchronization(new BatchingSynchronization())
             );
@@ -204,7 +204,7 @@ public enum BucketType {
 
         @Override
         public AsyncBucketProxy createAsyncBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
-            ProxyManagerMock<Integer> proxyManager = new ProxyManagerMock<>(ClientSideConfig.getDefault()
+            ProxyManagerMock<Integer> proxyManager = new ProxyManagerMock<>(ProxyManagerConfig.getDefault()
                 .withClientClock(timeMeter)
                 .withSynchronization(new BatchingSynchronization())
             );
@@ -217,14 +217,14 @@ public enum BucketType {
     COMPARE_AND_SWAP {
         @Override
         public Bucket createBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
-            CompareAndSwapBasedProxyManagerMock<Integer> proxyManager = new CompareAndSwapBasedProxyManagerMock<>(ClientSideConfig.getDefault().withClientClock(timeMeter));
+            CompareAndSwapBasedProxyManagerMock<Integer> proxyManager = new CompareAndSwapBasedProxyManagerMock<>(ProxyManagerConfig.getDefault().withClientClock(timeMeter));
             return proxyManager.builder()
                     .build(42, () -> configuration);
         }
 
         @Override
         public Bucket createBucket(BucketConfiguration configuration, TimeMeter timeMeter, BucketListener listener) {
-            CompareAndSwapBasedProxyManagerMock<Integer> proxyManager = new CompareAndSwapBasedProxyManagerMock<>(ClientSideConfig.getDefault().withClientClock(timeMeter));
+            CompareAndSwapBasedProxyManagerMock<Integer> proxyManager = new CompareAndSwapBasedProxyManagerMock<>(ProxyManagerConfig.getDefault().withClientClock(timeMeter));
             return proxyManager.builder()
                 .withListener(listener)
                 .build(42, () -> configuration);
@@ -232,19 +232,19 @@ public enum BucketType {
 
         @Override
         public ProxyManager<Integer> createProxyManager(TimeMeter timeMeter) {
-            return new CompareAndSwapBasedProxyManagerMock<>(ClientSideConfig.getDefault().withClientClock(timeMeter));
+            return new CompareAndSwapBasedProxyManagerMock<>(ProxyManagerConfig.getDefault().withClientClock(timeMeter));
         }
 
         @Override
         public AsyncBucketProxy createAsyncBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
-            CompareAndSwapBasedProxyManagerMock<Integer> proxyManager = new CompareAndSwapBasedProxyManagerMock<>(ClientSideConfig.getDefault().withClientClock(timeMeter));
+            CompareAndSwapBasedProxyManagerMock<Integer> proxyManager = new CompareAndSwapBasedProxyManagerMock<>(ProxyManagerConfig.getDefault().withClientClock(timeMeter));
             return proxyManager.asAsync().builder()
                 .build(42, () -> CompletableFuture.completedFuture(configuration));
         }
 
         @Override
         public AsyncBucketProxy createAsyncBucket(BucketConfiguration configuration, TimeMeter timeMeter, BucketListener listener) {
-            CompareAndSwapBasedProxyManagerMock<Integer> proxyManager = new CompareAndSwapBasedProxyManagerMock<>(ClientSideConfig.getDefault().withClientClock(timeMeter));
+            CompareAndSwapBasedProxyManagerMock<Integer> proxyManager = new CompareAndSwapBasedProxyManagerMock<>(ProxyManagerConfig.getDefault().withClientClock(timeMeter));
             return proxyManager.asAsync().builder()
                 .withListener(listener)
                 .build(42, () -> CompletableFuture.completedFuture(configuration));
@@ -254,14 +254,14 @@ public enum BucketType {
     LOCK_BASED {
         @Override
         public Bucket createBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
-            LockBasedProxyManagerMock<Integer> proxyManager = new LockBasedProxyManagerMock<>(ClientSideConfig.getDefault().withClientClock(timeMeter));
+            LockBasedProxyManagerMock<Integer> proxyManager = new LockBasedProxyManagerMock<>(ProxyManagerConfig.getDefault().withClientClock(timeMeter));
             return proxyManager.builder()
                     .build(42, () -> configuration);
         }
 
         @Override
         public Bucket createBucket(BucketConfiguration configuration, TimeMeter timeMeter, BucketListener listener) {
-            LockBasedProxyManagerMock<Integer> proxyManager = new LockBasedProxyManagerMock<>(ClientSideConfig.getDefault().withClientClock(timeMeter));
+            LockBasedProxyManagerMock<Integer> proxyManager = new LockBasedProxyManagerMock<>(ProxyManagerConfig.getDefault().withClientClock(timeMeter));
             return proxyManager.builder()
                 .withListener(listener)
                 .build(42, () -> configuration);
@@ -269,21 +269,21 @@ public enum BucketType {
 
         @Override
         public ProxyManager<Integer> createProxyManager(TimeMeter timeMeter) {
-            return new LockBasedProxyManagerMock<>(ClientSideConfig.getDefault().withClientClock(timeMeter));
+            return new LockBasedProxyManagerMock<>(ProxyManagerConfig.getDefault().withClientClock(timeMeter));
         }
     },
 
     SELECT_FOR_UPDATE {
         @Override
         public Bucket createBucket(BucketConfiguration configuration, TimeMeter timeMeter) {
-            SelectForUpdateBasedProxyManagerMock<Integer> proxyManager = new SelectForUpdateBasedProxyManagerMock<>(ClientSideConfig.getDefault().withClientClock(timeMeter));
+            SelectForUpdateBasedProxyManagerMock<Integer> proxyManager = new SelectForUpdateBasedProxyManagerMock<>(ProxyManagerConfig.getDefault().withClientClock(timeMeter));
             return proxyManager.builder()
                 .build(42, () -> configuration);
         }
 
         @Override
         public Bucket createBucket(BucketConfiguration configuration, TimeMeter timeMeter, BucketListener listener) {
-            SelectForUpdateBasedProxyManagerMock<Integer> proxyManager = new SelectForUpdateBasedProxyManagerMock<>(ClientSideConfig.getDefault().withClientClock(timeMeter));
+            SelectForUpdateBasedProxyManagerMock<Integer> proxyManager = new SelectForUpdateBasedProxyManagerMock<>(ProxyManagerConfig.getDefault().withClientClock(timeMeter));
             return proxyManager.builder()
                 .withListener(listener)
                 .build(42, () -> configuration);
@@ -291,7 +291,7 @@ public enum BucketType {
 
         @Override
         public ProxyManager<Integer> createProxyManager(TimeMeter timeMeter) {
-            return new LockBasedProxyManagerMock<>(ClientSideConfig.getDefault().withClientClock(timeMeter));
+            return new LockBasedProxyManagerMock<>(ProxyManagerConfig.getDefault().withClientClock(timeMeter));
         }
     };
 

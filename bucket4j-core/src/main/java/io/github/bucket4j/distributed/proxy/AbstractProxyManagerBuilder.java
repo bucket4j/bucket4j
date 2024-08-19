@@ -241,8 +241,8 @@ public abstract class AbstractProxyManagerBuilder<K, P extends ProxyManager<K>, 
         return synchronization;
     }
 
-    public ClientSideConfig getClientSideConfig() {
-        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, requestTimeoutNanos, expirationStrategy, synchronization, defaultListener, synchronizationListener);
+    public ProxyManagerConfig getClientSideConfig() {
+        return new ProxyManagerConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, requestTimeoutNanos, expirationStrategy, synchronization, defaultListener, synchronizationListener);
     }
 
 }

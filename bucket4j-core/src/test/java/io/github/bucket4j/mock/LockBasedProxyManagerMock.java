@@ -17,7 +17,7 @@
 
 package io.github.bucket4j.mock;
 
-import io.github.bucket4j.distributed.proxy.ClientSideConfig;
+import io.github.bucket4j.distributed.proxy.ProxyManagerConfig;
 import io.github.bucket4j.distributed.proxy.generic.pessimistic_locking.AbstractLockBasedProxyManager;
 import io.github.bucket4j.distributed.proxy.generic.pessimistic_locking.LockBasedTransaction;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
@@ -30,8 +30,8 @@ public class LockBasedProxyManagerMock<K> extends AbstractLockBasedProxyManager<
 
     private final Map<K, byte[]> stateMap = new HashMap<>();
 
-    public LockBasedProxyManagerMock(ClientSideConfig clientSideConfig) {
-        super(clientSideConfig);
+    public LockBasedProxyManagerMock(ProxyManagerConfig proxyManagerConfig) {
+        super(proxyManagerConfig);
     }
 
     @Override

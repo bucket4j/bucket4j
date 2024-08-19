@@ -45,46 +45,46 @@ public abstract class AbstractProxyManager<K> implements ProxyManager<K> {
 
     private static final BucketSynchronization DEFAULT_REQUEST_OPTIMIZER = BucketSynchronization.NONE_OPTIMIZED;
 
-    private final ClientSideConfig clientSideConfig;
+    private final ProxyManagerConfig proxyManagerConfig;
 
     private final Backend<K> backend;
     private final Backend<K> optimizedBackend;
     private final AsyncBackend<K> asyncBackend;
     private final AsyncBackend<K> optimizedAsyncBackend;
 
-    protected AbstractProxyManager(ClientSideConfig clientSideConfig) {
-        if (clientSideConfig.getExpirationAfterWriteStrategy().isPresent() && !isExpireAfterWriteSupported()) {
+    protected AbstractProxyManager(ProxyManagerConfig proxyManagerConfig) {
+        if (proxyManagerConfig.getExpirationAfterWriteStrategy().isPresent() && !isExpireAfterWriteSupported()) {
             throw BucketExceptions.expirationAfterWriteIsNotSupported();
         }
-        this.clientSideConfig = requireNonNull(clientSideConfig);
+        this.proxyManagerConfig = requireNonNull(proxyManagerConfig);
         this.backend = new Backend<K>() {
             @Override
             public <T> CommandResult<T> execute(K key, RemoteCommand<T> command) {
-                ExpirationAfterWriteStrategy expirationStrategy = clientSideConfig.getExpirationAfterWriteStrategy().orElse(null);
+                ExpirationAfterWriteStrategy expirationStrategy = proxyManagerConfig.getExpirationAfterWriteStrategy().orElse(null);
                 Request<T> request = new Request<>(command, getBackwardCompatibilityVersion(), getClientSideTime(), expirationStrategy);
                 Supplier<CommandResult<T>> resultSupplier = () -> AbstractProxyManager.this.execute(key, request);
-                return clientSideConfig.getExecutionStrategy().execute(resultSupplier);
+                return proxyManagerConfig.getExecutionStrategy().execute(resultSupplier);
             }
         };
-        optimizedBackend = clientSideConfig.getSynchronization().apply(backend, clientSideConfig.getSynchronizationListener());
+        optimizedBackend = proxyManagerConfig.getSynchronization().apply(backend, proxyManagerConfig.getSynchronizationListener());
 
         this.asyncBackend = !isAsyncModeSupported() ? null : new AsyncBackend<K>() {
             @Override
             public <T> CompletableFuture<CommandResult<T>> execute(K key, RemoteCommand<T> command) {
-                ExpirationAfterWriteStrategy expirationStrategy = clientSideConfig.getExpirationAfterWriteStrategy().orElse(null);
+                ExpirationAfterWriteStrategy expirationStrategy = proxyManagerConfig.getExpirationAfterWriteStrategy().orElse(null);
                 Request<T> request = new Request<>(command, getBackwardCompatibilityVersion(), getClientSideTime(), expirationStrategy);
                 Supplier<CompletableFuture<CommandResult<T>>> futureSupplier = () -> AbstractProxyManager.this.executeAsync(key, request);
-                return clientSideConfig.getExecutionStrategy().executeAsync(futureSupplier);
+                return proxyManagerConfig.getExecutionStrategy().executeAsync(futureSupplier);
             }
         };
-        optimizedAsyncBackend = asyncBackend == null ? null : clientSideConfig.getSynchronization().apply(asyncBackend, clientSideConfig.getSynchronizationListener());
+        optimizedAsyncBackend = asyncBackend == null ? null : proxyManagerConfig.getSynchronization().apply(asyncBackend, proxyManagerConfig.getSynchronizationListener());
     }
 
     private final AsyncProxyManager<K> asyncView = new AsyncProxyManager<>() {
         @Override
         public CompletableFuture<Optional<BucketConfiguration>> getProxyConfiguration(K key) {
             GetConfigurationCommand cmd = new GetConfigurationCommand();
-            ExpirationAfterWriteStrategy expirationStrategy = clientSideConfig.getExpirationAfterWriteStrategy().orElse(null);
+            ExpirationAfterWriteStrategy expirationStrategy = proxyManagerConfig.getExpirationAfterWriteStrategy().orElse(null);
             Request<BucketConfiguration> request = new Request<>(cmd, getBackwardCompatibilityVersion(), getClientSideTime(), expirationStrategy);
             return executeAsync(key, request).thenApply(result -> {
                 if (result.isBucketNotFound()) {
@@ -225,20 +225,20 @@ public abstract class AbstractProxyManager<K> implements ProxyManager<K> {
 
     abstract protected CompletableFuture<Void> removeAsync(K key);
 
-    protected ClientSideConfig getClientSideConfig() {
-        return clientSideConfig;
+    protected ProxyManagerConfig getClientSideConfig() {
+        return proxyManagerConfig;
     }
 
     protected Version getBackwardCompatibilityVersion() {
-        return clientSideConfig.getBackwardCompatibilityVersion();
+        return proxyManagerConfig.getBackwardCompatibilityVersion();
     }
 
     protected long currentTimeNanos() {
-        return clientSideConfig.getClientSideClock().orElse(TimeMeter.SYSTEM_MILLISECONDS).currentTimeNanos();
+        return proxyManagerConfig.getClientSideClock().orElse(TimeMeter.SYSTEM_MILLISECONDS).currentTimeNanos();
     }
 
     protected Long getClientSideTime() {
-        Optional<TimeMeter> clientClock = clientSideConfig.getClientSideClock();
+        Optional<TimeMeter> clientClock = proxyManagerConfig.getClientSideClock();
         if (clientClock.isEmpty()) {
             return null;
         }

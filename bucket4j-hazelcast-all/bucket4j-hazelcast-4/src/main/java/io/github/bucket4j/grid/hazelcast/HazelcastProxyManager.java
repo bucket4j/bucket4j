@@ -36,7 +36,6 @@
 
 package io.github.bucket4j.grid.hazelcast;
 
-import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
@@ -45,7 +44,6 @@ import com.hazelcast.config.SerializerConfig;
 import com.hazelcast.map.IMap;
 
 import io.github.bucket4j.distributed.proxy.AbstractProxyManager;
-import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.Request;
 import io.github.bucket4j.distributed.serialization.InternalSerializationHelper;

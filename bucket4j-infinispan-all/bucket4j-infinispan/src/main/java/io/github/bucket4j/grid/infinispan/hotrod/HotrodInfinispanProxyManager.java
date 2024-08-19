@@ -38,21 +38,15 @@ package io.github.bucket4j.grid.infinispan.hotrod;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 
 import org.infinispan.client.hotrod.RemoteCache;
-import org.infinispan.commons.CacheException;
-import org.infinispan.functional.FunctionalMap.ReadWriteMap;
 
 import io.github.bucket4j.distributed.proxy.AbstractProxyManager;
-import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.Request;
 import io.github.bucket4j.distributed.serialization.InternalSerializationHelper;
 import io.github.bucket4j.grid.infinispan.Bucket4jInfinispan;
-import io.github.bucket4j.grid.infinispan.InfinispanProcessor;
 
 import static io.github.bucket4j.distributed.serialization.InternalSerializationHelper.deserializeResult;
 

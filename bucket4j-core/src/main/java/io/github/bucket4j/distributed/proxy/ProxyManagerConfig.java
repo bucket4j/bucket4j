@@ -43,9 +43,9 @@ import io.github.bucket4j.distributed.versioning.Versions;
  *     <li>Client-side clock, see {@link #withClientClock(TimeMeter)} for more details.</li>
  * </ul>
  */
-public class ClientSideConfig {
+public class ProxyManagerConfig {
 
-    private static final ClientSideConfig defaultConfig = new ClientSideConfig(Versions.getLatest(), Optional.empty(),
+    private static final ProxyManagerConfig defaultConfig = new ProxyManagerConfig(Versions.getLatest(), Optional.empty(),
             ExecutionStrategy.SAME_TREAD, Optional.empty(), Optional.empty(), DirectSynchronization.instance, BucketListener.NOPE, NopeSynchronizationListener.instance);
 
     private final Version backwardCompatibilityVersion;
@@ -62,13 +62,13 @@ public class ClientSideConfig {
     private final Synchronization synchronization;
     private final SynchronizationListener synchronizationListener;
 
-    protected ClientSideConfig(Version backwardCompatibilityVersion, Optional<TimeMeter> clientSideClock,
-                               ExecutionStrategy executionStrategy,
-                               Optional<Long> requestTimeoutNanos,
-                               Optional<ExpirationAfterWriteStrategy> expirationStrategy,
-                               Synchronization synchronization,
-                               BucketListener defaultListener,
-                               SynchronizationListener synchronizationListener) {
+    protected ProxyManagerConfig(Version backwardCompatibilityVersion, Optional<TimeMeter> clientSideClock,
+                                 ExecutionStrategy executionStrategy,
+                                 Optional<Long> requestTimeoutNanos,
+                                 Optional<ExpirationAfterWriteStrategy> expirationStrategy,
+                                 Synchronization synchronization,
+                                 BucketListener defaultListener,
+                                 SynchronizationListener synchronizationListener) {
         this.backwardCompatibilityVersion = Objects.requireNonNull(backwardCompatibilityVersion);
         this.clientSideClock = Objects.requireNonNull(clientSideClock);
         this.executionStrategy = executionStrategy;
@@ -88,12 +88,12 @@ public class ClientSideConfig {
      *
      * @return default client-side configuration for proxy-manager
      */
-    public static ClientSideConfig getDefault() {
+    public static ProxyManagerConfig getDefault() {
         return defaultConfig;
     }
 
     /**
-     * Returns new instance of {@link ClientSideConfig} with configured {@code backwardCompatibilityVersion}.
+     * Returns new instance of {@link ProxyManagerConfig} with configured {@code backwardCompatibilityVersion}.
      *
      * <p>
      * Use this method in case of rolling upgrades, when you want from already new nodes to continue communication using
@@ -103,14 +103,14 @@ public class ClientSideConfig {
      *
      * @param backwardCompatibilityVersion the Bucket4j protocol version to be backward compatible with other nodes in the cluster.
      *
-     * @return new instance of {@link ClientSideConfig} with configured {@code backwardCompatibilityVersion}.
+     * @return new instance of {@link ProxyManagerConfig} with configured {@code backwardCompatibilityVersion}.
      */
-    public ClientSideConfig backwardCompatibleWith(Version backwardCompatibilityVersion) {
-        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, requestTimeoutNanos, expirationStrategy, synchronization, defaultListener, synchronizationListener);
+    public ProxyManagerConfig backwardCompatibleWith(Version backwardCompatibilityVersion) {
+        return new ProxyManagerConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, requestTimeoutNanos, expirationStrategy, synchronization, defaultListener, synchronizationListener);
     }
 
     /**
-     * Returns new instance of {@link ClientSideConfig} with configured {@code clientClock}.
+     * Returns new instance of {@link ProxyManagerConfig} with configured {@code clientClock}.
      *
      * <p>
      * Use this method when you want to measure current time by yourself. In normal scenarios you should not use this functionality,
@@ -121,32 +121,32 @@ public class ClientSideConfig {
      *
      * @param clientClock the clock that will be used for time measuring instead of server-side clock.
      *
-     * @return new instance of {@link ClientSideConfig} with configured {@code clientClock}.
+     * @return new instance of {@link ProxyManagerConfig} with configured {@code clientClock}.
      */
-    public ClientSideConfig withClientClock(TimeMeter clientClock) {
-        return new ClientSideConfig(backwardCompatibilityVersion, Optional.of(clientClock), executionStrategy, requestTimeoutNanos, expirationStrategy, synchronization, defaultListener, synchronizationListener);
+    public ProxyManagerConfig withClientClock(TimeMeter clientClock) {
+        return new ProxyManagerConfig(backwardCompatibilityVersion, Optional.of(clientClock), executionStrategy, requestTimeoutNanos, expirationStrategy, synchronization, defaultListener, synchronizationListener);
     }
 
     /**
-     * Returns new instance of {@link ClientSideConfig} with configured {@code executionStrategy}.
+     * Returns new instance of {@link ProxyManagerConfig} with configured {@code executionStrategy}.
      *
      * <p>
      * The default executionStrategy is {@link ExecutionStrategy#SAME_TREAD}.
      *
      * @param executionStrategy the strategy for request execution.
      *
-     * @return new instance of {@link ClientSideConfig} with configured {@code clientClock}.
+     * @return new instance of {@link ProxyManagerConfig} with configured {@code clientClock}.
      */
-    public ClientSideConfig withExecutionStrategy(ExecutionStrategy executionStrategy) {
-        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, requestTimeoutNanos, expirationStrategy, synchronization, defaultListener, synchronizationListener);
+    public ProxyManagerConfig withExecutionStrategy(ExecutionStrategy executionStrategy) {
+        return new ProxyManagerConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, requestTimeoutNanos, expirationStrategy, synchronization, defaultListener, synchronizationListener);
     }
 
-    public ClientSideConfig withSynchronization(Synchronization synchronization) {
-        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, requestTimeoutNanos, expirationStrategy, synchronization, defaultListener, synchronizationListener);
+    public ProxyManagerConfig withSynchronization(Synchronization synchronization) {
+        return new ProxyManagerConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, requestTimeoutNanos, expirationStrategy, synchronization, defaultListener, synchronizationListener);
     }
 
     /**
-     * Returns new instance of {@link ClientSideConfig} with configured timeout for remote operations.
+     * Returns new instance of {@link ProxyManagerConfig} with configured timeout for remote operations.
      *
      * <p>
      * The way in which timeout is applied depends on concrete implementation of {@link ProxyManager}. It can be three possible cases:
@@ -158,27 +158,27 @@ public class ClientSideConfig {
      *
      * @param requestTimeout timeout for remote operations.
      *
-     * @return new instance of {@link ClientSideConfig} with configured {@code requestTimeout}.
+     * @return new instance of {@link ProxyManagerConfig} with configured {@code requestTimeout}.
      */
-    public ClientSideConfig withRequestTimeout(Duration requestTimeout) {
+    public ProxyManagerConfig withRequestTimeout(Duration requestTimeout) {
         if (requestTimeout.isZero() || requestTimeout.isNegative()) {
             throw BucketExceptions.nonPositiveRequestTimeout(requestTimeout);
         }
         long requestTimeoutNanos = requestTimeout.toNanos();
-        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, Optional.of(requestTimeoutNanos), expirationStrategy, synchronization, defaultListener, synchronizationListener);
+        return new ProxyManagerConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, Optional.of(requestTimeoutNanos), expirationStrategy, synchronization, defaultListener, synchronizationListener);
     }
 
     /**
-     * Returns new instance of {@link ClientSideConfig} with configured strategy for choosing time to live for buckets.
+     * Returns new instance of {@link ProxyManagerConfig} with configured strategy for choosing time to live for buckets.
      * If particular {@link ProxyManager} does not support {@link ExpirationAfterWriteStrategy}
-     *  then exception  will be thrown in attempt to construct such ProxyManager with this instance of {@link ClientSideConfig}.
+     *  then exception  will be thrown in attempt to construct such ProxyManager with this instance of {@link ProxyManagerConfig}.
      *
      * @param expirationStrategy the strategy for choosing time to live for buckets.
      *
-     * @return new instance of {@link ClientSideConfig} with configured {@code expirationStrategy}.
+     * @return new instance of {@link ProxyManagerConfig} with configured {@code expirationStrategy}.
      */
-    public ClientSideConfig withExpirationAfterWriteStrategy(ExpirationAfterWriteStrategy expirationStrategy) {
-        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, requestTimeoutNanos, Optional.of(expirationStrategy), synchronization, defaultListener, synchronizationListener);
+    public ProxyManagerConfig withExpirationAfterWriteStrategy(ExpirationAfterWriteStrategy expirationStrategy) {
+        return new ProxyManagerConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, requestTimeoutNanos, Optional.of(expirationStrategy), synchronization, defaultListener, synchronizationListener);
     }
 
     /**

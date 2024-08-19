@@ -37,12 +37,12 @@ public interface Timeout {
 
     <T> CompletableFuture<T> callAsync(Function<Optional<Long>, CompletableFuture<T>> timeBoundedOperation);
 
-    static Timeout of(ClientSideConfig clientSideConfig) {
-        Optional<Long> requestTimeout = clientSideConfig.getRequestTimeoutNanos();
+    static Timeout of(ProxyManagerConfig proxyManagerConfig) {
+        Optional<Long> requestTimeout = proxyManagerConfig.getRequestTimeoutNanos();
         if (requestTimeout.isEmpty()) {
             return NO_TIMEOUT;
         } else {
-            TimeMeter clientClock = clientSideConfig.getClientSideClock().orElse(TimeMeter.SYSTEM_NANOTIME);
+            TimeMeter clientClock = proxyManagerConfig.getClientSideClock().orElse(TimeMeter.SYSTEM_NANOTIME);
             return boundedTimeout(clientClock, requestTimeout.get());
         }
     }

@@ -6,7 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class NoTimeoutTest {
 
-    private Timeout timeout = Timeout.of(ClientSideConfig.getDefault());
+    private Timeout timeout = Timeout.of(ProxyManagerConfig.getDefault());
 
     @Test
     public void testRun() {

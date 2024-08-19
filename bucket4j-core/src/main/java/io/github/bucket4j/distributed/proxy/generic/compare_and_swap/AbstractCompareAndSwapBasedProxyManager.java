@@ -22,7 +22,7 @@ package io.github.bucket4j.distributed.proxy.generic.compare_and_swap;
 
 import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.proxy.AbstractProxyManager;
-import io.github.bucket4j.distributed.proxy.ClientSideConfig;
+import io.github.bucket4j.distributed.proxy.ProxyManagerConfig;
 import io.github.bucket4j.distributed.proxy.Timeout;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.MutableBucketEntry;
@@ -41,8 +41,8 @@ public abstract class AbstractCompareAndSwapBasedProxyManager<K> extends Abstrac
 
     private static final CommandResult<?> UNSUCCESSFUL_CAS_RESULT = null;
 
-    protected AbstractCompareAndSwapBasedProxyManager(ClientSideConfig clientSideConfig) {
-        super(injectTimeClock(clientSideConfig));
+    protected AbstractCompareAndSwapBasedProxyManager(ProxyManagerConfig proxyManagerConfig) {
+        super(injectTimeClock(proxyManagerConfig));
     }
 
     @Override
@@ -111,11 +111,11 @@ public abstract class AbstractCompareAndSwapBasedProxyManager<K> extends Abstrac
             });
     }
 
-    private static ClientSideConfig injectTimeClock(ClientSideConfig clientSideConfig) {
-        if (clientSideConfig.getClientSideClock().isPresent()) {
-            return clientSideConfig;
+    private static ProxyManagerConfig injectTimeClock(ProxyManagerConfig proxyManagerConfig) {
+        if (proxyManagerConfig.getClientSideClock().isPresent()) {
+            return proxyManagerConfig;
         }
-        return clientSideConfig.withClientClock(TimeMeter.SYSTEM_MILLISECONDS);
+        return proxyManagerConfig.withClientClock(TimeMeter.SYSTEM_MILLISECONDS);
     }
 
 }

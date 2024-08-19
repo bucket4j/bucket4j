@@ -40,7 +40,6 @@ package io.github.bucket4j.grid.coherence;
 import com.tangosol.net.NamedCache;
 import com.tangosol.util.processor.SingleEntryAsynchronousProcessor;
 import io.github.bucket4j.distributed.proxy.AbstractProxyManager;
-import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.remote.*;
 import io.github.bucket4j.distributed.versioning.Version;
 

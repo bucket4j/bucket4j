@@ -23,7 +23,7 @@ package io.github.bucket4j.distributed.proxy.generic.select_for_update;
 import io.github.bucket4j.BucketExceptions;
 import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.proxy.AbstractProxyManager;
-import io.github.bucket4j.distributed.proxy.ClientSideConfig;
+import io.github.bucket4j.distributed.proxy.ProxyManagerConfig;
 import io.github.bucket4j.distributed.proxy.Timeout;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.MutableBucketEntry;
@@ -47,8 +47,8 @@ public abstract class AbstractSelectForUpdateBasedProxyManager<K> extends Abstra
 
     private static final CommandResult RETRY_IN_THE_SCOPE_OF_NEW_TRANSACTION = CommandResult.success(true, 666);
 
-    protected AbstractSelectForUpdateBasedProxyManager(ClientSideConfig clientSideConfig) {
-        super(injectTimeClock(clientSideConfig));
+    protected AbstractSelectForUpdateBasedProxyManager(ProxyManagerConfig proxyManagerConfig) {
+        super(injectTimeClock(proxyManagerConfig));
     }
 
     @Override
@@ -137,11 +137,11 @@ public abstract class AbstractSelectForUpdateBasedProxyManager<K> extends Abstra
         }
     }
 
-    private static ClientSideConfig injectTimeClock(ClientSideConfig clientSideConfig) {
-        if (clientSideConfig.getClientSideClock().isPresent()) {
-            return clientSideConfig;
+    private static ProxyManagerConfig injectTimeClock(ProxyManagerConfig proxyManagerConfig) {
+        if (proxyManagerConfig.getClientSideClock().isPresent()) {
+            return proxyManagerConfig;
         }
-        return clientSideConfig.withClientClock(TimeMeter.SYSTEM_MILLISECONDS);
+        return proxyManagerConfig.withClientClock(TimeMeter.SYSTEM_MILLISECONDS);
     }
 
     protected void applyTimeout(PreparedStatement statement, Optional<Long> requestTimeoutNanos) throws SQLException {

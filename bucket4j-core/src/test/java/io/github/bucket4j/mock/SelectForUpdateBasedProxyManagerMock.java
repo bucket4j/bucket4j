@@ -17,9 +17,7 @@
 
 package io.github.bucket4j.mock;
 
-import io.github.bucket4j.distributed.proxy.ClientSideConfig;
-import io.github.bucket4j.distributed.proxy.generic.pessimistic_locking.AbstractLockBasedProxyManager;
-import io.github.bucket4j.distributed.proxy.generic.pessimistic_locking.LockBasedTransaction;
+import io.github.bucket4j.distributed.proxy.ProxyManagerConfig;
 import io.github.bucket4j.distributed.proxy.generic.select_for_update.AbstractSelectForUpdateBasedProxyManager;
 import io.github.bucket4j.distributed.proxy.generic.select_for_update.LockAndGetResult;
 import io.github.bucket4j.distributed.proxy.generic.select_for_update.SelectForUpdateBasedTransaction;
@@ -33,8 +31,8 @@ public class SelectForUpdateBasedProxyManagerMock<K> extends AbstractSelectForUp
 
     private final Map<K, byte[]> stateMap = new HashMap<>();
 
-    public SelectForUpdateBasedProxyManagerMock(ClientSideConfig clientSideConfig) {
-        super(clientSideConfig);
+    public SelectForUpdateBasedProxyManagerMock(ProxyManagerConfig proxyManagerConfig) {
+        super(proxyManagerConfig);
     }
 
     @Override
