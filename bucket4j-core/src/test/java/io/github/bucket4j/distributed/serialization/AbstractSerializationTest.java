@@ -1,26 +1,61 @@
 
 package io.github.bucket4j.distributed.serialization;
 
-import io.github.bucket4j.*;
-import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
-import io.github.bucket4j.distributed.remote.*;
-import io.github.bucket4j.distributed.remote.commands.*;
-import io.github.bucket4j.distributed.versioning.Versions;
-import io.github.bucket4j.local.LockFreeBucket;
-import io.github.bucket4j.local.ConcurrencyStrategy;
-import io.github.bucket4j.local.ReentrantLockProtectedBucket;
-import io.github.bucket4j.local.SynchronizedBucket;
-import io.github.bucket4j.local.ThreadUnsafeBucket;
-import io.github.bucket4j.util.ComparableByContent;
-import org.junit.jupiter.api.Test;
-
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
 
-import static io.github.bucket4j.distributed.serialization.PrimitiveSerializationHandles.*;
-import static java.time.Duration.*;
+import org.junit.jupiter.api.Test;
+
+import io.github.bucket4j.Bandwidth;
+import io.github.bucket4j.Bucket;
+import io.github.bucket4j.BucketConfiguration;
+import io.github.bucket4j.BucketState;
+import io.github.bucket4j.ConsumptionProbe;
+import io.github.bucket4j.EstimationProbe;
+import io.github.bucket4j.MathType;
+import io.github.bucket4j.TokensInheritanceStrategy;
+import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
+import io.github.bucket4j.distributed.remote.CommandResult;
+import io.github.bucket4j.distributed.remote.MultiResult;
+import io.github.bucket4j.distributed.remote.RemoteBucketState;
+import io.github.bucket4j.distributed.remote.RemoteStat;
+import io.github.bucket4j.distributed.remote.RemoteVerboseResult;
+import io.github.bucket4j.distributed.remote.Request;
+import io.github.bucket4j.distributed.remote.commands.AddTokensCommand;
+import io.github.bucket4j.distributed.remote.commands.CheckConfigurationVersionAndExecuteCommand;
+import io.github.bucket4j.distributed.remote.commands.ConsumeAsMuchAsPossibleCommand;
+import io.github.bucket4j.distributed.remote.commands.ConsumeIgnoringRateLimitsCommand;
+import io.github.bucket4j.distributed.remote.commands.CreateInitialStateAndExecuteCommand;
+import io.github.bucket4j.distributed.remote.commands.CreateInitialStateWithVersionOrReplaceConfigurationAndExecuteCommand;
+import io.github.bucket4j.distributed.remote.commands.CreateSnapshotCommand;
+import io.github.bucket4j.distributed.remote.commands.EstimateAbilityToConsumeCommand;
+import io.github.bucket4j.distributed.remote.commands.ForceAddTokensCommand;
+import io.github.bucket4j.distributed.remote.commands.GetAvailableTokensCommand;
+import io.github.bucket4j.distributed.remote.commands.GetConfigurationCommand;
+import io.github.bucket4j.distributed.remote.commands.MultiCommand;
+import io.github.bucket4j.distributed.remote.commands.ReplaceConfigurationCommand;
+import io.github.bucket4j.distributed.remote.commands.ReserveAndCalculateTimeToSleepCommand;
+import io.github.bucket4j.distributed.remote.commands.ResetCommand;
+import io.github.bucket4j.distributed.remote.commands.SyncCommand;
+import io.github.bucket4j.distributed.remote.commands.TryConsumeAndReturnRemainingTokensCommand;
+import io.github.bucket4j.distributed.remote.commands.TryConsumeCommand;
+import io.github.bucket4j.distributed.remote.commands.VerboseCommand;
+import io.github.bucket4j.distributed.versioning.Versions;
+import io.github.bucket4j.local.ConcurrencyStrategy;
+import io.github.bucket4j.local.LockFreeBucket;
+import io.github.bucket4j.local.ReentrantLockProtectedBucket;
+import io.github.bucket4j.local.SynchronizedBucket;
+import io.github.bucket4j.local.ThreadUnsafeBucket;
+import io.github.bucket4j.util.ComparableByContent;
+
+import static io.github.bucket4j.distributed.serialization.PrimitiveSerializationHandles.BOOLEAN_HANDLE;
+import static io.github.bucket4j.distributed.serialization.PrimitiveSerializationHandles.LONG_HANDLE;
+import static io.github.bucket4j.distributed.serialization.PrimitiveSerializationHandles.NULL_HANDLE;
+import static java.time.Duration.ofDays;
+import static java.time.Duration.ofHours;
+import static java.time.Duration.ofSeconds;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public abstract class AbstractSerializationTest {

@@ -21,9 +21,15 @@ package io.github.bucket4j.distributed.remote;
 
 import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
 import io.github.bucket4j.distributed.serialization.InternalSerializationHelper;
-import io.github.bucket4j.distributed.versioning.*;
+import io.github.bucket4j.distributed.versioning.UnsupportedTypeException;
+import io.github.bucket4j.distributed.versioning.UsageOfObsoleteApiException;
+import io.github.bucket4j.distributed.versioning.UsageOfUnsupportedApiException;
+import io.github.bucket4j.distributed.versioning.Version;
+import io.github.bucket4j.distributed.versioning.Versions;
 
-import static io.github.bucket4j.distributed.serialization.InternalSerializationHelper.*;
+import static io.github.bucket4j.distributed.serialization.InternalSerializationHelper.deserializeState;
+import static io.github.bucket4j.distributed.serialization.InternalSerializationHelper.serializeResult;
+import static io.github.bucket4j.distributed.serialization.InternalSerializationHelper.serializeState;
 
 public abstract class AbstractBinaryTransaction {
 

@@ -19,10 +19,10 @@
  */
 package io.github.bucket4j.distributed.proxy.synchronization.per_bucket.predictive;
 
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.PredictionParameters;
-
 import java.util.Iterator;
 import java.util.LinkedList;
+
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.PredictionParameters;
 
 public class Sampling {
 

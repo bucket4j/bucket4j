@@ -1,16 +1,44 @@
 package io.github.bucket4j.tck;
 
-import io.github.bucket4j.*;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
+
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
+
+import io.github.bucket4j.Bandwidth;
+import io.github.bucket4j.Bucket;
+import io.github.bucket4j.BucketConfiguration;
+import io.github.bucket4j.ConsumptionProbe;
+import io.github.bucket4j.TimeMeter;
+import io.github.bucket4j.UninterruptibleBlockingStrategy;
+import io.github.bucket4j.VerboseResult;
 import io.github.bucket4j.distributed.AsyncBucketProxy;
 import io.github.bucket4j.distributed.BucketProxy;
 import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
+import io.github.bucket4j.distributed.proxy.AbstractAsyncProxyManagerBuilder;
 import io.github.bucket4j.distributed.proxy.AbstractProxyManagerBuilder;
+import io.github.bucket4j.distributed.proxy.AsyncProxyManager;
 import io.github.bucket4j.distributed.proxy.ExpiredEntriesCleaner;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.DelayParameters;
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.NopeSynchronizationListener;
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronization;
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronizations;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.DelayParameters;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.NopeBucketSynchronizationListener;
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.PredictionParameters;
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.delay.DelayBucketSynchronization;
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.manual.ManuallySyncingBucketSynchronization;
@@ -18,21 +46,10 @@ import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.predictiv
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.skiponzero.SkipSyncOnZeroBucketSynchronization;
 import io.github.bucket4j.util.AsyncConsumptionScenario;
 import io.github.bucket4j.util.ConsumptionScenario;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
 
-
-import java.time.Duration;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Function;
-import java.util.function.Supplier;
-import java.util.stream.Stream;
-
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public abstract class AbstractDistributedBucketTest {
 
@@ -49,10 +66,16 @@ public abstract class AbstractDistributedBucketTest {
       "--add-opens=java.base/java.lang=ALL-UNNAMED"
     );
 
+    private static final AsyncProxyManagerSpec NOPE = new AsyncProxyManagerSpec("Nope", null, null);
     protected static List<ProxyManagerSpec<?, ?, ?>> specs;
+    protected static List<AsyncProxyManagerSpec<?, ?, ?>> asyncSpecs = new ArrayList<>();
 
     public static Stream<ProxyManagerSpec<?, ?, ?>> specs() {
         return specs.stream();
+    }
+
+    public static Stream<AsyncProxyManagerSpec<?, ?, ?>> asyncSpecs() {
+        return asyncSpecs.isEmpty() ? Stream.of(NOPE) : asyncSpecs.stream();
     }
 
     private BucketConfiguration configurationForLongRunningTests = BucketConfiguration.builder()
@@ -114,7 +137,7 @@ public abstract class AbstractDistributedBucketTest {
             .build();
         ProxyManager<K> proxyManager = spec.builder.get()
                 .expirationAfterWrite(ExpirationAfterWriteStrategy.none())
-                .build();;
+                .build();
 
         K key = spec.generateRandomKey();
         BucketProxy bucket = proxyManager.builder().build(key, () -> configuration);
@@ -126,31 +149,27 @@ public abstract class AbstractDistributedBucketTest {
         assertTrue(proxyManager.getProxyConfiguration(key).isPresent());
     }
 
-    @MethodSource("specs")
+    @MethodSource("asyncSpecs")
     @ParameterizedTest
-    public <K, P extends ProxyManager<K>, B extends AbstractProxyManagerBuilder<K, P, B>> void testNoExpirationAfterWrite_Async(ProxyManagerSpec<K, P, B> spec) throws InterruptedException, ExecutionException {
-        if (!spec.expirationSupported) {
+    public <K, P extends AsyncProxyManager<K>, B extends AbstractAsyncProxyManagerBuilder<K, P, B>> void testNoExpirationAfterWrite_Async(AsyncProxyManagerSpec<K, P, B> spec) throws InterruptedException, ExecutionException {
+        if (spec == NOPE || !spec.expirationSupported) {
             return;
         }
         BucketConfiguration configuration = BucketConfiguration.builder()
             .addLimit(Bandwidth.builder().capacity(10).refillGreedy(10, Duration.ofSeconds(1)).build())
             .build();
-        ProxyManager<K> proxyManager = spec.builder.get()
+        AsyncProxyManager<K> proxyManager = spec.builder.get()
                 .expirationAfterWrite(ExpirationAfterWriteStrategy.none())
                 .build();
 
-        if (!proxyManager.isAsyncModeSupported()) {
-            return;
-        }
-
         K key = spec.generateRandomKey();
-        AsyncBucketProxy bucket = proxyManager.asAsync().builder().build(key, () -> CompletableFuture.completedFuture(configuration));
+        AsyncBucketProxy bucket = proxyManager.builder().build(key, () -> CompletableFuture.completedFuture(configuration));
         assertEquals(10, bucket.tryConsumeAsMuchAsPossible().get());
         Thread.sleep(3000);
         if (proxyManager instanceof ExpiredEntriesCleaner cleaner) {
             assertEquals(0, cleaner.removeExpired(1));
         }
-        assertTrue(proxyManager.getProxyConfiguration(key).isPresent());
+        assertTrue(proxyManager.getProxyConfiguration(key).get().isPresent());
     }
 
     @MethodSource("specs")
@@ -176,30 +195,27 @@ public abstract class AbstractDistributedBucketTest {
         assertTrue(proxyManager.getProxyConfiguration(key).isEmpty());
     }
 
-    @MethodSource("specs")
+    @MethodSource("asyncSpecs")
     @ParameterizedTest
-    public <K, P extends ProxyManager<K>, B extends AbstractProxyManagerBuilder<K, P, B>> void testFixedTtlExpirationAfterWrite_Async(ProxyManagerSpec<K, P, B> spec) throws InterruptedException, ExecutionException {
-        if (!spec.expirationSupported) {
+    public <K, P extends AsyncProxyManager<K>, B extends AbstractAsyncProxyManagerBuilder<K, P, B>> void testFixedTtlExpirationAfterWrite_Async(AsyncProxyManagerSpec<K, P, B> spec) throws InterruptedException, ExecutionException {
+        if (spec == NOPE || !spec.expirationSupported) {
             return;
         }
         BucketConfiguration configuration = BucketConfiguration.builder()
             .addLimit(Bandwidth.builder().capacity(10).refillGreedy(10, Duration.ofSeconds(100)).build())
             .build();
-        ProxyManager<K> proxyManager = spec.builder.get()
+        AsyncProxyManager<K> proxyManager = spec.builder.get()
             .expirationAfterWrite(ExpirationAfterWriteStrategy.fixedTimeToLive(Duration.ofSeconds(1)))
             .build();
-        if (!proxyManager.isAsyncModeSupported()) {
-            return;
-        }
 
         K key = spec.generateRandomKey();
-        AsyncBucketProxy bucket = proxyManager.asAsync().builder().build(key, () -> CompletableFuture.completedFuture(configuration));
+        AsyncBucketProxy bucket = proxyManager.builder().build(key, () -> CompletableFuture.completedFuture(configuration));
         assertEquals(10, bucket.tryConsumeAsMuchAsPossible().get());
         Thread.sleep(3000);
         if (proxyManager instanceof ExpiredEntriesCleaner cleaner) {
             assertEquals(1, cleaner.removeExpired(1));
         }
-        assertTrue(proxyManager.getProxyConfiguration(key).isEmpty());
+        assertTrue(proxyManager.getProxyConfiguration(key).get().isEmpty());
     }
 
     @MethodSource("specs")
@@ -230,36 +246,32 @@ public abstract class AbstractDistributedBucketTest {
         assertTrue(proxyManager.getProxyConfiguration(key).isEmpty());
     }
 
-    @MethodSource("specs")
+    @MethodSource("asyncSpecs")
     @ParameterizedTest
-    public <K, P extends ProxyManager<K>, B extends AbstractProxyManagerBuilder<K, P, B>> void testRefillBasedExpirationAfterWrite_Async(ProxyManagerSpec<K, P, B> spec) throws InterruptedException, ExecutionException {
-        if (!spec.expirationSupported) {
+    public <K, P extends AsyncProxyManager<K>, B extends AbstractAsyncProxyManagerBuilder<K, P, B>> void testRefillBasedExpirationAfterWrite_Async(AsyncProxyManagerSpec<K, P, B> spec) throws InterruptedException, ExecutionException {
+        if (spec == NOPE || !spec.expirationSupported) {
             return;
         }
         BucketConfiguration configuration = BucketConfiguration.builder()
             .addLimit(Bandwidth.builder().capacity(10).refillGreedy(10, Duration.ofSeconds(10)).build())
             .build();
-        ProxyManager<K> proxyManager = spec.builder.get()
+        AsyncProxyManager<K> proxyManager = spec.builder.get()
             .expirationAfterWrite(ExpirationAfterWriteStrategy.basedOnTimeForRefillingBucketUpToMax(Duration.ofSeconds(1)))
             .build();
 
-        if (!proxyManager.isAsyncModeSupported()) {
-            return;
-        }
-
         K key = spec.generateRandomKey();
-        AsyncBucketProxy bucket = proxyManager.asAsync().builder().build(key, () -> CompletableFuture.completedFuture(configuration));
+        AsyncBucketProxy bucket = proxyManager.builder().build(key, () -> CompletableFuture.completedFuture(configuration));
         assertEquals(true, bucket.tryConsume(1).get());
         Thread.sleep(100);
         if (proxyManager instanceof ExpiredEntriesCleaner cleaner) {
             assertEquals(0, cleaner.removeExpired(1));
         }
-        assertFalse(proxyManager.getProxyConfiguration(key).isEmpty());
+        assertFalse(proxyManager.getProxyConfiguration(key).get().isEmpty());
         Thread.sleep(3000);
         if (proxyManager instanceof ExpiredEntriesCleaner cleaner) {
             assertEquals(1, cleaner.removeExpired(1));
         }
-        assertTrue(proxyManager.getProxyConfiguration(key).isEmpty());
+        assertTrue(proxyManager.getProxyConfiguration(key).get().isEmpty());
     }
 
     @MethodSource("specs")
@@ -274,10 +286,10 @@ public abstract class AbstractDistributedBucketTest {
         DelayParameters delayParameters = new DelayParameters(1, Duration.ofNanos(1));
         List<BucketSynchronization> bucketSynchronizations = Arrays.asList(
             BucketSynchronizations.batching(),
-            new DelayBucketSynchronization(delayParameters, NopeSynchronizationListener.INSTANCE, clock),
-            new PredictiveBucketSynchronization(PredictionParameters.createDefault(delayParameters), delayParameters, NopeSynchronizationListener.INSTANCE, clock),
-            new SkipSyncOnZeroBucketSynchronization(NopeSynchronizationListener.INSTANCE, clock),
-            new ManuallySyncingBucketSynchronization(NopeSynchronizationListener.INSTANCE, clock)
+            new DelayBucketSynchronization(delayParameters, NopeBucketSynchronizationListener.INSTANCE, clock),
+            new PredictiveBucketSynchronization(PredictionParameters.createDefault(delayParameters), delayParameters, NopeBucketSynchronizationListener.INSTANCE, clock),
+            new SkipSyncOnZeroBucketSynchronization(NopeBucketSynchronizationListener.INSTANCE, clock),
+            new ManuallySyncingBucketSynchronization(NopeBucketSynchronizationListener.INSTANCE, clock)
         );
 
         for (BucketSynchronization bucketSynchronization : bucketSynchronizations) {
@@ -308,13 +320,13 @@ public abstract class AbstractDistributedBucketTest {
         }
     }
 
-    @MethodSource("specs")
+    @MethodSource("asyncSpecs")
     @ParameterizedTest
-    public <K, P extends ProxyManager<K>, B extends AbstractProxyManagerBuilder<K, P, B>> void testSynchronizationsAsync(ProxyManagerSpec<K, P, B> spec) {
-        ProxyManager<K> proxyManager = spec.builder.get().build();
-        if (!proxyManager.isAsyncModeSupported()) {
+    public <K, P extends AsyncProxyManager<K>, B extends AbstractAsyncProxyManagerBuilder<K, P, B>> void testSynchronizationsAsync(AsyncProxyManagerSpec<K, P, B> spec) {
+        if (spec == NOPE) {
             return;
         }
+        AsyncProxyManager<K> proxyManager = spec.builder.get().build();
 
         BucketConfiguration configuration = BucketConfiguration.builder()
             .addLimit(Bandwidth.builder().capacity(10).refillGreedy(10, Duration.ofSeconds(1)).build())
@@ -325,16 +337,16 @@ public abstract class AbstractDistributedBucketTest {
         DelayParameters delayParameters = new DelayParameters(1, Duration.ofNanos(1));
         List<BucketSynchronization> bucketSynchronizations = Arrays.asList(
             BucketSynchronizations.batching(),
-            new DelayBucketSynchronization(delayParameters, NopeSynchronizationListener.INSTANCE, clock),
-            new PredictiveBucketSynchronization(PredictionParameters.createDefault(delayParameters), delayParameters, NopeSynchronizationListener.INSTANCE, clock),
-            new SkipSyncOnZeroBucketSynchronization(NopeSynchronizationListener.INSTANCE, clock),
-            new ManuallySyncingBucketSynchronization(NopeSynchronizationListener.INSTANCE, clock)
+            new DelayBucketSynchronization(delayParameters, NopeBucketSynchronizationListener.INSTANCE, clock),
+            new PredictiveBucketSynchronization(PredictionParameters.createDefault(delayParameters), delayParameters, NopeBucketSynchronizationListener.INSTANCE, clock),
+            new SkipSyncOnZeroBucketSynchronization(NopeBucketSynchronizationListener.INSTANCE, clock),
+            new ManuallySyncingBucketSynchronization(NopeBucketSynchronizationListener.INSTANCE, clock)
         );
 
         for (BucketSynchronization bucketSynchronization : bucketSynchronizations) {
             try {
                 K key = spec.generateRandomKey();
-                AsyncBucketProxy bucket = proxyManager.asAsync().builder()
+                AsyncBucketProxy bucket = proxyManager.builder()
                     .withSynchronization(bucketSynchronization)
                     .build(key, () -> CompletableFuture.completedFuture(configuration));
 
@@ -393,14 +405,14 @@ public abstract class AbstractDistributedBucketTest {
         assertEquals(10 - PARALLELISM, bucket.getAvailableTokens());
     }
 
-    @MethodSource("specs")
+    @MethodSource("asyncSpecs")
     @ParameterizedTest
-    public <K, P extends ProxyManager<K>, B extends AbstractProxyManagerBuilder<K, P, B>> void testAsyncParallelInitialization(ProxyManagerSpec<K, P, B> spec) throws InterruptedException {
-        ProxyManager<K> proxyManager = spec.builder.get().build();
-        K key = spec.generateRandomKey();
-        if (!proxyManager.isAsyncModeSupported()) {
+    public <K, P extends AsyncProxyManager<K>, B extends AbstractAsyncProxyManagerBuilder<K, P, B>> void testAsyncParallelInitialization(AsyncProxyManagerSpec<K, P, B> spec) throws InterruptedException, ExecutionException {
+        if (spec == NOPE) {
             return;
         }
+        AsyncProxyManager<K> proxyManager = spec.builder.get().build();
+        K key = spec.generateRandomKey();
 
         final BucketConfiguration configuration = BucketConfiguration.builder()
             .addLimit(limit -> limit.capacity(10).refillIntervally(1, Duration.ofMinutes(1)))
@@ -419,7 +431,7 @@ public abstract class AbstractDistributedBucketTest {
                 }
                 try {
                     try {
-                        proxyManager.asAsync().builder().build(key, () -> CompletableFuture.completedFuture(configuration)).tryConsume(1).get();
+                        proxyManager.builder().build(key, () -> CompletableFuture.completedFuture(configuration)).tryConsume(1).get();
                     } catch (Throwable e) {
                         e.printStackTrace();
                     }
@@ -430,8 +442,8 @@ public abstract class AbstractDistributedBucketTest {
         }
         stopLatch.await();
 
-        BucketProxy bucket = proxyManager.builder().build(key, () -> configuration);
-        assertEquals(10 - PARALLELISM, bucket.getAvailableTokens());
+        AsyncBucketProxy bucket = proxyManager.builder().build(key, () -> CompletableFuture.completedFuture(configuration));
+        assertEquals(10 - PARALLELISM, bucket.getAvailableTokens().get());
     }
 
     @MethodSource("specs")
@@ -469,14 +481,14 @@ public abstract class AbstractDistributedBucketTest {
         assertEquals(10 - PARALLELISM, bucket.getAvailableTokens());
     }
 
-    @MethodSource("specs")
+    @MethodSource("asyncSpecs")
     @ParameterizedTest
-    public <K, P extends ProxyManager<K>, B extends AbstractProxyManagerBuilder<K, P, B>> void testAsyncParallelInitialization_withTimeout(ProxyManagerSpec<K, P, B> spec) throws InterruptedException {
-        ProxyManager<K> proxyManager = spec.builder.get().requestTimeout(Duration.ofSeconds(3)).build();
-        K key = spec.generateRandomKey();
-        if (!proxyManager.isAsyncModeSupported()) {
+    public <K, P extends AsyncProxyManager<K>, B extends AbstractAsyncProxyManagerBuilder<K, P, B>> void testAsyncParallelInitialization_withTimeout(AsyncProxyManagerSpec<K, P, B> spec) throws InterruptedException, ExecutionException {
+        if (spec == NOPE) {
             return;
         }
+        AsyncProxyManager<K> proxyManager = spec.builder.get().requestTimeout(Duration.ofSeconds(3)).build();
+        K key = spec.generateRandomKey();
 
         final BucketConfiguration configuration = BucketConfiguration.builder()
             .addLimit(limit -> limit.capacity(10).refillIntervally(1, Duration.ofMinutes(1)))
@@ -495,7 +507,7 @@ public abstract class AbstractDistributedBucketTest {
                 }
                 try {
                     try {
-                        proxyManager.asAsync().builder().build(key, () -> CompletableFuture.completedFuture(configuration)).tryConsume(1).get();
+                        proxyManager.builder().build(key, () -> CompletableFuture.completedFuture(configuration)).tryConsume(1).get();
                     } catch (Throwable e) {
                         e.printStackTrace();
                     }
@@ -506,8 +518,8 @@ public abstract class AbstractDistributedBucketTest {
         }
         stopLatch.await();
 
-        BucketProxy bucket = proxyManager.builder().build(key, () -> configuration);
-        assertEquals(10 - PARALLELISM, bucket.getAvailableTokens());
+        AsyncBucketProxy bucket = proxyManager.builder().build(key, () -> CompletableFuture.completedFuture(configuration));
+        assertEquals(10 - PARALLELISM, bucket.getAvailableTokens().get());
     }
 
     @MethodSource("specs")
@@ -567,13 +579,13 @@ public abstract class AbstractDistributedBucketTest {
         scenario.executeAndValidateRate();
     }
 
-    @MethodSource("specs")
+    @MethodSource("asyncSpecs")
     @ParameterizedTest
-    public <K, P extends ProxyManager<K>, B extends AbstractProxyManagerBuilder<K, P, B>> void testTryConsumeAsync(ProxyManagerSpec<K, P, B> spec) throws Exception {
-        ProxyManager<K> proxyManager = spec.builder.get().build();
-        if (!proxyManager.isAsyncModeSupported()) {
+    public <K, P extends AsyncProxyManager<K>, B extends AbstractAsyncProxyManagerBuilder<K, P, B>> void testTryConsumeAsync(AsyncProxyManagerSpec<K, P, B> spec) throws Exception {
+        if (spec == NOPE) {
             return;
         }
+        AsyncProxyManager<K> proxyManager = spec.builder.get().build();
         K key = spec.generateRandomKey();
 
         Function<AsyncBucketProxy, Long> action = bucket -> {
@@ -583,20 +595,20 @@ public abstract class AbstractDistributedBucketTest {
                 throw new RuntimeException(e);
             }
         };
-        Supplier<AsyncBucketProxy> bucketSupplier = () -> proxyManager.asAsync().builder()
+        Supplier<AsyncBucketProxy> bucketSupplier = () -> proxyManager.builder()
                 .build(key, () -> CompletableFuture.completedFuture(configurationForLongRunningTests));
         int durationSeconds = System.getenv("CI") == null ? 5 : 1;
         AsyncConsumptionScenario scenario = new AsyncConsumptionScenario(4, TimeUnit.SECONDS.toNanos(durationSeconds), bucketSupplier, action, permittedRatePerSecond);
         scenario.executeAndValidateRate();
     }
 
-    @MethodSource("specs")
+    @MethodSource("asyncSpecs")
     @ParameterizedTest
-    public <K, P extends ProxyManager<K>, B extends AbstractProxyManagerBuilder<K, P, B>> void testTryConsumeAsyncWithLimit(ProxyManagerSpec<K, P, B> spec) throws Exception {
-        ProxyManager<K> proxyManager = spec.builder.get().build();
-        if (!proxyManager.isAsyncModeSupported()) {
+    public <K, P extends AsyncProxyManager<K>, B extends AbstractAsyncProxyManagerBuilder<K, P, B>> void testTryConsumeAsyncWithLimit(AsyncProxyManagerSpec<K, P, B> spec) throws Exception {
+        if (spec == NOPE) {
             return;
         }
+        AsyncProxyManager<K> proxyManager = spec.builder.get().build();
 
         K key = spec.generateRandomKey();
         ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
@@ -607,7 +619,7 @@ public abstract class AbstractDistributedBucketTest {
                 throw new RuntimeException(e);
             }
         };
-        Supplier<AsyncBucketProxy> bucketSupplier = () -> proxyManager.asAsync().builder()
+        Supplier<AsyncBucketProxy> bucketSupplier = () -> proxyManager.builder()
                 .build(key, () -> CompletableFuture.completedFuture(configurationForLongRunningTests));
         int durationSeconds = System.getenv("CI") == null ? 5 : 1;
         AsyncConsumptionScenario scenario = new AsyncConsumptionScenario(4, TimeUnit.SECONDS.toNanos(durationSeconds), bucketSupplier, action, permittedRatePerSecond);
@@ -699,23 +711,23 @@ public abstract class AbstractDistributedBucketTest {
         assertFalse(unmappedBucket.tryConsume(1));
     }
 
-    @MethodSource("specs")
+    @MethodSource("asyncSpecs")
     @ParameterizedTest
-    public <K, P extends ProxyManager<K>, B extends AbstractProxyManagerBuilder<K, P, B>> void testWithMapperAsync(ProxyManagerSpec<K, P, B> spec) throws Exception {
-        ProxyManager<K> proxyManager = spec.builder.get().build();
-        if (!proxyManager.isAsyncModeSupported()) {
+    public <K, P extends AsyncProxyManager<K>, B extends AbstractAsyncProxyManagerBuilder<K, P, B>> void testWithMapperAsync(AsyncProxyManagerSpec<K, P, B> spec) throws Exception {
+        if (spec == NOPE) {
             return;
         }
+        AsyncProxyManager<K> proxyManager = spec.builder.get().build();
 
         K key = spec.generateRandomKey();
         BucketConfiguration configuration = BucketConfiguration.builder()
                 .addLimit(Bandwidth.builder().capacity(10).refillGreedy(10, Duration.ofDays(1)).build())
                 .build();
 
-        ProxyManager<String> mappedProxyManager = proxyManager.withMapper(dummy -> key);
-        AsyncBucketProxy unmappedBucket = proxyManager.asAsync().builder().build(key, () -> CompletableFuture.completedFuture(configuration));
-        AsyncBucketProxy mappedBucket = mappedProxyManager.asAsync().builder().build("dummy", () -> CompletableFuture.completedFuture(configuration));
-        AsyncBucketProxy mappedBucket2 = mappedProxyManager.asAsync().builder().build("dummy2", () -> CompletableFuture.completedFuture(configuration));
+        AsyncProxyManager<String> mappedProxyManager = proxyManager.withMapper(dummy -> key);
+        AsyncBucketProxy unmappedBucket = proxyManager.builder().build(key, () -> CompletableFuture.completedFuture(configuration));
+        AsyncBucketProxy mappedBucket = mappedProxyManager.builder().build("dummy", () -> CompletableFuture.completedFuture(configuration));
+        AsyncBucketProxy mappedBucket2 = mappedProxyManager.builder().build("dummy2", () -> CompletableFuture.completedFuture(configuration));
 
         assertTrue(unmappedBucket.tryConsume(10).get());
         assertFalse(mappedBucket.tryConsume(1).get());
@@ -779,13 +791,13 @@ public abstract class AbstractDistributedBucketTest {
         assertEquals(capacity - opsCount, availableTokens);
     }
 
-    @MethodSource("specs")
+    @MethodSource("asyncSpecs")
     @ParameterizedTest
-    public <K, P extends ProxyManager<K>, B extends AbstractProxyManagerBuilder<K, P, B>> void test_1000_tokens_consumption_async(ProxyManagerSpec<K, P, B> spec) throws InterruptedException {
-        ProxyManager<K> proxyManager = spec.builder.get().build();
-        if (!proxyManager.isAsyncModeSupported()) {
+    public <K, P extends AsyncProxyManager<K>, B extends AbstractAsyncProxyManagerBuilder<K, P, B>> void test_1000_tokens_consumption_async(AsyncProxyManagerSpec<K, P, B> spec) throws InterruptedException, ExecutionException {
+        if (spec == NOPE) {
             return;
         }
+        AsyncProxyManager<K> proxyManager = spec.builder.get().build();
 
         K key = spec.generateRandomKey();
         int threadCount = 8;
@@ -802,7 +814,7 @@ public abstract class AbstractDistributedBucketTest {
         ConcurrentHashMap<Integer, Integer> updatesByThread = new ConcurrentHashMap<>();
         ConcurrentHashMap<Integer, Throwable> errors = new ConcurrentHashMap<>();
         for (int i = 0; i < threadCount; i++) {
-            AsyncBucketProxy bucket = proxyManager.asAsync().builder().build(key, () -> CompletableFuture.completedFuture(configuration));
+            AsyncBucketProxy bucket = proxyManager.builder().build(key, () -> CompletableFuture.completedFuture(configuration));
             final int threadId = i;
             new Thread(() -> {
                 try {
@@ -825,7 +837,7 @@ public abstract class AbstractDistributedBucketTest {
         }
         stopLatch.await();
 
-        long availableTokens = proxyManager.builder().build(key, () -> configuration).getAvailableTokens();
+        long availableTokens = proxyManager.builder().build(key, () -> CompletableFuture.completedFuture(configuration)).getAvailableTokens().get();
         System.out.println("availableTokens " + availableTokens);
         System.out.println("Failed threads " + errors.keySet());
         System.out.println("Updates by thread " + updatesByThread);

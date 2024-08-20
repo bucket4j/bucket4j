@@ -21,8 +21,8 @@ package io.github.bucket4j.distributed.proxy.synchronization.per_bucket;
 
 import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.batch.BatchingBucketSynchronization;
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.predictive.PredictiveBucketSynchronization;
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.delay.DelayBucketSynchronization;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.predictive.PredictiveBucketSynchronization;
 
 /**
  * Provides factory methods for all request synchronization that are built-in into Bucket4j library.
@@ -42,7 +42,7 @@ public class BucketSynchronizations {
      * @see BatchingBucketSynchronization
      */
     public static BucketSynchronization batching() {
-        return new BatchingBucketSynchronization(NopeSynchronizationListener.INSTANCE);
+        return new BatchingBucketSynchronization(NopeBucketSynchronizationListener.INSTANCE);
     }
 
     /**
@@ -55,7 +55,7 @@ public class BucketSynchronizations {
      * @see DelayBucketSynchronization
      */
     public static BucketSynchronization delaying(DelayParameters delayParameters) {
-        return new DelayBucketSynchronization(delayParameters, NopeSynchronizationListener.INSTANCE, TimeMeter.SYSTEM_MILLISECONDS);
+        return new DelayBucketSynchronization(delayParameters, NopeBucketSynchronizationListener.INSTANCE, TimeMeter.SYSTEM_MILLISECONDS);
     }
 
     /**
@@ -72,7 +72,7 @@ public class BucketSynchronizations {
      * @see DelayParameters
      */
     public static BucketSynchronization predicting(DelayParameters delayParameters, PredictionParameters predictionParameters) {
-        return new PredictiveBucketSynchronization(predictionParameters, delayParameters, NopeSynchronizationListener.INSTANCE, TimeMeter.SYSTEM_MILLISECONDS);
+        return new PredictiveBucketSynchronization(predictionParameters, delayParameters, NopeBucketSynchronizationListener.INSTANCE, TimeMeter.SYSTEM_MILLISECONDS);
     }
 
     /**
@@ -87,7 +87,7 @@ public class BucketSynchronizations {
      */
     public static BucketSynchronization predicting(DelayParameters delayParameters) {
         PredictionParameters defaultPrediction = PredictionParameters.createDefault(delayParameters);
-        return new PredictiveBucketSynchronization(defaultPrediction, delayParameters, NopeSynchronizationListener.INSTANCE, TimeMeter.SYSTEM_MILLISECONDS);
+        return new PredictiveBucketSynchronization(defaultPrediction, delayParameters, NopeBucketSynchronizationListener.INSTANCE, TimeMeter.SYSTEM_MILLISECONDS);
     }
 
 }

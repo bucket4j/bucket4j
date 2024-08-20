@@ -38,15 +38,13 @@ package io.github.bucket4j.grid.coherence;
 
 
 import com.tangosol.net.NamedCache;
-import com.tangosol.util.processor.SingleEntryAsynchronousProcessor;
+
 import io.github.bucket4j.distributed.proxy.AbstractProxyManager;
-import io.github.bucket4j.distributed.remote.*;
+import io.github.bucket4j.distributed.remote.CommandResult;
+import io.github.bucket4j.distributed.remote.Request;
 import io.github.bucket4j.distributed.versioning.Version;
 
-import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-
-import static io.github.bucket4j.distributed.serialization.InternalSerializationHelper.*;
+import static io.github.bucket4j.distributed.serialization.InternalSerializationHelper.deserializeResult;
 
 
 /**
@@ -59,7 +57,7 @@ public class CoherenceProxyManager<K> extends AbstractProxyManager<K> {
     private final NamedCache<K, byte[]> cache;
 
     CoherenceProxyManager(Bucket4jCoherence.CoherenceProxyManagerBuilder<K> builder) {
-        super(builder.getClientSideConfig());
+        super(builder.getProxyManagerConfig());
         this.cache = builder.cache;
     }
 
@@ -74,40 +72,6 @@ public class CoherenceProxyManager<K> extends AbstractProxyManager<K> {
     @Override
     public void removeProxy(K key) {
         cache.remove(key);
-    }
-
-    @Override
-    public boolean isAsyncModeSupported() {
-        return true;
-    }
-
-    @Override
-    public <T> CompletableFuture<CommandResult<T>> executeAsync(K key, Request<T> request) {
-        CoherenceProcessor<K, T> entryProcessor = new CoherenceProcessor<>(request);
-        CompletableFuture<CommandResult<T>> future = new CompletableFuture<>();
-        Version backwardCompatibilityVersion = request.getBackwardCompatibilityVersion();
-        SingleEntryAsynchronousProcessor<K, byte[], byte[]> asyncProcessor =
-            new SingleEntryAsynchronousProcessor<>(entryProcessor) {
-                @Override
-                public void onResult(Map.Entry<K, byte[]> entry) {
-                    super.onResult(entry);
-                    byte[] resultBytes = entry.getValue();
-                    future.complete(deserializeResult(resultBytes, backwardCompatibilityVersion));
-                }
-
-                @Override
-                public void onException(Throwable error) {
-                    super.onException(error);
-                    future.completeExceptionally(error);
-                }
-            };
-        cache.invoke(key, asyncProcessor);
-        return future;
-    }
-
-    @Override
-    protected CompletableFuture<Void> removeAsync(K key) {
-        return cache.async().remove(key).thenApply(oldState -> null);
     }
 
     @Override

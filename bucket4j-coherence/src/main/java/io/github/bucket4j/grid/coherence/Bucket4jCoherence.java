@@ -23,6 +23,7 @@ import java.util.Objects;
 
 import com.tangosol.net.NamedCache;
 
+import io.github.bucket4j.distributed.proxy.AbstractAsyncProxyManagerBuilder;
 import io.github.bucket4j.distributed.proxy.AbstractProxyManagerBuilder;
 
 /**
@@ -42,6 +43,18 @@ public class Bucket4jCoherence {
         return new CoherenceProxyManagerBuilder<>(cache);
     }
 
+    /**
+     * Returns the builder for {@link CoherenceAsyncProxyManager}
+     *
+     * @param cache
+     *
+     * @return new instance of {@link CoherenceAsyncProxyManagerBuilder}
+     * @param <K> type ok key
+     */
+    public static <K> CoherenceAsyncProxyManagerBuilder<K> asyncEntryProcessorBasedBuilder(NamedCache<K, byte[]> cache) {
+        return new CoherenceAsyncProxyManagerBuilder<>(cache);
+    }
+
     public static class CoherenceProxyManagerBuilder<K> extends AbstractProxyManagerBuilder<K, CoherenceProxyManager<K>, CoherenceProxyManagerBuilder<K>> {
 
         final NamedCache<K, byte[]> cache;
@@ -53,6 +66,26 @@ public class Bucket4jCoherence {
         @Override
         public CoherenceProxyManager<K> build() {
             return new CoherenceProxyManager<>(this);
+        }
+
+        @Override
+        public boolean isExpireAfterWriteSupported() {
+            return true;
+        }
+
+    }
+
+    public static class CoherenceAsyncProxyManagerBuilder<K> extends AbstractAsyncProxyManagerBuilder<K, CoherenceAsyncProxyManager<K>, CoherenceAsyncProxyManagerBuilder<K>> {
+
+        final NamedCache<K, byte[]> cache;
+
+        public CoherenceAsyncProxyManagerBuilder(NamedCache<K, byte[]> cache) {
+            this.cache = Objects.requireNonNull(cache);
+        }
+
+        @Override
+        public CoherenceAsyncProxyManager<K> build() {
+            return new CoherenceAsyncProxyManager<>(this);
         }
 
         @Override

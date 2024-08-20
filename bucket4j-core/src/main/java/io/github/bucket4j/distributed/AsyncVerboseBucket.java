@@ -19,9 +19,15 @@
  */
 package io.github.bucket4j.distributed;
 
-import io.github.bucket4j.*;
-
 import java.util.concurrent.CompletableFuture;
+
+import io.github.bucket4j.Bucket;
+import io.github.bucket4j.BucketConfiguration;
+import io.github.bucket4j.ConsumptionProbe;
+import io.github.bucket4j.EstimationProbe;
+import io.github.bucket4j.Nothing;
+import io.github.bucket4j.TokensInheritanceStrategy;
+import io.github.bucket4j.VerboseResult;
 
 /**
  * Intent of this interface is to provide the verbose version of {@link AsyncBucketProxy} API.

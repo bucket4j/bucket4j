@@ -20,12 +20,18 @@
 
 package io.github.bucket4j.local;
 
-import io.github.bucket4j.*;
-import io.github.bucket4j.BandwidthBuilder.BandwidthBuilderBuildStage;
-import io.github.bucket4j.BandwidthBuilder.BandwidthBuilderCapacityStage;
-
 import java.util.Objects;
 import java.util.function.Function;
+
+import io.github.bucket4j.Bandwidth;
+import io.github.bucket4j.BandwidthBuilder.BandwidthBuilderBuildStage;
+import io.github.bucket4j.BandwidthBuilder.BandwidthBuilderCapacityStage;
+import io.github.bucket4j.BucketConfiguration;
+import io.github.bucket4j.BucketExceptions;
+import io.github.bucket4j.BucketListener;
+import io.github.bucket4j.ConfigurationBuilder;
+import io.github.bucket4j.MathType;
+import io.github.bucket4j.TimeMeter;
 
 /**
  * This builder creates in-memory buckets ({@link LockFreeBucket}).

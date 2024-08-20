@@ -1,22 +1,23 @@
 
 package io.github.bucket4j.grid.jcache.infinispan;
 
-import io.github.bucket4j.grid.jcache.Bucket4jJCache;
-import io.github.bucket4j.tck.AbstractDistributedBucketTest;
-import io.github.bucket4j.tck.ProxyManagerSpec;
-
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-
-import javax.cache.Cache;
-import javax.cache.CacheManager;
-import javax.cache.Caching;
-import javax.cache.spi.CachingProvider;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
+
+import javax.cache.Cache;
+import javax.cache.CacheManager;
+import javax.cache.Caching;
+import javax.cache.spi.CachingProvider;
+
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+
+import io.github.bucket4j.grid.jcache.Bucket4jJCache;
+import io.github.bucket4j.tck.AbstractDistributedBucketTest;
+import io.github.bucket4j.tck.ProxyManagerSpec;
 
 public class InfinispanJCacheTest extends AbstractDistributedBucketTest {
 

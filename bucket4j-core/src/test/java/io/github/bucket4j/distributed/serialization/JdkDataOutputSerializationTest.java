@@ -1,10 +1,13 @@
 package io.github.bucket4j.distributed.serialization;
 
-import io.github.bucket4j.distributed.versioning.Versions;
-
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.util.HashMap;
 import java.util.Map;
+
+import io.github.bucket4j.distributed.versioning.Versions;
 
 public class JdkDataOutputSerializationTest extends AbstractSerializationTest {
 

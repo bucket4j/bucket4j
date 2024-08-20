@@ -19,11 +19,11 @@
  */
 package io.github.bucket4j.grid.infinispan.serialization;
 
+import java.io.UncheckedIOException;
+
 import org.infinispan.protostream.FileDescriptorSource;
 import org.infinispan.protostream.SerializationContext;
 import org.infinispan.protostream.SerializationContextInitializer;
-
-import java.io.*;
 
 
 public class Bucket4jProtobufContextInitializer implements SerializationContextInitializer {

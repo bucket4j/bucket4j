@@ -19,13 +19,13 @@
  */
 package io.github.bucket4j.distributed.proxy;
 
-import io.github.bucket4j.BucketConfiguration;
-import io.github.bucket4j.distributed.AsyncBucketProxy;
-
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.function.Supplier;
+
+import io.github.bucket4j.BucketConfiguration;
+import io.github.bucket4j.distributed.AsyncBucketProxy;
 
 /**
  * The asynchronous equivalent of {@link ProxyManager}.
@@ -69,6 +69,13 @@ public interface AsyncProxyManager<K> {
      * @return the future that will be completed after deletion
      */
     CompletableFuture<Void> removeProxy(K key);
+
+    /**
+     * Describes whether this manager supports expire-after-write feature.
+     *
+     * @return <code>true</code> if this manager supports expire-after-write feature.
+     */
+    boolean isExpireAfterWriteSupported();
 
     /**
      * Asynchronously locates configuration of bucket which actually stored in the underlying storage.

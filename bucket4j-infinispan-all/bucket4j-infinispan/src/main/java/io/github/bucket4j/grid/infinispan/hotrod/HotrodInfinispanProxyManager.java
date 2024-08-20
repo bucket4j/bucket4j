@@ -38,7 +38,6 @@ package io.github.bucket4j.grid.infinispan.hotrod;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 
 import org.infinispan.client.hotrod.RemoteCache;
 
@@ -58,7 +57,7 @@ public class HotrodInfinispanProxyManager<K> extends AbstractProxyManager<K> {
     private final RemoteCache<K, byte[]> remoteCache;
 
     public HotrodInfinispanProxyManager(Bucket4jInfinispan.HotrodInfinispanProxyManagerBuilder<K> builder) {
-        super(builder.getClientSideConfig());
+        super(builder.getProxyManagerConfig());
         this.remoteCache = builder.remoteCache;
     }
 
@@ -73,23 +72,8 @@ public class HotrodInfinispanProxyManager<K> extends AbstractProxyManager<K> {
     }
 
     @Override
-    public boolean isAsyncModeSupported() {
-        return false;
-    }
-
-    @Override
     public void removeProxy(K key) {
         remoteCache.remove(key);
-    }
-
-    @Override
-    protected CompletableFuture<Void> removeAsync(K key) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public <T> CompletableFuture<CommandResult<T>> executeAsync(K key, Request<T> request) {
-        throw new UnsupportedOperationException();
     }
 
     @Override

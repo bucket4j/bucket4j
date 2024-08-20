@@ -19,14 +19,15 @@
  */
 package io.github.bucket4j.benchmark.state;
 
+import java.time.Duration;
+
+import org.openjdk.jmh.annotations.Scope;
+import org.openjdk.jmh.annotations.State;
+
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.local.ConcurrencyStrategy;
-import org.openjdk.jmh.annotations.Scope;
-import org.openjdk.jmh.annotations.State;
-
-import java.time.Duration;
 
 @State(Scope.Benchmark)
 public class LocalUnsafeState {

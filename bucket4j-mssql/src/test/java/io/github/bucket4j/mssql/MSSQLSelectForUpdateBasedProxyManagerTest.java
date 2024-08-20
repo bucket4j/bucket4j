@@ -1,16 +1,5 @@
 package io.github.bucket4j.mssql;
 
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
-import io.github.bucket4j.distributed.jdbc.BucketTableSettings;
-import io.github.bucket4j.tck.AbstractDistributedBucketTest;
-import io.github.bucket4j.tck.ProxyManagerSpec;
-
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-import org.testcontainers.containers.MSSQLServerContainer;
-
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -21,6 +10,19 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.testcontainers.containers.MSSQLServerContainer;
+import org.testcontainers.utility.DockerImageName;
+
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+
+import io.github.bucket4j.distributed.jdbc.BucketTableSettings;
+import io.github.bucket4j.tck.AbstractDistributedBucketTest;
+import io.github.bucket4j.tck.ProxyManagerSpec;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
@@ -165,12 +167,13 @@ public class MSSQLSelectForUpdateBasedProxyManagerTest extends AbstractDistribut
         hikariConfig.setUsername(container.getUsername());
         hikariConfig.setPassword(container.getPassword());
         hikariConfig.setDriverClassName(container.getDriverClassName());
-        hikariConfig.setMaximumPoolSize(100);
+        hikariConfig.setMaximumPoolSize(20);
         return new HikariDataSource(hikariConfig);
     }
 
     private static MSSQLServerContainer startMsSqlContainer() {
-        MSSQLServerContainer mssqlServerContainer = new MSSQLServerContainer().acceptLicense();
+        DockerImageName image = DockerImageName.parse("mcr.microsoft.com/mssql/server:2022-latest");
+        MSSQLServerContainer mssqlServerContainer = new MSSQLServerContainer(image).acceptLicense();
         mssqlServerContainer.start();
         return mssqlServerContainer;
     }

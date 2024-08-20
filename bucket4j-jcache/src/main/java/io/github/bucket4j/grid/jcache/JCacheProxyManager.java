@@ -36,9 +36,11 @@
 
 package io.github.bucket4j.grid.jcache;
 
-import io.github.bucket4j.distributed.proxy.AbstractProxyManager;
-import io.github.bucket4j.distributed.remote.*;
-import io.github.bucket4j.distributed.serialization.InternalSerializationHelper;
+import java.io.Serial;
+import java.io.Serializable;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Set;
 
 import javax.cache.Cache;
 import javax.cache.CacheManager;
@@ -46,10 +48,12 @@ import javax.cache.processor.EntryProcessor;
 import javax.cache.processor.MutableEntry;
 import javax.cache.spi.CachingProvider;
 
-import java.io.Serial;
-import java.io.Serializable;
-import java.util.*;
-import java.util.concurrent.CompletableFuture;
+import io.github.bucket4j.distributed.proxy.AbstractProxyManager;
+import io.github.bucket4j.distributed.remote.AbstractBinaryTransaction;
+import io.github.bucket4j.distributed.remote.CommandResult;
+import io.github.bucket4j.distributed.remote.RemoteBucketState;
+import io.github.bucket4j.distributed.remote.Request;
+import io.github.bucket4j.distributed.serialization.InternalSerializationHelper;
 
 /**
  * The extension of Bucket4j library addressed to support <a href="https://www.jcp.org/en/jsr/detail?id=107">JCache API (JSR 107)</a> specification.
@@ -68,7 +72,7 @@ public class JCacheProxyManager<K> extends AbstractProxyManager<K> {
     private final boolean preferLambdaStyle;
 
     public JCacheProxyManager(Bucket4jJCache.JCacheProxyManagerBuilder<K> builder) {
-        super(builder.getClientSideConfig());
+        super(builder.getProxyManagerConfig());
         cache = builder.cache;
         checkCompatibilityWithProvider(cache);
         this.preferLambdaStyle = preferLambdaStyle(cache);
@@ -87,20 +91,8 @@ public class JCacheProxyManager<K> extends AbstractProxyManager<K> {
     }
 
     @Override
-    public boolean isAsyncModeSupported() {
+    public boolean isExpireAfterWriteSupported() {
         return false;
-    }
-
-    @Override
-    public <T> CompletableFuture<CommandResult<T>> executeAsync(K key, Request<T> request) {
-        // because JCache does not specify async API
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    protected CompletableFuture<Void> removeAsync(K key) {
-        // because JCache does not specify async API
-        throw new UnsupportedOperationException();
     }
 
     private void checkCompatibilityWithProvider(Cache<K, byte[]> cache) {

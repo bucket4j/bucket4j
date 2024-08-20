@@ -1,7 +1,5 @@
 package io.github.bucket4j.distributed.proxy.synchronization.batch.mock
 
-import io.github.bucket4j.distributed.proxy.synchronization.batch.mock.MockBatchExecutor
-import io.github.bucket4j.distributed.proxy.synchronization.batch.mock.SingleMockCommand
 import org.jetbrains.kotlinx.lincheck.LinChecker
 import org.jetbrains.kotlinx.lincheck.LoggingLevel
 import org.jetbrains.kotlinx.lincheck.Options

@@ -17,15 +17,15 @@
 
 package io.github.bucket4j.mock;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+
 import io.github.bucket4j.distributed.proxy.ProxyManagerConfig;
 import io.github.bucket4j.distributed.proxy.generic.select_for_update.AbstractSelectForUpdateBasedProxyManager;
 import io.github.bucket4j.distributed.proxy.generic.select_for_update.LockAndGetResult;
 import io.github.bucket4j.distributed.proxy.generic.select_for_update.SelectForUpdateBasedTransaction;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
 
 public class SelectForUpdateBasedProxyManagerMock<K> extends AbstractSelectForUpdateBasedProxyManager<K> {
 
@@ -93,6 +93,11 @@ public class SelectForUpdateBasedProxyManagerMock<K> extends AbstractSelectForUp
     @Override
     public void removeProxy(K key) {
         stateMap.remove(key);
+    }
+
+    @Override
+    public boolean isExpireAfterWriteSupported() {
+        return false;
     }
 
 }

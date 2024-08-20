@@ -1,6 +1,6 @@
 package io.github.bucket4j.api_specifications.regular
 
-import io.github.bucket4j.Bandwidth
+
 import io.github.bucket4j.Bucket
 import io.github.bucket4j.BucketConfiguration
 import io.github.bucket4j.ConsumptionProbe
@@ -36,12 +36,13 @@ class TryConsumeAndReturnRemainingSpecification extends Specification {
             assert probe.remainingTokens == expectedRemaining
             assert probe.nanosToWaitForRefill == expectedWait
 
-            AsyncBucketProxy asyncBucket = type.createAsyncBucket(configuration, timeMeter)
-            probe = asyncBucket.tryConsumeAndReturnRemaining(toConsume).get()
-            assert probe.consumed == result
-            assert probe.remainingTokens == expectedRemaining
-            assert probe.nanosToWaitForRefill == expectedWait
-
+            if (type.asyncModeSupported) {
+                AsyncBucketProxy asyncBucket = type.createAsyncBucket(configuration, timeMeter)
+                probe = asyncBucket.tryConsumeAndReturnRemaining(toConsume).get()
+                assert probe.consumed == result
+                assert probe.remainingTokens == expectedRemaining
+                assert probe.nanosToWaitForRefill == expectedWait
+            }
         }
         where:
         n | toConsume | result  |  expectedRemaining | expectedWait | configuration
@@ -107,7 +108,7 @@ class TryConsumeAndReturnRemainingSpecification extends Specification {
             listener.getRejected() == 6
 
         where:
-            [type, verbose] << PipeGenerator.сartesianProduct(BucketType.values() as List, [false, true])
+            [type, verbose] << PipeGenerator.сartesianProduct(BucketType.ASYNC_TYPES, [false, true])
     }
 
 }

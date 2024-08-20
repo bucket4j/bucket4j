@@ -20,10 +20,10 @@
 
 package io.github.bucket4j.distributed.proxy;
 
+import java.util.concurrent.CompletableFuture;
+
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
-
-import java.util.concurrent.CompletableFuture;
 
 public interface AsyncCommandExecutor {
 

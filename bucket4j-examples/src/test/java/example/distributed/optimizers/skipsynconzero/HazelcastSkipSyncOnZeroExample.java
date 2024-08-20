@@ -34,10 +34,11 @@ import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.AsyncBucketProxy;
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.DefaultSynchronizationListener;
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronization;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.DefaultSynchronizationListener;
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.skiponzero.SkipSyncOnZeroBucketSynchronization;
 import io.github.bucket4j.grid.hazelcast.Bucket4jHazelcast;
+import io.github.bucket4j.grid.hazelcast.HazelcastAsyncProxyManager;
 import io.github.bucket4j.grid.hazelcast.HazelcastProxyManager;
 
 public class HazelcastSkipSyncOnZeroExample {
@@ -155,7 +156,7 @@ public class HazelcastSkipSyncOnZeroExample {
         Meter consumptionRate = new Meter();
         com.codahale.metrics.Timer latencyTimer = buildLatencyTimer();
 
-        HazelcastProxyManager<String> proxyManager = Bucket4jHazelcast.entryProcessorBasedBuilder(map).build();;
+        HazelcastAsyncProxyManager<String> proxyManager = Bucket4jHazelcast.asyncEntryProcessorBasedBuilder(map).build();;
         BucketConfiguration configuration = BucketConfiguration.builder()
             .addLimit(
                 Bandwidth.builder().capacity(10).refillGreedy(10, Duration.ofSeconds(1)).initialTokens(0).build())
@@ -167,7 +168,7 @@ public class HazelcastSkipSyncOnZeroExample {
         BucketSynchronization bucketSynchronization = new SkipSyncOnZeroBucketSynchronization(synchronizationListener, TimeMeter.SYSTEM_MILLISECONDS)
             .withListener(synchronizationListener);
 
-        AsyncBucketProxy bucket = proxyManager.asAsync().builder()
+        AsyncBucketProxy bucket = proxyManager.builder()
                 .withSynchronization(bucketSynchronization)
                 .build("13", () -> CompletableFuture.completedFuture(configuration));
 

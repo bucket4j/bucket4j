@@ -1,7 +1,7 @@
 
 package io.github.bucket4j.core_algorithms
 
-import io.github.bucket4j.Bandwidth
+
 import io.github.bucket4j.Bucket
 import io.github.bucket4j.BucketConfiguration
 import io.github.bucket4j.ConsumptionProbe
@@ -12,7 +12,6 @@ import spock.lang.Specification
 import spock.lang.Unroll
 
 import java.time.Duration
-
 
 class BucketRoundingRulesSpecification extends Specification {
 

@@ -27,12 +27,12 @@ import io.github.bucket4j.BucketExceptions;
 import io.github.bucket4j.BucketListener;
 import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
-import io.github.bucket4j.distributed.proxy.AbstractProxyManager.DefaultAsyncRemoteBucketBuilder;
+import io.github.bucket4j.distributed.proxy.AbstractAsyncProxyManager.DefaultAsyncRemoteBucketBuilder;
 import io.github.bucket4j.distributed.proxy.AbstractProxyManager.DefaultRemoteBucketBuilder;
 import io.github.bucket4j.distributed.proxy.synchronization.NopeSynchronizationListener;
+import io.github.bucket4j.distributed.proxy.synchronization.Synchronization;
 import io.github.bucket4j.distributed.proxy.synchronization.SynchronizationListener;
 import io.github.bucket4j.distributed.proxy.synchronization.direct.DirectSynchronization;
-import io.github.bucket4j.distributed.proxy.synchronization.Synchronization;
 import io.github.bucket4j.distributed.versioning.Version;
 import io.github.bucket4j.distributed.versioning.Versions;
 

@@ -1,7 +1,8 @@
 package io.github.bucket4j.distributed
 
-import io.github.bucket4j.Bandwidth
+
 import io.github.bucket4j.BucketConfiguration
+import io.github.bucket4j.mock.AsyncProxyManagerMock
 import io.github.bucket4j.mock.ProxyManagerMock
 import spock.lang.Specification
 
@@ -14,12 +15,12 @@ class RemoteCornerCases extends Specification {
 
     def "should complete future exceptionally if proxyManager failed"() {
         setup:
-            ProxyManagerMock proxyManagerMock = new ProxyManagerMock(SYSTEM_MILLISECONDS)
+            AsyncProxyManagerMock proxyManagerMock = new AsyncProxyManagerMock(SYSTEM_MILLISECONDS)
             BucketConfiguration configuration = BucketConfiguration.builder()
                 .addLimit({it.capacity(1).refillGreedy(1, Duration.ofNanos(1))})
                 .build()
 
-            AsyncBucketProxy bucket = proxyManagerMock.asAsync().builder()
+            AsyncBucketProxy bucket = proxyManagerMock.builder()
                 .build("66", {CompletableFuture.completedFuture(configuration)})
         when:
             proxyManagerMock.setException(new RuntimeException())

@@ -20,18 +20,23 @@
 
 package io.github.bucket4j.distributed.remote;
 
-import io.github.bucket4j.Nothing;
-
-import io.github.bucket4j.distributed.serialization.*;
-import io.github.bucket4j.distributed.versioning.Version;
-import io.github.bucket4j.distributed.versioning.Versions;
-import io.github.bucket4j.util.ComparableByContent;
-
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import static io.github.bucket4j.distributed.serialization.PrimitiveSerializationHandles.*;
+import io.github.bucket4j.Nothing;
+import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
+import io.github.bucket4j.distributed.serialization.Scope;
+import io.github.bucket4j.distributed.serialization.SerializationAdapter;
+import io.github.bucket4j.distributed.serialization.SerializationHandle;
+import io.github.bucket4j.distributed.serialization.SerializationHandles;
+import io.github.bucket4j.distributed.versioning.Version;
+import io.github.bucket4j.distributed.versioning.Versions;
+import io.github.bucket4j.util.ComparableByContent;
+
+import static io.github.bucket4j.distributed.serialization.PrimitiveSerializationHandles.BOOLEAN_HANDLE;
+import static io.github.bucket4j.distributed.serialization.PrimitiveSerializationHandles.LONG_HANDLE;
+import static io.github.bucket4j.distributed.serialization.PrimitiveSerializationHandles.NULL_HANDLE;
 import static io.github.bucket4j.distributed.versioning.Versions.v_7_0_0;
 
 public class CommandResult<T> implements ComparableByContent<CommandResult> {

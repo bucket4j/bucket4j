@@ -23,6 +23,7 @@ import java.util.Objects;
 
 import org.apache.ignite.IgniteCache;
 
+import io.github.bucket4j.distributed.proxy.AbstractAsyncProxyManagerBuilder;
 import io.github.bucket4j.distributed.proxy.AbstractProxyManagerBuilder;
 
 public class Bucket4jIgniteThick {
@@ -42,6 +43,19 @@ public class Bucket4jIgniteThick {
         return new IgniteProxyManagerBuilder<>(cache);
     }
 
+    /**
+     * Returns the builder for {@link IgniteAsyncProxyManager}
+     *
+     * @param cache
+     *
+     * @return new instance of {@link IgniteAsyncProxyManagerBuilder}
+     *
+     * @param <K> type ok key
+     */
+    public <K> IgniteAsyncProxyManagerBuilder<K> asyncEntryProcessorBasedBuilder(IgniteCache<K, byte[]> cache) {
+        return new IgniteAsyncProxyManagerBuilder<>(cache);
+    }
+
     public static class IgniteProxyManagerBuilder<K> extends AbstractProxyManagerBuilder<K, IgniteProxyManager<K>, IgniteProxyManagerBuilder<K>> {
 
         final IgniteCache<K, byte[]> cache;
@@ -57,6 +71,19 @@ public class Bucket4jIgniteThick {
 
     }
 
+    public static class IgniteAsyncProxyManagerBuilder<K> extends AbstractAsyncProxyManagerBuilder<K, IgniteAsyncProxyManager<K>, IgniteAsyncProxyManagerBuilder<K>> {
 
+        final IgniteCache<K, byte[]> cache;
+
+        public IgniteAsyncProxyManagerBuilder(IgniteCache<K, byte[]> cache) {
+            this.cache = Objects.requireNonNull(cache);
+        }
+
+        @Override
+        public IgniteAsyncProxyManager<K> build() {
+            return new IgniteAsyncProxyManager<>(this);
+        }
+
+    }
 
 }

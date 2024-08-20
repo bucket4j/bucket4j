@@ -2,6 +2,7 @@ package io.github.bucket4j.redis;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.UUID;
 
 import org.junit.jupiter.api.AfterAll;
@@ -54,6 +55,8 @@ public class JedisBasedProxyManagerStandaloneTest extends AbstractDistributedBuc
                 () -> Bucket4jJedis.casBasedBuilder(unifiedJedisPooled)
             ).checkExpiration()
         );
+
+        asyncSpecs = Collections.emptyList();
     }
 
     @AfterAll

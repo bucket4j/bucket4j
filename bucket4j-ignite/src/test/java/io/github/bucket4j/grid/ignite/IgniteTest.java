@@ -1,7 +1,12 @@
 package io.github.bucket4j.grid.ignite;
 
-import io.github.bucket4j.tck.AbstractDistributedBucketTest;
-import io.github.bucket4j.tck.ProxyManagerSpec;
+import java.io.Serializable;
+import java.net.UnknownHostException;
+import java.time.Duration;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.UUID;
+import java.util.concurrent.Executors;
 
 import org.apache.ignite.Ignite;
 import org.apache.ignite.IgniteCache;
@@ -17,13 +22,9 @@ import org.gridkit.vicluster.ViNode;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 
-import java.io.Serializable;
-import java.net.UnknownHostException;
-import java.time.Duration;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.UUID;
-import java.util.concurrent.Executors;
+import io.github.bucket4j.tck.AbstractDistributedBucketTest;
+import io.github.bucket4j.tck.AsyncProxyManagerSpec;
+import io.github.bucket4j.tck.ProxyManagerSpec;
 
 import static io.github.bucket4j.distributed.proxy.ExecutionStrategy.background;
 import static io.github.bucket4j.distributed.proxy.ExecutionStrategy.backgroundTimeBounded;
@@ -97,6 +98,14 @@ public class IgniteTest extends AbstractDistributedBucketTest {
                 () -> Bucket4jIgnite.thickClient()
                     .entryProcessorBasedBuilder(cache)
                     .executionStrategy(backgroundTimeBounded(Executors.newFixedThreadPool(20), Duration.ofSeconds(5)))
+            )
+        );
+
+        asyncSpecs = Arrays.asList(
+            new AsyncProxyManagerSpec<>(
+                "IgniteAsyncProxyManager",
+                () -> UUID.randomUUID().toString(),
+                () -> Bucket4jIgnite.thickClient().asyncEntryProcessorBasedBuilder(cache)
             )
         );
     }

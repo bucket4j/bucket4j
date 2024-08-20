@@ -20,25 +20,22 @@
 
 package io.github.bucket4j.grid.ignite.thin.cas;
 
+import java.nio.ByteBuffer;
+import java.util.Optional;
+
+import org.apache.ignite.client.ClientCache;
+
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AbstractCompareAndSwapBasedProxyManager;
-import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AsyncCompareAndSwapOperation;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.CompareAndSwapOperation;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.grid.ignite.thin.Bucket4jIgniteThin.IgniteThinClientCasBasedProxyManagerBuilder;
-import io.github.bucket4j.grid.ignite.thin.ThinClientUtils;
-import org.apache.ignite.client.ClientCache;
-import org.apache.ignite.client.IgniteClientFuture;
-
-import java.nio.ByteBuffer;
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 
 public class IgniteThinClientCasBasedProxyManager<K> extends AbstractCompareAndSwapBasedProxyManager<K> {
 
     private final ClientCache<K, ByteBuffer> cache;
 
     public IgniteThinClientCasBasedProxyManager(IgniteThinClientCasBasedProxyManagerBuilder<K> builder) {
-        super(builder.getClientSideConfig());
+        super(builder.getProxyManagerConfig());
         this.cache = builder.getCache();
     }
 
@@ -67,48 +64,13 @@ public class IgniteThinClientCasBasedProxyManager<K> extends AbstractCompareAndS
     }
 
     @Override
-    protected AsyncCompareAndSwapOperation beginAsyncCompareAndSwapOperation(K key) {
-        return new AsyncCompareAndSwapOperation() {
-            @Override
-            public CompletableFuture<Optional<byte[]>> getStateData(Optional<Long> timeoutNanos) {
-                IgniteClientFuture<ByteBuffer> igniteFuture = cache.getAsync(key);
-                CompletableFuture<ByteBuffer> resultFuture = ThinClientUtils.convertFuture(igniteFuture);
-                return resultFuture.thenApply((ByteBuffer persistedState) -> {
-                    if (persistedState == null) {
-                        return Optional.empty();
-                    }
-                    byte[] persistedStateBytes = persistedState.array();
-                    return Optional.of(persistedStateBytes);
-                });
-            }
-            @Override
-            public CompletableFuture<Boolean> compareAndSwap(byte[] originalDataBytes, byte[] newDataBytes, RemoteBucketState newState, Optional<Long> timeoutNanos) {
-                ByteBuffer newData = ByteBuffer.wrap(newDataBytes);
-                if (originalDataBytes == null) {
-                    IgniteClientFuture<Boolean> igniteFuture = cache.putIfAbsentAsync(key, newData);
-                    return ThinClientUtils.convertFuture(igniteFuture);
-                }
-                ByteBuffer originalData = ByteBuffer.wrap(originalDataBytes);
-                IgniteClientFuture<Boolean> igniteFuture = cache.replaceAsync(key, originalData, newData);
-                return ThinClientUtils.convertFuture(igniteFuture);
-            }
-        };
-    }
-
-    @Override
-    public boolean isAsyncModeSupported() {
-        return true;
-    }
-
-    @Override
     public void removeProxy(K key) {
         cache.remove(key);
     }
 
     @Override
-    protected CompletableFuture<Void> removeAsync(K key) {
-        IgniteClientFuture<Boolean> igniteFuture = cache.removeAsync(key);
-        return ThinClientUtils.convertFuture(igniteFuture).thenApply(result -> null);
+    public boolean isExpireAfterWriteSupported() {
+        return false;
     }
 
 }

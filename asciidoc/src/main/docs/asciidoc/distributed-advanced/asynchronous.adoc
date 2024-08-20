@@ -3,8 +3,7 @@ Since version ``3.0`` Bucket4j provides asynchronous analogs for the majority of
 Async view of proxyManager is available through ``asAsync()`` method:
 [source, java]
 ----
-ProxyManager proxyManager = ...;
-AsyncProxyManager asyncProxyManager = proxyManager.asAsync();
+AsyncProxyManager asyncProxyManager = ...;
 
 BucketConfiguration configuration = ...;
 AsyncBucketProxy asyncBucket = asyncProxyManager.getProxy(key, () -> configuration);
@@ -53,7 +52,7 @@ public class SmsServlet extends javax.servlet.http.HttpServlet {
         smsSender = (SmsSender) ctx.getAttribute("sms-sender");
         
         FunctionalMapImpl<String, byte[]> bucketMap = (FunctionalMapImpl<String, byte[]>) ctx.getAttribute("bucket-map");
-        this.buckets = new InfinispanProxyManager(bucketMap).asAsync();
+        this.buckets = Bucket4jInfinispan.asyncEntryProcessorBasedBuilder(bucketMap).build();
         
         this.configurationSupplier = () -> {
             return BucketConfiguratiion.builder()
@@ -71,7 +70,7 @@ public class SmsServlet extends javax.servlet.http.HttpServlet {
         String text = req.getParameter("text");
         
         AsyncBucketProxy bucket = buckets.getProxy(fromNumber, configurationSupplier);
-        CompletableFuture<ConsumptionProbe> limitCheckingFuture = bucket.asAsync().tryConsumeAndReturnRemaining(1);
+        CompletableFuture<ConsumptionProbe> limitCheckingFuture = bucket.tryConsumeAndReturnRemaining(1);
         final AsyncContext asyncContext = req.startAsync();
         limitCheckingFuture.thenCompose(probe -> {
             if (!probe.isConsumed()) {

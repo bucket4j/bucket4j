@@ -1,6 +1,19 @@
 
 package io.github.bucket4j.grid.jcache.hazelcast;
 
+import java.io.Serializable;
+import java.util.Arrays;
+import java.util.UUID;
+
+import javax.cache.Cache;
+
+import org.gridkit.nanocloud.Cloud;
+import org.gridkit.nanocloud.CloudFactory;
+import org.gridkit.nanocloud.VX;
+import org.gridkit.vicluster.ViNode;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+
 import com.hazelcast.config.CacheSimpleConfig;
 import com.hazelcast.config.Config;
 import com.hazelcast.config.JoinConfig;
@@ -11,18 +24,6 @@ import com.hazelcast.core.ICacheManager;
 import io.github.bucket4j.grid.jcache.Bucket4jJCache;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
 import io.github.bucket4j.tck.ProxyManagerSpec;
-
-import org.gridkit.nanocloud.Cloud;
-import org.gridkit.nanocloud.CloudFactory;
-import org.gridkit.nanocloud.VX;
-import org.gridkit.vicluster.ViNode;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-
-import javax.cache.Cache;
-import java.io.Serializable;
-import java.util.Arrays;
-import java.util.UUID;
 
 public class HazelcastJCacheTest extends AbstractDistributedBucketTest {
 

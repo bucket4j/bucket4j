@@ -1,8 +1,5 @@
-import com.tangosol.net.CacheFactory;
-import com.tangosol.net.NamedCache;
-import io.github.bucket4j.grid.coherence.Bucket4jCoherence;
-import io.github.bucket4j.tck.AbstractDistributedBucketTest;
-import io.github.bucket4j.tck.ProxyManagerSpec;
+import java.util.Arrays;
+import java.util.UUID;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -10,8 +7,13 @@ import org.junit.jupiter.api.Test;
 import org.littlegrid.ClusterMemberGroup;
 import org.littlegrid.ClusterMemberGroupUtils;
 
-import java.util.Arrays;
-import java.util.UUID;
+import com.tangosol.net.CacheFactory;
+import com.tangosol.net.NamedCache;
+
+import io.github.bucket4j.grid.coherence.Bucket4jCoherence;
+import io.github.bucket4j.tck.AbstractDistributedBucketTest;
+import io.github.bucket4j.tck.AsyncProxyManagerSpec;
+import io.github.bucket4j.tck.ProxyManagerSpec;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -42,6 +44,14 @@ public class CoherenceWithJdkSerializationTest extends AbstractDistributedBucket
                 "CoherenceProxyManager_JdkSerialization",
                 () -> UUID.randomUUID().toString(),
                 () -> Bucket4jCoherence.entryProcessorBasedBuilder(cache)
+            ).checkExpiration()
+        );
+
+        asyncSpecs = Arrays.asList(
+            new AsyncProxyManagerSpec<>(
+                "AsyncCoherenceProxyManager_JdkSerialization",
+                () -> UUID.randomUUID().toString(),
+                () -> Bucket4jCoherence.asyncEntryProcessorBasedBuilder(cache)
             ).checkExpiration()
         );
     }

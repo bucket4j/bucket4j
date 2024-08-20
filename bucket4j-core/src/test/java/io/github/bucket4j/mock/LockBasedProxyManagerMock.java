@@ -17,14 +17,14 @@
 
 package io.github.bucket4j.mock;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+
 import io.github.bucket4j.distributed.proxy.ProxyManagerConfig;
 import io.github.bucket4j.distributed.proxy.generic.pessimistic_locking.AbstractLockBasedProxyManager;
 import io.github.bucket4j.distributed.proxy.generic.pessimistic_locking.LockBasedTransaction;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
 
 public class LockBasedProxyManagerMock<K> extends AbstractLockBasedProxyManager<K> {
 
@@ -92,6 +92,11 @@ public class LockBasedProxyManagerMock<K> extends AbstractLockBasedProxyManager<
     @Override
     public void removeProxy(K key) {
         stateMap.remove(key);
+    }
+
+    @Override
+    public boolean isExpireAfterWriteSupported() {
+        return false;
     }
 
 }

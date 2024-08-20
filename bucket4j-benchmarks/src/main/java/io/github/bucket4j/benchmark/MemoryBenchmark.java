@@ -19,10 +19,12 @@
  */
 package io.github.bucket4j.benchmark;
 
+import org.openjdk.jol.info.ClassLayout;
+
 import com.google.common.util.concurrent.RateLimiter;
+
 import io.github.bucket4j.Bucket;
 import io.github.resilience4j.ratelimiter.internal.AtomicRateLimiter;
-import org.openjdk.jol.info.ClassLayout;
 
 public class MemoryBenchmark {
 

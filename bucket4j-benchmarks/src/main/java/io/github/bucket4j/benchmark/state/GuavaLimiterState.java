@@ -19,9 +19,10 @@
  */
 package io.github.bucket4j.benchmark.state;
 
-import com.google.common.util.concurrent.RateLimiter;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.State;
+
+import com.google.common.util.concurrent.RateLimiter;
 
 @State(Scope.Benchmark)
 public class GuavaLimiterState {

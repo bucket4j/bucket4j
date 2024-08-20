@@ -19,11 +19,11 @@
  */
 package io.github.bucket4j.distributed;
 
-import io.github.bucket4j.distributed.proxy.RemoteAsyncBucketBuilder;
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronization;
-
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
+
+import io.github.bucket4j.distributed.proxy.RemoteAsyncBucketBuilder;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronization;
 
 /**
  * The synchronization controller for {@link AsyncBucketProxy}.

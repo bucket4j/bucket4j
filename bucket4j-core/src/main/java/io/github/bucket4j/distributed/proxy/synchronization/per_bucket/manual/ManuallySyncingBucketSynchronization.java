@@ -24,10 +24,10 @@ import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.BucketSynchronizationController;
 import io.github.bucket4j.distributed.proxy.AsyncCommandExecutor;
 import io.github.bucket4j.distributed.proxy.CommandExecutor;
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.DelayParameters;
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.NopeSynchronizationListener;
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronization;
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronizationListener;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.DelayParameters;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.NopeBucketSynchronizationListener;
 
 /**
  * Synchronization that can serve requests locally without synchronization with external storage until explicit call of {@link BucketSynchronizationController#syncImmediately()}.
@@ -40,7 +40,7 @@ public class ManuallySyncingBucketSynchronization implements BucketSynchronizati
     private final TimeMeter timeMeter;
 
     public ManuallySyncingBucketSynchronization() {
-        this(NopeSynchronizationListener.INSTANCE, TimeMeter.SYSTEM_MILLISECONDS);
+        this(NopeBucketSynchronizationListener.INSTANCE, TimeMeter.SYSTEM_MILLISECONDS);
     }
 
     public ManuallySyncingBucketSynchronization(BucketSynchronizationListener listener, TimeMeter timeMeter) {

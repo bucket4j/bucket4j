@@ -19,16 +19,6 @@
  */
 package io.github.bucket4j.mssql;
 
-import io.github.bucket4j.BucketExceptions;
-import io.github.bucket4j.distributed.jdbc.CustomColumnProvider;
-import io.github.bucket4j.distributed.jdbc.PrimaryKeyMapper;
-import io.github.bucket4j.distributed.proxy.ExpiredEntriesCleaner;
-import io.github.bucket4j.distributed.proxy.generic.select_for_update.AbstractSelectForUpdateBasedProxyManager;
-import io.github.bucket4j.distributed.proxy.generic.select_for_update.LockAndGetResult;
-import io.github.bucket4j.distributed.proxy.generic.select_for_update.SelectForUpdateBasedTransaction;
-import io.github.bucket4j.distributed.remote.RemoteBucketState;
-
-import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -37,6 +27,17 @@ import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+
+import javax.sql.DataSource;
+
+import io.github.bucket4j.BucketExceptions;
+import io.github.bucket4j.distributed.jdbc.CustomColumnProvider;
+import io.github.bucket4j.distributed.jdbc.PrimaryKeyMapper;
+import io.github.bucket4j.distributed.proxy.ExpiredEntriesCleaner;
+import io.github.bucket4j.distributed.proxy.generic.select_for_update.AbstractSelectForUpdateBasedProxyManager;
+import io.github.bucket4j.distributed.proxy.generic.select_for_update.LockAndGetResult;
+import io.github.bucket4j.distributed.proxy.generic.select_for_update.SelectForUpdateBasedTransaction;
+import io.github.bucket4j.distributed.remote.RemoteBucketState;
 
 /**
  * The extension of Bucket4j library addressed to support "Microsoft SQL Server"
@@ -59,7 +60,7 @@ public class MSSQLSelectForUpdateBasedProxyManager<K> extends AbstractSelectForU
     private final List<CustomColumnProvider<K>> customColumns = new ArrayList<>();
 
     MSSQLSelectForUpdateBasedProxyManager(Bucket4jMSSQL.MSSQLSelectForUpdateBasedProxyManagerBuilder<K> builder) {
-        super(builder.getClientSideConfig());
+        super(builder.getProxyManagerConfig());
         this.dataSource = builder.getDataSource();
         this.primaryKeyMapper = builder.getPrimaryKeyMapper();
         this.removeSqlQuery = MessageFormat.format("DELETE FROM {0} WHERE {1} = ?", builder.getTableName(), builder.getIdColumnName());
@@ -68,7 +69,7 @@ public class MSSQLSelectForUpdateBasedProxyManager<K> extends AbstractSelectForU
             builder.getTableName(), builder.getIdColumnName(), builder.getStateColumnName());
         this.selectSqlQuery = MessageFormat.format("SELECT {0} as state FROM {1} WITH(ROWLOCK, UPDLOCK) WHERE {2} = ?", builder.getStateColumnName(), builder.getTableName(), builder.getIdColumnName());
         this.customColumns.addAll(builder.getCustomColumns());
-        getClientSideConfig().getExpirationAfterWriteStrategy().ifPresent(expiration -> {
+        getConfig().getExpirationAfterWriteStrategy().ifPresent(expiration -> {
             this.customColumns.add(CustomColumnProvider.createExpiresInColumnProvider(builder.getExpiresAtColumnName(), expiration));
         });
         if (customColumns.isEmpty()) {

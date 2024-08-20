@@ -23,8 +23,10 @@ import java.util.Objects;
 
 import org.redisson.command.CommandAsyncExecutor;
 
+import io.github.bucket4j.distributed.proxy.AbstractAsyncProxyManagerBuilder;
 import io.github.bucket4j.distributed.proxy.AbstractProxyManagerBuilder;
 import io.github.bucket4j.distributed.serialization.Mapper;
+import io.github.bucket4j.redis.redisson.cas.RedissonAsyncProxyManager;
 import io.github.bucket4j.redis.redisson.cas.RedissonBasedProxyManager;
 
 /**
@@ -41,6 +43,17 @@ public class Bucket4jRedisson {
      */
     public static RedissonBasedProxyManagerBuilder<String> casBasedBuilder(CommandAsyncExecutor commandExecutor) {
         return new RedissonBasedProxyManagerBuilder<>(Mapper.STRING, commandExecutor);
+    }
+
+    /**
+     * Returns the builder for {@link RedissonAsyncProxyManager}
+     *
+     * @param commandExecutor
+     *
+     * @return new instance of {@link RedissonAsyncProxyManagerBuilder}
+     */
+    public static RedissonAsyncProxyManagerBuilder<String> asyncCasBasedBuilder(CommandAsyncExecutor commandExecutor) {
+        return new RedissonAsyncProxyManagerBuilder<>(Mapper.STRING, commandExecutor);
     }
 
     public static class RedissonBasedProxyManagerBuilder<K> extends AbstractProxyManagerBuilder<K, RedissonBasedProxyManager<K>, RedissonBasedProxyManagerBuilder<K>> {
@@ -76,6 +89,48 @@ public class Bucket4jRedisson {
         @Override
         public RedissonBasedProxyManager<K> build() {
             return new RedissonBasedProxyManager<>(this);
+        }
+
+        @Override
+        public boolean isExpireAfterWriteSupported() {
+            return true;
+        }
+
+    }
+
+    public static class RedissonAsyncProxyManagerBuilder<K> extends AbstractAsyncProxyManagerBuilder<K, RedissonAsyncProxyManager<K>, RedissonAsyncProxyManagerBuilder<K>> {
+
+        private final CommandAsyncExecutor commandExecutor;
+        private Mapper<K> keyMapper;
+
+        public RedissonAsyncProxyManagerBuilder(Mapper<K> keyMapper, CommandAsyncExecutor commandExecutor) {
+            this.commandExecutor = Objects.requireNonNull(commandExecutor);
+            this.keyMapper = Objects.requireNonNull(keyMapper);
+        }
+
+        /**
+         * Specifies the type of key.
+         *
+         * @param keyMapper object responsible for converting primary keys to byte arrays.
+         *
+         * @return this builder instance
+         */
+        public <K2> RedissonAsyncProxyManagerBuilder<K2> keyMapper(Mapper<K2> keyMapper) {
+            this.keyMapper = (Mapper) Objects.requireNonNull(keyMapper);
+            return (RedissonAsyncProxyManagerBuilder<K2>) this;
+        }
+
+        public Mapper<K> getKeyMapper() {
+            return keyMapper;
+        }
+
+        public CommandAsyncExecutor getCommandExecutor() {
+            return commandExecutor;
+        }
+
+        @Override
+        public RedissonAsyncProxyManager<K> build() {
+            return new RedissonAsyncProxyManager<>(this);
         }
 
         @Override

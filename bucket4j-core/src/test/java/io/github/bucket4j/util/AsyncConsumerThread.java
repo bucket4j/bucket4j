@@ -17,10 +17,10 @@
 
 package io.github.bucket4j.util;
 
-import io.github.bucket4j.distributed.AsyncBucketProxy;
-
 import java.util.concurrent.CountDownLatch;
 import java.util.function.Function;
+
+import io.github.bucket4j.distributed.AsyncBucketProxy;
 
 public class AsyncConsumerThread extends Thread {
 
@@ -53,7 +53,7 @@ public class AsyncConsumerThread extends Thread {
                 consumed += action.apply(bucket);
             }
         } catch (Exception e) {
-            exception.printStackTrace();
+            e.printStackTrace();
             exception = e;
         } finally {
             endLatch.countDown();

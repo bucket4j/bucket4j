@@ -1,5 +1,18 @@
 package io.github.bucket4j.hazelcast;
 
+import java.io.Serializable;
+import java.util.Arrays;
+import java.util.UUID;
+
+import org.gridkit.nanocloud.Cloud;
+import org.gridkit.nanocloud.CloudFactory;
+import org.gridkit.nanocloud.VX;
+import org.gridkit.vicluster.ViNode;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.hazelcast.config.Config;
 import com.hazelcast.config.JoinConfig;
 import com.hazelcast.config.SerializerConfig;
@@ -17,19 +30,8 @@ import io.github.bucket4j.grid.hazelcast.serialization.HazelcastOffloadableEntry
 import io.github.bucket4j.grid.hazelcast.serialization.SerializationUtilities;
 import io.github.bucket4j.grid.hazelcast.serialization.SimpleBackupProcessorSerializer;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
+import io.github.bucket4j.tck.AsyncProxyManagerSpec;
 import io.github.bucket4j.tck.ProxyManagerSpec;
-import org.gridkit.nanocloud.Cloud;
-import org.gridkit.nanocloud.CloudFactory;
-import org.gridkit.nanocloud.VX;
-import org.gridkit.vicluster.ViNode;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.Serializable;
-import java.util.Arrays;
-import java.util.UUID;
 
 public class HazelcastWithCustomSerializersLoadedByStandardConfigTest extends AbstractDistributedBucketTest {
 
@@ -106,6 +108,14 @@ public class HazelcastWithCustomSerializersLoadedByStandardConfigTest extends Ab
                 "HazelcastProxyManager_CustomSerialization_offloadableExecutor",
                 () -> UUID.randomUUID().toString(),
                 () -> Bucket4jHazelcast.entryProcessorBasedBuilder(map).offloadableExecutorName("my-executor")
+            ).checkExpiration()
+        );
+
+        asyncSpecs = Arrays.asList(
+            new AsyncProxyManagerSpec<>(
+                "AsyncHazelcastProxyManager_JdkSerialization",
+                () -> UUID.randomUUID().toString(),
+                () -> Bucket4jHazelcast.asyncEntryProcessorBasedBuilder(map)
             ).checkExpiration()
         );
     }

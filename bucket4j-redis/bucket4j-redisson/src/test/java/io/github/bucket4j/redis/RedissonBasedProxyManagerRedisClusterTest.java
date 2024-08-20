@@ -23,6 +23,7 @@ import org.testcontainers.containers.GenericContainer;
 import io.github.bucket4j.distributed.serialization.Mapper;
 import io.github.bucket4j.redis.redisson.Bucket4jRedisson;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
+import io.github.bucket4j.tck.AsyncProxyManagerSpec;
 import io.github.bucket4j.tck.ProxyManagerSpec;
 import io.lettuce.core.RedisURI;
 import io.lettuce.core.cluster.RedisClusterClient;
@@ -64,6 +65,15 @@ public class RedissonBasedProxyManagerRedisClusterTest extends AbstractDistribut
                 "RedissonBasedProxyManager_StringKey",
                 () -> UUID.randomUUID().toString(),
                 () -> Bucket4jRedisson.casBasedBuilder(commandExecutor)
+            ).checkExpiration()
+        );
+
+        asyncSpecs = Arrays.asList(
+            // Redisson
+            new AsyncProxyManagerSpec<>(
+                "RedissonAsyncProxyManager_LongKey",
+                () -> ThreadLocalRandom.current().nextLong(),
+                () -> Bucket4jRedisson.asyncCasBasedBuilder(commandExecutor).keyMapper(Mapper.LONG)
             ).checkExpiration()
         );
     }

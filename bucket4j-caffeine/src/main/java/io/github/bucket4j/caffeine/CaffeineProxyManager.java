@@ -30,8 +30,6 @@ import io.github.bucket4j.distributed.remote.MutableBucketEntry;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.distributed.remote.Request;
 
-import java.util.concurrent.CompletableFuture;
-
 /**
  * The extension of Bucket4j library addressed to support <a href="https://github.com/ben-manes/caffeine">Caffeine</a> caching library.
  */
@@ -40,10 +38,10 @@ public class CaffeineProxyManager<K> extends AbstractProxyManager<K> {
     private final Cache<K, RemoteBucketState> cache;
 
     CaffeineProxyManager(Bucket4jCaffeine.CaffeineProxyManagerBuilder<K> builder) {
-        super(builder.getClientSideConfig());
+        super(builder.getProxyManagerConfig());
 
         this.cache = builder.cacheBuilder.expireAfter(new Expiry<K, RemoteBucketState>() {
-                private final ExpirationAfterWriteStrategy expiration = getClientSideConfig().getExpirationAfterWriteStrategy()
+                private final ExpirationAfterWriteStrategy expiration = getConfig().getExpirationAfterWriteStrategy()
                     .orElse(ExpirationAfterWriteStrategy.none());
 
                 @Override
@@ -97,25 +95,8 @@ public class CaffeineProxyManager<K> extends AbstractProxyManager<K> {
     }
 
     @Override
-    public boolean isAsyncModeSupported() {
-        return true;
-    }
-
-    @Override
-    public <T> CompletableFuture<CommandResult<T>> executeAsync(K key, Request<T> request) {
-        CommandResult<T> result = execute(key, request);
-        return CompletableFuture.completedFuture(result);
-    }
-
-    @Override
     public void removeProxy(K key) {
         cache.asMap().remove(key);
-    }
-
-    @Override
-    protected CompletableFuture<Void> removeAsync(K key) {
-        cache.asMap().remove(key);
-        return CompletableFuture.completedFuture(null);
     }
 
 }

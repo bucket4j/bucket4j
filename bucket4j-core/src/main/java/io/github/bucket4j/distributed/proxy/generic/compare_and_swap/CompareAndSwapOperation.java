@@ -20,9 +20,9 @@
 
 package io.github.bucket4j.distributed.proxy.generic.compare_and_swap;
 
-import io.github.bucket4j.distributed.remote.RemoteBucketState;
-
 import java.util.Optional;
+
+import io.github.bucket4j.distributed.remote.RemoteBucketState;
 
 public interface CompareAndSwapOperation {
 

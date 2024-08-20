@@ -1,17 +1,5 @@
 package io.github.bucket4j.postgresql;
 
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
-import io.github.bucket4j.distributed.jdbc.BucketTableSettings;
-import io.github.bucket4j.distributed.jdbc.PrimaryKeyMapper;
-import io.github.bucket4j.tck.AbstractDistributedBucketTest;
-import io.github.bucket4j.tck.ProxyManagerSpec;
-
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.testcontainers.containers.PostgreSQLContainer;
-
-import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -19,6 +7,20 @@ import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
+
+import javax.sql.DataSource;
+
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.testcontainers.containers.PostgreSQLContainer;
+
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+
+import io.github.bucket4j.distributed.jdbc.BucketTableSettings;
+import io.github.bucket4j.distributed.jdbc.PrimaryKeyMapper;
+import io.github.bucket4j.tck.AbstractDistributedBucketTest;
+import io.github.bucket4j.tck.ProxyManagerSpec;
 
 public class PostgreSQLTest extends AbstractDistributedBucketTest {
 

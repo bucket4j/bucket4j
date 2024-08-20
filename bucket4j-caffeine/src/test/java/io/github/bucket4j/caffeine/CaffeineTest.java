@@ -1,15 +1,14 @@
 package io.github.bucket4j.caffeine;
 
-import com.github.benmanes.caffeine.cache.Caffeine;
-
-import io.github.bucket4j.tck.AbstractDistributedBucketTest;
-import io.github.bucket4j.tck.ProxyManagerSpec;
-
-import java.time.Duration;
 import java.util.Arrays;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeAll;
+
+import com.github.benmanes.caffeine.cache.Caffeine;
+
+import io.github.bucket4j.tck.AbstractDistributedBucketTest;
+import io.github.bucket4j.tck.ProxyManagerSpec;
 
 public class CaffeineTest extends AbstractDistributedBucketTest {
 

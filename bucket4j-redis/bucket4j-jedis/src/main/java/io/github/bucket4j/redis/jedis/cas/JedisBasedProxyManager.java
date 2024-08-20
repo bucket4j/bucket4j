@@ -46,7 +46,7 @@ public class JedisBasedProxyManager<K> extends AbstractCompareAndSwapBasedProxyM
     }
 
     public JedisBasedProxyManager(Bucket4jJedis.JedisBasedProxyManagerBuilder<K> builder) {
-        super(builder.getClientSideConfig());
+        super(builder.getProxyManagerConfig());
         this.keyMapper = builder.getKeyMapper();
         this.expirationStrategy = builder.getExpirationAfterWrite().orElse(ExpirationAfterWriteStrategy.none());
         this.redisApi = builder.getRedisApi();
@@ -69,23 +69,8 @@ public class JedisBasedProxyManager<K> extends AbstractCompareAndSwapBasedProxyM
     }
 
     @Override
-    protected AsyncCompareAndSwapOperation beginAsyncCompareAndSwapOperation(K key) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public void removeProxy(K key) {
         redisApi.delete(keyMapper.toBytes(key));
-    }
-
-    @Override
-    protected CompletableFuture<Void> removeAsync(K key) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public boolean isAsyncModeSupported() {
-        return false;
     }
 
     private Boolean compareAndSwap(byte[] key, byte[] originalData, byte[] newData, RemoteBucketState newState) {

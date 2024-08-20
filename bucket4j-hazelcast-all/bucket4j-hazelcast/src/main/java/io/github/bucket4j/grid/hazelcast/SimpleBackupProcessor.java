@@ -19,12 +19,13 @@
  */
 package io.github.bucket4j.grid.hazelcast;
 
-import com.hazelcast.map.EntryProcessor;
-import io.github.bucket4j.util.ComparableByContent;
-
 import java.io.Serial;
 import java.util.Arrays;
 import java.util.Map;
+
+import com.hazelcast.map.EntryProcessor;
+
+import io.github.bucket4j.util.ComparableByContent;
 
 public class SimpleBackupProcessor<K> implements EntryProcessor<K, byte[], byte[]>, ComparableByContent<SimpleBackupProcessor> {
 

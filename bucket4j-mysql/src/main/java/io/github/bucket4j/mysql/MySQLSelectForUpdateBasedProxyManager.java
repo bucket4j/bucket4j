@@ -19,7 +19,19 @@
  */
 package io.github.bucket4j.mysql;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.text.MessageFormat;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+import javax.sql.DataSource;
+
 import com.mysql.cj.jdbc.exceptions.MySQLTransactionRollbackException;
+
 import io.github.bucket4j.BucketExceptions;
 import io.github.bucket4j.distributed.jdbc.CustomColumnProvider;
 import io.github.bucket4j.distributed.jdbc.PrimaryKeyMapper;
@@ -29,16 +41,6 @@ import io.github.bucket4j.distributed.proxy.generic.select_for_update.LockAndGet
 import io.github.bucket4j.distributed.proxy.generic.select_for_update.SelectForUpdateBasedTransaction;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.mysql.Bucket4jMySQL.MySQLSelectForUpdateBasedProxyManagerBuilder;
-
-import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
 
 /**
  * The extension of Bucket4j library addressed to support <a href="https://www.mysql.com/">MySQL</a>
@@ -59,7 +61,7 @@ public class MySQLSelectForUpdateBasedProxyManager<K> extends AbstractSelectForU
     private final List<CustomColumnProvider<K>> customColumns = new ArrayList<>();
 
     MySQLSelectForUpdateBasedProxyManager(MySQLSelectForUpdateBasedProxyManagerBuilder<K> builder) {
-        super(builder.getClientSideConfig());
+        super(builder.getProxyManagerConfig());
         this.dataSource = builder.getDataSource();
         this.primaryKeyMapper = builder.getPrimaryKeyMapper();
         this.removeSqlQuery = MessageFormat.format("DELETE FROM {0} WHERE {1} = ?", builder.getTableName(), builder.getIdColumnName());
@@ -67,7 +69,7 @@ public class MySQLSelectForUpdateBasedProxyManager<K> extends AbstractSelectForU
             builder.getTableName(), builder.getIdColumnName(), builder.getStateColumnName());
         selectSqlQuery = MessageFormat.format("SELECT {0} as state FROM {1} WHERE {2} = ? FOR UPDATE", builder.getStateColumnName(), builder.getTableName(), builder.getIdColumnName());
         this.customColumns.addAll(builder.getCustomColumns());
-        getClientSideConfig().getExpirationAfterWriteStrategy().ifPresent(expiration -> {
+        getConfig().getExpirationAfterWriteStrategy().ifPresent(expiration -> {
             this.customColumns.add(CustomColumnProvider.createExpiresInColumnProvider(builder.getExpiresAtColumnName(), expiration));
         });
         if (customColumns.isEmpty()) {

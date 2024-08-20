@@ -19,9 +19,13 @@
  */
 package io.github.bucket4j.distributed;
 
+import java.io.IOException;
+import java.time.Duration;
+import java.util.Map;
+
+import io.github.bucket4j.distributed.expiration.BasedOnTimeForRefillingBucketUpToMaxExpirationAfterWriteStrategy;
 import io.github.bucket4j.distributed.expiration.FixedTtlExpirationAfterWriteStrategy;
 import io.github.bucket4j.distributed.expiration.NoneExpirationAfterWriteStrategy;
-import io.github.bucket4j.distributed.expiration.BasedOnTimeForRefillingBucketUpToMaxExpirationAfterWriteStrategy;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
 import io.github.bucket4j.distributed.serialization.Scope;
@@ -29,10 +33,6 @@ import io.github.bucket4j.distributed.serialization.SerializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
 import io.github.bucket4j.distributed.serialization.SerializationHandles;
 import io.github.bucket4j.distributed.versioning.Version;
-
-import java.io.IOException;
-import java.time.Duration;
-import java.util.Map;
 
 /**
  * Represents the strategy for choosing time to live for buckets in the cache.

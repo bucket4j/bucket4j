@@ -19,10 +19,11 @@
  */
 package io.github.bucket4j.grid.infinispan.serialization;
 
-import io.github.bucket4j.grid.infinispan.InfinispanProcessor;
+import java.io.IOException;
+
 import org.infinispan.protostream.MessageMarshaller;
 
-import java.io.*;
+import io.github.bucket4j.grid.infinispan.InfinispanProcessor;
 
 public class InfinispanProcessorMarshaller implements MessageMarshaller<InfinispanProcessor> {
 

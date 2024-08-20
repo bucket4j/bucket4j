@@ -19,17 +19,6 @@
  */
 package io.github.bucket4j.postgresql;
 
-import io.github.bucket4j.BucketExceptions;
-import io.github.bucket4j.distributed.jdbc.CustomColumnProvider;
-import io.github.bucket4j.distributed.jdbc.PrimaryKeyMapper;
-import io.github.bucket4j.distributed.jdbc.LockIdSupplier;
-import io.github.bucket4j.distributed.proxy.ExpiredEntriesCleaner;
-import io.github.bucket4j.distributed.proxy.generic.pessimistic_locking.AbstractLockBasedProxyManager;
-import io.github.bucket4j.distributed.proxy.generic.pessimistic_locking.LockBasedTransaction;
-import io.github.bucket4j.distributed.remote.RemoteBucketState;
-import io.github.bucket4j.postgresql.Bucket4jPostgreSQL.PostgreSQLAdvisoryLockBasedProxyManagerBuilder;
-
-import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -37,8 +26,19 @@ import java.sql.SQLException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
+
+import javax.sql.DataSource;
+
+import io.github.bucket4j.BucketExceptions;
+import io.github.bucket4j.distributed.jdbc.CustomColumnProvider;
+import io.github.bucket4j.distributed.jdbc.LockIdSupplier;
+import io.github.bucket4j.distributed.jdbc.PrimaryKeyMapper;
+import io.github.bucket4j.distributed.proxy.ExpiredEntriesCleaner;
+import io.github.bucket4j.distributed.proxy.generic.pessimistic_locking.AbstractLockBasedProxyManager;
+import io.github.bucket4j.distributed.proxy.generic.pessimistic_locking.LockBasedTransaction;
+import io.github.bucket4j.distributed.remote.RemoteBucketState;
+import io.github.bucket4j.postgresql.Bucket4jPostgreSQL.PostgreSQLAdvisoryLockBasedProxyManagerBuilder;
 
 /**
  * The extension of Bucket4j library addressed to support <a href="https://www.postgresql.org/">PostgreSQL</a>
@@ -60,14 +60,14 @@ public class PostgreSQLadvisoryLockBasedProxyManager<K> extends AbstractLockBase
     private final List<CustomColumnProvider<K>> customColumns = new ArrayList<>();
 
     PostgreSQLadvisoryLockBasedProxyManager(PostgreSQLAdvisoryLockBasedProxyManagerBuilder<K> builder) {
-        super(builder.getClientSideConfig());
+        super(builder.getProxyManagerConfig());
         this.dataSource = builder.getDataSource();
         this.primaryKeyMapper = builder.getPrimaryKeyMapper();
         this.lockIdSupplier = builder.getLockIdSupplier();
         this.removeSqlQuery = MessageFormat.format("DELETE FROM {0} WHERE {1} = ?", builder.getTableName(), builder.getIdColumnName());
         this.selectSqlQuery = MessageFormat.format("SELECT {0} as state FROM {1} WHERE {2} = ?", builder.getStateColumnName(), builder.getTableName(), builder.getIdColumnName());
         this.customColumns.addAll(builder.getCustomColumns());
-        getClientSideConfig().getExpirationAfterWriteStrategy().ifPresent(expiration -> {
+        getConfig().getExpirationAfterWriteStrategy().ifPresent(expiration -> {
             this.customColumns.add(CustomColumnProvider.createExpiresInColumnProvider(builder.getExpiresAtColumnName(), expiration));
             String lockColumn = builder.getLockColumn();
             this.customColumns.add(new CustomColumnProvider<>() {

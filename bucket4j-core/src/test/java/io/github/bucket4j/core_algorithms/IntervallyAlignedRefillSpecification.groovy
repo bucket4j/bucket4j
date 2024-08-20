@@ -13,7 +13,7 @@ import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.TimeUnit
 
-import static io.github.bucket4j.MathType.*
+import static io.github.bucket4j.MathType.INTEGER_64_BITS
 
 
 class IntervallyAlignedRefillSpecification extends Specification {

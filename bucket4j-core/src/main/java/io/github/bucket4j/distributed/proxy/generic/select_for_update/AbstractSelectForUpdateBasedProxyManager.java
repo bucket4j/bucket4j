@@ -20,6 +20,11 @@
 
 package io.github.bucket4j.distributed.proxy.generic.select_for_update;
 
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
+
 import io.github.bucket4j.BucketExceptions;
 import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.proxy.AbstractProxyManager;
@@ -30,12 +35,6 @@ import io.github.bucket4j.distributed.remote.MutableBucketEntry;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.remote.Request;
-
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 
 
 /**
@@ -53,7 +52,7 @@ public abstract class AbstractSelectForUpdateBasedProxyManager<K> extends Abstra
 
     @Override
     public <T> CommandResult<T> execute(K key, Request<T> request) {
-        Timeout timeout = Timeout.of(getClientSideConfig());
+        Timeout timeout = Timeout.of(getConfig());
         while (true) {
             SelectForUpdateBasedTransaction transaction = timeout.call(timeoutNanos -> allocateTransaction(key, timeoutNanos));
             CommandResult<T> result;
@@ -66,21 +65,6 @@ public abstract class AbstractSelectForUpdateBasedProxyManager<K> extends Abstra
                 return result;
             }
         }
-    }
-
-    @Override
-    public boolean isAsyncModeSupported() {
-        return false;
-    }
-
-    @Override
-    public <T> CompletableFuture<CommandResult<T>> executeAsync(K key, Request<T> request) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    protected CompletableFuture<Void> removeAsync(Object key) {
-        return null;
     }
 
     protected abstract SelectForUpdateBasedTransaction allocateTransaction(K key, Optional<Long> timeoutNanos);

@@ -37,22 +37,14 @@
 package io.github.bucket4j.grid.hazelcast;
 
 import com.hazelcast.config.SerializationConfig;
-import com.hazelcast.config.SerializerConfig;
 import com.hazelcast.map.IMap;
+
 import io.github.bucket4j.distributed.proxy.AbstractProxyManager;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.Request;
 import io.github.bucket4j.distributed.versioning.Version;
 import io.github.bucket4j.grid.hazelcast.Bucket4jHazelcast.HazelcastProxyManagerBuilder;
-import io.github.bucket4j.grid.hazelcast.serialization.HazelcastEntryProcessorSerializer;
-import io.github.bucket4j.grid.hazelcast.serialization.HazelcastOffloadableEntryProcessorSerializer;
 import io.github.bucket4j.grid.hazelcast.serialization.SerializationUtilities;
-import io.github.bucket4j.grid.hazelcast.serialization.SimpleBackupProcessorSerializer;
-import io.github.bucket4j.distributed.serialization.InternalSerializationHelper;
-import io.github.bucket4j.grid.hazelcast.serialization.VersionedBackupProcessorSerializer;
-
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
 
 import static io.github.bucket4j.distributed.serialization.InternalSerializationHelper.deserializeResult;
 
@@ -65,7 +57,7 @@ public class HazelcastProxyManager<K> extends AbstractProxyManager<K> {
     private final String offloadableExecutorName;
 
     HazelcastProxyManager(HazelcastProxyManagerBuilder<K> builder) {
-        super(builder.getClientSideConfig());
+        super(builder.getProxyManagerConfig());
         this.map = builder.map;
         this.offloadableExecutorName = builder.offloadableExecutorName;
     }
@@ -81,23 +73,8 @@ public class HazelcastProxyManager<K> extends AbstractProxyManager<K> {
     }
 
     @Override
-    public boolean isAsyncModeSupported() {
-        return true;
-    }
-
-    @Override
     public boolean isExpireAfterWriteSupported() {
         return true;
-    }
-
-    @Override
-    public <T> CompletableFuture<CommandResult<T>> executeAsync(K key, Request<T> request) {
-        HazelcastEntryProcessor<K, T> entryProcessor = offloadableExecutorName == null?
-                new HazelcastEntryProcessor<>(request) :
-                new HazelcastOffloadableEntryProcessor<>(request, offloadableExecutorName);
-        CompletionStage<byte[]> future = map.submitToKey(key, entryProcessor);
-        Version backwardCompatibilityVersion = request.getBackwardCompatibilityVersion();
-        return (CompletableFuture) future.thenApply((byte[] bytes) -> InternalSerializationHelper.deserializeResult(bytes, backwardCompatibilityVersion));
     }
 
     @Override
@@ -105,56 +82,10 @@ public class HazelcastProxyManager<K> extends AbstractProxyManager<K> {
         map.remove(key);
     }
 
-    @Override
-    protected CompletableFuture<Void> removeAsync(K key) {
-        CompletionStage<byte[]> hazelcastFuture = map.removeAsync(key);
-        CompletableFuture<Void> resultFuture = new CompletableFuture<>();
-        hazelcastFuture.whenComplete((oldState, error) -> {
-          if (error == null) {
-              resultFuture.complete(null);
-          } else {
-              resultFuture.completeExceptionally(error);
-          }
-        });
-        return resultFuture;
-    }
-
-    /**
-     * Registers custom Hazelcast serializers for all classes from Bucket4j library which can be transferred over network.
-     * Each serializer will have different typeId, and this id will not be changed in the feature releases.
-     *
-     * <p>
-     *     <strong>Note:</strong> it would be better to leave an empty space in the Ids in order to handle the extension of Bucket4j library when new classes can be added to library.
-     *     For example if you called {@code getAllSerializers(10000)} then it would be reasonable to avoid registering your custom types in the interval 10000-10100.
-     * </p>
-     *
-     * @param typeIdBase a starting number from for typeId sequence
-     */
     public static void addCustomSerializers(SerializationConfig serializationConfig, final int typeIdBase) {
-        serializationConfig.addSerializerConfig(
-                new SerializerConfig()
-                        .setImplementation(new HazelcastEntryProcessorSerializer(SerializationUtilities.getSerializerTypeId(HazelcastEntryProcessorSerializer.class, typeIdBase)))
-                        .setTypeClass(HazelcastEntryProcessor.class)
-        );
-
-        serializationConfig.addSerializerConfig(
-                new SerializerConfig()
-                        .setImplementation(new SimpleBackupProcessorSerializer(SerializationUtilities.getSerializerTypeId(SimpleBackupProcessorSerializer.class, typeIdBase)))
-                        .setTypeClass(SimpleBackupProcessor.class)
-        );
-
-        serializationConfig.addSerializerConfig(
-                new SerializerConfig()
-                        .setImplementation(new HazelcastOffloadableEntryProcessorSerializer(SerializationUtilities.getSerializerTypeId(HazelcastOffloadableEntryProcessorSerializer.class, typeIdBase)))
-                        .setTypeClass(HazelcastOffloadableEntryProcessor.class)
-        );
-
-        serializationConfig.addSerializerConfig(
-            new SerializerConfig()
-                .setImplementation(new VersionedBackupProcessorSerializer(SerializationUtilities.getSerializerTypeId(VersionedBackupProcessorSerializer.class, typeIdBase)))
-                .setTypeClass(VersionedBackupProcessor.class)
-        );
-
+        SerializationUtilities.addCustomSerializers(serializationConfig, typeIdBase);
     }
+
+
 
 }

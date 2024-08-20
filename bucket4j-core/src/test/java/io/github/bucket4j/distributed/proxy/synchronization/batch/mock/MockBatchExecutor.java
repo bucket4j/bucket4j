@@ -1,12 +1,12 @@
 package io.github.bucket4j.distributed.proxy.synchronization.batch.mock;
 
-import io.github.bucket4j.util.concurrent.batch.AsyncBatchHelper;
-import io.github.bucket4j.util.concurrent.batch.BatchHelper;
-
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
+
+import io.github.bucket4j.util.concurrent.batch.AsyncBatchHelper;
+import io.github.bucket4j.util.concurrent.batch.BatchHelper;
 
 
 public class MockBatchExecutor {

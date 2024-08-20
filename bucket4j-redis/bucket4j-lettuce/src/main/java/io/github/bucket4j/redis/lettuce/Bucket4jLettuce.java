@@ -21,7 +21,9 @@ package io.github.bucket4j.redis.lettuce;
 
 import java.util.Objects;
 
+import io.github.bucket4j.distributed.proxy.AbstractAsyncProxyManagerBuilder;
 import io.github.bucket4j.distributed.proxy.AbstractProxyManagerBuilder;
+import io.github.bucket4j.redis.lettuce.cas.LettuceAsyncProxyManager;
 import io.github.bucket4j.redis.lettuce.cas.LettuceBasedProxyManager;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.RedisFuture;
@@ -37,7 +39,6 @@ import io.lettuce.core.codec.ByteArrayCodec;
  * Entry point for Lettuce integration
  */
 public class Bucket4jLettuce {
-
 
     /**
      * Returns the builder for {@link LettuceBasedProxyManager}
@@ -135,6 +136,102 @@ public class Bucket4jLettuce {
         return new LettuceBasedProxyManagerBuilder<>(redisApi);
     }
 
+    /**
+     * Returns the builder for {@link LettuceAsyncProxyManager}
+     *
+     * @param redisAsyncCommands
+     *
+     * @return new instance of {@link LettuceAsyncProxyManagerBuilder}
+     */
+    public static <K> LettuceAsyncProxyManagerBuilder<K> asyncCasBasedBuilder(RedisAsyncCommands<K, byte[]> redisAsyncCommands) {
+        Objects.requireNonNull(redisAsyncCommands);
+        RedisApi<K> redisApi = new RedisApi<>() {
+            @Override
+            public <V> RedisFuture<V> eval(String script, ScriptOutputType scriptOutputType, K[] keys, byte[][] params) {
+                return redisAsyncCommands.eval(script, scriptOutputType, keys, params);
+            }
+            @Override
+            public RedisFuture<byte[]> get(K key) {
+                return redisAsyncCommands.get(key);
+            }
+            @Override
+            public RedisFuture<?> delete(K key) {
+                return redisAsyncCommands.del(key);
+            }
+        };
+        return new LettuceAsyncProxyManagerBuilder<>(redisApi);
+    }
+
+    /**
+     * Returns the builder for {@link LettuceAsyncProxyManager}
+     *
+     * @param statefulRedisConnection
+     *
+     * @return new instance of {@link LettuceAsyncProxyManagerBuilder}
+     */
+    public static <K> LettuceAsyncProxyManagerBuilder<K> asyncCasBasedBuilder(StatefulRedisConnection<K, byte[]> statefulRedisConnection) {
+        return asyncCasBasedBuilder(statefulRedisConnection.async());
+    }
+
+    /**
+     * Returns the builder for {@link LettuceAsyncProxyManager}
+     *
+     * @param redisClient
+     *
+     * @return new instance of {@link LettuceAsyncProxyManagerBuilder}
+     */
+    public static LettuceAsyncProxyManagerBuilder<byte[]> asyncCasBasedBuilder(RedisClient redisClient) {
+        return asyncCasBasedBuilder(redisClient.connect(ByteArrayCodec.INSTANCE));
+    }
+
+    /**
+     * Returns the builder for {@link LettuceAsyncProxyManager}
+     *
+     * @param redisClient
+     *
+     * @return new instance of {@link LettuceAsyncProxyManagerBuilder}
+     */
+    public static LettuceAsyncProxyManagerBuilder<byte[]> asyncCasBasedBuilder(RedisClusterClient redisClient) {
+        return asyncCasBasedBuilder(redisClient.connect(ByteArrayCodec.INSTANCE));
+    }
+
+    /**
+     * Returns the builder for {@link LettuceAsyncProxyManager}
+     *
+     * @param connection
+     *
+     * @return new instance of {@link LettuceAsyncProxyManagerBuilder}
+     */
+    public static <K> LettuceAsyncProxyManagerBuilder<K> asyncCasBasedBuilder(StatefulRedisClusterConnection<K, byte[]> connection) {
+        return asyncCasBasedBuilder(connection.async());
+    }
+
+    /**
+     * Returns the builder for {@link LettuceAsyncProxyManager}
+     *
+     * @param redisAsyncCommands
+     *
+     * @return new instance of {@link LettuceAsyncProxyManagerBuilder}
+     */
+    public static <K> LettuceAsyncProxyManagerBuilder<K> asyncCasBasedBuilder(RedisAdvancedClusterAsyncCommands<K, byte[]> redisAsyncCommands) {
+        Objects.requireNonNull(redisAsyncCommands);
+        RedisApi<K> redisApi = new RedisApi<>() {
+            @Override
+            public <V> RedisFuture<V> eval(String script, ScriptOutputType scriptOutputType, K[] keys, byte[][] params) {
+                return redisAsyncCommands.eval(script, scriptOutputType, keys, params);
+            }
+            @Override
+            public RedisFuture<byte[]> get(K key) {
+                return redisAsyncCommands.get(key);
+            }
+            @Override
+            public RedisFuture<?> delete(K key) {
+                return redisAsyncCommands.del(key);
+            }
+        };
+        return new LettuceAsyncProxyManagerBuilder<>(redisApi);
+    }
+
     public static class LettuceBasedProxyManagerBuilder<K> extends AbstractProxyManagerBuilder<K, LettuceBasedProxyManager<K>, LettuceBasedProxyManagerBuilder<K>> {
 
         private final RedisApi<K> redisApi;
@@ -150,6 +247,30 @@ public class Bucket4jLettuce {
         @Override
         public LettuceBasedProxyManager<K> build() {
             return new LettuceBasedProxyManager<>(this);
+        }
+
+        @Override
+        public boolean isExpireAfterWriteSupported() {
+            return true;
+        }
+
+    }
+
+    public static class LettuceAsyncProxyManagerBuilder<K> extends AbstractAsyncProxyManagerBuilder<K, LettuceAsyncProxyManager<K>, LettuceAsyncProxyManagerBuilder<K>> {
+
+        private final RedisApi<K> redisApi;
+
+        public LettuceAsyncProxyManagerBuilder(RedisApi<K> redisApi) {
+            this.redisApi = redisApi;
+        }
+
+        public RedisApi<K> getRedisApi() {
+            return redisApi;
+        }
+
+        @Override
+        public LettuceAsyncProxyManager<K> build() {
+            return new LettuceAsyncProxyManager<>(this);
         }
 
         @Override

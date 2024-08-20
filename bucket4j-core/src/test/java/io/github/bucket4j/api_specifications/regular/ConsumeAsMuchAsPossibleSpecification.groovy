@@ -1,6 +1,6 @@
 package io.github.bucket4j.api_specifications.regular
 
-import io.github.bucket4j.Bandwidth
+
 import io.github.bucket4j.Bucket
 import io.github.bucket4j.BucketConfiguration
 import io.github.bucket4j.SimpleBucketListener
@@ -30,6 +30,9 @@ class ConsumeAsMuchAsPossibleSpecification extends Specification {
             Bucket bucket = bucketType.createBucket(configuration, timeMeter)
             assert bucket.tryConsumeAsMuchAsPossible() == requiredResult
 
+            if (!bucketType.asyncModeSupported) {
+                continue
+            }
             AsyncBucketProxy asyncBucket = bucketType.createAsyncBucket(configuration, timeMeter)
             assert asyncBucket.tryConsumeAsMuchAsPossible().get() == requiredResult
         }
@@ -48,6 +51,9 @@ class ConsumeAsMuchAsPossibleSpecification extends Specification {
             Bucket bucket = bucketType.createBucket(configuration, timeMeter)
             assert bucket.tryConsumeAsMuchAsPossible(limit) == requiredResult
 
+            if (!bucketType.asyncModeSupported) {
+                continue
+            }
             AsyncBucketProxy asyncBucket = bucketType.createAsyncBucket(configuration, timeMeter)
             assert asyncBucket.tryConsumeAsMuchAsPossible(limit).get() == requiredResult
         }
@@ -152,7 +158,7 @@ class ConsumeAsMuchAsPossibleSpecification extends Specification {
         listener.getRejected() == 0
 
         where:
-        [type, verbose] << PipeGenerator.сartesianProduct(BucketType.values() as List, [false, true])
+        [type, verbose] << PipeGenerator.сartesianProduct(BucketType.ASYNC_TYPES, [false, true])
     }
 
     @Unroll
@@ -191,7 +197,7 @@ class ConsumeAsMuchAsPossibleSpecification extends Specification {
             listener.getRejected() == 0
 
         where:
-            [type, verbose] << PipeGenerator.сartesianProduct(BucketType.values() as List, [false, true])
+            [type, verbose] << PipeGenerator.сartesianProduct(BucketType.ASYNC_TYPES, [false, true])
     }
 
 }

@@ -24,7 +24,7 @@ import java.util.Objects;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.functional.FunctionalMap;
 
-
+import io.github.bucket4j.distributed.proxy.AbstractAsyncProxyManagerBuilder;
 import io.github.bucket4j.distributed.proxy.AbstractProxyManagerBuilder;
 import io.github.bucket4j.grid.infinispan.hotrod.HotrodInfinispanProxyManager;
 
@@ -44,6 +44,19 @@ public class Bucket4jInfinispan {
      */
     public static <K> InfinispanProxyManagerBuilder<K> entryProcessorBasedBuilder(FunctionalMap.ReadWriteMap<K, byte[]> readWriteMap) {
         return new InfinispanProxyManagerBuilder<>(readWriteMap);
+    }
+
+    /**
+     * Returns the builder for {@link InfinispanAsyncProxyManager}
+     *
+     * @param readWriteMap
+     *
+     * @return new instance of {@link InfinispanAsyncProxyManagerBuilder}
+     *
+     * @param <K> type ok key
+     */
+    public static <K> InfinispanAsyncProxyManagerBuilder<K> asyncEntryProcessorBasedBuilder(FunctionalMap.ReadWriteMap<K, byte[]> readWriteMap) {
+        return new InfinispanAsyncProxyManagerBuilder<>(readWriteMap);
     }
 
     /**
@@ -70,6 +83,26 @@ public class Bucket4jInfinispan {
         @Override
         public InfinispanProxyManager<K> build() {
             return new InfinispanProxyManager<>(this);
+        }
+
+        @Override
+        public boolean isExpireAfterWriteSupported() {
+            return true;
+        }
+
+    }
+
+    public static class InfinispanAsyncProxyManagerBuilder<K> extends AbstractAsyncProxyManagerBuilder<K, InfinispanAsyncProxyManager<K>, InfinispanAsyncProxyManagerBuilder<K>> {
+
+        final FunctionalMap.ReadWriteMap<K, byte[]> readWriteMap;
+
+        public InfinispanAsyncProxyManagerBuilder(FunctionalMap.ReadWriteMap<K, byte[]> readWriteMap) {
+            this.readWriteMap = Objects.requireNonNull(readWriteMap);
+        }
+
+        @Override
+        public InfinispanAsyncProxyManager<K> build() {
+            return new InfinispanAsyncProxyManager<>(this);
         }
 
         @Override

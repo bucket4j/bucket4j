@@ -1,13 +1,15 @@
 package io.github.bucket4j.distributed.serialization;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import io.github.bucket4j.distributed.versioning.Versions;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
-import java.util.Map;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+
+import io.github.bucket4j.distributed.versioning.Versions;
 
 public class HashMapOutputSerializationTest extends AbstractSerializationTest {
 

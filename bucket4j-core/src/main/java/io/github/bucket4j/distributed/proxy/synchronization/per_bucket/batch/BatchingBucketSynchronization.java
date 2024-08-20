@@ -20,12 +20,12 @@
 
 package io.github.bucket4j.distributed.proxy.synchronization.per_bucket.batch;
 
+import java.util.Objects;
+
 import io.github.bucket4j.distributed.proxy.AsyncCommandExecutor;
 import io.github.bucket4j.distributed.proxy.CommandExecutor;
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronization;
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronizationListener;
-
-import java.util.Objects;
 
 /**
  * Synchronization that combines independent requests to same bucket into batches in order to reduce request count to remote storage.

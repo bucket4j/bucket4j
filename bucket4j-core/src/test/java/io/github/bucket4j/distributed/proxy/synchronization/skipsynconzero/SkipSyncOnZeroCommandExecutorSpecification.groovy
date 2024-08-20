@@ -1,10 +1,9 @@
 package io.github.bucket4j.distributed.proxy.synchronization.skipsynconzero
 
-
 import io.github.bucket4j.Bucket
 import io.github.bucket4j.BucketConfiguration
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.DefaultSynchronizationListener
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronization
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.DefaultSynchronizationListener
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.skiponzero.SkipSyncOnZeroBucketSynchronization
 import io.github.bucket4j.mock.ProxyManagerMock
 import io.github.bucket4j.mock.TimeMeterMock

@@ -19,9 +19,9 @@
  */
 package io.github.bucket4j.distributed.proxy.synchronization.per_bucket;
 
-public class NopeSynchronizationListener implements BucketSynchronizationListener {
+public class NopeBucketSynchronizationListener implements BucketSynchronizationListener {
 
-    public static final NopeSynchronizationListener INSTANCE = new NopeSynchronizationListener();
+    public static final NopeBucketSynchronizationListener INSTANCE = new NopeBucketSynchronizationListener();
 
     @Override
     public void incrementMergeCount(int count) {

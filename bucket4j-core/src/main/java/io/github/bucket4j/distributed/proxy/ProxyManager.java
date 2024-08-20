@@ -19,12 +19,13 @@
  */
 
 package io.github.bucket4j.distributed.proxy;
-import io.github.bucket4j.BucketConfiguration;
-import io.github.bucket4j.distributed.BucketProxy;
 
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
+
+import io.github.bucket4j.BucketConfiguration;
+import io.github.bucket4j.distributed.BucketProxy;
 
 /**
  * Represents an extension point of Bucket4j library.
@@ -80,30 +81,11 @@ public interface ProxyManager<K> {
     void removeProxy(K key);
 
     /**
-     * Describes whether this manager supports asynchronous API.
-     * If this method returns <code>false</code> then any invocation of {@link #asAsync()} will throw {@link UnsupportedOperationException}.
-     *
-     * @return <code>true</code> if this manager supports asynchronous API
-     */
-    boolean isAsyncModeSupported();
-
-    /**
      * Describes whether this manager supports expire-after-write feature.
      *
      * @return <code>true</code> if this manager supports expire-after-write feature.
      */
-    default boolean isExpireAfterWriteSupported() {
-        return false;
-    }
-
-    /**
-     * Returns asynchronous API for this proxy manager.
-     *
-     * @return asynchronous API for this proxy manager.
-     *
-     * @throws UnsupportedOperationException in case of this proxy manager does not support Async API.
-     */
-    AsyncProxyManager<K> asAsync() throws UnsupportedOperationException;
+    boolean isExpireAfterWriteSupported();
 
     /**
      * Returns a proxy object that wraps this ProxyManager such that keys are first mapped using the specified mapping function

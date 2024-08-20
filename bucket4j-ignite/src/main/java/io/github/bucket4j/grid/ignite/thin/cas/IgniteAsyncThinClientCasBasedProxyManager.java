@@ -1,0 +1,85 @@
+/*-
+ * ========================LICENSE_START=================================
+ * Bucket4j
+ * %%
+ * Copyright (C) 2015 - 2021 Vladimir Bukhtoyarov
+ * %%
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * =========================LICENSE_END==================================
+ */
+
+package io.github.bucket4j.grid.ignite.thin.cas;
+
+import java.nio.ByteBuffer;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+
+import org.apache.ignite.client.ClientCache;
+import org.apache.ignite.client.IgniteClientFuture;
+
+import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AbstractAsyncCompareAndSwapBasedProxyManager;
+import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AsyncCompareAndSwapOperation;
+import io.github.bucket4j.distributed.remote.RemoteBucketState;
+import io.github.bucket4j.grid.ignite.thin.Bucket4jIgniteThin.IgniteAsyncThinClientCasBasedProxyManagerBuilder;
+import io.github.bucket4j.grid.ignite.thin.ThinClientUtils;
+
+public class IgniteAsyncThinClientCasBasedProxyManager<K> extends AbstractAsyncCompareAndSwapBasedProxyManager<K> {
+
+    private final ClientCache<K, ByteBuffer> cache;
+
+    public IgniteAsyncThinClientCasBasedProxyManager(IgniteAsyncThinClientCasBasedProxyManagerBuilder<K> builder) {
+        super(builder.getProxyManagerConfig());
+        this.cache = builder.getCache();
+    }
+
+    @Override
+    protected AsyncCompareAndSwapOperation beginAsyncCompareAndSwapOperation(K key) {
+        return new AsyncCompareAndSwapOperation() {
+            @Override
+            public CompletableFuture<Optional<byte[]>> getStateData(Optional<Long> timeoutNanos) {
+                IgniteClientFuture<ByteBuffer> igniteFuture = cache.getAsync(key);
+                CompletableFuture<ByteBuffer> resultFuture = ThinClientUtils.convertFuture(igniteFuture);
+                return resultFuture.thenApply((ByteBuffer persistedState) -> {
+                    if (persistedState == null) {
+                        return Optional.empty();
+                    }
+                    byte[] persistedStateBytes = persistedState.array();
+                    return Optional.of(persistedStateBytes);
+                });
+            }
+            @Override
+            public CompletableFuture<Boolean> compareAndSwap(byte[] originalDataBytes, byte[] newDataBytes, RemoteBucketState newState, Optional<Long> timeoutNanos) {
+                ByteBuffer newData = ByteBuffer.wrap(newDataBytes);
+                if (originalDataBytes == null) {
+                    IgniteClientFuture<Boolean> igniteFuture = cache.putIfAbsentAsync(key, newData);
+                    return ThinClientUtils.convertFuture(igniteFuture);
+                }
+                ByteBuffer originalData = ByteBuffer.wrap(originalDataBytes);
+                IgniteClientFuture<Boolean> igniteFuture = cache.replaceAsync(key, originalData, newData);
+                return ThinClientUtils.convertFuture(igniteFuture);
+            }
+        };
+    }
+
+    @Override
+    public boolean isExpireAfterWriteSupported() {
+        return false;
+    }
+
+    @Override
+    protected CompletableFuture<Void> removeAsync(K key) {
+        IgniteClientFuture<Boolean> igniteFuture = cache.removeAsync(key);
+        return ThinClientUtils.convertFuture(igniteFuture).thenApply(result -> null);
+    }
+
+}

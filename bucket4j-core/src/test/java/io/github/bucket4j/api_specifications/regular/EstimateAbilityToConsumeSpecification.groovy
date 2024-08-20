@@ -28,14 +28,15 @@ class EstimateAbilityToConsumeSpecification extends Specification {
             assert probe.nanosToWaitForRefill == expectedWait
             assert bucket.getAvailableTokens() == availableTokensBeforeEstimation
 
-
-            AsyncBucketProxy asyncBucket = type.createAsyncBucket(configuration, timeMeter)
-            availableTokensBeforeEstimation = bucket.getAvailableTokens()
-            probe = asyncBucket.estimateAbilityToConsume(toEstimate).get()
-            assert probe.canBeConsumed() == result
-            assert probe.remainingTokens == availableTokensBeforeEstimation
-            assert probe.nanosToWaitForRefill == expectedWait
-            assert bucket.getAvailableTokens() == availableTokensBeforeEstimation
+            if (type.asyncModeSupported) {
+                AsyncBucketProxy asyncBucket = type.createAsyncBucket(configuration, timeMeter)
+                availableTokensBeforeEstimation = bucket.getAvailableTokens()
+                probe = asyncBucket.estimateAbilityToConsume(toEstimate).get()
+                assert probe.canBeConsumed() == result
+                assert probe.remainingTokens == availableTokensBeforeEstimation
+                assert probe.nanosToWaitForRefill == expectedWait
+                assert bucket.getAvailableTokens() == availableTokensBeforeEstimation
+            }
         }
         where:
         n | toEstimate | result  |  expectedWait | configuration

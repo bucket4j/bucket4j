@@ -2,9 +2,11 @@
 
 package io.github.bucket4j.grid.infinispan;
 
-import io.github.bucket4j.grid.infinispan.serialization.Bucket4jProtobufContextInitializer;
-import io.github.bucket4j.tck.AbstractDistributedBucketTest;
-import io.github.bucket4j.tck.ProxyManagerSpec;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
+import java.util.Arrays;
+import java.util.UUID;
 
 import org.infinispan.Cache;
 import org.infinispan.configuration.cache.CacheMode;
@@ -18,11 +20,10 @@ import org.infinispan.manager.DefaultCacheManager;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URISyntaxException;
-import java.util.Arrays;
-import java.util.UUID;
+import io.github.bucket4j.grid.infinispan.serialization.Bucket4jProtobufContextInitializer;
+import io.github.bucket4j.tck.AbstractDistributedBucketTest;
+import io.github.bucket4j.tck.AsyncProxyManagerSpec;
+import io.github.bucket4j.tck.ProxyManagerSpec;
 
 
 public class InfinispanTest extends AbstractDistributedBucketTest {
@@ -61,6 +62,14 @@ public class InfinispanTest extends AbstractDistributedBucketTest {
                 "InfinispanProxyManager",
                 () -> UUID.randomUUID().toString(),
                 () -> Bucket4jInfinispan.entryProcessorBasedBuilder(readWriteMap)
+            ).checkExpiration()
+        );
+
+        asyncSpecs = Arrays.asList(
+            new AsyncProxyManagerSpec<>(
+                "InfinispanAsyncProxyManager",
+                () -> UUID.randomUUID().toString(),
+                () -> Bucket4jInfinispan.asyncEntryProcessorBasedBuilder(readWriteMap)
             ).checkExpiration()
         );
     }

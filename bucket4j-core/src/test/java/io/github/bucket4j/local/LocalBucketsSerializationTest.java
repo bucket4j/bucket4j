@@ -1,15 +1,16 @@
 package io.github.bucket4j.local;
 
-import io.github.bucket4j.Bandwidth;
-import io.github.bucket4j.Bucket;
-import io.github.bucket4j.util.ComparableByContent;
-import org.junit.jupiter.api.Test;
-
 import java.io.IOException;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+
+import org.junit.jupiter.api.Test;
+
+import io.github.bucket4j.Bandwidth;
+import io.github.bucket4j.Bucket;
+import io.github.bucket4j.util.ComparableByContent;
 
 import static io.github.bucket4j.local.ConcurrencyStrategy.LOCK_FREE;
 import static io.github.bucket4j.local.ConcurrencyStrategy.REENTRANT_LOCK_PROTECTED;

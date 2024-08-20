@@ -4,9 +4,9 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import io.github.bucket4j.distributed.proxy.Backend;
 import io.github.bucket4j.distributed.proxy.CommandExecutor;
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.NopeSynchronizationListener;
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.batch.BatchingExecutor;
 import io.github.bucket4j.distributed.proxy.synchronization.SynchronizationListener;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.NopeBucketSynchronizationListener;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.batch.BatchingExecutor;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 
@@ -60,7 +60,7 @@ public class DelayingBackend<K> implements Backend<K> {
                     return target.execute(key, command);
                 }
             };
-            executor = new BatchingExecutor(originalExecutor, NopeSynchronizationListener.INSTANCE);
+            executor = new BatchingExecutor(originalExecutor, NopeBucketSynchronizationListener.INSTANCE);
         }
     }
 

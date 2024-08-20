@@ -1,11 +1,10 @@
 package io.github.bucket4j.distributed.proxy.synchronization.delay
 
-
 import io.github.bucket4j.Bucket
 import io.github.bucket4j.BucketConfiguration
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronization
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.DefaultSynchronizationListener
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.DelayParameters
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronization
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.delay.DelayBucketSynchronization
 import io.github.bucket4j.mock.ProxyManagerMock
 import io.github.bucket4j.mock.TimeMeterMock

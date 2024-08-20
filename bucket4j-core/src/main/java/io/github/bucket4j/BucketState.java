@@ -19,13 +19,13 @@
  */
 package io.github.bucket4j;
 
+import java.io.IOException;
+import java.util.Map;
+
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
 import io.github.bucket4j.distributed.serialization.Scope;
 import io.github.bucket4j.distributed.serialization.SerializationAdapter;
 import io.github.bucket4j.distributed.versioning.Version;
-
-import java.io.IOException;
-import java.util.Map;
 
 public interface BucketState {
 

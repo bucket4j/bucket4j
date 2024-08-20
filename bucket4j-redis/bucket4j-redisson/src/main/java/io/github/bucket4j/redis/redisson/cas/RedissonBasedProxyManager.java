@@ -24,7 +24,6 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -39,12 +38,11 @@ import org.redisson.command.CommandAsyncExecutor;
 
 import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AbstractCompareAndSwapBasedProxyManager;
-import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AsyncCompareAndSwapOperation;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.CompareAndSwapOperation;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.distributed.serialization.Mapper;
 import io.github.bucket4j.redis.consts.LuaScripts;
-import io.github.bucket4j.redis.redisson.Bucket4jRedisson;
+import io.github.bucket4j.redis.redisson.Bucket4jRedisson.RedissonBasedProxyManagerBuilder;
 import io.netty.buffer.ByteBuf;
 
 public class RedissonBasedProxyManager<K> extends AbstractCompareAndSwapBasedProxyManager<K> {
@@ -56,8 +54,8 @@ public class RedissonBasedProxyManager<K> extends AbstractCompareAndSwapBasedPro
 
     private final Mapper<K> keyMapper;
 
-    public RedissonBasedProxyManager(Bucket4jRedisson.RedissonBasedProxyManagerBuilder<K> builder) {
-        super(builder.getClientSideConfig());
+    public RedissonBasedProxyManager(RedissonBasedProxyManagerBuilder<K> builder) {
+        super(builder.getProxyManagerConfig());
         this.commandExecutor = builder.getCommandExecutor();
         this.expirationStrategy = builder.getExpirationAfterWrite().orElse(ExpirationAfterWriteStrategy.none());
         this.keyMapper = builder.getKeyMapper();
@@ -107,75 +105,10 @@ public class RedissonBasedProxyManager<K> extends AbstractCompareAndSwapBasedPro
         };
     }
 
-
-
-    @Override
-    protected AsyncCompareAndSwapOperation beginAsyncCompareAndSwapOperation(K key) {
-        String stringKey = keyMapper.toString(key);
-        List<Object> keys = Collections.singletonList(stringKey);
-        return new AsyncCompareAndSwapOperation() {
-            @Override
-            public CompletableFuture<Optional<byte[]>> getStateData(Optional<Long> timeoutNanos) {
-                RFuture<byte[]> redissonFuture = commandExecutor.readAsync(stringKey, ByteArrayCodec.INSTANCE, RedisCommands.GET, stringKey);
-                if (timeoutNanos.isEmpty()) {
-                    return convertFuture(redissonFuture, timeoutNanos)
-                        .thenApply((byte[] resultBytes) -> Optional.ofNullable(resultBytes));
-                } else {
-                    return convertFuture(redissonFuture, timeoutNanos)
-                        .thenApply((byte[] resultBytes) -> Optional.ofNullable(resultBytes));
-                }
-            }
-            @Override
-            public CompletableFuture<Boolean> compareAndSwap(byte[] originalData, byte[] newData, RemoteBucketState newState, Optional<Long> timeoutNanos) {
-                long ttlMillis = expirationStrategy.calculateTimeToLiveMillis(newState, currentTimeNanos());
-                if (ttlMillis > 0) {
-                    if (originalData == null) {
-                        RFuture<Boolean> redissonFuture = commandExecutor.writeAsync(stringKey, ByteArrayCodec.INSTANCE, SET, stringKey, encodeByteArray(newData), "PX", ttlMillis, "NX");
-                        return convertFuture(redissonFuture, timeoutNanos);
-                    } else {
-                        Object[] params = new Object[] {encodeByteArray(originalData), encodeByteArray(newData), ttlMillis};
-                        RFuture<Boolean> redissonFuture = commandExecutor.evalWriteAsync(stringKey, ByteArrayCodec.INSTANCE,
-                                RedisCommands.EVAL_BOOLEAN, LuaScripts.SCRIPT_COMPARE_AND_SWAP_PX, keys, params);
-                        return convertFuture(redissonFuture, timeoutNanos);
-                    }
-                } else {
-                    if (originalData == null) {
-                        RFuture<Boolean> redissonFuture = commandExecutor.writeAsync(stringKey, ByteArrayCodec.INSTANCE, SET, stringKey, encodeByteArray(newData), "NX");
-                        return convertFuture(redissonFuture, timeoutNanos);
-                    } else {
-                        Object[] params = new Object[] {encodeByteArray(originalData), encodeByteArray(newData)};
-                        RFuture<Boolean> redissonFuture = commandExecutor.evalWriteAsync(stringKey, ByteArrayCodec.INSTANCE,
-                                RedisCommands.EVAL_BOOLEAN, LuaScripts.SCRIPT_COMPARE_AND_SWAP, keys, params);
-                        return convertFuture(redissonFuture, timeoutNanos);
-                    }
-                }
-            }
-        };
-    }
-
     @Override
     public void removeProxy(K key) {
         RFuture<Object> future = commandExecutor.writeAsync(keyMapper.toString(key), RedisCommands.DEL_VOID, key);
         commandExecutor.get(future);
-    }
-
-    @Override
-    protected CompletableFuture<Void> removeAsync(K key) {
-        RFuture<?> redissonFuture = commandExecutor.writeAsync(keyMapper.toString(key), RedisCommands.DEL_VOID, key);
-        return convertFuture(redissonFuture, Optional.empty()).thenApply(bytes -> null);
-    }
-
-    @Override
-    public boolean isAsyncModeSupported() {
-        return true;
-    }
-
-    private <T> CompletableFuture<T> convertFuture(RFuture<T> redissonFuture, Optional<Long> timeoutNanos) {
-        if (timeoutNanos.isEmpty()) {
-            return redissonFuture.toCompletableFuture();
-        } else {
-            return redissonFuture.toCompletableFuture().orTimeout(timeoutNanos.get(), TimeUnit.NANOSECONDS);
-        }
     }
 
     private <T> T getWithTimeout(RFuture<T> redissonFuture, Optional<Long> timeoutNanos) {

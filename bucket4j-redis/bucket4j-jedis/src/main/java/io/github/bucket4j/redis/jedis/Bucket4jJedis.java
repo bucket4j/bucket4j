@@ -21,7 +21,6 @@ package io.github.bucket4j.redis.jedis;
 
 import java.util.Objects;
 
-
 import io.github.bucket4j.distributed.proxy.AbstractProxyManagerBuilder;
 import io.github.bucket4j.distributed.serialization.Mapper;
 import io.github.bucket4j.redis.jedis.cas.JedisBasedProxyManager;

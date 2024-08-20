@@ -4,9 +4,9 @@ import io.github.bucket4j.Bucket
 import io.github.bucket4j.BucketConfiguration
 import io.github.bucket4j.TokensInheritanceStrategy
 import io.github.bucket4j.distributed.proxy.ProxyManager
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.DefaultSynchronizationListener
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronization
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronizations
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.DefaultSynchronizationListener
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.batch.BatchingBucketSynchronization
 import io.github.bucket4j.distributed.remote.MultiResult
 import io.github.bucket4j.distributed.remote.Request

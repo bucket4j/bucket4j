@@ -24,7 +24,12 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
-import static io.github.bucket4j.LimitChecker.*;
+import static io.github.bucket4j.LimitChecker.checkConfiguration;
+import static io.github.bucket4j.LimitChecker.checkMaxWaitTime;
+import static io.github.bucket4j.LimitChecker.checkMigrationMode;
+import static io.github.bucket4j.LimitChecker.checkScheduler;
+import static io.github.bucket4j.LimitChecker.checkTokensToAdd;
+import static io.github.bucket4j.LimitChecker.checkTokensToConsume;
 
 public abstract class AbstractBucket implements Bucket {
 

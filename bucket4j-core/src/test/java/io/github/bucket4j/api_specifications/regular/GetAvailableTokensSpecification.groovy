@@ -1,6 +1,6 @@
 package io.github.bucket4j.api_specifications.regular
 
-import io.github.bucket4j.Bandwidth
+
 import io.github.bucket4j.Bucket
 import io.github.bucket4j.BucketConfiguration
 import io.github.bucket4j.mock.BucketType

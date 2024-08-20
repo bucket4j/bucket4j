@@ -20,12 +20,13 @@
 
 package io.github.bucket4j.grid.coherence.pof;
 
+import java.io.IOException;
+
 import com.tangosol.io.pof.PofReader;
 import com.tangosol.io.pof.PofSerializer;
 import com.tangosol.io.pof.PofWriter;
-import io.github.bucket4j.grid.coherence.CoherenceProcessor;
 
-import java.io.*;
+import io.github.bucket4j.grid.coherence.CoherenceProcessor;
 
 public class CoherenceEntryProcessorPofSerializer implements PofSerializer<CoherenceProcessor<?, ?>> {
 

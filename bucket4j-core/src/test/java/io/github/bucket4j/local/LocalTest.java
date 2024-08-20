@@ -1,16 +1,17 @@
 
 package io.github.bucket4j.local;
 
-import io.github.bucket4j.Bandwidth;
-import io.github.bucket4j.Bucket;
-import io.github.bucket4j.UninterruptibleBlockingStrategy;
-import io.github.bucket4j.util.ConsumptionScenario;
-import org.junit.jupiter.api.Test;
-
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.function.Supplier;
+
+import org.junit.jupiter.api.Test;
+
+import io.github.bucket4j.Bandwidth;
+import io.github.bucket4j.Bucket;
+import io.github.bucket4j.UninterruptibleBlockingStrategy;
+import io.github.bucket4j.util.ConsumptionScenario;
 
 public class LocalTest {
 

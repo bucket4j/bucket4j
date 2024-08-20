@@ -1,21 +1,15 @@
 package example.distributed.optimizers.manual_syncing;
 
-import com.codahale.metrics.Snapshot;
-import com.github.rollingmetrics.counter.SmoothlyDecayingRollingCounter;
-import com.github.rollingmetrics.dropwizard.Dropwizard;
-import com.github.rollingmetrics.histogram.OverflowResolver;
-import com.github.rollingmetrics.histogram.hdr.RollingHdrHistogram;
-import com.hazelcast.config.Config;
-import com.hazelcast.core.Hazelcast;
-import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.map.IMap;
-import io.github.bucket4j.Bandwidth;
-import io.github.bucket4j.BucketConfiguration;
-import io.github.bucket4j.distributed.AsyncBucketProxy;
-import io.github.bucket4j.distributed.BucketProxy;
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.manual.ManuallySyncingBucketSynchronization;
-import io.github.bucket4j.grid.hazelcast.Bucket4jHazelcast;
-import io.github.bucket4j.grid.hazelcast.HazelcastProxyManager;
+import java.io.Serializable;
+import java.time.Duration;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.gridkit.nanocloud.Cloud;
 import org.gridkit.nanocloud.CloudFactory;
@@ -27,16 +21,24 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.Serializable;
-import java.time.Duration;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
+import com.codahale.metrics.Snapshot;
+import com.github.rollingmetrics.counter.SmoothlyDecayingRollingCounter;
+import com.github.rollingmetrics.dropwizard.Dropwizard;
+import com.github.rollingmetrics.histogram.OverflowResolver;
+import com.github.rollingmetrics.histogram.hdr.RollingHdrHistogram;
+import com.hazelcast.config.Config;
+import com.hazelcast.core.Hazelcast;
+import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.map.IMap;
+
+import io.github.bucket4j.Bandwidth;
+import io.github.bucket4j.BucketConfiguration;
+import io.github.bucket4j.distributed.AsyncBucketProxy;
+import io.github.bucket4j.distributed.BucketProxy;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.manual.ManuallySyncingBucketSynchronization;
+import io.github.bucket4j.grid.hazelcast.Bucket4jHazelcast;
+import io.github.bucket4j.grid.hazelcast.HazelcastAsyncProxyManager;
+import io.github.bucket4j.grid.hazelcast.HazelcastProxyManager;
 
 public class HazelcastWithManualSyningPerformanceExample {
 
@@ -156,20 +158,20 @@ public class HazelcastWithManualSyningPerformanceExample {
         SmoothlyDecayingRollingCounter consumptionRate = new SmoothlyDecayingRollingCounter(Duration.ofSeconds(10), 5);
         com.codahale.metrics.Timer latencyTimer = buildLatencyTimer();
 
-        HazelcastProxyManager<String> proxyManager = Bucket4jHazelcast.entryProcessorBasedBuilder(map).build();;
+        HazelcastAsyncProxyManager<String> proxyManager = Bucket4jHazelcast.asyncEntryProcessorBasedBuilder(map).build();;
 //        ProxyManagerMock<String> proxyManager = new ProxyManagerMock<>(TimeMeter.SYSTEM_MILLISECONDS);
         BucketConfiguration configuration = BucketConfiguration.builder()
                 .addLimit(
                         Bandwidth.builder().capacity(10000).refillGreedy(10000, Duration.ofSeconds(1)).initialTokens(0).build())
                 .build();
 
-        AsyncBucketProxy bucket = proxyManager.asAsync().builder()
+        AsyncBucketProxy bucket = proxyManager.builder()
                 .withSynchronization(new ManuallySyncingBucketSynchronization())
                 .build("13", () -> CompletableFuture.completedFuture(configuration));
         bucket.getAvailableTokens().join();
 
-        BucketProxy nonOptimizedBucket = proxyManager.builder()
-                .build("13", () -> configuration);
+        AsyncBucketProxy nonOptimizedBucket = proxyManager.builder()
+                .build("13", () -> CompletableFuture.completedFuture(configuration));
 
         // sync bucket manually each second
         Executors.newScheduledThreadPool(1).scheduleAtFixedRate(() -> {

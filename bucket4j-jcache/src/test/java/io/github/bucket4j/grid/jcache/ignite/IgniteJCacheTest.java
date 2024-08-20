@@ -1,9 +1,13 @@
 
 package io.github.bucket4j.grid.jcache.ignite;
 
-import io.github.bucket4j.grid.jcache.Bucket4jJCache;
-import io.github.bucket4j.tck.AbstractDistributedBucketTest;
-import io.github.bucket4j.tck.ProxyManagerSpec;
+import java.io.Serializable;
+import java.net.UnknownHostException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.UUID;
+
+import javax.cache.Cache;
 
 import org.apache.ignite.Ignite;
 import org.apache.ignite.Ignition;
@@ -18,12 +22,9 @@ import org.gridkit.vicluster.ViNode;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 
-import javax.cache.Cache;
-import java.io.Serializable;
-import java.net.UnknownHostException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.UUID;
+import io.github.bucket4j.grid.jcache.Bucket4jJCache;
+import io.github.bucket4j.tck.AbstractDistributedBucketTest;
+import io.github.bucket4j.tck.ProxyManagerSpec;
 
 public class IgniteJCacheTest extends AbstractDistributedBucketTest {
 

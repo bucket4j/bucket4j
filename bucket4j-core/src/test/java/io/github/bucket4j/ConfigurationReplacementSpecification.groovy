@@ -24,7 +24,7 @@ class ConfigurationReplacementSpecification extends Specification {
                 BucketConfiguration newConfiguration = BucketConfiguration.builder()
                         .addLimit({it.capacity(60).refillGreedy(60, Duration.ofNanos(1000))})
                         .build()
-                if (sync) {
+                if (sync || !bucketType.asyncModeSupported) {
                     Bucket bucket = bucketType.createBucket(configuration, clock)
                     clock.addTime(3) // 1.8
                     if (!verbose) {
@@ -62,7 +62,7 @@ class ConfigurationReplacementSpecification extends Specification {
                     BucketConfiguration newConfiguration = BucketConfiguration.builder()
                             .addLimit(limit -> limit.capacity(60).refillGreedy(60, Duration.ofNanos(1000)).id("y"))
                             .build()
-                    if (sync) {
+                    if (sync || !bucketType.asyncModeSupported) {
                         Bucket bucket = bucketType.createBucket(configuration, clock)
                         clock.addTime(3) // 1.8
                         if (!verbose) {
@@ -102,7 +102,7 @@ class ConfigurationReplacementSpecification extends Specification {
                         .addLimit(limit -> limit.capacity(60).refillGreedy(60, Duration.ofNanos(1000)).id("y"))
                         .addLimit(limit -> limit.capacity(1000).refillGreedy(1000, Duration.ofNanos(1000)).id("z"))
                         .build()
-                    if (sync) {
+                    if (sync || !bucketType.asyncModeSupported) {
                         Bucket bucket = bucketType.createBucket(configuration, clock)
                         if (!verbose) {
                             bucket.replaceConfiguration(newConfiguration, TokensInheritanceStrategy.AS_IS)
@@ -141,7 +141,7 @@ class ConfigurationReplacementSpecification extends Specification {
                     BucketConfiguration newConfiguration = BucketConfiguration.builder()
                         .addLimit(limit -> limit.capacity(60).refillGreedy(60, Duration.ofNanos(1000)))
                         .build()
-                    if (sync) {
+                    if (sync || !bucketType.asyncModeSupported) {
                         Bucket bucket = bucketType.createBucket(configuration, clock)
                         assert bucket.getAvailableTokens() == 0
 
@@ -189,7 +189,7 @@ class ConfigurationReplacementSpecification extends Specification {
                     BucketConfiguration newConfiguration = BucketConfiguration.builder()
                             .addLimit({it.capacity(60).refillIntervally(60, Duration.ofNanos(1000))})
                             .build()
-                    if (sync) {
+                    if (sync || !bucketType.asyncModeSupported) {
                         Bucket bucket = bucketType.createBucket(configuration, clock)
                         bucket.getAvailableTokens()
                         clock.addTime(3) // 1.8
@@ -239,7 +239,7 @@ class ConfigurationReplacementSpecification extends Specification {
             BucketConfiguration newConfiguration = BucketConfiguration.builder()
                 .addLimit(limit -> limit.capacity(200).refillGreedy(100, Duration.ofNanos(100)))
                 .build()
-            if (sync) {
+            if (sync || !bucketType.asyncModeSupported) {
                 Bucket bucket = bucketType.createBucket(configuration, clock)
                 bucket.replaceConfiguration(newConfiguration, TokensInheritanceStrategy.AS_IS)
                 assert bucket.getAvailableTokens() == 200
@@ -266,7 +266,7 @@ class ConfigurationReplacementSpecification extends Specification {
                 BucketConfiguration newConfiguration = BucketConfiguration.builder()
                     .addLimit({it.capacity(60).refillGreedy(60, Duration.ofNanos(1000))})
                     .build()
-                if (sync) {
+                if (sync || !bucketType.asyncModeSupported) {
                     Bucket bucket = bucketType.createBucket(configuration, clock)
                     bucket.getAvailableTokens()
                     clock.addTime(3) // 1.8
@@ -312,7 +312,7 @@ class ConfigurationReplacementSpecification extends Specification {
                 BucketConfiguration newConfiguration = BucketConfiguration.builder()
                     .addLimit(limit -> limit.capacity(60).refillIntervally(60, Duration.ofNanos(1000)))
                     .build()
-                if (sync) {
+                if (sync || !bucketType.asyncModeSupported) {
                     Bucket bucket = bucketType.createBucket(configuration, clock)
                     bucket.getAvailableTokens();
                     clock.addTime(3) // 1.8
@@ -362,7 +362,7 @@ class ConfigurationReplacementSpecification extends Specification {
             BucketConfiguration newConfiguration = BucketConfiguration.builder()
                 .addLimit(limit -> limit.capacity(200).refillGreedy(100, Duration.ofNanos(100)))
                 .build()
-            if (sync) {
+            if (sync || !bucketType.asyncModeSupported) {
                 Bucket bucket = bucketType.createBucket(configuration, clock)
                 bucket.getAvailableTokens()
                 bucket.replaceConfiguration(newConfiguration, TokensInheritanceStrategy.ADDITIVE)
@@ -389,7 +389,7 @@ class ConfigurationReplacementSpecification extends Specification {
             BucketConfiguration newConfiguration = BucketConfiguration.builder()
                 .addLimit(limit -> limit.capacity(900).refillGreedy(100, Duration.ofNanos(100)))
                 .build()
-            if (sync) {
+            if (sync || !bucketType.asyncModeSupported) {
                 Bucket bucket = bucketType.createBucket(configuration, clock)
                 bucket.getAvailableTokens()
                 bucket.replaceConfiguration(newConfiguration, TokensInheritanceStrategy.ADDITIVE)
@@ -416,7 +416,7 @@ class ConfigurationReplacementSpecification extends Specification {
                 BucketConfiguration newConfiguration = BucketConfiguration.builder()
                     .addLimit(limit -> limit.capacity(200).refillGreedy(100, Duration.ofNanos(100)))
                     .build()
-                if (sync) {
+                if (sync || !bucketType.asyncModeSupported) {
                     Bucket bucket = bucketType.createBucket(configuration, clock)
                     bucket.replaceConfiguration(newConfiguration, TokensInheritanceStrategy.PROPORTIONALLY)
                     assert bucket.getAvailableTokens() == 200
@@ -443,7 +443,7 @@ class ConfigurationReplacementSpecification extends Specification {
                 BucketConfiguration newConfiguration = BucketConfiguration.builder()
                     .addLimit({it.capacity(60).refillGreedy(60, Duration.ofNanos(1000))})
                     .build()
-                if (sync) {
+                if (sync || !bucketType.asyncModeSupported) {
                     Bucket bucket = bucketType.createBucket(configuration, clock)
                     bucket.getAvailableTokens()
                     clock.addTime(3) // 1.8
@@ -502,7 +502,7 @@ class ConfigurationReplacementSpecification extends Specification {
                 BucketConfiguration newConfiguration = BucketConfiguration.builder()
                     .addLimit({it.capacity(60).refillGreedy(60, Duration.ofNanos(1000))})
                     .build()
-                if (sync) {
+                if (sync || !bucketType.asyncModeSupported) {
                     Bucket bucket = bucketType.createBucket(configuration, clock)
                     bucket.forceAddTokens(10000000)
                     assert bucket.getAvailableTokens() == 10000000
@@ -542,7 +542,7 @@ class ConfigurationReplacementSpecification extends Specification {
                 BucketConfiguration newConfiguration = BucketConfiguration.builder()
                     .addLimit({it.capacity(3).refillGreedy(3, Duration.ofNanos(8))})
                     .build()
-                if (sync) {
+                if (sync || !bucketType.asyncModeSupported) {
                     Bucket bucket = bucketType.createBucket(configuration, clock) // 0.75
                     bucket.getAvailableTokens()
                     clock.addTime(3) // 2.25
@@ -584,7 +584,7 @@ class ConfigurationReplacementSpecification extends Specification {
                     BucketConfiguration newConfiguration = BucketConfiguration.builder()
                         .addLimit(limit -> limit.capacity(3).refillGreedy(3, Duration.ofNanos(8)))
                         .build()
-                    if (sync) {
+                    if (sync || !bucketType.asyncModeSupported) {
                         Bucket bucket = bucketType.createBucket(configuration, clock) // 0.75
                         bucket.getAvailableTokens()
                         clock.addTime(3) // 2.25

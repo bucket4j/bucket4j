@@ -23,9 +23,9 @@ import com.github.rollingmetrics.histogram.hdr.RollingHdrHistogram;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.DefaultSynchronizationListener;
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronization;
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronizations;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.DefaultSynchronizationListener;
 import io.github.bucket4j.redis.lettuce.Bucket4jLettuce;
 import io.lettuce.core.RedisClient;
 

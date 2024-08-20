@@ -1,5 +1,8 @@
 package io.github.bucket4j.util;
 
+import java.lang.reflect.Field;
+import java.util.concurrent.atomic.AtomicReference;
+
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketState;
 import io.github.bucket4j.distributed.proxy.DefaultBucketProxy;
@@ -8,9 +11,6 @@ import io.github.bucket4j.local.LockFreeBucket;
 import io.github.bucket4j.local.ReentrantLockProtectedBucket;
 import io.github.bucket4j.local.SynchronizedBucket;
 import io.github.bucket4j.local.ThreadUnsafeBucket;
-
-import java.lang.reflect.Field;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class PackageAccessor {
 

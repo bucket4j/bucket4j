@@ -20,6 +20,10 @@
 
 package io.github.bucket4j.distributed.remote.commands;
 
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+
 import io.github.bucket4j.Nothing;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.MutableBucketEntry;
@@ -32,10 +36,6 @@ import io.github.bucket4j.distributed.serialization.SerializationHandle;
 import io.github.bucket4j.distributed.versioning.Version;
 import io.github.bucket4j.distributed.versioning.Versions;
 import io.github.bucket4j.util.ComparableByContent;
-
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 import static io.github.bucket4j.distributed.versioning.Versions.v_7_0_0;
 

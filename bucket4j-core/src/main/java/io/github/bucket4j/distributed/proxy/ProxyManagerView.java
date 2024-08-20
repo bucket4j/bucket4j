@@ -56,18 +56,8 @@ public class ProxyManagerView<K, KeyOld> implements ProxyManager<K> {
     }
 
     @Override
-    public boolean isAsyncModeSupported() {
-        return target.isAsyncModeSupported();
-    }
-
-    @Override
     public boolean isExpireAfterWriteSupported() {
         return target.isExpireAfterWriteSupported();
-    }
-
-    @Override
-    public AsyncProxyManager<K> asAsync() throws UnsupportedOperationException {
-        return target.asAsync().withMapper(mapper);
     }
 
     // To prevent nesting of anonymous class instances, directly map the original instance.

@@ -17,16 +17,14 @@
 
 package io.github.bucket4j.mock;
 
-import io.github.bucket4j.distributed.proxy.ProxyManagerConfig;
-import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AbstractCompareAndSwapBasedProxyManager;
-import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AsyncCompareAndSwapOperation;
-import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.CompareAndSwapOperation;
-import io.github.bucket4j.distributed.remote.RemoteBucketState;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
+
+import io.github.bucket4j.distributed.proxy.ProxyManagerConfig;
+import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AbstractCompareAndSwapBasedProxyManager;
+import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.CompareAndSwapOperation;
+import io.github.bucket4j.distributed.remote.RemoteBucketState;
 
 public class CompareAndSwapBasedProxyManagerMock<K> extends AbstractCompareAndSwapBasedProxyManager<K> {
 
@@ -34,12 +32,6 @@ public class CompareAndSwapBasedProxyManagerMock<K> extends AbstractCompareAndSw
 
     public CompareAndSwapBasedProxyManagerMock(ProxyManagerConfig proxyManagerConfig) {
         super(proxyManagerConfig);
-    }
-
-    @Override
-    protected CompletableFuture<Void> removeAsync(K key) {
-        stateMap.remove(key);
-        return CompletableFuture.completedFuture(null);
     }
 
     @Override
@@ -58,29 +50,13 @@ public class CompareAndSwapBasedProxyManagerMock<K> extends AbstractCompareAndSw
     }
 
     @Override
-    protected AsyncCompareAndSwapOperation beginAsyncCompareAndSwapOperation(K key) {
-        byte[] backup = stateMap.get(key);
-        return new AsyncCompareAndSwapOperation() {
-            @Override
-            public CompletableFuture<Optional<byte[]>> getStateData(Optional<Long> timeoutNanos) {
-                return CompletableFuture.completedFuture(Optional.ofNullable(backup));
-            }
-            @Override
-            public CompletableFuture<Boolean> compareAndSwap(byte[] originalData, byte[] newData, RemoteBucketState newState, Optional<Long> timeoutNanos) {
-                stateMap.put(key, newData);
-                return CompletableFuture.completedFuture(true);
-            }
-        };
-    }
-
-    @Override
     public void removeProxy(K key) {
         stateMap.remove(key);
     }
 
     @Override
-    public boolean isAsyncModeSupported() {
-        return true;
+    public boolean isExpireAfterWriteSupported() {
+        return false;
     }
 
 }

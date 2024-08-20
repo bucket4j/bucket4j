@@ -1,18 +1,14 @@
 package io.github.bucket4j.distributed.proxy.synchronization
 
-
 import io.github.bucket4j.Bucket
 import io.github.bucket4j.BucketConfiguration
 import io.github.bucket4j.TokensInheritanceStrategy
+import io.github.bucket4j.distributed.AsyncBucketProxy
 import io.github.bucket4j.distributed.BucketProxy
 import io.github.bucket4j.distributed.proxy.AsyncCommandExecutor
-import io.github.bucket4j.distributed.proxy.ProxyManagerConfig
 import io.github.bucket4j.distributed.proxy.CommandExecutor
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.DelayParameters
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.NopeSynchronizationListener
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronization
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronizations
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.PredictionParameters
+import io.github.bucket4j.distributed.proxy.ProxyManagerConfig
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.*
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.delay.DelayBucketSynchronization
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.manual.ManuallySyncingBucketSynchronization
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.predictive.PredictiveBucketSynchronization
@@ -25,18 +21,14 @@ import io.github.bucket4j.distributed.remote.commands.CreateInitialStateWithVers
 import io.github.bucket4j.distributed.remote.commands.GetAvailableTokensCommand
 import io.github.bucket4j.distributed.remote.commands.SyncCommand
 import io.github.bucket4j.distributed.versioning.Versions
-import io.github.bucket4j.mock.CompareAndSwapBasedProxyManagerMock
-import io.github.bucket4j.mock.LockBasedProxyManagerMock
-
-import io.github.bucket4j.mock.ProxyManagerMock
-import io.github.bucket4j.mock.SelectForUpdateBasedProxyManagerMock
-import io.github.bucket4j.mock.TimeMeterMock
+import io.github.bucket4j.mock.*
 import spock.lang.Shared
 import spock.lang.Specification
 import spock.lang.Unroll
 
 import java.time.Duration
 import java.util.concurrent.CompletableFuture
+import java.util.function.Supplier
 
 class BucketSynchronizationCornerCasesSpecification extends Specification {
 
@@ -78,10 +70,10 @@ class BucketSynchronizationCornerCasesSpecification extends Specification {
         where:
             [testNumber, synchronization] << [
                     [1, BucketSynchronizations.batching()],
-                    [2, new DelayBucketSynchronization(delayParameters, NopeSynchronizationListener.INSTANCE, clock)],
-                    [3, new PredictiveBucketSynchronization(PredictionParameters.createDefault(delayParameters), delayParameters, NopeSynchronizationListener.INSTANCE, clock)],
-                    [4, new SkipSyncOnZeroBucketSynchronization(NopeSynchronizationListener.INSTANCE, clock)],
-                    [5, new ManuallySyncingBucketSynchronization(NopeSynchronizationListener.INSTANCE, clock)]
+                    [2, new DelayBucketSynchronization(delayParameters, NopeBucketSynchronizationListener.INSTANCE, clock)],
+                    [3, new PredictiveBucketSynchronization(PredictionParameters.createDefault(delayParameters), delayParameters, NopeBucketSynchronizationListener.INSTANCE, clock)],
+                    [4, new SkipSyncOnZeroBucketSynchronization(NopeBucketSynchronizationListener.INSTANCE, clock)],
+                    [5, new ManuallySyncingBucketSynchronization(NopeBucketSynchronizationListener.INSTANCE, clock)]
         ]
     }
 
@@ -117,10 +109,10 @@ class BucketSynchronizationCornerCasesSpecification extends Specification {
         where:
         [testNumber, synchronization] << [
                 [1, BucketSynchronizations.batching()],
-                [2, new DelayBucketSynchronization(delayParameters, NopeSynchronizationListener.INSTANCE, clock)],
-                [3, new PredictiveBucketSynchronization(PredictionParameters.createDefault(delayParameters), delayParameters, NopeSynchronizationListener.INSTANCE, clock)],
-                [4, new SkipSyncOnZeroBucketSynchronization(NopeSynchronizationListener.INSTANCE, clock)],
-                [5, new ManuallySyncingBucketSynchronization(NopeSynchronizationListener.INSTANCE, clock)]
+                [2, new DelayBucketSynchronization(delayParameters, NopeBucketSynchronizationListener.INSTANCE, clock)],
+                [3, new PredictiveBucketSynchronization(PredictionParameters.createDefault(delayParameters), delayParameters, NopeBucketSynchronizationListener.INSTANCE, clock)],
+                [4, new SkipSyncOnZeroBucketSynchronization(NopeBucketSynchronizationListener.INSTANCE, clock)],
+                [5, new ManuallySyncingBucketSynchronization(NopeBucketSynchronizationListener.INSTANCE, clock)]
         ]
     }
 
@@ -156,10 +148,10 @@ class BucketSynchronizationCornerCasesSpecification extends Specification {
         where:
             [testNumber, synchronization] << [
                     [1, BucketSynchronizations.batching()],
-                    [2, new DelayBucketSynchronization(delayParameters, NopeSynchronizationListener.INSTANCE, clock)],
-                    [3, new PredictiveBucketSynchronization(PredictionParameters.createDefault(delayParameters), delayParameters, NopeSynchronizationListener.INSTANCE, clock)],
-                    [4, new SkipSyncOnZeroBucketSynchronization(NopeSynchronizationListener.INSTANCE, clock)],
-                    [5, new ManuallySyncingBucketSynchronization(NopeSynchronizationListener.INSTANCE, clock)]
+                    [2, new DelayBucketSynchronization(delayParameters, NopeBucketSynchronizationListener.INSTANCE, clock)],
+                    [3, new PredictiveBucketSynchronization(PredictionParameters.createDefault(delayParameters), delayParameters, NopeBucketSynchronizationListener.INSTANCE, clock)],
+                    [4, new SkipSyncOnZeroBucketSynchronization(NopeBucketSynchronizationListener.INSTANCE, clock)],
+                    [5, new ManuallySyncingBucketSynchronization(NopeBucketSynchronizationListener.INSTANCE, clock)]
             ]
     }
 
@@ -194,10 +186,10 @@ class BucketSynchronizationCornerCasesSpecification extends Specification {
         where:
             [testNumber, synchronization] << [
                     [1, BucketSynchronizations.batching()],
-                    [2, new DelayBucketSynchronization(delayParameters, NopeSynchronizationListener.INSTANCE, clock)],
-                    [3, new PredictiveBucketSynchronization(PredictionParameters.createDefault(delayParameters), delayParameters, NopeSynchronizationListener.INSTANCE, clock)],
-                    [4, new SkipSyncOnZeroBucketSynchronization(NopeSynchronizationListener.INSTANCE, clock)],
-                    [5, new ManuallySyncingBucketSynchronization(NopeSynchronizationListener.INSTANCE, clock)]
+                    [2, new DelayBucketSynchronization(delayParameters, NopeBucketSynchronizationListener.INSTANCE, clock)],
+                    [3, new PredictiveBucketSynchronization(PredictionParameters.createDefault(delayParameters), delayParameters, NopeBucketSynchronizationListener.INSTANCE, clock)],
+                    [4, new SkipSyncOnZeroBucketSynchronization(NopeBucketSynchronizationListener.INSTANCE, clock)],
+                    [5, new ManuallySyncingBucketSynchronization(NopeBucketSynchronizationListener.INSTANCE, clock)]
             ]
     }
 
@@ -246,29 +238,32 @@ class BucketSynchronizationCornerCasesSpecification extends Specification {
         where:
             [testNumber, synchronization] << [
                     [1, BucketSynchronizations.batching()],
-                    [2, new DelayBucketSynchronization(delayParameters, NopeSynchronizationListener.INSTANCE, clock)],
-                    [3, new PredictiveBucketSynchronization(PredictionParameters.createDefault(delayParameters), delayParameters, NopeSynchronizationListener.INSTANCE, clock)],
-                    [4, new SkipSyncOnZeroBucketSynchronization(NopeSynchronizationListener.INSTANCE, clock)],
-                    [5, new ManuallySyncingBucketSynchronization(NopeSynchronizationListener.INSTANCE, clock)]
+                    [2, new DelayBucketSynchronization(delayParameters, NopeBucketSynchronizationListener.INSTANCE, clock)],
+                    [3, new PredictiveBucketSynchronization(PredictionParameters.createDefault(delayParameters), delayParameters, NopeBucketSynchronizationListener.INSTANCE, clock)],
+                    [4, new SkipSyncOnZeroBucketSynchronization(NopeBucketSynchronizationListener.INSTANCE, clock)],
+                    [5, new ManuallySyncingBucketSynchronization(NopeBucketSynchronizationListener.INSTANCE, clock)]
             ]
     }
 
     @Unroll
     def "#testNumber implicit configuration replacement case for version increment - Async"(int testNumber, BucketSynchronization synchronization) {
         when:
-            ProxyManagerMock proxyManagerMock = new ProxyManagerMock(clock)
+            AsyncProxyManagerMock proxyManagerMock = new AsyncProxyManagerMock(clock)
 
             int KEY = 42
             int PREVIOUS_VERSION = 1
-            Bucket bucket10 = proxyManagerMock.builder()
+            Supplier<CompletableFuture<BucketConfiguration>> configSupplier = () -> CompletableFuture.completedFuture(
+                BucketConfiguration.builder()
+                    .addLimit({limit -> limit.capacity(10).refillGreedy(10, Duration.ofSeconds(1))})
+                    .build()
+            )
+            AsyncBucketProxy bucket10 = proxyManagerMock.builder()
                     .withSynchronization(synchronization)
                     .withImplicitConfigurationReplacement(PREVIOUS_VERSION, TokensInheritanceStrategy.RESET)
-                    .build(KEY, () -> BucketConfiguration.builder()
-                            .addLimit({limit -> limit.capacity(10).refillGreedy(10, Duration.ofSeconds(1))})
-                            .build())
+                    .build(KEY, configSupplier)
 
             // persist bucket with previous version
-            bucket10.tryConsumeAsMuchAsPossible()
+            bucket10.tryConsumeAsMuchAsPossible().get()
 
             AsyncCommandExecutor executor = synchronization.apply (new AsyncCommandExecutor() {
                 @Override
@@ -298,10 +293,10 @@ class BucketSynchronizationCornerCasesSpecification extends Specification {
         where:
             [testNumber, synchronization] << [
                     [1, BucketSynchronizations.batching()],
-                    [2, new DelayBucketSynchronization(delayParameters, NopeSynchronizationListener.INSTANCE, clock)],
-                    [3, new PredictiveBucketSynchronization(PredictionParameters.createDefault(delayParameters), delayParameters, NopeSynchronizationListener.INSTANCE, clock)],
-                    [4, new SkipSyncOnZeroBucketSynchronization(NopeSynchronizationListener.INSTANCE, clock)],
-                    [5, new ManuallySyncingBucketSynchronization(NopeSynchronizationListener.INSTANCE, clock)]
+                    [2, new DelayBucketSynchronization(delayParameters, NopeBucketSynchronizationListener.INSTANCE, clock)],
+                    [3, new PredictiveBucketSynchronization(PredictionParameters.createDefault(delayParameters), delayParameters, NopeBucketSynchronizationListener.INSTANCE, clock)],
+                    [4, new SkipSyncOnZeroBucketSynchronization(NopeBucketSynchronizationListener.INSTANCE, clock)],
+                    [5, new ManuallySyncingBucketSynchronization(NopeBucketSynchronizationListener.INSTANCE, clock)]
             ]
     }
 

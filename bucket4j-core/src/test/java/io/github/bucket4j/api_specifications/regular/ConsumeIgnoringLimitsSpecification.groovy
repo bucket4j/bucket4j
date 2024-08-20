@@ -1,7 +1,7 @@
 
 package io.github.bucket4j.api_specifications.regular
 
-import io.github.bucket4j.Bandwidth
+
 import io.github.bucket4j.Bucket
 import io.github.bucket4j.BucketConfiguration
 import io.github.bucket4j.BucketExceptions
@@ -16,7 +16,7 @@ import java.util.concurrent.ExecutionException
 
 import static io.github.bucket4j.util.PackageAccessor.getState
 import static org.junit.jupiter.api.Assertions.assertNotSame
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.fail
 
 class ConsumeIgnoringLimitsSpecification extends Specification {
 
@@ -28,7 +28,7 @@ class ConsumeIgnoringLimitsSpecification extends Specification {
                 for (boolean verbose : [false, true]) {
                     println("type=$type sync=$sync verbose=$verbose")
                     TimeMeterMock timeMeter = new TimeMeterMock(0)
-                    if (sync) {
+                    if (sync || !type.asyncModeSupported) {
                         Bucket bucket = type.createBucket(configuration, timeMeter)
                         bucket.getAvailableTokens()
                         timeMeter.addTime(nanosIncrement)
@@ -73,7 +73,7 @@ class ConsumeIgnoringLimitsSpecification extends Specification {
                 for (boolean verbose : [false, true]) {
                     println("type=$type sync=$sync verbose=$verbose")
                     TimeMeterMock timeMeter = new TimeMeterMock(0)
-                    if (sync) {
+                    if (sync || !type.asyncModeSupported) {
                         Bucket bucket = type.createBucket(configuration, timeMeter)
                         bucket.getAvailableTokens()
                         timeMeter.addTime(nanosIncrement)
@@ -121,7 +121,7 @@ class ConsumeIgnoringLimitsSpecification extends Specification {
             for (boolean sync : [true, false]) {
                 TimeMeterMock timeMeter = new TimeMeterMock(0)
                 Bucket bucket = type.createBucket(configuration, timeMeter)
-                if (sync) {
+                if (sync || !type.asyncModeSupported) {
                     try {
                         bucket.consumeIgnoringRateLimits(veryBigAmountOfTokensWhichCannotBeReserved)
                         fail()
@@ -152,7 +152,7 @@ class ConsumeIgnoringLimitsSpecification extends Specification {
             for (boolean sync : [true, false]) {
                 for (boolean verbose : [false, true]) {
                     // println("type=$type sync=$sync verbose=$verbose")
-                    if (sync) {
+                    if (sync || !type.asyncModeSupported) {
                         Bucket bucket = type.createBucket(configuration, timeMeter)
                         if (!verbose) {
                             bucket.consumeIgnoringRateLimits(15)

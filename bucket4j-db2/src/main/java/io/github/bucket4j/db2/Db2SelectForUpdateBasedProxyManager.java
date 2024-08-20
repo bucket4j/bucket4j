@@ -19,6 +19,19 @@
  */
 package io.github.bucket4j.db2;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.text.MessageFormat;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+import javax.sql.DataSource;
+
+import com.ibm.db2.jcc.am.SqlIntegrityConstraintViolationException;
+
 import io.github.bucket4j.BucketExceptions;
 import io.github.bucket4j.distributed.jdbc.CustomColumnProvider;
 import io.github.bucket4j.distributed.jdbc.PrimaryKeyMapper;
@@ -29,19 +42,7 @@ import io.github.bucket4j.distributed.proxy.generic.select_for_update.SelectForU
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.util.HexUtil;
 
-import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-
-import com.ibm.db2.jcc.am.SqlIntegrityConstraintViolationException;
-
-import static io.github.bucket4j.util.HexUtil.*;
+import static io.github.bucket4j.util.HexUtil.hexToBinary;
 
 /**
  * The extension of Bucket4j library addressed to support IBM Db2
@@ -62,7 +63,7 @@ public class Db2SelectForUpdateBasedProxyManager<K> extends AbstractSelectForUpd
     private final List<CustomColumnProvider<K>> customColumns = new ArrayList<>();
 
     public Db2SelectForUpdateBasedProxyManager(Bucket4jDb2.Db2SelectForUpdateBasedProxyManagerBuilder<K> builder) {
-        super(builder.getClientSideConfig());
+        super(builder.getProxyManagerConfig());
         this.dataSource = builder.getDataSource();
         this.primaryKeyMapper = builder.getPrimaryKeyMapper();
         this.removeSqlQuery = MessageFormat.format("DELETE FROM {0} WHERE {1} = ?", builder.getTableName(), builder.getIdColumnName());
@@ -70,7 +71,7 @@ public class Db2SelectForUpdateBasedProxyManager<K> extends AbstractSelectForUpd
             builder.getTableName(), builder.getIdColumnName());
         this.selectSqlQuery = MessageFormat.format("SELECT {0} as state FROM {1} WHERE {2} = ? FOR UPDATE OF {0} WITH RS", builder.getStateColumnName(), builder.getTableName(), builder.getIdColumnName());
         this.customColumns.addAll(builder.getCustomColumns());
-        getClientSideConfig().getExpirationAfterWriteStrategy().ifPresent(expiration -> {
+        getConfig().getExpirationAfterWriteStrategy().ifPresent(expiration -> {
             this.customColumns.add(CustomColumnProvider.createExpiresInColumnProvider(builder.getExpiresAtColumnName(), expiration));
         });
         if (customColumns.isEmpty()) {

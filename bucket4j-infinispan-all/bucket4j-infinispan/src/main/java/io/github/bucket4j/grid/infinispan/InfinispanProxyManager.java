@@ -36,13 +36,15 @@
 
 package io.github.bucket4j.grid.infinispan;
 
-import io.github.bucket4j.distributed.proxy.AbstractProxyManager;
-import io.github.bucket4j.distributed.remote.*;
-import org.infinispan.commons.CacheException;
-import org.infinispan.functional.FunctionalMap.ReadWriteMap;
-
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+
+import org.infinispan.functional.FunctionalMap.ReadWriteMap;
+
+import io.github.bucket4j.BucketExceptions;
+import io.github.bucket4j.distributed.proxy.AbstractProxyManager;
+import io.github.bucket4j.distributed.remote.CommandResult;
+import io.github.bucket4j.distributed.remote.Request;
 
 import static io.github.bucket4j.distributed.serialization.InternalSerializationHelper.deserializeResult;
 
@@ -55,7 +57,7 @@ public class InfinispanProxyManager<K> extends AbstractProxyManager<K> {
     private final ReadWriteMap<K, byte[]> readWriteMap;
 
     InfinispanProxyManager(Bucket4jInfinispan.InfinispanProxyManagerBuilder<K> builder) {
-        super(builder.getClientSideConfig());
+        super(builder.getProxyManagerConfig());
         this.readWriteMap = builder.readWriteMap;
     }
 
@@ -66,46 +68,16 @@ public class InfinispanProxyManager<K> extends AbstractProxyManager<K> {
             CompletableFuture<byte[]> resultFuture = readWriteMap.eval(key, entryProcessor);
             return (CommandResult<T>) resultFuture.thenApply(resultBytes -> deserializeResult(resultBytes, request.getBackwardCompatibilityVersion())).get();
         } catch (InterruptedException | ExecutionException e) {
-            throw new CacheException(e);
+            throw new BucketExceptions.BucketExecutionException(e);
         }
-    }
-
-    @Override
-    public boolean isAsyncModeSupported() {
-        return true;
     }
 
     @Override
     public void removeProxy(K key) {
         try {
-            removeAsync(key).get();
+            readWriteMap.eval(key, REMOVE_BUCKET_ENTRY_PROCESSOR).get();
         } catch (InterruptedException | ExecutionException e) {
-            throw new CacheException(e);
-        }
-    }
-
-    @Override
-    protected CompletableFuture<Void> removeAsync(K key) {
-        try {
-            CompletableFuture<byte[]> resultFuture = readWriteMap.eval(key, REMOVE_BUCKET_ENTRY_PROCESSOR);
-            return resultFuture.thenApply(resultBytes -> null);
-        } catch (Throwable t) {
-            CompletableFuture<Void> fail = new CompletableFuture<>();
-            fail.completeExceptionally(t);
-            return fail;
-        }
-    }
-
-    @Override
-    public <T> CompletableFuture<CommandResult<T>> executeAsync(K key, Request<T> request) {
-        try {
-            InfinispanProcessor<K, T> entryProcessor = new InfinispanProcessor<>(request);
-            CompletableFuture<byte[]> resultFuture = readWriteMap.eval(key, entryProcessor);
-            return resultFuture.thenApply(resultBytes -> deserializeResult(resultBytes, request.getBackwardCompatibilityVersion()));
-        } catch (Throwable t) {
-            CompletableFuture<CommandResult<T>> fail = new CompletableFuture<>();
-            fail.completeExceptionally(t);
-            return fail;
+            throw new BucketExceptions.BucketExecutionException(e);
         }
     }
 

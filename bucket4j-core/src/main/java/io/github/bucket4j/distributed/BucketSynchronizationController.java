@@ -19,10 +19,10 @@
  */
 package io.github.bucket4j.distributed;
 
+import java.time.Duration;
+
 import io.github.bucket4j.distributed.proxy.RemoteBucketBuilder;
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronization;
-
-import java.time.Duration;
 
 /**
  * The synchronization controller for {@link BucketProxy}.

@@ -20,10 +20,10 @@
 
 package io.github.bucket4j.distributed.proxy.generic.compare_and_swap;
 
-import io.github.bucket4j.distributed.remote.RemoteBucketState;
-
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+
+import io.github.bucket4j.distributed.remote.RemoteBucketState;
 
 /**
  * Describes the set of operations that {@link AbstractCompareAndSwapBasedProxyManager} typically performs in reaction to user request.

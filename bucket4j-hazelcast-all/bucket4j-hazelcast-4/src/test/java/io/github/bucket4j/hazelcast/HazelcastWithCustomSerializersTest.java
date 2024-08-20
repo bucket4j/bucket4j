@@ -1,14 +1,8 @@
 package io.github.bucket4j.hazelcast;
 
-import com.hazelcast.config.Config;
-import com.hazelcast.config.JoinConfig;
-import com.hazelcast.core.Hazelcast;
-import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.map.IMap;
-import io.github.bucket4j.grid.hazelcast.Bucket4jHazelcast;
-import io.github.bucket4j.grid.hazelcast.HazelcastProxyManager;
-import io.github.bucket4j.tck.AbstractDistributedBucketTest;
-import io.github.bucket4j.tck.ProxyManagerSpec;
+import java.io.Serializable;
+import java.util.Arrays;
+import java.util.UUID;
 
 import org.gridkit.nanocloud.Cloud;
 import org.gridkit.nanocloud.CloudFactory;
@@ -17,9 +11,17 @@ import org.gridkit.vicluster.ViNode;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 
-import java.io.Serializable;
-import java.util.Arrays;
-import java.util.UUID;
+import com.hazelcast.config.Config;
+import com.hazelcast.config.JoinConfig;
+import com.hazelcast.core.Hazelcast;
+import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.map.IMap;
+
+import io.github.bucket4j.grid.hazelcast.Bucket4jHazelcast;
+import io.github.bucket4j.grid.hazelcast.HazelcastProxyManager;
+import io.github.bucket4j.tck.AbstractDistributedBucketTest;
+import io.github.bucket4j.tck.AsyncProxyManagerSpec;
+import io.github.bucket4j.tck.ProxyManagerSpec;
 
 public class HazelcastWithCustomSerializersTest extends AbstractDistributedBucketTest {
 
@@ -68,7 +70,16 @@ public class HazelcastWithCustomSerializersTest extends AbstractDistributedBucke
             new ProxyManagerSpec<>(
                 "HazelcastProxyManager_CustomSerialization_offloadableExecutor",
                 () -> UUID.randomUUID().toString(),
-                () -> Bucket4jHazelcast.entryProcessorBasedBuilder(map).offloadableExecutorName("my-executor")
+                () -> Bucket4jHazelcast.entryProcessorBasedBuilder(map)
+                    .offloadableExecutorName("my-executor")
+            ).checkExpiration()
+        );
+
+        asyncSpecs = Arrays.asList(
+            new AsyncProxyManagerSpec<>(
+                "AsyncHazelcastProxyManager_CustomSerialization_offloadableExecutor",
+                () -> UUID.randomUUID().toString(),
+                () -> Bucket4jHazelcast.asyncEntryProcessorBasedBuilder(map).offloadableExecutorName("my-executor")
             ).checkExpiration()
         );
     }

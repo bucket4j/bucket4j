@@ -1,6 +1,6 @@
 package io.github.bucket4j.api_specifications.regular
 
-import io.github.bucket4j.Bandwidth
+
 import io.github.bucket4j.Bucket
 import io.github.bucket4j.BucketConfiguration
 import io.github.bucket4j.SimpleBucketListener
@@ -32,8 +32,10 @@ class TryConsumeSpecification extends Specification {
             Bucket bucket = type.createBucket(configuration, timeMeter)
             assert bucket.tryConsume(toConsume) == requiredResult
 
-            AsyncBucketProxy asyncBucket = type.createAsyncBucket(configuration, timeMeter)
-            assert asyncBucket.tryConsume(toConsume).get() == requiredResult
+            if (type.asyncModeSupported) {
+                AsyncBucketProxy asyncBucket = type.createAsyncBucket(configuration, timeMeter)
+                assert asyncBucket.tryConsume(toConsume).get() == requiredResult
+            }
         }
         where:
         n | requiredResult | toConsume | configuration
@@ -98,7 +100,7 @@ class TryConsumeSpecification extends Specification {
             listener.getRejected() == 6
 
         where:
-            [type, verbose] << PipeGenerator.сartesianProduct(BucketType.values() as List, [false, true])
+            [type, verbose] << PipeGenerator.сartesianProduct(BucketType.ASYNC_TYPES, [false, true])
     }
 
 }

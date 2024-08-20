@@ -19,13 +19,14 @@
  */
 package io.github.bucket4j.grid.hazelcast.serialization;
 
+import java.io.IOException;
+
 import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;
 import com.hazelcast.nio.serialization.StreamSerializer;
 import com.hazelcast.nio.serialization.TypedStreamDeserializer;
-import io.github.bucket4j.grid.hazelcast.SimpleBackupProcessor;
 
-import java.io.IOException;
+import io.github.bucket4j.grid.hazelcast.SimpleBackupProcessor;
 
 
 public class SimpleBackupProcessorSerializer implements StreamSerializer<SimpleBackupProcessor>, TypedStreamDeserializer<SimpleBackupProcessor> {

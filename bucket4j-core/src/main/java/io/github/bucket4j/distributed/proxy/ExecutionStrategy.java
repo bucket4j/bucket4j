@@ -19,11 +19,13 @@
  */
 package io.github.bucket4j.distributed.proxy;
 
-import io.github.bucket4j.BucketExceptions;
-
 import java.time.Duration;
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
+
+import io.github.bucket4j.BucketExceptions;
 
 /**
  * Defines the strategy for request execution.

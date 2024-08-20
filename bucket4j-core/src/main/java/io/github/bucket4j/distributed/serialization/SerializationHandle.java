@@ -19,11 +19,11 @@
  */
 package io.github.bucket4j.distributed.serialization;
 
-import io.github.bucket4j.distributed.versioning.Version;
-
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+
+import io.github.bucket4j.distributed.versioning.Version;
 
 public interface SerializationHandle<T> {
 

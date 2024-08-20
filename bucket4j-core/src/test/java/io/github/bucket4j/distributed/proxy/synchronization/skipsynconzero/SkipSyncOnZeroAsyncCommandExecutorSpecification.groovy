@@ -1,11 +1,11 @@
 package io.github.bucket4j.distributed.proxy.synchronization.skipsynconzero
 
-
 import io.github.bucket4j.BucketConfiguration
 import io.github.bucket4j.distributed.AsyncBucketProxy
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.DefaultSynchronizationListener
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronization
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.DefaultSynchronizationListener
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.skiponzero.SkipSyncOnZeroBucketSynchronization
+import io.github.bucket4j.mock.AsyncProxyManagerMock
 import io.github.bucket4j.mock.ProxyManagerMock
 import io.github.bucket4j.mock.TimeMeterMock
 import spock.lang.Specification
@@ -16,13 +16,13 @@ import java.util.concurrent.CompletableFuture
 class SkipSyncOnZeroAsyncCommandExecutorSpecification extends Specification {
 
     private TimeMeterMock clock = new TimeMeterMock()
-    private ProxyManagerMock proxyManager = new ProxyManagerMock(clock)
+    private AsyncProxyManagerMock proxyManager = new AsyncProxyManagerMock(clock)
     private DefaultSynchronizationListener listener = new DefaultSynchronizationListener();
     private BucketConfiguration configuration = BucketConfiguration.builder()
         .addLimit({it.capacity(100).refillGreedy(100, Duration.ofMillis(1000))})
         .build()
     private BucketSynchronization synchronization = new SkipSyncOnZeroBucketSynchronization(listener, clock)
-    private AsyncBucketProxy optimizedBucket = proxyManager.asAsync().builder()
+    private AsyncBucketProxy optimizedBucket = proxyManager.builder()
         .withSynchronization(synchronization)
         .build(1L, () -> CompletableFuture.completedFuture(configuration));
 

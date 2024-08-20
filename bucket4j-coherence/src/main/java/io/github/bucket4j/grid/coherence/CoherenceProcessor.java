@@ -19,6 +19,9 @@
  */
 package io.github.bucket4j.grid.coherence;
 
+import java.io.Serial;
+import java.util.Arrays;
+
 import com.tangosol.util.BinaryEntry;
 import com.tangosol.util.InvocableMap;
 import com.tangosol.util.processor.AbstractProcessor;
@@ -29,10 +32,6 @@ import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.distributed.remote.Request;
 import io.github.bucket4j.distributed.serialization.InternalSerializationHelper;
 import io.github.bucket4j.util.ComparableByContent;
-
-import java.io.Serial;
-import java.util.Arrays;
-import java.util.concurrent.TimeUnit;
 
 
 public class CoherenceProcessor<K, T> extends AbstractProcessor<K, byte[], byte[]> implements ComparableByContent {

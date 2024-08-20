@@ -19,8 +19,8 @@
  */
 package io.github.bucket4j.benchmark;
 
-import io.github.bucket4j.UninterruptibleBlockingStrategy;
-import io.github.bucket4j.benchmark.state.*;
+import java.util.concurrent.TimeUnit;
+
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Mode;
@@ -30,7 +30,10 @@ import org.openjdk.jmh.runner.RunnerException;
 import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
 
-import java.util.concurrent.TimeUnit;
+import io.github.bucket4j.UninterruptibleBlockingStrategy;
+import io.github.bucket4j.benchmark.state.GuavaLimiterState;
+import io.github.bucket4j.benchmark.state.LocalLockFreeState;
+import io.github.bucket4j.benchmark.state.LocalSynchronizedState;
 
 @BenchmarkMode({Mode.Throughput, Mode.AverageTime})
 @OutputTimeUnit(TimeUnit.MICROSECONDS)

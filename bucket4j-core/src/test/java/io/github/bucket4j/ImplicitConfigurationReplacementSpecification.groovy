@@ -2,6 +2,7 @@
 package io.github.bucket4j
 
 import io.github.bucket4j.distributed.AsyncBucketProxy
+import io.github.bucket4j.distributed.proxy.AsyncProxyManager
 import io.github.bucket4j.distributed.proxy.ProxyManager
 import io.github.bucket4j.distributed.proxy.RemoteAsyncBucketBuilder
 import io.github.bucket4j.distributed.proxy.RemoteBucketBuilder
@@ -33,13 +34,12 @@ class ImplicitConfigurationReplacementSpecification extends Specification {
                         .build()
 
                     TimeMeterMock clock = new TimeMeterMock(0)
-                    ProxyManager<Integer> proxyManager = bucketType.createProxyManager(clock)
-
-                    if (!proxyManager.isAsyncModeSupported() && !sync) {
+                    if (!bucketType.isAsyncModeSupported() && !sync) {
                         continue
                     }
 
                     if (sync) {
+                        ProxyManager<Integer> proxyManager = bucketType.createProxyManager(clock)
                         RemoteBucketBuilder<Integer> builder = proxyManager.builder()
                         if (batching) {
                             builder.withSynchronization(BucketSynchronizations.batching())
@@ -56,7 +56,8 @@ class ImplicitConfigurationReplacementSpecification extends Specification {
                             bucket2.asVerbose().getAvailableTokens().value == 3
                         }
                     } else {
-                        RemoteAsyncBucketBuilder<Integer> builder = proxyManager.asAsync().builder()
+                        AsyncProxyManager<Integer> proxyManager = bucketType.createAsyncProxyManager(clock)
+                        RemoteAsyncBucketBuilder<Integer> builder = proxyManager.builder()
                         if (batching) {
                             builder.withSynchronization(BucketSynchronizations.batching())
                         }
@@ -95,13 +96,13 @@ class ImplicitConfigurationReplacementSpecification extends Specification {
                         .build()
 
                     TimeMeterMock clock = new TimeMeterMock(0)
-                    ProxyManager<Integer> proxyManager = bucketType.createProxyManager(clock)
 
-                    if (!proxyManager.isAsyncModeSupported() && !sync) {
+                    if (!bucketType.isAsyncModeSupported() && !sync) {
                         continue
                     }
 
                     if (sync) {
+                        ProxyManager<Integer> proxyManager = bucketType.createProxyManager(clock)
                         RemoteBucketBuilder<Integer> builder = proxyManager.builder()
                         if (batching) {
                             builder.withSynchronization(BucketSynchronizations.batching())
@@ -118,7 +119,8 @@ class ImplicitConfigurationReplacementSpecification extends Specification {
                             bucket2.asVerbose().getAvailableTokens().value == 3
                         }
                     } else {
-                        RemoteAsyncBucketBuilder<Integer> builder = proxyManager.asAsync().builder()
+                        AsyncProxyManager<Integer> proxyManager = bucketType.createAsyncProxyManager(clock)
+                        RemoteAsyncBucketBuilder<Integer> builder = proxyManager.builder()
                         if (batching) {
                             builder.withSynchronization(BucketSynchronizations.batching())
                         }
@@ -158,13 +160,12 @@ class ImplicitConfigurationReplacementSpecification extends Specification {
                         .build()
 
                     TimeMeterMock clock = new TimeMeterMock(0)
-                    ProxyManager<Integer> proxyManager = bucketType.createProxyManager(clock)
-
-                    if (!proxyManager.isAsyncModeSupported() && !sync) {
+                    if (!bucketType.isAsyncModeSupported() && !sync) {
                         continue
                     }
 
                     if (sync) {
+                        ProxyManager<Integer> proxyManager = bucketType.createProxyManager(clock)
                         RemoteBucketBuilder<Integer> builder = proxyManager.builder()
                         if (batching) {
                             builder.withSynchronization(BucketSynchronizations.batching())
@@ -181,7 +182,8 @@ class ImplicitConfigurationReplacementSpecification extends Specification {
                             bucket2.asVerbose().getAvailableTokens().value == 60
                         }
                     } else {
-                        RemoteAsyncBucketBuilder<Integer> builder = proxyManager.asAsync().builder()
+                        AsyncProxyManager<Integer> proxyManager = bucketType.createAsyncProxyManager(clock)
+                        RemoteAsyncBucketBuilder<Integer> builder = proxyManager.builder()
                         if (batching) {
                             builder.withSynchronization(BucketSynchronizations.batching())
                         }

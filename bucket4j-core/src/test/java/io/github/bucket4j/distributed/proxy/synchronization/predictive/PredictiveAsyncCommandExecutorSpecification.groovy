@@ -1,15 +1,13 @@
 package io.github.bucket4j.distributed.proxy.synchronization.predictive
 
-
-import io.github.bucket4j.Bucket
 import io.github.bucket4j.BucketConfiguration
 import io.github.bucket4j.distributed.AsyncBucketProxy
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronization
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.DefaultSynchronizationListener
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.DelayParameters
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronization
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.PredictionParameters
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.predictive.PredictiveBucketSynchronization
-import io.github.bucket4j.mock.ProxyManagerMock
+import io.github.bucket4j.mock.AsyncProxyManagerMock
 import io.github.bucket4j.mock.TimeMeterMock
 import spock.lang.Specification
 
@@ -19,7 +17,7 @@ import java.util.concurrent.CompletableFuture
 class PredictiveAsyncCommandExecutorSpecification extends Specification {
 
     private TimeMeterMock clock = new TimeMeterMock()
-    private ProxyManagerMock proxyManager = new ProxyManagerMock(clock)
+    private AsyncProxyManagerMock proxyManager = new AsyncProxyManagerMock(clock)
     private DefaultSynchronizationListener listener = new DefaultSynchronizationListener();
     private BucketConfiguration configuration = BucketConfiguration.builder()
         .addLimit({it.capacity(100).refillGreedy(100, Duration.ofMillis(1000))})
@@ -27,10 +25,10 @@ class PredictiveAsyncCommandExecutorSpecification extends Specification {
     private DelayParameters delay = new DelayParameters(20, Duration.ofMillis(500))
     private PredictionParameters prediction = PredictionParameters.createDefault(delay)
     private BucketSynchronization synchronization = new PredictiveBucketSynchronization(prediction, delay, listener, clock)
-    private AsyncBucketProxy optimizedBucket = proxyManager.asAsync().builder()
+    private AsyncBucketProxy optimizedBucket = proxyManager.builder()
         .withSynchronization(synchronization)
         .build(1L, () -> CompletableFuture.completedFuture(configuration))
-    private Bucket notOptimizedBucket = proxyManager.builder()
+    private AsyncBucketProxy notOptimizedBucket = proxyManager.builder()
         .build(1L, () -> configuration)
 
     def "Should delay sync consumption"() {
@@ -40,7 +38,7 @@ class PredictiveAsyncCommandExecutorSpecification extends Specification {
             consumed == true
             optimizedBucket.getAvailableTokens().get() == 99
         and: "request propagated to proxyManager"
-            notOptimizedBucket.getAvailableTokens() == 99
+            notOptimizedBucket.getAvailableTokens().get() == 99
         and: "metrics correctly counted"
             listener.getMergeCount() == 0
             listener.getSkipCount() == 0 // getAvailableTokens creates second sample
@@ -52,7 +50,7 @@ class PredictiveAsyncCommandExecutorSpecification extends Specification {
             consumed == true
             optimizedBucket.getAvailableTokens().get() == 98
         and: "request not propagated to proxyManager because"
-            notOptimizedBucket.getAvailableTokens() == 99
+            notOptimizedBucket.getAvailableTokens().get() == 99
         and: "metrics correctly counted"
             listener.getMergeCount() == 0
             listener.getSkipCount() == 2
@@ -64,7 +62,7 @@ class PredictiveAsyncCommandExecutorSpecification extends Specification {
             consumed == true
             optimizedBucket.getAvailableTokens().get() == 98 // one token was refilled
         and: "request not propagated to proxyManager"
-            notOptimizedBucket.getAvailableTokens() == 100 // one token was refilled
+            notOptimizedBucket.getAvailableTokens().get() == 100 // one token was refilled
         and: "metrics correctly counted"
             listener.getMergeCount() == 0
             listener.getSkipCount() == 4
@@ -76,7 +74,7 @@ class PredictiveAsyncCommandExecutorSpecification extends Specification {
             consumed == true
             optimizedBucket.getAvailableTokens().get() == 79
         and: "request propagated to proxyManager because of overflow of delay threshold"
-            notOptimizedBucket.getAvailableTokens() == 79 // one token was refilled
+            notOptimizedBucket.getAvailableTokens().get() == 79 // one token was refilled
         and: "metrics correctly counted"
             listener.getMergeCount() == 0
             listener.getSkipCount() == 5
@@ -88,30 +86,30 @@ class PredictiveAsyncCommandExecutorSpecification extends Specification {
             optimizedBucket.getAvailableTokens().get() == 78
             optimizedBucket.tryConsumeAsMuchAsPossible(15).get() == 15
             optimizedBucket.getAvailableTokens().get() == 63
-            notOptimizedBucket.getAvailableTokens() == 4
+            notOptimizedBucket.getAvailableTokens().get() == 4
 
         when: "500 millis passed"
             clock.addMillis(500) // 500
         then: "request not propogated to proxyManager"
             optimizedBucket.getAvailableTokens().get() == 100
-            notOptimizedBucket.getAvailableTokens() == 54
+            notOptimizedBucket.getAvailableTokens().get() == 54
 
         when: "1 millis passed"
             clock.addMillis(1) // 501
         then: "request propogated to proxyManager"
             optimizedBucket.getAvailableTokens().get() == 38
-            notOptimizedBucket.getAvailableTokens() == 38
+            notOptimizedBucket.getAvailableTokens().get() == 38
 
         when: "250 millis passed"
             clock.addMillis(250)
         then: "optimized bucket takes care about other nodes consumption rate"
-            notOptimizedBucket.getAvailableTokens() == 63
+            notOptimizedBucket.getAvailableTokens().get() == 63
             optimizedBucket.getAvailableTokens().get() == 28
 
         when: "125 millis passed"
             clock.addMillis(125)
         then: "optimized bucket takes care about other nodes consumption rate"
-            notOptimizedBucket.getAvailableTokens() == 75
+            notOptimizedBucket.getAvailableTokens().get() == 75
             optimizedBucket.getAvailableTokens().get() == 22
 
         when:
@@ -120,44 +118,44 @@ class PredictiveAsyncCommandExecutorSpecification extends Specification {
 
         then: "amount of token in the proxyManager become negative after sync"
             optimizedBucket.getAvailableTokens().get() == 3
-            notOptimizedBucket.getAvailableTokens() == 0
+            notOptimizedBucket.getAvailableTokens().get() == 0
 
         when:
             clock.addMillis(40)
             optimizedBucket.getSynchronizationController().syncImmediately().get()
         then:
             optimizedBucket.getAvailableTokens().get() == -15
-            notOptimizedBucket.getAvailableTokens() == -15
+            notOptimizedBucket.getAvailableTokens().get() == -15
 
         when:
             clock.addMillis(100)
         then:
             optimizedBucket.getAvailableTokens().get() == -5
-            notOptimizedBucket.getAvailableTokens() == -5
+            notOptimizedBucket.getAvailableTokens().get() == -5
 
         when:
             clock.addMillis(50)
         then:
             optimizedBucket.getAvailableTokens().get() == 0
-            notOptimizedBucket.getAvailableTokens() == 0
+            notOptimizedBucket.getAvailableTokens().get() == 0
 
         when:
             clock.addMillis(80)
         then:
             optimizedBucket.getAvailableTokens().get() == 0
-            notOptimizedBucket.getAvailableTokens() == 8
+            notOptimizedBucket.getAvailableTokens().get() == 8
 
         when:
             clock.addMillis(20)
         then:
             optimizedBucket.getAvailableTokens().get() == 0
-            notOptimizedBucket.getAvailableTokens() == 10
+            notOptimizedBucket.getAvailableTokens().get() == 10
 
         when:
             clock.addMillis(400)
         then:
             optimizedBucket.getAvailableTokens().get() == 50
-            notOptimizedBucket.getAvailableTokens() == 50
+            notOptimizedBucket.getAvailableTokens().get() == 50
     }
 
     def "test synchronization by requirement"() {
@@ -168,13 +166,13 @@ class PredictiveAsyncCommandExecutorSpecification extends Specification {
             optimizedBucket.tryConsume(1)
         then:
             optimizedBucket.getAvailableTokens().get() == 99
-            notOptimizedBucket.getAvailableTokens() == 100
+            notOptimizedBucket.getAvailableTokens().get() == 100
 
         when: "explicit synchronization request"
             optimizedBucket.getSynchronizationController().syncImmediately().get()
         then: "synchronization performed"
             optimizedBucket.getAvailableTokens().get() == 99
-            notOptimizedBucket.getAvailableTokens() == 99
+            notOptimizedBucket.getAvailableTokens().get() == 99
     }
 
     def "test synchronization by conditional requirement"() {
@@ -185,31 +183,31 @@ class PredictiveAsyncCommandExecutorSpecification extends Specification {
             optimizedBucket.tryConsume(10).get()
         then:
             optimizedBucket.getAvailableTokens().get() == 90
-            notOptimizedBucket.getAvailableTokens() == 100
+            notOptimizedBucket.getAvailableTokens().get() == 100
 
         when: "synchronization requested with thresholds 20 tokens"
             optimizedBucket.getSynchronizationController().syncByCondition(20, Duration.ZERO).get()
         then: "synchronization have not performed"
             optimizedBucket.getAvailableTokens().get() == 90
-            notOptimizedBucket.getAvailableTokens() == 100
+            notOptimizedBucket.getAvailableTokens().get() == 100
 
         when: "synchronization requested with thresholds 10 tokens"
             optimizedBucket.getSynchronizationController().syncByCondition(10, Duration.ZERO).get()
         then: "synchronization have not performed"
             optimizedBucket.getAvailableTokens().get() == 90
-            notOptimizedBucket.getAvailableTokens() == 90
+            notOptimizedBucket.getAvailableTokens().get() == 90
 
         when: "synchronization requested with thresholds 10 tokens"
             optimizedBucket.getSynchronizationController().syncByCondition(10, Duration.ZERO).get()
         then: "synchronization have performed"
             optimizedBucket.getAvailableTokens().get() == 90
-            notOptimizedBucket.getAvailableTokens() == 90
+            notOptimizedBucket.getAvailableTokens().get() == 90
 
         when: "synchronization requested with thresholds 10 tokens"
             optimizedBucket.getSynchronizationController().syncByCondition(10, Duration.ZERO).get()
         then: "synchronization have performed"
             optimizedBucket.getAvailableTokens().get() == 90
-            notOptimizedBucket.getAvailableTokens() == 90
+            notOptimizedBucket.getAvailableTokens().get() == 90
 
         when: "9 millis passed 10 tokens consumed and synchronization requested with 20 millis limit"
             clock.addMillis(9)
@@ -217,19 +215,19 @@ class PredictiveAsyncCommandExecutorSpecification extends Specification {
             optimizedBucket.getSynchronizationController().syncByCondition(10, Duration.ofMillis(20))
         then: "synchronization have not performed"
             optimizedBucket.getAvailableTokens().get() == 80
-            notOptimizedBucket.getAvailableTokens() == 90
+            notOptimizedBucket.getAvailableTokens().get() == 90
 
         when: "synchronization requested with limit 10 millis + 9 tokens"
             optimizedBucket.getSynchronizationController().syncByCondition(9, Duration.ofMillis(10)).get()
         then: "synchronization have not performed"
             optimizedBucket.getAvailableTokens().get() == 80
-            notOptimizedBucket.getAvailableTokens() == 90
+            notOptimizedBucket.getAvailableTokens().get() == 90
 
         when: "synchronization requested with limit 9 millis + 10 tokens"
             optimizedBucket.getSynchronizationController().syncByCondition(10, Duration.ofMillis(9)).get()
         then: "synchronization have performed"
             optimizedBucket.getAvailableTokens().get() == 80
-            notOptimizedBucket.getAvailableTokens() == 80
+            notOptimizedBucket.getAvailableTokens().get() == 80
     }
 
 }

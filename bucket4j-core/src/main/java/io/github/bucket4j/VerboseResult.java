@@ -19,9 +19,10 @@
  */
 package io.github.bucket4j;
 
+import java.util.function.Function;
+
 import io.github.bucket4j.distributed.AsyncVerboseBucket;
 import io.github.bucket4j.util.ComparableByContent;
-import java.util.function.Function;
 
 /**
  * Intention of this class is to provide wrapper around results returned by any method of {@link VerboseBucket} and {@link AsyncVerboseBucket}.

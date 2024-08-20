@@ -19,10 +19,10 @@
  */
 package io.github.bucket4j.distributed.proxy.synchronization.per_bucket;
 
+import java.time.Duration;
+
 import io.github.bucket4j.BucketExceptions;
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.delay.DelayBucketSynchronization;
-
-import java.time.Duration;
 
 /**
  * Describes parameters for {@link DelayBucketSynchronization}.

@@ -19,6 +19,9 @@
  */
 package io.github.bucket4j.grid.hazelcast;
 
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
+
 import com.hazelcast.map.IMap;
 
 import io.github.bucket4j.TimeMeter;
@@ -27,27 +30,18 @@ import io.github.bucket4j.distributed.proxy.generic.pessimistic_locking.Abstract
 import io.github.bucket4j.distributed.proxy.generic.pessimistic_locking.LockBasedTransaction;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 
-import java.util.Optional;
-import java.util.concurrent.TimeUnit;
-
 public class HazelcastLockBasedProxyManager<K> extends AbstractLockBasedProxyManager<K> {
 
     private final IMap<K, byte[]> map;
 
     public HazelcastLockBasedProxyManager(Bucket4jHazelcast.HazelcastLockBasedProxyManagerBuilder<K> builder) {
-        super(builder.getClientSideConfig());
+        super(builder.getProxyManagerConfig());
         this.map = builder.map;
     }
 
     @Override
     public void removeProxy(K key) {
         map.remove(key);
-    }
-
-    @Override
-    public boolean isAsyncModeSupported() {
-        // Because Hazelcast IMap does not provide "lockAsync" API.
-        return false;
     }
 
     @Override
@@ -96,11 +90,11 @@ public class HazelcastLockBasedProxyManager<K> extends AbstractLockBasedProxyMan
             }
 
             private void save(byte[] data, RemoteBucketState newState) {
-                ExpirationAfterWriteStrategy expiration = getClientSideConfig().getExpirationAfterWriteStrategy().orElse(null);
+                ExpirationAfterWriteStrategy expiration = getConfig().getExpirationAfterWriteStrategy().orElse(null);
                 if (expiration == null) {
                     map.put(key, data);
                 } else {
-                    long currentTimeNanos = getClientSideConfig().getClientSideClock().orElse(TimeMeter.SYSTEM_MILLISECONDS).currentTimeNanos();
+                    long currentTimeNanos = getConfig().getClientSideClock().orElse(TimeMeter.SYSTEM_MILLISECONDS).currentTimeNanos();
                     long ttlMillis = expiration.calculateTimeToLiveMillis(newState, currentTimeNanos);
                     if (ttlMillis > 0) {
                         map.put(key, data, ttlMillis, TimeUnit.MILLISECONDS);

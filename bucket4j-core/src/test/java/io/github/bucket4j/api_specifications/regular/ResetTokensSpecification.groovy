@@ -22,7 +22,7 @@ class ResetTokensSpecification extends Specification {
                     for (boolean verbose : [true, false]) {
                         println("type=$type sync=$sync verbose=$verbose")
                         TimeMeterMock timeMeter = new TimeMeterMock(0)
-                        if (sync) {
+                        if (sync || !type.asyncModeSupported) {
                             Bucket bucket = type.createBucket(configuration, timeMeter)
                             bucket.getAvailableTokens()
                             if (!verbose) {

@@ -1,17 +1,19 @@
 package io.github.bucket4j.grid.jcache.infinispan;
 
 
-import io.github.bucket4j.grid.jcache.CompatibilityTest;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 import javax.cache.Cache;
 import javax.cache.CacheManager;
 import javax.cache.Caching;
 import javax.cache.spi.CachingProvider;
-import java.net.URI;
-import java.net.URISyntaxException;
+
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+
+import io.github.bucket4j.grid.jcache.CompatibilityTest;
 
 public class InfinispanCompatibilityInvestigationTest {
 

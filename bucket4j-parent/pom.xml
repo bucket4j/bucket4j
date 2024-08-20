@@ -59,7 +59,7 @@
         <redisson.version>3.21.0</redisson.version>
         <lettuce.version>6.1.8.RELEASE</lettuce.version>
         <caffeine.version>2.9.3</caffeine.version>
-        <mssql.version>12.4.2.jre8</mssql.version>
+        <mssql.version>12.8.0.jre11</mssql.version>
         <ojdbc.version>23.2.0.0</ojdbc.version>
         <junit.jupiter.version>5.10.2</junit.jupiter.version>
     </properties>

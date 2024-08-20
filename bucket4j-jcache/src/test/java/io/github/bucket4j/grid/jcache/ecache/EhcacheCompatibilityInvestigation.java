@@ -1,10 +1,6 @@
 package io.github.bucket4j.grid.jcache.ecache;
 
 
-import io.github.bucket4j.grid.jcache.CompatibilityTest;
-import org.ehcache.jsr107.EhcacheCachingProvider;
-
-
 import javax.cache.Cache;
 import javax.cache.CacheManager;
 import javax.cache.Caching;
@@ -12,6 +8,10 @@ import javax.cache.configuration.MutableConfiguration;
 import javax.cache.expiry.CreatedExpiryPolicy;
 import javax.cache.expiry.Duration;
 import javax.cache.spi.CachingProvider;
+
+import org.ehcache.jsr107.EhcacheCachingProvider;
+
+import io.github.bucket4j.grid.jcache.CompatibilityTest;
 
 public class EhcacheCompatibilityInvestigation {
 

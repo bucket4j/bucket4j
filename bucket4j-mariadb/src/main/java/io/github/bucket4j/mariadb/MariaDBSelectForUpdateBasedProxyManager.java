@@ -19,6 +19,18 @@
  */
 package io.github.bucket4j.mariadb;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.SQLTransactionRollbackException;
+import java.text.MessageFormat;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+import javax.sql.DataSource;
+
 import io.github.bucket4j.BucketExceptions;
 import io.github.bucket4j.distributed.jdbc.CustomColumnProvider;
 import io.github.bucket4j.distributed.jdbc.PrimaryKeyMapper;
@@ -28,17 +40,6 @@ import io.github.bucket4j.distributed.proxy.generic.select_for_update.LockAndGet
 import io.github.bucket4j.distributed.proxy.generic.select_for_update.SelectForUpdateBasedTransaction;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.mariadb.Bucket4jMariaDB.MariaDBSelectForUpdateBasedProxyManagerBuilder;
-
-import java.sql.SQLTransactionRollbackException;
-import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
 
 /**
  * The extension of Bucket4j library addressed to support <a href="https://mariadb.org/">MariaDB</a>
@@ -59,14 +60,14 @@ public class MariaDBSelectForUpdateBasedProxyManager<K> extends AbstractSelectFo
     private final List<CustomColumnProvider<K>> customColumns = new ArrayList<>();
 
     public MariaDBSelectForUpdateBasedProxyManager(MariaDBSelectForUpdateBasedProxyManagerBuilder<K> builder) {
-        super(builder.getClientSideConfig());
+        super(builder.getProxyManagerConfig());
         this.dataSource = builder.getDataSource();
         this.primaryKeyMapper = builder.getPrimaryKeyMapper();
         this.removeSqlQuery = MessageFormat.format("DELETE FROM {0} WHERE {1} = ?", builder.getTableName(), builder.getIdColumnName());
         this.insertSqlQuery = MessageFormat.format("INSERT IGNORE INTO {0}({1}, {2}) VALUES(?, null)",
             builder.getTableName(), builder.getIdColumnName(), builder.getStateColumnName());
         this.selectSqlQuery = MessageFormat.format("SELECT {0} as state FROM {1} WHERE {2} = ? FOR UPDATE", builder.getStateColumnName(), builder.getTableName(), builder.getIdColumnName());
-        getClientSideConfig().getExpirationAfterWriteStrategy().ifPresent(expiration -> {
+        getConfig().getExpirationAfterWriteStrategy().ifPresent(expiration -> {
             this.customColumns.add(CustomColumnProvider.createExpiresInColumnProvider(builder.getExpiresAtColumnName(), expiration));
         });
         if (customColumns.isEmpty()) {

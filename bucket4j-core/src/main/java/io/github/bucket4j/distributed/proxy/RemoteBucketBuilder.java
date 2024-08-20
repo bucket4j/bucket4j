@@ -20,16 +20,15 @@
 
 package io.github.bucket4j.distributed.proxy;
 
+import java.util.function.Function;
+import java.util.function.Supplier;
+
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.BucketListener;
 import io.github.bucket4j.TokensInheritanceStrategy;
 import io.github.bucket4j.distributed.BucketProxy;
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronization;
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronizations;
-
-
-import java.util.function.Function;
-import java.util.function.Supplier;
 
 /**
  * The builder for {@link BucketProxy}

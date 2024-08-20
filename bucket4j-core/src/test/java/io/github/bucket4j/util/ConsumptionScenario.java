@@ -1,11 +1,11 @@
 
 package io.github.bucket4j.util;
 
-import io.github.bucket4j.Bucket;
-
 import java.util.concurrent.CountDownLatch;
 import java.util.function.Function;
 import java.util.function.Supplier;
+
+import io.github.bucket4j.Bucket;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 

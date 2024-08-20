@@ -22,13 +22,11 @@ package io.github.bucket4j.redis.lettuce.cas;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AbstractCompareAndSwapBasedProxyManager;
-import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AsyncCompareAndSwapOperation;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.CompareAndSwapOperation;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.redis.consts.LuaScripts;
@@ -49,7 +47,7 @@ public class LettuceBasedProxyManager<K> extends AbstractCompareAndSwapBasedProx
     }
 
     public LettuceBasedProxyManager(Bucket4jLettuce.LettuceBasedProxyManagerBuilder<K> builder) {
-        super(builder.getClientSideConfig());
+        super(builder.getProxyManagerConfig());
         this.expirationStrategy = builder.getExpirationAfterWrite().orElse(ExpirationAfterWriteStrategy.none());
         this.redisApi = builder.getRedisApi();
     }
@@ -73,39 +71,9 @@ public class LettuceBasedProxyManager<K> extends AbstractCompareAndSwapBasedProx
     }
 
     @Override
-    protected AsyncCompareAndSwapOperation beginAsyncCompareAndSwapOperation(K key) {
-        @SuppressWarnings("unchecked")
-        K[] keys = (K[]) new Object[]{key};
-        return new AsyncCompareAndSwapOperation() {
-            @Override
-            public CompletableFuture<Optional<byte[]>> getStateData(Optional<Long> timeoutNanos) {
-                RedisFuture<byte[]> stateFuture = redisApi.get(key);
-                return convertToCompletableFuture(stateFuture, timeoutNanos)
-                        .thenApply(Optional::ofNullable);
-            }
-
-            @Override
-            public CompletableFuture<Boolean> compareAndSwap(byte[] originalData, byte[] newData, RemoteBucketState newState, Optional<Long> timeoutNanos) {
-                return convertToCompletableFuture(compareAndSwapFuture(keys, originalData, newData, newState), timeoutNanos);
-            }
-        };
-    }
-
-    @Override
     public void removeProxy(K key) {
         RedisFuture<?> future = redisApi.delete(key);
         getFutureValue(future, Optional.empty());
-    }
-
-    @Override
-    protected CompletableFuture<Void> removeAsync(K key) {
-        RedisFuture<?> future = redisApi.delete(key);
-        return convertToCompletableFuture(future, Optional.empty()).thenApply(bytes -> null);
-    }
-
-    @Override
-    public boolean isAsyncModeSupported() {
-        return true;
     }
 
     private RedisFuture<Boolean> compareAndSwapFuture(K[] keys, byte[] originalData, byte[] newData, RemoteBucketState newState) {
@@ -128,14 +96,6 @@ public class LettuceBasedProxyManager<K> extends AbstractCompareAndSwapBasedProx
                 byte[][] params = {originalData, newData};
                 return redisApi.eval(LuaScripts.SCRIPT_COMPARE_AND_SWAP, ScriptOutputType.BOOLEAN, keys, params);
             }
-        }
-    }
-
-    private <T> CompletableFuture<T> convertToCompletableFuture(RedisFuture<T> redisFuture, Optional<Long> timeoutNanos) {
-        if (timeoutNanos.isEmpty()) {
-            return redisFuture.toCompletableFuture();
-        } else {
-            return redisFuture.toCompletableFuture().orTimeout(timeoutNanos.get(), TimeUnit.NANOSECONDS);
         }
     }
 

@@ -24,11 +24,11 @@ import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.proxy.AsyncCommandExecutor;
 import io.github.bucket4j.distributed.proxy.CommandExecutor;
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronization;
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.DelayParameters;
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronizationListener;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.DelayParameters;
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.batch.AsyncBatchingExecutor;
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.batch.BatchingExecutor;
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.batch.BatchingBucketSynchronization;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.batch.BatchingExecutor;
 
 /**
  * Synchronization that can serve requests locally without synchronization with external storage until thresholds are not violated.

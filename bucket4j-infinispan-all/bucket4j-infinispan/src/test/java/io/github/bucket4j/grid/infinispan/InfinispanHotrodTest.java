@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.UUID;
 
 import org.infinispan.Cache;
@@ -72,6 +73,8 @@ public class InfinispanHotrodTest extends AbstractDistributedBucketTest {
                 () -> Bucket4jInfinispan.hotrodClientBasedBuilder(remoteCache)
             ).checkExpiration()
         );
+
+        asyncSpecs = Collections.emptyList();
     }
 
     private static GlobalConfiguration getGlobalConfiguration() {

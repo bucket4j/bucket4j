@@ -53,6 +53,11 @@ public class AsyncProxyManagerView<K, OldKey> implements AsyncProxyManager<K> {
     }
 
     @Override
+    public boolean isExpireAfterWriteSupported() {
+        return target.isExpireAfterWriteSupported();
+    }
+
+    @Override
     public CompletableFuture<Optional<BucketConfiguration>> getProxyConfiguration(K key) {
         return target.getProxyConfiguration(mapper.apply(key));
     }

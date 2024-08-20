@@ -17,11 +17,11 @@
 
 package io.github.bucket4j.util;
 
-import io.github.bucket4j.distributed.AsyncBucketProxy;
-
 import java.util.concurrent.CountDownLatch;
 import java.util.function.Function;
 import java.util.function.Supplier;
+
+import io.github.bucket4j.distributed.AsyncBucketProxy;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 

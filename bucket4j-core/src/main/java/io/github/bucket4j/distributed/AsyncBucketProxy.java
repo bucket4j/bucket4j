@@ -19,13 +19,19 @@
  */
 package io.github.bucket4j.distributed;
 
-import io.github.bucket4j.*;
-import io.github.bucket4j.distributed.proxy.RemoteAsyncBucketBuilder;
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronization;
-
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.function.Function;
+
+import io.github.bucket4j.Bucket;
+import io.github.bucket4j.BucketConfiguration;
+import io.github.bucket4j.BucketListener;
+import io.github.bucket4j.ConsumptionProbe;
+import io.github.bucket4j.EstimationProbe;
+import io.github.bucket4j.SchedulingBucket;
+import io.github.bucket4j.TokensInheritanceStrategy;
+import io.github.bucket4j.distributed.proxy.RemoteAsyncBucketBuilder;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronization;
 
 /**
  * Asynchronous analog of {@link BucketProxy}.

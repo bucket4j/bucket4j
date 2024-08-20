@@ -19,9 +19,9 @@
  */
 package io.github.bucket4j.grid.ignite.thin;
 
-import org.apache.ignite.client.IgniteClientFuture;
-
 import java.util.concurrent.CompletableFuture;
+
+import org.apache.ignite.client.IgniteClientFuture;
 
 public class ThinClientUtils {
 

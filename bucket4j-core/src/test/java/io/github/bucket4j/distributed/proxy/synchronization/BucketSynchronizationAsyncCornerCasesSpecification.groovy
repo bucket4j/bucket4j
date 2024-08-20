@@ -1,19 +1,16 @@
 package io.github.bucket4j.distributed.proxy.synchronization
 
-
 import io.github.bucket4j.BucketConfiguration
 import io.github.bucket4j.distributed.AsyncBucketProxy
 import io.github.bucket4j.distributed.proxy.ProxyManagerConfig
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.DelayParameters
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.NopeSynchronizationListener
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronization
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronizations
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.PredictionParameters
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.*
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.delay.DelayBucketSynchronization
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.manual.ManuallySyncingBucketSynchronization
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.predictive.PredictiveBucketSynchronization
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.skiponzero.SkipSyncOnZeroBucketSynchronization
-import io.github.bucket4j.mock.*
+import io.github.bucket4j.mock.AsyncCompareAndSwapBasedProxyManagerMock
+import io.github.bucket4j.mock.AsyncProxyManagerMock
+import io.github.bucket4j.mock.TimeMeterMock
 import spock.lang.Shared
 import spock.lang.Specification
 import spock.lang.Unroll
@@ -33,12 +30,12 @@ class BucketSynchronizationAsyncCornerCasesSpecification extends Specification {
     @Unroll
     def "should correctly handle exceptions when synchronization is used #testNumber ProxyManagerMock"(int testNumber, BucketSynchronization synchronization) {
         setup:
-            ProxyManagerMock proxyManagerMock = new ProxyManagerMock(clock)
+            AsyncProxyManagerMock proxyManagerMock = new AsyncProxyManagerMock(clock)
             BucketConfiguration configuration = BucketConfiguration.builder()
                 .addLimit({it.capacity(10).refillGreedy(10, Duration.ofSeconds (1))})
                 .build()
 
-            AsyncBucketProxy bucket = proxyManagerMock.asAsync().builder()
+            AsyncBucketProxy bucket = proxyManagerMock.builder()
                     .withSynchronization(synchronization)
                     .build("66", {CompletableFuture.completedFuture(configuration)})
         when:
@@ -61,10 +58,10 @@ class BucketSynchronizationAsyncCornerCasesSpecification extends Specification {
         where:
             [testNumber, synchronization] << [
                     [1, BucketSynchronizations.batching()],
-                    [2, new DelayBucketSynchronization(delayParameters, NopeSynchronizationListener.INSTANCE, clock)],
-                    [3, new PredictiveBucketSynchronization(PredictionParameters.createDefault(delayParameters), delayParameters, NopeSynchronizationListener.INSTANCE, clock)],
-                    [4, new SkipSyncOnZeroBucketSynchronization(NopeSynchronizationListener.INSTANCE, clock)],
-                    [5, new ManuallySyncingBucketSynchronization(NopeSynchronizationListener.INSTANCE, clock)]
+                    [2, new DelayBucketSynchronization(delayParameters, NopeBucketSynchronizationListener.INSTANCE, clock)],
+                    [3, new PredictiveBucketSynchronization(PredictionParameters.createDefault(delayParameters), delayParameters, NopeBucketSynchronizationListener.INSTANCE, clock)],
+                    [4, new SkipSyncOnZeroBucketSynchronization(NopeBucketSynchronizationListener.INSTANCE, clock)],
+                    [5, new ManuallySyncingBucketSynchronization(NopeBucketSynchronizationListener.INSTANCE, clock)]
         ]
     }
 
@@ -72,12 +69,12 @@ class BucketSynchronizationAsyncCornerCasesSpecification extends Specification {
     @Unroll
     def "should correctly handle exceptions when synchronization is used #testNumber CompareAndSwapBasedProxyManagerMock"(int testNumber, BucketSynchronization synchronization) {
         setup:
-            CompareAndSwapBasedProxyManagerMock proxyManagerMock = new CompareAndSwapBasedProxyManagerMock(ProxyManagerConfig.default.withClientClock(clock))
+            AsyncCompareAndSwapBasedProxyManagerMock proxyManagerMock = new AsyncCompareAndSwapBasedProxyManagerMock(ProxyManagerConfig.default.withClientClock(clock))
             BucketConfiguration configuration = BucketConfiguration.builder()
                 .addLimit({it.capacity(10).refillGreedy(10, Duration.ofSeconds (1))})
                 .build()
 
-            AsyncBucketProxy bucket = proxyManagerMock.asAsync().builder()
+            AsyncBucketProxy bucket = proxyManagerMock.builder()
                     .withSynchronization(synchronization)
                     .build("66", () -> CompletableFuture.completedFuture(configuration))
         when:
@@ -100,10 +97,10 @@ class BucketSynchronizationAsyncCornerCasesSpecification extends Specification {
         where:
         [testNumber, synchronization] << [
                 [1, BucketSynchronizations.batching()],
-                [2, new DelayBucketSynchronization(delayParameters, NopeSynchronizationListener.INSTANCE, clock)],
-                [3, new PredictiveBucketSynchronization(PredictionParameters.createDefault(delayParameters), delayParameters, NopeSynchronizationListener.INSTANCE, clock)],
-                [4, new SkipSyncOnZeroBucketSynchronization(NopeSynchronizationListener.INSTANCE, clock)],
-                [5, new ManuallySyncingBucketSynchronization(NopeSynchronizationListener.INSTANCE, clock)]
+                [2, new DelayBucketSynchronization(delayParameters, NopeBucketSynchronizationListener.INSTANCE, clock)],
+                [3, new PredictiveBucketSynchronization(PredictionParameters.createDefault(delayParameters), delayParameters, NopeBucketSynchronizationListener.INSTANCE, clock)],
+                [4, new SkipSyncOnZeroBucketSynchronization(NopeBucketSynchronizationListener.INSTANCE, clock)],
+                [5, new ManuallySyncingBucketSynchronization(NopeBucketSynchronizationListener.INSTANCE, clock)]
         ]
     }
 

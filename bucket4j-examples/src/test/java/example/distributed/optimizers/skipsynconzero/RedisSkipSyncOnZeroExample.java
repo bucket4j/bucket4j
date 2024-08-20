@@ -28,9 +28,10 @@ import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.AsyncBucketProxy;
 import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
+import io.github.bucket4j.distributed.proxy.AsyncProxyManager;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.DefaultSynchronizationListener;
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronization;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.DefaultSynchronizationListener;
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.skiponzero.SkipSyncOnZeroBucketSynchronization;
 import io.github.bucket4j.redis.lettuce.Bucket4jLettuce;
 import io.lettuce.core.RedisClient;
@@ -146,7 +147,7 @@ public class RedisSkipSyncOnZeroExample {
         Meter consumptionRate = new Meter();
         com.codahale.metrics.Timer latencyTimer = buildLatencyTimer();
 
-        ProxyManager<String> proxyManager = Bucket4jLettuce.casBasedBuilder(redisClient)
+        AsyncProxyManager<String> proxyManager = Bucket4jLettuce.asyncCasBasedBuilder(redisClient)
             .expirationAfterWrite(ExpirationAfterWriteStrategy.none())
             .build()
             .withMapper(str -> str.getBytes(Charsets.UTF_8));
@@ -160,7 +161,7 @@ public class RedisSkipSyncOnZeroExample {
         BucketSynchronization bucketSynchronization = new SkipSyncOnZeroBucketSynchronization(synchronizationListener, TimeMeter.SYSTEM_MILLISECONDS)
             .withListener(synchronizationListener);
 
-        AsyncBucketProxy bucket = proxyManager.asAsync().builder()
+        AsyncBucketProxy bucket = proxyManager.builder()
                 .withSynchronization(bucketSynchronization)
                 .build("13", () -> CompletableFuture.completedFuture(configuration));
 

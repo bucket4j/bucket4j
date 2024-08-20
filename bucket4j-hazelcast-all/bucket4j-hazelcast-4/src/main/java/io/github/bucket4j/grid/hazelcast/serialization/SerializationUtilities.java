@@ -25,8 +25,15 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
 
+import com.hazelcast.config.SerializationConfig;
+import com.hazelcast.config.SerializerConfig;
 import com.hazelcast.internal.util.StringUtil;
 import com.hazelcast.nio.serialization.Serializer;
+
+import io.github.bucket4j.grid.hazelcast.HazelcastEntryProcessor;
+import io.github.bucket4j.grid.hazelcast.HazelcastOffloadableEntryProcessor;
+import io.github.bucket4j.grid.hazelcast.SimpleBackupProcessor;
+import io.github.bucket4j.grid.hazelcast.VersionedBackupProcessor;
 
 public class SerializationUtilities {
     public static final String TYPE_ID_BASE_PROP_NAME = "bucket4j.hazelcast.serializer.type_id_base";
@@ -36,6 +43,44 @@ public class SerializationUtilities {
             new AbstractMap.SimpleEntry<Class<? extends Serializer>, Integer>(HazelcastOffloadableEntryProcessorSerializer.class, 2),
             new AbstractMap.SimpleEntry<Class<? extends Serializer>, Integer>(VersionedBackupProcessorSerializer.class, 3)
     );
+
+    /**
+     * Registers custom Hazelcast serializers for all classes from Bucket4j library which can be transferred over network.
+     * Each serializer will have different typeId, and this id will not be changed in the feature releases.
+     *
+     * <p>
+     *     <strong>Note:</strong> it would be better to leave an empty space in the Ids in order to handle the extension of Bucket4j library when new classes can be added to library.
+     *     For example if you called {@code getAllSerializers(10000)} then it would be reasonable to avoid registering your custom types in the interval 10000-10100.
+     * </p>
+     *
+     * @param typeIdBase a starting number from for typeId sequence
+     */
+    public static void addCustomSerializers(SerializationConfig serializationConfig, final int typeIdBase) {
+        serializationConfig.addSerializerConfig(
+            new SerializerConfig()
+                .setImplementation(new HazelcastEntryProcessorSerializer(SerializationUtilities.getSerializerTypeId(HazelcastEntryProcessorSerializer.class, typeIdBase)))
+                .setTypeClass(HazelcastEntryProcessor.class)
+        );
+
+        serializationConfig.addSerializerConfig(
+            new SerializerConfig()
+                .setImplementation(new SimpleBackupProcessorSerializer(SerializationUtilities.getSerializerTypeId(SimpleBackupProcessorSerializer.class, typeIdBase)))
+                .setTypeClass(SimpleBackupProcessor.class)
+        );
+
+        serializationConfig.addSerializerConfig(
+            new SerializerConfig()
+                .setImplementation(new HazelcastOffloadableEntryProcessorSerializer(SerializationUtilities.getSerializerTypeId(HazelcastOffloadableEntryProcessorSerializer.class, typeIdBase)))
+                .setTypeClass(HazelcastOffloadableEntryProcessor.class)
+        );
+
+        serializationConfig.addSerializerConfig(
+            new SerializerConfig()
+                .setImplementation(new VersionedBackupProcessorSerializer(SerializationUtilities.getSerializerTypeId(VersionedBackupProcessorSerializer.class, typeIdBase)))
+                .setTypeClass(VersionedBackupProcessor.class)
+        );
+
+    }
 
     public static int getSerializerTypeId(Class<? extends Serializer> serializerType) {
         Optional<Integer> typeIdBase = getSerializersTypeIdBase();

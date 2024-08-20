@@ -25,8 +25,11 @@ import java.util.Objects;
 import org.apache.ignite.client.ClientCache;
 import org.apache.ignite.client.ClientCompute;
 
+import io.github.bucket4j.distributed.proxy.AbstractAsyncProxyManagerBuilder;
 import io.github.bucket4j.distributed.proxy.AbstractProxyManagerBuilder;
+import io.github.bucket4j.grid.ignite.thin.cas.IgniteAsyncThinClientCasBasedProxyManager;
 import io.github.bucket4j.grid.ignite.thin.cas.IgniteThinClientCasBasedProxyManager;
+import io.github.bucket4j.grid.ignite.thin.compute.IgniteAsyncThinClientProxyManager;
 import io.github.bucket4j.grid.ignite.thin.compute.IgniteThinClientProxyManager;
 
 public class Bucket4jIgniteThin {
@@ -47,6 +50,19 @@ public class Bucket4jIgniteThin {
     }
 
     /**
+     * Returns the builder for {@link IgniteAsyncThinClientCasBasedProxyManager}
+     *
+     * @param cache
+     *
+     * @return new instance of {@link IgniteAsyncThinClientCasBasedProxyManagerBuilder}
+     *
+     * @param <K> type ok key
+     */
+    public <K> IgniteAsyncThinClientCasBasedProxyManagerBuilder<K> asyncCasBasedBuilder(ClientCache<K, ByteBuffer> cache) {
+        return new IgniteAsyncThinClientCasBasedProxyManagerBuilder<>(cache);
+    }
+
+    /**
      * Returns the builder for {@link IgniteThinClientProxyManager}
      *
      * @param cache
@@ -58,6 +74,20 @@ public class Bucket4jIgniteThin {
      */
     public <K> IgniteThinClientComputeProxyManagerBuilder<K> clientComputeBasedBuilder(ClientCache<K, byte[]> cache, ClientCompute clientCompute) {
         return new IgniteThinClientComputeProxyManagerBuilder<>(cache, clientCompute);
+    }
+
+    /**
+     * Returns the builder for {@link IgniteAsyncThinClientProxyManager}
+     *
+     * @param cache
+     * @param clientCompute
+     *
+     * @return new instance of {@link IgniteAsyncThinClientComputeProxyManagerBuilder}
+     *
+     * @param <K> type ok key
+     */
+    public <K> IgniteAsyncThinClientComputeProxyManagerBuilder<K> asyncClientComputeBasedBuilder(ClientCache<K, byte[]> cache, ClientCompute clientCompute) {
+        return new IgniteAsyncThinClientComputeProxyManagerBuilder<>(cache, clientCompute);
     }
 
     public static class IgniteThinClientCasBasedProxyManagerBuilder<K> extends AbstractProxyManagerBuilder<K, IgniteThinClientCasBasedProxyManager<K>, IgniteThinClientCasBasedProxyManagerBuilder<K>> {
@@ -78,6 +108,24 @@ public class Bucket4jIgniteThin {
         }
     }
 
+    public static class IgniteAsyncThinClientCasBasedProxyManagerBuilder<K> extends AbstractAsyncProxyManagerBuilder<K, IgniteAsyncThinClientCasBasedProxyManager<K>, IgniteAsyncThinClientCasBasedProxyManagerBuilder<K>> {
+
+        private final ClientCache<K, ByteBuffer> cache;
+
+        public IgniteAsyncThinClientCasBasedProxyManagerBuilder(ClientCache<K, ByteBuffer> cache) {
+            this.cache = Objects.requireNonNull(cache);
+        }
+
+        @Override
+        public IgniteAsyncThinClientCasBasedProxyManager<K> build() {
+            return new IgniteAsyncThinClientCasBasedProxyManager<>(this);
+        }
+
+        public ClientCache<K, ByteBuffer> getCache() {
+            return cache;
+        }
+    }
+
     public static class IgniteThinClientComputeProxyManagerBuilder<K> extends AbstractProxyManagerBuilder<K, IgniteThinClientProxyManager<K>, IgniteThinClientComputeProxyManagerBuilder<K>> {
 
         private final ClientCache<K, byte[]> cache;
@@ -91,6 +139,30 @@ public class Bucket4jIgniteThin {
         @Override
         public IgniteThinClientProxyManager<K> build() {
             return new IgniteThinClientProxyManager<>(this);
+        }
+
+        public ClientCache<K, byte[]> getCache() {
+            return cache;
+        }
+
+        public ClientCompute getClientCompute() {
+            return clientCompute;
+        }
+    }
+
+    public static class IgniteAsyncThinClientComputeProxyManagerBuilder<K> extends AbstractAsyncProxyManagerBuilder<K, IgniteAsyncThinClientProxyManager<K>, IgniteAsyncThinClientComputeProxyManagerBuilder<K>> {
+
+        private final ClientCache<K, byte[]> cache;
+        private final ClientCompute clientCompute;
+
+        public IgniteAsyncThinClientComputeProxyManagerBuilder(ClientCache<K, byte[]> cache, ClientCompute clientCompute) {
+            this.cache = Objects.requireNonNull(cache);
+            this.clientCompute = Objects.requireNonNull(clientCompute);
+        }
+
+        @Override
+        public IgniteAsyncThinClientProxyManager<K> build() {
+            return new IgniteAsyncThinClientProxyManager<>(this);
         }
 
         public ClientCache<K, byte[]> getCache() {

@@ -20,12 +20,10 @@
 package io.github.bucket4j.grid.hazelcast;
 
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 
 import com.hazelcast.map.IMap;
 
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AbstractCompareAndSwapBasedProxyManager;
-import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AsyncCompareAndSwapOperation;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.CompareAndSwapOperation;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.grid.hazelcast.Bucket4jHazelcast.HazelcastCompareAndSwapBasedProxyManagerBuilder;
@@ -35,24 +33,18 @@ public class HazelcastCompareAndSwapBasedProxyManager<K> extends AbstractCompare
     private final IMap<K, byte[]> map;
 
     HazelcastCompareAndSwapBasedProxyManager(HazelcastCompareAndSwapBasedProxyManagerBuilder<K> builder) {
-        super(builder.getClientSideConfig());
+        super(builder.getProxyManagerConfig());
         this.map = builder.map;
-    }
-
-    @Override
-    protected CompletableFuture<Void> removeAsync(K key) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public boolean isAsyncModeSupported() {
-        // Because Hazelcast IMap does not provide "replaceAsync" API.
-        return false;
     }
 
     @Override
     public void removeProxy(K key) {
         map.remove(key);
+    }
+
+    @Override
+    public boolean isExpireAfterWriteSupported() {
+        return false;
     }
 
     @Override
@@ -73,11 +65,6 @@ public class HazelcastCompareAndSwapBasedProxyManager<K> extends AbstractCompare
                 }
             }
         };
-    }
-
-    @Override
-    protected AsyncCompareAndSwapOperation beginAsyncCompareAndSwapOperation(K key) {
-        throw new UnsupportedOperationException();
     }
 
 }

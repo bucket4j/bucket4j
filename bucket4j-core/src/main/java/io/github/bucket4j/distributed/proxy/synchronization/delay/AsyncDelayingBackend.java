@@ -8,10 +8,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import io.github.bucket4j.BucketExceptions;
 import io.github.bucket4j.distributed.proxy.AsyncBackend;
 import io.github.bucket4j.distributed.proxy.AsyncCommandExecutor;
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronizationListener;
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.batch.AsyncBatchingExecutor;
 import io.github.bucket4j.distributed.proxy.synchronization.BucketSynchronizationListenerAdapter;
 import io.github.bucket4j.distributed.proxy.synchronization.SynchronizationListener;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronizationListener;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.batch.AsyncBatchingExecutor;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 

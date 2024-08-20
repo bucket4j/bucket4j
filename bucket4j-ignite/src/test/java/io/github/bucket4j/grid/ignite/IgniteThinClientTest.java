@@ -1,13 +1,20 @@
 package io.github.bucket4j.grid.ignite;
 
-import io.github.bucket4j.tck.AbstractDistributedBucketTest;
-import io.github.bucket4j.tck.ProxyManagerSpec;
+import java.io.Serializable;
+import java.nio.ByteBuffer;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.UUID;
 
 import org.apache.ignite.Ignite;
 import org.apache.ignite.Ignition;
 import org.apache.ignite.client.ClientCache;
 import org.apache.ignite.client.IgniteClient;
-import org.apache.ignite.configuration.*;
+import org.apache.ignite.configuration.CacheConfiguration;
+import org.apache.ignite.configuration.ClientConfiguration;
+import org.apache.ignite.configuration.ClientConnectorConfiguration;
+import org.apache.ignite.configuration.IgniteConfiguration;
+import org.apache.ignite.configuration.ThinClientConfiguration;
 import org.apache.ignite.spi.discovery.tcp.TcpDiscoverySpi;
 import org.apache.ignite.spi.discovery.tcp.ipfinder.vm.TcpDiscoveryVmIpFinder;
 import org.gridkit.nanocloud.Cloud;
@@ -17,11 +24,9 @@ import org.gridkit.vicluster.ViNode;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 
-import java.io.Serializable;
-import java.nio.ByteBuffer;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.UUID;
+import io.github.bucket4j.tck.AbstractDistributedBucketTest;
+import io.github.bucket4j.tck.AsyncProxyManagerSpec;
+import io.github.bucket4j.tck.ProxyManagerSpec;
 
 
 public class IgniteThinClientTest extends AbstractDistributedBucketTest {
@@ -91,6 +96,19 @@ public class IgniteThinClientTest extends AbstractDistributedBucketTest {
                 "IgniteThinClientCas",
                 () -> UUID.randomUUID().toString(),
                 () -> Bucket4jIgnite.thinClient().casBasedBuilder(cache2)
+            )
+        );
+
+        asyncSpecs = Arrays.asList(
+            new AsyncProxyManagerSpec<>(
+                "IgniteAsyncThinClientCompute",
+                () -> UUID.randomUUID().toString(),
+                () -> Bucket4jIgnite.thinClient().asyncClientComputeBasedBuilder(cache, igniteClient.compute())
+            ),
+            new AsyncProxyManagerSpec<>(
+                "IgniteAsyncThinClientCas",
+                () -> UUID.randomUUID().toString(),
+                () -> Bucket4jIgnite.thinClient().asyncCasBasedBuilder((cache2))
             )
         );
     }

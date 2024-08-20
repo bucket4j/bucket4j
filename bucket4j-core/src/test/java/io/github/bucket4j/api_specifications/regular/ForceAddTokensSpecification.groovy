@@ -1,6 +1,6 @@
 package io.github.bucket4j.api_specifications.regular
 
-import io.github.bucket4j.Bandwidth
+
 import io.github.bucket4j.Bucket
 import io.github.bucket4j.BucketConfiguration
 import io.github.bucket4j.distributed.AsyncBucketProxy
@@ -22,7 +22,7 @@ class ForceAddTokensSpecification extends Specification {
                 for (boolean verbose : [true, false]) {
                     println("type=$type sync=$sync verbose=$verbose")
                     TimeMeterMock timeMeter = new TimeMeterMock(0)
-                    if (sync) {
+                    if (sync || !type.asyncModeSupported) {
                         Bucket bucket = type.createBucket(configuration, timeMeter)
                         bucket.getAvailableTokens()
                         timeMeter.addTime(nanosIncrement)

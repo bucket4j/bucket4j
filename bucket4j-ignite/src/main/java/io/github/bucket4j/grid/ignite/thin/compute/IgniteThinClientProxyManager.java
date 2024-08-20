@@ -36,18 +36,14 @@
 
 package io.github.bucket4j.grid.ignite.thin.compute;
 
+import org.apache.ignite.client.ClientCache;
+import org.apache.ignite.client.ClientCompute;
+
 import io.github.bucket4j.BucketExceptions;
 import io.github.bucket4j.distributed.proxy.AbstractProxyManager;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.Request;
-import io.github.bucket4j.distributed.versioning.Version;
 import io.github.bucket4j.grid.ignite.thin.Bucket4jIgniteThin;
-import io.github.bucket4j.grid.ignite.thin.ThinClientUtils;
-import org.apache.ignite.client.ClientCache;
-import org.apache.ignite.client.ClientCompute;
-import org.apache.ignite.client.IgniteClientFuture;
-
-import java.util.concurrent.CompletableFuture;
 
 import static io.github.bucket4j.distributed.serialization.InternalSerializationHelper.deserializeResult;
 
@@ -61,7 +57,7 @@ public class IgniteThinClientProxyManager<K> extends AbstractProxyManager<K> {
     private final ClientCompute clientCompute;
 
     public IgniteThinClientProxyManager(Bucket4jIgniteThin.IgniteThinClientComputeProxyManagerBuilder<K> builder) {
-        super(builder.getClientSideConfig());
+        super(builder.getProxyManagerConfig());
         cache = builder.getCache();
         clientCompute = builder.getClientCompute();
     }
@@ -79,30 +75,13 @@ public class IgniteThinClientProxyManager<K> extends AbstractProxyManager<K> {
     }
 
     @Override
-    public boolean isAsyncModeSupported() {
-        return true;
-    }
-
-    @Override
-    public <T> CompletableFuture<CommandResult<T>> executeAsync(K key, Request<T> request) {
-        IgniteEntryProcessor<K> entryProcessor = new IgniteEntryProcessor<>(request);
-        Bucket4jComputeTaskParams<K> taskParams = new Bucket4jComputeTaskParams<>(cache.getName(), key, entryProcessor);
-
-        IgniteClientFuture<byte[]> igniteFuture = clientCompute.executeAsync2(Bucket4jComputeTask.JOB_NAME, taskParams);
-        CompletableFuture<byte[]> completableFuture = ThinClientUtils.convertFuture(igniteFuture);
-        Version backwardCompatibilityVersion = request.getBackwardCompatibilityVersion();
-        return completableFuture.thenApply((byte[] resultBytes) -> deserializeResult(resultBytes, backwardCompatibilityVersion));
-    }
-
-    @Override
     public void removeProxy(K key) {
         cache.remove(key);
     }
 
     @Override
-    protected CompletableFuture<Void> removeAsync(K key) {
-        IgniteClientFuture<Boolean> igniteFuture = cache.removeAsync(key);
-        return ThinClientUtils.convertFuture(igniteFuture).thenApply(result -> null);
+    public boolean isExpireAfterWriteSupported() {
+        return true;
     }
 
 }

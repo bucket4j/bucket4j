@@ -20,13 +20,13 @@
 
 package io.github.bucket4j.local;
 
+import java.io.IOException;
+import java.util.Map;
+
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
-
-import java.io.IOException;
-import java.util.Map;
 
 /**
  * Represents the bucket inside current JVM.

@@ -18,20 +18,22 @@
 package io.github.bucket4j.mock;
 
 
-import io.github.bucket4j.TimeMeter;
-import io.github.bucket4j.distributed.proxy.AbstractProxyManager;
-import io.github.bucket4j.distributed.proxy.ProxyManagerConfig;
-import io.github.bucket4j.distributed.remote.*;
-import io.github.bucket4j.distributed.versioning.Version;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
+
+import io.github.bucket4j.TimeMeter;
+import io.github.bucket4j.distributed.proxy.AbstractProxyManager;
+import io.github.bucket4j.distributed.proxy.ProxyManagerConfig;
+import io.github.bucket4j.distributed.remote.AbstractBinaryTransaction;
+import io.github.bucket4j.distributed.remote.CommandResult;
+import io.github.bucket4j.distributed.remote.RemoteBucketState;
+import io.github.bucket4j.distributed.remote.Request;
+import io.github.bucket4j.distributed.versioning.Version;
 
 import static io.github.bucket4j.distributed.serialization.InternalSerializationHelper.deserializeResult;
 import static io.github.bucket4j.distributed.serialization.InternalSerializationHelper.serializeRequest;
@@ -233,34 +235,8 @@ public class ProxyManagerMock<K> extends AbstractProxyManager<K> {
     }
 
     @Override
-    public boolean isAsyncModeSupported() {
-        return true;
-    }
-
-    @Override
-    public <T> CompletableFuture<CommandResult<T>> executeAsync(K key, Request<T> request) {
-        executionLock.lock();
-        try {
-            if (exception != null) {
-                CompletableFuture<CommandResult<T>> future = new CompletableFuture<>();
-                future.completeExceptionally(new RuntimeException());
-                return future;
-            }
-            return CompletableFuture.completedFuture(execute(key, request));
-        } finally {
-            executionLock.unlock();
-        }
-    }
-
-    @Override
-    protected CompletableFuture<Void> removeAsync(K key) {
-        executionLock.lock();
-        try {
-            stateMap.remove(key);
-            return CompletableFuture.completedFuture(null);
-        } finally {
-            executionLock.unlock();
-        }
+    public boolean isExpireAfterWriteSupported() {
+        return false;
     }
 
 }

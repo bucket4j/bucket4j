@@ -16,6 +16,7 @@ import org.testcontainers.containers.GenericContainer;
 
 import io.github.bucket4j.redis.lettuce.Bucket4jLettuce;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
+import io.github.bucket4j.tck.AsyncProxyManagerSpec;
 import io.github.bucket4j.tck.ProxyManagerSpec;
 import io.lettuce.core.RedisURI;
 import io.lettuce.core.cluster.RedisClusterClient;
@@ -43,6 +44,14 @@ public class LettuceBasedProxyManagerClusterTest extends AbstractDistributedBuck
                 "LettuceBasedProxyManager_ByteArrayKey",
                 () -> UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8),
                 () -> Bucket4jLettuce.casBasedBuilder(redisClient)
+            ).checkExpiration()
+        );
+
+        asyncSpecs = Arrays.asList(
+            new AsyncProxyManagerSpec<>(
+                "LettuceAsyncProxyManager_ByteArrayKey",
+                () -> UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8),
+                () -> Bucket4jLettuce.asyncCasBasedBuilder(redisClient)
             ).checkExpiration()
         );
     }

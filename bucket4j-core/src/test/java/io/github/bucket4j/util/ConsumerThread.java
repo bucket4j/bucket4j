@@ -1,10 +1,10 @@
 
 package io.github.bucket4j.util;
 
-import io.github.bucket4j.Bucket;
-
 import java.util.concurrent.CountDownLatch;
 import java.util.function.Function;
+
+import io.github.bucket4j.Bucket;
 
 public class ConsumerThread extends Thread {
 

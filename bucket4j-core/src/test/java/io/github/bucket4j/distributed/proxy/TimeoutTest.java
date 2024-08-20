@@ -9,7 +9,9 @@ import org.junit.jupiter.api.Test;
 import io.github.bucket4j.TimeoutException;
 import io.github.bucket4j.mock.TimeMeterMock;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class TimeoutTest {
 

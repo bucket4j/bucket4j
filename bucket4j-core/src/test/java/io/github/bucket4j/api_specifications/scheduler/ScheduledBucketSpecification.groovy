@@ -3,10 +3,7 @@ package io.github.bucket4j.api_specifications.scheduler
 import io.github.bucket4j.BucketConfiguration
 import io.github.bucket4j.SchedulingBucket
 import io.github.bucket4j.SimpleBucketListener
-import io.github.bucket4j.distributed.AsyncBucketProxy
-import io.github.bucket4j.distributed.proxy.ProxyManager
 import io.github.bucket4j.mock.BucketType
-import io.github.bucket4j.mock.ProxyManagerMock
 import io.github.bucket4j.mock.SchedulerMock
 import io.github.bucket4j.mock.TimeMeterMock
 import io.github.bucket4j.util.PipeGenerator
@@ -18,8 +15,6 @@ import java.time.Duration
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
-
-import static io.github.bucket4j.TimeMeter.SYSTEM_MILLISECONDS
 
 class ScheduledBucketSpecification extends Specification {
 
@@ -33,7 +28,7 @@ class ScheduledBucketSpecification extends Specification {
             def configuration = BucketConfiguration.builder()
                 .addLimit(limit -> {limit.capacity(10).refillGreedy(10, Duration.ofSeconds(1))})
                 .build()
-        SchedulingBucket bucket = async?
+        SchedulingBucket bucket = async && type.isAsyncModeSupported()?
                 type.createAsyncBucket(configuration, clock, listener).asScheduler() :
                 type.createBucket(configuration, clock, listener).asScheduler()
 
@@ -74,7 +69,7 @@ class ScheduledBucketSpecification extends Specification {
             BucketConfiguration configuration = BucketConfiguration.builder()
                 .addLimit(limit -> {limit.capacity(10).refillGreedy(10, Duration.ofSeconds(1))})
                 .build()
-            SchedulingBucket bucket = async?
+            SchedulingBucket bucket = async && type.isAsyncModeSupported() ?
                     type.createAsyncBucket(configuration, clock, listener).asScheduler() :
                     type.createBucket(configuration, clock, listener).asScheduler()
 
@@ -114,23 +109,27 @@ class ScheduledBucketSpecification extends Specification {
         for (BucketType type : BucketType.values()) {
             for (boolean limitAsDuration: [true, false]) {
                 for (boolean verbose: [true, false]) {
-                    TimeMeterMock meter = new TimeMeterMock(0)
-                    AsyncBucketProxy bucket = type.createAsyncBucket(configuration, meter)
-                    SchedulerMock scheduler = new SchedulerMock()
-                    if (limitAsDuration) {
-                        if (verbose) {
-                            assert bucket.asScheduler().asVerbose().tryConsume(toConsume, Duration.ofNanos(sleepLimit), scheduler).get().value == requiredResult
+                    for (boolean async:[true, false]) {
+                        TimeMeterMock meter = new TimeMeterMock(0)
+                        SchedulingBucket schedulingBucket = async && type.asyncModeSupported ?
+                                type.createAsyncBucket(configuration, meter).asScheduler() :
+                                type.createBucket(configuration, meter).asScheduler()
+                        SchedulerMock scheduler = new SchedulerMock()
+                        if (limitAsDuration) {
+                            if (verbose) {
+                                assert schedulingBucket.asVerbose().tryConsume(toConsume, Duration.ofNanos(sleepLimit), scheduler).get().value == requiredResult
+                            } else {
+                                assert schedulingBucket.tryConsume(toConsume, Duration.ofNanos(sleepLimit), scheduler).get() == requiredResult
+                            }
                         } else {
-                            assert bucket.asScheduler().tryConsume(toConsume, Duration.ofNanos(sleepLimit), scheduler).get() == requiredResult
+                            if (verbose) {
+                                assert schedulingBucket.asVerbose().tryConsume(toConsume, sleepLimit, scheduler).get().value == requiredResult
+                            } else {
+                                assert schedulingBucket.tryConsume(toConsume, sleepLimit, scheduler).get() == requiredResult
+                            }
                         }
-                    } else {
-                        if (verbose) {
-                            assert bucket.asScheduler().asVerbose().tryConsume(toConsume, sleepLimit, scheduler).get().value == requiredResult
-                        } else {
-                            assert bucket.asScheduler().tryConsume(toConsume, sleepLimit, scheduler).get() == requiredResult
-                        }
+                        assert scheduler.acummulatedDelayNanos == requiredSleep
                     }
-                    assert scheduler.acummulatedDelayNanos == requiredSleep
                 }
             }
         }
@@ -152,12 +151,11 @@ class ScheduledBucketSpecification extends Specification {
             BucketConfiguration configuration = BucketConfiguration.builder()
                 .addLimit({limit -> limit.capacity(1).refillGreedy(1, Duration.ofNanos(1))})
                 .build()
-            ProxyManager proxyManagerMock =   new ProxyManagerMock(SYSTEM_MILLISECONDS)
-            SchedulerMock schedulerMock = new SchedulerMock()
 
-            SchedulingBucket bucket = async ?
-                proxyManagerMock.asAsync().builder().build("66", {configuration}).asScheduler() :
-                proxyManagerMock.builder().build("66", {configuration}).asScheduler()
+            SchedulerMock schedulerMock = new SchedulerMock()
+            SchedulingBucket bucket = async && type.asyncModeSupported ?
+                type.createAsyncBucket(configuration, clock).asScheduler() :
+                type.createBucket(configuration, clock).asScheduler()
 
         when:
             schedulerMock.setException(new RuntimeException())
@@ -179,7 +177,7 @@ class ScheduledBucketSpecification extends Specification {
             BucketConfiguration configuration = BucketConfiguration.builder()
                 .addLimit({limit -> limit.capacity(10).refillGreedy(10, Duration.ofSeconds(1))})
                 .build()
-            SchedulingBucket bucket = async ?
+            SchedulingBucket bucket = async && type.isAsyncModeSupported() ?
                 type.createAsyncBucket(configuration, clock, listener).asScheduler() :
                 type.createBucket(configuration, clock, listener).asScheduler()
 

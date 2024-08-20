@@ -1,32 +1,5 @@
 package example.distributed.optimizers.batching;
 
-import com.codahale.metrics.Meter;
-import com.codahale.metrics.Snapshot;
-import com.github.rollingmetrics.dropwizard.Dropwizard;
-import com.github.rollingmetrics.histogram.OverflowResolver;
-import com.github.rollingmetrics.histogram.hdr.RollingHdrHistogram;
-import com.hazelcast.map.IMap;
-import io.github.bucket4j.Bandwidth;
-import io.github.bucket4j.Bucket;
-import io.github.bucket4j.BucketConfiguration;
-import io.github.bucket4j.distributed.AsyncBucketProxy;
-import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronizations;
-import io.github.bucket4j.grid.hazelcast.Bucket4jHazelcast;
-import io.github.bucket4j.grid.hazelcast.HazelcastProxyManager;
-import org.gridkit.nanocloud.Cloud;
-import org.gridkit.nanocloud.CloudFactory;
-import org.gridkit.nanocloud.VX;
-import org.gridkit.vicluster.ViNode;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-
-import com.hazelcast.config.Config;
-import com.hazelcast.core.Hazelcast;
-import com.hazelcast.core.HazelcastInstance;
-import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.Serializable;
 import java.time.Duration;
 import java.util.Timer;
@@ -34,6 +7,35 @@ import java.util.TimerTask;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+
+import org.gridkit.nanocloud.Cloud;
+import org.gridkit.nanocloud.CloudFactory;
+import org.gridkit.nanocloud.VX;
+import org.gridkit.vicluster.ViNode;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.codahale.metrics.Meter;
+import com.codahale.metrics.Snapshot;
+import com.github.rollingmetrics.dropwizard.Dropwizard;
+import com.github.rollingmetrics.histogram.OverflowResolver;
+import com.github.rollingmetrics.histogram.hdr.RollingHdrHistogram;
+import com.hazelcast.config.Config;
+import com.hazelcast.core.Hazelcast;
+import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.map.IMap;
+
+import io.github.bucket4j.Bandwidth;
+import io.github.bucket4j.Bucket;
+import io.github.bucket4j.BucketConfiguration;
+import io.github.bucket4j.distributed.AsyncBucketProxy;
+import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronizations;
+import io.github.bucket4j.grid.hazelcast.Bucket4jHazelcast;
+import io.github.bucket4j.grid.hazelcast.HazelcastAsyncProxyManager;
+import io.github.bucket4j.grid.hazelcast.HazelcastProxyManager;
 
 public class HazelcastWithBatchingPerformanceExample {
 
@@ -134,13 +136,13 @@ public class HazelcastWithBatchingPerformanceExample {
         Meter consumptionRate = new Meter();
         com.codahale.metrics.Timer latencyTimer = buildLatencyTimer();
 
-        HazelcastProxyManager<String> proxyManager = Bucket4jHazelcast.entryProcessorBasedBuilder(map).build();;
+        HazelcastAsyncProxyManager<String> proxyManager = Bucket4jHazelcast.asyncEntryProcessorBasedBuilder(map).build();;
         BucketConfiguration configuration = BucketConfiguration.builder()
             .addLimit(
                 Bandwidth.builder().capacity(10).refillGreedy(10, Duration.ofSeconds(1)).initialTokens(0).build())
             .build();
 
-        AsyncBucketProxy bucket = proxyManager.asAsync().builder()
+        AsyncBucketProxy bucket = proxyManager.builder()
                 .withSynchronization(BucketSynchronizations.batching())
                 .build("13", () -> CompletableFuture.completedFuture(configuration));
 

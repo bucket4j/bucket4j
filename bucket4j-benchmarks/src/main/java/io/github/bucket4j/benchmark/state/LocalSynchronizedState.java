@@ -19,13 +19,14 @@
  */
 package io.github.bucket4j.benchmark.state;
 
-import io.github.bucket4j.Bandwidth;
-import io.github.bucket4j.Bucket;
-import io.github.bucket4j.local.ConcurrencyStrategy;
+import java.time.Duration;
+
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.State;
 
-import java.time.Duration;
+import io.github.bucket4j.Bandwidth;
+import io.github.bucket4j.Bucket;
+import io.github.bucket4j.local.ConcurrencyStrategy;
 
 @State(Scope.Benchmark)
 public class LocalSynchronizedState {

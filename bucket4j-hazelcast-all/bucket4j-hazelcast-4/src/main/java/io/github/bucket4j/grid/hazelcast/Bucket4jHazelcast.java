@@ -23,6 +23,7 @@ import java.util.Objects;
 
 import com.hazelcast.map.IMap;
 
+import io.github.bucket4j.distributed.proxy.AbstractAsyncProxyManagerBuilder;
 import io.github.bucket4j.distributed.proxy.AbstractProxyManagerBuilder;
 
 /**
@@ -35,12 +36,25 @@ public class Bucket4jHazelcast {
      *
      * @param map
      *
-     * @return new instance of {@link HazelcastCompareAndSwapBasedProxyManagerBuilder}
+     * @return new instance of {@link HazelcastProxyManagerBuilder}
      *
      * @param <K> type ok key
      */
     public static <K> HazelcastProxyManagerBuilder<K> entryProcessorBasedBuilder(IMap<K, byte[]> map) {
         return new HazelcastProxyManagerBuilder<>(map);
+    }
+
+    /**
+     * Returns the builder for {@link HazelcastAsyncProxyManager}
+     *
+     * @param map
+     *
+     * @return new instance of {@link HazelcastAsyncProxyManagerBuilder}
+     *
+     * @param <K> type ok key
+     */
+    public static <K> HazelcastAsyncProxyManagerBuilder<K> asyncEntryProcessorBasedBuilder(IMap<K, byte[]> map) {
+        return new HazelcastAsyncProxyManagerBuilder<>(map);
     }
 
     /**
@@ -86,6 +100,31 @@ public class Bucket4jHazelcast {
         @Override
         public HazelcastProxyManager<K> build() {
             return new HazelcastProxyManager<>(this);
+        }
+
+        @Override
+        public boolean isExpireAfterWriteSupported() {
+            return true;
+        }
+    }
+
+    public static class HazelcastAsyncProxyManagerBuilder<K> extends AbstractAsyncProxyManagerBuilder<K, HazelcastAsyncProxyManager<K>, HazelcastAsyncProxyManagerBuilder<K>> {
+
+        final IMap<K, byte[]> map;
+        String offloadableExecutorName;
+
+        public HazelcastAsyncProxyManagerBuilder(IMap<K, byte[]> map) {
+            this.map = Objects.requireNonNull(map);
+        }
+
+        public HazelcastAsyncProxyManagerBuilder<K> offloadableExecutorName(String offloadableExecutorName) {
+            this.offloadableExecutorName = Objects.requireNonNull(offloadableExecutorName);
+            return this;
+        }
+
+        @Override
+        public HazelcastAsyncProxyManager<K> build() {
+            return new HazelcastAsyncProxyManager<>(this);
         }
 
         @Override

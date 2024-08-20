@@ -1,10 +1,10 @@
 
 package io.github.bucket4j
 
-
 import io.github.bucket4j.distributed.AsyncBucketProxy
-import io.github.bucket4j.mock.ProxyManagerMock
+import io.github.bucket4j.mock.AsyncProxyManagerMock
 import io.github.bucket4j.mock.BucketType
+import io.github.bucket4j.mock.ProxyManagerMock
 import spock.lang.Specification
 import spock.lang.Unroll
 
@@ -306,9 +306,10 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
 
     def "GridBucket should check that configuration is not null"() {
         setup:
-            ProxyManagerMock mockProxy = new ProxyManagerMock(TimeMeter.SYSTEM_MILLISECONDS)
+            ProxyManagerMock proxyManagerMock = new ProxyManagerMock(TimeMeter.SYSTEM_MILLISECONDS)
+            AsyncProxyManagerMock asyncProxyManagerMock = new AsyncProxyManagerMock(TimeMeter.SYSTEM_MILLISECONDS)
         when:
-            mockProxy.builder()
+            proxyManagerMock.builder()
                 .build("66", { null })
                 .getAvailableTokens()
         then:
@@ -316,7 +317,7 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
             ex.message == nullConfiguration().message
 
         when:
-            mockProxy.builder()
+            proxyManagerMock.builder()
                 .build("66", (Supplier<BucketConfiguration>) null)
 
         then:
@@ -324,7 +325,7 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
             ex.message == nullConfigurationSupplier().message
 
         when:
-            mockProxy.asAsync().builder()
+            asyncProxyManagerMock.builder()
                 .build("66", { null })
                 .getAvailableTokens().get()
         then:
@@ -332,7 +333,7 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
             ex.cause.message == nullConfigurationFuture().message
 
         when:
-            mockProxy.asAsync().builder()
+            asyncProxyManagerMock.builder()
                 .build("66", { CompletableFuture.completedFuture(null) })
                 .getAvailableTokens().get()
         then:
@@ -340,7 +341,7 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
             ex.cause.message == nullConfiguration().message
 
         when:
-            mockProxy.asAsync().builder()
+            asyncProxyManagerMock.builder()
                 .build("66", (Supplier<CompletableFuture<BucketConfiguration>>) null)
 
         then:
@@ -355,7 +356,6 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
                 .addLimit({it.capacity(1).refillGreedy(1, Duration.ofSeconds(10))})
                 .build()
             def bucket = type.createBucket(configuration, TimeMeter.SYSTEM_MILLISECONDS)
-            def asyncBucket = type.createAsyncBucket(configuration, TimeMeter.SYSTEM_MILLISECONDS)
 
         when:
             bucket.replaceConfiguration(null, TokensInheritanceStrategy.AS_IS)
@@ -369,6 +369,10 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
             ex = thrown()
             ex.message == nullConfiguration().message
 
+        if (!type.asyncModeSupported) {
+            return
+        }
+        def asyncBucket = type.createAsyncBucket(configuration, TimeMeter.SYSTEM_MILLISECONDS)
         when:
             asyncBucket.replaceConfiguration(null, TokensInheritanceStrategy.AS_IS)
         then:
@@ -391,7 +395,6 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
             def builder = BucketConfiguration.builder()
                 .addLimit({it.capacity(1).refillGreedy(1, Duration.ofSeconds(10))})
             def bucket = type.createBucket(builder.build(), TimeMeter.SYSTEM_MILLISECONDS)
-            def asyncBucket = type.createAsyncBucket(builder.build(), TimeMeter.SYSTEM_MILLISECONDS)
             def newConfiguration = builder.build()
         when:
             bucket.replaceConfiguration(newConfiguration, null)
@@ -405,6 +408,10 @@ class DetectionOfIllegalApiUsageSpecification extends Specification {
             ex = thrown()
             ex.message == nullTokensInheritanceStrategy().message
 
+        if (!type.asyncModeSupported) {
+            return
+        }
+        def asyncBucket = type.createAsyncBucket(builder.build(), TimeMeter.SYSTEM_MILLISECONDS)
         when:
             asyncBucket.replaceConfiguration(newConfiguration, null)
         then:

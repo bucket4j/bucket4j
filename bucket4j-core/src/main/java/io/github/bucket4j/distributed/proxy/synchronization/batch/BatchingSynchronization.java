@@ -4,8 +4,6 @@ import io.github.bucket4j.distributed.proxy.AsyncBackend;
 import io.github.bucket4j.distributed.proxy.Backend;
 import io.github.bucket4j.distributed.proxy.synchronization.Synchronization;
 import io.github.bucket4j.distributed.proxy.synchronization.SynchronizationListener;
-import io.github.bucket4j.distributed.proxy.synchronization.batch.AsyncBatchingBackend;
-import io.github.bucket4j.distributed.proxy.synchronization.batch.BatchingBackend;
 
 public class BatchingSynchronization implements Synchronization {
 
