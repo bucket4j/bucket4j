@@ -53,7 +53,22 @@ public abstract class AbstractProxyManagerBuilder<K, P extends ProxyManager<K>, 
 
     private Synchronization synchronization = DirectSynchronization.instance;
 
-    private SynchronizationListener synchronizationListener = NopeSynchronizationListener.instance;
+    private BucketConfigurationProvider<K> configurationProvider = (BucketConfigurationProvider<K>) BucketConfigurationProvider.DEFAULT;
+
+    /**
+     * Configures {@code configurationProvider}.
+     *
+     * <p>
+     * TODO
+     *
+     * @param configurationProvider TODO
+     *
+     * @return this builder with configured {@code configurationProvider}.
+     */
+    public B configurationProvider(BucketConfigurationProvider<K> configurationProvider) {
+        this.backwardCompatibilityVersion = Objects.requireNonNull(backwardCompatibilityVersion);
+        return (B) this;
+    }
 
     /**
      * Configures {@code backwardCompatibilityVersion}.
@@ -166,11 +181,6 @@ public abstract class AbstractProxyManagerBuilder<K, P extends ProxyManager<K>, 
 
     public B synchronization(Synchronization synchronization) {
         this.synchronization = Objects.requireNonNull(synchronization);
-        return (B) this;
-    }
-
-    public B synchronizationListener(SynchronizationListener synchronizationListener) {
-        this.synchronizationListener = Objects.requireNonNull(synchronizationListener);
         return (B) this;
     }
 

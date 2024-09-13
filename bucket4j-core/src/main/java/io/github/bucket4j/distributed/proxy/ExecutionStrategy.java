@@ -34,19 +34,12 @@ public interface ExecutionStrategy {
 
     <T> T execute(Supplier<T> supplier);
 
-    <T> CompletableFuture<T>  executeAsync(Supplier<CompletableFuture<T>> supplier);
-
     /**
      * This execution strategy always communicates with backend in current thread
      */
     ExecutionStrategy SAME_TREAD = new ExecutionStrategy() {
         @Override
         public <T> T execute(Supplier<T> supplier) {
-            return supplier.get();
-        }
-
-        @Override
-        public <T> CompletableFuture<T> executeAsync(Supplier<CompletableFuture<T>> supplier) {
             return supplier.get();
         }
     };
@@ -63,28 +56,6 @@ public interface ExecutionStrategy {
                 } catch (Throwable e) {
                     throw BucketExceptions.executionException(e);
                 }
-            }
-
-            @Override
-            public <T> CompletableFuture<T> executeAsync(Supplier<CompletableFuture<T>> supplier) {
-                CompletableFuture<CompletableFuture<T>> futureToFuture = CompletableFuture.supplyAsync(supplier, executor);
-
-                CompletableFuture<T> resultFuture = new CompletableFuture<>();
-                futureToFuture.whenComplete((CompletableFuture<T> mediateFuture, Throwable error) -> {
-                    if (error != null) {
-                        resultFuture.completeExceptionally(error);
-                    } else {
-                        mediateFuture.whenComplete((T result, Throwable err) -> {
-                            if (err != null) {
-                                resultFuture.completeExceptionally(err);
-                            } else {
-                                resultFuture.complete(result);
-                            }
-                        });
-                    }
-                });
-
-                return resultFuture;
             }
         };
     }
@@ -106,28 +77,6 @@ public interface ExecutionStrategy {
                 } catch (Throwable e) {
                     throw BucketExceptions.executionException(e);
                 }
-            }
-
-            @Override
-            public <T> CompletableFuture<T> executeAsync(Supplier<CompletableFuture<T>> supplier) {
-                CompletableFuture<CompletableFuture<T>> futureToFuture = CompletableFuture.supplyAsync(supplier, executor);
-
-                CompletableFuture<T> resultFuture = new CompletableFuture<>();
-                futureToFuture.whenComplete((CompletableFuture<T> mediateFuture, Throwable error) -> {
-                    if (error != null) {
-                        resultFuture.completeExceptionally(error);
-                    } else {
-                        mediateFuture.whenComplete((T result, Throwable err) -> {
-                            if (err != null) {
-                                resultFuture.completeExceptionally(err);
-                            } else {
-                                resultFuture.complete(result);
-                            }
-                        });
-                    }
-                });
-
-                return resultFuture.orTimeout(timeoutNanos, TimeUnit.NANOSECONDS);
             }
         };
     }

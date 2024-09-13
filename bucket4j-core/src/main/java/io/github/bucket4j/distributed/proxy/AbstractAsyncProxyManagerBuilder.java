@@ -55,6 +55,23 @@ public abstract class AbstractAsyncProxyManagerBuilder<K, P extends AsyncProxyMa
 
     private SynchronizationListener synchronizationListener = NopeSynchronizationListener.instance;
 
+    private AsyncBucketConfigurationProvider<K> configurationProvider = (AsyncBucketConfigurationProvider<K>) AsyncBucketConfigurationProvider.DEFAULT;
+
+    /**
+     * Configures {@code configurationProvider}.
+     *
+     * <p>
+     * TODO
+     *
+     * @param configurationProvider TODO
+     *
+     * @return this builder with configured {@code configurationProvider}.
+     */
+    public B configurationProvider(BucketConfigurationProvider<K> configurationProvider) {
+        this.backwardCompatibilityVersion = Objects.requireNonNull(backwardCompatibilityVersion);
+        return (B) this;
+    }
+
     /**
      * Configures {@code backwardCompatibilityVersion}.
      *

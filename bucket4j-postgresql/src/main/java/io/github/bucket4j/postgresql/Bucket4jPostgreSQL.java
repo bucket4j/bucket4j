@@ -54,6 +54,8 @@ public class Bucket4jPostgreSQL {
         return new PostgreSQLSelectForUpdateBasedProxyManagerBuilder<>(dataSource, PrimaryKeyMapper.LONG);
     }
 
+    public static class PostgreSQLAdvisoryLockBasedProxyManagerBuilderConfigurationProviderStage {}
+
     public static class PostgreSQLAdvisoryLockBasedProxyManagerBuilder<K> extends AbstractJdbcProxyManagerBuilder<K, PostgreSQLadvisoryLockBasedProxyManager<K>, PostgreSQLAdvisoryLockBasedProxyManagerBuilder<K>> {
 
         private LockIdSupplier<K> lockIdSupplier = (LockIdSupplier) LockIdSupplier.DEFAULT;
