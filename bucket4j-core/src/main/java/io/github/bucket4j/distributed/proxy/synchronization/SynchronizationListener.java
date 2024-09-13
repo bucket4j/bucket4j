@@ -2,6 +2,8 @@ package io.github.bucket4j.distributed.proxy.synchronization;
 
 public interface SynchronizationListener {
 
+    SynchronizationListener NOPE = NopeSynchronizationListener.instance;
+
     /**
      * This method is invoked every time when several independent requests to the same bucket combined into a single one.
      *

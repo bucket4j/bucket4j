@@ -12,8 +12,10 @@ import io.github.bucket4j.BucketListener;
 import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.AsyncBucketProxy;
 import io.github.bucket4j.distributed.proxy.AsyncProxyManager;
+import io.github.bucket4j.distributed.proxy.AsyncProxyManagerConfig;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.distributed.proxy.ProxyManagerConfig;
+import io.github.bucket4j.distributed.proxy.synchronization.batch.AsyncBatchingSynchronization;
 import io.github.bucket4j.distributed.proxy.synchronization.batch.BatchingSynchronization;
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronizations;
 import io.github.bucket4j.local.ConcurrencyStrategy;
@@ -239,9 +241,9 @@ public enum BucketType {
 
         @Override
         public AsyncProxyManager<Integer> createAsyncProxyManager(TimeMeter timeMeter) {
-            return new AsyncProxyManagerMock<>(ProxyManagerConfig.getDefault()
+            return (AsyncProxyManager) new AsyncProxyManagerMock<>(AsyncProxyManagerConfig.getDefault()
                 .withClientClock(timeMeter)
-                .withSynchronization(new BatchingSynchronization())
+                .withSynchronization(new AsyncBatchingSynchronization())
             );
         }
 
@@ -274,12 +276,14 @@ public enum BucketType {
 
         @Override
         public AsyncProxyManager<Integer> createAsyncProxyManager(TimeMeter timeMeter) {
-            return new AsyncCompareAndSwapBasedProxyManagerMock<>(ProxyManagerConfig.getDefault().withClientClock(timeMeter));
+            AsyncProxyManagerConfig<Integer> config = (AsyncProxyManagerConfig) AsyncProxyManagerConfig.getDefault().withClientClock(timeMeter);
+            return new AsyncCompareAndSwapBasedProxyManagerMock<>(config);
         }
 
         @Override
         public AsyncBucketProxy createAsyncBucket(BucketConfiguration configuration, TimeMeter timeMeter, BucketListener listener) {
-            AsyncCompareAndSwapBasedProxyManagerMock<Integer> proxyManager = new AsyncCompareAndSwapBasedProxyManagerMock<>(ProxyManagerConfig.getDefault().withClientClock(timeMeter));
+            AsyncProxyManagerConfig<Integer> config = (AsyncProxyManagerConfig) AsyncProxyManagerConfig.getDefault().withClientClock(timeMeter);
+            AsyncCompareAndSwapBasedProxyManagerMock<Integer> proxyManager = new AsyncCompareAndSwapBasedProxyManagerMock<>(config);
             return proxyManager.builder()
                 .withListener(listener)
                 .build(42, () -> CompletableFuture.completedFuture(configuration));

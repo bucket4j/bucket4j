@@ -8,8 +8,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import io.github.bucket4j.BucketExceptions;
 import io.github.bucket4j.distributed.proxy.AsyncBackend;
 import io.github.bucket4j.distributed.proxy.AsyncCommandExecutor;
-import io.github.bucket4j.distributed.proxy.synchronization.BucketSynchronizationListenerAdapter;
-import io.github.bucket4j.distributed.proxy.synchronization.SynchronizationListener;
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.BucketSynchronizationListener;
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.batch.AsyncBatchingExecutor;
 import io.github.bucket4j.distributed.remote.CommandResult;
@@ -19,13 +17,11 @@ public class AsyncBatchingBackend<K> implements AsyncBackend<K> {
 
     private final AsyncBackend<K> target;
     private final ConcurrentHashMap<K, BatchingExecutorEntry> executors = new ConcurrentHashMap<>();
-    private final SynchronizationListener synchronizationListener;
     private final BucketSynchronizationListener bucketSynchronizationListener;
 
-    public AsyncBatchingBackend(AsyncBackend<K> target, SynchronizationListener synchronizationListener) {
+    public AsyncBatchingBackend(AsyncBackend<K> target) {
         this.target = Objects.requireNonNull(target);
-        this.synchronizationListener = synchronizationListener;
-        this.bucketSynchronizationListener = new BucketSynchronizationListenerAdapter(synchronizationListener);
+        this.bucketSynchronizationListener = BucketSynchronizationListener.createDefault();
     }
 
     @Override

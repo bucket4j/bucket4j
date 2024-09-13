@@ -24,12 +24,11 @@ import java.util.Objects;
 import java.util.Optional;
 
 import io.github.bucket4j.BucketExceptions;
-import io.github.bucket4j.BucketListener;
 import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
-import io.github.bucket4j.distributed.proxy.synchronization.NopeSynchronizationListener;
+import io.github.bucket4j.distributed.proxy.synchronization.AsyncSynchronization;
 import io.github.bucket4j.distributed.proxy.synchronization.Synchronization;
-import io.github.bucket4j.distributed.proxy.synchronization.SynchronizationListener;
+import io.github.bucket4j.distributed.proxy.synchronization.direct.AsyncDirectSynchronization;
 import io.github.bucket4j.distributed.proxy.synchronization.direct.DirectSynchronization;
 import io.github.bucket4j.distributed.versioning.Version;
 import io.github.bucket4j.distributed.versioning.Versions;
@@ -48,13 +47,8 @@ public abstract class AbstractAsyncProxyManagerBuilder<K, P extends AsyncProxyMa
     private ExecutionStrategy executionStrategy = ExecutionStrategy.SAME_TREAD;
     private Optional<Long> requestTimeoutNanos = Optional.empty();
     private Optional<ExpirationAfterWriteStrategy> expirationStrategy = Optional.empty();
-
-    private BucketListener defaultListener = BucketListener.NOPE;
-
-    private Synchronization synchronization = DirectSynchronization.instance;
-
-    private SynchronizationListener synchronizationListener = NopeSynchronizationListener.instance;
-
+    private BucketListenerProvider<K> listenerProvider = (BucketListenerProvider<K>) BucketListenerProvider.DEFAULT;
+    private AsyncSynchronization synchronization = AsyncDirectSynchronization.instance;
     private AsyncBucketConfigurationProvider<K> configurationProvider = (AsyncBucketConfigurationProvider<K>) AsyncBucketConfigurationProvider.DEFAULT;
 
     /**
@@ -172,22 +166,17 @@ public abstract class AbstractAsyncProxyManagerBuilder<K, P extends AsyncProxyMa
     /**
      * Configures listener at proxy-manager level, this listener will be used for buckets in case of listener will not be specified during bucket build time.
      *
-     * @param defaultListener listener of bucket events
+     * @param bucketListenerProvider listener of bucket events
      *
      * @return this builder instance
      */
-    public B defaultListener(BucketListener defaultListener) {
-        this.defaultListener = Objects.requireNonNull(defaultListener);
+    public B bucketListenerProvider(BucketListenerProvider<K> bucketListenerProvider) {
+        this.listenerProvider = Objects.requireNonNull(bucketListenerProvider);
         return (B) this;
     }
 
-    public B synchronization(Synchronization synchronization) {
+    public B synchronization(AsyncSynchronization synchronization) {
         this.synchronization = Objects.requireNonNull(synchronization);
-        return (B) this;
-    }
-
-    public B synchronizationListener(SynchronizationListener synchronizationListener) {
-        this.synchronizationListener = Objects.requireNonNull(synchronizationListener);
         return (B) this;
     }
 
@@ -254,12 +243,12 @@ public abstract class AbstractAsyncProxyManagerBuilder<K, P extends AsyncProxyMa
         return false;
     }
 
-    public Synchronization getSynchronization() {
+    public AsyncSynchronization getSynchronization() {
         return synchronization;
     }
 
-    public ProxyManagerConfig getProxyManagerConfig() {
-        return new ProxyManagerConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, requestTimeoutNanos, expirationStrategy, synchronization, defaultListener, synchronizationListener);
+    public AsyncProxyManagerConfig<K> getProxyManagerConfig() {
+        return new AsyncProxyManagerConfig<>(backwardCompatibilityVersion, clientSideClock, executionStrategy, requestTimeoutNanos, expirationStrategy, synchronization, listenerProvider, configurationProvider);
     }
 
 }

@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
+import io.github.bucket4j.distributed.proxy.AsyncProxyManagerConfig;
 import io.github.bucket4j.distributed.proxy.ProxyManagerConfig;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AbstractAsyncCompareAndSwapBasedProxyManager;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AsyncCompareAndSwapOperation;
@@ -31,7 +32,7 @@ public class AsyncCompareAndSwapBasedProxyManagerMock<K> extends AbstractAsyncCo
 
     private final Map<K, byte[]> stateMap = new HashMap<>();
 
-    public AsyncCompareAndSwapBasedProxyManagerMock(ProxyManagerConfig proxyManagerConfig) {
+    public AsyncCompareAndSwapBasedProxyManagerMock(AsyncProxyManagerConfig<K> proxyManagerConfig) {
         super(proxyManagerConfig);
     }
 

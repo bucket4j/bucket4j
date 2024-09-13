@@ -29,6 +29,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.proxy.AbstractAsyncProxyManager;
+import io.github.bucket4j.distributed.proxy.AsyncProxyManagerConfig;
 import io.github.bucket4j.distributed.proxy.ProxyManagerConfig;
 import io.github.bucket4j.distributed.remote.AbstractBinaryTransaction;
 import io.github.bucket4j.distributed.remote.CommandResult;
@@ -57,10 +58,10 @@ public class AsyncProxyManagerMock<K> extends AbstractAsyncProxyManager<K> {
     private boolean allowReturnResult = true;
 
     public AsyncProxyManagerMock(TimeMeter timeMeter) {
-        super(ProxyManagerConfig.getDefault().withClientClock(timeMeter));
+        super((AsyncProxyManagerConfig<K>) AsyncProxyManagerConfig.getDefault().withClientClock(timeMeter));
     }
 
-    public AsyncProxyManagerMock(ProxyManagerConfig config) {
+    public AsyncProxyManagerMock(AsyncProxyManagerConfig<K> config) {
         super(config);
     }
 

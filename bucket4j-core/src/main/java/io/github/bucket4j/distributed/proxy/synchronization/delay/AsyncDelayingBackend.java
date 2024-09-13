@@ -19,12 +19,10 @@ public class AsyncDelayingBackend<K> implements AsyncBackend<K> {
 
     private final AsyncBackend<K> target;
     private final ConcurrentHashMap<K, DelayingExecutorEntry> executors = new ConcurrentHashMap<>();
-    private final SynchronizationListener synchronizationListener;
     private final BucketSynchronizationListener bucketSynchronizationListener;
 
     public AsyncDelayingBackend(AsyncBackend<K> target, SynchronizationListener synchronizationListener) {
         this.target = Objects.requireNonNull(target);
-        this.synchronizationListener = synchronizationListener;
         this.bucketSynchronizationListener = new BucketSynchronizationListenerAdapter(synchronizationListener);
     }
 

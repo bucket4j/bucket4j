@@ -29,9 +29,11 @@ import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
 import io.github.bucket4j.distributed.proxy.AbstractAsyncProxyManager.DefaultAsyncRemoteBucketBuilder;
 import io.github.bucket4j.distributed.proxy.AbstractProxyManager.DefaultRemoteBucketBuilder;
+import io.github.bucket4j.distributed.proxy.synchronization.AsyncSynchronization;
 import io.github.bucket4j.distributed.proxy.synchronization.NopeSynchronizationListener;
 import io.github.bucket4j.distributed.proxy.synchronization.Synchronization;
 import io.github.bucket4j.distributed.proxy.synchronization.SynchronizationListener;
+import io.github.bucket4j.distributed.proxy.synchronization.direct.AsyncDirectSynchronization;
 import io.github.bucket4j.distributed.proxy.synchronization.direct.DirectSynchronization;
 import io.github.bucket4j.distributed.versioning.Version;
 import io.github.bucket4j.distributed.versioning.Versions;
@@ -43,40 +45,39 @@ import io.github.bucket4j.distributed.versioning.Versions;
  *     <li>Client-side clock, see {@link #withClientClock(TimeMeter)} for more details.</li>
  * </ul>
  */
-public class AsyncProxyManagerConfig {
+public class AsyncProxyManagerConfig<K> {
 
     private static final AsyncProxyManagerConfig defaultConfig = new AsyncProxyManagerConfig(Versions.getLatest(), Optional.empty(),
-            ExecutionStrategy.SAME_TREAD, Optional.empty(), Optional.empty(), DirectSynchronization.instance, BucketListener.NOPE, NopeSynchronizationListener.instance);
+            ExecutionStrategy.SAME_TREAD, Optional.empty(), Optional.empty(), AsyncDirectSynchronization.instance,
+        BucketListenerProvider.DEFAULT, AsyncBucketConfigurationProvider.DEFAULT);
 
     private final Version backwardCompatibilityVersion;
     private final Optional<TimeMeter> clientSideClock;
 
     private final ExecutionStrategy executionStrategy;
-
     private final Optional<Long> requestTimeoutNanos;
-
     private final Optional<ExpirationAfterWriteStrategy> expirationStrategy;
+    private final AsyncSynchronization synchronization;
+    private final BucketListenerProvider<K> listenerProvider;
+    private final AsyncBucketConfigurationProvider<K> configurationProvider;
 
-    private final BucketListener defaultListener;
-
-    private final Synchronization synchronization;
-    private final SynchronizationListener synchronizationListener;
 
     protected AsyncProxyManagerConfig(Version backwardCompatibilityVersion, Optional<TimeMeter> clientSideClock,
                                       ExecutionStrategy executionStrategy,
                                       Optional<Long> requestTimeoutNanos,
                                       Optional<ExpirationAfterWriteStrategy> expirationStrategy,
-                                      Synchronization synchronization,
-                                      BucketListener defaultListener,
-                                      SynchronizationListener synchronizationListener) {
+                                      AsyncSynchronization synchronization,
+                                      BucketListenerProvider<K> listenerProvider,
+                                      AsyncBucketConfigurationProvider<K> configurationProvider
+                                      ) {
         this.backwardCompatibilityVersion = Objects.requireNonNull(backwardCompatibilityVersion);
         this.clientSideClock = Objects.requireNonNull(clientSideClock);
         this.executionStrategy = executionStrategy;
         this.requestTimeoutNanos = requestTimeoutNanos;
         this.expirationStrategy = expirationStrategy;
-        this.defaultListener = Objects.requireNonNull(defaultListener);
         this.synchronization = Objects.requireNonNull(synchronization);
-        this.synchronizationListener = Objects.requireNonNull(synchronizationListener);
+        this.listenerProvider = Objects.requireNonNull(listenerProvider);
+        this.configurationProvider = Objects.requireNonNull(configurationProvider);
     }
 
     /**
@@ -88,7 +89,7 @@ public class AsyncProxyManagerConfig {
      *
      * @return default client-side configuration for proxy-manager
      */
-    public static AsyncProxyManagerConfig getDefault() {
+    public static <T> AsyncProxyManagerConfig<T> getDefault() {
         return defaultConfig;
     }
 
@@ -105,8 +106,8 @@ public class AsyncProxyManagerConfig {
      *
      * @return new instance of {@link AsyncProxyManagerConfig} with configured {@code backwardCompatibilityVersion}.
      */
-    public AsyncProxyManagerConfig backwardCompatibleWith(Version backwardCompatibilityVersion) {
-        return new AsyncProxyManagerConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, requestTimeoutNanos, expirationStrategy, synchronization, defaultListener, synchronizationListener);
+    public AsyncProxyManagerConfig<K> backwardCompatibleWith(Version backwardCompatibilityVersion) {
+        return new AsyncProxyManagerConfig<>(backwardCompatibilityVersion, clientSideClock, executionStrategy, requestTimeoutNanos, expirationStrategy, synchronization, listenerProvider, configurationProvider);
     }
 
     /**
@@ -123,8 +124,8 @@ public class AsyncProxyManagerConfig {
      *
      * @return new instance of {@link AsyncProxyManagerConfig} with configured {@code clientClock}.
      */
-    public AsyncProxyManagerConfig withClientClock(TimeMeter clientClock) {
-        return new AsyncProxyManagerConfig(backwardCompatibilityVersion, Optional.of(clientClock), executionStrategy, requestTimeoutNanos, expirationStrategy, synchronization, defaultListener, synchronizationListener);
+    public AsyncProxyManagerConfig<K> withClientClock(TimeMeter clientClock) {
+        return new AsyncProxyManagerConfig<>(backwardCompatibilityVersion, Optional.of(clientClock), executionStrategy, requestTimeoutNanos, expirationStrategy, synchronization, listenerProvider, configurationProvider);
     }
 
     /**
@@ -137,12 +138,12 @@ public class AsyncProxyManagerConfig {
      *
      * @return new instance of {@link AsyncProxyManagerConfig} with configured {@code clientClock}.
      */
-    public AsyncProxyManagerConfig withExecutionStrategy(ExecutionStrategy executionStrategy) {
-        return new AsyncProxyManagerConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, requestTimeoutNanos, expirationStrategy, synchronization, defaultListener, synchronizationListener);
+    public AsyncProxyManagerConfig<K> withExecutionStrategy(ExecutionStrategy executionStrategy) {
+        return new AsyncProxyManagerConfig<>(backwardCompatibilityVersion, clientSideClock, executionStrategy, requestTimeoutNanos, expirationStrategy, synchronization, listenerProvider, configurationProvider);
     }
 
-    public AsyncProxyManagerConfig withSynchronization(Synchronization synchronization) {
-        return new AsyncProxyManagerConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, requestTimeoutNanos, expirationStrategy, synchronization, defaultListener, synchronizationListener);
+    public AsyncProxyManagerConfig<K> withSynchronization(AsyncSynchronization synchronization) {
+        return new AsyncProxyManagerConfig<>(backwardCompatibilityVersion, clientSideClock, executionStrategy, requestTimeoutNanos, expirationStrategy, synchronization, listenerProvider, configurationProvider);
     }
 
     /**
@@ -160,12 +161,12 @@ public class AsyncProxyManagerConfig {
      *
      * @return new instance of {@link AsyncProxyManagerConfig} with configured {@code requestTimeout}.
      */
-    public AsyncProxyManagerConfig withRequestTimeout(Duration requestTimeout) {
+    public AsyncProxyManagerConfig<K> withRequestTimeout(Duration requestTimeout) {
         if (requestTimeout.isZero() || requestTimeout.isNegative()) {
             throw BucketExceptions.nonPositiveRequestTimeout(requestTimeout);
         }
         long requestTimeoutNanos = requestTimeout.toNanos();
-        return new AsyncProxyManagerConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, Optional.of(requestTimeoutNanos), expirationStrategy, synchronization, defaultListener, synchronizationListener);
+        return new AsyncProxyManagerConfig<>(backwardCompatibilityVersion, clientSideClock, executionStrategy, Optional.of(requestTimeoutNanos), expirationStrategy, synchronization, listenerProvider, configurationProvider);
     }
 
     /**
@@ -177,8 +178,8 @@ public class AsyncProxyManagerConfig {
      *
      * @return new instance of {@link AsyncProxyManagerConfig} with configured {@code expirationStrategy}.
      */
-    public AsyncProxyManagerConfig withExpirationAfterWriteStrategy(ExpirationAfterWriteStrategy expirationStrategy) {
-        return new AsyncProxyManagerConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, requestTimeoutNanos, Optional.of(expirationStrategy), synchronization, defaultListener, synchronizationListener);
+    public AsyncProxyManagerConfig<K> withExpirationAfterWriteStrategy(ExpirationAfterWriteStrategy expirationStrategy) {
+        return new AsyncProxyManagerConfig<>(backwardCompatibilityVersion, clientSideClock, executionStrategy, requestTimeoutNanos, Optional.of(expirationStrategy), synchronization, listenerProvider, configurationProvider);
     }
 
     /**
@@ -230,15 +231,16 @@ public class AsyncProxyManagerConfig {
         return executionStrategy;
     }
 
-    public Synchronization getSynchronization() {
+    public AsyncSynchronization getSynchronization() {
         return synchronization;
     }
 
-    public <K> RemoteAsyncBucketBuilder<K> apply(DefaultAsyncRemoteBucketBuilder builder) {
-        return builder.withListener(defaultListener);
+    public BucketListenerProvider<K> getListenerProvider() {
+        return listenerProvider;
     }
 
-    public SynchronizationListener getSynchronizationListener() {
-        return synchronizationListener;
+    public AsyncBucketConfigurationProvider<K> getConfigurationProvider() {
+        return configurationProvider;
     }
+
 }

@@ -43,34 +43,34 @@ public abstract class AbstractAsyncProxyManager<K> implements AsyncProxyManager<
 
     private static final BucketSynchronization DEFAULT_REQUEST_OPTIMIZER = BucketSynchronization.NONE_OPTIMIZED;
 
-    private final ProxyManagerConfig proxyManagerConfig;
+    private final AsyncProxyManagerConfig<K> config;
 
     private final AsyncBackend<K> asyncBackend;
     private final AsyncBackend<K> optimizedAsyncBackend;
 
-    protected AbstractAsyncProxyManager(ProxyManagerConfig proxyManagerConfig) {
-        if (proxyManagerConfig.getExpirationAfterWriteStrategy().isPresent() && !isExpireAfterWriteSupported()) {
+    protected AbstractAsyncProxyManager(AsyncProxyManagerConfig<K> config) {
+        if (config.getExpirationAfterWriteStrategy().isPresent() && !isExpireAfterWriteSupported()) {
             throw BucketExceptions.expirationAfterWriteIsNotSupported();
         }
-        this.proxyManagerConfig = requireNonNull(proxyManagerConfig);
+        this.config = requireNonNull(config);
 
-        this.asyncBackend = new AsyncBackend<K>() {
+        this.asyncBackend = new AsyncBackend<>() {
             @Override
             public <T> CompletableFuture<CommandResult<T>> execute(K key, RemoteCommand<T> command) {
-                ExpirationAfterWriteStrategy expirationStrategy = proxyManagerConfig.getExpirationAfterWriteStrategy().orElse(null);
-                Request<T> request = new Request<>(command, AbstractAsyncProxyManager.this.proxyManagerConfig.getBackwardCompatibilityVersion(), getClientSideTime(), expirationStrategy);
+                ExpirationAfterWriteStrategy expirationStrategy = config.getExpirationAfterWriteStrategy().orElse(null);
+                Request<T> request = new Request<>(command, config.getBackwardCompatibilityVersion(), getClientSideTime(), expirationStrategy);
                 Supplier<CompletableFuture<CommandResult<T>>> futureSupplier = () -> AbstractAsyncProxyManager.this.executeAsync(key, request);
-                return proxyManagerConfig.getExecutionStrategy().executeAsync(futureSupplier);
+                return config.getExecutionStrategy().execute(futureSupplier);
             }
         };
-        optimizedAsyncBackend = asyncBackend == null ? null : proxyManagerConfig.getSynchronization().apply(asyncBackend, proxyManagerConfig.getSynchronizationListener());
+        optimizedAsyncBackend = asyncBackend == null ? null : config.getSynchronization().apply(asyncBackend);
     }
 
     @Override
     public CompletableFuture<Optional<BucketConfiguration>> getProxyConfiguration(K key) {
         GetConfigurationCommand cmd = new GetConfigurationCommand();
-        ExpirationAfterWriteStrategy expirationStrategy = proxyManagerConfig.getExpirationAfterWriteStrategy().orElse(null);
-        Request<BucketConfiguration> request = new Request<>(cmd, proxyManagerConfig.getBackwardCompatibilityVersion(), getClientSideTime(), expirationStrategy);
+        ExpirationAfterWriteStrategy expirationStrategy = config.getExpirationAfterWriteStrategy().orElse(null);
+        Request<BucketConfiguration> request = new Request<>(cmd, config.getBackwardCompatibilityVersion(), getClientSideTime(), expirationStrategy);
         return executeAsync(key, request).thenApply(result -> {
             if (result.isBucketNotFound()) {
                 return Optional.empty();
@@ -81,7 +81,7 @@ public abstract class AbstractAsyncProxyManager<K> implements AsyncProxyManager<
 
     @Override
     public RemoteAsyncBucketBuilder<K> builder() {
-        return getConfig().apply(new DefaultAsyncRemoteBucketBuilder());
+        return new DefaultAsyncRemoteBucketBuilder();
     }
 
     @Override
@@ -129,7 +129,8 @@ public abstract class AbstractAsyncProxyManager<K> implements AsyncProxyManager<
             };
             commandExecutor = asyncRequestOptimizer.apply(commandExecutor);
 
-            return new DefaultAsyncBucketProxy(commandExecutor, configurationSupplier, implicitConfigurationReplacement, listener);
+            return new DefaultAsyncBucketProxy(commandExecutor, configurationSupplier, implicitConfigurationReplacement,
+                listener == BucketListener.NOPE ? config.getListenerProvider().get(key) : listener);
         }
 
     }
@@ -138,16 +139,16 @@ public abstract class AbstractAsyncProxyManager<K> implements AsyncProxyManager<
 
     abstract protected CompletableFuture<Void> removeAsync(K key);
 
-    protected ProxyManagerConfig getConfig() {
-        return proxyManagerConfig;
+    protected AsyncProxyManagerConfig<K> getConfig() {
+        return config;
     }
 
     protected long currentTimeNanos() {
-        return proxyManagerConfig.getClientSideClock().orElse(TimeMeter.SYSTEM_MILLISECONDS).currentTimeNanos();
+        return config.getClientSideClock().orElse(TimeMeter.SYSTEM_MILLISECONDS).currentTimeNanos();
     }
 
     protected Long getClientSideTime() {
-        Optional<TimeMeter> clientClock = proxyManagerConfig.getClientSideClock();
+        Optional<TimeMeter> clientClock = config.getClientSideClock();
         if (clientClock.isEmpty()) {
             return null;
         }

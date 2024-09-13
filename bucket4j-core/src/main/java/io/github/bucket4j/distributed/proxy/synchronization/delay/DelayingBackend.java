@@ -4,7 +4,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import io.github.bucket4j.distributed.proxy.Backend;
 import io.github.bucket4j.distributed.proxy.CommandExecutor;
-import io.github.bucket4j.distributed.proxy.synchronization.SynchronizationListener;
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.NopeBucketSynchronizationListener;
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.batch.BatchingExecutor;
 import io.github.bucket4j.distributed.remote.CommandResult;
@@ -14,11 +13,9 @@ public class DelayingBackend<K> implements Backend<K> {
 
     private final Backend<K> target;
     private final ConcurrentHashMap<K, DelayingExecutorEntry> executors = new ConcurrentHashMap<>();
-    private final SynchronizationListener synchronizationListener;
 
-    public DelayingBackend(Backend<K> target, SynchronizationListener synchronizationListener) {
+    public DelayingBackend(Backend<K> target) {
         this.target = target;
-        this.synchronizationListener = synchronizationListener;
     }
 
     @Override

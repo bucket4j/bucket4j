@@ -56,7 +56,7 @@ public class ProxyManagerMock<K> extends AbstractProxyManager<K> {
     private boolean allowReturnResult = true;
 
     public ProxyManagerMock(TimeMeter timeMeter) {
-        super(ProxyManagerConfig.getDefault().withClientClock(timeMeter));
+        super((ProxyManagerConfig<K>) ProxyManagerConfig.getDefault().withClientClock(timeMeter));
     }
 
     public ProxyManagerMock(ProxyManagerConfig config) {

@@ -25,6 +25,7 @@ import java.util.concurrent.CompletableFuture;
 
 import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.proxy.AbstractAsyncProxyManager;
+import io.github.bucket4j.distributed.proxy.AsyncProxyManagerConfig;
 import io.github.bucket4j.distributed.proxy.ProxyManagerConfig;
 import io.github.bucket4j.distributed.proxy.Timeout;
 import io.github.bucket4j.distributed.remote.CommandResult;
@@ -41,8 +42,8 @@ public abstract class AbstractAsyncCompareAndSwapBasedProxyManager<K> extends Ab
 
     private static final CommandResult<?> UNSUCCESSFUL_CAS_RESULT = null;
 
-    protected AbstractAsyncCompareAndSwapBasedProxyManager(ProxyManagerConfig proxyManagerConfig) {
-        super(injectTimeClock(proxyManagerConfig));
+    protected AbstractAsyncCompareAndSwapBasedProxyManager(AsyncProxyManagerConfig<K> config) {
+        super((AsyncProxyManagerConfig<K>) injectTimeClock(config));
     }
 
     @Override
@@ -80,7 +81,7 @@ public abstract class AbstractAsyncCompareAndSwapBasedProxyManager<K> extends Ab
             });
     }
 
-    private static ProxyManagerConfig injectTimeClock(ProxyManagerConfig proxyManagerConfig) {
+    private static <T> AsyncProxyManagerConfig<?> injectTimeClock(AsyncProxyManagerConfig<T> proxyManagerConfig) {
         if (proxyManagerConfig.getClientSideClock().isPresent()) {
             return proxyManagerConfig;
         }
