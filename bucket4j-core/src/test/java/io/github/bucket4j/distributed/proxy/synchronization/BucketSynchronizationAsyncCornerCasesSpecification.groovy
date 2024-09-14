@@ -2,7 +2,7 @@ package io.github.bucket4j.distributed.proxy.synchronization
 
 import io.github.bucket4j.BucketConfiguration
 import io.github.bucket4j.distributed.AsyncBucketProxy
-import io.github.bucket4j.distributed.proxy.ProxyManagerConfig
+import io.github.bucket4j.distributed.proxy.AsyncProxyManagerConfig
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.*
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.delay.DelayBucketSynchronization
 import io.github.bucket4j.distributed.proxy.synchronization.per_bucket.manual.ManuallySyncingBucketSynchronization
@@ -69,7 +69,7 @@ class BucketSynchronizationAsyncCornerCasesSpecification extends Specification {
     @Unroll
     def "should correctly handle exceptions when synchronization is used #testNumber CompareAndSwapBasedProxyManagerMock"(int testNumber, BucketSynchronization synchronization) {
         setup:
-            AsyncCompareAndSwapBasedProxyManagerMock proxyManagerMock = new AsyncCompareAndSwapBasedProxyManagerMock(ProxyManagerConfig.default.withClientClock(clock))
+            AsyncCompareAndSwapBasedProxyManagerMock proxyManagerMock = new AsyncCompareAndSwapBasedProxyManagerMock(AsyncProxyManagerConfig.default.withClientClock(clock))
             BucketConfiguration configuration = BucketConfiguration.builder()
                 .addLimit({it.capacity(10).refillGreedy(10, Duration.ofSeconds (1))})
                 .build()
