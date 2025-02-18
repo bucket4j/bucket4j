@@ -6,7 +6,7 @@ Different backward compatibility aspects are described bellow.
 ## Documentation
 Documentation is provided for any version, does not matter how old it is. 
 We never remove documentation for legacy releases.
-Documentation for previous releases always available [in archive](https://bucket4j.com/previos-releases.html).
+Documentation for previous releases always available [in archive](https://bucket4j.com/previous-releases.html).
 
 ## Rolling updates
 When using distributed bucket, you should understand that bucket is stored inside some persistent storage in some format.
