@@ -6,7 +6,7 @@ VerboseResult:: is the wrapper for interaction result that provides the snapshot
 
 ==== Verbose API entry-points
 The way to get access for `Verbose API` is the same for all types of buckets, just call `asVerbose()` method:
-----
+
 [source, java]
 ----
 // for io.github.bucket4j.Bucket
@@ -14,8 +14,6 @@ Bucket bucket = ...;
 VerboseBucket verboseBucket = bucket.asVerbose();
 VerboseSchedulingBucket verboseSchedulingBucket = bucket.asScheduler().asVerbose();
 VerboseBlockingBucket VerboseBlockingBucket = bucket.asBlocking().asVerbose();
-----
-
 ----
 [source, java]
 ----
