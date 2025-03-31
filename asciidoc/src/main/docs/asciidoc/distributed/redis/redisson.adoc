@@ -16,7 +16,7 @@ To use ``bucket4j-redisson`` extension you need to add following dependency:
     <version>{revnumber}</version>
 </dependency>
 
-<!-- For java 17 -->
+<!-- For java 11 -->
 <dependency>
     <groupId>com.bucket4j</groupId>
     <artifactId>bucket4j_jdk11-redis-common</artifactId>
