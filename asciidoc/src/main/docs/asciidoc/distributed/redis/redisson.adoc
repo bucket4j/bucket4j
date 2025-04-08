@@ -32,7 +32,7 @@ To use ``bucket4j-redisson`` extension you need to add following dependency:
 ===== Example of Bucket instantiation via RedissonBasedProxyManager
 [source, java]
 ----
-// Instantiate config
+// Instantiate Redisson config
 Config config = new Config();
 // ... 
 Redisson redissonClient = (Redisson) Redisson.create(config);
