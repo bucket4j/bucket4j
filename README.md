@@ -118,8 +118,10 @@ Sometimes you are having deal with bucket per key scenarios but distributed sync
 
 ## Have a question?
 Feel free to ask via:
-* [Bucket4j issue tracker](https://github.com/bucket4j/bucket4j/issues/new) to report a bug.
-* [Bucket4j discussions](https://github.com/bucket4j/bucket4j/discussions) for questions, feature proposals, sharing of experience.
+* [Bucket4j github issue tracker](https://github.com/bucket4j/bucket4j/issues/new) to report a bug.
+* [Bucket4j github discussions](https://github.com/bucket4j/bucket4j/discussions) for questions, feature proposals, sharing of experience.
+* [Bucket4j telegram chat(Eng)](https://t.me/+6cB0iKpLdfY3ZWRi)
+* [Bucket4j telegram chat(Ru)](https://t.me/+bpqEMT9GL744MjA6)
 
 ## License
 Copyright 2015-2024 Vladimir Bukhtoyarov
