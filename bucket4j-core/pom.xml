@@ -33,6 +33,31 @@
                     </execution>
                 </executions>
             </plugin>
+<!--            <plugin>-->
+<!--                <groupId>org.apache.maven.plugins</groupId>-->
+<!--                <artifactId>maven-shade-plugin</artifactId>-->
+<!--                <executions>-->
+<!--                    <execution>-->
+<!--                        <id>jol-samples</id>-->
+<!--                        <phase>package</phase>-->
+<!--                        <goals>-->
+<!--                            <goal>shade</goal>-->
+<!--                        </goals>-->
+<!--                        <configuration>-->
+<!--                            <finalName>jol-samples</finalName>-->
+<!--                            <transformers>-->
+<!--                                <transformer-->
+<!--                                        implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">-->
+<!--                                    <manifestEntries>-->
+<!--                                        <Premain-Class>org.openjdk.jol.vm.InstrumentationSupport</Premain-Class>-->
+<!--                                        <Launcher-Agent-Class>org.openjdk.jol.vm.InstrumentationSupport$Installer</Launcher-Agent-Class>-->
+<!--                                    </manifestEntries>-->
+<!--                                </transformer>-->
+<!--                            </transformers>-->
+<!--                        </configuration>-->
+<!--                    </execution>-->
+<!--                </executions>-->
+<!--            </plugin>-->
         </plugins>
     </build>
 
@@ -41,7 +66,7 @@
         <dependency>
             <groupId>org.openjdk.jol</groupId>
             <artifactId>jol-core</artifactId>
-            <version>0.10</version>
+            <version>0.17</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
