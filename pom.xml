@@ -37,6 +37,7 @@
         <module>bucket4j-caffeine</module>
 <!--        <module>backward-compatibility-tests</module>-->
         <module>asciidoc</module>
+        <module>bucket4j-mongodb</module>
     </modules>
 
     <properties>
