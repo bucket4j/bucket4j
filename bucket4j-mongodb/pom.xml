@@ -42,16 +42,15 @@
             <version>${testcontainers.version}</version>
             <scope>test</scope>
         </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.mongodb</groupId>-->
+<!--            <artifactId>mongo-java-driver</artifactId>-->
+<!--            <version>3.12.14</version>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>org.mongodb</groupId>
-            <artifactId>mongo-java-driver</artifactId>
-            <version>3.12.14</version>
-        </dependency>
-        <dependency>
-            <groupId>org.mongodb</groupId>
-            <artifactId>mongodb-jdbc</artifactId>
-            <version>2.0.3</version>
-            <scope>provided</scope>
+            <artifactId>mongodb-driver-reactivestreams</artifactId>
+            <version>4.11.1</version>
         </dependency>
         <dependency>
             <groupId>com.zaxxer</groupId>
