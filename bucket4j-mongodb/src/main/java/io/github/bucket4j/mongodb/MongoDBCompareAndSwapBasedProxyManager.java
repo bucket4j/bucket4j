@@ -1,11 +1,12 @@
 package io.github.bucket4j.mongodb;
 
 import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.FindOneAndReplaceOptions;
 import com.mongodb.client.model.Projections;
-import com.mongodb.client.model.ReplaceOptions;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.reactivestreams.client.MongoCollection;
 import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
+import io.github.bucket4j.distributed.expiration.NoneExpirationAfterWriteStrategy;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AbstractCompareAndSwapBasedProxyManager;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AsyncCompareAndSwapOperation;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.CompareAndSwapOperation;
@@ -18,8 +19,9 @@ import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 
 import java.nio.ByteBuffer;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 public class MongoDBCompareAndSwapBasedProxyManager<K> extends AbstractCompareAndSwapBasedProxyManager<K> {
@@ -115,19 +117,61 @@ public class MongoDBCompareAndSwapBasedProxyManager<K> extends AbstractCompareAn
     }
 
     private CompletableFuture<Boolean> compareAndSwapFuture(byte[] keyBytes, byte[] originalData, byte[] newData, RemoteBucketState newState) {
-        Document filter = new Document("_id", keyBytes);
-        if (originalData != null) {
-            filter.append("state", originalData);
-        } else {
-            filter.append("state", new Document("$exists", false));
+        List<Document> results = new ArrayList<>();
+        CountDownLatch latch = new CountDownLatch(1);
+
+        collection.find().subscribe(new Subscriber<Document>() {
+            private Subscription subscription;
+
+            @Override
+            public void onSubscribe(Subscription s) {
+                subscription = s;
+                subscription.request(Long.MAX_VALUE); // Запрашиваем все документы
+            }
+
+            @Override
+            public void onNext(Document document) {
+                results.add(document);
+            }
+
+            @Override
+            public void onError(Throwable t) {
+                t.printStackTrace();
+                latch.countDown();
+            }
+
+            @Override
+            public void onComplete() {
+                latch.countDown();
+            }
+        });
+        try {
+            if (!latch.await(30, TimeUnit.SECONDS)) {
+                throw new RuntimeException("Timeout waiting for MongoDB operation to complete");
+            }
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
 
-        long currentTimeNanos = currentTimeNanos();
-        long ttlMillis = expirationStrategy.calculateTimeToLiveMillis(newState, currentTimeNanos);
-        long expiresAt = ttlMillis + TimeUnit.NANOSECONDS.toMillis(currentTimeNanos);
+        Document filter = new Document("_id", keyBytes);
 
-        Document replacement = new Document("_id", keyBytes).append("state", newData).append("expiresAt", expiresAt);
-        ReplaceOptions options = new ReplaceOptions().upsert(originalData == null);
+//        if (originalData != null) {
+            filter.append("state", originalData);
+//        } else {
+//            filter.append("state", new Document("$exists", false));
+//        }
+
+        Date expirationDate = null;
+
+        if (expirationStrategy.getClass() != NoneExpirationAfterWriteStrategy.class) {
+            long currentTimeNanos = currentTimeNanos();
+            long ttlMillis = expirationStrategy.calculateTimeToLiveMillis(newState, currentTimeNanos);
+            long expiresAt = ttlMillis + TimeUnit.NANOSECONDS.toMillis(currentTimeNanos);
+            expirationDate = new Date(expiresAt);
+        }
+
+        Document replacement = new Document("_id", keyBytes).append("state", newData).append("expiresAt", expirationDate);
+        FindOneAndReplaceOptions options = new FindOneAndReplaceOptions().upsert(true);
 
         CompletableFuture<Boolean> future =  new CompletableFuture<Boolean>();
 
