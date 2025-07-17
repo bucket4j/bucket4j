@@ -23,12 +23,12 @@ import java.util.Date;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Logger;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class MongoDBCompareAndSwapBasedProxyManager<K> extends AbstractCompareAndSwapBasedProxyManager<K> {
     private static final Logger logger = Logger.getLogger(MongoDBCompareAndSwapBasedProxyManager.class.getName());
-    
+
     private final MongoCollection<Document> collection;
     private final Mapper<K> keyMapper;
     private final ExpirationAfterWriteStrategy expirationStrategy;
@@ -88,7 +88,27 @@ public class MongoDBCompareAndSwapBasedProxyManager<K> extends AbstractCompareAn
 
         collection
                 .deleteOne(Filters.eq("_id", keyBytes))
-                .subscribe(new MongoDBUtilitySubscriber<DeleteResult, Void>(future));
+                .subscribe(new Subscriber<>() {
+                    @Override
+                    public void onSubscribe(Subscription s) {
+                        s.request(1);
+                    }
+
+                    @Override
+                    public void onNext(DeleteResult deleteResult) {
+                        future.complete(null);
+                    }
+
+                    @Override
+                    public void onError(Throwable t) {
+                        future.completeExceptionally(t);
+                    }
+
+                    @Override
+                    public void onComplete() {
+                        future.complete(null);
+                    }
+                });
 
         return future;
     }
@@ -117,7 +137,34 @@ public class MongoDBCompareAndSwapBasedProxyManager<K> extends AbstractCompareAn
                         )
                 )
                 .first()
-                .subscribe(new MongoDBUtilitySubscriber<Document, Document>(future));
+                .subscribe(new Subscriber<Document>() {
+                    @Override
+                    public void onSubscribe(Subscription s) {
+                        System.out.println("[MongoDB-CAS] getBucketStateFuture onSubscribe - requesting 1 item");
+                        s.request(1);
+                    }
+
+                    @Override
+                    public void onNext(Document document) {
+                        System.out.println("[MongoDB-CAS] getBucketStateFuture onNext - document found");
+                        future.complete(document);
+                    }
+
+                    @Override
+                    public void onError(Throwable t) {
+                        System.out.println("[MongoDB-CAS] getBucketStateFuture onError - error: " + t.getMessage());
+                        t.printStackTrace();
+                        future.completeExceptionally(t);
+                    }
+
+                    @Override
+                    public void onComplete() {
+                        if (!future.isDone()) {
+                            System.out.println("[MongoDB-CAS] getBucketStateFuture onComplete - no document found");
+                            future.complete(null);
+                        }
+                    }
+                });
 
         return future.thenApply(bucketState -> {
             if (bucketState == null) {
@@ -131,7 +178,7 @@ public class MongoDBCompareAndSwapBasedProxyManager<K> extends AbstractCompareAn
     }
 
     private CompletableFuture<Boolean> compareAndSwapFuture(byte[] keyBytes, byte[] originalData, byte[] newData, RemoteBucketState newState) {
-        logger.log(Level.FINE, "Starting compareAndSwapFuture - originalData: {0}, newData length: {1}", 
+        logger.log(Level.FINE, "Starting compareAndSwapFuture - originalData: {0}, newData length: {1}",
                 new Object[]{originalData == null ? "null" : "[" + originalData.length + " bytes]", newData.length});
 //        List<Document> results = new ArrayList<>();
 //        CountDownLatch latch = new CountDownLatch(1);
@@ -176,7 +223,6 @@ public class MongoDBCompareAndSwapBasedProxyManager<K> extends AbstractCompareAn
             long ttlMillis = expirationStrategy.calculateTimeToLiveMillis(newState, currentTimeNanos);
             long expiresAt = ttlMillis + TimeUnit.NANOSECONDS.toMillis(currentTimeNanos);
             expirationDate = new Date(expiresAt);
-            logger.log(Level.FINE, "Expiration date calculated: {0}", expirationDate);
         }
 
         CompletableFuture<Boolean> future = new CompletableFuture<>();
@@ -188,7 +234,7 @@ public class MongoDBCompareAndSwapBasedProxyManager<K> extends AbstractCompareAn
                     .append("state", newData)
                     .append("expiresAt", expirationDate);
 
-            collection.insertOne(newDocument).subscribe(new Subscriber<com.mongodb.client.result.InsertOneResult>() {
+            collection.insertOne(newDocument).subscribe(new Subscriber<>() {
                 @Override
                 public void onSubscribe(Subscription s) {
                     logger.log(Level.FINE, "Insert onSubscribe - requesting 1 item");
@@ -211,6 +257,9 @@ public class MongoDBCompareAndSwapBasedProxyManager<K> extends AbstractCompareAn
                         logger.log(Level.WARNING, "Insert onError - unexpected error", t);
                         future.completeExceptionally(t);
                     }
+                    ;
+                    onComplete();
+
                 }
 
                 @Override
@@ -231,7 +280,7 @@ public class MongoDBCompareAndSwapBasedProxyManager<K> extends AbstractCompareAn
 
             FindOneAndReplaceOptions options = new FindOneAndReplaceOptions();
 
-            collection.findOneAndReplace(filter, replacement, options).subscribe(new Subscriber<Document>() {
+            collection.findOneAndReplace(filter, replacement, options).subscribe(new Subscriber<>() {
                 @Override
                 public void onSubscribe(Subscription s) {
                     logger.log(Level.FINE, "Update onSubscribe - requesting 1 item");
@@ -249,6 +298,7 @@ public class MongoDBCompareAndSwapBasedProxyManager<K> extends AbstractCompareAn
                 public void onError(Throwable t) {
                     logger.log(Level.WARNING, "Update onError - error during findOneAndReplace", t);
                     future.completeExceptionally(t);
+                    onComplete();
                 }
 
                 @Override
