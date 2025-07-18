@@ -13,7 +13,7 @@ import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 import org.testcontainers.containers.MongoDBContainer;
 
-import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -30,42 +30,66 @@ public class MongoDBTest extends AbstractDistributedBucketTest {
 
         mongoClient = MongoClients.create(mongoDBContainer.getConnectionString());
         MongoDatabase mongoDatabase = mongoClient.getDatabase("bucket4j_test");
-        MongoCollection<Document> collection = mongoDatabase.getCollection("bucket");
 
-        CompletableFuture<Void> future = new CompletableFuture<>();
-        collection.createIndex(
-                new Document("expiresAt", 1),
-                new com.mongodb.client.model.IndexOptions().expireAfter(0L, java.util.concurrent.TimeUnit.SECONDS)
-        ).subscribe(new Subscriber<>() {
-            @Override
-            public void onSubscribe(Subscription s) {
-                s.request(1);
-            }
+        String basicExpiresAtFieldName = "expiresAt";
+        MongoCollection<Document> basicCollection = prepareCollection(mongoDatabase, "bucket", basicExpiresAtFieldName, false);
 
-            @Override
-            public void onNext(String s) {
-                future.complete(null);
-            }
+        String modifiedExpiresAtFieldName = "expiresAt" + UUID.randomUUID();
+        MongoCollection<Document> modifiedCollection = prepareCollection(mongoDatabase, "bucket_modified", modifiedExpiresAtFieldName, false);
 
-            @Override
-            public void onError(Throwable t) {
-                future.completeExceptionally(t);
-            }
-
-            @Override
-            public void onComplete() {
-                future.complete(null);
-            }
-        });
-        future.join();
-
-        specs = Collections.singletonList(
+        specs = List.of(
                 new ProxyManagerSpec<>(
-                        "MongoDBCompareAndSwapBasedProxyManager",
+                        "BasicMongoDBCompareAndSwapBasedProxyManager",
                         () -> UUID.randomUUID().toString(),
-                        () -> Bucket4jMongoDB.compareAndSwapBasedBuilder(collection)
+                        () -> Bucket4jMongoDB.compareAndSwapBasedBuilder(basicCollection)
+                ).checkExpiration(),
+                new ProxyManagerSpec<>(
+                        "MongoDBCompareAndSwapBasedProxyManagerWithRenamedFields",
+                        () -> UUID.randomUUID().toString(),
+                        () -> Bucket4jMongoDB
+                                .compareAndSwapBasedBuilder(modifiedCollection)
+                                .expiresAtField(modifiedExpiresAtFieldName)
+                                .stateField("state" + UUID.randomUUID())
                 ).checkExpiration()
         );
+    }
+
+    /*
+    ttl index alfways false however long duration tests may use it
+     */
+    private static MongoCollection<Document> prepareCollection(MongoDatabase mongoDatabase, String collectionName, String expiresAtFieldName, boolean useTtlIndex) {
+        MongoCollection<Document> collection = mongoDatabase.getCollection(collectionName);
+
+        if (useTtlIndex) {
+            CompletableFuture<Void> future = new CompletableFuture<>();
+            collection.createIndex(
+                    new Document(expiresAtFieldName, 1),
+                    new com.mongodb.client.model.IndexOptions().expireAfter(0L, java.util.concurrent.TimeUnit.SECONDS)
+            ).subscribe(new Subscriber<>() {
+                @Override
+                public void onSubscribe(Subscription s) {
+                    s.request(1);
+                }
+
+                @Override
+                public void onNext(String s) {
+                    future.complete(null);
+                }
+
+                @Override
+                public void onError(Throwable t) {
+                    future.completeExceptionally(t);
+                }
+
+                @Override
+                public void onComplete() {
+                    future.complete(null);
+                }
+            });
+            future.join();
+        }
+
+        return collection;
     }
 
     @AfterAll

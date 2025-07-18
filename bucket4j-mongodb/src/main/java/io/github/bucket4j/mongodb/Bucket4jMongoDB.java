@@ -1,11 +1,8 @@
 package io.github.bucket4j.mongodb;
 
 import com.mongodb.reactivestreams.client.MongoCollection;
-import io.github.bucket4j.distributed.proxy.AbstractProxyManagerBuilder;
 import io.github.bucket4j.distributed.serialization.Mapper;
 import org.bson.Document;
-
-import java.util.Objects;
 
 import static io.github.bucket4j.distributed.serialization.Mapper.STRING;
 
@@ -18,26 +15,14 @@ public class Bucket4jMongoDB {
         return new MongoDBCompareAndSwapBasedProxyManagerBuilder<>(collection, keyMapper);
     }
 
-    public static class MongoDBCompareAndSwapBasedProxyManagerBuilder<K> extends AbstractProxyManagerBuilder<K, MongoDBCompareAndSwapBasedProxyManager<K>, MongoDBCompareAndSwapBasedProxyManagerBuilder<K>> {
-        private final MongoCollection<Document> collection;
-        private final Mapper<K> keyMapper;
-
+    public static class MongoDBCompareAndSwapBasedProxyManagerBuilder<K> extends AbstractMongoDBProxyManagerBuilder<K, MongoDBReactiveCompareAndSwapBasedProxyManager<K>, MongoDBCompareAndSwapBasedProxyManagerBuilder<K>> {
         public MongoDBCompareAndSwapBasedProxyManagerBuilder(MongoCollection<Document> collection, Mapper<K> keyMapper) {
-            this.collection = Objects.requireNonNull(collection, "Bucket collection cannot be null");
-            this.keyMapper = Objects.requireNonNull(keyMapper);
+            super(collection, keyMapper);
         }
 
         @Override
-        public MongoDBCompareAndSwapBasedProxyManager<K> build() {
-            return new MongoDBCompareAndSwapBasedProxyManager<>(this);
-        }
-
-        public MongoCollection<Document> getCollection() {
-            return collection;
-        }
-
-        public Mapper<K> getKeyMapper() {
-            return keyMapper;
+        public MongoDBReactiveCompareAndSwapBasedProxyManager<K> build() {
+            return new MongoDBReactiveCompareAndSwapBasedProxyManager<>(this);
         }
     }
 }
