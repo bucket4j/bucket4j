@@ -1,24 +1,19 @@
-package io.github.bucket4j.mongodb;
-
-import com.mongodb.reactivestreams.client.MongoClient;
-import com.mongodb.reactivestreams.client.MongoClients;
-import com.mongodb.reactivestreams.client.MongoCollection;
-import com.mongodb.reactivestreams.client.MongoDatabase;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
+import io.github.bucket4j.mongodb_sync.Bucket4jMongoDBSync;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
 import io.github.bucket4j.tck.ProxyManagerSpec;
 import org.bson.Document;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.reactivestreams.Subscriber;
-import org.reactivestreams.Subscription;
 import org.testcontainers.containers.MongoDBContainer;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 
-
-public class MongoDBTest extends AbstractDistributedBucketTest {
+public class MongoDBSyncTest extends AbstractDistributedBucketTest {
     private static MongoDBContainer mongoDBContainer;
     private static MongoClient mongoClient;
 
@@ -41,55 +36,17 @@ public class MongoDBTest extends AbstractDistributedBucketTest {
                 new ProxyManagerSpec<>(
                         "BasicMongoDBCompareAndSwapBasedProxyManager",
                         () -> UUID.randomUUID().toString(),
-                        () -> Bucket4jMongoDB.compareAndSwapBasedBuilder(basicCollection)
+                        () -> Bucket4jMongoDBSync.compareAndSwapBasedBuilder(basicCollection)
                 ).checkExpiration(),
                 new ProxyManagerSpec<>(
                         "MongoDBCompareAndSwapBasedProxyManagerWithRenamedFields",
                         () -> UUID.randomUUID().toString(),
-                        () -> Bucket4jMongoDB
+                        () -> Bucket4jMongoDBSync
                                 .compareAndSwapBasedBuilder(modifiedCollection)
                                 .expiresAtField(modifiedExpiresAtFieldName)
                                 .stateField("state" + UUID.randomUUID())
                 ).checkExpiration()
         );
-    }
-
-    /*
-    ttl index alfways false however long duration tests may use it
-     */
-    private static MongoCollection<Document> prepareCollection(MongoDatabase mongoDatabase, String collectionName, String expiresAtFieldName, boolean useTtlIndex) {
-        MongoCollection<Document> collection = mongoDatabase.getCollection(collectionName);
-
-        if (useTtlIndex) {
-            CompletableFuture<Void> future = new CompletableFuture<>();
-            collection.createIndex(
-                    new Document(expiresAtFieldName, 1),
-                    new com.mongodb.client.model.IndexOptions().expireAfter(0L, java.util.concurrent.TimeUnit.SECONDS)
-            ).subscribe(new Subscriber<>() {
-                @Override
-                public void onSubscribe(Subscription s) {
-                    s.request(1);
-                }
-
-                @Override
-                public void onNext(String s) {
-                    future.complete(null);
-                }
-
-                @Override
-                public void onError(Throwable t) {
-                    future.completeExceptionally(t);
-                }
-
-                @Override
-                public void onComplete() {
-                    future.complete(null);
-                }
-            });
-            future.join();
-        }
-
-        return collection;
     }
 
     @AfterAll
@@ -99,4 +56,21 @@ public class MongoDBTest extends AbstractDistributedBucketTest {
         }
         mongoDBContainer.stop();
     }
+
+    /*
+    ttl index always false however long duration tests may use it
+     */
+    private static MongoCollection<Document> prepareCollection(MongoDatabase mongoDatabase, String collectionName, String expiresAtFieldName, boolean useTtlIndex) {
+        MongoCollection<Document> collection = mongoDatabase.getCollection(collectionName);
+
+        if (useTtlIndex) {
+            collection.createIndex(
+                    new Document(expiresAtFieldName, 1),
+                    new com.mongodb.client.model.IndexOptions().expireAfter(0L, java.util.concurrent.TimeUnit.SECONDS)
+            );
+        }
+
+        return collection;
+    }
+
 }

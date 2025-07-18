@@ -11,7 +11,13 @@
     </parent>
 
     <artifactId>bucket4j_jdk17-mongodb</artifactId>
+    <packaging>pom</packaging>
     <name>bucket4j_jdk17-mongodb</name>
+    <modules>
+        <module>bucket4j-mongodb-sync</module>
+        <module>bucket4j-mongodb-async</module>
+        <module>bucket4j-mongo-common</module>
+    </modules>
 
     <properties>
         <modular-name>mongodb</modular-name>
@@ -40,22 +46,6 @@
             <groupId>org.testcontainers</groupId>
             <artifactId>mongodb</artifactId>
             <version>${testcontainers.version}</version>
-            <scope>test</scope>
-        </dependency>
-<!--        <dependency>-->
-<!--            <groupId>org.mongodb</groupId>-->
-<!--            <artifactId>mongo-java-driver</artifactId>-->
-<!--            <version>3.12.14</version>-->
-<!--        </dependency>-->
-        <dependency>
-            <groupId>org.mongodb</groupId>
-            <artifactId>mongodb-driver-reactivestreams</artifactId>
-            <version>4.11.1</version>
-        </dependency>
-        <dependency>
-            <groupId>com.zaxxer</groupId>
-            <artifactId>HikariCP-java6</artifactId>
-            <version>2.3.8</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
