@@ -26,7 +26,6 @@ public class MongoDBAsyncTest extends AbstractDistributedBucketTest {
     public static void setupMongo() {
         mongoDBContainer = new MongoDBContainer("mongo:latest");
         mongoDBContainer.start();
-        mongoDBContainer.followOutput(outputFrame -> System.out.print(outputFrame.getUtf8String()));
 
         mongoClient = MongoClients.create(mongoDBContainer.getConnectionString());
         MongoDatabase mongoDatabase = mongoClient.getDatabase("bucket4j_test");
