@@ -14,6 +14,7 @@ import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.CompareAndS
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.distributed.serialization.Mapper;
 import org.bson.Document;
+import org.bson.conversions.Bson;
 import org.bson.types.Binary;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
@@ -25,6 +26,16 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * The extension of Bucket4j library addressed to support MongoDB with a Reactive-Streams-based version of MongoDB Java driver.
+ * <p>
+ * Compare-And-Swap-based proxy manager for MongoDB that uses ReactiveStreams to provide asynchronous operations.
+ * <p>
+ * This implementation provides CAS functionality and solves concurrency related problems by utilizing MongoDB's atomic operations
+ * {@link MongoCollection#insertOne(Object)} and {@link MongoCollection#findOneAndReplace(Bson, Object)}.
+ *
+ * @param <K> type of primary key
+ */
 public class MongoDBAsyncCompareAndSwapBasedProxyManager<K> extends AbstractCompareAndSwapBasedProxyManager<K> implements ExpiredEntriesCleaner {
     private final MongoCollection<Document> collection;
     private final Mapper<K> keyMapper;
