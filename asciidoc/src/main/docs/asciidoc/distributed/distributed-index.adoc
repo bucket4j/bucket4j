@@ -9,3 +9,5 @@ include::jcache/in-memory-grid.adoc[]
 include::redis/redis.adoc[]
 
 include::jdbc/jdbc-integrations.adoc[]
+
+include::mongodb/mongodb-integrations.adoc[]

@@ -1,0 +1,21 @@
+[[bucket4j-mongodb, Bucket4j-MongoDB]]
+=== Bucket4j-MongoDB
+Bucket4j provides integration with MongoDB database through two modules:
+[cols="1,1,1"]
+|===
+|Module | Async supported | Driver type
+
+|``bucket4j-mongodb-sync``
+| No
+| Synchronous MongoDB Java Driver
+
+|``bucket4j-mongodb-async``
+| Yes
+| Reactive Streams MongoDB Java Driver
+
+|===
+IMPORTANT: Both modules use Compare&Swap pattern to handle concurrent access to MongoDB. This provides atomic bucket state updates through MongoDB's atomic operations (`insertOne` and `findOneAndReplace`).
+
+include::mongodb-sync.adoc[]
+
+include::mongodb-async.adoc[]

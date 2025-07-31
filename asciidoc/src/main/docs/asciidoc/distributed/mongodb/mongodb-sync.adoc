@@ -1,0 +1,73 @@
+[[bucket4j-mongodb-sync, Bucket4j-MongoDB-Sync]]
+==== MongoDB Sync integration
+===== Dependencies
+To use ``bucket4j-mongodb-sync`` extension you need to add following dependency:
+[source, xml, subs=attributes+]
+----
+<!-- For java 17 -->
+<dependency>
+    <groupId>com.bucket4j</groupId>
+    <artifactId>bucket4j_jdk17-mongo-common</artifactId>
+    <version>{revnumber}</version>
+</dependency>
+<dependency>
+    <groupId>com.bucket4j</groupId>
+    <artifactId>bucket4j_jdk17-mongodb-sync</artifactId>
+    <version>{revnumber}</version>
+</dependency>
+----
+
+===== Example of Bucket instantiation via MongoDBSyncCompareAndSwapBasedProxyManager
+[source, java]
+----
+MongoClient mongoClient = MongoClients.create("mongodb://localhost:27017");
+MongoDatabase database = mongoClient.getDatabase("bucket4j");
+MongoCollection<Document> collection = database.getCollection("buckets");
+
+MongoDBSyncCompareAndSwapBasedProxyManagerBuilder<String> builder = 
+    Bucket4jMongoDBSync.compareAndSwapBasedBuilder(collection)
+        .expirationAfterWrite(ExpirationAfterWriteStrategy.basedOnTimeForRefillingBucketUpToMax(ofSeconds(10)));
+
+MongoDBSyncCompareAndSwapBasedProxyManager<String> proxyManager = builder.build();
+
+BucketConfiguration configuration = BucketConfiguration.builder()
+    .addLimit(limit -> limit.capacity(1_000).refillGreedy(1_000, ofMinutes(1)))
+    .build();
+    
+Bucket bucket = proxyManager.getProxy("user-123", () -> configuration);
+----
+
+===== Custom field names
+By default, MongoDB integration uses `state` field to store bucket state and `expiresAt` field for expiration timestamp. You can customize these field names:
+[source, java]
+----
+MongoDBSyncCompareAndSwapBasedProxyManager<String> proxyManager = 
+    Bucket4jMongoDBSync.compareAndSwapBasedBuilder(collection)
+        .stateField("bucketState")
+        .expiresAtField("ttl")
+        .build();
+----
+
+===== Custom key mapping
+By default, the integration uses String keys. You can specify custom key types using a Mapper:
+[source, java]
+----
+MongoDBSyncCompareAndSwapBasedProxyManager<Long> proxyManager = 
+    Bucket4jMongoDBSync.compareAndSwapBasedBuilder(collection, Mapper.LONG)
+        .build();
+        
+Bucket bucket = proxyManager.getProxy(123L, () -> configuration);
+----
+
+===== Expired entries cleanup
+The MongoDB sync integration supports automatic cleanup of expired entries:
+[source, java]
+----
+// Remove up to 1000 expired entries
+int removedCount = proxyManager.removeExpired(1000);
+----
+
+===== Important notes
+* This integration does NOT support async operations - `isAsyncModeSupported()` returns `false`
+* Uses MongoDB's atomic operations for thread-safe bucket state management
+* Bucket state is stored as binary data in the configured state field
