@@ -193,6 +193,7 @@ public abstract class AbstractBucket implements Bucket {
                 return false;
             }
 
+            listener.onConsumed(tokensToConsume);
             if (nanosToSleep > 0L) {
                 try {
                     listener.beforeParking(nanosToSleep);
@@ -203,7 +204,6 @@ public abstract class AbstractBucket implements Bucket {
                 }
                 listener.onParked(nanosToSleep);
             }
-            listener.onConsumed(tokensToConsume);
 
             return true;
         }
@@ -219,12 +219,12 @@ public abstract class AbstractBucket implements Bucket {
                 return false;
             }
 
+            listener.onConsumed(tokensToConsume);
             if (nanosToSleep > 0L) {
                 listener.beforeParking(nanosToSleep);
                 blockingStrategy.parkUninterruptibly(nanosToSleep);
                 listener.onParked(nanosToSleep);
             }
-            listener.onConsumed(tokensToConsume);
 
             return true;
         }
@@ -238,6 +238,7 @@ public abstract class AbstractBucket implements Bucket {
                 throw BucketExceptions.reservationOverflow();
             }
 
+            listener.onConsumed(tokensToConsume);
             if (nanosToSleep > 0L) {
                 try {
                     listener.beforeParking(nanosToSleep);
@@ -248,7 +249,6 @@ public abstract class AbstractBucket implements Bucket {
                 }
                 listener.onParked(nanosToSleep);
             }
-            listener.onConsumed(tokensToConsume);
         }
 
         @Override
@@ -260,12 +260,12 @@ public abstract class AbstractBucket implements Bucket {
                 throw BucketExceptions.reservationOverflow();
             }
 
+            listener.onConsumed(tokensToConsume);
             if (nanosToSleep > 0L) {
                 listener.beforeParking(nanosToSleep);
                 blockingStrategy.parkUninterruptibly(nanosToSleep);
                 listener.onParked(nanosToSleep);
             }
-            listener.onConsumed(tokensToConsume);
         }
 
         @Override
@@ -408,6 +408,7 @@ public abstract class AbstractBucket implements Bucket {
                 return nanosToSleepVerbose.withValue(false);
             }
 
+            listener.onConsumed(tokensToConsume);
             if (nanosToSleep > 0L) {
                 try {
                     listener.beforeParking(nanosToSleep);
@@ -418,7 +419,7 @@ public abstract class AbstractBucket implements Bucket {
                 }
                 listener.onParked(nanosToSleep);
             }
-            listener.onConsumed(tokensToConsume);
+
             return nanosToSleepVerbose.withValue(true);
         }
 
@@ -434,12 +435,12 @@ public abstract class AbstractBucket implements Bucket {
                 return nanosToSleepVerbose.withValue(false);
             }
 
+            listener.onConsumed(tokensToConsume);
             if (nanosToSleep > 0L) {
                 listener.beforeParking(nanosToSleep);
                 blockingStrategy.parkUninterruptibly(nanosToSleep);
                 listener.onParked(nanosToSleep);
             }
-            listener.onConsumed(tokensToConsume);
 
             return nanosToSleepVerbose.withValue(true);
         }
@@ -454,6 +455,7 @@ public abstract class AbstractBucket implements Bucket {
                 throw BucketExceptions.reservationOverflow();
             }
 
+            listener.onConsumed(tokensToConsume);
             if (nanosToSleep > 0L) {
                 try {
                     listener.beforeParking(nanosToSleep);
@@ -464,7 +466,6 @@ public abstract class AbstractBucket implements Bucket {
                 }
                 listener.onParked(nanosToSleep);
             }
-            listener.onConsumed(tokensToConsume);
             return nanosToSleepVerbose.withValue(null);
         }
 
@@ -478,12 +479,12 @@ public abstract class AbstractBucket implements Bucket {
                 throw BucketExceptions.reservationOverflow();
             }
 
+            listener.onConsumed(tokensToConsume);
             if (nanosToSleep > 0L) {
                 listener.beforeParking(nanosToSleep);
                 blockingStrategy.parkUninterruptibly(nanosToSleep);
                 listener.onParked(nanosToSleep);
             }
-            listener.onConsumed(tokensToConsume);
             return nanosToSleepVerbose.withValue(null);
         }
     };
