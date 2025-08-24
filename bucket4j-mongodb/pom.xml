@@ -4,9 +4,9 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
+        <artifactId>bucket4j_jdk17-parent</artifactId>
         <groupId>com.bucket4j</groupId>
-        <artifactId>bucket4j_jdk17</artifactId>
-        <version>8.14.0</version>
+        <version>8.15.0</version>
         <relativePath>../bucket4j-parent</relativePath>
     </parent>
 
