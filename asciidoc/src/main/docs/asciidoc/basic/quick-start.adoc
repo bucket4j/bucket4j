@@ -6,18 +6,21 @@ You need to add the dependency to your project as described below in order to be
 .Maven dependency
 [,xml,subs=attributes+]
 ----
+<!-- For java 17 -->
 <dependency>
     <groupId>com.bucket4j</groupId>
-    <artifactId>bucket4j-core</artifactId>
+    <artifactId>bucket4j_jdk17-core</artifactId>
+    <version>{revnumber}</version>
+</dependency>
+
+<!-- For java 11 -->
+<dependency>
+    <groupId>com.bucket4j</groupId>
+    <artifactId>bucket4j_jdk11-core</artifactId>
     <version>{revnumber}</version>
 </dependency>
 ----
 
-.Gradle dependency
-[source, groovy, subs=attributes+]
-----
-implementation 'com.bucket4j:bucket4j-core:{revnumber}'
-----
 NOTE: see https://bucket4j.com/commercial/java8.html[Java compatibility matrix] if you need for build that is compatible with Java 8
 
 ==== Limiting the rate of access to REST API
