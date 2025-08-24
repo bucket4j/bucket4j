@@ -10,7 +10,7 @@
         <relativePath>../../bucket4j-mongodb</relativePath>
     </parent>
     <name>bucket4j-mongodb-async</name>
-    <artifactId>bucket4j-mongodb-async</artifactId>
+    <artifactId>bucket4j_jdk17-mongodb-async</artifactId>
 
     <properties>
         <modular-name>mongodb_async</modular-name>
@@ -18,7 +18,7 @@
     <dependencies>
         <dependency>
             <groupId>com.bucket4j</groupId>
-            <artifactId>bucket4j-mongo-common</artifactId>
+            <artifactId>bucket4j_jdk17-mongo-common</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

@@ -9,8 +9,8 @@
         <version>8.15.0</version>
         <relativePath>../../bucket4j-mongodb</relativePath>
     </parent>
-    <name>bucket4j-mongodb-sync</name>
-    <artifactId>bucket4j-mongodb-sync</artifactId>
+    <name>bucket4j_jdk17-mongodb-sync</name>
+    <artifactId>bucket4j_jdk17-mongodb-sync</artifactId>
 
     <properties>
         <modular-name>mongodb_sync</modular-name>
@@ -18,7 +18,7 @@
     <dependencies>
         <dependency>
             <groupId>com.bucket4j</groupId>
-            <artifactId>bucket4j-mongo-common</artifactId>
+            <artifactId>bucket4j_jdk17-mongo-common</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

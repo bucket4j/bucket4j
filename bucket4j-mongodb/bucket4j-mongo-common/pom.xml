@@ -9,8 +9,8 @@
         <version>8.15.0</version>
         <relativePath>../../bucket4j-mongodb</relativePath>
     </parent>
-    <name>bucket4j-mongo-common</name>
-    <artifactId>bucket4j-mongo-common</artifactId>
+    <name>bucket4j_jdk17-mongo-common</name>
+    <artifactId>bucket4j_jdk17-mongo-common</artifactId>
 
     <properties>
         <modular-name>mongodb_common</modular-name>
