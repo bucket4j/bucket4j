@@ -15,6 +15,18 @@ To use ``bucket4j-mongodb-async`` extension you need to add following dependency
     <artifactId>bucket4j_jdk17-mongodb-async</artifactId>
     <version>{revnumber}</version>
 </dependency>
+
+<!-- For java 11 -->
+<dependency>
+    <groupId>com.bucket4j</groupId>
+    <artifactId>bucket4j_jdk11-mongo-common</artifactId>
+    <version>{revnumber}</version>
+</dependency>
+<dependency>
+    <groupId>com.bucket4j</groupId>
+    <artifactId>bucket4j_jdk11-mongodb-async</artifactId>
+    <version>{revnumber}</version>
+</dependency>
 ----
 
 ===== Example of Bucket instantiation via MongoDBAsyncCompareAndSwapBasedProxyManager
