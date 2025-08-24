@@ -17,9 +17,7 @@
 
     <properties>
         <modular-name>benchmarks</modular-name>
-        <maven.deploy.skip>true</maven.deploy.skip>
         <revapi.skip>true</revapi.skip>
-        <skipNexusStagingDeployMojo>true</skipNexusStagingDeployMojo>
     </properties>
 
     <dependencies>

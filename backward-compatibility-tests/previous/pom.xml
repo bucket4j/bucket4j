@@ -17,8 +17,6 @@
     <properties>
         <modular-name>backward_compatibility_tests_prevoius</modular-name>
         <prevoius.version>8.8.0</prevoius.version>
-        <maven.deploy.skip>true</maven.deploy.skip>
-        <skipNexusStagingDeployMojo>true</skipNexusStagingDeployMojo>
     </properties>
 
     <dependencies>

@@ -11,8 +11,6 @@
     </parent>
 
     <properties>
-        <skipNexusStagingDeployMojo>true</skipNexusStagingDeployMojo>
-        <maven.deploy.skip>true</maven.deploy.skip>
         <revapi.skip>true</revapi.skip>
         <experimentalCoroutines>enable</experimentalCoroutines>
         <kotlin.version>1.9.21</kotlin.version>

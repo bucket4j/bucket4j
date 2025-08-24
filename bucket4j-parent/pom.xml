@@ -260,16 +260,28 @@
             <build>
                 <plugins>
                     <plugin>
-                        <!-- See documentation there https://central.sonatype.org/pages/apache-maven.html -->
-                        <groupId>org.sonatype.plugins</groupId>
-                        <artifactId>nexus-staging-maven-plugin</artifactId>
-                        <version>1.6.8</version>
+                        <groupId>org.sonatype.central</groupId>
+                        <artifactId>central-publishing-maven-plugin</artifactId>
+                        <version>0.8.0</version>
                         <extensions>true</extensions>
                         <configuration>
-                            <serverId>ossrh-bucket4j</serverId>
-                            <nexusUrl>https://s01.oss.sonatype.org/</nexusUrl>
-                            <autoReleaseAfterClose>false</autoReleaseAfterClose>
-                            <stagingProgressTimeoutMinutes>120</stagingProgressTimeoutMinutes>
+                            <publishingServerId>central</publishingServerId>
+<!--                            <autoPublish>true</autoPublish>-->
+<!--                            <waitUntil>published</waitUntil>-->
+                            <excludeArtifacts>
+                                <excludeArtifact>bucket4j_jdk17-infinispan-all</excludeArtifact>
+                                <excludeArtifact>bucket4j_jdk17-hazelcast-all</excludeArtifact>
+                                <excludeArtifact>bucket4j_jdk17-redis</excludeArtifact>
+                                <excludeArtifact>bucket4j_jdk17-mongodb</excludeArtifact>
+                                <excludeArtifact>asciidoc</excludeArtifact>
+                                <excludeArtifact>bucket4j_jdk17-benchmarks</excludeArtifact>
+                                <excludeArtifact>lincheck-tests</excludeArtifact>
+                                <excludeArtifact>bucket4j_jdk17-examples</excludeArtifact>
+                                <excludeArtifact>backward-compatibility-tests</excludeArtifact>
+                                <excludeArtifact>backward-compatibility-tests-common</excludeArtifact>
+                                <excludeArtifact>backward-compatibility-tests-current</excludeArtifact>
+                                <excludeArtifact>backward-compatibility-tests-prevoius</excludeArtifact>
+                            </excludeArtifacts>
                         </configuration>
                     </plugin>
                     <plugin>

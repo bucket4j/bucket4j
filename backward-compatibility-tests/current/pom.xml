@@ -17,8 +17,6 @@
     <properties>
         <modular-name>backward_compatibility_tests_current</modular-name>
         <current.version>8.15.0</current.version>
-        <maven.deploy.skip>true</maven.deploy.skip>
-        <skipNexusStagingDeployMojo>true</skipNexusStagingDeployMojo>
     </properties>
 
     <dependencies>
