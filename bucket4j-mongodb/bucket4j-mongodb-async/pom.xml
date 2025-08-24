@@ -9,7 +9,7 @@
         <version>8.15.0</version>
         <relativePath>../../bucket4j-mongodb</relativePath>
     </parent>
-
+    <name>bucket4j-mongodb-async</name>
     <artifactId>bucket4j-mongodb-async</artifactId>
 
     <properties>
