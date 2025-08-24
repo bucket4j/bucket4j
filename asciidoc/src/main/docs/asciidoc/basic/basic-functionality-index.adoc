@@ -1,8 +1,8 @@
 == Basic functionality
 
-include::concepts.adoc[]
-
 include::quick-start.adoc[]
+
+include::concepts.adoc[]
 
 include::listener.adoc[]
 
