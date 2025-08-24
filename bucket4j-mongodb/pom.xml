@@ -18,17 +18,6 @@
         <module>bucket4j-mongodb-async</module>
         <module>bucket4j-mongo-common</module>
     </modules>
-
-    <properties>
-        <modular-name>mongodb</modular-name>
-    </properties>
-    <repositories>
-        <repository>
-            <id>central</id>
-            <name>Maven Central</name>
-            <url>https://repo1.maven.org/maven2/</url>
-        </repository>
-    </repositories>
     <dependencies>
         <dependency>
             <groupId>com.bucket4j</groupId>

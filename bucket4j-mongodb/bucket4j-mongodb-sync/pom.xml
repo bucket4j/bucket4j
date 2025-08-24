@@ -12,16 +12,13 @@
     <artifactId>bucket4j-mongodb-sync</artifactId>
 
     <properties>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <modular-name>mongodb-sync</modular-name>
     </properties>
     <dependencies>
         <dependency>
             <groupId>com.bucket4j</groupId>
             <artifactId>bucket4j-mongo-common</artifactId>
-            <version>8.15.0</version>
-            <scope>compile</scope>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.mongodb</groupId>
