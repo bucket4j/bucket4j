@@ -13,6 +13,6 @@
     <artifactId>bucket4j-mongo-common</artifactId>
 
     <properties>
-        <modular-name>mongodb-common</modular-name>
+        <modular-name>mongodb_common</modular-name>
     </properties>
 </project>

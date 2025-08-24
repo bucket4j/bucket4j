@@ -13,7 +13,7 @@
     <artifactId>bucket4j-mongodb-async</artifactId>
 
     <properties>
-        <modular-name>mongodb-async</modular-name>
+        <modular-name>mongodb_async</modular-name>
     </properties>
     <dependencies>
         <dependency>
