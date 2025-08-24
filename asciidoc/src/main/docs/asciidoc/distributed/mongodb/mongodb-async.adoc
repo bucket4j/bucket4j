@@ -1,0 +1,102 @@
+[[bucket4j-mongodb-async, Bucket4j-MongoDB-Async]]
+==== MongoDB Async integration
+===== Dependencies
+To use ``bucket4j-mongodb-async`` extension you need to add following dependency:
+[source, xml, subs=attributes+]
+----
+<!-- For java 17 -->
+<dependency>
+    <groupId>com.bucket4j</groupId>
+    <artifactId>bucket4j_jdk17-mongo-common</artifactId>
+    <version>{revnumber}</version>
+</dependency>
+<dependency>
+    <groupId>com.bucket4j</groupId>
+    <artifactId>bucket4j_jdk17-mongodb-async</artifactId>
+    <version>{revnumber}</version>
+</dependency>
+----
+
+===== Example of Bucket instantiation via MongoDBAsyncCompareAndSwapBasedProxyManager
+[source, java]
+----
+import com.mongodb.reactivestreams.client.MongoClient;
+import com.mongodb.reactivestreams.client.MongoClients;
+
+MongoClient mongoClient = MongoClients.create("mongodb://localhost:27017");
+MongoDatabase database = mongoClient.getDatabase("bucket4j");
+MongoCollection<Document> collection = database.getCollection("buckets");
+
+MongoDBAsyncCompareAndSwapBasedProxyManagerBuilder<String> builder = 
+    Bucket4jMongoDBAsync.compareAndSwapBasedBuilder(collection)
+        .expirationAfterWrite(ExpirationAfterWriteStrategy.basedOnTimeForRefillingBucketUpToMax(ofSeconds(10)));
+
+MongoDBAsyncCompareAndSwapBasedProxyManager<String> proxyManager = builder.build();
+
+BucketConfiguration configuration = BucketConfiguration.builder()
+    .addLimit(limit -> limit.capacity(1_000).refillGreedy(1_000, ofMinutes(1)))
+    .build();
+    
+// Synchronous usage
+Bucket bucket = proxyManager.getProxy("user-123", () -> configuration);
+
+// Asynchronous usage
+AsyncBucketProxy asyncBucket = proxyManager.asAsync().getProxy("user-456", () -> configuration);
+CompletableFuture<ConsumptionProbe> future = asyncBucket.tryConsumeAndReturnRemaining(1);
+----
+
+===== Custom field names
+By default, MongoDB integration uses `state` field to store bucket state and `expiresAt` field for expiration timestamp. You can customize these field names:
+[source, java]
+----
+MongoDBAsyncCompareAndSwapBasedProxyManager<String> proxyManager = 
+    Bucket4jMongoDBAsync.compareAndSwapBasedBuilder(collection)
+        .stateField("bucketState")
+        .expiresAtField("ttl")
+        .build();
+----
+
+===== Custom key mapping
+By default, the integration uses String keys. You can specify custom key types using a Mapper:
+[source, java]
+----
+MongoDBAsyncCompareAndSwapBasedProxyManager<Long> proxyManager = 
+    Bucket4jMongoDBAsync.compareAndSwapBasedBuilder(collection, Mapper.LONG)
+        .build();
+        
+AsyncBucketProxy asyncBucket = proxyManager.asAsync().getProxy(123L, () -> configuration);
+----
+
+===== Async operations support
+The MongoDB async integration fully supports asynchronous operations using CompletableFuture:
+[source, java]
+----
+AsyncBucketProxy asyncBucket = proxyManager.asAsync().getProxy("user-123", () -> configuration);
+
+// Async consume
+CompletableFuture<ConsumptionProbe> consumeFuture = asyncBucket.tryConsumeAndReturnRemaining(10);
+consumeFuture.thenAccept(probe -> {
+    if (probe.isConsumed()) {
+        System.out.println("Consumed successfully, remaining: " + probe.getRemainingTokens());
+    } else {
+        System.out.println("Rate limit exceeded, try again in: " + probe.getNanosToWaitForRefill());
+    }
+});
+
+// Async removal
+CompletableFuture<Void> removeFuture = proxyManager.removeAsync("user-123");
+----
+
+===== Expired entries cleanup
+The MongoDB async integration supports automatic cleanup of expired entries:
+[source, java]
+----
+// Remove up to 1000 expired entries
+int removedCount = proxyManager.removeExpired(1000);
+----
+
+===== Important notes
+* This integration supports both synchronous and asynchronous operations - `isAsyncModeSupported()` returns `true`
+* Uses Reactive Streams MongoDB driver for non-blocking operations
+* Uses MongoDB's atomic operations for thread-safe bucket state management
+* Bucket state is stored as binary data in the configured state field
