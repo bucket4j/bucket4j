@@ -2,6 +2,8 @@
 
 include::asynchronous.adoc[]
 
+include::client-side-configuration.adoc[]
+
 include::implicit-configuration-replacement.adoc[]
 
 include::implement-custom-database.adoc[]

@@ -1,0 +1,58 @@
+=== Client-side configuration
+
+`ClientSideConfig` allows you to configure client-side behavior for distributed bucket operations.
+
+==== Request timeout
+
+You can configure a timeout for distributed bucket operations:
+
+[source, java]
+----
+ClientSideConfig config = ClientSideConfig.getDefault()
+    .withRequestTimeout(Duration.ofSeconds(3));
+
+ProxyManager<String> proxyManager = LettuceBasedProxyManager.builderFor(redisClient)
+    .withClientSideConfig(config)
+    .build();
+----
+
+When the timeout is exceeded, a `TimeoutException` will be thrown.
+
+==== Max retries for CAS operations
+
+For Compare-And-Swap (CAS) based backends (Redis, Hazelcast, Ignite, etc.), you can limit the number of retry attempts to prevent infinite loops under high contention:
+
+[source, java]
+----
+ClientSideConfig config = ClientSideConfig.getDefault()
+    .withMaxRetries(10);  // Limit to 10 CAS retry attempts
+
+ProxyManager<String> proxyManager = LettuceBasedProxyManager.builderFor(redisClient)
+    .withClientSideConfig(config)
+    .build();
+----
+
+When max retries is exceeded, a `BucketExecutionException` will be thrown.
+
+**Default behavior:** If `maxRetries` is not configured, CAS operations will retry for max integer value (backward compatible).
+
+==== Combining timeout and max retries
+
+You can combine both settings for comprehensive protection:
+
+[source, java]
+----
+ClientSideConfig config = ClientSideConfig.getDefault()
+    .withMaxRetries(5)                          // Max 5 retry attempts
+    .withRequestTimeout(Duration.ofSeconds(2)); // Max 2 seconds total
+
+ProxyManager<String> proxyManager = LettuceBasedProxyManager.builderFor(redisClient)
+    .withClientSideConfig(config)
+    .build();
+----
+
+The operation will fail with whichever limit is reached first:
+
+* `BucketExecutionException` if 5 retries are exceeded
+* `TimeoutException` if 2 seconds timeout is exceeded
+
