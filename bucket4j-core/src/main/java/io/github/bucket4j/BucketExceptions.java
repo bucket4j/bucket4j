@@ -248,6 +248,18 @@ public final class BucketExceptions {
         return new IllegalArgumentException(msg);
     }
 
+    public static IllegalArgumentException nonPositiveMaxRetries(int maxRetries) {
+        String pattern = "{0} is wrong value for maxRetries, because maxRetries should be positive";
+        String msg = MessageFormat.format(pattern, maxRetries);
+        return new IllegalArgumentException(msg);
+    }
+
+    public static BucketExecutionException maxRetriesExceeded(int maxRetries) {
+        String pattern = "CAS operation failed after {0} retry attempts";
+        String msg = MessageFormat.format(pattern, maxRetries);
+        return new BucketExecutionException(msg);
+    }
+
     public static TimeoutException timeoutReached(long nanosElapsed, long requestTimeoutNanos) {
         String pattern = "Timeout {0} nanos has been reached, actual operation time is {1} nanos";
         String msg = MessageFormat.format(pattern, requestTimeoutNanos, nanosElapsed);

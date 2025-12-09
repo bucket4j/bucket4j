@@ -20,6 +20,7 @@
 
 package io.github.bucket4j.distributed.proxy.generic.compare_and_swap;
 
+import io.github.bucket4j.BucketExceptions;
 import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.proxy.AbstractProxyManager;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
@@ -49,12 +50,19 @@ public abstract class AbstractCompareAndSwapBasedProxyManager<K> extends Abstrac
     public <T> CommandResult<T> execute(K key, Request<T> request) {
         Timeout timeout = Timeout.of(getClientSideConfig());
         CompareAndSwapOperation operation = timeout.call(requestTimeout -> beginCompareAndSwapOperation(key));
-        while (true) {
+
+        Optional<Integer> maxRetries = getClientSideConfig().getMaxRetries();
+        int maxAttempts = maxRetries.orElse(Integer.MAX_VALUE);
+
+        for (int attempt = 0; attempt < maxAttempts; attempt++) {
             CommandResult<T> result = execute(request, operation, timeout);
             if (result != UNSUCCESSFUL_CAS_RESULT) {
                 return result;
             }
         }
+
+        // Only reached if maxRetries was explicitly set
+        throw BucketExceptions.maxRetriesExceeded(maxAttempts);
     }
 
     @Override
@@ -62,7 +70,7 @@ public abstract class AbstractCompareAndSwapBasedProxyManager<K> extends Abstrac
         Timeout timeout = Timeout.of(getClientSideConfig());
         AsyncCompareAndSwapOperation operation = beginAsyncCompareAndSwapOperation(key);
         CompletableFuture<CommandResult<T>> result = executeAsync(request, operation, timeout);
-        return result.thenCompose((CommandResult<T> response) -> retryIfCasWasUnsuccessful(operation, request, response, timeout));
+        return result.thenCompose((CommandResult<T> response) -> retryIfCasWasUnsuccessful(operation, request, response, timeout, 1));
     }
 
     protected abstract CompareAndSwapOperation beginCompareAndSwapOperation(K key);
@@ -86,12 +94,20 @@ public abstract class AbstractCompareAndSwapBasedProxyManager<K> extends Abstrac
         }
     }
 
-    private <T> CompletableFuture<CommandResult<T>> retryIfCasWasUnsuccessful(AsyncCompareAndSwapOperation operation, Request<T> request, CommandResult<T> casResponse, Timeout timeout) {
+    private <T> CompletableFuture<CommandResult<T>> retryIfCasWasUnsuccessful(AsyncCompareAndSwapOperation operation, Request<T> request, CommandResult<T> casResponse, Timeout timeout, int attemptCount) {
         if (casResponse != UNSUCCESSFUL_CAS_RESULT) {
             return CompletableFuture.completedFuture(casResponse);
-        } else {
-            return executeAsync(request, operation, timeout).thenCompose((CommandResult<T> response) -> retryIfCasWasUnsuccessful(operation, request, response, timeout));
         }
+
+        // Check max retries
+        Optional<Integer> maxRetries = getClientSideConfig().getMaxRetries();
+        if (maxRetries.isPresent() && attemptCount >= maxRetries.get()) {
+            CompletableFuture<CommandResult<T>> failed = new CompletableFuture<>();
+            failed.completeExceptionally(BucketExceptions.maxRetriesExceeded(maxRetries.get()));
+            return failed;
+        }
+
+        return executeAsync(request, operation, timeout).thenCompose((CommandResult<T> response) -> retryIfCasWasUnsuccessful(operation, request, response, timeout, attemptCount + 1));
     }
 
     private <T> CompletableFuture<CommandResult<T>> executeAsync(Request<T> request, AsyncCompareAndSwapOperation operation, Timeout timeout) {
