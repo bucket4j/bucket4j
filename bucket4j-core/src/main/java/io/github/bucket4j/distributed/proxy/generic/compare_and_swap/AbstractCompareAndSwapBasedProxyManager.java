@@ -24,6 +24,7 @@ import io.github.bucket4j.BucketExceptions;
 import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.proxy.AbstractProxyManager;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
+import io.github.bucket4j.distributed.proxy.RetryStrategy;
 import io.github.bucket4j.distributed.proxy.Timeout;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.MutableBucketEntry;
@@ -51,17 +52,34 @@ public abstract class AbstractCompareAndSwapBasedProxyManager<K> extends Abstrac
         Timeout timeout = Timeout.of(getClientSideConfig());
         CompareAndSwapOperation operation = timeout.call(requestTimeout -> beginCompareAndSwapOperation(key));
 
+        Optional<RetryStrategy> retryStrategy = getClientSideConfig().getRetryStrategy();
         Optional<Integer> maxRetries = getClientSideConfig().getMaxRetries();
+
+        long startTimeNanos = System.nanoTime();
+        int attempt = 0;
         int maxAttempts = maxRetries.orElse(Integer.MAX_VALUE);
 
-        for (int attempt = 0; attempt < maxAttempts; attempt++) {
+        while (attempt < maxAttempts) {
             CommandResult<T> result = execute(request, operation, timeout);
             if (result != UNSUCCESSFUL_CAS_RESULT) {
                 return result;
             }
+
+            // Check retry strategy if present
+            if (retryStrategy.isPresent()) {
+                long currentTimeNanos = System.nanoTime();
+                RetryStrategy.RetryMetadata metadata = new RetryStrategy.RetryMetadata(
+                    attempt + 1, key, startTimeNanos, currentTimeNanos
+                );
+                if (!retryStrategy.get().shouldRetry(metadata)) {
+                    throw BucketExceptions.maxRetriesExceeded(attempt + 1);
+                }
+            }
+
+            attempt++;
         }
 
-        // Only reached if maxRetries was explicitly set
+        // Only reached if maxRetries was explicitly set and exceeded
         throw BucketExceptions.maxRetriesExceeded(maxAttempts);
     }
 
@@ -70,7 +88,8 @@ public abstract class AbstractCompareAndSwapBasedProxyManager<K> extends Abstrac
         Timeout timeout = Timeout.of(getClientSideConfig());
         AsyncCompareAndSwapOperation operation = beginAsyncCompareAndSwapOperation(key);
         CompletableFuture<CommandResult<T>> result = executeAsync(request, operation, timeout);
-        return result.thenCompose((CommandResult<T> response) -> retryIfCasWasUnsuccessful(operation, request, response, timeout, 1));
+        long startTimeNanos = System.nanoTime();
+        return result.thenCompose((CommandResult<T> response) -> retryIfCasWasUnsuccessful(operation, request, response, timeout, 1, key, startTimeNanos));
     }
 
     protected abstract CompareAndSwapOperation beginCompareAndSwapOperation(K key);
@@ -94,20 +113,34 @@ public abstract class AbstractCompareAndSwapBasedProxyManager<K> extends Abstrac
         }
     }
 
-    private <T> CompletableFuture<CommandResult<T>> retryIfCasWasUnsuccessful(AsyncCompareAndSwapOperation operation, Request<T> request, CommandResult<T> casResponse, Timeout timeout, int attemptCount) {
+    private <T> CompletableFuture<CommandResult<T>> retryIfCasWasUnsuccessful(AsyncCompareAndSwapOperation operation, Request<T> request, CommandResult<T> casResponse, Timeout timeout, int attemptCount, K key, long startTimeNanos) {
         if (casResponse != UNSUCCESSFUL_CAS_RESULT) {
             return CompletableFuture.completedFuture(casResponse);
         }
 
-        // Check max retries
-        Optional<Integer> maxRetries = getClientSideConfig().getMaxRetries();
-        if (maxRetries.isPresent() && attemptCount >= maxRetries.get()) {
-            CompletableFuture<CommandResult<T>> failed = new CompletableFuture<>();
-            failed.completeExceptionally(BucketExceptions.maxRetriesExceeded(maxRetries.get()));
-            return failed;
+        // Check retry strategy first
+        Optional<RetryStrategy> retryStrategy = getClientSideConfig().getRetryStrategy();
+        if (retryStrategy.isPresent()) {
+            long currentTimeNanos = System.nanoTime();
+            RetryStrategy.RetryMetadata metadata = new RetryStrategy.RetryMetadata(
+                attemptCount, key, startTimeNanos, currentTimeNanos
+            );
+            if (!retryStrategy.get().shouldRetry(metadata)) {
+                CompletableFuture<CommandResult<T>> failed = new CompletableFuture<>();
+                failed.completeExceptionally(BucketExceptions.maxRetriesExceeded(attemptCount));
+                return failed;
+            }
+        } else {
+            // Fall back to max retries check
+            Optional<Integer> maxRetries = getClientSideConfig().getMaxRetries();
+            if (maxRetries.isPresent() && attemptCount >= maxRetries.get()) {
+                CompletableFuture<CommandResult<T>> failed = new CompletableFuture<>();
+                failed.completeExceptionally(BucketExceptions.maxRetriesExceeded(maxRetries.get()));
+                return failed;
+            }
         }
 
-        return executeAsync(request, operation, timeout).thenCompose((CommandResult<T> response) -> retryIfCasWasUnsuccessful(operation, request, response, timeout, attemptCount + 1));
+        return executeAsync(request, operation, timeout).thenCompose((CommandResult<T> response) -> retryIfCasWasUnsuccessful(operation, request, response, timeout, attemptCount + 1, key, startTimeNanos));
     }
 
     private <T> CompletableFuture<CommandResult<T>> executeAsync(Request<T> request, AsyncCompareAndSwapOperation operation, Timeout timeout) {

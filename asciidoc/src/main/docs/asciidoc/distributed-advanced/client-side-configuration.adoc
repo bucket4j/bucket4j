@@ -56,3 +56,72 @@ The operation will fail with whichever limit is reached first:
 * `BucketExecutionException` if 5 retries are exceeded
 * `TimeoutException` if 2 seconds timeout is exceeded
 
+==== Custom retry strategy for CAS operations
+
+For advanced use cases, you can provide a custom retry strategy that makes dynamic decisions based on retry metadata:
+
+[source, java]
+----
+RetryStrategy customStrategy = metadata -> {
+    // Access retry information
+    int attemptNumber = metadata.getAttemptNumber();
+    String bucketKey = (String) metadata.getBucketKey();
+
+    // Log retry attempts
+    logger.info("CAS retry attempt {} for bucket {}", attemptNumber, bucketKey);
+
+    // Custom retry logic based on bucket
+    return attemptNumber < 5;
+};
+
+ClientSideConfig config = ClientSideConfig.getDefault()
+    .withRetryStrategy(customStrategy);
+
+ProxyManager<String> proxyManager = LettuceBasedProxyManager.builderFor(redisClient)
+    .withClientSideConfig(config)
+    .build();
+----
+
+The `RetryMetadata` provides:
+
+* `getAttemptNumber()` - Current retry attempt number (1-based)
+* `getBucketKey()` - The bucket identifier/key
+
+**Common use cases:**
+
+*Simple retry limit:*
+[source, java]
+----
+RetryStrategy limitedRetries = metadata ->
+    metadata.getAttemptNumber() < 5;
+----
+
+*Bucket-specific retry logic with neural network evaluation:*
+[source, java]
+----
+RetryStrategy bucketSpecific = metadata -> {
+    String bucketKey = (String) metadata.getBucketKey();
+    countRetryInPrometheus(metadata.getAttemptNumber())
+    // Use neural network to decide based on bucket and attempt
+    return evaluateNeuralModel(bucketKey, metadata.getAttemptNumber());
+};
+----
+
+*Integration with metrics:*
+[source, java]
+----
+RetryStrategy withMetrics = metadata -> {
+    metricsCollector.recordRetry(metadata.getBucketKey(), metadata.getAttemptNumber());
+    return metadata.getAttemptNumber() < 5;
+};
+----
+
+*Delegating to mediator component:*
+[source, java]
+----
+RetryStrategy mediatorBased = metadata ->
+    retryMediator.shouldRetry(metadata.getBucketKey(), metadata.getAttemptNumber());
+----
+
+**Note:** If both `withRetryStrategy()` and `withMaxRetries()` are configured, the `RetryStrategy` takes precedence.
+
