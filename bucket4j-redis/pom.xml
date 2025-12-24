@@ -24,6 +24,7 @@
         <module>bucket4j-jedis</module>
         <module>bucket4j-lettuce</module>
         <module>bucket4j-redisson</module>
+        <module>bucket4j-glide</module>
     </modules>
 
     <dependencies>
