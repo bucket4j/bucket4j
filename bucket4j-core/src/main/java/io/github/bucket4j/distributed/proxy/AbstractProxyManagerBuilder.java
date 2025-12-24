@@ -233,7 +233,7 @@ public abstract class AbstractProxyManagerBuilder<K, P extends ProxyManager<K>, 
     }
 
     public ClientSideConfig getClientSideConfig() {
-        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, requestTimeoutNanos, expirationStrategy, defaultListener, defaultRecoveryStrategy);
+        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, requestTimeoutNanos, expirationStrategy, defaultListener, defaultRecoveryStrategy, Optional.empty(), Optional.empty());
     }
 
 }

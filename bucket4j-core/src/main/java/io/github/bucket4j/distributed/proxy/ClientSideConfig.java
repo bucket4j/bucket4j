@@ -42,7 +42,7 @@ import io.github.bucket4j.distributed.versioning.Versions;
 public class ClientSideConfig {
 
     private static final ClientSideConfig defaultConfig = new ClientSideConfig(Versions.getLatest(), Optional.empty(),
-        ExecutionStrategy.SAME_TREAD, Optional.empty(), Optional.empty(), BucketListener.NOPE, RecoveryStrategy.RECONSTRUCT);
+        ExecutionStrategy.SAME_TREAD, Optional.empty(), Optional.empty(), BucketListener.NOPE, RecoveryStrategy.RECONSTRUCT, Optional.empty(), Optional.empty());
 
     private final Version backwardCompatibilityVersion;
     private final Optional<TimeMeter> clientSideClock;
@@ -56,12 +56,17 @@ public class ClientSideConfig {
     private final BucketListener defaultListener;
     private final RecoveryStrategy defaultRecoveryStrategy;
 
+    private final Optional<Integer> maxRetries;
+    private final Optional<RetryStrategy> retryStrategy;
+
     protected ClientSideConfig(Version backwardCompatibilityVersion, Optional<TimeMeter> clientSideClock,
                                ExecutionStrategy executionStrategy,
                                Optional<Long> requestTimeoutNanos,
                                Optional<ExpirationAfterWriteStrategy> expirationStrategy,
                                BucketListener defaultListener,
-                               RecoveryStrategy defaultRecoveryStrategy) {
+                               RecoveryStrategy defaultRecoveryStrategy,
+                               Optional<Integer> maxRetries,
+                               Optional<RetryStrategy> retryStrategy) {
         this.backwardCompatibilityVersion = Objects.requireNonNull(backwardCompatibilityVersion);
         this.clientSideClock = Objects.requireNonNull(clientSideClock);
         this.executionStrategy = executionStrategy;
@@ -69,6 +74,8 @@ public class ClientSideConfig {
         this.expirationStrategy = expirationStrategy;
         this.defaultListener = Objects.requireNonNull(defaultListener);
         this.defaultRecoveryStrategy = Objects.requireNonNull(defaultRecoveryStrategy);
+        this.maxRetries = Objects.requireNonNull(maxRetries);
+        this.retryStrategy = Objects.requireNonNull(retryStrategy);
     }
 
     /**
@@ -98,7 +105,7 @@ public class ClientSideConfig {
      * @return new instance of {@link ClientSideConfig} with configured {@code backwardCompatibilityVersion}.
      */
     public ClientSideConfig backwardCompatibleWith(Version backwardCompatibilityVersion) {
-        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, requestTimeoutNanos, expirationStrategy, defaultListener, defaultRecoveryStrategy);
+        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, requestTimeoutNanos, expirationStrategy, defaultListener, defaultRecoveryStrategy, maxRetries, retryStrategy);
     }
 
     /**
@@ -116,7 +123,7 @@ public class ClientSideConfig {
      * @return new instance of {@link ClientSideConfig} with configured {@code clientClock}.
      */
     public ClientSideConfig withClientClock(TimeMeter clientClock) {
-        return new ClientSideConfig(backwardCompatibilityVersion, Optional.of(clientClock), executionStrategy, requestTimeoutNanos, expirationStrategy, defaultListener, defaultRecoveryStrategy);
+        return new ClientSideConfig(backwardCompatibilityVersion, Optional.of(clientClock), executionStrategy, requestTimeoutNanos, expirationStrategy, defaultListener, defaultRecoveryStrategy, maxRetries, retryStrategy);
     }
 
     /**
@@ -130,7 +137,7 @@ public class ClientSideConfig {
      * @return new instance of {@link ClientSideConfig} with configured {@code clientClock}.
      */
     public ClientSideConfig withExecutionStrategy(ExecutionStrategy executionStrategy) {
-        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, requestTimeoutNanos, expirationStrategy, defaultListener, defaultRecoveryStrategy);
+        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, requestTimeoutNanos, expirationStrategy, defaultListener, defaultRecoveryStrategy, maxRetries, retryStrategy);
     }
 
     /**
@@ -153,7 +160,7 @@ public class ClientSideConfig {
             throw BucketExceptions.nonPositiveRequestTimeout(requestTimeout);
         }
         long requestTimeoutNanos = requestTimeout.toNanos();
-        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, Optional.of(requestTimeoutNanos), expirationStrategy, defaultListener, defaultRecoveryStrategy);
+        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, Optional.of(requestTimeoutNanos), expirationStrategy, defaultListener, defaultRecoveryStrategy, maxRetries, retryStrategy);
     }
 
     /**
@@ -166,7 +173,54 @@ public class ClientSideConfig {
      * @return new instance of {@link ClientSideConfig} with configured {@code expirationStrategy}.
      */
     public ClientSideConfig withExpirationAfterWriteStrategy(ExpirationAfterWriteStrategy expirationStrategy) {
-        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, requestTimeoutNanos, Optional.of(expirationStrategy), defaultListener, defaultRecoveryStrategy);
+        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, requestTimeoutNanos, Optional.of(expirationStrategy), defaultListener, defaultRecoveryStrategy, maxRetries, retryStrategy);
+    }
+
+    /**
+     * Returns new instance of {@link ClientSideConfig} with configured maximum number of CAS retry attempts.
+     *
+     * <p>
+     * Use this method when you want to limit the number of Compare-And-Swap retry attempts in case of contention.
+     * By default, CAS operations will retry indefinitely (or until timeout if configured).
+     *
+     * <p>
+     * By default, maxRetries is not set. This means that CAS operations will retry indefinitely.
+     *
+     * @param maxRetries the maximum number of CAS retry attempts before throwing an exception.
+     *
+     * @return new instance of {@link ClientSideConfig} with configured {@code maxRetries}.
+     */
+    public ClientSideConfig withMaxRetries(int maxRetries) {
+        if (maxRetries < 1) {
+            throw BucketExceptions.nonPositiveMaxRetries(maxRetries);
+        }
+        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, requestTimeoutNanos, expirationStrategy, defaultListener, defaultRecoveryStrategy, Optional.of(maxRetries), retryStrategy);
+    }
+
+    /**
+     * Returns new instance of {@link ClientSideConfig} with configured custom retry strategy for CAS operations.
+     *
+     * <p>
+     * Use this method when you want to implement custom retry logic based on metadata about the retry attempt.
+     * This allows for sophisticated retry decisions such as:
+     * <ul>
+     *     <li>Delegating decisions to a mediator component</li>
+     *     <li>Applying arbitrary business logic (e.g., neural networks trained on traffic patterns)</li>
+     *     <li>Integrating metrics/monitoring for analysis and tuning</li>
+     * </ul>
+     *
+     * <p>
+     * The retry strategy takes precedence over {@link #withMaxRetries(int)} if both are configured.
+     *
+     * <p>
+     * By default, retryStrategy is not set. This means that either maxRetries or infinite retries will be used.
+     *
+     * @param retryStrategy the custom retry strategy for CAS operations.
+     *
+     * @return new instance of {@link ClientSideConfig} with configured {@code retryStrategy}.
+     */
+    public ClientSideConfig withRetryStrategy(RetryStrategy retryStrategy) {
+        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, requestTimeoutNanos, expirationStrategy, defaultListener, defaultRecoveryStrategy, maxRetries, Optional.of(retryStrategy));
     }
 
     /**
@@ -216,6 +270,24 @@ public class ClientSideConfig {
      */
     public ExecutionStrategy getExecutionStrategy() {
         return executionStrategy;
+    }
+
+    /**
+     * Returns the maximum number of CAS retry attempts
+     *
+     * @return the maximum number of CAS retry attempts
+     */
+    public Optional<Integer> getMaxRetries() {
+        return maxRetries;
+    }
+
+    /**
+     * Returns the custom retry strategy for CAS operations
+     *
+     * @return the custom retry strategy for CAS operations
+     */
+    public Optional<RetryStrategy> getRetryStrategy() {
+        return retryStrategy;
     }
 
     public <K> RemoteBucketBuilder<K> apply(DefaultRemoteBucketBuilder builder) {
