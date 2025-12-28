@@ -17,6 +17,10 @@ Bucket4j provides integration with four Redis libraries:
 | No
 | Yes
 
+|``Valkey-glide``
+| Yes
+| Yes
+
 |===
 IMPORTANT: For all libraries mentioned above concurrent access to Redis is solved by Compare&Swap pattern, this can be improved in the future via switching to Javascript stored procedures.
 
@@ -25,3 +29,5 @@ include::lettuce.adoc[]
 include::redisson.adoc[]
 
 include::jedis.adoc[]
+
+include::glide.adoc[]
