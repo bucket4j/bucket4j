@@ -2,4 +2,6 @@
 Release `{revnumber}`
 
 ==== The feature in release scope are following:
-* https://github.com/bucket4j/bucket4j/pull/549[#549 MongoDB backend]
+* https://github.com/bucket4j/bucket4j/pull/559[#559 Support for Valkey GLIDE]
+* https://github.com/bucket4j/bucket4j/pull/560[#560 Retry strategy for CAS]
+* https://github.com/bucket4j/bucket4j/pull/561[#561 OSGi support with bnd-maven-plugin]
