@@ -16,15 +16,6 @@ The Bucket4j is distributed through [Maven Central](http://search.maven.org/):
   <version>8.16.0</version>
 </dependency>
 ```
-##### Java 11 dependency
-```xml
-<!-- For java 11 -->
-<dependency>
-  <groupId>com.bucket4j</groupId>
-  <artifactId>bucket4j_jdk11-core</artifactId>
-  <version>8.16.0</version>
-</dependency>
-```
 ##### Java 8 dependencies
 Builds for Java 8 are not distributed through Maven Central. For direct downloading of Bucket4j builds for Java 8 [visit this page](https://bucket4j.com/commercial/java8.html).
 

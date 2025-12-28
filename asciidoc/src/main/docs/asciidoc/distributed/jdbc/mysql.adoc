@@ -4,17 +4,9 @@
 To use ``bucket4j-coherence`` extension you need to add the following dependency:
 [source, xml, subs=attributes+]
 ----
-<!-- For java 17 -->
 <dependency>
     <groupId>com.bucket4j</groupId>
     <artifactId>bucket4j_jdk17-coherence</artifactId>
-    <version>{revnumber}</version>
-</dependency>
-
-<!-- For java 11 -->
-<dependency>
-    <groupId>com.bucket4j</groupId>
-    <artifactId>bucket4j_jdk11-coherence</artifactId>
     <version>{revnumber}</version>
 </dependency>
 ----

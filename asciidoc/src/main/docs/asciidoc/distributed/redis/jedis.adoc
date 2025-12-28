@@ -15,18 +15,6 @@ To use ``bucket4j-jedis`` extension you need to add following dependency:
     <artifactId>bucket4j_jdk17-jedis</artifactId>
     <version>{revnumber}</version>
 </dependency>
-
-<!-- For java 11 -->
-<dependency>
-    <groupId>com.bucket4j</groupId>
-    <artifactId>bucket4j_jdk11-redis-common</artifactId>
-    <version>{revnumber}</version>
-</dependency>
-<dependency>
-    <groupId>com.bucket4j</groupId>
-    <artifactId>bucket4j_jdk11-jedis</artifactId>
-    <version>{revnumber}</version>
-</dependency>
 ----
 
 ===== Example of Bucket instantiation via JedisBasedProxyManager

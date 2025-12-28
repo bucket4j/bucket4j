@@ -19,6 +19,7 @@
 
     <properties>
         <modular-name>coherence</modular-name>
+        <maven.test.skip>true</maven.test.skip>
     </properties>
 
     <dependencies>

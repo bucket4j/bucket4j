@@ -4,17 +4,9 @@
 To use Bucket4j extension for PostgreSQL you need to add following dependency:
 [source, xml, subs=attributes+]
 ----
-<!-- For java 17 -->
 <dependency>
     <groupId>com.bucket4j</groupId>
     <artifactId>bucket4j_jdk17-postgresql</artifactId>
-    <version>{revnumber}</version>
-</dependency>
-
-<!-- For java 11 -->
-<dependency>
-    <groupId>com.bucket4j</groupId>
-    <artifactId>bucket4j_jdk11-postgresql</artifactId>
     <version>{revnumber}</version>
 </dependency>
 ----

@@ -6,17 +6,9 @@ You need to add the dependency to your project as described below in order to be
 .Maven dependency
 [,xml,subs=attributes+]
 ----
-<!-- For java 17 -->
 <dependency>
     <groupId>com.bucket4j</groupId>
     <artifactId>bucket4j_jdk17-core</artifactId>
-    <version>{revnumber}</version>
-</dependency>
-
-<!-- For java 11 -->
-<dependency>
-    <groupId>com.bucket4j</groupId>
-    <artifactId>bucket4j_jdk11-core</artifactId>
     <version>{revnumber}</version>
 </dependency>
 ----

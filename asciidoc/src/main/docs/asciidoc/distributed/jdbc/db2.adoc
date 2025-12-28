@@ -5,17 +5,9 @@ To use Bucket4j extension for IBM Db2 Server you need to add following dependenc
 
 [source, xml, subs=attributes+]
 ----
-<!-- For java 17 -->
 <dependency>
     <groupId>com.bucket4j</groupId>
     <artifactId>bucket4j_jdk17-db2</artifactId>
-    <version>{revnumber}</version>
-</dependency>
-
-<!-- For java 11 -->
-<dependency>
-    <groupId>com.bucket4j</groupId>
-    <artifactId>bucket4j_jdk11-db2</artifactId>
     <version>{revnumber}</version>
 </dependency>
 ----

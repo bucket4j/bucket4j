@@ -11,13 +11,6 @@ To use Bucket4j extension for MariaDB you need to add following dependency:
     <artifactId>bucket4j_jdk17-mariadb</artifactId>
     <version>{revnumber}</version>
 </dependency>
-
-<!-- For java 11 -->
-<dependency>
-    <groupId>com.bucket4j</groupId>
-    <artifactId>bucket4j_jdk11-mariadb</artifactId>
-    <version>{revnumber}</version>
-</dependency>
 ----
 
 ===== DDL example
