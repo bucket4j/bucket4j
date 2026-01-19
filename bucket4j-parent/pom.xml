@@ -125,7 +125,7 @@
     Automatic-Module-Name: io.github.bucket4j.${modular-name}
 
     # Export your own packages; import everything else
-    Export-Package: ${project.groupId}.*;version="${project.version}"
+    -exportcontents: io.github.bucket4j.*;version="${project.version}";-noimport:=true
     Import-Package: *
 
     # Nice-to-have OSGi metadata
