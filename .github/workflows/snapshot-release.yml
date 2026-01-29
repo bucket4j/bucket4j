@@ -1,0 +1,42 @@
+name: Publish Snapshot
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+jobs:
+  publish-snapshot:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'zulu'
+        cache: 'maven'
+        server-id: github
+        server-username: GITHUB_ACTOR
+        server-password: GITHUB_TOKEN
+    
+    - name: Update version to SNAPSHOT
+      run: |
+        # Get current version and append -SNAPSHOT if not already present
+        CURRENT_VERSION=$(./mvnw help:evaluate -Dexpression=project.version -q -DforceStdout)
+        if [[ ! $CURRENT_VERSION == *"-SNAPSHOT" ]]; then
+          SNAPSHOT_VERSION="${CURRENT_VERSION}-SNAPSHOT"
+          ./mvnw versions:set -DnewVersion=$SNAPSHOT_VERSION -DgenerateBackupPoms=false
+        fi
+    
+    - name: Build and deploy snapshot
+      run: ./mvnw --no-transfer-progress -B clean deploy -DskipTests -Pgithub
+      env:
+        GITHUB_ACTOR: ${{ github.actor }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
