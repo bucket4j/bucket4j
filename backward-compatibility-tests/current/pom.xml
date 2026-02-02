@@ -8,7 +8,7 @@
     <parent>
         <groupId>com.bucket4j</groupId>
         <artifactId>backward-compatibility-tests</artifactId>
-        <version>8.16.0</version>
+        <version>8.16.1</version>
         <relativePath>../../backward-compatibility-tests</relativePath>
     </parent>
     <artifactId>backward-compatibility-tests-current</artifactId>
@@ -16,7 +16,7 @@
 
     <properties>
         <modular-name>backward_compatibility_tests_current</modular-name>
-        <current.version>8.16.0</current.version>
+        <current.version>8.16.1</current.version>
     </properties>
 
     <dependencies>

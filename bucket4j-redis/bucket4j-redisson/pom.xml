@@ -8,7 +8,7 @@
     <parent>
         <groupId>com.bucket4j</groupId>
         <artifactId>bucket4j_jdk17-redis</artifactId>
-        <version>8.16.0</version>
+        <version>8.16.1</version>
         <relativePath>../../bucket4j-redis</relativePath>
     </parent>
     <artifactId>bucket4j_jdk17-redisson</artifactId>
