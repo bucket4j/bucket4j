@@ -48,6 +48,9 @@ public abstract class AbstractProxyManagerBuilder<K, P extends ProxyManager<K>, 
     private BucketListener defaultListener = BucketListener.NOPE;
     private RecoveryStrategy defaultRecoveryStrategy = RecoveryStrategy.RECONSTRUCT;
 
+    private Optional<Integer> maxRetries = Optional.empty();
+    private Optional<RetryStrategy> retryStrategy = Optional.empty();
+
     /**
      * Configures {@code backwardCompatibilityVersion}.
      *
@@ -170,6 +173,55 @@ public abstract class AbstractProxyManagerBuilder<K, P extends ProxyManager<K>, 
     }
 
     /**
+     * Configures maximum number of CAS retry attempts.
+     *
+     * <p>
+     * Use this method when you want to limit the number of Compare-And-Swap retry attempts in case of contention.
+     * By default, CAS operations will retry indefinitely (or until timeout if configured).
+     *
+     * <p>
+     * By default, maxRetries is not set. This means that CAS operations will retry indefinitely.
+     *
+     * @param maxRetries the maximum number of CAS retry attempts before throwing an exception.
+     *
+     * @return this builder with configured {@code maxRetries}.
+     */
+    public B maxRetries(int maxRetries) {
+        if (maxRetries < 1) {
+            throw BucketExceptions.nonPositiveMaxRetries(maxRetries);
+        }
+        this.maxRetries = Optional.of(maxRetries);
+        return (B) this;
+    }
+
+    /**
+     * Configures custom retry strategy for CAS operations.
+     *
+     * <p>
+     * Use this method when you want to implement custom retry logic based on metadata about the retry attempt.
+     * This allows for sophisticated retry decisions such as:
+     * <ul>
+     *     <li>Delegating decisions to a mediator component</li>
+     *     <li>Applying arbitrary business logic (e.g., neural networks trained on traffic patterns)</li>
+     *     <li>Integrating metrics/monitoring for analysis and tuning</li>
+     * </ul>
+     *
+     * <p>
+     * The retry strategy takes precedence over {@link #maxRetries(int)} if both are configured.
+     *
+     * <p>
+     * By default, retryStrategy is not set. This means that either maxRetries or infinite retries will be used.
+     *
+     * @param retryStrategy the custom retry strategy for CAS operations.
+     *
+     * @return this builder with configured {@code retryStrategy}.
+     */
+    public B retryStrategy(RetryStrategy retryStrategy) {
+        this.retryStrategy = Optional.of(Objects.requireNonNull(retryStrategy));
+        return (B) this;
+    }
+
+    /**
      * Returns the strategy for choosing time to live for buckets.
      *
      * @return the strategy for choosing time to live for buckets
@@ -217,6 +269,24 @@ public abstract class AbstractProxyManagerBuilder<K, P extends ProxyManager<K>, 
     }
 
     /**
+     * Returns the maximum number of CAS retry attempts
+     *
+     * @return the maximum number of CAS retry attempts
+     */
+    public Optional<Integer> getMaxRetries() {
+        return maxRetries;
+    }
+
+    /**
+     * Returns the custom retry strategy for CAS operations
+     *
+     * @return the custom retry strategy for CAS operations
+     */
+    public Optional<RetryStrategy> getRetryStrategy() {
+        return retryStrategy;
+    }
+
+    /**
      * Builds new instance of {@link P}
      *
      * @return new instance of {@link P}
@@ -233,7 +303,7 @@ public abstract class AbstractProxyManagerBuilder<K, P extends ProxyManager<K>, 
     }
 
     public ClientSideConfig getClientSideConfig() {
-        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, requestTimeoutNanos, expirationStrategy, defaultListener, defaultRecoveryStrategy, Optional.empty(), Optional.empty());
+        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, requestTimeoutNanos, expirationStrategy, defaultListener, defaultRecoveryStrategy, maxRetries, retryStrategy);
     }
 
 }
