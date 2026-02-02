@@ -1,4 +1,4 @@
-[[bucket4j-lettuce, Bucket4j-Lettuce]]
+[[bucket4j-glide, Bucket4j-Glide]]
 ==== Valkey glide integration
 ===== Dependencies
 To use ``valkey-glide`` extension you need to add following dependency:
