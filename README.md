@@ -85,7 +85,8 @@ In addition to local in-memory buckets, the Bucket4j supports clustered usage sc
 
 ### Valkey back-ends
 | Back-end                   |  Async supported | Redis cluster supported |                                       Documentation link                                       |
-| ```Valkey/Glide```         |  Yes             |           Yes           | [bucket4j-valkey/Glide](https://bucket4j.github.io/8.16.1/toc.html#toc.html#bucket4j-glide) |
+| :---                       | :---:            |:-----------------------:|:----------------------------------------------------------------------------------------------:|
+| ```Valkey/Glide```         |  Yes             |           Yes           | [bucket4j-valkey/Glide](https://bucket4j.github.io/8.16.1/toc.html#toc.html#bucket4j-glide)    |
 
 
 ### Mongo back-ends

@@ -26,6 +26,24 @@
         </repository>
     </distributionManagement>
 
+    <profiles>
+        <profile>
+            <id>github</id>
+            <distributionManagement>
+                <repository>
+                    <id>github</id>
+                    <name>GitHub Packages</name>
+                    <url>https://maven.pkg.github.com/${env.GITHUB_REPOSITORY}</url>
+                </repository>
+                <snapshotRepository>
+                    <id>github</id>
+                    <name>GitHub Packages</name>
+                    <url>https://maven.pkg.github.com/${env.GITHUB_REPOSITORY}</url>
+                </snapshotRepository>
+            </distributionManagement>
+        </profile>
+    </profiles>
+
     <licenses>
         <license>
             <name>The Apache Software License, Version 2.0</name>
@@ -125,7 +143,7 @@
     Automatic-Module-Name: io.github.bucket4j.${modular-name}
 
     # Export your own packages; import everything else
-    Export-Package: ${project.groupId}.*;version="${project.version}"
+    -exportcontents: io.github.bucket4j.*;version="${project.version}";-noimport:=true
     Import-Package: *
 
     # Nice-to-have OSGi metadata
