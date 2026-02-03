@@ -26,24 +26,6 @@
         </repository>
     </distributionManagement>
 
-    <profiles>
-        <profile>
-            <id>github</id>
-            <distributionManagement>
-                <repository>
-                    <id>github</id>
-                    <name>GitHub Packages</name>
-                    <url>https://maven.pkg.github.com/${env.GITHUB_REPOSITORY}</url>
-                </repository>
-                <snapshotRepository>
-                    <id>github</id>
-                    <name>GitHub Packages</name>
-                    <url>https://maven.pkg.github.com/${env.GITHUB_REPOSITORY}</url>
-                </snapshotRepository>
-            </distributionManagement>
-        </profile>
-    </profiles>
-
     <licenses>
         <license>
             <name>The Apache Software License, Version 2.0</name>
@@ -317,6 +299,21 @@
     </build>
 
     <profiles>
+        <profile>
+            <id>github</id>
+            <distributionManagement>
+                <repository>
+                    <id>github</id>
+                    <name>GitHub Packages</name>
+                    <url>https://maven.pkg.github.com/${env.GITHUB_REPOSITORY}</url>
+                </repository>
+                <snapshotRepository>
+                    <id>github</id>
+                    <name>GitHub Packages</name>
+                    <url>https://maven.pkg.github.com/${env.GITHUB_REPOSITORY}</url>
+                </snapshotRepository>
+            </distributionManagement>
+        </profile>
         <profile>
             <id>release</id>
             <activation>
