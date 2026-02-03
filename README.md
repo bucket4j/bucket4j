@@ -80,20 +80,20 @@ In addition to local in-memory buckets, the Bucket4j supports clustered usage sc
 | Back-end                   |  Async supported | Redis cluster supported |                                       Documentation link                                       |
 | :---                       | :---:            |:-----------------------:|:----------------------------------------------------------------------------------------------:|
 | ```Redis/Redisson```       |  Yes             |           Yes           |    [bucket4j-redis/Redisson](https://bucket4j.github.io/8.16.1/toc.html#bucket4j-redisson)     |
-| ```Redis/Jedis```          |  No              |           Yes           |  [bucket4j-redis/Jedis](https://bucket4j.github.io/8.16.1/toc.html#toc.html#bucket4j-jedis)    |
-| ```Redis/Lettuce```        |  Yes             |           Yes           | [bucket4j-redis/Lettuce](https://bucket4j.github.io/8.16.1/toc.html#toc.html#bucket4j-lettuce) |
+| ```Redis/Jedis```          |  No              |           Yes           |  [bucket4j-redis/Jedis](https://bucket4j.github.io/8.16.1/toc.html#bucket4j-jedis)             |
+| ```Redis/Lettuce```        |  Yes             |           Yes           | [bucket4j-redis/Lettuce](https://bucket4j.github.io/8.16.1/toc.html#bucket4j-lettuce)          |
 
 ### Valkey back-ends
 | Back-end                   |  Async supported | Redis cluster supported |                                       Documentation link                                       |
 | :---                       | :---:            |:-----------------------:|:----------------------------------------------------------------------------------------------:|
-| ```Valkey/Glide```         |  Yes             |           Yes           | [bucket4j-valkey/Glide](https://bucket4j.github.io/8.16.1/toc.html#toc.html#bucket4j-glide)    |
+| ```Valkey/Glide```         |  Yes             |           Yes           | [bucket4j-valkey/Glide](https://bucket4j.github.io/8.16.1/toc.html#bucket4j-glide)             |
 
 
 ### Mongo back-ends
 | Back-end                      | Async supported |                                          Documentation link                                          |
 |:------------------------------|:---------------:|:----------------------------------------------------------------------------------------------------:|
-| ```Mongodb/mongodb-driver-sync```            |       No        |      [bucket4j-mongodb/sync](https://bucket4j.github.io/8.16.1/toc.html#bucket4j-mongodb-sync)       |
-| ```Mongodb/mongodb-driver-reactivestreams``` |       Yes       | [bucket4j-mongodb/async](https://bucket4j.github.io/8.16.1/toc.html#toc.html#bucket4j-mongodb-async) |
+| ```Mongodb/mongodb-driver-sync```            |       No        | [bucket4j-mongodb/sync](https://bucket4j.github.io/8.16.1/toc.html#bucket4j-mongodb-sync)   |
+| ```Mongodb/mongodb-driver-reactivestreams``` |       Yes       | [bucket4j-mongodb/async](https://bucket4j.github.io/8.16.1/toc.html#bucket4j-mongodb-async) |
 
 ### JDBC back-ends
 | Back-end                   |                                  Documentation link                                   |
