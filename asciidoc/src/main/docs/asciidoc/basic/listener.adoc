@@ -114,35 +114,35 @@ private Bucket decorate(User user, Bucket originalbucket) {
 ----
 
 ==== Example of integration with Micrometer
-`io.github.bucket4j.SimpleBucketListener` is a simple implementation of `io.github.bucket4j.BucketListener` interface that is available out of the box. 
+`io.github.bucket4j.SimpleBucketListener` is a simple implementation of `io.github.bucket4j.BucketListener` interface that is available out of the box.
 
-Below is the example of exposing statistics via Micrometer:
+Below is an example of exposing statistics via Micrometer:
 [source, java]
 ----
-private static Bucket decorateBucketByStatListener(Bucket originalBucket, String bucketName) {
-  SimpleBucketListener stat = new SimpleBucketListener();
-  Metrics.gauge(bucketName + ".consumed", stat, SimpleBucketListener::getConsumed);
-  Metrics.gauge(bucketName + ".rejected", stat, SimpleBucketListener::getRejected);
-  Metrics.gauge(bucketName + ".parkedNanos", stat, SimpleBucketListener::getParkedNanos);
-  Metrics.gauge(bucketName + ".interrupted", stat, SimpleBucketListener::getInterrupted);
-  Metrics.gauge(bucketName + ".delayedNanos", stat, SimpleBucketListener::getDelayedNanos);
-  return originalBucket.toListenable(stat);
+private Bucket decorateBucketByStatListener(Bucket originalBucket, String bucketName) {
+    Iterable<Tag> tag = ImmutableList.of(new ImmutableTag("bucket", bucketName));
+    SimpleBucketListener stat = new SimpleBucketListener();
+    Metrics.gauge("bucket4j.consumed", tag, stat, SimpleBucketListener::getConsumed);
+    Metrics.gauge("bucket4j.rejected", tag, stat, SimpleBucketListener::getRejected);
+    Metrics.gauge("bucket4j.parkedNanos", tag, stat, SimpleBucketListener::getParkedNanos);
+    Metrics.gauge("bucket4j.interrupted", tag, stat, SimpleBucketListener::getInterrupted);
+    Metrics.gauge("bucket4j.delayedNanos", tag, stat, SimpleBucketListener::getDelayedNanos);
+    return bucket.toListenable(stat);
 }
 ----
 
 ==== Example of integration with Dropwizard metrics-core
-Below is the example of exposing statistics via Dropwizard Metrics:
+Below is an example of exposing statistics via Dropwizard Metrics:
 [source, java]
 ----
 public static Bucket decorateBucketByStatListener(Bucket originalBucket, String bucketName, MetricRegistry registry) {
-  SimpleBucketListener stat = new SimpleBucketListener();
-  registry.register(name + ".consumed", (Gauge<Long>) stat::getConsumed);
-  registry.register(name + ".rejected", (Gauge<Long>) stat::getRejected);
-  registry.register(name + ".parkedNanos", (Gauge<Long>) stat::getParkedNanos);
-  registry.register(name + ".interrupted", (Gauge<Long>) stat::getInterrupted);
-  registry.register(name + ".delayedNanos", (Gauge<Long>) stat::getDelayedNanos);
-
-  return originalBucket.toListenable(stat);
+    SimpleBucketListener stat = new SimpleBucketListener();
+    registry.register(bucketName + ".consumed", (Gauge<Long>) stat::getConsumed);
+    registry.register(bucketName + ".rejected", (Gauge<Long>) stat::getRejected);
+    registry.register(bucketName + ".parkedNanos", (Gauge<Long>) stat::getParkedNanos);
+    registry.register(bucketName + ".interrupted", (Gauge<Long>) stat::getInterrupted);
+    registry.register(bucketName + ".delayedNanos", (Gauge<Long>) stat::getDelayedNanos);
+    return originalBucket.toListenable(stat);
 }
 ----
 
