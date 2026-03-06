@@ -113,8 +113,25 @@ private Bucket decorate(User user, Bucket originalbucket) {
 }
 ----
 
+==== Example of integration with Micrometer
+`io.github.bucket4j.SimpleBucketListener` is a simple implementation of `io.github.bucket4j.BucketListener` interface that is available out of the box. 
+
+Below is the example of exposing statistics via Micrometer:
+[source, java]
+----
+private static Bucket decorateBucketByStatListener(Bucket originalBucket, String bucketName) {
+  SimpleBucketListener stat = new SimpleBucketListener();
+  Metrics.gauge(bucketName + ".consumed", stat, SimpleBucketListener::getConsumed);
+  Metrics.gauge(bucketName + ".rejected", stat, SimpleBucketListener::getRejected);
+  Metrics.gauge(bucketName + ".parkedNanos", stat, SimpleBucketListener::getParkedNanos);
+  Metrics.gauge(bucketName + ".interrupted", stat, SimpleBucketListener::getInterrupted);
+  Metrics.gauge(bucketName + ".delayedNanos", stat, SimpleBucketListener::getDelayedNanos);
+  return originalBucket.toListenable(stat);
+}
+----
+
 ==== Example of integration with Dropwizard metrics-core
-`io.github.bucket4j.SimpleBucketListener` is a simple implementation of `io.github.bucket4j.BucketListener` interface that is available out of the box. Below is the example of exposing statistics via Dropwizard Metrics(for Micrometer it should be quite similar):
+Below is the example of exposing statistics via Dropwizard Metrics:
 [source, java]
 ----
 public static Bucket decorateBucketByStatListener(Bucket originalBucket, String bucketName, MetricRegistry registry) {
@@ -128,3 +145,4 @@ public static Bucket decorateBucketByStatListener(Bucket originalBucket, String 
   return originalBucket.toListenable(stat);
 }
 ----
+
