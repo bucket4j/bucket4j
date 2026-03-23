@@ -58,7 +58,7 @@ private static final HazelcastProxyManager<K> proxyManager = Bucket4jHazelcast
     .build();
 ----
 How to choose eviction jitter properly? Zero means immediate eviction after refill,
-however it is better to avoid too small jitter, because recreation of bucket after expiration will require one network hope,
+however it is better to avoid too small jitter, because recreation of bucket after expiration will require one network hop,
 so it is better to configure at least of few seconds for jitter in order to avoid to frequent buckets recreation.
 
 ===== Configuring Custom Serialization for Bucket4j library classes
