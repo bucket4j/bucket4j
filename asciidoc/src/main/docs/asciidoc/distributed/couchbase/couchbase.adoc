@@ -1,0 +1,63 @@
+[[bucket4j-couchbase, Bucket4j-Couchbase]]
+=== Bucket4j-Couchbase
+Bucket4j provides integration with Couchbase through the synchronous Couchbase Java SDK KV API.
+
+This integration uses compare-and-swap based on Couchbase document CAS.
+Bucket state is stored as binary document content.
+Expiration is delegated to Couchbase document TTL.
+
+===== Dependencies
+To use ``bucket4j_jdk17-couchbase`` you need to add the following dependency:
+[source, xml, subs=attributes+]
+----
+<dependency>
+    <groupId>com.bucket4j</groupId>
+    <artifactId>bucket4j_jdk17-couchbase</artifactId>
+    <version>{revnumber}</version>
+</dependency>
+<dependency>
+    <groupId>com.couchbase.client</groupId>
+    <artifactId>java-client</artifactId>
+    <version>3.9.1</version>
+</dependency>
+----
+
+===== Example of Bucket instantiation via CouchbaseCompareAndSwapBasedProxyManager
+[source, java]
+----
+Cluster cluster = Cluster.connect("127.0.0.1", "Administrator", "password");
+Bucket couchbaseBucket = cluster.bucket("bucket4j");
+couchbaseBucket.waitUntilReady(ofSeconds(10));
+Collection collection = couchbaseBucket.defaultCollection();
+
+CouchbaseCompareAndSwapBasedProxyManager<String> proxyManager =
+    Bucket4jCouchbase.compareAndSwapBasedBuilder(collection)
+        .expirationAfterWrite(ExpirationAfterWriteStrategy.basedOnTimeForRefillingBucketUpToMax(ofSeconds(10)))
+        .build();
+
+BucketConfiguration configuration = BucketConfiguration.builder()
+    .addLimit(limit -> limit.capacity(1_000).refillGreedy(1_000, ofMinutes(1)))
+    .build();
+
+Bucket bucketProxy = proxyManager.getProxy("user-123", () -> configuration);
+----
+
+===== Custom key mapping
+By default, the integration uses String keys.
+You can specify custom key types using a Mapper:
+[source, java]
+----
+CouchbaseCompareAndSwapBasedProxyManager<Long> proxyManager =
+    Bucket4jCouchbase.compareAndSwapBasedBuilder(collection, Mapper.LONG)
+        .build();
+
+Bucket bucket = proxyManager.getProxy(123L, () -> configuration);
+----
+
+Custom key mappers must produce valid Couchbase document ids because `Mapper.toString(key)` is used as the document key.
+
+===== Important notes
+* Async API is not supported
+* Expired buckets rely on Couchbase automatic document expiration
+* Expiration values below one second are rounded up to one second
+* Bucket state is stored as binary data in each document

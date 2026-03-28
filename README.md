@@ -75,6 +75,7 @@ In addition to local in-memory buckets, the Bucket4j supports clustered usage sc
 | ```Apache Ignite```        |  Yes             |              No               |           n/a           |         Yes         |     [bucket4j-ignite](https://bucket4j.github.io/8.17.0/toc.html#bucket4j-ignite)     |
 | ```Inifinispan```          |  Yes             |              Yes              |           Yes           |         No          | [bucket4j-infinispan](https://bucket4j.github.io/8.17.0/toc.html#bucket4j-infinispan) |
 | ```Oracle Coherence```     |  Yes             |              Yes              |           Yes           |         No          |  [bucket4j-coherence](https://bucket4j.github.io/8.17.0/toc.html#bucket4j-coherence)  |
+| ```Couchbase```            |  Yes             |              Yes              |           Yes           |         No          |   [bucket4j-couchbase](https://bucket4j.github.io/8.17.0/toc.html#bucket4j-couchbase)  |
 
 ### Redis back-ends
 | Back-end                   |  Async supported | Redis cluster supported |                                       Documentation link                                       |

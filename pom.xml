@@ -38,6 +38,7 @@
 <!--        <module>backward-compatibility-tests</module>-->
         <module>asciidoc</module>
         <module>bucket4j-mongodb</module>
+        <module>bucket4j-couchbase</module>
     </modules>
 
     <properties>

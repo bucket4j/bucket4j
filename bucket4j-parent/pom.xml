@@ -54,6 +54,7 @@
         <ehcache.version>3.8.1</ehcache.version>
 
         <testcontainers.version>1.20.1</testcontainers.version>
+        <jackson.annotations.version>2.20</jackson.annotations.version>
         <lettuce-version>5.0.2.RELEASE</lettuce-version>
         <jedis.version>4.4.6</jedis.version>
         <redisson.version>3.21.0</redisson.version>
@@ -64,6 +65,7 @@
         <mssql.version>12.4.2.jre8</mssql.version>
         <ojdbc.version>23.2.0.0</ojdbc.version>
         <junit.jupiter.version>5.10.2</junit.jupiter.version>
+        <slf4j.version>2.0.9</slf4j.version>
         <bnd.version>7.1.0</bnd.version>
         <!-- default OSGi bundle symbolic name pattern -->
         <osgi.symbolicName>${project.groupId}.${modular-name}</osgi.symbolicName>
@@ -511,9 +513,21 @@
             </exclusions>
         </dependency>
         <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
             <version>1.3.12</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+            <version>${jackson.annotations.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>

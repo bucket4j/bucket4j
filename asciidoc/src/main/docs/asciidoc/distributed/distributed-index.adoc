@@ -11,3 +11,5 @@ include::redis/redis.adoc[]
 include::jdbc/jdbc-integrations.adoc[]
 
 include::mongodb/mongodb-integrations.adoc[]
+
+include::couchbase/couchbase.adoc[]
