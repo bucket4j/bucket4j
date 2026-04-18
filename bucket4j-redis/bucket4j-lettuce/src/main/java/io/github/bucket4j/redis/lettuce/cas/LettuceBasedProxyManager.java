@@ -50,15 +50,13 @@ import io.lettuce.core.codec.ByteArrayCodec;
 /**
  * Manages distributed rate limiting using Compare-And-Swap (CAS) semantics
  *
- * <p>CAS operations may fail under concurrent updates. Retry behavior is
+ * CAS operations may fail under concurrent updates. Retry behavior is
  * handled internally and configurable via:
- * <ul>
- *   <li>{@code maxRetries} - maximum number of CAS retry attempts</li>
- *   <li>{@code RetryStrategy} - determines whether another attempt should
- * *       be made based on attempt number, bucket key, and elapsed time</li>
- * </ul>
+ *   {@code maxRetries} - maximum number of CAS retry attempts</li>
+ *   {@code RetryStrategy} - determines whether another attempt should
+ *   be made based on attempt number, bucket key, and elapsed time</li>
  *
- * <p>By default, retries continue until success or maxRetries is reached.
+ * By default, retries continue until success or maxRetries is reached.
  * Retries are immediate with no backoff between attempts, as
  * {@code RetryStrategy} controls only whether to retry, not timing.
  * Timeout behavior is controlled via client-side timeout configuration.
@@ -237,7 +235,7 @@ public class LettuceBasedProxyManager<K> extends AbstractCompareAndSwapBasedProx
     /**
      * Executes a Compare-And-Swap operation for updating bucket state.
      *
-     * <p>If the operation fails due to concurrent modification, it is
+     * If the operation fails due to concurrent modification, it is
      * automatically retried by the parent proxy manager according to
      * the configured {@code maxRetries} and {@code RetryStrategy}.
      *
