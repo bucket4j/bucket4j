@@ -28,6 +28,8 @@ Bucket4j provides integration with five Redis libraries:
 |===
 IMPORTANT: For all libraries mentioned above concurrent access to Redis is solved by Compare&Swap pattern, this can be improved in the future via switching to Javascript stored procedures.
 
+NOTE: The ``bucket4j_jdk17-redis`` artifact is an aggregator module and should not be used as an application dependency. Use ``bucket4j_jdk17-redis-common`` together with a concrete Redis client module, such as ``bucket4j_jdk17-lettuce``, ``bucket4j_jdk17-redisson``, ``bucket4j_jdk17-jedis``, ``bucket4j_jdk17-vertx``, or ``bucket4j_jdk17-glide``.
+
 include::lettuce.adoc[]
 
 include::redisson.adoc[]

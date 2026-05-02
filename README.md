@@ -81,31 +81,31 @@ In addition to local in-memory buckets, the Bucket4j supports clustered usage sc
 | Back-end                   |  Async supported | Redis cluster supported |                                       Documentation link                                       |
 | :---                       | :---:            |:-----------------------:|:----------------------------------------------------------------------------------------------:|
 | ```Redis/Vert.x Redis Client``` |  Yes             |           Yes           | [bucket4j-redis/Vert.x](https://bucket4j.github.io/8.18.0/toc.html#bucket4j-vertx)         |
-| ```Redis/Redisson```       |  Yes             |           Yes           |    [bucket4j-redis/Redisson](https://bucket4j.github.io/8.16.1/toc.html#bucket4j-redisson)     |
-| ```Redis/Jedis```          |  No              |           Yes           |  [bucket4j-redis/Jedis](https://bucket4j.github.io/8.16.1/toc.html#bucket4j-jedis)             |
-| ```Redis/Lettuce```        |  Yes             |           Yes           | [bucket4j-redis/Lettuce](https://bucket4j.github.io/8.16.1/toc.html#bucket4j-lettuce)          |
+| ```Redis/Redisson```       |  Yes             |           Yes           |    [bucket4j-redis/Redisson](https://bucket4j.github.io/8.18.0/toc.html#bucket4j-redisson)     |
+| ```Redis/Jedis```          |  No              |           Yes           |  [bucket4j-redis/Jedis](https://bucket4j.github.io/8.18.0/toc.html#bucket4j-jedis)             |
+| ```Redis/Lettuce```        |  Yes             |           Yes           | [bucket4j-redis/Lettuce](https://bucket4j.github.io/8.18.0/toc.html#bucket4j-lettuce)          |
 
 ### Valkey back-ends
 | Back-end                   |  Async supported | Redis cluster supported |                                       Documentation link                                       |
 | :---                       | :---:            |:-----------------------:|:----------------------------------------------------------------------------------------------:|
-| ```Valkey/Glide```         |  Yes             |           Yes           | [bucket4j-valkey/Glide](https://bucket4j.github.io/8.16.1/toc.html#bucket4j-glide)             |
+| ```Valkey/Glide```         |  Yes             |           Yes           | [bucket4j-valkey/Glide](https://bucket4j.github.io/8.18.0/toc.html#bucket4j-glide)             |
 
 
 ### Mongo back-ends
 | Back-end                      | Async supported |                                          Documentation link                                          |
 |:------------------------------|:---------------:|:----------------------------------------------------------------------------------------------------:|
-| ```Mongodb/mongodb-driver-sync```            |       No        | [bucket4j-mongodb/sync](https://bucket4j.github.io/8.16.1/toc.html#bucket4j-mongodb-sync)   |
-| ```Mongodb/mongodb-driver-reactivestreams``` |       Yes       | [bucket4j-mongodb/async](https://bucket4j.github.io/8.16.1/toc.html#bucket4j-mongodb-async) |
+| ```Mongodb/mongodb-driver-sync```            |       No        | [bucket4j-mongodb/sync](https://bucket4j.github.io/8.18.0/toc.html#bucket4j-mongodb-sync)   |
+| ```Mongodb/mongodb-driver-reactivestreams``` |       Yes       | [bucket4j-mongodb/async](https://bucket4j.github.io/8.18.0/toc.html#bucket4j-mongodb-async) |
 
 ### JDBC back-ends
 | Back-end                   |                                  Documentation link                                   |
 |:---------------------------|:-------------------------------------------------------------------------------------:|
-| ```MySQL```                |      [bucket4j-mysql](https://bucket4j.github.io/8.16.1/toc.html#bucket4j-mysql)      |
-| ```PostgreSQL```           | [bucket4j-postgresql](https://bucket4j.github.io/8.16.1/toc.html#bucket4j-postgresql) |
-| ```Oracle```               |     [bucket4j-oracle](https://bucket4j.github.io/8.16.1/toc.html#bucket4j-oracle)     |
-| ```Microsoft SQL Server``` |      [bucket4j-mssql](https://bucket4j.github.io/8.16.1/toc.html#bucket4j-mssql)      |
-| ```MariaDB```              |    [bucket4j-mariadb](https://bucket4j.github.io/8.16.1/toc.html#bucket4j-mariadb)    |
-| ```DB2```                  |        [bucket4j-db2](https://bucket4j.github.io/8.16.1/toc.html#bucket4j-db2)        |
+| ```MySQL```                |      [bucket4j-mysql](https://bucket4j.github.io/8.18.0/toc.html#bucket4j-mysql)      |
+| ```PostgreSQL```           | [bucket4j-postgresql](https://bucket4j.github.io/8.18.0/toc.html#bucket4j-postgresql) |
+| ```Oracle```               |     [bucket4j-oracle](https://bucket4j.github.io/8.18.0/toc.html#bucket4j-oracle)     |
+| ```Microsoft SQL Server``` |      [bucket4j-mssql](https://bucket4j.github.io/8.18.0/toc.html#bucket4j-mssql)      |
+| ```MariaDB```              |    [bucket4j-mariadb](https://bucket4j.github.io/8.18.0/toc.html#bucket4j-mariadb)    |
+| ```DB2```                  |        [bucket4j-db2](https://bucket4j.github.io/8.18.0/toc.html#bucket4j-db2)        |
 
 
 ### Local caches support
