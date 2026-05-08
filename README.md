@@ -16,8 +16,6 @@ The Bucket4j is distributed through [Maven Central](http://search.maven.org/):
   <version>8.18.0</version>
 </dependency>
 ```
-##### Java 8 dependencies
-Builds for Java 8 are not distributed through Maven Central. For direct downloading of Bucket4j builds for Java 8 [visit this page](https://bucket4j.com/commercial/java8.html).
 
 #### Quick start
 ```java
@@ -125,8 +123,6 @@ Sometimes you are having deal with bucket per key scenarios but distributed sync
 Feel free to ask via:
 * [Bucket4j github issue tracker](https://github.com/bucket4j/bucket4j/issues/new) to report a bug.
 * [Bucket4j github discussions](https://github.com/bucket4j/bucket4j/discussions) for questions, feature proposals, sharing of experience.
-* [Bucket4j telegram chat(Eng)](https://t.me/+6cB0iKpLdfY3ZWRi)
-* [Bucket4j telegram chat(Ru)](https://t.me/+bpqEMT9GL744MjA6)
 
 ## License
 Copyright 2015-2024 Vladimir Bukhtoyarov
