@@ -153,27 +153,18 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket, Compa
 
         while (true) {
             newState.refillAllBandwidth(currentTimeNanos);
-            long nanosToCloseDeficit = newState.calculateDelayNanosAfterWillBePossibleToConsume(tokensToConsume, currentTimeNanos, false);
-            if (nanosToCloseDeficit == 0) {
+            long nanosToCloseRefill = newState.calculateDelayNanosAfterWillBePossibleToConsume(tokensToConsume, currentTimeNanos, false);
+            if (nanosToCloseRefill <= waitIfBusyNanosLimit) {
                 newState.consume(tokensToConsume);
                 if (stateRef.compareAndSet(previousState, newState)) {
-                    return 0L;
+                    return nanosToCloseRefill;
                 }
                 previousState = stateRef.get();
                 newState.copyStateFrom(previousState);
-                continue;
             }
-
-            if (nanosToCloseDeficit == Long.MAX_VALUE || nanosToCloseDeficit > waitIfBusyNanosLimit) {
+            if (nanosToCloseRefill == Long.MAX_VALUE) {
                 return Long.MAX_VALUE;
             }
-
-            newState.consume(tokensToConsume);
-            if (stateRef.compareAndSet(previousState, newState)) {
-                return nanosToCloseDeficit;
-            }
-            previousState = stateRef.get();
-            newState.copyStateFrom(previousState);
         }
     }
 
@@ -186,26 +177,17 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket, Compa
         while (true) {
             newState.refillAllBandwidth(currentTimeNanos);
             long nanosToCloseDeficit = newState.calculateDelayNanosAfterWillBePossibleToConsume(tokensToConsume, currentTimeNanos, false);
-            if (nanosToCloseDeficit == 0) {
+            if (nanosToCloseDeficit <= maxWaitTimeNanos) {
                 newState.consume(tokensToConsume);
                 if (stateRef.compareAndSet(previousState, newState)) {
-                    return new VerboseResult<>(currentTimeNanos, 0L, newState.copy());
+                    return new VerboseResult<>(currentTimeNanos, nanosToCloseDeficit, newState.copy());
                 }
                 previousState = stateRef.get();
                 newState.copyStateFrom(previousState);
-                continue;
             }
-
-            if (nanosToCloseDeficit == Long.MAX_VALUE || nanosToCloseDeficit > maxWaitTimeNanos) {
-                return new VerboseResult<>(currentTimeNanos, Long.MAX_VALUE, newState);
+            if (nanosToCloseDeficit == Long.MAX_VALUE) {
+                return new VerboseResult<>(Long.MAX_VALUE, nanosToCloseDeficit, newState.copy());
             }
-
-            newState.consume(tokensToConsume);
-            if (stateRef.compareAndSet(previousState, newState)) {
-                return new VerboseResult<>(currentTimeNanos, nanosToCloseDeficit, newState.copy());
-            }
-            previousState = stateRef.get();
-            newState.copyStateFrom(previousState);
         }
     }
 
@@ -252,7 +234,7 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket, Compa
         long currentTimeNanos = timeMeter.currentTimeNanos();
 
         while (true) {
-            newState.refillAllBandwidth(currentTimeNanos);
+            newState.setRefillTime(currentTimeNanos);
             newState.reset();
             if (stateRef.compareAndSet(previousState, newState)) {
                 return;
@@ -445,7 +427,7 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket, Compa
         long currentTimeNanos = timeMeter.currentTimeNanos();
 
         while (true) {
-            newState.refillAllBandwidth(currentTimeNanos);
+            newState.setRefillTime(currentTimeNanos);
             newState.reset();
             if (stateRef.compareAndSet(previousState, newState)) {
                 return new VerboseResult<>(currentTimeNanos, Nothing.INSTANCE, newState.copy());

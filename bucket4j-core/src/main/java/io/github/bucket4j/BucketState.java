@@ -61,6 +61,8 @@ public interface BucketState {
 
     MathType getMathType();
 
+    void setRefillTime(long currentTimeNano);
+
     static BucketState createInitialState(BucketConfiguration configuration, MathType mathType, long currentTimeNanos) {
         return switch (mathType) {
             case INTEGER_64_BITS -> new BucketState64BitsInteger(configuration, currentTimeNanos);
