@@ -653,27 +653,27 @@ public class BucketState64BitsInteger implements BucketState, ComparableByConten
     }
 
     @Override
-    public void setRefillTime(long currentTimeNano) {
+    public void syncRefillTimestamps(long currentTimeNanos) {
         Bandwidth[] bandwidths = configuration.getBandwidths();
         for(int i = 0; i < bandwidths.length; i++){
-            long refillTime = normalizeRefillTime(i, bandwidths[i], currentTimeNano);
+            long refillTime = normalizeRefillTime(i, bandwidths[i], currentTimeNanos);
             if(refillTime != -1L)
                 setLastRefillTimeNanos(i, refillTime);
         }
     }
 
-    private long normalizeRefillTime(int bandwidthIndex, Bandwidth bandwidth, long currentTimeToNanos){
+    private long normalizeRefillTime(int bandwidthIndex, Bandwidth bandwidth, long currentTimeNanos){
         long previousRefillNanos = getLastRefillTimeNanos(bandwidthIndex);
-        if(currentTimeToNanos <= previousRefillNanos)
-            return -1;
+        if(currentTimeNanos <= previousRefillNanos)
+            return -1L;
         if(bandwidth.isRefillIntervally()){
-            long correction = (currentTimeToNanos - previousRefillNanos)%bandwidth.getRefillPeriodNanos();
-            currentTimeToNanos -= currentTimeToNanos;
+            long correction = (currentTimeNanos - previousRefillNanos)%bandwidth.getRefillPeriodNanos();
+            currentTimeNanos -= correction;
         }
 
-        if(currentTimeToNanos <= previousRefillNanos)
-            return -1;
-        return currentTimeToNanos;
+        if(currentTimeNanos <= previousRefillNanos)
+            return -1L;
+        return currentTimeNanos;
     }
 
 }

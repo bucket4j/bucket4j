@@ -61,7 +61,7 @@ public interface BucketState {
 
     MathType getMathType();
 
-    void setRefillTime(long currentTimeNano);
+    void syncRefillTimestamps(long currentTimeNanos);
 
     static BucketState createInitialState(BucketConfiguration configuration, MathType mathType, long currentTimeNanos) {
         return switch (mathType) {
