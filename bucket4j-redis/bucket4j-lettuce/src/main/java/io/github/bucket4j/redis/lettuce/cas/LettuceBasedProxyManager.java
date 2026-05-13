@@ -47,6 +47,21 @@ import io.lettuce.core.cluster.api.StatefulRedisClusterConnection;
 import io.lettuce.core.cluster.api.async.RedisAdvancedClusterAsyncCommands;
 import io.lettuce.core.codec.ByteArrayCodec;
 
+/**
+ * Manages distributed rate limiting using Compare-And-Swap (CAS) semantics
+ *
+ * CAS operations may fail under concurrent updates. Retry behavior is
+ * handled internally and configurable via:
+ *   {@code maxRetries} - maximum number of CAS retry attempts</li>
+ *   {@code RetryStrategy} - determines whether another attempt should
+ *   be made based on attempt number, bucket key, and elapsed time</li>
+ *
+ * By default, retries continue until success or maxRetries is reached.
+ * Retries are immediate with no backoff between attempts, as
+ * {@code RetryStrategy} controls only whether to retry, not timing.
+ * Timeout behavior is controlled via client-side timeout configuration.
+ *
+ */
 public class LettuceBasedProxyManager<K> extends AbstractCompareAndSwapBasedProxyManager<K> {
 
     private final RedisApi<K> redisApi;
@@ -217,6 +232,15 @@ public class LettuceBasedProxyManager<K> extends AbstractCompareAndSwapBasedProx
         return true;
     }
 
+    /**
+     * Executes a Compare-And-Swap operation for updating bucket state.
+     *
+     * If the operation fails due to concurrent modification, it is
+     * automatically retried by the parent proxy manager according to
+     * the configured {@code maxRetries} and {@code RetryStrategy}.
+     *
+     * @see AbstractCompareAndSwapBasedProxyManager for retry and timeout configuration
+     */
     private RedisFuture<Boolean> compareAndSwapFuture(K[] keys, byte[] originalData, byte[] newData, RemoteBucketState newState) {
         long ttlMillis = expirationStrategy.calculateTimeToLiveMillis(newState, currentTimeNanos());
         if (ttlMillis > 0) {
