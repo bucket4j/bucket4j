@@ -24,6 +24,7 @@ import io.github.bucket4j.BucketExceptions;
 import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.proxy.AbstractProxyManager;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
+import io.github.bucket4j.distributed.proxy.RetryDecision;
 import io.github.bucket4j.distributed.proxy.RetryStrategy;
 import io.github.bucket4j.distributed.proxy.Timeout;
 import io.github.bucket4j.distributed.remote.CommandResult;
@@ -33,6 +34,9 @@ import io.github.bucket4j.distributed.remote.Request;
 
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.LockSupport;
+import java.util.function.Supplier;
 
 /**
  * The base class for proxy managers that built on top of idea that underlining storage provide transactions and locking.
@@ -57,7 +61,7 @@ public abstract class AbstractCompareAndSwapBasedProxyManager<K> extends Abstrac
 
         long startTimeNanos = System.nanoTime();
         int attempt = 0;
-        int maxAttempts = maxRetries.orElse(Integer.MAX_VALUE);
+        int maxAttempts = retryStrategy.isPresent() ? Integer.MAX_VALUE : maxRetries.orElse(Integer.MAX_VALUE);
 
         while (attempt < maxAttempts) {
             CommandResult<T> result = execute(request, operation, timeout);
@@ -71,9 +75,11 @@ public abstract class AbstractCompareAndSwapBasedProxyManager<K> extends Abstrac
                 RetryStrategy.RetryMetadata metadata = new RetryStrategy.RetryMetadata(
                     attempt + 1, key, startTimeNanos, currentTimeNanos
                 );
-                if (!retryStrategy.get().shouldRetry(metadata)) {
+                RetryDecision retryDecision = retryStrategy.get().shouldRetry(metadata);
+                if (!retryDecision.shouldRetry()) {
                     throw BucketExceptions.maxRetriesExceeded(attempt + 1);
                 }
+                sleepBeforeRetry(timeout, retryDecision);
             }
 
             attempt++;
@@ -125,11 +131,14 @@ public abstract class AbstractCompareAndSwapBasedProxyManager<K> extends Abstrac
             RetryStrategy.RetryMetadata metadata = new RetryStrategy.RetryMetadata(
                 attemptCount, key, startTimeNanos, currentTimeNanos
             );
-            if (!retryStrategy.get().shouldRetry(metadata)) {
+            RetryDecision retryDecision = retryStrategy.get().shouldRetry(metadata);
+            if (!retryDecision.shouldRetry()) {
                 CompletableFuture<CommandResult<T>> failed = new CompletableFuture<>();
                 failed.completeExceptionally(BucketExceptions.maxRetriesExceeded(attemptCount));
                 return failed;
             }
+            return delayRetry(timeout, retryDecision, () -> executeAsync(request, operation, timeout)
+                .thenCompose((CommandResult<T> response) -> retryIfCasWasUnsuccessful(operation, request, response, timeout, attemptCount + 1, key, startTimeNanos)));
         } else {
             // Fall back to max retries check
             Optional<Integer> maxRetries = getClientSideConfig().getMaxRetries();
@@ -165,6 +174,36 @@ public abstract class AbstractCompareAndSwapBasedProxyManager<K> extends Abstrac
             return clientSideConfig;
         }
         return clientSideConfig.withClientClock(TimeMeter.SYSTEM_MILLISECONDS);
+    }
+
+    private void sleepBeforeRetry(Timeout timeout, RetryDecision retryDecision) {
+        long delayNanos = retryDecision.getDelay().toNanos();
+        if (delayNanos == 0) {
+            return;
+        }
+
+        timeout.run(requestTimeout -> {
+            long boundedDelay = requestTimeout.map(remainingTimeout -> Math.min(delayNanos, remainingTimeout)).orElse(delayNanos);
+            if (boundedDelay > 0) {
+                LockSupport.parkNanos(boundedDelay);
+            }
+        });
+    }
+
+    private <T> CompletableFuture<T> delayRetry(Timeout timeout, RetryDecision retryDecision, Supplier<CompletableFuture<T>> retrySupplier) {
+        long delayNanos = retryDecision.getDelay().toNanos();
+        if (delayNanos == 0) {
+            return retrySupplier.get();
+        }
+
+        return timeout.callAsync(requestTimeout -> {
+            long boundedDelay = requestTimeout.map(remainingTimeout -> Math.min(delayNanos, remainingTimeout)).orElse(delayNanos);
+            if (boundedDelay == 0) {
+                return retrySupplier.get();
+            }
+            return CompletableFuture.runAsync(() -> { }, CompletableFuture.delayedExecutor(boundedDelay, TimeUnit.NANOSECONDS))
+                .thenCompose(ignored -> retrySupplier.get());
+        });
     }
 
 }

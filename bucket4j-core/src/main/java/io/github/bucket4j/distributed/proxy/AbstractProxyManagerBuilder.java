@@ -203,6 +203,7 @@ public abstract class AbstractProxyManagerBuilder<K, P extends ProxyManager<K>, 
      * <ul>
      *     <li>Delegating decisions to a mediator component</li>
      *     <li>Applying arbitrary business logic (e.g., neural networks trained on traffic patterns)</li>
+     *     <li>Adding backoff, jitter or fixed delays between CAS retries</li>
      *     <li>Integrating metrics/monitoring for analysis and tuning</li>
      * </ul>
      *
@@ -210,7 +211,7 @@ public abstract class AbstractProxyManagerBuilder<K, P extends ProxyManager<K>, 
      * The retry strategy takes precedence over {@link #maxRetries(int)} if both are configured.
      *
      * <p>
-     * By default, retryStrategy is not set. This means that either maxRetries or infinite retries will be used.
+     * By default, retryStrategy is not set. This means that either maxRetries or infinite immediate retries will be used.
      *
      * @param retryStrategy the custom retry strategy for CAS operations.
      *

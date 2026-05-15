@@ -20,6 +20,8 @@
 
 package io.github.bucket4j.distributed.proxy;
 
+import java.time.Duration;
+
 /**
  * A functional interface that allows custom retry logic for Compare-And-Swap (CAS) operations.
  *
@@ -37,16 +39,21 @@ package io.github.bucket4j.distributed.proxy;
  * Example usage:
  * <pre>{@code
  * // Simple retry limit
- * RetryStrategy limitedRetries = metadata -> metadata.getAttemptNumber() < 5;
+ * RetryStrategy limitedRetries = metadata ->
+ *     metadata.getAttemptNumber() < 5 ? RetryDecision.retryImmediately() : RetryDecision.stop();
  *
- * // Time-based retry
+ * // Time-based retry with exponential backoff
  * RetryStrategy timeBasedRetry = metadata ->
- *     metadata.getElapsedTimeNanos() < Duration.ofSeconds(1).toNanos();
+ *     metadata.getElapsedTimeNanos() < Duration.ofSeconds(1).toNanos()
+ *         ? RetryDecision.retryAfter(Duration.ofMillis(10L * metadata.getAttemptNumber()))
+ *         : RetryDecision.stop();
  *
  * // Bucket-specific retry logic with neural network
  * RetryStrategy bucketSpecific = metadata -> {
  *     String bucketKey = (String) metadata.getBucketKey();
- *     return evaluateNeuralModel(bucketKey, metadata.getAttemptNumber());
+ *     return evaluateNeuralModel(bucketKey, metadata.getAttemptNumber())
+ *         ? RetryDecision.retryImmediately()
+ *         : RetryDecision.stop();
  * };
  *
  * // Complex business logic
@@ -55,7 +62,9 @@ package io.github.bucket4j.distributed.proxy;
  *         metadata.getAttemptNumber(),
  *         metadata.getBucketKey(),
  *         metadata.getElapsedTimeNanos() / 1_000_000);
- *     return myMediatorComponent.shouldRetry(metadata);
+ *     return myMediatorComponent.shouldRetry(metadata)
+ *         ? RetryDecision.retryAfter(Duration.ofMillis(50))
+ *         : RetryDecision.stop();
  * };
  * }</pre>
  *
@@ -65,12 +74,12 @@ package io.github.bucket4j.distributed.proxy;
 public interface RetryStrategy {
 
     /**
-     * Determines whether another CAS retry attempt should be made.
+     * Determines how CAS retries should proceed after a failed compare-and-swap attempt.
      *
      * @param metadata information about the current retry attempt
-     * @return {@code true} if another retry should be attempted, {@code false} to stop retrying
+     * @return a decision that describes whether the CAS loop should continue and how long to wait before retrying
      */
-    boolean shouldRetry(RetryMetadata metadata);
+    RetryDecision shouldRetry(RetryMetadata metadata);
 
     /**
      * Metadata about a CAS retry attempt.
@@ -151,4 +160,3 @@ public interface RetryStrategy {
         }
     }
 }
-

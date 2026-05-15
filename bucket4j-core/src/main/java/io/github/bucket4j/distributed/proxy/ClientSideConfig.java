@@ -206,6 +206,7 @@ public class ClientSideConfig {
      * <ul>
      *     <li>Delegating decisions to a mediator component</li>
      *     <li>Applying arbitrary business logic (e.g., neural networks trained on traffic patterns)</li>
+     *     <li>Adding backoff, jitter or fixed delays between CAS retries</li>
      *     <li>Integrating metrics/monitoring for analysis and tuning</li>
      * </ul>
      *
@@ -213,7 +214,7 @@ public class ClientSideConfig {
      * The retry strategy takes precedence over {@link #withMaxRetries(int)} if both are configured.
      *
      * <p>
-     * By default, retryStrategy is not set. This means that either maxRetries or infinite retries will be used.
+     * By default, retryStrategy is not set. This means that either maxRetries or infinite immediate retries will be used.
      *
      * @param retryStrategy the custom retry strategy for CAS operations.
      *
