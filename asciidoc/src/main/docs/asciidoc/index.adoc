@@ -3,7 +3,7 @@ image::./images/white-logo.png[]
 endif::[]
 
 == Current version {revnumber} documentation
-Release date: `13 April 2026`
+Release date: `19 May 2026`
 
 * http://bucket4j.com/{revnumber}/release-notes.html[{revnumber} Release notes]
 * http://bucket4j.com/{revnumber}/toc.html[{revnumber} Reference]
