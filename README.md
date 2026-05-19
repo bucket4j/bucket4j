@@ -13,7 +13,7 @@ The Bucket4j is distributed through [Maven Central](http://search.maven.org/):
 <dependency>
   <groupId>com.bucket4j</groupId>
   <artifactId>bucket4j_jdk17-core</artifactId>
-  <version>8.18.0</version>
+  <version>8.19.0</version>
 </dependency>
 ```
 
