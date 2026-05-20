@@ -56,6 +56,11 @@ Each backend module provides a `ProxyManager` implementation:
 - `bucket4j-redis-common` — shared interfaces and base implementations
 - `bucket4j-jedis`, `bucket4j-lettuce`, `bucket4j-redisson`, `bucket4j-vertx`, `bucket4j-glide` — Redis client integrations
 
+### Documentation
+- **Documentation sources**: Located in the `asciidoc` module under `src/main/docs/asciidoc/`
+- Published at [bucket4j.github.io](https://bucket4j.github.io)
+- Build docs with: `./mvnw -P generate-html -pl asciidoc process-resources`
+
 ### Testing conventions
 - **Test frameworks**: JUnit 5 (`**/*Test.class`) and Groovy/Spock (`**/*Specification.class`)
 - **Test profiles**: Database backends use Testcontainers (version 1.20.1)
