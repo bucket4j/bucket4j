@@ -153,13 +153,24 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket, Compa
 
         while (true) {
             newState.refillAllBandwidth(currentTimeNanos);
-            long nanosToCloseRefill = newState.calculateDelayNanosAfterWillBePossibleToConsume(tokensToConsume, currentTimeNanos, false);
-            if (nanosToCloseRefill > waitIfBusyNanosLimit) {
+            long nanosToCloseDeficit = newState.calculateDelayNanosAfterWillBePossibleToConsume(tokensToConsume, currentTimeNanos, false);
+            if (nanosToCloseDeficit == 0) {
+                newState.consume(tokensToConsume);
+                if (stateRef.compareAndSet(previousState, newState)) {
+                    return 0L;
+                }
+                previousState = stateRef.get();
+                newState.copyStateFrom(previousState);
+                continue;
+            }
+
+            if (nanosToCloseDeficit == Long.MAX_VALUE || nanosToCloseDeficit > waitIfBusyNanosLimit) {
                 return Long.MAX_VALUE;
             }
+
             newState.consume(tokensToConsume);
             if (stateRef.compareAndSet(previousState, newState)) {
-                return nanosToCloseRefill;
+                return nanosToCloseDeficit;
             }
             previousState = stateRef.get();
             newState.copyStateFrom(previousState);
@@ -175,8 +186,14 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket, Compa
         while (true) {
             newState.refillAllBandwidth(currentTimeNanos);
             long nanosToCloseDeficit = newState.calculateDelayNanosAfterWillBePossibleToConsume(tokensToConsume, currentTimeNanos, false);
-            if (nanosToCloseDeficit > maxWaitTimeNanos) {
-                return new VerboseResult<>(currentTimeNanos, Long.MAX_VALUE, newState.copy());
+            if (nanosToCloseDeficit == 0) {
+                newState.consume(tokensToConsume);
+                if (stateRef.compareAndSet(previousState, newState)) {
+                    return new VerboseResult<>(currentTimeNanos, 0L, newState.copy());
+                }
+                previousState = stateRef.get();
+                newState.copyStateFrom(previousState);
+                continue;
             }
             newState.consume(tokensToConsume);
             if (stateRef.compareAndSet(previousState, newState)) {
