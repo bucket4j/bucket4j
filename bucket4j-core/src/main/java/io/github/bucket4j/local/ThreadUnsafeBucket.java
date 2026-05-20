@@ -240,7 +240,7 @@ public class ThreadUnsafeBucket extends AbstractBucket implements LocalBucket, C
     @Override
     protected VerboseResult<Nothing> resetVerboseImpl() {
         long currentTimeNanos = timeMeter.currentTimeNanos();
-        state.refillAllBandwidth(currentTimeNanos);
+        state.syncRefillTimestamps(currentTimeNanos);
         state.reset();
         return new VerboseResult<>(currentTimeNanos, Nothing.INSTANCE, state.copy());
     }
@@ -284,7 +284,7 @@ public class ThreadUnsafeBucket extends AbstractBucket implements LocalBucket, C
     @Override
     public void reset() {
         long currentTimeNanos = timeMeter.currentTimeNanos();
-        state.refillAllBandwidth(currentTimeNanos);
+        state.syncRefillTimestamps(currentTimeNanos);
         state.reset();
     }
 

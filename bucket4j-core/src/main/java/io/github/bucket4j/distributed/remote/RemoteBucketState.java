@@ -155,6 +155,10 @@ public class RemoteBucketState implements ComparableByContent<RemoteBucketState>
         state.refillAllBandwidth(currentTimeNanos);
     }
 
+    public void syncRefillTimestamps(long currentTimeNanos) {
+        state.syncRefillTimestamps(currentTimeNanos);
+    }
+
     public long getAvailableTokens() {
         return state.getAvailableTokens();
     }

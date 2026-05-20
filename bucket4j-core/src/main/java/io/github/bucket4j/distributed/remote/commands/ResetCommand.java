@@ -98,7 +98,7 @@ public class ResetCommand implements RemoteCommand<Nothing>, ComparableByContent
         }
 
         RemoteBucketState state = mutableEntry.get();
-        state.refillAllBandwidth(currentTimeNanos);
+        state.syncRefillTimestamps(currentTimeNanos);
         state.reset();
         mutableEntry.set(state);
         return CommandResult.empty();
