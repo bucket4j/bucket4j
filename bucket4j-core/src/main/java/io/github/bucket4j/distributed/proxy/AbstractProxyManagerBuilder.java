@@ -84,7 +84,7 @@ public abstract class AbstractProxyManagerBuilder<K, P extends ProxyManager<K>, 
      * @return this builder with configured {@code clientClock}.
      */
     public B clientClock(TimeMeter clientClock) {
-        Objects.requireNonNull(clientSideClock);
+        Objects.requireNonNull(clientClock);
         if (!clientClock.isWallClockBased()) {
             throw BucketExceptions.isNotWallBasedClockUsedInDistributedEnvironment(clientClock.getClass());
         }
