@@ -77,7 +77,7 @@ public interface RemoteBucketBuilder<K> {
      * in case of persisted version of configuration in the storage < than provided {@code desiredConfigurationVersion}.
      *
      * @param desiredConfigurationVersion specifies desired configuration version
-     * @param tokensInheritanceStrategy the strategy that will be used for token migration if {@code desiredConfigurationVersion of persisted bucket} is less that provided desiredConfigurationVersion
+     * @param tokensInheritanceStrategy the strategy that will be used for token migration if {@code desiredConfigurationVersion of persisted bucket} is less than provided desiredConfigurationVersion
      *
      * @return {@code this}
      */

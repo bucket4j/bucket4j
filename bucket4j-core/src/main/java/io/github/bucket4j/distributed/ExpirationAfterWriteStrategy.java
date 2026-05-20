@@ -85,7 +85,7 @@ public interface ExpirationAfterWriteStrategy {
      *
      * @param keepAfterRefillDuration specifies how long bucket should be held in the cache after all consumed tokens have been refilled.
      *                                It can be a zero duration, but from performance considerations it is recommended to provide at least few seconds,
-     *                                because reusing of already persisted can be faster that initialization of bucket from scratch,
+     *                                because reusing of already persisted can be faster than initialization of bucket from scratch,
      *                                so <b>keepAfterRefillDuration</b> helps to not evict buckets from storage too frequent.
      * @return
      *
