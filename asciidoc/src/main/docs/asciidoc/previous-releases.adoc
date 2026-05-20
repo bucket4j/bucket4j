@@ -36,8 +36,8 @@ Release date: `18 Aug 2024`
 ==== 8.13.1
 Release date: `07 June 2024`
 
-* http://bucket4j.com/8.13.0/release-notes.html[8.13.1 Release notes]
-* http://bucket4j.com/8.13.0/toc.html[8.13.1 Reference]
+* http://bucket4j.com/8.13.1/release-notes.html[8.13.1 Release notes]
+* http://bucket4j.com/8.13.1/toc.html[8.13.1 Reference]
 
 ==== 8.12.1
 Release date: `01 May 2024`
@@ -140,8 +140,8 @@ Release date: `02 May 2022`
 ==== 7.3.0
 `04 March 2022` Support for Caffeine.
 
-* http://bucket4j.com/7.4.0/release-notes.html[7.3.0 Release notes]
-* http://bucket4j.com/7.4.0/toc.html[7.3.0 Reference]
+* http://bucket4j.com/7.3.0/release-notes.html[7.3.0 Release notes]
+* http://bucket4j.com/7.3.0/toc.html[7.3.0 Reference]
 
 ==== 7.2.0
 `11 Feb 2022` Support for MySQL and PostgreSQL.

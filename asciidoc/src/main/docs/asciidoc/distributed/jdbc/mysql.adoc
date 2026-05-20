@@ -1,12 +1,12 @@
 [[bucket4j-mysql, Bucket4j-MySQL]]
 ==== MySQL integration
 ===== Dependencies
-To use ``bucket4j-coherence`` extension you need to add the following dependency:
+To use ``bucket4j-mysql`` extension you need to add the following dependency:
 [source, xml, subs=attributes+]
 ----
 <dependency>
     <groupId>com.bucket4j</groupId>
-    <artifactId>bucket4j_jdk17-coherence</artifactId>
+    <artifactId>bucket4j_jdk17-mysql</artifactId>
     <version>{revnumber}</version>
 </dependency>
 ----

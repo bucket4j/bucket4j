@@ -44,7 +44,7 @@ so in case of multiple bandwidth configuration replacement codes can copy availa
      bucket.replaceConfiguration(newConfiguration, TokensInheritanceStrategy.PROPORTIONALLY);
 ----
 .There are the following rules for bandwidth identifiers:
-* By default bandwidth has <b>null</b> identifier.
+* By default bandwidth has *null* identifier.
 * null value of identifier equals to another null value if and only if there is only one bandwidth with a null identifier.
 * If an identifier for bandwidth is specified then it must be unique in the bucket. Bucket does not allow to create of several bandwidths with the same ID.
 

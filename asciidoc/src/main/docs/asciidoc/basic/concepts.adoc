@@ -134,7 +134,7 @@ BucketState is the place where bucket stores own mutable state like:
 * Amount of currently available tokens.
 * Timestamp when the last refill was happen.
 
-`BucketState` is represented by interface https://github.com/bucket4j/bucket4j/blob/{minor-number}/bucket4j-core/src/main/java/io/github/bucket4j/Bucket.java[io.github.bucket4j.BucketState]. Usually you never interact with this interface, excepting the cases when you want to get access to low-level diagnostic API that is described in <<verbose-api>>.
+`BucketState` is represented by interface https://github.com/bucket4j/bucket4j/blob/{minor-number}/bucket4j-core/src/main/java/io/github/bucket4j/BucketState.java[io.github.bucket4j.BucketState]. Usually you never interact with this interface, excepting the cases when you want to get access to low-level diagnostic API that is described in <<verbose-api>>.
 
 
 [[local-bucket-builder, BucketBuilder]]

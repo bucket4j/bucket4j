@@ -134,7 +134,7 @@ public class IpThrottlingFilter implements javax.servlet.Filter {
     private Supplier<BucketConfiguration> getConfigSupplierForUser(String userId) {
          return () -> {
              long translationsPerDay = limitProvider.readPerDayLimitFromAgreementsDatabase(userId);
-             return BucketConfiguratiion.builder()
+             return BucketConfiguration.builder()
                     .addLimit(limit -> limit.capacity(translationsPerDay).refillGreedy(1_000, ofDays(1)))
                      .build();
          };

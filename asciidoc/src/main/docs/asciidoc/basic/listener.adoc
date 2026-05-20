@@ -39,7 +39,7 @@ You can do post-aggregation of monitoring statistics via features built into you
 BucketListener listener = new MyListener();
 
 Bucket bucket = Bucket.builder()
-    .addLimit(limit -> limit,capacity(100).refillGreedy(100, ofMinutes(1)))
+    .addLimit(limit -> limit.capacity(100).refillGreedy(100, ofMinutes(1)))
     .withListener(listener)
     .build()
 ----
@@ -88,7 +88,7 @@ this way will create a decorator to original bucket
 ----
 
 public void doSomethingProtected(User user, Bucket bucket) {
-    bucket = decorate(user, bucket).tryConsume(1)
+    bucket = decorate(user, bucket)
     if (bucket.tryConsume(1)) {
         doSomething(user);
     } else {

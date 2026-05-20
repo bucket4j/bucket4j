@@ -37,7 +37,7 @@ BucketConfiguration bucketConfiguration = verboseResult.getConfiguration();
 long capacity = Arrays.stream(bucketConfiguration.getBandwidths())
                 .mapToLong(Bandwidth::getCapacity)
                 .max().getAsLong();
-response.addHeader("RateLimit-Limit", "" + capacity));
+response.addHeader("RateLimit-Limit", "" + capacity);
 
 VerboseResult.Diagnostics diagnostics = verboseResult.getDiagnostics()
 response.addHeader("RateLimit-Remaining", "" + diagnostics.getAvailableTokens());
