@@ -39,6 +39,7 @@
         <module>asciidoc</module>
         <module>bucket4j-mongodb</module>
         <module>bucket4j-couchbase</module>
+        <module>bucket4j-cassandra</module>
     </modules>
 
     <properties>
