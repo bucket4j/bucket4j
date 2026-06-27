@@ -152,5 +152,25 @@ public class SerializationUtilitiesTest {
         assertThrowsExactly(InvalidConfigurationParameterException.class, () -> { int typeId = SerializationUtilities.getSerializerTypeId(HazelcastOffloadableEntryProcessorSerializer.class); });
     }
 
+    // ************************************************************************************
+    // Exception message content verification (kills MessageFormat mutants on line 86)
+    // ************************************************************************************
+    @Test
+    @SetSystemProperty(key = SerializationUtilities.TYPE_ID_BASE_PROP_NAME, value = TYPE_ID_BASE_SYS_PROP_VALUE_INVALID)
+    public void testGetPropertyFromExternal_InvalidSysProp_MessageContent() {
+        InvalidConfigurationParameterException ex = assertThrows(
+                InvalidConfigurationParameterException.class,
+                () -> { SerializationUtilities.getSerializerTypeId(HazelcastEntryProcessorSerializer.class); });
+        assertEquals("The System Property [bucket4j.hazelcast.serializer.type_id_base] has an invalid format. It must be a positive Integer.", ex.getMessage());
+    }
+
+    @Test
+    @SetSystemProperty(key = SerializationUtilities.TYPE_ID_BASE_PROP_NAME, value = "abc")
+    public void testGetPropertyFromExternal_InvalidSysProp_MessageContent_NonNumeric() {
+        InvalidConfigurationParameterException ex = assertThrows(
+                InvalidConfigurationParameterException.class,
+                () -> { SerializationUtilities.getSerializerTypeId(HazelcastEntryProcessorSerializer.class); });
+        assertEquals("The System Property [bucket4j.hazelcast.serializer.type_id_base] has an invalid format. It must be a positive Integer.", ex.getMessage());
+    }
 
 }
