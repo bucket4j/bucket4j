@@ -1,3 +1,4 @@
+[[client-side-configuration]]
 === Client-side configuration
 
 `ClientSideConfig` allows you to configure client-side behavior for distributed bucket operations.
