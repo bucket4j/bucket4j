@@ -47,20 +47,38 @@ public class Bucket4jJedis {
         RedisApi redisApi = new RedisApi() {
             @Override
             public Object eval(byte[] script, int keyCount, byte[]... params) {
-                try (Jedis jedis = jedisPool.getResource()) {
+                Jedis jedis = null;
+                try {
+                    jedis = jedisPool.getResource();
                     return jedis.eval(script, 1, params);
+                } finally {
+                    if (jedis != null) {
+                        jedisPool.returnResource(jedis);
+                    }
                 }
             }
             @Override
             public byte[] get(byte[] key) {
-                try (Jedis jedis = jedisPool.getResource()) {
+                Jedis jedis = null;
+                try {
+                    jedis = jedisPool.getResource();
                     return jedis.get(key);
+                } finally {
+                    if (jedis != null) {
+                        jedisPool.returnResource(jedis);
+                    }
                 }
             }
             @Override
             public void delete(byte[] key) {
-                try (Jedis jedis = jedisPool.getResource()) {
+                Jedis jedis = null;
+                try {
+                    jedis = jedisPool.getResource();
                     jedis.del(key);
+                } finally {
+                    if (jedis != null) {
+                        jedisPool.returnResource(jedis);
+                    }
                 }
             }
         };
