@@ -40,7 +40,7 @@ public class LettuceBasedProxyManagerValkeyStandaloneTest extends AbstractDistri
         redisClient = createLettuceClient(container);
 
         specs = Arrays.asList(
-            // Letucce
+            // Lettuce
             new ProxyManagerSpec<>(
                 "LettuceBasedProxyManager_ByteArrayKey",
                 () -> UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8),
