@@ -40,7 +40,7 @@ public class LettuceBasedProxyManagerClusterTest extends AbstractDistributedBuck
     private static RedisClusterClient redisClient;
 
     @BeforeAll
-    public static void setup() {
+    public static void setup() throws InterruptedException {
         container = startRedisContainer();
 
         // Redis Cluster nodes advertise their internal container IP address, which is not
@@ -51,6 +51,8 @@ public class LettuceBasedProxyManagerClusterTest extends AbstractDistributedBuck
 
         // Lettuce
         redisClient = createLettuceClient(container, clientResources);
+
+        Thread.sleep(2000);
 
         specs = Arrays.asList(
             new ProxyManagerSpec<>(

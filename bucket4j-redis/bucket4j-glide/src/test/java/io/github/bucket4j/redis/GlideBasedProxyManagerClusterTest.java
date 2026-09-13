@@ -7,10 +7,6 @@ import io.github.bucket4j.distributed.serialization.Mapper;
 import io.github.bucket4j.redis.glide.Bucket4jGlide;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
 import io.github.bucket4j.tck.ProxyManagerSpec;
-import io.lettuce.core.RedisURI;
-import io.lettuce.core.cluster.RedisClusterClient;
-import io.lettuce.core.cluster.SlotHash;
-import io.lettuce.core.cluster.api.StatefulRedisClusterConnection;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.slf4j.Logger;
@@ -23,9 +19,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 public class GlideBasedProxyManagerClusterTest extends AbstractDistributedBucketTest {
 
@@ -75,7 +68,7 @@ public class GlideBasedProxyManagerClusterTest extends AbstractDistributedBucket
         for (var containerClusterPort : CONTAINER_CLUSTER_PORTS) {
             addresses.add(NodeAddress.builder()
                     .host(container.getHost())
-                    .port(container.getMappedPort(containerClusterPort))
+                    .port(containerClusterPort)
                     .build());
         }
         GlideClusterClientConfiguration config = GlideClusterClientConfiguration.builder()
@@ -90,48 +83,43 @@ public class GlideBasedProxyManagerClusterTest extends AbstractDistributedBucket
     }
 
     private static GenericContainer startRedisContainer() {
-        // see this doc https://github.com/Grokzen/docker-redis-cluster
-        GenericContainer genericContainer = new GenericContainer("grokzen/redis-cluster:6.2.14");
-
+        // Redis Cluster nodes announce the address that was used to build the cluster
+        // (the IP env var below) as their own address in CLUSTER SLOTS/MOVED replies.
+        // By default grokzen/redis-cluster auto-detects the container's internal bridge
+        // IP, which is not reachable from the host on many Docker setups (Docker
+        // Desktop/OrbStack NAT, VPN split-tunnel routes, etc). Glide's Java client has
+        // no client-side NAT-mapping hook (unlike Lettuce/Jedis/Redisson), so instead we
+        // force the container to announce 127.0.0.1 and bind its ports 1:1 to the host,
+        // so whatever the client is told always resolves back to the same container.
+        GenericContainer genericContainer = new GenericContainer("grokzen/redis-cluster:6.2.14") {
+            {
+                for (Integer port : CONTAINER_CLUSTER_PORTS) {
+                    addFixedExposedPort(port, port);
+                }
+            }
+        };
         genericContainer.withExposedPorts(CONTAINER_CLUSTER_PORTS);
-        // start does not wait cluster availability
+        genericContainer.withEnv("IP", "127.0.0.1");
         genericContainer.start();
 
-        List<RedisURI> clusterHosts = Arrays.stream(CONTAINER_CLUSTER_PORTS)
-                .map(port -> RedisURI.create(genericContainer.getHost(), genericContainer.getMappedPort(port)))
-                .collect(Collectors.toList());
-
-        // need to wait until all nodes join to cluster
         for (int i = 0; i < 200; i++) {
-            RedisClusterClient redisClientProbe = null;
             try {
-                redisClientProbe = RedisClusterClient.create(clusterHosts);
-                StatefulRedisClusterConnection<String, String> clusterConnection = redisClientProbe.connect();
-                AtomicInteger availableSlots = new AtomicInteger();
-                clusterConnection.getPartitions().forEach(partition -> partition.forEachSlot(slot -> availableSlots.incrementAndGet()));
-                if (availableSlots.get() < SlotHash.SLOT_COUNT) {
-                    throw new IllegalStateException("Only " + availableSlots.get() + " slots is ready from required " + SlotHash.SLOT_COUNT);
+                String clusterInfo = genericContainer.execInContainer("redis-cli", "-p", "7000", "cluster", "info").getStdout();
+                if (clusterInfo.contains("cluster_state:ok")) {
+                    return genericContainer;
                 }
-
-                clusterConnection.sync().get("42");
-                return genericContainer;
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 logger.error("Failed to check Redis Cluster availability: {}", e.getMessage(), e);
+            }
 
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException ex) {
-                    throw new RuntimeException(ex);
-                }
-            } finally {
-                if (redisClientProbe != null) {
-                    redisClientProbe.shutdown();
-                }
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
             }
         }
 
-        throw new IllegalStateException("Cluster was not assembled in " + TimeUnit.MILLISECONDS.toSeconds(200 * 100) + " seconds");
+        throw new IllegalStateException("Cluster was not assembled in 200 seconds");
     }
-
 
 }
