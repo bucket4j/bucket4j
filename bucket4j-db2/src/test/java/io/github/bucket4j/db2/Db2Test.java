@@ -9,7 +9,7 @@ import io.github.bucket4j.tck.ProxyManagerSpec;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.testcontainers.containers.Db2Container;
+import org.testcontainers.db2.Db2Container;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -84,7 +84,7 @@ public class Db2Test extends AbstractDistributedBucketTest {
     }
 
     private static Db2Container startDb2Container() {
-        Db2Container container = new Db2Container().acceptLicense();
+        Db2Container container = new Db2Container("ibmcom/db2:11.5.0.0a").acceptLicense();
         container.start();
         return container;
     }

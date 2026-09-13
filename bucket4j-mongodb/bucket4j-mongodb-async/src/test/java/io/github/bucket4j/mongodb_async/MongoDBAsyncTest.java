@@ -11,7 +11,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
-import org.testcontainers.containers.MongoDBContainer;
+import org.testcontainers.mongodb.MongoDBContainer;
 
 import java.util.List;
 import java.util.UUID;

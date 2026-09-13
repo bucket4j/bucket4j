@@ -12,7 +12,7 @@ import io.github.bucket4j.tck.ProxyManagerSpec;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.testcontainers.containers.MSSQLServerContainer;
+import org.testcontainers.mssqlserver.MSSQLServerContainer;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -175,7 +175,7 @@ public class MSSQLSelectForUpdateBasedProxyManagerTest extends AbstractDistribut
     }
 
     private static MSSQLServerContainer startMsSqlContainer() {
-        MSSQLServerContainer mssqlServerContainer = new MSSQLServerContainer().acceptLicense();
+        MSSQLServerContainer mssqlServerContainer = new MSSQLServerContainer("mcr.microsoft.com/mssql/server:2017-CU12").acceptLicense();
         mssqlServerContainer.start();
         return mssqlServerContainer;
     }

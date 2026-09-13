@@ -8,7 +8,7 @@ import io.github.bucket4j.tck.ProxyManagerSpec;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.testcontainers.containers.MariaDBContainer;
+import org.testcontainers.mariadb.MariaDBContainer;
 
 import javax.sql.DataSource;
 import java.sql.Connection;

@@ -22,7 +22,7 @@ package com.bucket4j.backward_compatibility;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import io.github.bucket4j.distributed.jdbc.BucketTableSettings;
-import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.postgresql.PostgreSQLContainer;
 
 import javax.sql.DataSource;
 import java.io.File;
@@ -37,7 +37,7 @@ import java.util.Properties;
 public class StartPostgreSQLContainer {
 
     public static void main(String[] args) throws IOException, SQLException, InterruptedException {
-        PostgreSQLContainer container = new PostgreSQLContainer();
+        PostgreSQLContainer container = new PostgreSQLContainer("postgres:9.6.12");
         container.start();
 
         System.out.println("JDBC URL = " + container.getJdbcUrl());
