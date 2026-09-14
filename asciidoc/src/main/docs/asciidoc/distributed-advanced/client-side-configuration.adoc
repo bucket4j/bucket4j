@@ -86,7 +86,7 @@ RetryStrategy customStrategy = metadata -> {
     logger.info("CAS retry attempt {} for bucket {}", attemptNumber, bucketKey);
 
     // Custom retry logic based on bucket
-    return attemptNumber < 5;
+    return attemptNumber < 5 ? RetryDecision.retryImmediately() : RetryDecision.stop();
 };
 
 ProxyManager<String> proxyManager = Bucket4jLettuce.casBasedBuilder(redisClient)
@@ -107,7 +107,7 @@ RetryStrategy customStrategy = metadata -> {
     logger.info("CAS retry attempt {} for bucket {}", attemptNumber, bucketKey);
 
     // Custom retry logic based on bucket
-    return attemptNumber < 5;
+    return attemptNumber < 5 ? RetryDecision.retryImmediately() : RetryDecision.stop();
 };
 
 ClientSideConfig config = ClientSideConfig.getDefault()
@@ -118,10 +118,21 @@ ProxyManager<String> proxyManager = LettuceBasedProxyManager.builderFor(redisCli
     .build();
 ----
 
+The strategy returns a `RetryDecision`:
+
+* `RetryDecision.stop()` - Stop retrying; a `BucketExecutionException` will be thrown
+* `RetryDecision.retryImmediately()` - Retry without any delay
+* `RetryDecision.retryAfter(Duration)` - Wait for the given duration before the next attempt
+
 The `RetryMetadata` provides:
 
 * `getAttemptNumber()` - Current retry attempt number (1-based)
 * `getBucketKey()` - The bucket identifier/key
+* `getStartTimeNanos()` - Time when the first attempt started (nanoseconds)
+* `getCurrentTimeNanos()` - Current time (nanoseconds)
+* `getElapsedTimeNanos()` - Elapsed time since the first attempt (nanoseconds)
+
+IMPORTANT: Under high contention on a hot bucket key, immediate retries tend to re-collide: all losers of a CAS race retry at the same moment, so the conflict repeats. Prefer `retryAfter` with randomized (jittered) delays to desynchronize competing clients, and prefer a time-budget stop condition over an attempt-count stop — an attempt count can be exhausted in a few milliseconds and reject a request even though the bucket still has tokens available.
 
 **Common use cases:**
 
@@ -129,27 +140,62 @@ The `RetryMetadata` provides:
 [source, java]
 ----
 RetryStrategy limitedRetries = metadata ->
-    metadata.getAttemptNumber() < 5;
+    metadata.getAttemptNumber() < 5 ? RetryDecision.retryImmediately() : RetryDecision.stop();
 ----
 
+*Exponential backoff with jitter and time budget (recommended under contention):*
 
-*Bucket-specific retry logic with neural network evaluation:*
+`RetryStrategies` ships a ready-made implementation of this pattern, so you do not
+need to hand-roll it:
+
 [source, java]
 ----
-RetryStrategy bucketSpecific = metadata -> {
-    String bucketKey = (String) metadata.getBucketKey();
-    countRetryInPrometheus(metadata.getAttemptNumber())
-    // Use neural network to decide based on bucket and attempt
-    return evaluateNeuralModel(bucketKey, metadata.getAttemptNumber());
-};
+RetryStrategy backoffWithJitter = RetryStrategies.exponentialBackoffWithJitter(
+    Duration.ofMicros(500),   // base delay - at least one round trip to the backend
+    Duration.ofMillis(20),    // max delay - caps added latency under sustained contention
+    Duration.ofMillis(150));  // budget - total time before giving up, not attempt count
+
+ClientSideConfig config = ClientSideConfig.getDefault()
+    .withRetryStrategy(backoffWithJitter);
 ----
+
+The delay before each attempt is chosen uniformly at random between half and the
+full value of an exponentially growing (and capped) base delay, so that clients which
+failed on the same attempt number do not all retry at the same instant. The stop
+condition is elapsed wall-clock time rather than attempt count, which avoids
+rejecting a request whose attempts merely happened to run fast.
+
+**Tuning guidance:**
+
+* *Base delay* — the CAS executor re-reads backend state before each retry
+  attempt, so the delay's purpose is to desynchronize competing clients rather
+  than to wait for fresh data. 0.5-1ms is typical for Redis.
+* *Max delay* — 20-50ms bounds each individual backoff sleep and spreads out
+  retries under sustained contention. The cumulative retry latency is bounded
+  by `budget`.
+* *Budget* — maximum wall-clock time for scheduling retry delays. Once the
+  jittered delay no longer fits within the remaining budget, the strategy
+  stops. The CAS executor may run one final attempt after waking, so total
+  elapsed time may slightly exceed the budget by one backend round-trip.
+  Set as a fraction of the endpoint's overall latency SLA, since any
+  request that reaches the budget has already waited that long.
+* Keep `withRequestTimeout` configured as a second backstop alongside the budget —
+  whichever limit is reached first applies.
+
+**Limits, stated honestly:** backoff and jitter reduce contention and false
+rejections, but they cannot eliminate the underlying two-round-trip
+read-modify-CAS race — each round still admits roughly one winner per hot key.
+If a single key must eventually absorb far higher concurrency than backoff can
+serve fairly, the only way to remove the race entirely is to move the bucket
+arithmetic server-side (for example, into a Lua script executed atomically by
+Redis), which is a larger change outside the scope of this configuration option.
 
 *Integration with metrics:*
 [source, java]
 ----
 RetryStrategy withMetrics = metadata -> {
     metricsCollector.recordRetry(metadata.getBucketKey(), metadata.getAttemptNumber());
-    return metadata.getAttemptNumber() < 5;
+    return metadata.getAttemptNumber() < 5 ? RetryDecision.retryImmediately() : RetryDecision.stop();
 };
 ----
 
@@ -157,7 +203,9 @@ RetryStrategy withMetrics = metadata -> {
 [source, java]
 ----
 RetryStrategy mediatorBased = metadata ->
-    retryMediator.shouldRetry(metadata.getBucketKey(), metadata.getAttemptNumber());
+    retryMediator.shouldRetry(metadata.getBucketKey(), metadata.getAttemptNumber())
+        ? RetryDecision.retryImmediately()
+        : RetryDecision.stop();
 ----
 
 **Note:** If both `retryStrategy()` and `maxRetries()` are configured, the `RetryStrategy` takes precedence.
