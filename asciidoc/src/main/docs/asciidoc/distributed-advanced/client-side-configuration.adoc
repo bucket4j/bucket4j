@@ -86,7 +86,7 @@ RetryStrategy customStrategy = metadata -> {
     logger.info("CAS retry attempt {} for bucket {}", attemptNumber, bucketKey);
 
     // Custom retry logic based on bucket
-    return attemptNumber < 5;
+    return attemptNumber < 5 ? RetryDecision.retryImmediately() : RetryDecision.stop();
 };
 
 ProxyManager<String> proxyManager = Bucket4jLettuce.casBasedBuilder(redisClient)
@@ -107,7 +107,7 @@ RetryStrategy customStrategy = metadata -> {
     logger.info("CAS retry attempt {} for bucket {}", attemptNumber, bucketKey);
 
     // Custom retry logic based on bucket
-    return attemptNumber < 5;
+    return attemptNumber < 5 ? RetryDecision.retryImmediately() : RetryDecision.stop();
 };
 
 ClientSideConfig config = ClientSideConfig.getDefault()
@@ -118,10 +118,21 @@ ProxyManager<String> proxyManager = LettuceBasedProxyManager.builderFor(redisCli
     .build();
 ----
 
+The strategy returns a `RetryDecision`:
+
+* `RetryDecision.stop()` - Stop retrying; a `BucketExecutionException` will be thrown
+* `RetryDecision.retryImmediately()` - Retry without any delay
+* `RetryDecision.retryAfter(Duration)` - Wait for the given duration before the next attempt
+
 The `RetryMetadata` provides:
 
 * `getAttemptNumber()` - Current retry attempt number (1-based)
 * `getBucketKey()` - The bucket identifier/key
+* `getStartTimeNanos()` - Time when the first attempt started (nanoseconds)
+* `getCurrentTimeNanos()` - Current time (nanoseconds)
+* `getElapsedTimeNanos()` - Elapsed time since the first attempt (nanoseconds)
+
+IMPORTANT: Under high contention on a hot bucket key, immediate retries tend to re-collide: all losers of a CAS race retry at the same moment, so the conflict repeats. Prefer `retryAfter` with randomized (jittered) delays to desynchronize competing clients, and prefer a time-budget stop condition over an attempt-count stop — an attempt count can be exhausted in a few milliseconds and reject a request even though the bucket still has tokens available. The elapsed-time budget is a soft scheduling bound: the CAS executor may run one final attempt after waking, so total elapsed time may slightly exceed the stated budget by one backend round-trip.
 
 **Common use cases:**
 
@@ -129,18 +140,22 @@ The `RetryMetadata` provides:
 [source, java]
 ----
 RetryStrategy limitedRetries = metadata ->
-    metadata.getAttemptNumber() < 5;
+    metadata.getAttemptNumber() < 5 ? RetryDecision.retryImmediately() : RetryDecision.stop();
 ----
 
-
-*Bucket-specific retry logic with neural network evaluation:*
+*Exponential backoff with jitter and time budget (recommended under contention):*
 [source, java]
 ----
-RetryStrategy bucketSpecific = metadata -> {
-    String bucketKey = (String) metadata.getBucketKey();
-    countRetryInPrometheus(metadata.getAttemptNumber())
-    // Use neural network to decide based on bucket and attempt
-    return evaluateNeuralModel(bucketKey, metadata.getAttemptNumber());
+RetryStrategy backoffWithJitter = metadata -> {
+    // Soft scheduling budget — executor may overshoot by one round-trip
+    if (metadata.getElapsedTimeNanos() >= TimeUnit.MILLISECONDS.toNanos(150)) {
+        return RetryDecision.stop();
+    }
+    long baseNanos = TimeUnit.MICROSECONDS.toNanos(500);
+    long expNanos = Math.min(TimeUnit.MILLISECONDS.toNanos(20),
+            baseNanos << Math.min(metadata.getAttemptNumber() - 1, 6));
+    long jitteredNanos = ThreadLocalRandom.current().nextLong(expNanos / 2, expNanos + 1);
+    return RetryDecision.retryAfter(Duration.ofNanos(jitteredNanos));
 };
 ----
 
@@ -149,7 +164,7 @@ RetryStrategy bucketSpecific = metadata -> {
 ----
 RetryStrategy withMetrics = metadata -> {
     metricsCollector.recordRetry(metadata.getBucketKey(), metadata.getAttemptNumber());
-    return metadata.getAttemptNumber() < 5;
+    return metadata.getAttemptNumber() < 5 ? RetryDecision.retryImmediately() : RetryDecision.stop();
 };
 ----
 
@@ -157,7 +172,9 @@ RetryStrategy withMetrics = metadata -> {
 [source, java]
 ----
 RetryStrategy mediatorBased = metadata ->
-    retryMediator.shouldRetry(metadata.getBucketKey(), metadata.getAttemptNumber());
+    retryMediator.shouldRetry(metadata.getBucketKey(), metadata.getAttemptNumber())
+        ? RetryDecision.retryImmediately()
+        : RetryDecision.stop();
 ----
 
 **Note:** If both `retryStrategy()` and `maxRetries()` are configured, the `RetryStrategy` takes precedence.
