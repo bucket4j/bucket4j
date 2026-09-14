@@ -67,6 +67,7 @@
         <junit.jupiter.version>5.10.2</junit.jupiter.version>
         <slf4j.version>2.0.9</slf4j.version>
         <bnd.version>7.1.0</bnd.version>
+        <cassandra.version>4.19.2</cassandra.version>
         <!-- default OSGi bundle symbolic name pattern -->
         <osgi.symbolicName>${project.groupId}.${modular-name}</osgi.symbolicName>
         <bnd.skip>false</bnd.skip>
