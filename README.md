@@ -119,6 +119,38 @@ Sometimes you are having deal with bucket per key scenarios but distributed sync
 
 ## [Bucket4j Backward compatibility policy](backward-compatibility-policy.md)
 
+## Snapshot builds
+Every commit/merge to the `master` branch is automatically built and published as a `-SNAPSHOT` artifact to [GitHub Packages](https://github.com/bucket4j/bucket4j/packages) (see [`.github/workflows/snapshot-release.yml`](.github/workflows/snapshot-release.yml)).
+
+To consume a snapshot, add the GitHub Packages repository to your `pom.xml`:
+```xml
+<repositories>
+  <repository>
+    <id>github</id>
+    <name>Bucket4j GitHub Packages</name>
+    <url>https://maven.pkg.github.com/bucket4j/bucket4j</url>
+  </repository>
+</repositories>
+```
+GitHub Packages requires authentication even for reading public packages, so add a server entry with your GitHub username and a [personal access token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens) that has the `read:packages` scope to your `~/.m2/settings.xml`:
+```xml
+<servers>
+  <server>
+    <id>github</id>
+    <username>YOUR_GITHUB_USERNAME</username>
+    <password>YOUR_GITHUB_TOKEN</password>
+  </server>
+</servers>
+```
+Then reference the snapshot version (current `pom.xml` version with the `-SNAPSHOT` suffix), for example:
+```xml
+<dependency>
+  <groupId>com.bucket4j</groupId>
+  <artifactId>bucket4j_jdk17-core</artifactId>
+  <version>8.19.0-SNAPSHOT</version>
+</dependency>
+```
+
 ## Have a question?
 Feel free to ask via:
 * [Bucket4j github issue tracker](https://github.com/bucket4j/bucket4j/issues/new) to report a bug.
