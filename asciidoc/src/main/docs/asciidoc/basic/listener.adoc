@@ -1,39 +1,39 @@
 === Listening for bucket events
 
-==== What can be listened
-.You can attach a listener to bucket by to track following events:
+==== What can be listened to
+.You can attach a listener to a bucket to track the following events:
 - When tokens are consumed from a bucket.
-- When consumption requests were rejected by the bucket.
-- When the thread was parked to wait for tokens refill as a result of interaction with ``BlockingBucket``.
-- When the thread was interrupted during the wait for tokens to be refilled as a result of interaction with ``BlockingBucket``.
-- When a delayed task was submitted to ``ScheduledExecutorService`` as a result of interaction with ``AsyncScheduledBucket``.
+- When a consumption request is rejected by the bucket.
+- When a thread is parked to wait for a refill, as a result of interaction with `BlockingBucket`.
+- When a thread is interrupted while waiting for a refill, as a result of interaction with `BlockingBucket`.
+- When a delayed task is submitted to a `ScheduledExecutorService`, as a result of interaction with `AsyncScheduledBucket`.
 
 ==== Listener API - corner cases
 ========
-**Question:** How many listeners are needed to create an application that uses many buckets?
+**Question:** How many listeners do I need if my application uses many buckets?
 
-**Answer:**  it depends on:
+**Answer:** It depends:
 
-- If you want to have aggregated statistics for all buckets then create a single listener per application and reuse this listener for all buckets.
-- If you want to measure statistics independently per bucket then use a listener per bucket model.
+- If you want aggregated statistics across all buckets, create a single listener per application and reuse it for all buckets.
+- If you want to measure statistics per bucket, use a separate listener per bucket.
 ========
 
 ========
-**Question:** where are methods the listener is invoking in case of distributed usage?
+**Question:** In a distributed scenario, on which side are the listener's methods invoked?
 
-**Answer:** listener always invoked on the client-side, which means that each client JVM will have its independent stat for the same bucket.
+**Answer:** The listener is always invoked on the client side, which means that each client JVM has its own, independent statistics for the same bucket.
 ========
 
 ========
-**Question:** Why does bucket invoke the listener on the client-side instead of the server-side in case of distributed scenario? What do I need to do if I need an aggregated stat across the whole cluster?
+**Question:** Why is the listener invoked on the client side rather than the server side in a distributed scenario? What should I do if I need aggregated statistics across the whole cluster?
 
-**Answer:** Because of a planned expansion to non-JVM back-ends such as Redis, MySQL, PostgreSQL.
-It is not possible to serialize and invoke listener on this non-java back-ends, so it was decided to invoke listener on the client-side,
-to avoid inconsistency between different back-ends in the future.
-You can do post-aggregation of monitoring statistics via features built into your monitoring database or via mediator(like StatsD) between your application and the monitoring database.
+**Answer:** This is because of planned expansion to non-JVM backends such as Redis, MySQL, and PostgreSQL.
+It is not possible to serialize and invoke a listener on these non-Java backends, so it was decided to always invoke listeners on the client side,
+to avoid inconsistent behavior between different backends in the future.
+You can perform post-aggregation of monitoring statistics using features built into your monitoring database, or via a mediator (such as StatsD) between your application and the monitoring database.
 ========
 
-==== Specify listener to local bucket at build time
+==== Attaching a listener to a local bucket at build time
 [source, java]
 ----
 BucketListener listener = new MyListener();
@@ -44,7 +44,7 @@ Bucket bucket = Bucket.builder()
     .build()
 ----
 
-==== Specify listener to distributed bucket at build time
+==== Attaching a listener to a distributed bucket at build time
 [source, java]
 ----
 BucketListener listener = new MyListener();
@@ -54,7 +54,7 @@ Bucket bucket = proxyManager.builder()
      .build(key, configSupplier);
 ----
 
-==== Specify listener to async distributed bucket at build time
+==== Attaching a listener to an async distributed bucket at build time
 [source, java]
 ----
 BucketListener listener = new MyListener();
@@ -64,31 +64,29 @@ AsyncBucketProxy bucket = proxyManager.asAsync().builder()
      .build(key, configSupplier);
 ----
 
-==== Specify listener to distributed bucket at proxy-manager build time
-You can configure default listener at proxy-manager build time. And this listener will be used for all bucket that belong to this proxy-manager.
-Bellow example for Hazelcast, the way to configure listener for other backends is the same.
+==== Attaching a default listener at proxy-manager build time
+You can configure a default listener when building a proxy manager. This listener is then used for every bucket that belongs to this proxy manager.
+Below is an example for Hazelcast; the approach is the same for other backends.
 [source, java]
 ----
 BucketListener listener = new MyListener();
 
-// listener will be attached to all buckets that belong to this proxy manager
+// the listener will be attached to every bucket that belongs to this proxy manager
 HazelcastLockBasedProxyManager proxyManager = Bucket4jHazelcast.entryProcessorBasedBuilder(map)
     .defaultListener(listener)
     .build();
 ----
 
-==== Specify listener to bucket at use time.
-Sometimes listener is not known at bucket build time, and you want to clarify listener later.
-For example, it can happen when you want to share same bucket per multiple users,
-but in same time it needs to have dedicated listener per each user.
+==== Attaching a listener to a bucket at usage time
+Sometimes the listener is not known at bucket build time, and you want to attach it later.
+This can happen, for example, when the same bucket is shared across multiple users, but you still need a dedicated listener per user.
 
-In such case you can build bucket without listener and attach it later via the ``toListenable`` method,
-this way will create a decorator to original bucket
+In this case, you can build the bucket without a listener and attach one later via the `toListenable` method.
+This method wraps the original bucket in a decorator that reports events to the given listener:
 [source, java]
 ----
-
 public void doSomethingProtected(User user, Bucket bucket) {
-    bucket = decorate(user, bucket)
+    bucket = decorate(user, bucket);
     if (bucket.tryConsume(1)) {
         doSomething(user);
     } else {
@@ -97,26 +95,26 @@ public void doSomethingProtected(User user, Bucket bucket) {
 }
 
 ...
-private Bucket decorate(User user, Bucket originalbucket) {
+private Bucket decorate(User user, Bucket originalBucket) {
     BucketListener listener = new BucketListener() {
         @Override
         public void onConsumed(long tokens) {
-            // log something related for user or increase user related metrics
+            // log something related to the user, or increment a user-related metric
         }
         @Override
         public void onRejected(long tokens) {
-            // log something related for user or increase user related metrics
+            // log something related to the user, or increment a user-related metric
         }
-        ...
+        // ... other BucketListener methods omitted for brevity
     }
-    return originalbucket.toListenable(listener);
+    return originalBucket.toListenable(listener);
 }
 ----
 
 ==== Example of integration with Micrometer
-`io.github.bucket4j.SimpleBucketListener` is a simple implementation of `io.github.bucket4j.BucketListener` interface that is available out of the box.
+`io.github.bucket4j.SimpleBucketListener` is a ready-to-use implementation of the `io.github.bucket4j.BucketListener` interface that simply counts events.
 
-Below is an example of exposing statistics via Micrometer:
+Below is an example of exposing its statistics via Micrometer:
 [source, java]
 ----
 private Bucket decorateBucketByStatListener(Bucket originalBucket, String bucketName) {
@@ -127,11 +125,11 @@ private Bucket decorateBucketByStatListener(Bucket originalBucket, String bucket
     Metrics.gauge("bucket4j.parkedNanos", tag, stat, SimpleBucketListener::getParkedNanos);
     Metrics.gauge("bucket4j.interrupted", tag, stat, SimpleBucketListener::getInterrupted);
     Metrics.gauge("bucket4j.delayedNanos", tag, stat, SimpleBucketListener::getDelayedNanos);
-    return bucket.toListenable(stat);
+    return originalBucket.toListenable(stat);
 }
 ----
 
-==== Example of integration with Dropwizard metrics-core
+==== Example of integration with Dropwizard Metrics
 Below is an example of exposing statistics via Dropwizard Metrics:
 [source, java]
 ----
@@ -145,4 +143,3 @@ public static Bucket decorateBucketByStatListener(Bucket originalBucket, String 
     return originalBucket.toListenable(stat);
 }
 ----
-

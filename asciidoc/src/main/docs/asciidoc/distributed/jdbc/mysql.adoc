@@ -1,7 +1,7 @@
 [[bucket4j-mysql, Bucket4j-MySQL]]
 ==== MySQL integration
 ===== Dependencies
-To use ``bucket4j-mysql`` extension you need to add the following dependency:
+To use the ``bucket4j-mysql`` extension, add the following dependency:
 [source, xml, subs=attributes+]
 ----
 <dependency>
@@ -14,12 +14,12 @@ To use ``bucket4j-mysql`` extension you need to add the following dependency:
 ===== DDL example
 [source,sql]
 ----
-// in case of expiration feature is not required
+// if the expiration feature is not required
 CREATE TABLE IF NOT EXISTS bucket(id BIGINT PRIMARY KEY, state BLOB);
 ----
 [source,sql]
 ----
-// in case of expiration feature is required
+// if the expiration feature is required
 CREATE TABLE IF NOT EXISTS bucket(id BIGINT PRIMARY KEY, state BLOB, expires_at BIGINT);
 ----
 

@@ -1,11 +1,11 @@
 [[verbose-api, Verbose/Debug API]]
 === Verbose/Debug API
-Verbose API:: is the API whose intent is in injecting low-level diagnostic information into the results of any interaction with a bucket. Verbose API provides the same functionality as Regular API, with one exception - a result of any method always decorated by `VerboseResult` wrapper.
+Verbose API:: is an API whose purpose is to attach low-level diagnostic information to the result of any interaction with a bucket. It provides the same functionality as the regular API, with one difference - the result of any method is always wrapped in a `VerboseResult`.
 
-VerboseResult:: is the wrapper for interaction result that provides the snapshot of a bucket and its configuration that was actual at the moment of interaction with a bucket.
+VerboseResult:: is a wrapper around an interaction result that also carries a snapshot of the bucket and its configuration, as they were at the moment of the interaction.
 
-==== Verbose API entry-points
-The way to get access for `Verbose API` is the same for all types of buckets, just call `asVerbose()` method:
+==== Verbose API entry points
+The way to access the `Verbose API` is the same for every kind of bucket - just call the `asVerbose()` method:
 
 [source, java]
 ----
@@ -13,7 +13,7 @@ The way to get access for `Verbose API` is the same for all types of buckets, ju
 Bucket bucket = ...;
 VerboseBucket verboseBucket = bucket.asVerbose();
 VerboseSchedulingBucket verboseSchedulingBucket = bucket.asScheduler().asVerbose();
-VerboseBlockingBucket VerboseBlockingBucket = bucket.asBlocking().asVerbose();
+VerboseBlockingBucket verboseBlockingBucket = bucket.asBlocking().asVerbose();
 ----
 [source, java]
 ----
@@ -24,9 +24,9 @@ VerboseSchedulingBucket verboseSchedulingBucket = bucket.asScheduler().asVerbose
 ----
 
 ==== Principles of result decoration
-* void return type always decorated by `VerboseResult<Void>`
-* A primitive result type like long, boolean always decorated by correspondent boxed type for example `VerboseResult<Boolean>`
-* Non-primitive result type always decorated as is, for example, `VerboseResult<EstimationProbe>`
+* A `void` return type is always wrapped as `VerboseResult<Void>`.
+* A primitive result type such as `long` or `boolean` is always wrapped using the corresponding boxed type, for example `VerboseResult<Boolean>`.
+* A non-primitive result type is always wrapped as-is, for example `VerboseResult<EstimationProbe>`.
 
 ==== Example of Verbose API usage
 [source, java]
@@ -39,7 +39,7 @@ long capacity = Arrays.stream(bucketConfiguration.getBandwidths())
                 .max().getAsLong();
 response.addHeader("RateLimit-Limit", "" + capacity);
 
-VerboseResult.Diagnostics diagnostics = verboseResult.getDiagnostics()
+VerboseResult.Diagnostics diagnostics = verboseResult.getDiagnostics();
 response.addHeader("RateLimit-Remaining", "" + diagnostics.getAvailableTokens());
 response.addHeader("RateLimit-Reset", "" + TimeUnit.NANOSECONDS.toSeconds(diagnostics.calculateFullRefillingTime()));
 
@@ -55,4 +55,3 @@ if (probe.isConsumed()) {
     httpResponse.getWriter().append("Too many requests");
 }
 ----
-

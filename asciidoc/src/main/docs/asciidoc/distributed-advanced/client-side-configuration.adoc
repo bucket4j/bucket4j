@@ -1,7 +1,12 @@
 [[client-side-configuration]]
 === Client-side configuration
 
-`ClientSideConfig` allows you to configure client-side behavior for distributed bucket operations.
+`ClientSideConfig` lets you configure client-side behavior for distributed bucket operations, such as request timeouts and retry limits for Compare-And-Swap (CAS) based backends.
+
+Most backends expose this configuration in two equivalent ways:
+
+* Through dedicated builder methods (`.requestTimeout(...)`, `.maxRetries(...)`, `.retryStrategy(...)`) - this is the recommended way, shown below using `Bucket4jLettuce.casBasedBuilder(...)` as an example.
+* Through an explicit `ClientSideConfig` object passed to `.withClientSideConfig(config)` - useful when you want to build the configuration once and share or reuse it across several proxy managers.
 
 ==== Request timeout
 
@@ -9,84 +14,56 @@ You can configure a timeout for distributed bucket operations:
 
 [source, java]
 ----
-ClientSideConfig config = ClientSideConfig.getDefault()
-    .withRequestTimeout(Duration.ofSeconds(3));
-
-ProxyManager<String> proxyManager = LettuceBasedProxyManager.builderFor(redisClient)
-    .withClientSideConfig(config)
+ProxyManager<String> proxyManager = Bucket4jLettuce.casBasedBuilder(redisClient)
+    .requestTimeout(Duration.ofSeconds(3))
     .build();
 ----
 
-When the timeout is exceeded, a `TimeoutException` will be thrown.
+The way a configured timeout is enforced depends on the backend: some backends use native per-request timeouts (for example, JDBC statement timeouts), others enforce the timeout at the Bucket4j library level (for example, by timing out the returned `CompletableFuture`), and a few backends may not be able to honor it at all. Where the timeout is enforced, exceeding it throws a `TimeoutException`.
 
 ==== Max retries for CAS operations
 
-For Compare-And-Swap (CAS) based backends (Redis, Hazelcast, Ignite, etc.), you can limit the number of retry attempts to prevent infinite loops under high contention.
-
-**Using the builder API (recommended):**
+For CAS-based backends (Redis, Hazelcast, Ignite, etc.), you can limit the number of retry attempts to prevent long-running or effectively infinite loops under high contention.
 
 [source, java]
 ----
 ProxyManager<String> proxyManager = Bucket4jLettuce.casBasedBuilder(redisClient)
-    .maxRetries(10)  // Limit to 10 CAS retry attempts
+    .maxRetries(10)  // limit to 10 CAS retry attempts
     .build();
 ----
 
+When the number of retries is exceeded, a `BucketExecutionException` is thrown.
 
-When max retries is exceeded, a `BucketExecutionException` will be thrown.
-
-**Default behavior:** If `maxRetries` is not configured, CAS operations will retry for max integer value (backward compatible).
+**Default behavior:** if `maxRetries` is not configured, CAS operations retry indefinitely (unless a request timeout is also configured).
 
 ==== Combining timeout and max retries
 
-You can combine both settings for comprehensive protection.
-
-**Using the builder API (recommended):**
+You can combine both settings for comprehensive protection - whichever limit is reached first wins:
 
 [source, java]
 ----
 ProxyManager<String> proxyManager = Bucket4jLettuce.casBasedBuilder(redisClient)
-    .maxRetries(5)                          // Max 5 retry attempts
-    .requestTimeout(Duration.ofSeconds(2))  // Max 2 seconds total
+    .maxRetries(5)                          // max 5 retry attempts
+    .requestTimeout(Duration.ofSeconds(2))  // max 2 seconds total
     .build();
 ----
 
-**Using ClientSideConfig (alternative approach):**
-
-[source, java]
-----
-ClientSideConfig config = ClientSideConfig.getDefault()
-    .withMaxRetries(5)                          // Max 5 retry attempts
-    .withRequestTimeout(Duration.ofSeconds(2)); // Max 2 seconds total
-
-ProxyManager<String> proxyManager = LettuceBasedProxyManager.builderFor(redisClient)
-    .withClientSideConfig(config)
-    .build();
-----
-
-The operation will fail with whichever limit is reached first:
-
-* `BucketExecutionException` if 5 retries are exceeded
-* `TimeoutException` if 2 seconds timeout is exceeded
+* `BucketExecutionException` is thrown if 5 retries are exceeded first.
+* `TimeoutException` is thrown if the 2-second timeout is exceeded first.
 
 ==== Custom retry strategy for CAS operations
 
-For advanced use cases, you can provide a custom retry strategy that makes dynamic decisions based on retry metadata.
-
-**Using the builder API (recommended):**
+For advanced use cases, you can provide a custom `RetryStrategy` that makes dynamic decisions based on metadata about the current retry attempt. Unlike a plain retry counter, `RetryStrategy` can also introduce a delay before the next attempt:
 
 [source, java]
 ----
 RetryStrategy customStrategy = metadata -> {
-    // Access retry information
     int attemptNumber = metadata.getAttemptNumber();
     String bucketKey = (String) metadata.getBucketKey();
 
-    // Log retry attempts
     logger.info("CAS retry attempt {} for bucket {}", attemptNumber, bucketKey);
 
-    // Custom retry logic based on bucket
-    return attemptNumber < 5;
+    return attemptNumber < 5 ? RetryDecision.retryImmediately() : RetryDecision.stop();
 };
 
 ProxyManager<String> proxyManager = Bucket4jLettuce.casBasedBuilder(redisClient)
@@ -94,34 +71,33 @@ ProxyManager<String> proxyManager = Bucket4jLettuce.casBasedBuilder(redisClient)
     .build();
 ----
 
-**Using ClientSideConfig (alternative approach):**
+`RetryStrategy` is a functional interface: `RetryDecision shouldRetry(RetryMetadata metadata)`. It is invoked after every failed CAS attempt, and the returned `RetryDecision` tells Bucket4j how to proceed:
+
+* `RetryDecision.stop()` - give up and report failure.
+* `RetryDecision.retryImmediately()` - retry right away.
+* `RetryDecision.retryAfter(Duration)` - wait for the given delay before retrying (useful for backoff).
+
+`RetryMetadata` provides:
+
+* `getAttemptNumber()` - the current attempt number (1-based).
+* `getBucketKey()` - the bucket identifier/key.
+* `getStartTimeNanos()` / `getCurrentTimeNanos()` / `getElapsedTimeNanos()` - timing information about the retry loop, useful for time-based backoff or giving up after a deadline.
+
+Alternatively, the same strategy can be supplied through `ClientSideConfig`, for example when you want to share one configuration object across several proxy managers:
 
 [source, java]
 ----
-RetryStrategy customStrategy = metadata -> {
-    // Access retry information
-    int attemptNumber = metadata.getAttemptNumber();
-    String bucketKey = (String) metadata.getBucketKey();
-
-    // Log retry attempts
-    logger.info("CAS retry attempt {} for bucket {}", attemptNumber, bucketKey);
-
-    // Custom retry logic based on bucket
-    return attemptNumber < 5;
-};
-
 ClientSideConfig config = ClientSideConfig.getDefault()
+    .withMaxRetries(5)
+    .withRequestTimeout(Duration.ofSeconds(2))
     .withRetryStrategy(customStrategy);
 
-ProxyManager<String> proxyManager = LettuceBasedProxyManager.builderFor(redisClient)
+ProxyManager<String> proxyManager = Bucket4jLettuce.casBasedBuilder(redisClient)
     .withClientSideConfig(config)
     .build();
 ----
 
-The `RetryMetadata` provides:
-
-* `getAttemptNumber()` - Current retry attempt number (1-based)
-* `getBucketKey()` - The bucket identifier/key
+**Note:** if both `retryStrategy()` and `maxRetries()` are configured, the `RetryStrategy` takes precedence.
 
 **Common use cases:**
 
@@ -129,18 +105,26 @@ The `RetryMetadata` provides:
 [source, java]
 ----
 RetryStrategy limitedRetries = metadata ->
-    metadata.getAttemptNumber() < 5;
+    metadata.getAttemptNumber() < 5 ? RetryDecision.retryImmediately() : RetryDecision.stop();
 ----
 
+*Exponential backoff based on elapsed time:*
+[source, java]
+----
+RetryStrategy timeBasedRetry = metadata ->
+    metadata.getElapsedTimeNanos() < Duration.ofSeconds(1).toNanos()
+        ? RetryDecision.retryAfter(Duration.ofMillis(10L * metadata.getAttemptNumber()))
+        : RetryDecision.stop();
+----
 
-*Bucket-specific retry logic with neural network evaluation:*
+*Bucket-specific retry logic:*
 [source, java]
 ----
 RetryStrategy bucketSpecific = metadata -> {
     String bucketKey = (String) metadata.getBucketKey();
-    countRetryInPrometheus(metadata.getAttemptNumber())
-    // Use neural network to decide based on bucket and attempt
-    return evaluateNeuralModel(bucketKey, metadata.getAttemptNumber());
+    return shouldKeepRetrying(bucketKey, metadata.getAttemptNumber())
+        ? RetryDecision.retryImmediately()
+        : RetryDecision.stop();
 };
 ----
 
@@ -149,15 +133,13 @@ RetryStrategy bucketSpecific = metadata -> {
 ----
 RetryStrategy withMetrics = metadata -> {
     metricsCollector.recordRetry(metadata.getBucketKey(), metadata.getAttemptNumber());
-    return metadata.getAttemptNumber() < 5;
+    return metadata.getAttemptNumber() < 5 ? RetryDecision.retryImmediately() : RetryDecision.stop();
 };
 ----
 
-*Delegating to mediator component:*
+*Delegating to another component:*
 [source, java]
 ----
 RetryStrategy mediatorBased = metadata ->
-    retryMediator.shouldRetry(metadata.getBucketKey(), metadata.getAttemptNumber());
+    retryMediator.decide(metadata.getBucketKey(), metadata.getAttemptNumber());
 ----
-
-**Note:** If both `retryStrategy()` and `maxRetries()` are configured, the `RetryStrategy` takes precedence.

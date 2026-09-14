@@ -1,18 +1,18 @@
 === JDBC integrations
-General principles to use each JDBC integration:
+General principles for using each JDBC integration:
 
-* Bucket4j authors do not provide create a table for store buckets, you must make the table personally.
-Examples of DDL provided for each integration.
-* You should create a trigger or a scheduler that will clear your bucket storage table since DBMS is not IMDB, and DBMS don't give TTL the opportunity.
+* Bucket4j does not create the bucket storage table for you - you need to create it yourself.
+A DDL example is provided for each integration.
+* Relational databases are not in-memory data grids and have no built-in TTL support, so you should create a trigger or a scheduler to clear expired rows from your bucket storage table.
 
-==== Overriding table and columns naming scheme
-.There is three naming parameters
-* `tableName` - name of table to use as a Buckets store. Default value is `bucket`
-* `idName` - name of primary key column. Default value is `id`
-* `stateName` - name of column to store state of bucket. Default value is `state`
+==== Overriding the table and column naming scheme
+.There are three naming parameters
+* `tableName` - name of the table used as the bucket store. Default value is `bucket`
+* `idColumnName` - name of the primary key column. Default value is `id`
+* `stateColumnName` - name of the column used to store the bucket state. Default value is `state`
 
-You can change naming as you wish, at proxy-manager build time. Bellow is example for Mysql,
-the code for other integrations will be the same
+You can override the naming as you wish at proxy-manager build time. Below is an example for MySQL;
+the code for other integrations is the same.
 
 [source, java]
 ----
@@ -24,13 +24,13 @@ MySQLSelectForUpdateBasedProxyManager<Long> proxyManager = Bucket4jMySQL
     .build()
 ----
 
-==== Overriding type of primary key
-By default `java.lang.Long` is used as Java representation of value for primary-key column,
-and it is expected that type of primary column must be assigned from Long during specifying parameters of `PreparedStatement`. +
+==== Overriding the type of the primary key
+By default, `java.lang.Long` is used as the Java representation of the primary-key column value,
+and the primary key column type is expected to be assignable from `Long` when binding `PreparedStatement` parameters. +
 
-Sometimes you want to have to setting up something else for primary key column, for example `java.lang.String` and its correspondent type in database.
-You can configure custom primary-key type at proxy-manager build time. Bellow is example for PostgreSQL,
-the code for other integrations will be the same
+Sometimes you need the primary key column to use a different type, for example `java.lang.String` and its corresponding database type.
+You can configure a custom primary-key type at proxy-manager build time. Below is an example for PostgreSQL;
+the code for other integrations is the same.
 [source,sql]
 ----
 CREATE TABLE IF NOT EXISTS bucket(id VARCHAR PRIMARY KEY, state BYTEA);
@@ -42,13 +42,13 @@ PostgreSQLSelectForUpdateBasedProxyManager<String> proxyManager = Bucket4jPostgr
     .primaryKeyMapper(PrimaryKeyMapper.STRING)
     .build();
 ----
-There are several predefined mappers defined inside `io.github.bucket4j.distributed.jdbc.PrimaryKeyMapper`,
-if nothing suitable then you can define own by implementing this interface.
+There are several predefined mappers defined inside `io.github.bucket4j.distributed.jdbc.PrimaryKeyMapper`;
+if none of them suit your needs, you can define your own by implementing this interface.
 
-==== Expiration Policy
-Relational databases have no built-in auto-expiration functionality like for example Redis has.
-For all Jdbc integrations Bucket4j just calculates `expires_at` column if expire-policy is configured.
-Then, you need to manually trigger the removing of expired bucket, like bellow
+==== Expiration policy
+Relational databases have no built-in auto-expiration functionality, unlike, for example, Redis.
+For all JDBC integrations, Bucket4j only calculates the `expires_at` column if an expiration policy is configured.
+You then need to manually trigger the removal of expired buckets, as shown below.
 [source,sql]
 ----
 CREATE TABLE IF NOT EXISTS bucket(id BIGINT PRIMARY KEY, state BYTEA, expires_at BIGINT);

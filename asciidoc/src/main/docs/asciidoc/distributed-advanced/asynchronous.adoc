@@ -1,41 +1,40 @@
+[[asynchronous-api]]
 === Asynchronous API
-Since version ``3.0`` Bucket4j provides asynchronous analogs for the majority of API methods.
-Async view of proxyManager is available through ``asAsync()`` method:
+Since version `3.0`, Bucket4j provides asynchronous equivalents for most of its API methods.
+The asynchronous view of a `ProxyManager` is available through the `asAsync()` method:
 [source, java]
 ----
-ProxyManager proxyManager = ...;
-AsyncProxyManager asyncProxyManager = proxyManager.asAsync();
+ProxyManager<String> proxyManager = ...;
+AsyncProxyManager<String> asyncProxyManager = proxyManager.asAsync();
 
 BucketConfiguration configuration = ...;
-AsyncBucketProxy asyncBucket = asyncProxyManager.getProxy(key, () -> configuration);
+AsyncBucketProxy asyncBucket = asyncProxyManager.getProxy(key, () -> CompletableFuture.completedFuture(configuration));
 ----
-Each method of class ```AsyncBucketProxy``` has full equivalence with the same semantic in asynchronous version in the ```Bucket``` class.
+Every method of the `AsyncBucketProxy` interface has a direct equivalent, with the same semantics, as the corresponding method of the `Bucket` interface - the only difference is that it returns a `CompletableFuture` instead of blocking the calling thread.
 
-==== Example - limiting the rate of access to the asynchronous servlet
-Imagine that you develop an SMS service, which allows sending SMS via an HTTP interface.
-You want your architecture to be protected from overloading, clustered, and fully asynchronous.
+==== Example - limiting the rate of access to an asynchronous servlet
+Imagine that you are developing an SMS service that allows sending SMS messages via an HTTP interface.
+You want the architecture to be protected from overloading, clustered, and fully asynchronous.
 
 **Overloading protection requirement:**
 
-> To prevent fraud and service overloading you want to introduce the following limit for any outbound phone number: The bucket size is 20 SMS (which cannot be exceeded at any given time), with a "refill rate" of 10 SMS per minute that continually increases tokens in the bucket.
-In other words, if a client sends 10 SMS per minute, it will never be throttled,
-and moreover, the client has overdraft equals to 20 SMS which can be used if the average is a little bit higher than 10 SMS/minute on short time period.
-**Solution:** let's use Bucket4j for this.
+> To prevent fraud and service overloading, you want to introduce the following limit for each outbound phone number: the bucket size is 20 SMS messages (which cannot be exceeded at any given time), with a "refill rate" of 10 SMS messages per minute that continuously adds tokens to the bucket.
+In other words, if a client sends 10 SMS messages per minute, it will never be throttled.
+Moreover, the client has an overdraft of 20 SMS messages, which can be used if the average is a little higher than 10 SMS/minute over a short period of time.
+**Solution:** use Bucket4j for this.
 
 **Clustering requirement:**
 
-> You want to avoid the single point of failure, if one server crashed that information about consumed tokens should not be lost,
-thus it would be better to use any distributed computation platform for storing the buckets.
+> You want to avoid a single point of failure - if one server crashes, information about already-consumed tokens should not be lost.
+It would therefore be better to store the buckets on a distributed computation platform rather than in the memory of a single server.
 
-**Solution:** let's use JBoss Infinispan for this and ``bucket4j-infinispan`` extension.
-Hazelcast and Apache Ignite will be also well-chosen, Infinispan just selected as an example.
+**Solution:** use JBoss Infinispan and the `bucket4j-infinispan` extension for this. Hazelcast and Apache Ignite would work equally well; Infinispan was picked here purely as an example.
 
 **Asynchronous processing requirement:**
-Also for maximum scalability, you want from architecture to be fully non-blocking,
-non-blocking architecture means that both sms sending and limit checking should be asynchronous.
-**Solution:** let's use asynchronous features provided by Bucket4j and Servlet-API.
+For maximum scalability, you also want the architecture to be fully non-blocking - both sending the SMS and checking the limit should be asynchronous.
+**Solution:** use the asynchronous features provided by Bucket4j together with the Servlet API's asynchronous support.
 
-**Mockup of service based on top of Servlet API and bucket4j-infinispan**:
+**Mockup of a service built on top of the Servlet API and bucket4j-infinispan**:
 
 [source,java]
 ----
@@ -43,43 +42,41 @@ public class SmsServlet extends javax.servlet.http.HttpServlet {
 
     private SmsSender smsSender;
     private AsyncProxyManager<String> buckets;
-    private Supplier<BucketConfiguration> configurationSupplier;
-       
+    private Supplier<CompletableFuture<BucketConfiguration>> configurationSupplier;
+
     @Override
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
         ServletContext ctx = config.getServletContext();
-        
+
         smsSender = (SmsSender) ctx.getAttribute("sms-sender");
-        
+
         FunctionalMapImpl<String, byte[]> bucketMap = (FunctionalMapImpl<String, byte[]>) ctx.getAttribute("bucket-map");
         this.buckets = new InfinispanProxyManager(bucketMap).asAsync();
-        
+
         this.configurationSupplier = () -> {
-            return BucketConfiguration.builder()
+            BucketConfiguration configuration = BucketConfiguration.builder()
                 .addLimit(limit -> limit.capacity(20).refillGreedy(10, Duration.ofMinutes(1)))
                 .build();
+            return CompletableFuture.completedFuture(configuration);
         };
     }
-    
+
     @Override
-    protected void doPost(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
-        HttpServletRequest httpRequest = (HttpServletRequest) servletRequest;
-        
-        String fromNumber = req.getParameter("from");
-        String toNumber = req.getParameter("to");
-        String text = req.getParameter("text");
-        
+    protected void doPost(HttpServletRequest httpRequest, HttpServletResponse httpResponse) throws IOException, ServletException {
+        String fromNumber = httpRequest.getParameter("from");
+        String toNumber = httpRequest.getParameter("to");
+        String text = httpRequest.getParameter("text");
+
         AsyncBucketProxy bucket = buckets.getProxy(fromNumber, configurationSupplier);
-        CompletableFuture<ConsumptionProbe> limitCheckingFuture = bucket.asAsync().tryConsumeAndReturnRemaining(1);
-        final AsyncContext asyncContext = req.startAsync();
+        CompletableFuture<ConsumptionProbe> limitCheckingFuture = bucket.tryConsumeAndReturnRemaining(1);
+        final AsyncContext asyncContext = httpRequest.startAsync();
         limitCheckingFuture.thenCompose(probe -> {
             if (!probe.isConsumed()) {
                 Result throttledResult = Result.throttled(probe);
                 return CompletableFuture.completedFuture(throttledResult);
             } else {
-                CompletableFuture<Result> sendingFuture = smsSender.sendAsync(fromNumber, toNumber, text);
-                return sendingFuture;
+                return smsSender.sendAsync(fromNumber, toNumber, text);
             }
         }).whenComplete((result, exception) -> {
             HttpServletResponse asyncResponse = (HttpServletResponse) asyncContext.getResponse();
@@ -96,7 +93,7 @@ public class SmsServlet extends javax.servlet.http.HttpServlet {
                     asyncResponse.setStatus(200);
                     asyncResponse.getWriter().append("Success");
                 }
-            } finally{
+            } finally {
                 asyncContext.complete();
             }
         });

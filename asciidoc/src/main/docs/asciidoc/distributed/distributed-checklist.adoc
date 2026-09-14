@@ -1,29 +1,29 @@
 [[distributed-checklist, Distributed usage checklist]]
-=== Production checklist especially in the context of distributed systems
-Before using Bucket4j in clustered scenario you need to understand, agree, and configure the following points:
+=== Production checklist for distributed systems
+Before using Bucket4j in a clustered scenario, make sure you understand, agree with, and have configured the following points.
 
 .Do not forget about exception handling
-When working within a distributed system, it is inevitable that requests may cross the border of the current JVM, leading to communication on the network.
-The network being unreliable, it is impossible to avoid failures. Thus, you should embrace this reality and be ready to get unchecked exceptions when interacting with a distributed bucket.
-**It is your responsibility to handle(or ignore) such exceptions:**
+In a distributed system, requests inevitably cross the boundary of the current JVM and require communication over the network.
+Because the network is unreliable, failures cannot be avoided. You should expect this and be ready to receive unchecked exceptions when interacting with a distributed bucket.
+**It is your responsibility to handle (or deliberately ignore) such exceptions:**
 
-* You probably do not want to fail business transactions if the grid responsible for throttling goes down. If this is the case you can simply log the exception and continue your business transaction without throttling
-* If you wish to fail your business transaction when the grid responsible for throttling goes down, simply rethrow or don't catch the exception
+* If you do not want to fail business transactions when the grid responsible for throttling goes down, simply log the exception and continue the business transaction without throttling.
+* If you want your business transaction to fail when the grid responsible for throttling goes down, simply rethrow the exception, or do not catch it at all.
 
 .Do not forget to configure backups
-If the state of any bucket should survive the restart/crash of the grid node that holds its state, you need to configure backups yourself, in a way specific to the particular grid vendor. For example, see how to https://apacheignite.readme.io/v2.3/docs/primary-and-backup-copies[configure backups for Apache Ignite].
+If a bucket's state needs to survive a restart or crash of the grid node that holds it, you need to configure backups yourself, in a way specific to your grid vendor. For example, see how to https://apacheignite.readme.io/v2.3/docs/primary-and-backup-copies[configure backups for Apache Ignite].
 
 .Retention tuning is your responsibility
-When dealing with multi-tenant scenarios like a bucket per user or a bucket per IP address,
-the number of buckets in the cache will continuously increase. This is because a new bucket will be created each time a new key is detected.
+In multi-tenant scenarios, such as a bucket per user or a bucket per IP address,
+the number of buckets in the cache keeps growing, because a new bucket is created every time a new key is encountered.
 
-To prevent exhausting the available memory of your cluster you need to configure the following aspects:
-* **Maximum cache size(in units of bytes)** - Obviously it is preferable to lose bucket data than lose the whole cluster due to memory exception.
-* **Expiration policy** Bucket4j provides way to configure flexible per-entry expiration for mostly integrations(excepting Apache Ignite).
-You need to read Bucket4j documentation for your particular backend in order tp find-out the way to configure expire policy.
+To avoid exhausting the memory of your cluster, you need to configure the following:
+* **Maximum cache size (in bytes)** - it is preferable to lose some bucket data than to lose the whole cluster to an out-of-memory error.
+* **Expiration policy** - Bucket4j provides a way to configure flexible per-entry expiration for most integrations (Apache Ignite is the exception).
+Consult the Bucket4j documentation for your particular backend to find out how to configure its expiration policy.
 
-.High availability(HA) tuning and testing is your responsibility
-There are no special settings for HA supported by Bucket4j because Bucket4j does nothing more than just invoking EntryProcessors on the cache.
-Instead, Bucket4j relies on *you* to configure the cache with proper parameters that control redundancy and high availability.
+.High availability (HA) tuning and testing is your responsibility
+Bucket4j does not provide any special settings for HA, because all it does is invoke entry processors (or their equivalent) on the underlying cache.
+Instead, Bucket4j relies on *you* to configure the cache with the redundancy and high-availability parameters it needs.
 
-Years of experience working with the distributed system has taught the author that High Availability does not come for free. You need to test and verify that your system remains available. This cannot be provided by this or any other library. Your system will most certainly go down if you do not plan for that.
+Years of experience with distributed systems have taught the author that high availability does not come for free. You need to test and verify that your system remains available under failure - this cannot be guaranteed by this or any other library. If you do not plan for failure, your system will most certainly go down when it happens.

@@ -1,8 +1,8 @@
 === Technical limitations
-To provide the best precision, Bucket4j uses integer arithmetic as much as possible, so any internal calculation is limited by bound ``Long.MAX_VALUE``. The library introduces several limits that are described further, to be sure that calculations will never exceed the bound.
+To provide the best possible precision, Bucket4j relies on integer arithmetic wherever possible, so every internal calculation is bounded by `Long.MAX_VALUE`. The library imposes a few limits, described below, to guarantee that these calculations never overflow.
 
 ==== Maximum refill rate
-The maximum refill rate is limited by ``1 token/ 1 nanosecond``. Following examples of API usage will raise exceptions
+The maximum refill rate is limited to `1 token / 1 nanosecond`. The examples below will raise an exception:
 
 [source, java]
 ----
@@ -17,13 +17,13 @@ Bandwidth.builder().capacity(10_000).refillGreedy(1_001, ofNanos(1_000));
 Bandwidth.builder().capacity(1_000_000).refillGreedy(1_000_001, ofMillis(1));
 ----
 
-==== Limitation for refill period
-Bucket4j works with time intervals as the 64-bit number of nanoseconds. So maximum refill period that is possible will be:
+==== Limitation on refill period
+Bucket4j represents time intervals as a 64-bit number of nanoseconds, so the longest possible refill period is:
 [source, java]
 ----
 Duration.ofNanos(Long.MAX_VALUE);
 ----
-Any attempt to specify a period longer than the limit above will fail with an exception. For example, the code below will fail
+Any attempt to specify a period longer than this limit fails with an exception. For example, the code below fails:
 [source, java]
 ----
 Bandwidth.builder(limit -> limit.capacity(...).refillGreedy(42, Duration.ofMinutes(153722867280912930));

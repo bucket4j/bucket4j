@@ -1,32 +1,65 @@
-//=== The design
-//
-//
-//
-//When rate-limiter
-//
-//==== Vocubalarity
-//Distributed use-case of Bucket4j brings following entities that need to added to vocubalarity in additionaly to already mentioned:
-//
-//
+[[distributed-concepts]]
+=== Concepts
 
-// BucketProxy Provides a light-weight proxy to bucket which state actually stored in external storage, like in-memory jvm or relational database. Is represented by
+Using Bucket4j in a cluster of JVMs introduces a few new entities in addition to the ones already described in <<bucket, basic concepts>>.
 
-//=== Concurrency Guarantees
-//**Question:** is the provided JCache integration safe across multiple JVMs? Does it ensure that two nodes creating a bucket simultaneously on a given Cache<K, V> will only actually create one single bucket (without resetting a previously created one with the same key)?
-//**Answer:** Yes. JCache integration is safe for multi node environment, Bucket4j never replaces bucket which already exists.
-//This behavior is guaranteed by **putIfAbsent** method contract of [javax.cache.Cache](http://static.javadoc.io/javax.cache/cache-api/1.0.0/javax/cache/Cache.html) class.
-//
-//**Question:** Does ProxyManager store buckets internally, could be this a reason of OutOfMemoryError?
-//**Answer:** No. ProxyManager stores nothing about buckets which it returns, the buckets actually stored in in-memory GRID outside client JVM.
-//Think about proxy returned by ``ProxyManager#getBucket`` just about very cheap pointer to data which actually stored somewhere outside.
-//So, independently of count of buckets ProxyManager will never be a reason of crash or extreme memory consumption.
-//
-//**Question:** what will happen if bucket state will be lost in the GRID  because of split-brain, human mistake or pragmatically errors introduced by GRID vendor?
-//**Answer:** ProxyManager automatically detect this kind of situation and save bucket yet another time, to reconstruct bucket it uses provided configuration supplier.
-//Reconstructed bucket remembers nothing about previously consumed tokens, so limit can be exceeded in this kind of GRID failures.
-//
-//**Question:** should I always work with JCache through ProxyManager?
-//**Answer:** It depends. When you have deal with potentially huge and unpredictable amount of buckets, it is always better to use ProxyManager.
-//ProxyManager protects you from common performance pitfalls(like described in https://github.com/bucket4j/bucket4j/issues/26[this issue]).
-//But when you have deal with one or few buckets which well known at development time, then it would be better to avoid ProxyManager
-//and work directly with [GridBucket](https://github.com/bucket4j/bucket4j/blob/2.0/bucket4j-core/src/main/java/io/github/bucket4j/grid/GridBucket.java) as described in the next example.
+[[proxy-manager, ProxyManager]]
+==== ProxyManager
+`ProxyManager` is the main extension point that connects Bucket4j to a particular storage technology (a JCache-compliant grid, Redis, a relational database, MongoDB, Couchbase, etc).
+A `ProxyManager` is typically built once per RDBMS table, grid cache, or similarly isolated part of the external storage, and buckets are distinguished from each other within it by a primary key.
+
+Each backend module provides its own way to build a `ProxyManager` (see the documentation page for your specific backend), but once built, it is used the same way everywhere:
+[source, java]
+----
+ProxyManager<String> proxyManager = ...; // built in a backend-specific way
+
+Supplier<BucketConfiguration> configurationSupplier = () -> BucketConfiguration.builder()
+    .addLimit(limit -> limit.capacity(100).refillGreedy(100, Duration.ofMinutes(1)))
+    .build();
+
+BucketProxy bucket = proxyManager.getProxy("42", configurationSupplier);
+----
+The `configurationSupplier` is invoked lazily, and only once - the first time a bucket with the given key is created in the storage. On every subsequent call for the same key, the persisted configuration is reused and the supplier is not invoked again.
+If you need to configure something that cannot be expressed through `getProxy` (for example <<implicit-configuration-replacement>>, a custom `RecoveryStrategy`, a `BucketListener`, or <<client-side-configuration>> such as request timeouts and CAS retry limits), use `proxyManager.builder()...build(key, configurationSupplier)` instead.
+
+[[bucket-proxy, BucketProxy]]
+==== BucketProxy
+`BucketProxy` is a lightweight handle to a bucket whose actual state is stored outside the current JVM - in a grid, a database, or a key-value store. It extends the regular <<bucket, Bucket>> interface, so you interact with it exactly as you would with a local bucket (`tryConsume`, `asBlocking()`, `asVerbose()`, and so on); the difference is purely in where the state lives and how it is synchronized.
+
+Unless you explicitly attached a request-optimization strategy via `withOptimization(...)`, a `BucketProxy` is a cheap object: it holds no state of its own, and you do not need to cache or reuse the instance returned by `getProxy`/`build`. Feel free to build, use, and discard one for every request.
+
+`AsyncBucketProxy` is the asynchronous equivalent of `BucketProxy`; it is obtained from an `AsyncProxyManager` (see <<asynchronous-api>>) and every method returns a `CompletableFuture` instead of blocking the calling thread.
+
+==== Frequently asked questions
+
+========
+**Question:** Is it safe for two nodes to try to create a bucket with the same key at the same time? Will the second node overwrite (and effectively reset) the bucket created by the first one?
+
+**Answer:** No, this is safe. Bucket4j never blindly overwrites an existing bucket. Bucket creation always goes through an atomic "create if absent" operation specific to the backend
+(for example, `putIfAbsent` for JCache-compliant grids, a Lua-scripted `SETNX`-like check for Redis, or an `INSERT` that is allowed to fail for SQL databases). If two nodes race to create the same bucket, only one of them wins, and the other transparently starts working with the bucket that was created first.
+========
+
+========
+**Question:** Does `ProxyManager` keep buckets in memory on the client side? Could having many buckets cause an `OutOfMemoryError` in my application?
+
+**Answer:** No. `ProxyManager` does not cache or retain anything about the buckets it hands out - all state lives in the external storage, outside your JVM.
+Think of the object returned by `ProxyManager#getProxy` as a very cheap pointer to data that lives elsewhere, not as a container for that data.
+Because of this, the number of buckets you create through a `ProxyManager` has no bearing on your application's memory consumption; any growth in memory usage will show up in the external storage, not in your JVM.
+========
+
+========
+**Question:** What happens if a bucket's state is lost in the storage - because of a split-brain, a human mistake, or a bug introduced by the storage vendor?
+
+**Answer:** By default, `ProxyManager` detects this situation and reconstructs the bucket from scratch using the `configurationSupplier` you provided when the bucket was created (this is the `RecoveryStrategy.RECONSTRUCT` strategy, which favors availability over consistency).
+The reconstructed bucket remembers nothing about tokens consumed before the loss, so the configured limit can technically be exceeded across this kind of storage failure.
+If you would rather fail loudly than silently reset a bucket, configure `RemoteBucketBuilder#withRecoveryStrategy(RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION)`, which throws `BucketNotFoundException` instead.
+========
+
+========
+**Question:** Should I always go through `ProxyManager`, or can I keep a `BucketProxy` reference around and reuse it?
+
+**Answer:** It depends on your access pattern.
+
+- If you are dealing with a potentially large and unpredictable number of buckets (for example, one bucket per user or per IP address), it is best to call `getProxy`/`build` each time you need the bucket, and let `ProxyManager` create a fresh, cheap proxy every time. This protects you from common pitfalls, like accidentally keeping a huge number of proxy objects alive on the client side.
+- If you are dealing with one or a few buckets that are well known at development time (for example, a small number of global rate limits for your service), it is fine to build the `BucketProxy` once and keep a reference to it for the lifetime of your application - as long as you have not attached a request-optimization strategy via `withOptimization(...)` that would make the proxy stateful.
+========

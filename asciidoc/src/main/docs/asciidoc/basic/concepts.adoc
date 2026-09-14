@@ -2,14 +2,14 @@
 
 [[bucket, Bucket]]
 ==== Bucket
-`Bucket` is a rate-limiter that is implemented on the top of ideas of well-known https://en.wikipedia.org/wiki/Token_bucket[Token Bucket algorithm].
-In the Bucket4j library code the `Bucket` is represented by interface https://github.com/bucket4j/bucket4j/blob/{minor-number}/bucket4j-core/src/main/java/io/github/bucket4j/Bucket.java[io.github.bucket4j.Bucket].
+`Bucket` is a rate-limiter built on top of the ideas of the well-known https://en.wikipedia.org/wiki/Token_bucket[token-bucket algorithm].
+In the Bucket4j code, `Bucket` is represented by the interface https://github.com/bucket4j/bucket4j/blob/{minor-number}/bucket4j-core/src/main/java/io/github/bucket4j/Bucket.java[io.github.bucket4j.Bucket].
 
-.Bucket aggregates the following parts:
-* <<bucket-bonfiguration>> specifies an immutable collection of limitation rules that are used by the bucket during its work.
-* <<bucket-state>> the place where bucket stores mutable state like the amount of currently available tokens.
+.A bucket aggregates the following parts:
+* <<bucket-configuration>> - an immutable collection of limitation rules used by the bucket.
+* <<bucket-state>> - the place where the bucket stores mutable state, such as the amount of currently available tokens.
 
-A bucket can be constructed via a special builder API <<local-bucket-builder>> that is available by factory method:
+A bucket is constructed via the <<local-bucket-builder>> builder API, available through the following factory method:
 [source, java]
 ----
 Bucket bucket = Bucket.builder()
@@ -17,12 +17,14 @@ Bucket bucket = Bucket.builder()
    .build();
 ----
 
-[[bucket-bonfiguration, BucketConfiguration]]
+[[bucket-configuration, BucketConfiguration]]
 ==== BucketConfiguration
-`BucketConfiguration` can be described as collection of <<bandwidth, limits>> that are used by <<bucket>> during its job. Configuration
-In the Bucket4j library code the `BucketConfiguration` is represented by class https://github.com/bucket4j/bucket4j/blob/{minor-number}/bucket4j-core/src/main/java/io/github/bucket4j/BucketConfiguration.java[io.github.bucket4j.BucketConfiguration]. Configuration is immutable, there is no way to add or remove a limit to already created configuration. However, you can replace the configuration of the bucket via creating a new configuration instance and calling `bucket.replaceConfiguration(newConfiguration)`.
+`BucketConfiguration` is a collection of <<bandwidth, limits>> used by the <<bucket>> during its work.
+In the Bucket4j code, `BucketConfiguration` is represented by the class https://github.com/bucket4j/bucket4j/blob/{minor-number}/bucket4j-core/src/main/java/io/github/bucket4j/BucketConfiguration.java[io.github.bucket4j.BucketConfiguration].
+The configuration is immutable - there is no way to add or remove a limit from an already-created configuration. However, you can replace the configuration of a bucket by creating a new configuration instance and calling `bucket.replaceConfiguration(newConfiguration)` (see <<configuration-replacement>>).
 
-Usually, you should not create BucketConfiguration directly(excepting the case with configuration replacement) because <<local-bucket-builder>> does for you behind the scene, for rare cases when you need to create configuration directly you have to use `ConfigurationBuilder` that is available by factory method:
+Usually you should not create a `BucketConfiguration` directly (except for the configuration-replacement case), because the <<local-bucket-builder>> does it for you behind the scenes.
+For the rare cases when you need to create a configuration directly, use `ConfigurationBuilder`, available through the following factory method:
 [source, java]
 ----
 BucketConfiguration configuration = BucketConfiguration.builder()
@@ -30,16 +32,16 @@ BucketConfiguration configuration = BucketConfiguration.builder()
     .build()
 ----
 
-IMPORTANT: Most users configure a single limit per configuration, but it is strongly recommended to analyze whether <<short-timed-bursts, short-timed bursts problem>>
-can affect your application and if so then think about adding more limits.
+IMPORTANT: Most users configure a single limit per configuration, but it is strongly recommended to check whether the <<short-timed-bursts, short-timed bursts problem>>
+could affect your application, and if so, consider adding more limits.
 
 [[bandwidth]]
 ==== Limitation/Bandwidth
-Limitations that are used by bucket can be denoted in terms of bandwidths. Bandwidth is denoted by the following terms:
+Limitations applied by a bucket are described in terms of bandwidths. A bandwidth is defined by the following properties:
 
 Capacity::
-`Capacity` is the term that is directly inherited from the classic interpretation of the token-bucket algorithm, this specifies how many tokens your bucket has.
-Capacity must be configured during building stage
+`Capacity` is inherited directly from the classic interpretation of the token-bucket algorithm - it specifies how many tokens the bucket can hold.
+Capacity must be configured at build time:
 [source, java]
 ----
 Bucket bucket = Bucket.builder()
@@ -48,18 +50,18 @@ Bucket bucket = Bucket.builder()
 ----
 
 Refill::
-Refill specifies how fast tokens can be refilled after it was consumed from a bucket.
-Refill must be configured during building stage
+Refill specifies how fast tokens are replenished after being consumed from the bucket.
+Refill must also be configured at build time:
 [source, java]
 ----
 Bucket bucket = Bucket.builder()
-    .addLimit(limit -> limit.capacity(...).refillXXX(...)) // where XXX - is concrete refill style
+    .addLimit(limit -> limit.capacity(...).refillXXX(...)) // where XXX is a specific refill style
     .build()
 ----
-Bucket4j allows to choose different <<refill-types>>.
+Bucket4j lets you choose from several <<refill-types>>.
 
 Initial tokens::
-Bucket4j extends the token-bucket algorithm by allowing to specify the initial amount of tokens for each bandwidth. By default, an initial amount of tokens equals to capacity and can be changed by `withInitialTokens` method: +
+Bucket4j extends the classic token-bucket algorithm by letting you specify the initial amount of tokens for each bandwidth. By default, the initial amount of tokens equals the capacity, and it can be changed via the `initialTokens` method: +
 +
 [source, java]
 ----
@@ -69,8 +71,8 @@ Bucket bucket = Bucket.builder()
 ----
 
 Bandwidth ID::
-The identifier is the optional attribute that is null by default. You may prefer to assign identifiers for bandwidths if you use on-the-fly configuration replacement and your buckets have more than one bandwidth per bucket, otherwise, it is better to avoid using identifiers to preserve memory.
-The Identifier for bandwidth can be specified in following way: +
+The identifier is an optional attribute that is `null` by default. Assign identifiers to bandwidths when a bucket has more than one bandwidth and you rely on on-the-fly configuration replacement; otherwise, it is better to avoid identifiers to save memory.
+An identifier can be specified as follows: +
 +
 [source, java]
 ----
@@ -79,15 +81,15 @@ BucketConfiguration configuration = BucketConfiguration.builder()
     .addLimit(limit -> limit.capacity(100).refillGreedy(100, ofSeconds(1)).id("burst-protection"))
     .build();
 ----
-NOTE: Identifiers are critical for on-the-fly configuration replacement functionality because during replacement it needs to decide how correctly propagate information about already consumed tokens from the state before config replacement to the state after replacement. This is not a trivial task especially when the number of limits is changing.
+NOTE: Identifiers matter for on-the-fly configuration replacement, because during replacement Bucket4j needs to decide how to correctly carry over the number of already-consumed tokens from the state before replacement to the state after replacement. This is not trivial, especially when the number of limits changes - see <<configuration-replacement>> for details.
 
 [[refill-types, Refill types]]
 ==== Refill styles
-Bucket4j allows to choose different styles in which consumed tokens are being refilled to bucket
+Bucket4j lets you choose between several styles in which consumed tokens are refilled back into the bucket.
 
 .There are four types of refill:
 Greedy::
-This type of refill greedily regenerates tokens manner, it tries to add the tokens to the bucket as soon as possible. For example refill "10 tokens per 1 second" adds 1 token per every 100 milliseconds, in other words, the refill will not wait 1 second to regenerate a bunch of 10 tokens. The three refills below do refill of tokens with the same speed: +
+This type of refill regenerates tokens as greedily as possible - it tries to add tokens to the bucket as soon as it can. For example, a refill of "10 tokens per 1 second" adds 1 token every 100 milliseconds, rather than waiting a full second to add all 10 tokens at once. The three refills below regenerate tokens at the same speed: +
 +
 [source, java]
 ----
@@ -97,7 +99,7 @@ Bucket.builder().addLimit(limit -> limit.capacity(1000).refillGreedy(1, ofMillis
 ----
 
 Intervally::
-This type of refill regenerates tokens in an interval manner. "Interval" in opposite to "greedy"  will wait until the whole period will be elapsed before regenerating the whole amount of tokens. +
+This type of refill regenerates tokens in an interval-based manner. Unlike "greedy", "intervally" waits until the whole period has elapsed before regenerating the entire amount of tokens at once. +
 +
 .Example: +
 +
@@ -108,13 +110,13 @@ Bucket bucket = Bucket.builder().addLimit(limit -> limit.capacity(1000).refillIn
 ----
 
 IntervallyAligned::
-This type of refill regenerates that does refill of tokens in an interval manner. Interval" in opposite to "greedy"  will wait until the whole period will be elapsed before regenerating the whole amount of tokens. In addition to *Interval* it is possible to specify the time when the first refill should happen.  This type can be used to configure clear interval boundary i.e. start of the second, minute, hour, day.
+This type of refill also regenerates tokens in an interval-based manner - like "intervally", it waits until the whole period has elapsed before regenerating the entire amount of tokens at once. In addition, it lets you specify the moment in time when the first refill should happen, which is useful for aligning refills to a clear interval boundary, such as the start of a second, minute, hour, or day.
 +
 .Example:
 [source, java]
 ----
-// imagine that wall clock is 16:20, the first refill will happen at 17:00
-// first refill will happen in the beginning of next hour
+// imagine that the wall clock reads 16:20; the first refill will happen at 17:00,
+// i.e. at the beginning of the next hour
 Instant firstRefillTime = ZonedDateTime.now()
   .truncatedTo(ChronoUnit.HOURS)
   .plus(1, ChronoUnit.HOURS)
@@ -124,28 +126,49 @@ Bucket bucket = Bucket.builder().addLimit(limit -> limit.capacity(400).refillInt
 ----
 
 RefillIntervallyAlignedWithAdaptiveInitialTokens::
-See javadocs.
+This refill style behaves like `IntervallyAligned`, but instead of starting with a full bucket it calculates the initial amount of tokens adaptively, based on how much of the current period has already elapsed before the first refill. This is useful when you want a clean interval boundary (for example, refilling at the start of every hour) without granting a full bucket of tokens to every client the moment it is created. +
++
+The initial amount of tokens is calculated using the following formula: +
+`initialTokens = min(capacity, max(0, capacity - refillTokens) + elapsedFractionOfPeriod * refillTokens)` +
++
+.Example:
+[source, java]
+----
+// imagine that the wall clock reads 16:20, so 20 out of the 60 minutes of the current hour have already elapsed;
+// the first refill will happen at the start of the next hour, at 17:00
+Instant firstRefillTime = ZonedDateTime.now()
+  .truncatedTo(ChronoUnit.HOURS)
+  .plus(1, ChronoUnit.HOURS)
+  .toInstant();
+
+Bucket bucket = Bucket.builder()
+    .addLimit(limit -> limit.capacity(400).refillIntervallyAlignedWithAdaptiveInitialTokens(400, ofHours(1), firstRefillTime))
+    .build();
+// initial tokens = min(400, max(0, 400 - 400) + 40/60 * 400) = min(400, 0 + 266) = 266
+----
++
+NOTE: Because this strategy needs to measure how far the current moment is from `timeOfFirstRefill`, it cannot be combined with the nanosecond-based clock enabled by `withNanosecondPrecision()` - it requires a `System.currentTimeMillis()`-based clock. It is also incompatible with explicitly specifying `initialTokens()` for the same bandwidth, because the initial amount of tokens is already computed adaptively.
 
 
 [[bucket-state, BucketState]]
 ==== BucketState
-BucketState is the place where bucket stores own mutable state like:
+`BucketState` is the place where a bucket stores its own mutable state, such as:
 
-* Amount of currently available tokens.
-* Timestamp when the last refill was happen.
+* The amount of currently available tokens.
+* The timestamp of the last refill.
 
-`BucketState` is represented by interface https://github.com/bucket4j/bucket4j/blob/{minor-number}/bucket4j-core/src/main/java/io/github/bucket4j/BucketState.java[io.github.bucket4j.BucketState]. Usually you never interact with this interface, excepting the cases when you want to get access to low-level diagnostic API that is described in <<verbose-api>>.
+`BucketState` is represented by the class https://github.com/bucket4j/bucket4j/blob/{minor-number}/bucket4j-core/src/main/java/io/github/bucket4j/BucketState.java[io.github.bucket4j.BucketState]. You normally never interact with this class directly, except when you need access to the low-level diagnostic API described in <<verbose-api>>.
 
 
 [[local-bucket-builder, BucketBuilder]]
 ==== BucketBuilder
-It was explicitly decided by library authors to not provide for end-users to construct a library entity via direct constructors.
+The library authors deliberately decided not to let end-users construct library entities via direct constructors.
 
-.It was to reason to split built-time and usage-time APIs:
-* To be able in the future to change internal implementations without breaking backward compatibility.
-* To provide `Fluent Builder API` that in our minds is a good modern library design pattern.
+.The reasons for splitting the build-time and usage-time APIs are:
+* It allows internal implementations to change in the future without breaking backward compatibility.
+* It provides a `Fluent Builder API`, which we consider a good, modern library design pattern.
 
-`LocalBucketBuilder` is a fluent builder that is specialized to construct the local buckets, where a local bucket is a bucket that holds an internal state just in memory and does not provide clustering functionality. Bellow an example of LocalBucketBuilder usage:
+`LocalBucketBuilder` is a fluent builder specialized for constructing local buckets, where a local bucket is a bucket that holds its state purely in memory and does not provide clustering functionality. Below is an example of `LocalBucketBuilder` usage:
 [source, java]
 ----
 Bucket bucket = Bucket.builder()

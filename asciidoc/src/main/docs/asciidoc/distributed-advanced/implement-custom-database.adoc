@@ -1,129 +1,106 @@
-=== Framework to implement custom work with your database
-The Bucket4j library allows implementing work with any database.
-If you didn't find in distributed realization your database (currently Bucket4j supports the next databases: Redis, Hazelcast, Apache Ignite, Infinispan, Oracle coherence, PostgreSQL, MySQL)
-you can implement your database as a distributed storage.
-All what you need to do, extends from `io.github.bucket4j.distributed.proxy.generic.select_for_update.AbstractLockBasedProxyManager` or
-AbstractSelectForUpdateBasedProxyManager<T>
-and override 3 methods and create your implementation which implements `io.github.bucket4j.distributed.proxy.generic.select_for_update.LockBasedTransaction`.
+=== Framework for implementing support for a custom database
 
-**Step by step to take that.**
+Bucket4j ships with `ProxyManager` implementations for a number of backends (Redis, Hazelcast, Apache Ignite, Infinispan, Oracle Coherence, PostgreSQL, MySQL, MariaDB, MSSQL, DB2, Oracle, MongoDB, Couchbase), but you are not limited to them.
+If your storage of choice is not on this list, you can implement a `ProxyManager` for it using the generic framework described below, as long as your storage supports one of the following:
 
-**First of all**
-we need to create our custom proxy manages which extends from AbstractLockBasedProxyManager<T> or AbstractSelectForUpdateBasedProxyManager<T> (as genetic classes takes a type of key table).
-To define in which class you should extend, need to understand the main idea of these classes:
+* **Pessimistic locking** - an exclusive lock can be acquired on a row/entry by key, and released later in the same transaction.
+* **`SELECT ... FOR UPDATE`-style semantics** - a row/entry can be locked and its current value read in a single atomic operation, similar to how relational databases lock rows for update.
 
-`AbstractLockBasedProxyManager<T>` - Uses to realize based on exclusive locks
+==== Step 1 - choose and extend the right base class
 
-`AbstractSelectForUpdateBasedProxyManager<T>` - Uses to realize Select For Update concept
+Extend one of the following classes, depending on which locking style your storage supports:
 
-After need to override works of allocation transaction, to do that, we should override method allocateTransaction.
-The main idea of allocateTransaction to just return class which implements `LockBasedTransaction` (for `AbstractLockBasedProxyManager<T>`)
-or `SelectForUpdateBasedTransaction` (for `AbstractSelectForUpdateBasedProxyManager<T>`) - we will implement it later
-And override removeProxy() for remove bucket from the table which store buckets.
+* `io.github.bucket4j.distributed.proxy.generic.pessimistic_locking.AbstractLockBasedProxyManager<K>` - for storages that provide explicit, exclusive locks.
+* `io.github.bucket4j.distributed.proxy.generic.select_for_update.AbstractSelectForUpdateBasedProxyManager<K>` - for storages that provide `SELECT ... FOR UPDATE`-style semantics.
 
-**Second of all**
+Both classes take care of the whole command-execution protocol (locking, reading, applying the command, persisting, unlocking, committing) - your subclass only needs to teach them how to talk to your specific storage. This comes down to implementing three methods:
 
-Need to implement `LockBasedTransaction` or `SelectForUpdateBasedTransaction` to realize custom work of database for transaction.
+* `allocateTransaction(K key, Optional<Long> requestTimeoutNanos)` - a `protected abstract` method that returns a fresh transaction object (`LockBasedTransaction` or `SelectForUpdateBasedTransaction`, described below) bound to the given key.
+* `removeProxy(K key)` - inherited from the `ProxyManager` interface; deletes the persisted bucket state for the given key from your storage.
+* `getProxyConfiguration(K key)` - inherited from the `ProxyManager` interface; reads back the `BucketConfiguration` that was persisted for the given key, or an empty `Optional` if no bucket exists for that key yet.
 
-To do that, we need to create a custom class to implement from one of these classes
+==== Step 2 - implement the transaction interface
 
-*LockBasedTransaction*
+The transaction object you return from `allocateTransaction` is where all the storage-specific work happens - beginning/committing/rolling back a transaction, locking a row, and reading or writing the bucket's binary state.
+
+**`LockBasedTransaction`** (package `io.github.bucket4j.distributed.proxy.generic.pessimistic_locking`), used together with `AbstractLockBasedProxyManager`:
+
+[source, java]
 ----
-    /**
-     * Begins transaction if underlying storage requires transactions.
-     * There is strong guarantee that {@link #commit()} or {@link #rollback()} will be called if {@link #begin()} returns successfully.
-     */
-    void begin();
+public interface LockBasedTransaction {
 
-    /**
-     * Rollbacks transaction if underlying storage requires transactions
-     */
+    // Begins a transaction, if the underlying storage requires one.
+    // commit(...) or rollback() is guaranteed to be called if begin(...) returns successfully.
+    void begin(Optional<Long> timeoutNanos);
+
+    // Rolls back the transaction, if the underlying storage requires one.
     void rollback();
 
-    /**
-     * Commits transaction if underlying storage requires transactions
-     */
-    void commit();
+    // Commits the transaction, if the underlying storage requires one.
+    void commit(Optional<Long> timeoutNanos);
 
-    /**
-     * Locks data by the key associated with this transaction and returns data that is associated with the key.
-     * There is strong guarantee that {@link #unlock()} will be called if {@link #lockAndGet()} returns successfully.
-     *
-     * @return Returns the data by the key associated with this transaction, or null data associated with key does not exist
-     */
-    byte[] lockAndGet();
+    // Locks the row/entry associated with the key and returns its current data.
+    // unlock() is guaranteed to be called if lockAndGet(...) returns successfully.
+    // Returns null if no data is associated with the key yet.
+    byte[] lockAndGet(Optional<Long> timeoutNanos);
 
-    /**
-     * Unlocks data by the key associated with this transaction.
-     */
+    // Unlocks the row/entry associated with the key.
     void unlock();
 
-    /**
-     * Creates the data by the key associated with this transaction.
-     *
-     * @param data bucket state to persists
-     */
-    void create(byte[] data);
+    // Persists the initial state of a bucket that did not exist before.
+    void create(byte[] data, RemoteBucketState state, Optional<Long> timeoutNanos);
 
-    /**
-     * Updates the data by the key associated with this transaction.
-     *
-     * @param data bucket state to persists
-     */
-    void update(byte[] data);
+    // Persists the updated state of a bucket that already existed.
+    void update(byte[] data, RemoteBucketState newState, Optional<Long> timeoutNanos);
 
-    /**
-     * Frees resources associated with this transaction
-     */
+    // Frees any resources held by this transaction (connections, statements, etc).
     void release();
+
+}
 ----
 
-As an example, you can see to the PostgreSQL or MySQL realization which based on select for update concept.
+As a reference implementation, see `HazelcastLockBasedProxyManager` or `PostgreSQLadvisoryLockBasedProxyManager`.
 
-*SelectForUpdateBasedTransaction*
+**`SelectForUpdateBasedTransaction`** (package `io.github.bucket4j.distributed.proxy.generic.select_for_update`), used together with `AbstractSelectForUpdateBasedProxyManager`:
 
+[source, java]
 ----
-    /**
-     * Begins transaction if underlying storage requires transactions.
-     * There is strong guarantee that {@link #commit()} or {@link #rollback()} will be called if {@link #begin()} returns successfully.
-     */
-    void begin();
+public interface SelectForUpdateBasedTransaction {
 
-    /**
-     * Rollbacks transaction if underlying storage requires transactions
-     */
+    // Begins a transaction, if the underlying storage requires one.
+    // commit(...) or rollback() is guaranteed to be called if begin(...) returns successfully.
+    void begin(Optional<Long> timeoutNanos);
+
+    // Rolls back the transaction, if the underlying storage requires one.
     void rollback();
 
-    /**
-     * Commits transaction if underlying storage requires transactions
-     */
-    void commit();
+    // Commits the transaction, if the underlying storage requires one.
+    void commit(Optional<Long> timeoutNanos);
 
-    /**
-     * Locks data by the key associated with this transaction and returns data that is associated with the key.
-     *
-     * @return the data by the key associated with this transaction, or null data associated with key does not exist
-     */
-    LockAndGetResult tryLockAndGet();
+    // Atomically locks and reads the row/entry associated with the key.
+    // Returns LockAndGetResult.notLocked() if no row exists yet for the key (see tryInsertEmptyData below).
+    LockAndGetResult tryLockAndGet(Optional<Long> timeoutNanos);
 
-    /**
-     * Creates empty data by for the key associated with this transaction.
-     * This operation is required to be able to lock data in the scope of next transaction.
-     *
-     * @return true if data has been inserted
-     */
-    boolean tryInsertEmptyData();
+    // Inserts an empty row for the key, so that it can be locked by tryLockAndGet(...) in a subsequent transaction.
+    // Returns true if a row was actually inserted (it may already have been inserted by a concurrent request).
+    boolean tryInsertEmptyData(Optional<Long> timeoutNanos);
 
-    /**
-     * Updates the data by the key associated with this transaction.
-     *
-     * @param data bucket state to persists
-     */
-    void update(byte[] data);
+    // Persists the updated state of the bucket.
+    void update(byte[] data, RemoteBucketState newState, Optional<Long> timeoutNanos);
 
-    /**
-     * Frees resources associated with this transaction
-     */
+    // Frees any resources held by this transaction (connections, statements, etc).
     void release();
+
+}
 ----
 
+As a reference implementation, see `PostgreSQLSelectForUpdateBasedProxyManager`, `MySQLSelectForUpdateBasedProxyManager`, or any of the other SQL-based proxy managers - they all follow the same pattern and differ mainly in the SQL dialect used to lock rows.
+
+==== Step 3 - implement `removeProxy` and `getProxyConfiguration`
+
+These two methods come from the `ProxyManager` interface itself, rather than from `AbstractLockBasedProxyManager`/`AbstractSelectForUpdateBasedProxyManager`, so they are not covered by the transaction abstraction above - implement them directly against your storage:
+
+* `removeProxy(K key)` - delete the row/entry associated with the key.
+* `getProxyConfiguration(K key)` - read the row/entry associated with the key and, if present, deserialize and return its `BucketConfiguration`.
+
+Once all three pieces are in place, your class can be used through the regular `ProxyManager` API exactly like any of the built-in backends.

@@ -1,7 +1,7 @@
 [[bucket4j-coherence, Bucket4j-Coherence]]
 ==== Oracle Coherence integration
 ===== Dependencies
-To use ``bucket4j-coherence`` extension you need to add the following dependency:
+To use the ``bucket4j-coherence`` extension, add the following dependency:
 [source, xml, subs=attributes+]
 ----
 <dependency>
@@ -29,9 +29,9 @@ Bucket bucket = proxyManager.getProxy(key, () -> configuration);
 ----
 
 ===== Configuring POF serialization for Bucket4j library classes
-If you configure nothing, then by default Java serialization will be used for serialization Bucket4j library classes. Java serialization can be rather slow and should be avoided in general.
-``Bucket4j`` provides https://docs.oracle.com/cd/E24290_01/coh.371/e22837/api_pof.htm#COHDG1363[custom POF serializers] for all library classes that could be transferred over the network.
-To let Coherence know about POF serializers you should register three serializers in the POF configuration config file:
+If you configure nothing, Bucket4j library classes are serialized using plain Java serialization by default, which can be rather slow and should generally be avoided.
+``Bucket4j`` provides https://docs.oracle.com/cd/E24290_01/coh.371/e22837/api_pof.htm#COHDG1363[custom POF serializers] for all library classes that can be transferred over the network.
+To let Coherence know about the POF serializers, register the serializer in the POF configuration file:
 ====
 ``io.github.bucket4j.grid.coherence.pof.CoherenceEntryProcessorPofSerializer`` for class ``io.github.bucket4j.grid.coherence.CoherenceProcessor``
 ====

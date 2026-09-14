@@ -1,7 +1,7 @@
 [[bucket4j-jedis, Bucket4j-Jedis]]
 ==== Jedis integration
 ===== Dependencies
-To use ``bucket4j-jedis`` extension you need to add following dependency:
+To use the ``bucket4j-jedis`` extension, add the following dependency:
 [source, xml, subs=attributes+]
 ----
 <!-- For java 17 -->
@@ -28,7 +28,7 @@ JedisBasedProxyManager<String> proxyManager = Bucket4jJedis.casBasedBuilder(jedi
 ...
 
 BucketConfiguration configuration = BucketConfiguration.builder()
-    .addLimit(limit -> capacity(1_000).refillGreedy(1_000, ofMinutes(1)))
+    .addLimit(limit -> limit.capacity(1_000).refillGreedy(1_000, ofMinutes(1)))
     .build();
 Bucket bucket = proxyManager.getProxy(key, () -> configuration);
 ----

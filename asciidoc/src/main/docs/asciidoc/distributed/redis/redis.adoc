@@ -26,7 +26,7 @@ Bucket4j provides integration with five Redis libraries:
 | Yes
 
 |===
-IMPORTANT: For all libraries mentioned above concurrent access to Redis is solved by Compare&Swap pattern, this can be improved in the future via switching to Javascript stored procedures.
+IMPORTANT: For all libraries mentioned above, concurrent access to Redis is handled via the Compare&Swap pattern; this could be improved in the future by switching to Lua stored procedures.
 
 ==== How Compare&Swap works in Redis
 Bucket4j uses Lua scripts executed atomically via Redis https://valkey.io/commands/eval/[EVAL] command to implement the Compare&Swap pattern.
