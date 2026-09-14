@@ -25,9 +25,9 @@ public class TimeoutException extends BucketExceptions.BucketExecutionException 
     private final long requestTimeoutNanos;
 
     public TimeoutException(String message, long nanosElapsed, long requestTimeoutNanos) {
-        super(message);
-        this.nanosElapsed = nanosElapsed;
-        this.requestTimeoutNanos = requestTimeoutNanos;
+       super(message, null, true, false);
+       this.nanosElapsed = nanosElapsed;
+       this.requestTimeoutNanos = requestTimeoutNanos;
     }
 
     public long getNanosElapsed() {

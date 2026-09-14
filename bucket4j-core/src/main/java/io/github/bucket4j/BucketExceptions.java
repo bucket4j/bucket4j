@@ -255,9 +255,9 @@ public final class BucketExceptions {
     }
 
     public static BucketExecutionException maxRetriesExceeded(int maxRetries) {
-        String pattern = "CAS operation failed after {0} retry attempts";
-        String msg = MessageFormat.format(pattern, maxRetries);
-        return new BucketExecutionException(msg);
+       String pattern = "CAS operation failed after {0} retry attempts";
+       String msg = MessageFormat.format(pattern, maxRetries);
+       return new BucketExecutionException(msg, null, true, false);
     }
 
     public static TimeoutException timeoutReached(long nanosElapsed, long requestTimeoutNanos) {
@@ -280,13 +280,17 @@ public final class BucketExceptions {
     }
 
     public static class BucketExecutionException extends RuntimeException {
-        public BucketExecutionException(Throwable cause) {
-            super(cause);
-        }
-        public BucketExecutionException(String message) {
-            super(message);
-        }
+    public BucketExecutionException(Throwable cause) {
+        super(cause);
     }
+    public BucketExecutionException(String message) {
+        super(message);
+    }
+    protected BucketExecutionException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+        super(message, cause, enableSuppression, writableStackTrace);
+    }
+}
+
 
     private BucketExceptions() {
         // private constructor for utility class

@@ -32,6 +32,7 @@ import io.lettuce.core.cluster.RedisClusterClient;
 import io.lettuce.core.cluster.api.StatefulRedisClusterConnection;
 import io.lettuce.core.cluster.api.async.RedisAdvancedClusterAsyncCommands;
 import io.lettuce.core.codec.ByteArrayCodec;
+import io.lettuce.core.masterreplica.StatefulRedisMasterReplicaConnection;
 
 /**
  * Entry point for Lettuce integration
@@ -63,6 +64,17 @@ public class Bucket4jLettuce {
             }
         };
         return new LettuceBasedProxyManagerBuilder<>(redisApi);
+    }
+
+    /**
+     * Returns the builder for {@link LettuceBasedProxyManager}
+     *
+     * @param statefulRedisMasterReplicaConnection
+     *
+     * @return new instance of {@link LettuceBasedProxyManagerBuilder}
+     */
+    public static <K> LettuceBasedProxyManagerBuilder<K> casBasedBuilder(StatefulRedisMasterReplicaConnection<K, byte[]> statefulRedisMasterReplicaConnection) {
+       return casBasedBuilder(statefulRedisMasterReplicaConnection.async());
     }
 
     /**

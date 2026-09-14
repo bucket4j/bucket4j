@@ -3,32 +3,27 @@ package io.github.bucket4j.mssql;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import io.github.bucket4j.distributed.jdbc.BucketTableSettings;
-import io.github.bucket4j.distributed.jdbc.SQLProxyConfiguration;
-import io.github.bucket4j.distributed.proxy.ClientSideConfig;
-import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
 import io.github.bucket4j.tck.ProxyManagerSpec;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.testcontainers.containers.MSSQLServerContainer;
+import org.testcontainers.mssqlserver.MSSQLServerContainer;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.MessageFormat;
-import java.time.Duration;
 import java.util.Arrays;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class MSSQLSelectForUpdateBasedProxyManagerTest extends AbstractDistributedBucketTest {
 
@@ -175,7 +170,7 @@ public class MSSQLSelectForUpdateBasedProxyManagerTest extends AbstractDistribut
     }
 
     private static MSSQLServerContainer startMsSqlContainer() {
-        MSSQLServerContainer mssqlServerContainer = new MSSQLServerContainer().acceptLicense();
+        MSSQLServerContainer mssqlServerContainer = new MSSQLServerContainer("mcr.microsoft.com/mssql/server:2017-CU12").acceptLicense();
         mssqlServerContainer.start();
         return mssqlServerContainer;
     }
