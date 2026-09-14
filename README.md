@@ -147,7 +147,7 @@ Then reference the snapshot version (current `pom.xml` version with the `-SNAPSH
 <dependency>
   <groupId>com.bucket4j</groupId>
   <artifactId>bucket4j_jdk17-core</artifactId>
-  <version>8.19.0-SNAPSHOT</version>
+  <version>8.20.0-SNAPSHOT</version>
 </dependency>
 ```
 
