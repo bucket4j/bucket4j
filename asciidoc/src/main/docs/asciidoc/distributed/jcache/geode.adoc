@@ -27,7 +27,9 @@ BucketConfiguration configuration = BucketConfiguration.builder()
 
 Bucket bucket = proxyManager.getProxy(key, () -> configuration);
 ----
-IMPORTANT: `GeodeProxyManager` requires every member that hosts the region to have the Bucket4j jars on its classpath.
+NOTE: Unlike `bucket4j-coherence` and the thick-client flavor of `bucket4j-ignite`, `GeodeProxyManager` does not
+ship any Bucket4j class to the Geode members - see below for why - so there is no need to put the Bucket4j jars
+on the classpath of the members that host the region; only the client-side application needs the dependency.
 
 ===== Why Bucket4j-Geode is compare-and-swap based, and not entry-processor based (unlike Coherence and Ignite)
 Coherence's ``NamedCache.invoke()`` and Ignite's ``IgniteCache.invoke()`` both provide a genuine per-key atomic
