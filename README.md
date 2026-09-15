@@ -74,6 +74,7 @@ In addition to local in-memory buckets, the Bucket4j supports clustered usage sc
 | ```Inifinispan```          |  Yes             |              Yes              |           Yes           |         No          | [bucket4j-infinispan](https://bucket4j.github.io/8.18.0/toc.html#bucket4j-infinispan) |
 | ```Oracle Coherence```     |  Yes             |              Yes              |           Yes           |         No          |  [bucket4j-coherence](https://bucket4j.github.io/8.18.0/toc.html#bucket4j-coherence)  |
 | ```Couchbase```            |  Yes             |              Yes              |           Yes           |         No          |   [bucket4j-couchbase](https://bucket4j.github.io/8.18.0/toc.html#bucket4j-couchbase)  |
+| ```Apache Geode (GemFire)```|  No              |              No               |           n/a           |         No          |     [bucket4j-geode](https://bucket4j.github.io/8.18.0/toc.html#bucket4j-geode)       |
 
 ### Redis back-ends
 | Back-end                   |  Async supported | Redis cluster supported |                                       Documentation link                                       |
