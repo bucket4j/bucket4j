@@ -28,6 +28,7 @@
         <module>lincheck-tests</module>
         <module>bucket4j-redis</module>
         <module>bucket4j-coherence</module>
+        <module>bucket4j-geode</module>
         <module>bucket4j-postgresql</module>
         <module>bucket4j-oracle</module>
         <module>bucket4j-mysql</module>

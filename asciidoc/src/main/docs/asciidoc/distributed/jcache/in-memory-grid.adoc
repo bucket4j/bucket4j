@@ -9,3 +9,5 @@ include::ignite.adoc[]
 include::infinispan.adoc[]
 
 include::coherence.adoc[]
+
+include::geode.adoc[]
