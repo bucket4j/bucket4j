@@ -13,6 +13,7 @@ import org.junit.jupiter.api.BeforeAll;
 
 import java.util.Arrays;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import static io.github.bucket4j.distributed.proxy.ExecutionStrategy.background;
@@ -29,6 +30,7 @@ import static io.github.bucket4j.distributed.proxy.ExecutionStrategy.background;
 public class GeodeTest extends AbstractDistributedBucketTest {
 
     private static Cache cache;
+    private static ExecutorService backgroundExecutor;
 
     @BeforeAll
     public static void setup() {
@@ -38,6 +40,7 @@ public class GeodeTest extends AbstractDistributedBucketTest {
             .set("log-level", "warning")
             .create();
         Region<String, byte[]> region = cache.<String, byte[]>createRegionFactory(RegionShortcut.PARTITION).create("my_buckets");
+        backgroundExecutor = Executors.newFixedThreadPool(20);
 
         specs = Arrays.asList(
             new ProxyManagerSpec<>(
@@ -49,13 +52,16 @@ public class GeodeTest extends AbstractDistributedBucketTest {
                 "GeodeProxyManager_background",
                 () -> UUID.randomUUID().toString(),
                 () -> Bucket4jGeode.compareAndSwapBasedBuilder(region)
-                    .executionStrategy(background(Executors.newFixedThreadPool(20)))
+                    .executionStrategy(background(backgroundExecutor))
             )
         );
     }
 
     @AfterAll
     public static void shutdown() {
+        if (backgroundExecutor != null) {
+            backgroundExecutor.shutdown();
+        }
         if (cache != null) {
             cache.close();
         }

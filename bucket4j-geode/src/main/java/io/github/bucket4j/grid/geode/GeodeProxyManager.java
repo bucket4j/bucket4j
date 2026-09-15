@@ -72,7 +72,6 @@ public class GeodeProxyManager<K> extends AbstractCompareAndSwapBasedProxyManage
                 transactionManager.begin();
                 try {
                     if (!Arrays.equals(region.get(key), originalData)) {
-                        transactionManager.rollback();
                         return false;
                     }
                     region.put(key, newData);
@@ -80,6 +79,12 @@ public class GeodeProxyManager<K> extends AbstractCompareAndSwapBasedProxyManage
                     return true;
                 } catch (CommitConflictException e) {
                     return false;
+                } finally {
+                    // commit() already rolls back internally on CommitConflictException, so exists() guards
+                    // against calling rollback() on a transaction that Geode already terminated
+                    if (transactionManager.exists()) {
+                        transactionManager.rollback();
+                    }
                 }
             }
         };
