@@ -58,11 +58,11 @@ public class GeodeClientServerTransactionTest {
             + ":" + Path.of("target/test-classes").toAbsolutePath();
 
         String m2Repo = Path.of(System.getProperty("user.home"), ".m2", "repository").toAbsolutePath().toString();
-        String projectTarget = Path.of("target").toAbsolutePath().toString();
+        String repoRoot = Path.of("..").toAbsolutePath().normalize().toString();
 
         serverContainer = new GenericContainer<>(DockerImageName.parse("eclipse-temurin:17-jre-jammy"))
             .withFileSystemBind(m2Repo, m2Repo, org.testcontainers.containers.BindMode.READ_ONLY)
-            .withFileSystemBind(projectTarget, projectTarget, org.testcontainers.containers.BindMode.READ_ONLY)
+            .withFileSystemBind(repoRoot, repoRoot, org.testcontainers.containers.BindMode.READ_ONLY)
             .withExposedPorts(CACHE_SERVER_PORT)
             .withCommand("java", "-cp", classpath, "io.github.bucket4j.grid.geode.GeodeServerMain",
                 String.valueOf(CACHE_SERVER_PORT), REGION_NAME)
