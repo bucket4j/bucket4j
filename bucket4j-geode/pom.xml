@@ -39,6 +39,16 @@
             <artifactId>geode-core</artifactId>
             <version>${geode.version}</version>
             <scope>provided</scope>
+            <exclusions>
+                <!-- gfsh is Geode's interactive CLI shell tooling (pulls Spring Shell, which
+                     ships two jars both containing classes in org.springframework.shell -
+                     a genuine split package that fails module-aware javadoc). Bucket4j only
+                     uses geode-core's cache/execute API, never gfsh. -->
+                <exclusion>
+                    <groupId>org.apache.geode</groupId>
+                    <artifactId>geode-gfsh</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.testcontainers</groupId>
@@ -50,6 +60,38 @@
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>biz.aQute.bnd</groupId>
+                <artifactId>bnd-maven-plugin</artifactId>
+                <configuration>
+                    <!-- geode-core declares Automatic-Module-Name in its own manifest while geode-common
+                         (needed for org.apache.geode.lang.Identifiable) does not; once maven-javadoc-plugin
+                         also sees *our* artifact as a named/automatic module, it resolves the whole
+                         dependency graph as a JPMS module graph, splitting geode-core and geode-common
+                         across the module path and the patch-module option in a way that leaves
+                         Identifiable unreachable and fails javadoc generation. -removeheaders strips
+                         our own Automatic-Module-Name from the final manifest so javadoc keeps this
+                         module on the plain classpath instead. -->
+                    <bnd><![CDATA[
+    Bundle-SymbolicName: ${osgi.symbolicName}
+    Bundle-Name: ${project.name}
+    Bundle-Version: ${project.version}
+    Automatic-Module-Name: io.github.bucket4j.${modular-name}
+
+    # Export your own packages; import everything else
+    -exportcontents: io.github.bucket4j.*;version="${project.version}";-noimport:=true
+    Import-Package: *
+
+    # Nice-to-have OSGi metadata
+    Bundle-Vendor: Vladimir Bukhtoyarov
+    Bundle-Description: ${project.description}
+    Bundle-DocURL: ${project.url}
+    -reproducible: true
+    -noextraheaders: true
+    -removeheaders: Automatic-Module-Name
+                    ]]></bnd>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
