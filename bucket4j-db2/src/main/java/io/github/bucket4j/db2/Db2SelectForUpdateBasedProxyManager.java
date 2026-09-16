@@ -27,7 +27,7 @@ import io.github.bucket4j.distributed.proxy.generic.select_for_update.AbstractSe
 import io.github.bucket4j.distributed.proxy.generic.select_for_update.LockAndGetResult;
 import io.github.bucket4j.distributed.proxy.generic.select_for_update.SelectForUpdateBasedTransaction;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
-import io.github.bucket4j.util.HexUtil;
+import io.github.bucket4j.db2.util.HexUtil;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -41,7 +41,7 @@ import java.util.Optional;
 
 import com.ibm.db2.jcc.am.SqlIntegrityConstraintViolationException;
 
-import static io.github.bucket4j.util.HexUtil.*;
+import static io.github.bucket4j.db2.util.HexUtil.*;
 
 /**
  * The extension of Bucket4j library addressed to support IBM Db2

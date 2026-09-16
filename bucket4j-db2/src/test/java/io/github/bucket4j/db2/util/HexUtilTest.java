@@ -1,4 +1,4 @@
-package io.github.bucket4j.util;
+package io.github.bucket4j.db2.util;
 
 import java.util.UUID;
 
