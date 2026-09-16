@@ -17,7 +17,7 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package io.github.bucket4j.util;
+package io.github.bucket4j.db2.util;
 
 public class HexUtil {
 
