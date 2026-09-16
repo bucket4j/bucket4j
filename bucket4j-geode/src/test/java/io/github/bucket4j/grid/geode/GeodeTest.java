@@ -53,6 +53,11 @@ public class GeodeTest extends AbstractDistributedBucketTest {
                 () -> UUID.randomUUID().toString(),
                 () -> Bucket4jGeode.compareAndSwapBasedBuilder(region)
                     .executionStrategy(background(backgroundExecutor))
+            ),
+            new ProxyManagerSpec<>(
+                "GeodeFunctionProxyManager",
+                () -> UUID.randomUUID().toString(),
+                () -> Bucket4jGeode.functionBasedBuilder(region)
             )
         );
     }

@@ -23,9 +23,13 @@ import io.github.bucket4j.tck.ProxyManagerSpec;
 import org.slf4j.LoggerFactory;
 
 /**
- * Runs the full Bucket4j TCK - including its concurrency tests - against {@link GeodeProxyManager}
- * wired up to a real, out-of-process Geode peer member (started in a Docker container by
- * {@link GeodeServerMain}), through a genuine network {@link ClientCache}.
+ * Runs the full Bucket4j TCK - including its concurrency tests - against both {@link GeodeProxyManager}
+ * and {@link GeodeFunctionProxyManager}, wired up to a real, out-of-process Geode peer member (started in
+ * a Docker container by {@link GeodeServerMain}), through a genuine network {@link ClientCache}. Since
+ * {@link Bucket4jGeode#functionBasedBuilder(org.apache.geode.cache.Region)} ships the
+ * {@link GeodeBucketFunction} instance to the server directly via {@code Execution.execute(Function)},
+ * running it here also proves the server actually has the class on its classpath - the deployment cost
+ * that {@link GeodeProxyManager} avoids.
  *
  * <p>Unlike {@link GeodeTest}, which only proves the CAS-transaction approach works for an embedded
  * peer-only topology, this test exercises the actual deployment topology real users have: a client
@@ -74,6 +78,11 @@ public class GeodeClientServerTest extends AbstractDistributedBucketTest {
                 "GeodeProxyManager_ClientServer",
                 () -> UUID.randomUUID().toString(),
                 () -> Bucket4jGeode.compareAndSwapBasedBuilder(clientRegion)
+            ),
+            new ProxyManagerSpec<>(
+                "GeodeFunctionProxyManager_ClientServer",
+                () -> UUID.randomUUID().toString(),
+                () -> Bucket4jGeode.functionBasedBuilder(clientRegion)
             )
         );
     }

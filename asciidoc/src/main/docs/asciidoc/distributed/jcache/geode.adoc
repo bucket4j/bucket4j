@@ -54,6 +54,44 @@ identity comparison, and Geode is free to hand back a freshly deserialized array
 comparison can spuriously fail (or spuriously succeed, for two logically-different-but-never-fetched values)
 depending on internal storage details that are not part of Geode's public contract.
 
+===== Function-based alternative: colocating the retry loop with the data
+`GeodeProxyManager`'s compare-and-swap loop runs on the *client*: every losing racer's retry is a fresh
+`get()` followed by a fresh transactional `put()`/`commit()`, each a full client-server round-trip. Under
+heavy contention on the same key, this means the number of round-trips grows with the number of retries.
+
+`Bucket4jGeode.functionBasedBuilder(region)` avoids this by dispatching the whole request to a Geode
+`Function` (`GeodeBucketFunction`) that runs colocated with the data, on the member owning the key's
+bucket. The function performs the exact same compare-and-swap-via-transaction loop described above, but
+entirely on the server: a losing racer retries locally against the freshly committed state instead of
+making another round-trip back to the client. The client only pays for one round-trip per call, regardless
+of how much local contention that call has to resolve on the server.
+
+[source, java]
+----
+org.apache.geode.cache.Region<K, byte[]> region = ...;
+private static final GeodeFunctionProxyManager<K> proxyManager = Bucket4jGeode
+    .functionBasedBuilder(region)
+    // setup optional parameters if necessary
+    .build();
+----
+
+This comes at a deployment cost that `GeodeProxyManager` does not have: `GeodeFunctionProxyManager` ships
+the `GeodeBucketFunction` instance to the server on every call (via `Execution.execute(Function)`, which
+does not require pre-registration through `FunctionService.registerFunction`), so the Bucket4j jar must be
+present on the classpath of every Geode member that can host the region - the same requirement
+`bucket4j-coherence` and the thick-client flavor of `bucket4j-ignite` already have. Choose
+`compareAndSwapBasedBuilder` if only the client application can depend on Bucket4j; choose
+`functionBasedBuilder` if the servers can also carry the dependency and contention on individual keys is
+expected to be significant.
+
+`GeodeFunctionProxyManager` overrides `Function.isHA()` to return `false`. Geode's default (`true`) would
+let it transparently re-run the whole function on another member if the result never reached the caller -
+for example, if the owning member dies right after `commit()` succeeds but before the result is delivered.
+Since the function performs a non-idempotent bucket mutation, a silent automatic re-execution in that window
+would risk double-applying an already-committed change. Disabling `isHA()` turns that unavoidable ambiguity
+into a visible exception to the caller instead, the same failure mode `GeodeProxyManager` already has for a
+lost acknowledgement.
+
 ===== Why there is no asynchronous API yet
 Every other in-memory-grid integration that supports asynchronous mode (Hazelcast, Ignite, Coherence, Infinispan)
 does so because the underlying client exposes a `CompletableFuture`-returning (or otherwise non-blocking)

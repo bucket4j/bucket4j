@@ -57,4 +57,34 @@ public class Bucket4jGeode {
 
     }
 
+    /**
+     * Returns the builder for {@link GeodeFunctionProxyManager}, which colocates the whole compare-and-swap
+     * retry loop with the data via a Geode {@code Function}, instead of retrying from the client the way
+     * the proxy manager returned by {@link #compareAndSwapBasedBuilder(Region)} does. Requires the Bucket4j
+     * jar to be present on the classpath of every Geode server that can own a bucket key.
+     *
+     * @param region the region that will be used to store bucket state, must contain {@code byte[]} values
+     *
+     * @return new instance of {@link GeodeFunctionProxyManagerBuilder}
+     * @param <K> type of key
+     */
+    public static <K> GeodeFunctionProxyManagerBuilder<K> functionBasedBuilder(Region<K, byte[]> region) {
+        return new GeodeFunctionProxyManagerBuilder<>(region);
+    }
+
+    public static class GeodeFunctionProxyManagerBuilder<K> extends AbstractProxyManagerBuilder<K, GeodeFunctionProxyManager<K>, GeodeFunctionProxyManagerBuilder<K>> {
+
+        final Region<K, byte[]> region;
+
+        public GeodeFunctionProxyManagerBuilder(Region<K, byte[]> region) {
+            this.region = Objects.requireNonNull(region);
+        }
+
+        @Override
+        public GeodeFunctionProxyManager<K> build() {
+            return new GeodeFunctionProxyManager<>(this);
+        }
+
+    }
+
 }
