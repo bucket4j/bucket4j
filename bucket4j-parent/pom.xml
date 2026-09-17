@@ -336,6 +336,7 @@
 <!--                            <waitUntil>published</waitUntil>-->
                             <ignorePublishedComponents>true</ignorePublishedComponents>
                             <excludeArtifacts>
+                                <excludeArtifact>bucket4j_jdk17</excludeArtifact>
                                 <excludeArtifact>bucket4j_jdk17-infinispan-all</excludeArtifact>
                                 <excludeArtifact>bucket4j_jdk17-hazelcast-all</excludeArtifact>
                                 <excludeArtifact>bucket4j_jdk17-redis</excludeArtifact>
