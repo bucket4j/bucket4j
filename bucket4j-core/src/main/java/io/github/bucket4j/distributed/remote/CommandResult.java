@@ -72,6 +72,16 @@ public class CommandResult<T> implements ComparableByContent<CommandResult> {
         }
 
         @Override
+        public int estimateSize(CommandResult<?> result, Version backwardCompatibilityVersion, Scope scope) {
+            int size = PrimitiveSizeCalculator.SIZE_OF_INT; // format version
+
+            size += PrimitiveSizeCalculator.SIZE_OF_INT; // resultTypeId
+            SerializationHandle handle = SerializationHandles.CORE_HANDLES.getHandleByTypeId(result.resultTypeId);
+            size += handle.estimateSize(result.data, backwardCompatibilityVersion, scope);
+            return size;
+        }
+
+        @Override
         public int getTypeId() {
             return 10;
         }

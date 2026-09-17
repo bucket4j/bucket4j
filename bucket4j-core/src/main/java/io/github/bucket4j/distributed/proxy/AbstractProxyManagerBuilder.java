@@ -27,6 +27,7 @@ import io.github.bucket4j.BucketExceptions;
 import io.github.bucket4j.BucketListener;
 import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
+import io.github.bucket4j.distributed.serialization.SerializationStyle;
 import io.github.bucket4j.distributed.versioning.Version;
 import io.github.bucket4j.distributed.versioning.Versions;
 
@@ -50,6 +51,8 @@ public abstract class AbstractProxyManagerBuilder<K, P extends ProxyManager<K>, 
 
     private Optional<Integer> maxRetries = Optional.empty();
     private Optional<RetryStrategy> retryStrategy = Optional.empty();
+
+    private SerializationStyle serializationStyle = SerializationStyle.DATA_OUTPUT;
 
     /**
      * Configures {@code backwardCompatibilityVersion}.
@@ -223,6 +226,28 @@ public abstract class AbstractProxyManagerBuilder<K, P extends ProxyManager<K>, 
     }
 
     /**
+     * Configures {@code serializationStyle} that is used for serializing/deserializing bucket state on the client side.
+     *
+     * <p>
+     * Use this method to opt into the faster {@link SerializationStyle#BYTE_BUFFER} serialization for
+     * {@link ProxyManager} implementations that fully control both serialization and deserialization of bucket state
+     * on the client side (e.g. Compare-And-Swap and Select-For-Update based backends). Backends where state is
+     * deserialized remotely (e.g. Hazelcast, Ignite, Infinispan) are not affected by this option and always use
+     * {@link SerializationStyle#DATA_OUTPUT}.
+     *
+     * <p>
+     * By default, serializationStyle is {@link SerializationStyle#DATA_OUTPUT}.
+     *
+     * @param serializationStyle the serialization style to use.
+     *
+     * @return this builder with configured {@code serializationStyle}.
+     */
+    public B serializationStyle(SerializationStyle serializationStyle) {
+        this.serializationStyle = Objects.requireNonNull(serializationStyle);
+        return (B) this;
+    }
+
+    /**
      * Returns the strategy for choosing time to live for buckets.
      *
      * @return the strategy for choosing time to live for buckets
@@ -288,6 +313,15 @@ public abstract class AbstractProxyManagerBuilder<K, P extends ProxyManager<K>, 
     }
 
     /**
+     * Returns the serialization style that is used for serializing/deserializing bucket state on the client side.
+     *
+     * @return the serialization style that is used for serializing/deserializing bucket state on the client side
+     */
+    public SerializationStyle getSerializationStyle() {
+        return serializationStyle;
+    }
+
+    /**
      * Builds new instance of {@link P}
      *
      * @return new instance of {@link P}
@@ -304,7 +338,7 @@ public abstract class AbstractProxyManagerBuilder<K, P extends ProxyManager<K>, 
     }
 
     public ClientSideConfig getClientSideConfig() {
-        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, requestTimeoutNanos, expirationStrategy, defaultListener, defaultRecoveryStrategy, maxRetries, retryStrategy);
+        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, requestTimeoutNanos, expirationStrategy, defaultListener, defaultRecoveryStrategy, maxRetries, retryStrategy, serializationStyle);
     }
 
 }

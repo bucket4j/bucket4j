@@ -20,6 +20,7 @@
 package io.github.bucket4j.distributed.remote;
 
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
+import io.github.bucket4j.distributed.serialization.PrimitiveSizeCalculator;
 import io.github.bucket4j.distributed.serialization.Scope;
 import io.github.bucket4j.distributed.serialization.SerializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
@@ -64,6 +65,11 @@ public class RemoteStat implements ComparableByContent<RemoteStat> {
             adapter.writeInt(output, v_7_0_0.getNumber());
 
             adapter.writeLong(output, stat.consumedTokens);
+        }
+
+        @Override
+        public int estimateSize(RemoteStat stat, Version backwardCompatibilityVersion, Scope scope) {
+            return PrimitiveSizeCalculator.SIZE_OF_INT + PrimitiveSizeCalculator.SIZE_OF_LONG;
         }
 
         @Override

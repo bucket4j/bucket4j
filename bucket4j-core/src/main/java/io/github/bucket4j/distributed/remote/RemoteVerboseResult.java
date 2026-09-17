@@ -113,6 +113,19 @@ public class RemoteVerboseResult<T> implements ComparableByContent<RemoteVerbose
         }
 
         @Override
+        public int estimateSize(RemoteVerboseResult<?> result, Version backwardCompatibilityVersion, Scope scope) {
+            int size = PrimitiveSizeCalculator.SIZE_OF_INT; // format version
+
+            size += PrimitiveSizeCalculator.SIZE_OF_LONG; // operationTimeNanos
+
+            size += PrimitiveSizeCalculator.SIZE_OF_INT; // resultTypeId
+            SerializationHandle handle = SerializationHandles.CORE_HANDLES.getHandleByTypeId(result.resultTypeId);
+            size += handle.estimateSize(result.value, backwardCompatibilityVersion, scope);
+            size += RemoteBucketState.SERIALIZATION_HANDLE.estimateSize(result.state, backwardCompatibilityVersion, scope);
+            return size;
+        }
+
+        @Override
         public int getTypeId() {
             return 14;
         }

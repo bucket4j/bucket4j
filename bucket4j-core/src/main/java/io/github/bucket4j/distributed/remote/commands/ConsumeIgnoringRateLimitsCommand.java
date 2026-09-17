@@ -25,6 +25,7 @@ import io.github.bucket4j.distributed.remote.MutableBucketEntry;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
+import io.github.bucket4j.distributed.serialization.PrimitiveSizeCalculator;
 import io.github.bucket4j.distributed.serialization.Scope;
 import io.github.bucket4j.distributed.serialization.SerializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
@@ -59,6 +60,13 @@ public class ConsumeIgnoringRateLimitsCommand implements RemoteCommand<Long>, Co
             adapter.writeInt(output, v_7_0_0.getNumber());
 
             adapter.writeLong(output, command.tokensToConsume);
+        }
+
+        @Override
+        public int estimateSize(ConsumeIgnoringRateLimitsCommand command, Version backwardCompatibilityVersion, Scope scope) {
+            int size = PrimitiveSizeCalculator.SIZE_OF_INT; // format version
+            size += PrimitiveSizeCalculator.SIZE_OF_LONG; // tokensToConsume
+            return size;
         }
 
         @Override

@@ -21,6 +21,7 @@ package io.github.bucket4j.distributed.remote.commands;
 
 import io.github.bucket4j.distributed.remote.*;
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
+import io.github.bucket4j.distributed.serialization.PrimitiveSizeCalculator;
 import io.github.bucket4j.distributed.serialization.Scope;
 import io.github.bucket4j.distributed.serialization.SerializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
@@ -65,6 +66,17 @@ public class MultiCommand implements RemoteCommand<MultiResult>, ComparableByCon
             for (RemoteCommand<?> command : multiCommand.commands) {
                 RemoteCommand.serialize(adapter, output, command, backwardCompatibilityVersion, scope);
             }
+        }
+
+        @Override
+        public int estimateSize(MultiCommand multiCommand, Version backwardCompatibilityVersion, Scope scope) {
+            int size = PrimitiveSizeCalculator.SIZE_OF_INT; // format version
+
+            size += PrimitiveSizeCalculator.SIZE_OF_INT; // commands.size()
+            for (RemoteCommand<?> command : multiCommand.commands) {
+                size += RemoteCommand.estimateSize(command, backwardCompatibilityVersion, scope);
+            }
+            return size;
         }
 
         @Override

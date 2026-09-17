@@ -20,6 +20,7 @@
 package io.github.bucket4j.distributed.remote;
 
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
+import io.github.bucket4j.distributed.serialization.PrimitiveSizeCalculator;
 import io.github.bucket4j.distributed.serialization.Scope;
 import io.github.bucket4j.distributed.serialization.SerializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
@@ -79,6 +80,13 @@ public class UsageOfObsoleteApiError implements ComparableByContent<UsageOfObsol
             adapter.writeInt(output, v_7_0_0.getNumber());
             adapter.writeInt(output, error.requestedFormatNumber);
             adapter.writeInt(output, error.minSupportedFormatNumber);
+        }
+
+        @Override
+        public int estimateSize(UsageOfObsoleteApiError error, Version backwardCompatibilityVersion, Scope scope) {
+            return PrimitiveSizeCalculator.SIZE_OF_INT // format version
+                    + PrimitiveSizeCalculator.SIZE_OF_INT // requestedFormatNumber
+                    + PrimitiveSizeCalculator.SIZE_OF_INT; // minSupportedFormatNumber
         }
 
         @Override

@@ -22,6 +22,7 @@ package io.github.bucket4j;
 import io.github.bucket4j.distributed.proxy.DefaultAsyncBucketProxy;
 
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
+import io.github.bucket4j.distributed.serialization.PrimitiveSizeCalculator;
 import io.github.bucket4j.distributed.serialization.Scope;
 import io.github.bucket4j.distributed.serialization.SerializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
@@ -67,6 +68,14 @@ public class EstimationProbe implements ComparableByContent<EstimationProbe> {
             adapter.writeBoolean(output, probe.canBeConsumed);
             adapter.writeLong(output, probe.remainingTokens);
             adapter.writeLong(output, probe.nanosToWaitForRefill);
+        }
+
+        @Override
+        public int estimateSize(EstimationProbe probe, Version backwardCompatibilityVersion, Scope scope) {
+            return PrimitiveSizeCalculator.SIZE_OF_INT // format version
+                    + PrimitiveSizeCalculator.SIZE_OF_BOOLEAN // canBeConsumed
+                    + PrimitiveSizeCalculator.SIZE_OF_LONG // remainingTokens
+                    + PrimitiveSizeCalculator.SIZE_OF_LONG; // nanosToWaitForRefill
         }
 
         @Override

@@ -22,6 +22,7 @@ package io.github.bucket4j.local;
 
 import io.github.bucket4j.*;
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
+import io.github.bucket4j.distributed.serialization.PrimitiveSizeCalculator;
 import io.github.bucket4j.distributed.serialization.Scope;
 import io.github.bucket4j.distributed.serialization.SerializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
@@ -556,6 +557,14 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket, Compa
             BucketState state = bucket.stateRef.get();
             BucketConfiguration.SERIALIZATION_HANDLE.serialize(adapter, output, state.getConfiguration(), backwardCompatibilityVersion, scope);
             BucketState.serialize(adapter, output, state, backwardCompatibilityVersion, scope);
+        }
+
+        @Override
+        public int estimateSize(LockFreeBucket bucket, Version backwardCompatibilityVersion, Scope scope) {
+            BucketState state = bucket.stateRef.get();
+            return PrimitiveSizeCalculator.SIZE_OF_INT // format version
+                    + BucketConfiguration.SERIALIZATION_HANDLE.estimateSize(state.getConfiguration(), backwardCompatibilityVersion, scope)
+                    + BucketState.estimateSize(state, backwardCompatibilityVersion, scope);
         }
 
         @Override

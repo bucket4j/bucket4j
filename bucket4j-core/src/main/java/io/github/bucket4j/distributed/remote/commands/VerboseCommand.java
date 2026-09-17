@@ -21,6 +21,7 @@ package io.github.bucket4j.distributed.remote.commands;
 
 import io.github.bucket4j.distributed.remote.*;
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
+import io.github.bucket4j.distributed.serialization.PrimitiveSizeCalculator;
 import io.github.bucket4j.distributed.serialization.Scope;
 import io.github.bucket4j.distributed.serialization.SerializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
@@ -125,6 +126,14 @@ public class VerboseCommand<T> implements RemoteCommand<RemoteVerboseResult<T>>,
             adapter.writeInt(output, v_7_0_0.getNumber());
 
             RemoteCommand.serialize(adapter, output, command.targetCommand, backwardCompatibilityVersion, scope);
+        }
+
+        @Override
+        public int estimateSize(VerboseCommand<?> command, Version backwardCompatibilityVersion, Scope scope) {
+            int size = PrimitiveSizeCalculator.SIZE_OF_INT; // format version
+
+            size += RemoteCommand.estimateSize(command.targetCommand, backwardCompatibilityVersion, scope);
+            return size;
         }
 
         @Override

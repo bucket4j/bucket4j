@@ -41,6 +41,7 @@ import java.util.Map;
 
 import io.github.bucket4j.distributed.remote.commands.VerboseCommand;
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
+import io.github.bucket4j.distributed.serialization.PrimitiveSizeCalculator;
 import io.github.bucket4j.distributed.serialization.Scope;
 import io.github.bucket4j.distributed.serialization.SerializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
@@ -103,6 +104,11 @@ public interface RemoteCommand<T> {
         int typeId = adapter.readInt(input);
         SerializationHandle<?> serializer = SerializationHandles.CORE_HANDLES.getHandleByTypeId(typeId);
         return (RemoteCommand<?>) serializer.deserialize(adapter, input);
+    }
+
+    static int estimateSize(RemoteCommand<?> command, Version backwardCompatibilityVersion, Scope scope) {
+        SerializationHandle<RemoteCommand<?>> serializer = command.getSerializationHandle();
+        return PrimitiveSizeCalculator.SIZE_OF_INT + serializer.estimateSize(command, backwardCompatibilityVersion, scope);
     }
 
     static RemoteCommand<?> fromJsonCompatibleSnapshot(Map<String, Object> snapshot) throws IOException {

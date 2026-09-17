@@ -25,6 +25,7 @@ import io.github.bucket4j.BucketState;
 import io.github.bucket4j.MathType;
 import io.github.bucket4j.distributed.remote.*;
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
+import io.github.bucket4j.distributed.serialization.PrimitiveSizeCalculator;
 import io.github.bucket4j.distributed.serialization.Scope;
 import io.github.bucket4j.distributed.serialization.SerializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
@@ -61,6 +62,15 @@ public class CreateInitialStateAndExecuteCommand<T> implements RemoteCommand<T>,
 
             BucketConfiguration.SERIALIZATION_HANDLE.serialize(adapter, output, command.configuration, backwardCompatibilityVersion, scope);
             RemoteCommand.serialize(adapter, output, command.targetCommand, backwardCompatibilityVersion, scope);
+        }
+
+        @Override
+        public int estimateSize(CreateInitialStateAndExecuteCommand command, Version backwardCompatibilityVersion, Scope scope) {
+            int size = PrimitiveSizeCalculator.SIZE_OF_INT; // format version
+
+            size += BucketConfiguration.SERIALIZATION_HANDLE.estimateSize(command.configuration, backwardCompatibilityVersion, scope);
+            size += RemoteCommand.estimateSize(command.targetCommand, backwardCompatibilityVersion, scope);
+            return size;
         }
 
         @Override

@@ -122,11 +122,11 @@ public abstract class AbstractSelectForUpdateBasedProxyManager<K> extends Abstra
         }
 
         try {
-            MutableBucketEntry entry = new MutableBucketEntry(persistedDataOnBeginOfTransaction);
+            MutableBucketEntry entry = new MutableBucketEntry(persistedDataOnBeginOfTransaction, getClientSideConfig().getSerializationStyle());
             CommandResult<T> result = command.execute(entry, super.getClientSideTime());
             if (entry.isStateModified()) {
                 RemoteBucketState modifiedState = entry.get();
-                byte[] bytes = entry.getStateBytes(request.getBackwardCompatibilityVersion());
+                byte[] bytes = entry.getStateBytes(request.getBackwardCompatibilityVersion(), getClientSideConfig().getSerializationStyle());
                 timeout.run(threshold -> transaction.update(bytes, modifiedState, threshold));
             }
             timeout.run(transaction::commit);

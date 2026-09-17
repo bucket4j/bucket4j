@@ -21,6 +21,7 @@ package io.github.bucket4j.distributed.remote;
 
 import io.github.bucket4j.distributed.proxy.BucketNotFoundException;
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
+import io.github.bucket4j.distributed.serialization.PrimitiveSizeCalculator;
 import io.github.bucket4j.distributed.serialization.Scope;
 import io.github.bucket4j.distributed.serialization.SerializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
@@ -54,6 +55,11 @@ public class BucketNotFoundError implements CommandError, ComparableByContent<Bu
         @Override
         public <O> void serialize(SerializationAdapter<O> adapter, O output, BucketNotFoundError error, Version backwardCompatibilityVersion, Scope scope) throws IOException {
             adapter.writeInt(output, v_7_0_0.getNumber());
+        }
+
+        @Override
+        public int estimateSize(BucketNotFoundError error, Version backwardCompatibilityVersion, Scope scope) {
+            return PrimitiveSizeCalculator.SIZE_OF_INT; // format version
         }
 
         @Override

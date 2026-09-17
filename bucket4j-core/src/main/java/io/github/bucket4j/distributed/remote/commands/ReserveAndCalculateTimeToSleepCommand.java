@@ -25,6 +25,7 @@ import io.github.bucket4j.distributed.remote.MutableBucketEntry;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
+import io.github.bucket4j.distributed.serialization.PrimitiveSizeCalculator;
 import io.github.bucket4j.distributed.serialization.Scope;
 import io.github.bucket4j.distributed.serialization.SerializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
@@ -63,6 +64,14 @@ public class ReserveAndCalculateTimeToSleepCommand implements RemoteCommand<Long
 
             adapter.writeLong(output, command.tokensToConsume);
             adapter.writeLong(output, command.waitIfBusyNanosLimit);
+        }
+
+        @Override
+        public int estimateSize(ReserveAndCalculateTimeToSleepCommand command, Version backwardCompatibilityVersion, Scope scope) {
+            int size = PrimitiveSizeCalculator.SIZE_OF_INT; // format version
+            size += PrimitiveSizeCalculator.SIZE_OF_LONG; // tokensToConsume
+            size += PrimitiveSizeCalculator.SIZE_OF_LONG; // waitIfBusyNanosLimit
+            return size;
         }
 
         @Override

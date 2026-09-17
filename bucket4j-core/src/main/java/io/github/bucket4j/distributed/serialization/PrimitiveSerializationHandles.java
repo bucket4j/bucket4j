@@ -41,6 +41,11 @@ public class PrimitiveSerializationHandles {
         }
 
         @Override
+        public int estimateSize(Nothing serializableObject, Version backwardCompatibilityVersion, Scope scope) {
+            return 0;
+        }
+
+        @Override
         public int getTypeId() {
             return 0;
         }
@@ -75,6 +80,11 @@ public class PrimitiveSerializationHandles {
         @Override
         public <O> void serialize(SerializationAdapter<O> adapter, O output, Long value, Version backwardCompatibilityVersion, Scope scope) throws IOException {
             adapter.writeLong(output, value);
+        }
+
+        @Override
+        public int estimateSize(Long value, Version backwardCompatibilityVersion, Scope scope) {
+            return PrimitiveSizeCalculator.SIZE_OF_LONG;
         }
 
         @Override
@@ -114,6 +124,11 @@ public class PrimitiveSerializationHandles {
         @Override
         public <O> void serialize(SerializationAdapter<O> adapter, O output, Boolean value, Version backwardCompatibilityVersion, Scope scope) throws IOException {
             adapter.writeBoolean(output, value);
+        }
+
+        @Override
+        public int estimateSize(Boolean value, Version backwardCompatibilityVersion, Scope scope) {
+            return PrimitiveSizeCalculator.SIZE_OF_BOOLEAN;
         }
 
         @Override
