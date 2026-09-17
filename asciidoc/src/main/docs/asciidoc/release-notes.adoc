@@ -3,4 +3,10 @@ Release `{revnumber}`
 
 ==== The features in release scope are following:
 * https://github.com/bucket4j/bucket4j/pull/580[#580 compare-and-swap retry mechanism]
+* https://github.com/bucket4j/bucket4j/pull/588[#588 Support for Redis Sentinel via Lettuce]
+* https://github.com/bucket4j/bucket4j/pull/615[#615 Gemfire/Geode support]
+
+==== The bugfixes in release scope are following:
+* https://github.com/bucket4j/bucket4j/pull/595[#595 Disable stack trace generation in BucketExecutionException]
+* https://github.com/bucket4j/bucket4j/pull/606[#606 Fix MySQL gap lock deadlocks]
 
