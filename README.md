@@ -96,6 +96,12 @@ In addition to local in-memory buckets, the Bucket4j supports clustered usage sc
 | ```Mongodb/mongodb-driver-sync```            |       No        |  [bucket4j-mongodb/sync](https://bucket4j.github.io/8.20.0/toc.html#bucket4j-mongodb-sync)  |
 | ```Mongodb/mongodb-driver-reactivestreams``` |       Yes       | [bucket4j-mongodb/async](https://bucket4j.github.io/8.20.0/toc.html#bucket4j-mongodb-async) |
 
+### Memcached back-ends
+| Back-end                                | Async supported |                                  Documentation link                                   |
+|:-----------------------------------------|:---------------:|:---------------------------------------------------------------------------------------:|
+| ```Memcached/compare-and-swap based```   |       Yes       | [bucket4j-memcached](https://bucket4j.github.io/8.20.0/toc.html#bucket4j-memcached)   |
+| ```Memcached/lock based```               |       No        | [bucket4j-memcached](https://bucket4j.github.io/8.20.0/toc.html#bucket4j-memcached)   |
+
 ### JDBC back-ends
 | Back-end                   |                                  Documentation link                                   |
 |:---------------------------|:-------------------------------------------------------------------------------------:|
@@ -158,5 +164,5 @@ Feel free to ask via:
 * [Bucket4j github discussions](https://github.com/bucket4j/bucket4j/discussions) for questions, feature proposals, sharing of experience.
 
 ## License
-Copyright 2015-2024 Vladimir Bukhtoyarov
+Copyright 2015-2026 Vladimir Bukhtoyarov
 Licensed under the Apache Software License, Version 2.0: <http://www.apache.org/licenses/LICENSE-2.0>.
