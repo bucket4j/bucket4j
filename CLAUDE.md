@@ -51,6 +51,7 @@ Each backend module provides a `ProxyManager` implementation:
 | `bucket4j-postgresql`, `bucket4j-mysql`, `bucket4j-mariadb`, `bucket4j-mssql`, `bucket4j-db2`, `bucket4j-oracle` | SQL databases | Yes |
 | `bucket4j-caffeine` | Caffeine cache | N/A |
 | `bucket4j-mongodb` | MongoDB | Yes |
+| `bucket4j-memcached` | Memcached (CAS-based and lock-based) | Partial (CAS-based only) |
 
 ### Redis sub-modules (`bucket4j-redis/`)
 - `bucket4j-redis-common` — shared interfaces and base implementations
