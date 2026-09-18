@@ -37,6 +37,7 @@ import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.CompareAndS
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.distributed.serialization.Mapper;
 import io.github.bucket4j.memcached.Bucket4jMemcached;
+import io.github.bucket4j.memcached.MemcachedExpirations;
 
 /**
  * Compare-and-swap-based proxy manager for Memcached, built on top of the <a href="https://github.com/spotify/folsom">folsom</a>
@@ -90,14 +91,15 @@ public class MemcachedCompareAndSwapBasedProxyManager<K> extends AbstractCompare
             @Override
             public boolean compareAndSwap(byte[] originalData, byte[] newData, RemoteBucketState newState, Optional<Long> timeoutNanos) {
                 int expirationSeconds = expirationSeconds(newState);
+                boolean isAdd = originalData == null;
                 MemcacheStatus status;
-                if (originalData == null) {
+                if (isAdd) {
                     // nulls are prohibited as values, so "add" (store-if-absent) must be used in such cases
                     status = getFutureValue(client.add(memcachedKey, newData, expirationSeconds), timeoutNanos);
                 } else {
                     status = getFutureValue(client.set(memcachedKey, newData, expirationSeconds, currentCas), timeoutNanos);
                 }
-                return status == MemcacheStatus.OK;
+                return toCasResult(memcachedKey, status, isAdd);
             }
         };
     }
@@ -124,11 +126,12 @@ public class MemcachedCompareAndSwapBasedProxyManager<K> extends AbstractCompare
             @Override
             public CompletableFuture<Boolean> compareAndSwap(byte[] originalData, byte[] newData, RemoteBucketState newState, Optional<Long> timeoutNanos) {
                 int expirationSeconds = expirationSeconds(newState);
-                CompletableFuture<MemcacheStatus> future = originalData == null
+                boolean isAdd = originalData == null;
+                CompletableFuture<MemcacheStatus> future = isAdd
                     // nulls are prohibited as values, so "add" (store-if-absent) must be used in such cases
                     ? client.add(memcachedKey, newData, expirationSeconds).toCompletableFuture()
                     : client.set(memcachedKey, newData, expirationSeconds, currentCas).toCompletableFuture();
-                return withTimeout(future, timeoutNanos).thenApply(status -> status == MemcacheStatus.OK);
+                return withTimeout(future, timeoutNanos).thenApply(status -> toCasResult(memcachedKey, status, isAdd));
             }
         };
     }
@@ -156,11 +159,29 @@ public class MemcachedCompareAndSwapBasedProxyManager<K> extends AbstractCompare
 
     private int expirationSeconds(RemoteBucketState newState) {
         long ttlMillis = expirationStrategy.calculateTimeToLiveMillis(newState, currentTimeNanos());
-        if (ttlMillis <= 0) {
-            // 0 means "never expire" for memcached
-            return 0;
+        return MemcachedExpirations.toMemcachedExpiration(ttlMillis);
+    }
+
+    /**
+     * Interprets the outcome of an {@code add}/{@code cas} write. For {@code add}, a losing race reports
+     * {@code KEY_EXISTS} over the binary protocol or {@code ITEM_NOT_STORED} over the ascii protocol; for
+     * {@code cas}, a losing race reports {@code KEY_EXISTS} (value changed since it was read) or
+     * {@code KEY_NOT_FOUND} (key concurrently deleted). All of these are ordinary CAS conflicts that the caller
+     * retries. Any other non-{@code OK} status (e.g. {@code VALUE_TOO_LARGE}, {@code OUT_OF_MEMORY}) indicates a
+     * permanent failure and must be propagated instead of being silently retried forever.
+     */
+    private boolean toCasResult(String memcachedKey, MemcacheStatus status, boolean isAdd) {
+        if (status == MemcacheStatus.OK) {
+            return true;
         }
-        return (int) Math.max(1, TimeUnit.MILLISECONDS.toSeconds(ttlMillis));
+        boolean isConflict = isAdd
+            ? status == MemcacheStatus.KEY_EXISTS || status == MemcacheStatus.ITEM_NOT_STORED
+            : status == MemcacheStatus.KEY_EXISTS || status == MemcacheStatus.KEY_NOT_FOUND;
+        if (isConflict) {
+            return false;
+        }
+        throw new BucketExceptions.BucketExecutionException(
+            "Memcached CAS operation on key \"" + memcachedKey + "\" failed with status " + status);
     }
 
     private <T> CompletableFuture<T> withTimeout(CompletableFuture<T> future, Optional<Long> timeoutNanos) {

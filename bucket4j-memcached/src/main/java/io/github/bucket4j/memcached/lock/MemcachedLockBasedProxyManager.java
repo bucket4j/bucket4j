@@ -19,6 +19,7 @@
  */
 package io.github.bucket4j.memcached.lock;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -36,6 +37,7 @@ import io.github.bucket4j.distributed.proxy.generic.pessimistic_locking.LockBase
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.distributed.serialization.Mapper;
 import io.github.bucket4j.memcached.Bucket4jMemcached;
+import io.github.bucket4j.memcached.MemcachedExpirations;
 
 /**
  * Lock-based proxy manager for Memcached, built on top of the <a href="https://github.com/spotify/folsom">folsom</a> client.
@@ -58,11 +60,12 @@ public class MemcachedLockBasedProxyManager<K> extends AbstractLockBasedProxyMan
 
     private static final byte[] LOCK_MARKER = {1};
     private static final String LOCK_KEY_SUFFIX = ".bucket4j-lock";
+    private static final int MAX_MEMCACHED_KEY_LENGTH_BYTES = 250;
 
     private final MemcacheClient<byte[]> client;
     private final Mapper<K> keyMapper;
     private final ExpirationAfterWriteStrategy expirationStrategy;
-    private final int lockExpirationSeconds;
+    private final long lockExpirationSeconds;
     private final long lockPollPeriodMillis;
 
     public MemcachedLockBasedProxyManager(Bucket4jMemcached.MemcachedLockBasedProxyManagerBuilder<K> builder) {
@@ -89,6 +92,11 @@ public class MemcachedLockBasedProxyManager<K> extends AbstractLockBasedProxyMan
     protected LockBasedTransaction allocateTransaction(K key, Optional<Long> timeoutNanos) {
         String dataKey = keyMapper.toString(key);
         String lockKey = dataKey + LOCK_KEY_SUFFIX;
+        if (lockKey.getBytes(StandardCharsets.UTF_8).length > MAX_MEMCACHED_KEY_LENGTH_BYTES) {
+            throw new IllegalArgumentException("Memcached key derived for the lock (\"" + lockKey + "\") exceeds memcached's "
+                + MAX_MEMCACHED_KEY_LENGTH_BYTES + "-byte key limit; use a shorter key so that appending the \""
+                + LOCK_KEY_SUFFIX + "\" suffix still fits within the limit");
+        }
         return new LockBasedTransaction() {
 
             private volatile boolean lockOwnedByThisTransaction;
@@ -141,7 +149,8 @@ public class MemcachedLockBasedProxyManager<K> extends AbstractLockBasedProxyMan
             private void acquireLock(Optional<Long> timeoutNanos) {
                 long deadlineNanos = timeoutNanos.map(t -> System.nanoTime() + t).orElse(Long.MAX_VALUE);
                 while (true) {
-                    MemcacheStatus status = getFutureValue(client.add(lockKey, LOCK_MARKER, lockExpirationSeconds), timeoutNanos);
+                    int lockExpiration = MemcachedExpirations.toMemcachedExpiration(TimeUnit.SECONDS.toMillis(lockExpirationSeconds));
+                    MemcacheStatus status = getFutureValue(client.add(lockKey, LOCK_MARKER, lockExpiration), timeoutNanos);
                     if (status == MemcacheStatus.OK) {
                         lockOwnedByThisTransaction = true;
                         return;
@@ -167,11 +176,7 @@ public class MemcachedLockBasedProxyManager<K> extends AbstractLockBasedProxyMan
 
     private int expirationSeconds(RemoteBucketState newState) {
         long ttlMillis = expirationStrategy.calculateTimeToLiveMillis(newState, currentTimeNanos());
-        if (ttlMillis <= 0) {
-            // 0 means "never expire" for memcached
-            return 0;
-        }
-        return (int) Math.max(1, TimeUnit.MILLISECONDS.toSeconds(ttlMillis));
+        return MemcachedExpirations.toMemcachedExpiration(ttlMillis);
     }
 
     private <T> T getFutureValue(CompletionStage<T> stage, Optional<Long> timeoutNanos) {

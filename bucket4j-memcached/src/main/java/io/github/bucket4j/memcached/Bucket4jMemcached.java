@@ -139,12 +139,12 @@ public class Bucket4jMemcached {
 
     public static class MemcachedLockBasedProxyManagerBuilder<K> extends AbstractProxyManagerBuilder<K, MemcachedLockBasedProxyManager<K>, MemcachedLockBasedProxyManagerBuilder<K>> {
 
-        private static final int DEFAULT_LOCK_EXPIRATION_SECONDS = 30;
+        private static final long DEFAULT_LOCK_EXPIRATION_SECONDS = 30;
         private static final long DEFAULT_LOCK_POLL_PERIOD_MILLIS = 50;
 
         private final MemcacheClient<byte[]> client;
         private Mapper<K> keyMapper;
-        private int lockExpirationSeconds = DEFAULT_LOCK_EXPIRATION_SECONDS;
+        private long lockExpirationSeconds = DEFAULT_LOCK_EXPIRATION_SECONDS;
         private long lockPollPeriodMillis = DEFAULT_LOCK_POLL_PERIOD_MILLIS;
 
         private MemcachedLockBasedProxyManagerBuilder(MemcacheClient<byte[]> client, Mapper<K> keyMapper) {
@@ -184,11 +184,11 @@ public class Bucket4jMemcached {
          */
         public MemcachedLockBasedProxyManagerBuilder<K> lockExpiration(Duration lockExpiration) {
             Objects.requireNonNull(lockExpiration);
-            this.lockExpirationSeconds = (int) Math.max(1, lockExpiration.toSeconds());
+            this.lockExpirationSeconds = Math.max(1, lockExpiration.toSeconds());
             return this;
         }
 
-        public int getLockExpirationSeconds() {
+        public long getLockExpirationSeconds() {
             return lockExpirationSeconds;
         }
 
