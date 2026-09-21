@@ -21,6 +21,7 @@ package io.github.bucket4j.distributed.remote;
 
 import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
 import io.github.bucket4j.distributed.serialization.InternalSerializationHelper;
+import io.github.bucket4j.distributed.serialization.SerializationStyle;
 import io.github.bucket4j.distributed.versioning.*;
 
 import static io.github.bucket4j.distributed.serialization.InternalSerializationHelper.*;
@@ -37,13 +38,13 @@ public abstract class AbstractBinaryTransaction {
 
     public byte[] execute() {
         try {
-            request = InternalSerializationHelper.deserializeRequest(requestBytes);
+            request = InternalSerializationHelper.deserializeRequest(requestBytes, SerializationStyle.BYTE_BUFFER);
         } catch (UnsupportedTypeException e) {
-            return serializeResult(CommandResult.unsupportedType(e.getTypeId()), Versions.getOldest());
+            return serializeResult(CommandResult.unsupportedType(e.getTypeId()), Versions.getOldest(), SerializationStyle.BYTE_BUFFER);
         } catch (UsageOfUnsupportedApiException e) {
-            return serializeResult(CommandResult.usageOfUnsupportedApiException(e.getRequestedFormatNumber(), e.getMaxSupportedFormatNumber()), Versions.getOldest());
+            return serializeResult(CommandResult.usageOfUnsupportedApiException(e.getRequestedFormatNumber(), e.getMaxSupportedFormatNumber()), Versions.getOldest(), SerializationStyle.BYTE_BUFFER);
         } catch (UsageOfObsoleteApiException e) {
-            return serializeResult(CommandResult.usageOfObsoleteApiException(e.getRequestedFormatNumber(), e.getMinSupportedFormatNumber()), Versions.getOldest());
+            return serializeResult(CommandResult.usageOfObsoleteApiException(e.getRequestedFormatNumber(), e.getMinSupportedFormatNumber()), Versions.getOldest(), SerializationStyle.BYTE_BUFFER);
         }
 
         Version backwardCompatibilityVersion = request.getBackwardCompatibilityVersion();
@@ -52,7 +53,7 @@ public abstract class AbstractBinaryTransaction {
             RemoteBucketState currentState = null;
             if (exists()) {
                 byte[] stateBytes = getRawState();
-                currentState = deserializeState(stateBytes);
+                currentState = deserializeState(stateBytes, SerializationStyle.BYTE_BUFFER);
             }
             MutableBucketEntry entryWrapper = new MutableBucketEntry(currentState);
 
@@ -62,16 +63,16 @@ public abstract class AbstractBinaryTransaction {
 
             if (entryWrapper.isStateModified()) {
                 RemoteBucketState newState = entryWrapper.get();
-                setRawState(serializeState(newState, backwardCompatibilityVersion), newState);
+                setRawState(serializeState(newState, backwardCompatibilityVersion, SerializationStyle.BYTE_BUFFER), newState);
             }
 
-            return serializeResult(result, request.getBackwardCompatibilityVersion());
+            return serializeResult(result, request.getBackwardCompatibilityVersion(), SerializationStyle.BYTE_BUFFER);
         } catch (UnsupportedTypeException e) {
-            return serializeResult(CommandResult.unsupportedType(e.getTypeId()), backwardCompatibilityVersion);
+            return serializeResult(CommandResult.unsupportedType(e.getTypeId()), backwardCompatibilityVersion, SerializationStyle.BYTE_BUFFER);
         } catch (UsageOfUnsupportedApiException e) {
-            return serializeResult(CommandResult.usageOfUnsupportedApiException(e.getRequestedFormatNumber(), e.getMaxSupportedFormatNumber()), backwardCompatibilityVersion);
+            return serializeResult(CommandResult.usageOfUnsupportedApiException(e.getRequestedFormatNumber(), e.getMaxSupportedFormatNumber()), backwardCompatibilityVersion, SerializationStyle.BYTE_BUFFER);
         } catch (UsageOfObsoleteApiException e) {
-            return serializeResult(CommandResult.usageOfObsoleteApiException(e.getRequestedFormatNumber(), e.getMinSupportedFormatNumber()), backwardCompatibilityVersion);
+            return serializeResult(CommandResult.usageOfObsoleteApiException(e.getRequestedFormatNumber(), e.getMinSupportedFormatNumber()), backwardCompatibilityVersion, SerializationStyle.BYTE_BUFFER);
         }
     }
 

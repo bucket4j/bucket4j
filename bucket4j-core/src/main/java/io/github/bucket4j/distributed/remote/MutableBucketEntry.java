@@ -22,6 +22,7 @@ package io.github.bucket4j.distributed.remote;
 
 import java.util.Objects;
 
+import io.github.bucket4j.distributed.serialization.SerializationStyle;
 import io.github.bucket4j.distributed.versioning.Version;
 
 import static io.github.bucket4j.distributed.serialization.InternalSerializationHelper.deserializeState;
@@ -37,7 +38,7 @@ public class MutableBucketEntry {
     }
 
     public MutableBucketEntry(byte[] originalStateBytes) {
-        this.state = originalStateBytes == null? null : deserializeState(originalStateBytes);
+        this.state = originalStateBytes == null? null : deserializeState(originalStateBytes, SerializationStyle.BYTE_BUFFER);
     }
 
     public boolean exists() {
@@ -61,7 +62,7 @@ public class MutableBucketEntry {
     }
 
     public byte[] getStateBytes(Version backwardCompatibilityVersion) {
-        return serializeState(get(), backwardCompatibilityVersion);
+        return serializeState(get(), backwardCompatibilityVersion, SerializationStyle.BYTE_BUFFER);
     }
 
 }

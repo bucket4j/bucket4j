@@ -49,6 +49,7 @@ import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.Request;
 import io.github.bucket4j.distributed.serialization.InternalSerializationHelper;
+import io.github.bucket4j.distributed.serialization.SerializationStyle;
 import io.github.bucket4j.distributed.versioning.Version;
 import io.github.bucket4j.grid.hazelcast.Bucket4jHazelcast.HazelcastProxyManagerBuilder;
 import io.github.bucket4j.grid.hazelcast.serialization.HazelcastEntryProcessorSerializer;
@@ -108,7 +109,7 @@ public class HazelcastProxyManager<K> extends AbstractProxyManager<K> {
                 new HazelcastOffloadableEntryProcessor<>(request, offloadableExecutorName);
         byte[] response = map.executeOnKey(key, entryProcessor);
         Version backwardCompatibilityVersion = request.getBackwardCompatibilityVersion();
-        return deserializeResult(response, backwardCompatibilityVersion);
+        return deserializeResult(response, backwardCompatibilityVersion, SerializationStyle.BYTE_BUFFER);
     }
 
     @Override
@@ -128,7 +129,7 @@ public class HazelcastProxyManager<K> extends AbstractProxyManager<K> {
                 new HazelcastOffloadableEntryProcessor<>(request, offloadableExecutorName);
         CompletionStage<byte[]> future = map.submitToKey(key, entryProcessor);
         Version backwardCompatibilityVersion = request.getBackwardCompatibilityVersion();
-        return (CompletableFuture) future.thenApply((byte[] bytes) -> InternalSerializationHelper.deserializeResult(bytes, backwardCompatibilityVersion));
+        return (CompletableFuture) future.thenApply((byte[] bytes) -> InternalSerializationHelper.deserializeResult(bytes, backwardCompatibilityVersion, SerializationStyle.BYTE_BUFFER));
     }
 
     @Override

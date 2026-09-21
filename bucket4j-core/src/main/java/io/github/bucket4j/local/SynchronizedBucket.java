@@ -23,6 +23,7 @@ package io.github.bucket4j.local;
 
 import io.github.bucket4j.*;
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
+import io.github.bucket4j.distributed.serialization.PrimitiveSizeCalculator;
 import io.github.bucket4j.distributed.serialization.Scope;
 import io.github.bucket4j.distributed.serialization.SerializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
@@ -467,6 +468,13 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket, C
             adapter.writeInt(output, v_7_0_0.getNumber());
             BucketConfiguration.SERIALIZATION_HANDLE.serialize(adapter, output, bucket.state.getConfiguration(), backwardCompatibilityVersion, scope);
             BucketState.serialize(adapter, output, bucket.state, backwardCompatibilityVersion, scope);
+        }
+
+        @Override
+        public int estimateSize(SynchronizedBucket bucket, Version backwardCompatibilityVersion, Scope scope) {
+            return PrimitiveSizeCalculator.SIZE_OF_INT // format version
+                    + BucketConfiguration.SERIALIZATION_HANDLE.estimateSize(bucket.state.getConfiguration(), backwardCompatibilityVersion, scope)
+                    + BucketState.estimateSize(bucket.state, backwardCompatibilityVersion, scope);
         }
 
         @Override

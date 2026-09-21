@@ -26,6 +26,7 @@ import io.github.bucket4j.MathType;
 import io.github.bucket4j.TokensInheritanceStrategy;
 import io.github.bucket4j.distributed.remote.*;
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
+import io.github.bucket4j.distributed.serialization.PrimitiveSizeCalculator;
 import io.github.bucket4j.distributed.serialization.Scope;
 import io.github.bucket4j.distributed.serialization.SerializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
@@ -68,6 +69,17 @@ public class CreateInitialStateWithVersionOrReplaceConfigurationAndExecuteComman
             RemoteCommand.serialize(adapter, output, command.targetCommand, backwardCompatibilityVersion, scope);
             adapter.writeLong(output, command.desiredConfigurationVersion);
             adapter.writeByte(output, command.tokensInheritanceStrategy.getId());
+        }
+
+        @Override
+        public int estimateSize(CreateInitialStateWithVersionOrReplaceConfigurationAndExecuteCommand<?> command, Version backwardCompatibilityVersion, Scope scope) {
+            int size = PrimitiveSizeCalculator.SIZE_OF_INT; // format version
+
+            size += BucketConfiguration.SERIALIZATION_HANDLE.estimateSize(command.configuration, backwardCompatibilityVersion, scope);
+            size += RemoteCommand.estimateSize(command.targetCommand, backwardCompatibilityVersion, scope);
+            size += PrimitiveSizeCalculator.SIZE_OF_LONG; // desiredConfigurationVersion
+            size += PrimitiveSizeCalculator.SIZE_OF_BYTE; // tokensInheritanceStrategy
+            return size;
         }
 
         @Override

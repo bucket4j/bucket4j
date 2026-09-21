@@ -42,6 +42,7 @@ import com.tangosol.util.processor.SingleEntryAsynchronousProcessor;
 import io.github.bucket4j.distributed.proxy.AbstractProxyManager;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.remote.*;
+import io.github.bucket4j.distributed.serialization.SerializationStyle;
 import io.github.bucket4j.distributed.versioning.Version;
 
 import java.util.Map;
@@ -82,7 +83,7 @@ public class CoherenceProxyManager<K> extends AbstractProxyManager<K> {
         CoherenceProcessor<K, T> entryProcessor = new CoherenceProcessor<>(request);
         byte[] resultBytes = cache.invoke(key, entryProcessor);
         Version backwardCompatibilityVersion = request.getBackwardCompatibilityVersion();
-        return deserializeResult(resultBytes, backwardCompatibilityVersion);
+        return deserializeResult(resultBytes, backwardCompatibilityVersion, SerializationStyle.BYTE_BUFFER);
     }
 
     @Override
@@ -107,7 +108,7 @@ public class CoherenceProxyManager<K> extends AbstractProxyManager<K> {
                     super.onResult(entry);
                     try {
                         byte[] resultBytes = entry.getValue();
-                        future.complete(deserializeResult(resultBytes, backwardCompatibilityVersion));
+                        future.complete(deserializeResult(resultBytes, backwardCompatibilityVersion, SerializationStyle.BYTE_BUFFER));
                     } catch (Throwable error) {
                         future.completeExceptionally(error);
                     }

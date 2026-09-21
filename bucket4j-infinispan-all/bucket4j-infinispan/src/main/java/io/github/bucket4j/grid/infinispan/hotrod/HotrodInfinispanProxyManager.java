@@ -38,7 +38,6 @@ package io.github.bucket4j.grid.infinispan.hotrod;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
@@ -51,6 +50,7 @@ import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.Request;
 import io.github.bucket4j.distributed.serialization.InternalSerializationHelper;
+import io.github.bucket4j.distributed.serialization.SerializationStyle;
 import io.github.bucket4j.grid.infinispan.Bucket4jInfinispan;
 import io.github.bucket4j.grid.infinispan.InfinispanProcessor;
 
@@ -70,12 +70,12 @@ public class HotrodInfinispanProxyManager<K> extends AbstractProxyManager<K> {
 
     @Override
     public <T> CommandResult<T> execute(K key, Request<T> request) {
-        byte[] requestBytes = InternalSerializationHelper.serializeRequest(request);
+        byte[] requestBytes = InternalSerializationHelper.serializeRequest(request, SerializationStyle.BYTE_BUFFER);
         Map<String, Object> params = new HashMap<>();
         params.put(Bucket4jTask.KEY_PARAM, key);
         params.put(Bucket4jTask.REQUEST_PARAM, requestBytes);
         byte[] responseBytes = remoteCache.execute(Bucket4jTask.TASK_NAME, params, key);
-        return deserializeResult(responseBytes, request.getBackwardCompatibilityVersion());
+        return deserializeResult(responseBytes, request.getBackwardCompatibilityVersion(), SerializationStyle.BYTE_BUFFER);
     }
 
     @Override

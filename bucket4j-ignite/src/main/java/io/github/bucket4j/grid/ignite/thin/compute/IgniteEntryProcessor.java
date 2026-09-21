@@ -22,6 +22,8 @@ package io.github.bucket4j.grid.ignite.thin.compute;
 import io.github.bucket4j.distributed.remote.AbstractBinaryTransaction;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.distributed.remote.Request;
+import io.github.bucket4j.distributed.serialization.SerializationStyle;
+
 import org.apache.ignite.cache.CacheEntryProcessor;
 
 import javax.cache.processor.EntryProcessorException;
@@ -40,7 +42,7 @@ public class IgniteEntryProcessor<K> implements Serializable, CacheEntryProcesso
     private final byte[] requestBytes;
 
     IgniteEntryProcessor(Request<?> request) {
-        this.requestBytes = serializeRequest(request);
+        this.requestBytes = serializeRequest(request, SerializationStyle.BYTE_BUFFER);
     }
 
     @Override

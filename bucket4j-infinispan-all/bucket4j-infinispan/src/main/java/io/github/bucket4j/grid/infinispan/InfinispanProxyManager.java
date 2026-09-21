@@ -39,6 +39,8 @@ package io.github.bucket4j.grid.infinispan;
 import io.github.bucket4j.distributed.proxy.AbstractProxyManager;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.remote.*;
+import io.github.bucket4j.distributed.serialization.SerializationStyle;
+
 import org.infinispan.commons.CacheException;
 import org.infinispan.functional.FunctionalMap.ReadWriteMap;
 import java.util.Objects;
@@ -82,7 +84,7 @@ public class InfinispanProxyManager<K> extends AbstractProxyManager<K> {
         InfinispanProcessor<K, T> entryProcessor = new InfinispanProcessor<>(request);
         try {
             CompletableFuture<byte[]> resultFuture = readWriteMap.eval(key, entryProcessor);
-            return (CommandResult<T>) resultFuture.thenApply(resultBytes -> deserializeResult(resultBytes, request.getBackwardCompatibilityVersion())).get();
+            return (CommandResult<T>) resultFuture.thenApply(resultBytes -> deserializeResult(resultBytes, request.getBackwardCompatibilityVersion(), SerializationStyle.BYTE_BUFFER)).get();
         } catch (InterruptedException | ExecutionException e) {
             throw new CacheException(e);
         }
@@ -119,7 +121,7 @@ public class InfinispanProxyManager<K> extends AbstractProxyManager<K> {
         try {
             InfinispanProcessor<K, T> entryProcessor = new InfinispanProcessor<>(request);
             CompletableFuture<byte[]> resultFuture = readWriteMap.eval(key, entryProcessor);
-            return resultFuture.thenApply(resultBytes -> deserializeResult(resultBytes, request.getBackwardCompatibilityVersion()));
+            return resultFuture.thenApply(resultBytes -> deserializeResult(resultBytes, request.getBackwardCompatibilityVersion(), SerializationStyle.BYTE_BUFFER));
         } catch (Throwable t) {
             CompletableFuture<CommandResult<T>> fail = new CompletableFuture<>();
             fail.completeExceptionally(t);

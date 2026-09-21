@@ -62,6 +62,17 @@ public class MultiResult implements ComparableByContent<MultiResult> {
         }
 
         @Override
+        public int estimateSize(MultiResult multiResult, Version backwardCompatibilityVersion, Scope scope) {
+            int size = PrimitiveSizeCalculator.SIZE_OF_INT; // format version
+
+            size += PrimitiveSizeCalculator.SIZE_OF_INT; // results size
+            for (CommandResult<?> result : multiResult.results) {
+                size += CommandResult.SERIALIZATION_HANDLE.estimateSize(result, backwardCompatibilityVersion, scope);
+            }
+            return size;
+        }
+
+        @Override
         public int getTypeId() {
             return 13;
         }

@@ -21,6 +21,7 @@ package io.github.bucket4j.distributed.remote;
 
 import io.github.bucket4j.distributed.proxy.ConfigurationNeedToBeReplacedException;
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
+import io.github.bucket4j.distributed.serialization.PrimitiveSizeCalculator;
 import io.github.bucket4j.distributed.serialization.Scope;
 import io.github.bucket4j.distributed.serialization.SerializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
@@ -54,6 +55,11 @@ public class ConfigurationNeedToBeReplacedError implements CommandError, Compara
         @Override
         public <O> void serialize(SerializationAdapter<O> adapter, O output, ConfigurationNeedToBeReplacedError error, Version backwardCompatibilityVersion, Scope scope) throws IOException {
             adapter.writeInt(output, v_8_1_0.getNumber());
+        }
+
+        @Override
+        public int estimateSize(ConfigurationNeedToBeReplacedError error, Version backwardCompatibilityVersion, Scope scope) {
+            return PrimitiveSizeCalculator.SIZE_OF_INT; // format version
         }
 
         @Override

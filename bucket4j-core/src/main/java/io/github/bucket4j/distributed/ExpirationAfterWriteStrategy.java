@@ -24,6 +24,7 @@ import io.github.bucket4j.distributed.expiration.NoneExpirationAfterWriteStrateg
 import io.github.bucket4j.distributed.expiration.BasedOnTimeForRefillingBucketUpToMaxExpirationAfterWriteStrategy;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
+import io.github.bucket4j.distributed.serialization.PrimitiveSizeCalculator;
 import io.github.bucket4j.distributed.serialization.Scope;
 import io.github.bucket4j.distributed.serialization.SerializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
@@ -105,6 +106,11 @@ public interface ExpirationAfterWriteStrategy {
         int typeId = adapter.readInt(input);
         SerializationHandle<?> serializer = SerializationHandles.CORE_HANDLES.getHandleByTypeId(typeId);
         return (ExpirationAfterWriteStrategy) serializer.deserialize(adapter, input);
+    }
+
+    static int estimateSize(ExpirationAfterWriteStrategy expirationStrategy, Version backwardCompatibilityVersion, Scope scope) {
+        SerializationHandle<ExpirationAfterWriteStrategy> serializer = expirationStrategy.getSerializationHandle();
+        return PrimitiveSizeCalculator.SIZE_OF_INT + serializer.estimateSize(expirationStrategy, backwardCompatibilityVersion, scope);
     }
 
     static ExpirationAfterWriteStrategy fromJsonCompatibleSnapshot(Map<String, Object> snapshot) throws IOException {

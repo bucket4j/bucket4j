@@ -20,6 +20,7 @@
 package io.github.bucket4j.distributed.remote;
 
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
+import io.github.bucket4j.distributed.serialization.PrimitiveSizeCalculator;
 import io.github.bucket4j.distributed.serialization.Scope;
 import io.github.bucket4j.distributed.serialization.SerializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
@@ -70,6 +71,13 @@ public class UnsupportedNamedTypeError implements CommandError, ComparableByCont
         public <O> void serialize(SerializationAdapter<O> adapter, O output, UnsupportedNamedTypeError error, Version backwardCompatibilityVersion, Scope scope) throws IOException {
             adapter.writeInt(output, v_7_0_0.getNumber());
             adapter.writeString(output, error.typeName);
+        }
+
+        @Override
+        public int estimateSize(UnsupportedNamedTypeError error, Version backwardCompatibilityVersion, Scope scope) {
+            int size = PrimitiveSizeCalculator.SIZE_OF_INT; // format version
+            size += PrimitiveSizeCalculator.sizeOfString(error.typeName);
+            return size;
         }
 
         @Override

@@ -20,6 +20,7 @@
 package io.github.bucket4j.distributed.remote;
 
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
+import io.github.bucket4j.distributed.serialization.PrimitiveSizeCalculator;
 import io.github.bucket4j.distributed.serialization.Scope;
 import io.github.bucket4j.distributed.serialization.SerializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
@@ -70,6 +71,12 @@ public class UnsupportedTypeError implements CommandError, ComparableByContent<U
         public <O> void serialize(SerializationAdapter<O> adapter, O output, UnsupportedTypeError error, Version backwardCompatibilityVersion, Scope scope) throws IOException {
             adapter.writeInt(output, v_7_0_0.getNumber());
             adapter.writeInt(output, error.typeId);
+        }
+
+        @Override
+        public int estimateSize(UnsupportedTypeError error, Version backwardCompatibilityVersion, Scope scope) {
+            return PrimitiveSizeCalculator.SIZE_OF_INT // format version
+                    + PrimitiveSizeCalculator.SIZE_OF_INT; // typeId
         }
 
         @Override

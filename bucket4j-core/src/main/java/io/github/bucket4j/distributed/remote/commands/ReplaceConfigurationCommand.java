@@ -28,6 +28,7 @@ import io.github.bucket4j.distributed.remote.MutableBucketEntry;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
+import io.github.bucket4j.distributed.serialization.PrimitiveSizeCalculator;
 import io.github.bucket4j.distributed.serialization.Scope;
 import io.github.bucket4j.distributed.serialization.SerializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
@@ -64,6 +65,15 @@ public class ReplaceConfigurationCommand implements RemoteCommand<Nothing>, Comp
 
             BucketConfiguration.SERIALIZATION_HANDLE.serialize(adapter, output, command.newConfiguration, backwardCompatibilityVersion, scope);
             adapter.writeByte(output, command.tokensInheritanceStrategy.getId());
+        }
+
+        @Override
+        public int estimateSize(ReplaceConfigurationCommand command, Version backwardCompatibilityVersion, Scope scope) {
+            int size = PrimitiveSizeCalculator.SIZE_OF_INT; // format version
+
+            size += BucketConfiguration.SERIALIZATION_HANDLE.estimateSize(command.newConfiguration, backwardCompatibilityVersion, scope);
+            size += PrimitiveSizeCalculator.SIZE_OF_BYTE; // tokensInheritanceStrategy
+            return size;
         }
 
         @Override

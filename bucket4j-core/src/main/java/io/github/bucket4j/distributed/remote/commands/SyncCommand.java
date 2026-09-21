@@ -28,6 +28,7 @@ import io.github.bucket4j.distributed.remote.MutableBucketEntry;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
+import io.github.bucket4j.distributed.serialization.PrimitiveSizeCalculator;
 import io.github.bucket4j.distributed.serialization.Scope;
 import io.github.bucket4j.distributed.serialization.SerializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
@@ -64,6 +65,14 @@ public class SyncCommand implements RemoteCommand<Nothing>, ComparableByContent<
 
             adapter.writeLong(output, command.unsynchronizedTokens);
             adapter.writeLong(output, command.nanosSinceLastSync);
+        }
+
+        @Override
+        public int estimateSize(SyncCommand command, Version backwardCompatibilityVersion, Scope scope) {
+            int size = PrimitiveSizeCalculator.SIZE_OF_INT; // format version
+            size += PrimitiveSizeCalculator.SIZE_OF_LONG; // unsynchronizedTokens
+            size += PrimitiveSizeCalculator.SIZE_OF_LONG; // nanosSinceLastSync
+            return size;
         }
 
         @Override

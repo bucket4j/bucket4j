@@ -24,6 +24,7 @@ import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.BucketState;
 import io.github.bucket4j.TokensInheritanceStrategy;
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
+import io.github.bucket4j.distributed.serialization.PrimitiveSizeCalculator;
 import io.github.bucket4j.distributed.serialization.Scope;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
 import io.github.bucket4j.distributed.serialization.SerializationAdapter;
@@ -83,6 +84,22 @@ public class RemoteBucketState implements ComparableByContent<RemoteBucketState>
                     adapter.writeBoolean(output, false);
                 }
             }
+        }
+
+        @Override
+        public int estimateSize(RemoteBucketState remoteState, Version backwardCompatibilityVersion, Scope scope) {
+            Version serializationVersion = getSerializationVersion(remoteState, backwardCompatibilityVersion, scope);
+            int size = PrimitiveSizeCalculator.SIZE_OF_INT;
+            size += BucketConfiguration.SERIALIZATION_HANDLE.estimateSize(remoteState.getConfiguration(), backwardCompatibilityVersion, scope);
+            size += BucketState.estimateSize(remoteState.state, backwardCompatibilityVersion, scope);
+            size += RemoteStat.SERIALIZATION_HANDLE.estimateSize(remoteState.stat, backwardCompatibilityVersion, scope);
+            if (serializationVersion == v_8_1_0) {
+                size += PrimitiveSizeCalculator.SIZE_OF_BOOLEAN;
+                if (remoteState.configurationVersion != null) {
+                    size += PrimitiveSizeCalculator.SIZE_OF_LONG;
+                }
+            }
+            return size;
         }
 
         private static Version getSerializationVersion(RemoteBucketState remoteState, Version backwardCompatibilityVersion, Scope scope) {

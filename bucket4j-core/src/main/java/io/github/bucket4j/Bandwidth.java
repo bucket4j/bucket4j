@@ -21,6 +21,7 @@ package io.github.bucket4j;
 
 import io.github.bucket4j.BandwidthBuilder.BandwidthBuilderCapacityStage;
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
+import io.github.bucket4j.distributed.serialization.PrimitiveSizeCalculator;
 import io.github.bucket4j.distributed.serialization.Scope;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
 import io.github.bucket4j.distributed.serialization.SerializationAdapter;
@@ -204,6 +205,20 @@ public class Bandwidth implements ComparableByContent<Bandwidth> {
             if (bandwidth.hasId()) {
                 adapter.writeString(output, bandwidth.id);
             }
+        }
+
+        @Override
+        public int estimateSize(Bandwidth bandwidth, Version backwardCompatibilityVersion, Scope scope) {
+            int size = PrimitiveSizeCalculator.SIZE_OF_INT
+                + 4 * PrimitiveSizeCalculator.SIZE_OF_LONG // capacity, initialTokens, refillPeriodNanos, refillTokens
+                + PrimitiveSizeCalculator.SIZE_OF_BOOLEAN // refillIntervally
+                + PrimitiveSizeCalculator.SIZE_OF_LONG // timeOfFirstRefillMillis
+                + PrimitiveSizeCalculator.SIZE_OF_BOOLEAN // useAdaptiveInitialTokens
+                + PrimitiveSizeCalculator.SIZE_OF_BOOLEAN; // hasId
+            if (bandwidth.hasId()) {
+                size += PrimitiveSizeCalculator.sizeOfString(bandwidth.id);
+            }
+            return size;
         }
 
         @Override

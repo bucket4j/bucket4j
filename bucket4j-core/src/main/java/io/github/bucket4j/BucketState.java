@@ -20,6 +20,7 @@
 package io.github.bucket4j;
 
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
+import io.github.bucket4j.distributed.serialization.PrimitiveSizeCalculator;
 import io.github.bucket4j.distributed.serialization.Scope;
 import io.github.bucket4j.distributed.serialization.SerializationAdapter;
 import io.github.bucket4j.distributed.versioning.Version;
@@ -84,6 +85,15 @@ public interface BucketState {
                 break;
             default:
                 throw new IOException("Unknown mathType=" + state.getMathType());
+        }
+    }
+
+    static int estimateSize(BucketState state, Version backwardCompatibilityVersion, Scope scope) {
+        switch (state.getMathType()) {
+            case INTEGER_64_BITS:
+                return PrimitiveSizeCalculator.SIZE_OF_INT + BucketState64BitsInteger.SERIALIZATION_HANDLE.estimateSize((BucketState64BitsInteger) state, backwardCompatibilityVersion, scope);
+            default:
+                throw new IllegalStateException("Unknown mathType=" + state.getMathType());
         }
     }
 
