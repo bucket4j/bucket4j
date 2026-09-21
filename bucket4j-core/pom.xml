@@ -17,6 +17,8 @@
 
     <properties>
         <modular-name>core</modular-name>
+        <kotlin.version>2.2.0</kotlin.version>
+        <kotest.version>5.9.1</kotest.version>
     </properties>
 
     <build>
@@ -32,6 +34,41 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <!-- Kotest specs (io.github.bucket4j.**Specification, src/test/kotlin) are gradually
+                     replacing the Groovy/Spock specs, see https://github.com/bucket4j/bucket4j/issues/624 -->
+                <groupId>org.jetbrains.kotlin</groupId>
+                <artifactId>kotlin-maven-plugin</artifactId>
+                <version>${kotlin.version}</version>
+                <configuration>
+                    <jvmTarget>17</jvmTarget>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>test-compile-kotlin</id>
+                        <!-- bound after test-compile so Kotest specs can reference the Java/Groovy
+                             test classes (e.g. io.github.bucket4j.mock.*) that were just compiled -->
+                        <phase>process-test-classes</phase>
+                        <goals>
+                            <goal>test-compile</goal>
+                        </goals>
+                        <configuration>
+                            <sourceDirs>
+                                <sourceDir>${project.basedir}/src/test/kotlin</sourceDir>
+                            </sourceDirs>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <systemPropertyVariables combine.children="append">
+                        <!-- no @AutoScan extensions in this project, skip the classpath scan -->
+                        <kotest.framework.classpath.scanning.autoscan.disable>true</kotest.framework.classpath.scanning.autoscan.disable>
+                    </systemPropertyVariables>
+                </configuration>
             </plugin>
 <!--            <plugin>-->
 <!--                <groupId>org.apache.maven.plugins</groupId>-->
@@ -67,6 +104,40 @@
             <groupId>org.openjdk.jol</groupId>
             <artifactId>jol-core</artifactId>
             <version>0.17</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-stdlib</artifactId>
+            <version>${kotlin.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.kotest</groupId>
+            <artifactId>kotest-runner-junit5-jvm</artifactId>
+            <version>${kotest.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.kotest</groupId>
+            <artifactId>kotest-assertions-core-jvm</artifactId>
+            <version>${kotest.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- kotest-runner-junit5-jvm transitively pulls an older junit-platform (1.8.2) than
+             junit-jupiter-engine ${junit.jupiter.version} needs; pin explicitly so all
+             JUnit Platform engines (Jupiter, Spock, Kotest) run against the same version. -->
+        <dependency>
+            <groupId>org.junit.platform</groupId>
+            <artifactId>junit-platform-launcher</artifactId>
+            <version>1.10.2</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.platform</groupId>
+            <artifactId>junit-platform-engine</artifactId>
+            <version>1.10.2</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
