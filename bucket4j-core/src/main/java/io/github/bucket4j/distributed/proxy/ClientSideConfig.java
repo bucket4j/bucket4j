@@ -226,27 +226,6 @@ public class ClientSideConfig {
     }
 
     /**
-     * Returns new instance of {@link ClientSideConfig} with configured {@code serializationStyle}.
-     *
-     * <p>
-     * Use this method to opt into the faster {@link SerializationStyle#BYTE_BUFFER} serialization for
-     * {@link ProxyManager} implementations that fully control both serialization and deserialization of bucket state
-     * on the client side (e.g. Compare-And-Swap and Select-For-Update based backends). Backends where state is
-     * deserialized remotely (e.g. Hazelcast, Ignite, Infinispan) are not affected by this option and always use
-     * {@link SerializationStyle#DATA_OUTPUT}.
-     *
-     * <p>
-     * By default, serializationStyle is {@link SerializationStyle#DATA_OUTPUT}.
-     *
-     * @param serializationStyle the serialization style to use.
-     *
-     * @return new instance of {@link ClientSideConfig} with configured {@code serializationStyle}.
-     */
-    public ClientSideConfig withSerializationStyle(SerializationStyle serializationStyle) {
-        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, requestTimeoutNanos, expirationStrategy, defaultListener, defaultRecoveryStrategy, maxRetries, retryStrategy);
-    }
-
-    /**
      * Returns the strategy for choosing time to live for buckets.
      *
      * @return the strategy for choosing time to live for buckets

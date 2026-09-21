@@ -104,14 +104,6 @@ public class DataOutputSerializationAdapter implements SerializationAdapter<Data
     }
 
     @Override
-    public void writeDoubleArray(DataOutput target, double[] value) throws IOException {
-        target.writeInt(value.length);
-        for (int i = 0; i < value.length; i++) {
-            target.writeDouble(value[i]);
-        }
-    }
-
-    @Override
     public void writeString(DataOutput target, String value) throws IOException {
         target.writeUTF(value);
     }

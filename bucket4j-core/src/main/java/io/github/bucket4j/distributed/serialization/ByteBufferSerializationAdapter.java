@@ -123,14 +123,6 @@ public class ByteBufferSerializationAdapter implements SerializationAdapter<Byte
     }
 
     @Override
-    public void writeDoubleArray(ByteBuffer target, double[] value) {
-        target.putInt(value.length);
-        for (double v : value) {
-            target.putDouble(v);
-        }
-    }
-
-    @Override
     public void writeString(ByteBuffer target, String value) throws IOException {
         int utfLength = PrimitiveSizeCalculator.modifiedUtf8Length(value);
         if (utfLength > 65535) {

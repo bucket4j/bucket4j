@@ -33,8 +33,6 @@ public interface SerializationAdapter<T> {
 
     void writeLongArray(T target, long[] value) throws IOException;
 
-    void writeDoubleArray(T target, double[] value) throws IOException;
-
     void writeString(T target, String value) throws IOException;
 
 }
