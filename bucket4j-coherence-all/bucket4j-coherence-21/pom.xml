@@ -8,18 +8,17 @@
 
     <parent>
         <groupId>com.bucket4j</groupId>
-        <artifactId>bucket4j_jdk17-parent</artifactId>
+        <artifactId>bucket4j_jdk17-coherence-all</artifactId>
         <version>8.21.0</version>
-        <relativePath>../bucket4j-parent</relativePath>
+        <relativePath>../../bucket4j-coherence-all</relativePath>
     </parent>
 
-    <name>bucket4j_jdk17-coherence</name>
-    <description>Bucket4j integration with Coherence</description>
-    <artifactId>bucket4j_jdk17-coherence</artifactId>
+    <name>bucket4j_jdk17-coherence-21</name>
+    <description>Bucket4j integration with legacy Oracle Coherence 21.x branch</description>
+    <artifactId>bucket4j_jdk17-coherence-21</artifactId>
 
     <properties>
-        <modular-name>coherence</modular-name>
-        <maven.test.skip>true</maven.test.skip>
+        <modular-name>coherence21</modular-name>
     </properties>
 
     <dependencies>
@@ -31,7 +30,7 @@
         <dependency>
             <groupId>com.oracle.coherence.ce</groupId>
             <artifactId>coherence</artifactId>
-            <version>21.06</version>
+            <version>${coherence.21.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -56,5 +55,22 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <!--
+                        Oracle Coherence keeps most of its cluster/network state in static singletons (CacheFactory),
+                        so a JVM that already hosted one Coherence cluster member cannot cleanly host another one
+                        after the first is shut down. Every test class here starts its own real Coherence cluster,
+                        so each of them needs a pristine JVM.
+                    -->
+                    <reuseForks>false</reuseForks>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 
 </project>
