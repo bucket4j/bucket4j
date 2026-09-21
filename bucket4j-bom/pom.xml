@@ -89,6 +89,11 @@
             </dependency>
             <dependency>
                 <groupId>com.bucket4j</groupId>
+                <artifactId>bucket4j_jdk17-coherence-21</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.bucket4j</groupId>
                 <artifactId>bucket4j_jdk17-geode</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -145,6 +150,11 @@
             <dependency>
                 <groupId>com.bucket4j</groupId>
                 <artifactId>bucket4j_jdk17-couchbase</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.bucket4j</groupId>
+                <artifactId>bucket4j_jdk17-memcached</artifactId>
                 <version>${project.version}</version>
             </dependency>
         </dependencies>

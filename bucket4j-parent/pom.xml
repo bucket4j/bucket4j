@@ -51,6 +51,8 @@
 
         <hazelcast.4.version>4.1</hazelcast.4.version>
         <hazelcast.latest.version>5.3.6</hazelcast.latest.version>
+        <coherence.21.version>21.06</coherence.21.version>
+        <coherence.latest.version>26.07</coherence.latest.version>
         <infinispan.latest.version>15.0.4.Final</infinispan.latest.version>
         <ehcache.version>3.8.1</ehcache.version>
 
@@ -337,6 +339,7 @@
                             <ignorePublishedComponents>true</ignorePublishedComponents>
                             <excludeArtifacts>
                                 <excludeArtifact>bucket4j_jdk17</excludeArtifact>
+                                <excludeArtifact>bucket4j_jdk17-coherence-all</excludeArtifact>
                                 <excludeArtifact>bucket4j_jdk17-infinispan-all</excludeArtifact>
                                 <excludeArtifact>bucket4j_jdk17-hazelcast-all</excludeArtifact>
                                 <excludeArtifact>bucket4j_jdk17-redis</excludeArtifact>
@@ -368,16 +371,21 @@
                     <plugin>
                         <groupId>org.codehaus.mojo</groupId>
                         <artifactId>license-maven-plugin</artifactId>
-                        <version>2.0.0</version>
+                        <version>2.5.0</version>
                         <configuration>
-<!--                            <licenseName>bucket4_license</licenseName>-->
 <!--                            <licenseResolver>${project.baseUri}/src/license</licenseResolver>-->
+                            <licenseName>apache_v2</licenseName>
                             <inceptionYear>2015</inceptionYear>
                             <organizationName>Vladimir Bukhtoyarov</organizationName>
                             <projectName>Bucket4j</projectName>
                             <addJavaLicenseAfterPackage>false</addJavaLicenseAfterPackage>
                             <processStartTag>========================LICENSE_START=================================</processStartTag>
                             <processEndTag>=========================LICENSE_END==================================</processEndTag>
+                            <canUpdateCopyright>true</canUpdateCopyright>
+                            <canUpdateDescription>true</canUpdateDescription>
+                            <roots>
+                                <root>src/main/java</root>
+                            </roots>
                         </configuration>
                         <executions>
                             <execution>
@@ -386,12 +394,6 @@
                                     <goal>update-file-header</goal>
                                 </goals>
                                 <phase>process-sources</phase>
-                                <configuration>
-                                    <licenseName>apache_v2</licenseName>
-                                    <roots>
-                                        <root>src/main/java</root>
-                                    </roots>
-                                </configuration>
                             </execution>
                         </executions>
                     </plugin>
@@ -428,7 +430,7 @@
                     <plugin>
                         <groupId>org.codehaus.mojo</groupId>
                         <artifactId>license-maven-plugin</artifactId>
-                        <version>2.0.0</version>
+                        <version>2.5.0</version>
                     </plugin>
                 </plugins>
             </reporting>
