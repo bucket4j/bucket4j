@@ -29,7 +29,6 @@ import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
 import io.github.bucket4j.distributed.proxy.AbstractProxyManager.DefaultAsyncRemoteBucketBuilder;
 import io.github.bucket4j.distributed.proxy.AbstractProxyManager.DefaultRemoteBucketBuilder;
-import io.github.bucket4j.distributed.serialization.SerializationStyle;
 import io.github.bucket4j.distributed.versioning.Version;
 import io.github.bucket4j.distributed.versioning.Versions;
 
