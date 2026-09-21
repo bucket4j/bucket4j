@@ -69,6 +69,8 @@
         <ojdbc.version>23.2.0.0</ojdbc.version>
         <junit.jupiter.version>5.10.2</junit.jupiter.version>
         <slf4j.version>2.0.9</slf4j.version>
+        <!-- shared across all modules that use Kotlin (bucket4j-core Kotest specs, lincheck-tests) -->
+        <kotlin.version>2.2.0</kotlin.version>
         <bnd.version>7.1.0</bnd.version>
         <!-- default OSGi bundle symbolic name pattern -->
         <osgi.symbolicName>${project.groupId}.${modular-name}</osgi.symbolicName>

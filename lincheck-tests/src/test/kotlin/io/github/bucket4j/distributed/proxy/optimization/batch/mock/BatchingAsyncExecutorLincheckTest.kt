@@ -1,7 +1,7 @@
 package io.github.bucket4j.distributed.proxy.optimization.batch.mock
 
 import org.jetbrains.kotlinx.lincheck.LinChecker
-import org.jetbrains.kotlinx.lincheck.LoggingLevel
+import org.jetbrains.kotlinx.lincheck.util.LoggingLevel
 import org.jetbrains.kotlinx.lincheck.Options
 import org.jetbrains.kotlinx.lincheck.annotations.Operation
 import org.jetbrains.kotlinx.lincheck.annotations.Param

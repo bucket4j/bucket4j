@@ -13,12 +13,11 @@
     <properties>
         <revapi.skip>true</revapi.skip>
         <experimentalCoroutines>enable</experimentalCoroutines>
-        <kotlin.version>1.9.21</kotlin.version>
-        <kotlin.coroutines.version>1.7.3</kotlin.coroutines.version>
+        <kotlin.coroutines.version>1.10.2</kotlin.coroutines.version>
 
-        <lincheck.version>2.24</lincheck.version>
-        <asm.version>9.6</asm.version>
-        <byteBuddyVersion>1.14.12</byteBuddyVersion>
+        <lincheck.version>2.39</lincheck.version>
+        <asm.version>9.10.1</asm.version>
+        <byteBuddyVersion>1.17.5</byteBuddyVersion>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
     </properties>
@@ -120,11 +119,6 @@
         </dependency>
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
-            <artifactId>kotlin-stdlib-common</artifactId>
-            <version>${kotlin.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-reflect</artifactId>
             <version>${kotlin.version}</version>
         </dependency>
@@ -144,7 +138,7 @@
         <dependency>
             <groupId>org.reflections</groupId>
             <artifactId>reflections</artifactId>
-            <version>0.9.12</version>
+            <version>0.10.2</version>
         </dependency>
         <dependency>
             <groupId>org.ow2.asm</groupId>
