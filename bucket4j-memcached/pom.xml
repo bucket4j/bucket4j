@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.bucket4j</groupId>
+        <artifactId>bucket4j_jdk17-parent</artifactId>
+        <version>8.21.0</version>
+        <relativePath>../bucket4j-parent</relativePath>
+    </parent>
+
+    <artifactId>bucket4j_jdk17-memcached</artifactId>
+    <name>bucket4j_jdk17-memcached</name>
+    <description>Bucket4j integration with Memcached</description>
+
+    <properties>
+        <modular-name>memcached</modular-name>
+        <folsom.version>1.21.0</folsom.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.bucket4j</groupId>
+            <artifactId>bucket4j_jdk17-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.bucket4j</groupId>
+            <artifactId>bucket4j_jdk17-core</artifactId>
+            <version>${project.version}</version>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.spotify</groupId>
+            <artifactId>folsom</artifactId>
+            <version>${folsom.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers</artifactId>
+            <version>${testcontainers.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+</project>

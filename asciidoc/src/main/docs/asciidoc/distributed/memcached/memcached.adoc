@@ -1,0 +1,75 @@
+[[bucket4j-memcached, Bucket4j-Memcached]]
+=== Bucket4j-Memcached
+Bucket4j provides integration with Memcached through the https://github.com/spotify/folsom[folsom] client.
+
+Memcached has no server-side scripting/RPC capability, so the bucket state transition cannot be executed atomically on the server as it is for Redis or JDBC-based backends.
+Instead, the state transition is computed on the client and persisted using memcached's native `gets`/`cas`/`add` commands to implement optimistic (compare-and-swap) concurrency control.
+Since folsom's API is natively based on `CompletionStage`, this proxy manager supports both the synchronous and the asynchronous `Bucket` API.
+
+Bucket state is stored as raw binary data. Expiration is delegated to memcached's native per-key TTL.
+
+==== Memcached integration
+===== Dependencies
+To use ``bucket4j_jdk17-memcached``, add the following dependency:
+[source, xml, subs=attributes+]
+----
+<dependency>
+    <groupId>com.bucket4j</groupId>
+    <artifactId>bucket4j_jdk17-memcached</artifactId>
+    <version>{revnumber}</version>
+</dependency>
+<dependency>
+    <groupId>com.spotify</groupId>
+    <artifactId>folsom</artifactId>
+    <version>1.21.0</version>
+</dependency>
+----
+
+===== Example of Bucket instantiation via MemcachedCompareAndSwapBasedProxyManager
+[source, java]
+----
+MemcacheClient<byte[]> client = MemcacheClientBuilder.newByteArrayClient()
+    .withAddress("127.0.0.1", 11211)
+    .connectAscii();
+ConnectFuture.connectFuture(client).toCompletableFuture().get();
+
+MemcachedCompareAndSwapBasedProxyManager<String> proxyManager =
+    Bucket4jMemcached.casBasedBuilder(client)
+        .expirationAfterWrite(ExpirationAfterWriteStrategy.basedOnTimeForRefillingBucketUpToMax(ofSeconds(10)))
+        .build();
+
+BucketConfiguration configuration = BucketConfiguration.builder()
+    .addLimit(limit -> limit.capacity(1_000).refillGreedy(1_000, ofMinutes(1)))
+    .build();
+
+Bucket bucketProxy = proxyManager.getProxy("user-123", () -> configuration);
+----
+
+===== Asynchronous usage
+`MemcachedCompareAndSwapBasedProxyManager` reports `isAsyncModeSupported() == true`, so it can also be used through the asynchronous `Bucket` API:
+[source, java]
+----
+AsyncBucketProxy bucketProxy = proxyManager.asAsync().getProxy("user-123", () -> configuration);
+
+CompletableFuture<ConsumptionProbe> probeFuture = bucketProxy.tryConsumeAndReturnRemaining(1);
+----
+
+===== Custom key mapping
+By default, the integration uses String keys.
+You can specify custom key types using a Mapper:
+[source, java]
+----
+MemcachedCompareAndSwapBasedProxyManager<Long> proxyManager =
+    Bucket4jMemcached.casBasedBuilder(client, Mapper.LONG)
+        .build();
+
+Bucket bucket = proxyManager.getProxy(123L, () -> configuration);
+----
+
+Custom key mappers must produce valid memcached keys because `Mapper.toString(key)` is used as the memcached key.
+
+===== Important notes
+* `MemcachedCompareAndSwapBasedProxyManager` supports both the synchronous and the asynchronous `Bucket` API (`isAsyncModeSupported()` returns `true`)
+* Expired buckets rely on memcached's native per-key TTL
+* Expiration values below one second are rounded up to one second
+* Bucket state is stored as raw binary data, bypassing Java serialization
