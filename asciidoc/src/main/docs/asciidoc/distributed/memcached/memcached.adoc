@@ -3,10 +3,8 @@
 Bucket4j provides integration with Memcached through the https://github.com/spotify/folsom[folsom] client.
 
 Memcached has no server-side scripting/RPC capability, so the bucket state transition cannot be executed atomically on the server as it is for Redis or JDBC-based backends.
-Instead, two complementary strategies are provided, both computing the state transition on the client:
-
-* A *compare-and-swap* based implementation, built on top of memcached's native `gets`/`cas`/`add` commands. This is the recommended choice for most use cases, and since folsom's API is natively based on `CompletionStage`, it supports both the synchronous and the asynchronous `Bucket` API.
-* A *lock* based implementation, which emulates a distributed mutex on top of the `add` command (which succeeds only if the key is currently absent) and uses it to guard a plain read-modify-write cycle. Memcached itself has no native distributed locking primitive. Because lock acquisition inherently requires a blocking retry loop, only the synchronous `Bucket` API is supported.
+Instead, the state transition is computed on the client and persisted using memcached's native `gets`/`cas`/`add` commands to implement optimistic (compare-and-swap) concurrency control.
+Since folsom's API is natively based on `CompletionStage`, this proxy manager supports both the synchronous and the asynchronous `Bucket` API.
 
 Bucket state is stored as raw binary data. Expiration is delegated to memcached's native per-key TTL.
 
@@ -56,24 +54,6 @@ AsyncBucketProxy bucketProxy = proxyManager.asAsync().getProxy("user-123", () ->
 CompletableFuture<ConsumptionProbe> probeFuture = bucketProxy.tryConsumeAndReturnRemaining(1);
 ----
 
-===== Example of Bucket instantiation via MemcachedLockBasedProxyManager
-[source, java]
-----
-MemcacheClient<byte[]> client = MemcacheClientBuilder.newByteArrayClient()
-    .withAddress("127.0.0.1", 11211)
-    .connectAscii();
-ConnectFuture.connectFuture(client).toCompletableFuture().get();
-
-MemcachedLockBasedProxyManager<String> proxyManager =
-    Bucket4jMemcached.lockBasedBuilder(client)
-        .lockExpiration(ofSeconds(30))
-        .lockPollPeriod(ofMillis(50))
-        .build();
-
-Bucket bucketProxy = proxyManager.getProxy("user-123", () -> configuration);
-----
-`lockExpiration` bounds how long the mutex that guards a bucket may stay held, protecting against a permanently stuck lock if a client crashes while holding it; `lockPollPeriod` controls how often a client that failed to acquire the mutex retries. Under heavy contention on the same key, the lock-based implementation avoids the compare-and-swap retry loop, at the cost of the extra `add`/`delete` round-trip used to acquire/release the mutex. Unlike the compare-and-swap-based implementation, this proxy manager only supports the synchronous `Bucket` API, because `LockBasedTransaction` has no asynchronous variant.
-
 ===== Custom key mapping
 By default, the integration uses String keys.
 You can specify custom key types using a Mapper:
@@ -89,8 +69,7 @@ Bucket bucket = proxyManager.getProxy(123L, () -> configuration);
 Custom key mappers must produce valid memcached keys because `Mapper.toString(key)` is used as the memcached key.
 
 ===== Important notes
-* `MemcachedCompareAndSwapBasedProxyManager` supports both the synchronous and the asynchronous `Bucket` API (`isAsyncModeSupported()` returns `true`); `MemcachedLockBasedProxyManager` supports only the synchronous API, because lock acquisition inherently requires a blocking retry loop
+* `MemcachedCompareAndSwapBasedProxyManager` supports both the synchronous and the asynchronous `Bucket` API (`isAsyncModeSupported()` returns `true`)
 * Expired buckets rely on memcached's native per-key TTL
 * Expiration values below one second are rounded up to one second
-* For `MemcachedLockBasedProxyManager`, the lock key is derived from the data key by appending `.bucket4j-lock`; make sure custom key mappers do not produce keys that collide with this suffix
 * Bucket state is stored as raw binary data, bypassing Java serialization

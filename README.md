@@ -100,7 +100,6 @@ In addition to local in-memory buckets, the Bucket4j supports clustered usage sc
 | Back-end                                | Async supported |                                  Documentation link                                   |
 |:-----------------------------------------|:---------------:|:---------------------------------------------------------------------------------------:|
 | ```Memcached/compare-and-swap based```   |       Yes       | [bucket4j-memcached](https://bucket4j.github.io/8.20.0/toc.html#bucket4j-memcached)   |
-| ```Memcached/lock based```               |       No        | [bucket4j-memcached](https://bucket4j.github.io/8.20.0/toc.html#bucket4j-memcached)   |
 
 ### JDBC back-ends
 | Back-end                   |                                  Documentation link                                   |

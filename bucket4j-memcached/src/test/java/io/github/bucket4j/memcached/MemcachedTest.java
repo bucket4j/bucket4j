@@ -1,7 +1,6 @@
 package io.github.bucket4j.memcached;
 
 import java.io.IOException;
-import java.time.Duration;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
@@ -39,13 +38,6 @@ public class MemcachedTest extends AbstractDistributedBucketTest {
                 "MemcachedCompareAndSwapBasedProxyManager",
                 () -> UUID.randomUUID().toString(),
                 () -> Bucket4jMemcached.casBasedBuilder(client)
-            ).checkExpiration(),
-            new ProxyManagerSpec<>(
-                "MemcachedLockBasedProxyManager",
-                () -> UUID.randomUUID().toString(),
-                () -> Bucket4jMemcached.lockBasedBuilder(client)
-                    .lockExpiration(Duration.ofSeconds(5))
-                    .lockPollPeriod(Duration.ofMillis(10))
             ).checkExpiration()
         );
     }
@@ -61,3 +53,4 @@ public class MemcachedTest extends AbstractDistributedBucketTest {
     }
 
 }
+

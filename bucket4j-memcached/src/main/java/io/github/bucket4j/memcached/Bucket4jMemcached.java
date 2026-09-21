@@ -19,7 +19,6 @@
  */
 package io.github.bucket4j.memcached;
 
-import java.time.Duration;
 import java.util.Objects;
 
 import com.spotify.folsom.MemcacheClient;
@@ -27,7 +26,6 @@ import com.spotify.folsom.MemcacheClient;
 import io.github.bucket4j.distributed.proxy.AbstractProxyManagerBuilder;
 import io.github.bucket4j.distributed.serialization.Mapper;
 import io.github.bucket4j.memcached.cas.MemcachedCompareAndSwapBasedProxyManager;
-import io.github.bucket4j.memcached.lock.MemcachedLockBasedProxyManager;
 
 import static io.github.bucket4j.distributed.serialization.Mapper.STRING;
 
@@ -35,16 +33,11 @@ import static io.github.bucket4j.distributed.serialization.Mapper.STRING;
  * Entry point for Memcached integration that uses the <a href="https://github.com/spotify/folsom">folsom</a> client.
  *
  * <p>
- * Memcached does not provide server-side scripting/RPC capabilities, therefore two complementary strategies are provided:
- * <ul>
- *     <li>{@link #casBasedBuilder(MemcacheClient)} - uses memcached's native {@code gets}/{@code cas}/{@code add} commands
- *     to implement optimistic concurrency control. Works against any memcached-protocol-compatible server and does not require
- *     server-side locking support. Supports both the synchronous and the asynchronous {@code Bucket} API, since folsom's own
- *     API is natively based on {@link java.util.concurrent.CompletionStage}.</li>
- *     <li>{@link #lockBasedBuilder(MemcacheClient)} - emulates a distributed mutex on top of the {@code add} command
- *     (which succeeds only if the key is currently absent) and uses it to guard a plain read-modify-write cycle. Only
- *     the synchronous {@code Bucket} API is supported, because lock acquisition inherently requires a blocking retry loop.</li>
- * </ul>
+ * Memcached does not provide server-side scripting/RPC capabilities, therefore the bucket state transition is computed
+ * on the client and persisted using memcached's native {@code gets}/{@code cas}/{@code add} commands to implement
+ * optimistic concurrency control. Works against any memcached-protocol-compatible server and does not require
+ * server-side locking support. Supports both the synchronous and the asynchronous {@code Bucket} API, since folsom's
+ * own API is natively based on {@link java.util.concurrent.CompletionStage}.
  */
 public class Bucket4jMemcached {
 
@@ -70,30 +63,6 @@ public class Bucket4jMemcached {
      */
     public static <K> MemcachedCompareAndSwapBasedProxyManagerBuilder<K> casBasedBuilder(MemcacheClient<byte[]> client, Mapper<K> keyMapper) {
         return new MemcachedCompareAndSwapBasedProxyManagerBuilder<>(client, keyMapper);
-    }
-
-    /**
-     * Returns the builder for {@link MemcachedLockBasedProxyManager}.
-     *
-     * @param client folsom client that holds the connection(s) to the memcached cluster.
-     *
-     * @return new instance of {@link MemcachedLockBasedProxyManagerBuilder}
-     */
-    public static MemcachedLockBasedProxyManagerBuilder<String> lockBasedBuilder(MemcacheClient<byte[]> client) {
-        return new MemcachedLockBasedProxyManagerBuilder<>(client, STRING);
-    }
-
-    /**
-     * Returns the builder for {@link MemcachedLockBasedProxyManager}.
-     *
-     * @param client folsom client that holds the connection(s) to the memcached cluster.
-     * @param keyMapper object responsible for converting primary keys to memcached keys.
-     * @param <K> type of primary key
-     *
-     * @return new instance of {@link MemcachedLockBasedProxyManagerBuilder}
-     */
-    public static <K> MemcachedLockBasedProxyManagerBuilder<K> lockBasedBuilder(MemcacheClient<byte[]> client, Mapper<K> keyMapper) {
-        return new MemcachedLockBasedProxyManagerBuilder<>(client, keyMapper);
     }
 
     public static class MemcachedCompareAndSwapBasedProxyManagerBuilder<K> extends AbstractProxyManagerBuilder<K, MemcachedCompareAndSwapBasedProxyManager<K>, MemcachedCompareAndSwapBasedProxyManagerBuilder<K>> {
@@ -134,91 +103,6 @@ public class Bucket4jMemcached {
         @Override
         public MemcachedCompareAndSwapBasedProxyManager<K> build() {
             return new MemcachedCompareAndSwapBasedProxyManager<>(this);
-        }
-    }
-
-    public static class MemcachedLockBasedProxyManagerBuilder<K> extends AbstractProxyManagerBuilder<K, MemcachedLockBasedProxyManager<K>, MemcachedLockBasedProxyManagerBuilder<K>> {
-
-        private static final long DEFAULT_LOCK_EXPIRATION_SECONDS = 30;
-        private static final long DEFAULT_LOCK_POLL_PERIOD_MILLIS = 50;
-
-        private final MemcacheClient<byte[]> client;
-        private Mapper<K> keyMapper;
-        private long lockExpirationSeconds = DEFAULT_LOCK_EXPIRATION_SECONDS;
-        private long lockPollPeriodMillis = DEFAULT_LOCK_POLL_PERIOD_MILLIS;
-
-        private MemcachedLockBasedProxyManagerBuilder(MemcacheClient<byte[]> client, Mapper<K> keyMapper) {
-            this.client = Objects.requireNonNull(client);
-            this.keyMapper = Objects.requireNonNull(keyMapper);
-        }
-
-        public MemcacheClient<byte[]> getClient() {
-            return client;
-        }
-
-        /**
-         * Specifies the type of key.
-         *
-         * @param keyMapper object responsible for converting primary keys to memcached keys.
-         *
-         * @return this builder instance
-         */
-        public <K2> MemcachedLockBasedProxyManagerBuilder<K2> keyMapper(Mapper<K2> keyMapper) {
-            this.keyMapper = (Mapper) Objects.requireNonNull(keyMapper);
-            return (MemcachedLockBasedProxyManagerBuilder<K2>) this;
-        }
-
-        public Mapper<K> getKeyMapper() {
-            return keyMapper;
-        }
-
-        /**
-         * Specifies for how long the mutex that guards a bucket is allowed to stay held in memcached before it is
-         * automatically released. Protects against a permanently stuck lock in case a client crashes while holding it.
-         *
-         * <p> By default, the lock expiration is 30 seconds.
-         *
-         * @param lockExpiration duration after which a held lock is automatically released by memcached.
-         *
-         * @return this builder instance
-         */
-        public MemcachedLockBasedProxyManagerBuilder<K> lockExpiration(Duration lockExpiration) {
-            Objects.requireNonNull(lockExpiration);
-            this.lockExpirationSeconds = Math.max(1, lockExpiration.toSeconds());
-            return this;
-        }
-
-        public long getLockExpirationSeconds() {
-            return lockExpirationSeconds;
-        }
-
-        /**
-         * Specifies how often a client that failed to acquire the mutex retries acquiring it.
-         *
-         * <p> By default, the poll period is 50 milliseconds.
-         *
-         * @param lockPollPeriod delay between successive attempts to acquire the mutex.
-         *
-         * @return this builder instance
-         */
-        public MemcachedLockBasedProxyManagerBuilder<K> lockPollPeriod(Duration lockPollPeriod) {
-            Objects.requireNonNull(lockPollPeriod);
-            this.lockPollPeriodMillis = Math.max(1, lockPollPeriod.toMillis());
-            return this;
-        }
-
-        public long getLockPollPeriodMillis() {
-            return lockPollPeriodMillis;
-        }
-
-        @Override
-        public boolean isExpireAfterWriteSupported() {
-            return true;
-        }
-
-        @Override
-        public MemcachedLockBasedProxyManager<K> build() {
-            return new MemcachedLockBasedProxyManager<>(this);
         }
     }
 
