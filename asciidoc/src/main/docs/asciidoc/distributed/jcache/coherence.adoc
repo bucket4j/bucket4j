@@ -1,7 +1,7 @@
 [[bucket4j-coherence, Bucket4j-Coherence]]
 ==== Oracle Coherence integration
 ===== Dependencies
-To use the ``bucket4j-coherence`` extension, add the following dependency:
+To use the Bucket4j extension with a current version of Oracle Coherence, add the following dependency:
 [source, xml, subs=attributes+]
 ----
 <dependency>
@@ -10,6 +10,20 @@ To use the ``bucket4j-coherence`` extension, add the following dependency:
     <version>{revnumber}</version>
 </dependency>
 ----
+If you are using a legacy ``Coherence 21.x`` release, add this dependency instead:
+[source, xml, subs=attributes+]
+----
+<dependency>
+    <groupId>com.bucket4j</groupId>
+    <artifactId>bucket4j_jdk17-coherence-21</artifactId>
+    <version>{revnumber}</version>
+</dependency>
+----
+
+===== General compatibility matrix principles
+* Bucket4j's authors do not continuously monitor new Coherence releases, so there can be periods when no Bucket4j version is compatible with a newly released Coherence version.
+Log an issue in the https://github.com/bucket4j/bucket4j/issues[bug tracker] if you hit this - adding support for a new Coherence version is usually an easy fix.
+* Integrations with legacy Coherence versions are not removed without a clear reason. Even if you work at a large enterprise that does not update its infrastructure often, you still get Bucket4j's new features on legacy Coherence releases.
 
 ===== Example of Bucket instantiation
 [source, java]
