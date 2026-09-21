@@ -2,7 +2,6 @@ package io.github.bucket4j.core_algorithms
 
 import io.github.bucket4j.Bandwidth
 import io.github.bucket4j.Bucket
-import io.github.bucket4j.Refill
 import io.github.bucket4j.mock.TimeMeterMock
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.longs.shouldBeExactly
@@ -13,8 +12,11 @@ import java.util.concurrent.TimeUnit
 class FixedIntervalRefillSpecification : FunSpec({
 
     test("basic test of fixed interval refill") {
-        val refill = Refill.intervally(9, Duration.ofNanos(10))
-        val bandwidth = Bandwidth.classic(9, refill).withInitialTokens(0)
+        val bandwidth = Bandwidth.builder()
+            .capacity(9)
+            .refillIntervally(9, Duration.ofNanos(10))
+            .initialTokens(0)
+            .build()
         val mockTimer = TimeMeterMock(0)
         val bucket: Bucket = Bucket.builder()
             .withCustomTimePrecision(mockTimer)
@@ -34,8 +36,16 @@ class FixedIntervalRefillSpecification : FunSpec({
     }
 
     test("complex test of fixed interval refill") {
-        val bandwidth1 = Bandwidth.classic(9, Refill.intervally(5, Duration.ofNanos(6))).withInitialTokens(0)
-        val bandwidth2 = Bandwidth.classic(12, Refill.intervally(4, Duration.ofNanos(5))).withInitialTokens(0)
+        val bandwidth1 = Bandwidth.builder()
+            .capacity(9)
+            .refillIntervally(5, Duration.ofNanos(6))
+            .initialTokens(0)
+            .build()
+        val bandwidth2 = Bandwidth.builder()
+            .capacity(12)
+            .refillIntervally(4, Duration.ofNanos(5))
+            .initialTokens(0)
+            .build()
         val mockTimer = TimeMeterMock(0)
         val bucket: Bucket = Bucket.builder()
             .withCustomTimePrecision(mockTimer)
@@ -65,8 +75,11 @@ class FixedIntervalRefillSpecification : FunSpec({
     }
 
     test("refill time estimation, https://github.com/bucket4j/bucket4j/issues/71") {
-        val refill = Refill.intervally(10, Duration.ofMinutes(1))
-        val bandwidth = Bandwidth.classic(10, refill).withInitialTokens(0)
+        val bandwidth = Bandwidth.builder()
+            .capacity(10)
+            .refillIntervally(10, Duration.ofMinutes(1))
+            .initialTokens(0)
+            .build()
         val mockTimer = TimeMeterMock(0)
         val bucket: Bucket = Bucket.builder()
             .withCustomTimePrecision(mockTimer)
