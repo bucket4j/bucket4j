@@ -95,10 +95,10 @@ public abstract class AbstractLockBasedProxyManager<K> extends AbstractProxyMana
         }
 
         try {
-            MutableBucketEntry entry = new MutableBucketEntry(persistedDataOnBeginOfTransaction, getClientSideConfig().getSerializationStyle());
+            MutableBucketEntry entry = new MutableBucketEntry(persistedDataOnBeginOfTransaction);
             CommandResult<T> result = command.execute(entry, super.getClientSideTime());
             if (entry.isStateModified()) {
-                byte[] bytes = entry.getStateBytes(request.getBackwardCompatibilityVersion(), getClientSideConfig().getSerializationStyle());
+                byte[] bytes = entry.getStateBytes(request.getBackwardCompatibilityVersion());
                 if (persistedDataOnBeginOfTransaction == null) {
                     timeout.run(requestTimeout -> transaction.create(bytes, entry.get(), requestTimeout));
                 } else {

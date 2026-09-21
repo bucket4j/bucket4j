@@ -39,6 +39,7 @@ package io.github.bucket4j.grid.ignite.thick;
 import io.github.bucket4j.distributed.proxy.AbstractProxyManager;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.remote.*;
+import io.github.bucket4j.distributed.serialization.SerializationStyle;
 import io.github.bucket4j.distributed.versioning.Version;
 import io.github.bucket4j.grid.ignite.Bucket4jIgnite;
 
@@ -91,7 +92,7 @@ public class IgniteProxyManager<K> extends AbstractProxyManager<K> {
     public <T> CommandResult<T> execute(K key, Request<T> request) {
         IgniteProcessor<K> entryProcessor = new IgniteProcessor<>(request);
         byte[] resultBytes = cache.invoke(key, entryProcessor);
-        return deserializeResult(resultBytes, request.getBackwardCompatibilityVersion());
+        return deserializeResult(resultBytes, request.getBackwardCompatibilityVersion(), SerializationStyle.BYTE_BUFFER);
     }
 
     @Override
@@ -113,7 +114,7 @@ public class IgniteProxyManager<K> extends AbstractProxyManager<K> {
         igniteFuture.listen((IgniteInClosure<IgniteFuture<byte[]>>) completedIgniteFuture -> {
             try {
                 byte[] resultBytes = completedIgniteFuture.get();
-                CommandResult<T> result = deserializeResult(resultBytes, backwardCompatibilityVersion);
+                CommandResult<T> result = deserializeResult(resultBytes, backwardCompatibilityVersion, SerializationStyle.BYTE_BUFFER);
                 completableFuture.complete(result);
             } catch (Throwable t) {
                 completableFuture.completeExceptionally(t);
@@ -145,7 +146,7 @@ public class IgniteProxyManager<K> extends AbstractProxyManager<K> {
         private final byte[] requestBytes;
 
         private IgniteProcessor(Request<?> request) {
-            this.requestBytes = serializeRequest(request);
+            this.requestBytes = serializeRequest(request, SerializationStyle.BYTE_BUFFER);
         }
 
         @Override

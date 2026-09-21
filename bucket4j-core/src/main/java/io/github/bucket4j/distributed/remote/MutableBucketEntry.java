@@ -38,11 +38,7 @@ public class MutableBucketEntry {
     }
 
     public MutableBucketEntry(byte[] originalStateBytes) {
-        this.state = originalStateBytes == null? null : deserializeState(originalStateBytes);
-    }
-
-    public MutableBucketEntry(byte[] originalStateBytes, SerializationStyle serializationStyle) {
-        this.state = originalStateBytes == null? null : deserializeState(originalStateBytes, serializationStyle);
+        this.state = originalStateBytes == null? null : deserializeState(originalStateBytes, SerializationStyle.BYTE_BUFFER);
     }
 
     public boolean exists() {
@@ -66,11 +62,7 @@ public class MutableBucketEntry {
     }
 
     public byte[] getStateBytes(Version backwardCompatibilityVersion) {
-        return serializeState(get(), backwardCompatibilityVersion);
-    }
-
-    public byte[] getStateBytes(Version backwardCompatibilityVersion, SerializationStyle serializationStyle) {
-        return serializeState(get(), backwardCompatibilityVersion, serializationStyle);
+        return serializeState(get(), backwardCompatibilityVersion, SerializationStyle.BYTE_BUFFER);
     }
 
 }

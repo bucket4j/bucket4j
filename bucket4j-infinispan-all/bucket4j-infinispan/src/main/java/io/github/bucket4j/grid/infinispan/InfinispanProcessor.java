@@ -26,6 +26,7 @@ import io.github.bucket4j.distributed.remote.AbstractBinaryTransaction;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.distributed.remote.Request;
 import io.github.bucket4j.distributed.serialization.InternalSerializationHelper;
+import io.github.bucket4j.distributed.serialization.SerializationStyle;
 import io.github.bucket4j.util.ComparableByContent;
 import org.infinispan.functional.EntryView;
 import org.infinispan.functional.MetaParam;
@@ -41,7 +42,7 @@ public class InfinispanProcessor<K, R> implements
     private final byte[] requestBytes;
 
     public InfinispanProcessor(Request<R> request) {
-        this.requestBytes = InternalSerializationHelper.serializeRequest(request);
+        this.requestBytes = InternalSerializationHelper.serializeRequest(request, SerializationStyle.BYTE_BUFFER);
     }
 
     public InfinispanProcessor(byte[] requestBytes) {

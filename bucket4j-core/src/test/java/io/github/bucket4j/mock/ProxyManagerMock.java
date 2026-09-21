@@ -22,6 +22,7 @@ import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.proxy.AbstractProxyManager;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.remote.*;
+import io.github.bucket4j.distributed.serialization.SerializationStyle;
 import io.github.bucket4j.distributed.versioning.Version;
 
 import java.util.ArrayList;
@@ -30,11 +31,14 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 import static io.github.bucket4j.distributed.serialization.InternalSerializationHelper.deserializeResult;
 import static io.github.bucket4j.distributed.serialization.InternalSerializationHelper.serializeRequest;
+import static io.github.bucket4j.distributed.serialization.SerializationStyle.BYTE_BUFFER;
+import static io.github.bucket4j.distributed.serialization.SerializationStyle.DATA_OUTPUT;
 
 public class ProxyManagerMock<K> extends AbstractProxyManager<K> {
 
@@ -187,7 +191,7 @@ public class ProxyManagerMock<K> extends AbstractProxyManager<K> {
             }
 
 
-            byte[] requestBytes = serializeRequest(request);
+            byte[] requestBytes = serializeRequest(request, ThreadLocalRandom.current().nextBoolean() ? BYTE_BUFFER : DATA_OUTPUT);
             AbstractBinaryTransaction transaction = new AbstractBinaryTransaction(requestBytes) {
                 @Override
                 protected byte[] getRawState() {
@@ -216,7 +220,7 @@ public class ProxyManagerMock<K> extends AbstractProxyManager<K> {
                     throw new RuntimeException(e);
                 }
             }
-            return deserializeResult(responseBytes, backwardCompatibilityVersion);
+            return deserializeResult(responseBytes, backwardCompatibilityVersion, ThreadLocalRandom.current().nextBoolean() ? BYTE_BUFFER : DATA_OUTPUT);
         } finally {
             executionLock.unlock();
         }

@@ -40,6 +40,7 @@ import io.github.bucket4j.distributed.proxy.AbstractProxyManager;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.remote.*;
 import io.github.bucket4j.distributed.serialization.InternalSerializationHelper;
+import io.github.bucket4j.distributed.serialization.SerializationStyle;
 
 import javax.cache.Cache;
 import javax.cache.CacheManager;
@@ -98,7 +99,7 @@ public class JCacheProxyManager<K> extends AbstractProxyManager<K> {
     public <T> CommandResult<T> execute(K key, Request<T> request) {
         EntryProcessor<K, byte[], byte[]> entryProcessor = preferLambdaStyle? createLambdaProcessor(request) : new BucketProcessor<>(request);
         byte[] resultBytes = cache.invoke(key, entryProcessor);
-        return InternalSerializationHelper.deserializeResult(resultBytes, request.getBackwardCompatibilityVersion());
+        return InternalSerializationHelper.deserializeResult(resultBytes, request.getBackwardCompatibilityVersion(), SerializationStyle.BYTE_BUFFER);
     }
 
     @Override
@@ -165,7 +166,7 @@ public class JCacheProxyManager<K> extends AbstractProxyManager<K> {
     }
 
     public <T> EntryProcessor<K, byte[], byte[]> createLambdaProcessor(Request<T> request) {
-        byte[] serializedRequest = InternalSerializationHelper.serializeRequest(request);
+        byte[] serializedRequest = InternalSerializationHelper.serializeRequest(request, SerializationStyle.BYTE_BUFFER);
         return  (Serializable & EntryProcessor<K, byte[], byte[]>) (mutableEntry, objects)
                 -> new JCacheTransaction(mutableEntry, serializedRequest).execute();
     }
@@ -178,7 +179,7 @@ public class JCacheProxyManager<K> extends AbstractProxyManager<K> {
         private final byte[] serializedRequest;
 
         public BucketProcessor(Request<T> request) {
-            this.serializedRequest = InternalSerializationHelper.serializeRequest(request);
+            this.serializedRequest = InternalSerializationHelper.serializeRequest(request, SerializationStyle.BYTE_BUFFER);
         }
 
         @Override

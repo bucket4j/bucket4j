@@ -32,6 +32,7 @@ import org.apache.geode.cache.execute.ResultCollector;
 import io.github.bucket4j.distributed.proxy.AbstractProxyManager;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.Request;
+import io.github.bucket4j.distributed.serialization.SerializationStyle;
 
 import static io.github.bucket4j.distributed.serialization.InternalSerializationHelper.deserializeResult;
 import static io.github.bucket4j.distributed.serialization.InternalSerializationHelper.serializeRequest;
@@ -61,13 +62,13 @@ public class GeodeFunctionProxyManager<K> extends AbstractProxyManager<K> {
 
     @Override
     protected <T> CommandResult<T> execute(K key, Request<T> request) {
-        byte[] requestBytes = serializeRequest(request);
+        byte[] requestBytes = serializeRequest(request, SerializationStyle.BYTE_BUFFER);
         Execution<byte[], byte[], List<byte[]>> execution = FunctionService.<byte[], byte[], List<byte[]>>onRegion(region)
             .withFilter(Collections.singleton(key))
             .setArguments(requestBytes);
         ResultCollector<byte[], List<byte[]>> resultCollector = execution.execute(new GeodeBucketFunction<K>());
         byte[] resultBytes = resultCollector.getResult().get(0);
-        return deserializeResult(resultBytes, request.getBackwardCompatibilityVersion());
+        return deserializeResult(resultBytes, request.getBackwardCompatibilityVersion(), SerializationStyle.BYTE_BUFFER);
     }
 
     @Override

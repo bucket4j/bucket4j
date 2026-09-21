@@ -43,7 +43,7 @@ import io.github.bucket4j.distributed.versioning.Versions;
 public class ClientSideConfig {
 
     private static final ClientSideConfig defaultConfig = new ClientSideConfig(Versions.getLatest(), Optional.empty(),
-        ExecutionStrategy.SAME_TREAD, Optional.empty(), Optional.empty(), BucketListener.NOPE, RecoveryStrategy.RECONSTRUCT, Optional.empty(), Optional.empty(), SerializationStyle.DATA_OUTPUT);
+        ExecutionStrategy.SAME_TREAD, Optional.empty(), Optional.empty(), BucketListener.NOPE, RecoveryStrategy.RECONSTRUCT, Optional.empty(), Optional.empty());
 
     private final Version backwardCompatibilityVersion;
     private final Optional<TimeMeter> clientSideClock;
@@ -60,8 +60,6 @@ public class ClientSideConfig {
     private final Optional<Integer> maxRetries;
     private final Optional<RetryStrategy> retryStrategy;
 
-    private final SerializationStyle serializationStyle;
-
     protected ClientSideConfig(Version backwardCompatibilityVersion, Optional<TimeMeter> clientSideClock,
                                ExecutionStrategy executionStrategy,
                                Optional<Long> requestTimeoutNanos,
@@ -69,8 +67,7 @@ public class ClientSideConfig {
                                BucketListener defaultListener,
                                RecoveryStrategy defaultRecoveryStrategy,
                                Optional<Integer> maxRetries,
-                               Optional<RetryStrategy> retryStrategy,
-                               SerializationStyle serializationStyle) {
+                               Optional<RetryStrategy> retryStrategy) {
         this.backwardCompatibilityVersion = Objects.requireNonNull(backwardCompatibilityVersion);
         this.clientSideClock = Objects.requireNonNull(clientSideClock);
         this.executionStrategy = executionStrategy;
@@ -80,7 +77,6 @@ public class ClientSideConfig {
         this.defaultRecoveryStrategy = Objects.requireNonNull(defaultRecoveryStrategy);
         this.maxRetries = Objects.requireNonNull(maxRetries);
         this.retryStrategy = Objects.requireNonNull(retryStrategy);
-        this.serializationStyle = Objects.requireNonNull(serializationStyle);
     }
 
     /**
@@ -110,7 +106,7 @@ public class ClientSideConfig {
      * @return new instance of {@link ClientSideConfig} with configured {@code backwardCompatibilityVersion}.
      */
     public ClientSideConfig backwardCompatibleWith(Version backwardCompatibilityVersion) {
-        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, requestTimeoutNanos, expirationStrategy, defaultListener, defaultRecoveryStrategy, maxRetries, retryStrategy, serializationStyle);
+        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, requestTimeoutNanos, expirationStrategy, defaultListener, defaultRecoveryStrategy, maxRetries, retryStrategy);
     }
 
     /**
@@ -128,7 +124,7 @@ public class ClientSideConfig {
      * @return new instance of {@link ClientSideConfig} with configured {@code clientClock}.
      */
     public ClientSideConfig withClientClock(TimeMeter clientClock) {
-        return new ClientSideConfig(backwardCompatibilityVersion, Optional.of(clientClock), executionStrategy, requestTimeoutNanos, expirationStrategy, defaultListener, defaultRecoveryStrategy, maxRetries, retryStrategy, serializationStyle);
+        return new ClientSideConfig(backwardCompatibilityVersion, Optional.of(clientClock), executionStrategy, requestTimeoutNanos, expirationStrategy, defaultListener, defaultRecoveryStrategy, maxRetries, retryStrategy);
     }
 
     /**
@@ -142,7 +138,7 @@ public class ClientSideConfig {
      * @return new instance of {@link ClientSideConfig} with configured {@code clientClock}.
      */
     public ClientSideConfig withExecutionStrategy(ExecutionStrategy executionStrategy) {
-        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, requestTimeoutNanos, expirationStrategy, defaultListener, defaultRecoveryStrategy, maxRetries, retryStrategy, serializationStyle);
+        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, requestTimeoutNanos, expirationStrategy, defaultListener, defaultRecoveryStrategy, maxRetries, retryStrategy);
     }
 
     /**
@@ -165,7 +161,7 @@ public class ClientSideConfig {
             throw BucketExceptions.nonPositiveRequestTimeout(requestTimeout);
         }
         long requestTimeoutNanos = requestTimeout.toNanos();
-        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, Optional.of(requestTimeoutNanos), expirationStrategy, defaultListener, defaultRecoveryStrategy, maxRetries, retryStrategy, serializationStyle);
+        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, Optional.of(requestTimeoutNanos), expirationStrategy, defaultListener, defaultRecoveryStrategy, maxRetries, retryStrategy);
     }
 
     /**
@@ -178,7 +174,7 @@ public class ClientSideConfig {
      * @return new instance of {@link ClientSideConfig} with configured {@code expirationStrategy}.
      */
     public ClientSideConfig withExpirationAfterWriteStrategy(ExpirationAfterWriteStrategy expirationStrategy) {
-        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, requestTimeoutNanos, Optional.of(expirationStrategy), defaultListener, defaultRecoveryStrategy, maxRetries, retryStrategy, serializationStyle);
+        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, requestTimeoutNanos, Optional.of(expirationStrategy), defaultListener, defaultRecoveryStrategy, maxRetries, retryStrategy);
     }
 
     /**
@@ -199,7 +195,7 @@ public class ClientSideConfig {
         if (maxRetries < 1) {
             throw BucketExceptions.nonPositiveMaxRetries(maxRetries);
         }
-        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, requestTimeoutNanos, expirationStrategy, defaultListener, defaultRecoveryStrategy, Optional.of(maxRetries), retryStrategy, serializationStyle);
+        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, requestTimeoutNanos, expirationStrategy, defaultListener, defaultRecoveryStrategy, Optional.of(maxRetries), retryStrategy);
     }
 
     /**
@@ -226,7 +222,7 @@ public class ClientSideConfig {
      * @return new instance of {@link ClientSideConfig} with configured {@code retryStrategy}.
      */
     public ClientSideConfig withRetryStrategy(RetryStrategy retryStrategy) {
-        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, requestTimeoutNanos, expirationStrategy, defaultListener, defaultRecoveryStrategy, maxRetries, Optional.of(retryStrategy), serializationStyle);
+        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, requestTimeoutNanos, expirationStrategy, defaultListener, defaultRecoveryStrategy, maxRetries, Optional.of(retryStrategy));
     }
 
     /**
@@ -247,7 +243,7 @@ public class ClientSideConfig {
      * @return new instance of {@link ClientSideConfig} with configured {@code serializationStyle}.
      */
     public ClientSideConfig withSerializationStyle(SerializationStyle serializationStyle) {
-        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, requestTimeoutNanos, expirationStrategy, defaultListener, defaultRecoveryStrategy, maxRetries, retryStrategy, Objects.requireNonNull(serializationStyle));
+        return new ClientSideConfig(backwardCompatibilityVersion, clientSideClock, executionStrategy, requestTimeoutNanos, expirationStrategy, defaultListener, defaultRecoveryStrategy, maxRetries, retryStrategy);
     }
 
     /**
@@ -315,17 +311,6 @@ public class ClientSideConfig {
      */
     public Optional<RetryStrategy> getRetryStrategy() {
         return retryStrategy;
-    }
-
-    /**
-     * Returns the serialization style that should be used for serializing/deserializing bucket state on the client side.
-     *
-     * @return the serialization style that should be used for serializing/deserializing bucket state on the client side
-     *
-     * @see #withSerializationStyle(SerializationStyle)
-     */
-    public SerializationStyle getSerializationStyle() {
-        return serializationStyle;
     }
 
     public <K> RemoteBucketBuilder<K> apply(DefaultRemoteBucketBuilder builder) {

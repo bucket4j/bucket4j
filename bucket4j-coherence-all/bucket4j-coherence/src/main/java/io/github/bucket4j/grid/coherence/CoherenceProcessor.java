@@ -28,6 +28,7 @@ import io.github.bucket4j.distributed.remote.AbstractBinaryTransaction;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.distributed.remote.Request;
 import io.github.bucket4j.distributed.serialization.InternalSerializationHelper;
+import io.github.bucket4j.distributed.serialization.SerializationStyle;
 import io.github.bucket4j.util.ComparableByContent;
 
 import java.io.Serial;
@@ -43,7 +44,7 @@ public class CoherenceProcessor<K, T> extends AbstractProcessor<K, byte[], byte[
     private final byte[] requestBytes;
 
     public CoherenceProcessor(Request<T> request) {
-        this.requestBytes = InternalSerializationHelper.serializeRequest(request);
+        this.requestBytes = InternalSerializationHelper.serializeRequest(request, SerializationStyle.BYTE_BUFFER);
     }
 
     public CoherenceProcessor(byte[] requestBytes) {

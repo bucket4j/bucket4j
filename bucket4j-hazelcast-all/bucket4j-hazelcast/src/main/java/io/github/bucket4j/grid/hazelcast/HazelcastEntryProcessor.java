@@ -26,6 +26,7 @@ import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
 import io.github.bucket4j.distributed.remote.AbstractBinaryTransaction;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.distributed.remote.Request;
+import io.github.bucket4j.distributed.serialization.SerializationStyle;
 import io.github.bucket4j.util.ComparableByContent;
 
 import java.io.Serial;
@@ -44,7 +45,7 @@ public class HazelcastEntryProcessor<K, T> implements EntryProcessor<K, byte[], 
     private EntryProcessor<K, byte[], byte[]> backupProcessor;
 
     public HazelcastEntryProcessor(Request<T> request) {
-        this.requestBytes = serializeRequest(request);
+        this.requestBytes = serializeRequest(request, SerializationStyle.BYTE_BUFFER);
     }
 
     public HazelcastEntryProcessor(byte[] requestBytes) {

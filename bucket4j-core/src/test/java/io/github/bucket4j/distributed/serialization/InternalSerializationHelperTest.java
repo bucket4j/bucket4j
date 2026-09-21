@@ -31,8 +31,8 @@ public class InternalSerializationHelperTest {
 
     @Test
     public void defaultStyleRoundTripsState() {
-        byte[] bytes = InternalSerializationHelper.serializeState(remoteBucketState, Versions.getLatest());
-        RemoteBucketState deserialized = InternalSerializationHelper.deserializeState(bytes);
+        byte[] bytes = InternalSerializationHelper.serializeState(remoteBucketState, Versions.getLatest(), SerializationStyle.BYTE_BUFFER);
+        RemoteBucketState deserialized = InternalSerializationHelper.deserializeState(bytes, SerializationStyle.BYTE_BUFFER);
         assertTrue(ComparableByContent.equals(remoteBucketState, deserialized));
     }
 

@@ -105,13 +105,13 @@ public abstract class AbstractCompareAndSwapBasedProxyManager<K> extends Abstrac
     private <T> CommandResult<T> execute(Request<T> request, CompareAndSwapOperation operation, Timeout timeout) {
         RemoteCommand<T> command = request.getCommand();
         byte[] originalStateBytes = timeout.call(operation::getStateData).orElse(null);
-        MutableBucketEntry entry = new MutableBucketEntry(originalStateBytes, getClientSideConfig().getSerializationStyle());
+        MutableBucketEntry entry = new MutableBucketEntry(originalStateBytes);
         CommandResult<T> result = command.execute(entry, getClientSideTime());
         if (!entry.isStateModified()) {
             return result;
         }
 
-        byte[] newStateBytes = entry.getStateBytes(request.getBackwardCompatibilityVersion(), getClientSideConfig().getSerializationStyle());
+        byte[] newStateBytes = entry.getStateBytes(request.getBackwardCompatibilityVersion());
         if (timeout.call(requestTimeout -> operation.compareAndSwap(originalStateBytes, newStateBytes, entry.get(), requestTimeout))) {
             return result;
         } else {
@@ -157,13 +157,13 @@ public abstract class AbstractCompareAndSwapBasedProxyManager<K> extends Abstrac
             .thenApply((Optional<byte[]> originalStateBytes) -> originalStateBytes.orElse(null))
             .thenCompose((byte[] originalStateBytes) -> {
                 RemoteCommand<T> command = request.getCommand();
-                MutableBucketEntry entry = new MutableBucketEntry(originalStateBytes, getClientSideConfig().getSerializationStyle());
+                MutableBucketEntry entry = new MutableBucketEntry(originalStateBytes);
                 CommandResult<T> result = command.execute(entry, getClientSideTime());
                 if (!entry.isStateModified()) {
                     return CompletableFuture.completedFuture(result);
                 }
 
-                byte[] newStateBytes = entry.getStateBytes(request.getBackwardCompatibilityVersion(), getClientSideConfig().getSerializationStyle());
+                byte[] newStateBytes = entry.getStateBytes(request.getBackwardCompatibilityVersion());
                 return timeout.callAsync(requestTimeout -> operation.compareAndSwap(originalStateBytes, newStateBytes, entry.get(), requestTimeout))
                     .thenApply((casWasSuccessful) -> casWasSuccessful? result : null);
             });

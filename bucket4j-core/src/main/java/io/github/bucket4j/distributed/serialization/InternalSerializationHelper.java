@@ -29,32 +29,16 @@ import java.nio.ByteBuffer;
 
 public class InternalSerializationHelper {
 
-    public static byte[] serializeState(RemoteBucketState state, Version backwardCompatibilityVersion) {
-        return serializeState(state, backwardCompatibilityVersion, SerializationStyle.DATA_OUTPUT);
-    }
-
     public static byte[] serializeState(RemoteBucketState state, Version backwardCompatibilityVersion, SerializationStyle style) {
         return serialize(RemoteBucketState.SERIALIZATION_HANDLE, state, backwardCompatibilityVersion, Scope.PERSISTED_STATE, style);
-    }
-
-    public static RemoteBucketState deserializeState(byte[] bytes) {
-        return deserializeState(bytes, SerializationStyle.DATA_OUTPUT);
     }
 
     public static RemoteBucketState deserializeState(byte[] bytes, SerializationStyle style) {
         return deserialize(RemoteBucketState.SERIALIZATION_HANDLE, bytes, style);
     }
 
-    public static byte[] serializeRequest(Request<?> request) {
-        return serializeRequest(request, SerializationStyle.DATA_OUTPUT);
-    }
-
     public static byte[] serializeRequest(Request<?> request, SerializationStyle style) {
         return serialize(Request.SERIALIZATION_HANDLE, request, request.getBackwardCompatibilityVersion(), Scope.REQUEST, style);
-    }
-
-    public static <T> Request<T> deserializeRequest(byte[] bytes) {
-        return deserializeRequest(bytes, SerializationStyle.DATA_OUTPUT);
     }
 
     @SuppressWarnings("unchecked")
@@ -62,16 +46,8 @@ public class InternalSerializationHelper {
         return (Request<T>) deserialize(Request.SERIALIZATION_HANDLE, bytes, style);
     }
 
-    public static byte[] serializeResult(CommandResult<?> result, Version backwardCompatibilityVersion) {
-        return serializeResult(result, backwardCompatibilityVersion, SerializationStyle.DATA_OUTPUT);
-    }
-
     public static byte[] serializeResult(CommandResult<?> result, Version backwardCompatibilityVersion, SerializationStyle style) {
         return serialize(CommandResult.SERIALIZATION_HANDLE, result, backwardCompatibilityVersion, Scope.RESPONSE, style);
-    }
-
-    public static <T> CommandResult<T> deserializeResult(byte[] bytes, Version backwardCompatibilityVersion) {
-        return deserializeResult(bytes, backwardCompatibilityVersion, SerializationStyle.DATA_OUTPUT);
     }
 
     @SuppressWarnings("unchecked")

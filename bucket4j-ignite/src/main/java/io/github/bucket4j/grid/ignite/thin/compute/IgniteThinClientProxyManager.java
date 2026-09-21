@@ -41,6 +41,7 @@ import io.github.bucket4j.distributed.proxy.AbstractProxyManager;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.Request;
+import io.github.bucket4j.distributed.serialization.SerializationStyle;
 import io.github.bucket4j.distributed.versioning.Version;
 import io.github.bucket4j.grid.ignite.Bucket4jIgnite;
 import io.github.bucket4j.grid.ignite.thin.Bucket4jIgniteThin;
@@ -92,7 +93,7 @@ public class IgniteThinClientProxyManager<K> extends AbstractProxyManager<K> {
         Bucket4jComputeTaskParams<K> taskParams = new Bucket4jComputeTaskParams<>(cache.getName(), key, entryProcessor);
         try {
             byte[] resultBytes = clientCompute.execute(Bucket4jComputeTask.JOB_NAME, taskParams);
-            return deserializeResult(resultBytes, request.getBackwardCompatibilityVersion());
+            return deserializeResult(resultBytes, request.getBackwardCompatibilityVersion(), SerializationStyle.BYTE_BUFFER);
         } catch (InterruptedException e) {
             throw BucketExceptions.executionException(e);
         }
@@ -111,7 +112,7 @@ public class IgniteThinClientProxyManager<K> extends AbstractProxyManager<K> {
         IgniteClientFuture<byte[]> igniteFuture = clientCompute.executeAsync2(Bucket4jComputeTask.JOB_NAME, taskParams);
         CompletableFuture<byte[]> completableFuture = ThinClientUtils.convertFuture(igniteFuture);
         Version backwardCompatibilityVersion = request.getBackwardCompatibilityVersion();
-        return completableFuture.thenApply((byte[] resultBytes) -> deserializeResult(resultBytes, backwardCompatibilityVersion));
+        return completableFuture.thenApply((byte[] resultBytes) -> deserializeResult(resultBytes, backwardCompatibilityVersion, SerializationStyle.BYTE_BUFFER));
     }
 
     @Override
