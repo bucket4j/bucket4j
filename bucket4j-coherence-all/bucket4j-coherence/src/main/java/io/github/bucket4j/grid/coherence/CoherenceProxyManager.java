@@ -105,8 +105,12 @@ public class CoherenceProxyManager<K> extends AbstractProxyManager<K> {
                 @Override
                 public void onResult(Map.Entry<K, byte[]> entry) {
                     super.onResult(entry);
-                    byte[] resultBytes = entry.getValue();
-                    future.complete(deserializeResult(resultBytes, backwardCompatibilityVersion));
+                    try {
+                        byte[] resultBytes = entry.getValue();
+                        future.complete(deserializeResult(resultBytes, backwardCompatibilityVersion));
+                    } catch (Throwable error) {
+                        future.completeExceptionally(error);
+                    }
                 }
 
                 @Override
