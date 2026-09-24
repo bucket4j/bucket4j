@@ -3,8 +3,6 @@ package io.github.bucket4j.distributed.proxy.optimization.delay;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.distributed.AsyncBucketProxy;
-import io.github.bucket4j.BucketConfiguration;
-import io.github.bucket4j.distributed.AsyncBucketProxy;
 import io.github.bucket4j.distributed.proxy.optimization.DefaultOptimizationListener;
 import io.github.bucket4j.distributed.proxy.optimization.DelayParameters;
 import io.github.bucket4j.distributed.proxy.optimization.Optimization;
