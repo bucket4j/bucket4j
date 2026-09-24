@@ -10,7 +10,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Run tests in a single module**: `./mvnw -pl bucket4j-core test`
 - **Run a single test class**: `./mvnw -pl bucket4j-core -Dtest=LockFreeBucketLayout test`
 - **Run a single test method**: `./mvnw -pl bucket4j-core -Dtest=LockFreeBucketLayout#testMethod test`
-- **Run a Groovy specification**: `./mvnw -pl bucket4j-core -Dtest=BandwidthBuilderTest test`
 - **Skip backward-compatibility tests**: They are commented out from the root POM; run separately via `./mvnw -pl backward-compatibility-tests/...`
 - **Build requirements**: JDK 17, Zulu distribution (CI uses `actions/setup-java@v4`)
 
@@ -63,7 +62,7 @@ Each backend module provides a `ProxyManager` implementation:
 - Build docs with: `./mvnw -P generate-html -pl asciidoc process-resources`
 
 ### Testing conventions
-- **Test frameworks**: JUnit 5 (`**/*Test.class`) and Groovy/Spock (`**/*Specification.class`)
+- **Test frameworks**: JUnit 5 (`**/*Test.class`) with AssertJ assertions
 - **Test profiles**: Database backends use Testcontainers (version 1.20.1)
 - **Mock objects**: Located in `io.github.bucket4j.mock` package
 - **TCK tests**: Compatibility tests in `io.github.bucket4j.tck`
