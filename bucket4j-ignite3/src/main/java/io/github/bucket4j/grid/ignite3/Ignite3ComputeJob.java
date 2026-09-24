@@ -19,10 +19,19 @@
  */
 package io.github.bucket4j.grid.ignite3;
 
-import io.github.bucket4j.distributed.remote.AbstractBinaryTransaction;
-import io.github.bucket4j.distributed.remote.RemoteBucketState;
-import io.github.bucket4j.grid.ignite3.internal.ByteArrayListCodec;
+import io.github.bucket4j.distributed.remote.CommandResult;
+import io.github.bucket4j.distributed.remote.MutableBucketEntry;
+import io.github.bucket4j.distributed.remote.RemoteCommand;
+import io.github.bucket4j.distributed.remote.Request;
+import io.github.bucket4j.distributed.serialization.InternalSerializationHelper;
+import io.github.bucket4j.distributed.serialization.SerializationStyle;
+import io.github.bucket4j.distributed.versioning.UnsupportedTypeException;
+import io.github.bucket4j.distributed.versioning.UsageOfObsoleteApiException;
+import io.github.bucket4j.distributed.versioning.UsageOfUnsupportedApiException;
+import io.github.bucket4j.distributed.versioning.Versions;
 import io.github.bucket4j.grid.ignite3.internal.JobInputCodec;
+import io.github.bucket4j.util.concurrent.batch.AsyncBatchHelper;
+
 import org.apache.ignite.Ignite;
 import org.apache.ignite.compute.ComputeJob;
 import org.apache.ignite.compute.JobDescriptor;
@@ -31,25 +40,45 @@ import org.apache.ignite.marshalling.ByteArrayMarshaller;
 import org.apache.ignite.marshalling.Marshaller;
 import org.apache.ignite.table.KeyValueView;
 import org.apache.ignite.table.Table;
-import org.apache.ignite.tx.Transaction;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Function;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import static io.github.bucket4j.distributed.serialization.InternalSerializationHelper.serializeResult;
+import static java.util.concurrent.CompletableFuture.completedFuture;
 
 /**
- * Server-side compute job that applies a batch of bucket4j requests, coalesced client-side for the same key
- * by {@link io.github.bucket4j.grid.ignite3.internal.BatchingRegistry}, against a single row of an Ignite 3 table
- * inside one transaction - so that N coalesced client calls cost one transaction and one network round trip
- * instead of N of each.
+ * TODO
  */
-public class Ignite3ComputeJob implements ComputeJob<byte[], byte[]> {
+public class Ignite3ComputeJob<K> implements ComputeJob<byte[], byte[]> {
 
-    public static final JobDescriptor<byte[], byte[]> JOB_DESCRIPTOR = JobDescriptor.builder(Ignite3ComputeJob.class)
+    public static final JobDescriptor<byte[], byte[]> JOB_DESCRIPTOR = (JobDescriptor) JobDescriptor.builder(Ignite3ComputeJob.class.getName())
             .argumentMarshaller(ByteArrayMarshaller.create())
             .resultMarshaller(ByteArrayMarshaller.create())
             .build();
+
+    // structure: table_name -> bucket key -> request batcher for reduce contention on key inside particular table
+    // is used to fight with SERIALIZABLE nature of Ignite-3 transactions that rollbacks conflicting transactions
+    // idea is simple - instead of allow to independent requests to fight with each other we just do accumulation independent requests into batches
+    // and then execute all batch in single interaction with Ignite transaction engine
+    private static final ConcurrentHashMap<String, ConcurrentHashMap<?, BatcherEntry<?>>> batchersPerTable = new ConcurrentHashMap<>();
+
+    private static final class BatcherEntry<K> {
+        private int inProgressCount;
+        private final AsyncBatchHelper<Request<?>, CommandResult<?>, List<Request<?>>, List<CommandResult<?>>> batcher;
+
+        BatcherEntry(Ignite3ComputeJob<K> job, JobExecutionContext context, String tableName, K key, int initialCount) {
+            this.inProgressCount = initialCount;
+            this.batcher = AsyncBatchHelper.create(
+                (List<Request<?>> requests) -> requests,
+                (List<Request<?>> requests) -> job.executeBatchAsync(context, tableName, key, requests),
+                (List<Request<?>> requests, List<CommandResult<?>> results) -> results
+            );
+        }
+    }
 
     @Override
     public Marshaller<byte[], byte[]> inputMarshaller() {
@@ -62,70 +91,103 @@ public class Ignite3ComputeJob implements ComputeJob<byte[], byte[]> {
     }
 
     @Override
-    public CompletableFuture<byte[]> executeAsync(JobExecutionContext context, byte[] input) {
-        JobInputCodec.JobInput<Object> jobInput = JobInputCodec.decode(input);
-        List<byte[]> requests = ByteArrayListCodec.decode(jobInput.requestBytes());
+    public CompletableFuture<byte[]> executeAsync(JobExecutionContext context, byte[] jobBytes) {
+        // deserialize job
+        JobInputCodec.JobInput<K> jobInput = JobInputCodec.decode(jobBytes);
+        byte[] requestBytes  = jobInput.requestBytes();
 
+        // deserialize request
+        Request<?> request;
+        try {
+            request = InternalSerializationHelper.deserializeRequest(requestBytes, SerializationStyle.BYTE_BUFFER);
+        } catch (UnsupportedTypeException e) {
+            return completedFuture(serializeResult(CommandResult.unsupportedType(e.getTypeId()), Versions.getOldest(), SerializationStyle.BYTE_BUFFER));
+        } catch (UsageOfUnsupportedApiException e) {
+            return completedFuture(serializeResult(CommandResult.usageOfUnsupportedApiException(e.getRequestedFormatNumber(), e.getMaxSupportedFormatNumber()), Versions.getOldest(), SerializationStyle.BYTE_BUFFER));
+        } catch (UsageOfObsoleteApiException e) {
+            return completedFuture(serializeResult(CommandResult.usageOfObsoleteApiException(e.getRequestedFormatNumber(), e.getMinSupportedFormatNumber()), Versions.getOldest(), SerializationStyle.BYTE_BUFFER));
+        }
+
+        // find appropriate batcher
+        K key = jobInput.key();
+        String tableName = jobInput.tableName();
+        ConcurrentHashMap<K, BatcherEntry<K>> tableBatchers = findTableBatchers(tableName);
+        BatcherEntry entry = tableBatchers.compute(key, (K k, BatcherEntry<K> previous) -> {
+            if (previous != null) {
+                previous.inProgressCount++;
+                return previous;
+            } else {
+                return new BatcherEntry(this, context, tableName, key, 1);
+            }
+        });
+
+        // schedule async execution via batcher
+        AtomicBoolean decrementFlag = new AtomicBoolean();
+        try {
+            CompletableFuture<CommandResult<?>> completableFuture = entry.batcher.executeAsync(request);
+            return completableFuture
+                .whenComplete((CommandResult<?> result, Throwable throwable) -> tryClear(key, decrementFlag, tableBatchers))
+                .thenApply((CommandResult<?> result) -> {
+                    try {
+                        return serializeResult(result, request.getBackwardCompatibilityVersion(), SerializationStyle.BYTE_BUFFER);
+                    } catch (UnsupportedTypeException e) {
+                        return serializeResult(CommandResult.unsupportedType(e.getTypeId()), request.getBackwardCompatibilityVersion(), SerializationStyle.BYTE_BUFFER);
+                    } catch (UsageOfUnsupportedApiException e) {
+                        return serializeResult(CommandResult.usageOfUnsupportedApiException(e.getRequestedFormatNumber(), e.getMaxSupportedFormatNumber()), request.getBackwardCompatibilityVersion(), SerializationStyle.BYTE_BUFFER);
+                    } catch (UsageOfObsoleteApiException e) {
+                        return serializeResult(CommandResult.usageOfObsoleteApiException(e.getRequestedFormatNumber(), e.getMinSupportedFormatNumber()), request.getBackwardCompatibilityVersion(), SerializationStyle.BYTE_BUFFER);
+                    }
+                });
+        } catch (Throwable t) {
+            tryClear(key, decrementFlag, tableBatchers);
+            throw t;
+        }
+    }
+
+    private ConcurrentHashMap<K, BatcherEntry<K>> findTableBatchers(String tableName) {
+        ConcurrentHashMap tableBatchers = batchersPerTable.get(tableName);
+        if (tableBatchers == null) {
+            tableBatchers = batchersPerTable.computeIfAbsent(tableName, k -> new ConcurrentHashMap<>());
+        }
+        return tableBatchers;
+    }
+
+    private void tryClear(K key, AtomicBoolean decrementFlag, ConcurrentHashMap<K, BatcherEntry<K>> batchers) {
+        if (decrementFlag.compareAndSet(false, true)) {
+            batchers.compute(key, (K k, BatcherEntry<K> previous) -> {
+                if (previous == null) {
+                    return null;
+                } else {
+                    previous.inProgressCount--;
+                    return previous.inProgressCount == 0 ? null : previous;
+                }
+            });
+        }
+    }
+
+    private CompletableFuture<List<CommandResult<?>>> executeBatchAsync(JobExecutionContext context, String tableName, K key, List<Request<?>> requests) {
         Ignite ignite = context.ignite();
-        Table table = ignite.tables().table(jobInput.tableName());
-        Object key = jobInput.key();
-        @SuppressWarnings({"unchecked", "rawtypes"})
-        KeyValueView<Object, byte[]> keyValueView = (KeyValueView<Object, byte[]>) (KeyValueView) table.keyValueView(key.getClass(), byte[].class);
-
-        Function<Transaction, byte[]> transactionBody = tx -> applyBatch(tx, keyValueView, key, requests);
-        byte[] resultBytes = ignite.transactions().runInTransaction(transactionBody);
-        return CompletableFuture.completedFuture(resultBytes);
-    }
-
-    private static byte[] applyBatch(Transaction tx, KeyValueView<Object, byte[]> keyValueView, Object key, List<byte[]> requests) {
-        byte[] state = keyValueView.get(tx, key);
-        boolean exists = state != null;
-
-        List<byte[]> resultsBytes = new ArrayList<>(requests.size());
-        for (byte[] requestBytes : requests) {
-            SingleRequestTransaction transaction = new SingleRequestTransaction(requestBytes, state, exists);
-            resultsBytes.add(transaction.execute());
-            state = transaction.state;
-            exists = transaction.exists;
-        }
-
-        if (exists) {
-            keyValueView.put(tx, key, state);
-        }
-
-        return ByteArrayListCodec.encode(resultsBytes);
-    }
-
-    /**
-     * Applies one bucket4j request against an in-memory holder of the row's raw state; the holder is threaded
-     * across all requests in the batch and only read from / written to the real {@link KeyValueView} once per batch.
-     */
-    private static final class SingleRequestTransaction extends AbstractBinaryTransaction {
-
-        private byte[] state;
-        private boolean exists;
-
-        SingleRequestTransaction(byte[] requestBytes, byte[] state, boolean exists) {
-            super(requestBytes);
-            this.state = state;
-            this.exists = exists;
-        }
-
-        @Override
-        protected byte[] getRawState() {
-            return state;
-        }
-
-        @Override
-        protected void setRawState(byte[] newStateBytes, RemoteBucketState newState) {
-            this.state = newStateBytes;
-            this.exists = true;
-        }
-
-        @Override
-        public boolean exists() {
-            return exists;
-        }
+        return ignite.transactions().runInTransactionAsync((tx) -> {
+            Table table = ignite.tables().table(tableName);
+            KeyValueView<K, byte[]> keyValueView = (KeyValueView<K, byte[]>) table.keyValueView(key.getClass(), byte[].class);
+            return keyValueView.getAsync(tx, key).thenCompose(((byte[] stateBytes) -> {
+                List<CommandResult<?>> results = new ArrayList<>(requests.size());
+                MutableBucketEntry entryWrapper = new MutableBucketEntry(stateBytes);
+                for (Request<?> request : requests) {
+                    long currentTimeNanos = request.getClientSideTime() != null? request.getClientSideTime(): System.currentTimeMillis() * 1_000_000;
+                    RemoteCommand<?> command = request.getCommand();
+                    CommandResult<?> result = command.execute(entryWrapper, currentTimeNanos);
+                    results.add(result);
+                }
+                if (!entryWrapper.isStateModified()) {
+                    return CompletableFuture.completedFuture(results);
+                } else {
+                    Request<?> lastRequest = requests.get(requests.size() - 1);
+                    byte[] finalState = entryWrapper.getStateBytes(lastRequest.getBackwardCompatibilityVersion());
+                    return keyValueView.putAsync(tx, key, finalState).thenApply((Void v) -> results);
+                }
+            }));
+        });
 
     }
 
