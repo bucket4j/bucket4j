@@ -69,12 +69,12 @@ class EstimateAbilityToConsumeTest {
             assertThat(bucket.getAvailableTokens()).isEqualTo(availableTokensBeforeEstimation);
 
             AsyncBucketProxy asyncBucket = type.createAsyncBucket(testCase.configuration(), timeMeter);
-            availableTokensBeforeEstimation = bucket.getAvailableTokens();
+            availableTokensBeforeEstimation = asyncBucket.getAvailableTokens().get();
             probe = asyncBucket.estimateAbilityToConsume(testCase.toEstimate()).get();
             assertThat(probe.canBeConsumed()).isEqualTo(testCase.result());
             assertThat(probe.getRemainingTokens()).isEqualTo(availableTokensBeforeEstimation);
             assertThat(probe.getNanosToWaitForRefill()).isEqualTo(testCase.expectedWait());
-            assertThat(bucket.getAvailableTokens()).isEqualTo(availableTokensBeforeEstimation);
+            assertThat(asyncBucket.getAvailableTokens().get()).isEqualTo(availableTokensBeforeEstimation);
         }
     }
 
