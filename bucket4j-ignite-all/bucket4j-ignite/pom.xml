@@ -7,13 +7,13 @@
 
     <parent>
         <groupId>com.bucket4j</groupId>
-        <artifactId>bucket4j_jdk17-parent</artifactId>
+        <artifactId>bucket4j_jdk17-ignite-all</artifactId>
         <version>8.21.0</version>
-        <relativePath>../bucket4j-parent</relativePath>
+        <relativePath>../../bucket4j-ignite-all</relativePath>
     </parent>
     <artifactId>bucket4j_jdk17-ignite</artifactId>
     <name>bucket4j_jdk17-ignite</name>
-    <description>Bucket4j integration with Ignite</description>
+    <description>Bucket4j integration with legacy Apache Ignite 2.x branch</description>
 
     <properties>
         <modular-name>ignite</modular-name>

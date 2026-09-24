@@ -47,6 +47,7 @@
         <maven.build.timestamp.format>yyyy-MM-dd HH</maven.build.timestamp.format>
         <jcache.version>1.0.0</jcache.version>
         <ignite.version>2.16.0</ignite.version>
+        <ignite.3.version>3.1.0</ignite.3.version>
         <geode.version>2.0.2</geode.version>
 
         <hazelcast.4.version>4.1</hazelcast.4.version>

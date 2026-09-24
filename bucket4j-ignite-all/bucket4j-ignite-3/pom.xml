@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.bucket4j</groupId>
+        <artifactId>bucket4j_jdk17-ignite-all</artifactId>
+        <version>8.21.0</version>
+        <relativePath>../../bucket4j-ignite-all</relativePath>
+    </parent>
+    <artifactId>bucket4j_jdk17-ignite-3</artifactId>
+    <name>bucket4j_jdk17-ignite-3</name>
+    <description>Bucket4j integration with Apache Ignite 3.x branch</description>
+
+    <properties>
+        <modular-name>ignite3</modular-name>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.bucket4j</groupId>
+            <artifactId>bucket4j_jdk17-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.bucket4j</groupId>
+            <artifactId>bucket4j_jdk17-core</artifactId>
+            <version>${project.version}</version>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.ignite</groupId>
+            <artifactId>ignite-client</artifactId>
+            <version>${ignite.3.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers</artifactId>
+            <version>${testcontainers.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!--
+                The compute-based proxy manager submits a ComputeJob that runs inside the Ignite 3 server JVM.
+                Ignite 3 requires job classes (and everything they need, including bucket4j-core) to be present
+                on the server node's classpath or supplied as a Deployment Unit. For integration testing we
+                build a self-contained jar with this module + bucket4j-core and drop it into the server
+                container's classpath directory before the node starts, so it must exist before tests run.
+            -->
+            <!--
+                maven-shade-plugin (below) needs the module's main jar artifact to already exist when it
+                runs at process-test-classes. The default jar:jar execution is bound to the package phase,
+                which runs after process-test-classes, so build the main jar early as well - at
+                generate-test-resources specifically, so it's guaranteed to run after process-classes,
+                where the parent's bnd-maven-plugin execution generates the OSGi manifest this jar needs.
+            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>default-jar</id>
+                        <phase>generate-test-resources</phase>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>2.2</version>
+                <executions>
+                    <execution>
+                        <id>build-server-job-jar</id>
+                        <phase>process-test-classes</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <shadedArtifactAttached>true</shadedArtifactAttached>
+                            <shadedClassifierName>server-job</shadedClassifierName>
+                            <filters>
+                                <filter>
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/*.SF</exclude>
+                                        <exclude>META-INF/*.DSA</exclude>
+                                        <exclude>META-INF/*.RSA</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

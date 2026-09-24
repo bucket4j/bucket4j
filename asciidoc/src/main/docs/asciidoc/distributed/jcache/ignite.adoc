@@ -80,3 +80,64 @@ IMPORTANT: unlike the other two options, `IgniteThinClientCasBasedProxyManager` 
 Unlike Infinispan, Coherence, and Hazelcast, Ignite does not provide an API for configuring per-entry expiration.
 So there is currently only one option - configure expiration at the cache level, https://apacheignite.readme.io/docs/expiry-policies[for example, as described here].
 If this is not acceptable, switch to one of the other in-memory grids mentioned above.
+
+[[bucket4j-ignite-3, Bucket4j-Ignite-3]]
+==== Apache Ignite 3.x integration
+Apache Ignite 3.x is a distinct product line from Ignite 2.x, with an incompatible client API (SQL-first tables instead of caches, no ``EntryProcessor``,
+and a different thin-client/transaction model). Because of that, it is packaged as a separate module rather than folded into ``bucket4j-ignite``,
+and both modules are kept and maintained side by side so users on either branch keep getting Bucket4j's new features.
+
+===== Dependencies
+To use the ``bucket4j-ignite-3`` extension, add the following dependency:
+[source, xml, subs=attributes+]
+----
+<dependency>
+    <groupId>com.bucket4j</groupId>
+    <artifactId>bucket4j_jdk17-ignite-3</artifactId>
+    <version>{revnumber}</version>
+</dependency>
+----
+
+===== Example of Bucket instantiation via IgniteKeyValueCasBasedProxyManager
+This option performs a plain get/compare-and-swap dialog with a table's ``KeyValueView``, without executing any code on the Ignite server side.
+Choose it when you already own a table and want the simplest possible integration.
+[source, java]
+----
+org.apache.ignite.table.KeyValueView<K, byte[]> keyValueView = ...;
+private static final IgniteKeyValueCasBasedProxyManager<K> proxyManager = Bucket4jIgnite3.INSTANCE
+    .casBasedBuilder(keyValueView)
+    // setup optional parameters if necessary
+    .build();
+...
+
+BucketConfiguration configuration = BucketConfiguration.builder()
+    .addLimit(limit -> limit.capacity(1_000).refillGreedy(1_000, ofMinutes(1)))
+    .build();
+Bucket bucket = proxyManager.getProxy(key, () -> configuration);
+----
+
+===== Example of Bucket instantiation via IgniteComputeProxyManager
+This option executes a colocated ``ComputeJob`` on the cluster node that owns the bucket's partition, so the read-modify-write cycle happens without extra network hops.
+[source, java]
+----
+org.apache.ignite.client.IgniteClient client = ...;
+BucketTableSettings tableSettings = BucketTableSettings.customSettings("bucket_table", "id", "state");
+private static final IgniteComputeProxyManager proxyManager = Bucket4jIgnite3.INSTANCE
+    .computeBasedBuilder(client, tableSettings)
+    // setup optional parameters if necessary
+    .build();
+...
+
+BucketConfiguration configuration = BucketConfiguration.builder()
+    .addLimit(limit -> limit.capacity(1_000).refillGreedy(1_000, ofMinutes(1)))
+    .build();
+Bucket bucket = proxyManager.getProxy(key, () -> configuration);
+----
+IMPORTANT: `IgniteComputeProxyManager` runs its compute job on the node that owns the bucket's partition, so that node's classloader must be able to load the job class.
+Place ``bucket4j-ignite-3`` and ``bucket4j-core`` on every cluster node's classpath, or deploy them as an https://ignite.apache.org/docs/latest/developers-guide/compute/deployment-units[Ignite Deployment Unit].
+
+NOTE: The compute job's table must have a JDK matching the one Bucket4j was built with (JDK 17) available on the server node - the officially published Ignite 3.x Docker image bundles a JDK 11 JRE by default, which cannot load the job's class files.
+
+===== Concurrent access to the same bucket key
+Both proxy managers reconcile concurrent writers to the same bucket key with an optimistic compare-and-swap loop on the row's state column,
+retrying with a randomized backoff on a CAS conflict rather than relying on Ignite's own transactional isolation to detect the conflict.
