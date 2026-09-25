@@ -112,7 +112,7 @@ public class Ignite3ComputeJob<K> implements ComputeJob<byte[], byte[]> {
         K key = jobInput.key();
         String tableName = jobInput.tableName();
         // to avoid mixing requests to different ignite instances inside same JVM(unlikely but can be)
-        String registryKey = tableName + context.ignite().name();
+        String registryKey = tableName + ":" + context.ignite().name();
 
         ConcurrentHashMap<K, BatcherEntry<K>> tableBatchers = findTableBatchers(registryKey);
         BatcherEntry entry = tableBatchers.compute(key, (K k, BatcherEntry<K> previous) -> {
