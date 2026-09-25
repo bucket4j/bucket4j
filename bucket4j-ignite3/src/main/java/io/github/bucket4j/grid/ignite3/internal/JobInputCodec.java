@@ -19,18 +19,22 @@
  */
 package io.github.bucket4j.grid.ignite3.internal;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
+import io.github.bucket4j.distributed.serialization.ByteBufferSerializationAdapter;
+import io.github.bucket4j.distributed.serialization.PrimitiveSizeCalculator;
+
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.nio.ByteBuffer;
 
 /**
  * Ignite 3's {@code ComputeJob} accepts a single argument, but bucket4j-ignite3 needs to ship both the routing
  * key and the serialized bucket4j request to the job body. This codec packs {@code (tableName, key, requestBytes)}
  * into one {@code byte[]} envelope that becomes the job argument; the key itself is separately handed to
  * {@code JobTarget.colocated} for node routing.
+ *
+ * <p>Follows the estimate-size-then-serialize {@link ByteBuffer} approach used by
+ * {@code io.github.bucket4j.distributed.serialization.InternalSerializationHelper}: the exact envelope size is
+ * computed upfront so that exactly one right-sized {@link ByteBuffer} is allocated.
  */
 public final class JobInputCodec {
 
@@ -41,25 +45,30 @@ public final class JobInputCodec {
     }
 
     public static <K> byte[] encode(String tableName, K key, byte[] requestBytes) {
-        ByteArrayOutputStream bytes = new ByteArrayOutputStream(requestBytes.length + 64);
-        try (DataOutputStream out = new DataOutputStream(bytes)) {
-            out.writeUTF(tableName);
+        int size = PrimitiveSizeCalculator.sizeOfString(tableName)
+                + KeyCodec.estimateSize(key)
+                + PrimitiveSizeCalculator.SIZE_OF_INT
+                + requestBytes.length;
+        ByteBuffer out = ByteBuffer.allocate(size);
+        try {
+            ByteBufferSerializationAdapter.INSTANCE.writeString(out, tableName);
             KeyCodec.encode(out, key);
-            out.writeInt(requestBytes.length);
-            out.write(requestBytes);
+            out.putInt(requestBytes.length);
+            out.put(requestBytes);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
-        return bytes.toByteArray();
+        return out.array();
     }
 
     public static <K> JobInput<K> decode(byte[] bytes) {
-        try (DataInputStream in = new DataInputStream(new ByteArrayInputStream(bytes))) {
-            String tableName = in.readUTF();
+        ByteBuffer in = ByteBuffer.wrap(bytes);
+        try {
+            String tableName = ByteBufferSerializationAdapter.INSTANCE.readString(in);
             K key = KeyCodec.decode(in);
-            int length = in.readInt();
+            int length = in.getInt();
             byte[] requestBytes = new byte[length];
-            in.readFully(requestBytes);
+            in.get(requestBytes);
             return new JobInput<>(tableName, key, requestBytes);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
