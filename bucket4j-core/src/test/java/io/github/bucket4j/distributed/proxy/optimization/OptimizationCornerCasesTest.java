@@ -5,6 +5,7 @@ import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.TokensInheritanceStrategy;
 import io.github.bucket4j.distributed.BucketProxy;
+import io.github.bucket4j.distributed.proxy.AsyncCommandExecutor;
 import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.CommandExecutor;
 import io.github.bucket4j.distributed.proxy.optimization.delay.DelayOptimization;
@@ -29,6 +30,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import java.time.Duration;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -205,6 +207,49 @@ class OptimizationCornerCasesTest {
             .build();
         CommandResult syncResult2 = executor.execute(new CreateInitialStateWithVersionOrReplaceConfigurationAndExecuteCommand<>(configuration, syncCommand, PREVIOUS_VERSION + 1, TokensInheritanceStrategy.RESET));
         CommandResult getTokensResult2 = executor.execute(new CreateInitialStateWithVersionOrReplaceConfigurationAndExecuteCommand<>(configuration, getTokensCommand, PREVIOUS_VERSION + 1, TokensInheritanceStrategy.RESET));
+
+        assertThat(getTokensResult.isConfigurationNeedToBeReplaced()).isTrue();
+        assertThat(syncResult.isConfigurationNeedToBeReplaced()).isTrue();
+        assertThat(syncResult2.isError()).isFalse();
+        assertThat(getTokensResult2.getData()).isEqualTo(100L);
+    }
+
+    @ParameterizedTest
+    @MethodSource("optimizations")
+    void implicitConfigurationReplacementCaseForVersionIncrementAsync(OptimizationCase testCase) throws Exception {
+        ProxyManagerMock proxyManagerMock = new ProxyManagerMock(CLOCK);
+
+        int KEY = 42;
+        int PREVIOUS_VERSION = 1;
+        Bucket bucket10 = proxyManagerMock.builder()
+            .withOptimization(testCase.optimization())
+            .withImplicitConfigurationReplacement(PREVIOUS_VERSION, TokensInheritanceStrategy.RESET)
+            .build(KEY, BucketConfiguration.builder()
+                .addLimit(limit -> limit.capacity(10).refillGreedy(10, Duration.ofSeconds(1)))
+                .build());
+
+        // persist bucket with previous version
+        bucket10.tryConsumeAsMuchAsPossible();
+
+        AsyncCommandExecutor executor = testCase.optimization().apply(new AsyncCommandExecutor() {
+            @Override
+            public <T> CompletableFuture<CommandResult<T>> executeAsync(RemoteCommand<T> command) {
+                Request<T> request = new Request<>(command, Versions.getLatest(), CLOCK.currentTimeNanos(), null);
+                return proxyManagerMock.executeAsync(KEY, request);
+            }
+        });
+        // emulate case where two command in parallel detects that config needs to be replaced
+        RemoteCommand<?> getTokensCommand = new GetAvailableTokensCommand();
+        CommandResult getTokensResult = executor.executeAsync(new CheckConfigurationVersionAndExecuteCommand<>(getTokensCommand, PREVIOUS_VERSION + 1)).get();
+        RemoteCommand<?> syncCommand = new SyncCommand(1, 1_000_000);
+        CommandResult syncResult = executor.executeAsync(new CheckConfigurationVersionAndExecuteCommand<>(syncCommand, PREVIOUS_VERSION + 1)).get();
+
+        // then wrap original commands by CreateInitialStateWithVersionOrReplaceConfigurationAndExecuteCommand and repeat
+        BucketConfiguration configuration = BucketConfiguration.builder()
+            .addLimit(limit -> limit.capacity(100).refillGreedy(10, Duration.ofSeconds(1)))
+            .build();
+        CommandResult syncResult2 = executor.executeAsync(new CreateInitialStateWithVersionOrReplaceConfigurationAndExecuteCommand<>(configuration, syncCommand, PREVIOUS_VERSION + 1, TokensInheritanceStrategy.RESET)).get();
+        CommandResult getTokensResult2 = executor.executeAsync(new CreateInitialStateWithVersionOrReplaceConfigurationAndExecuteCommand<>(configuration, getTokensCommand, PREVIOUS_VERSION + 1, TokensInheritanceStrategy.RESET)).get();
 
         assertThat(getTokensResult.isConfigurationNeedToBeReplaced()).isTrue();
         assertThat(syncResult.isConfigurationNeedToBeReplaced()).isTrue();

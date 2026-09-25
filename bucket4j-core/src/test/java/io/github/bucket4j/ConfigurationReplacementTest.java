@@ -89,9 +89,9 @@ class ConfigurationReplacementTest {
                     AsyncBucketProxy bucket = testCase.bucketType().createAsyncBucket(configuration, clock);
                     clock.addTime(3); // 1.8
                     if (!verbose) {
-                        bucket.replaceConfiguration(newConfiguration, TokensInheritanceStrategy.RESET).get();
+                        bucket.replaceConfiguration(newConfiguration, TokensInheritanceStrategy.AS_IS).get();
                     } else {
-                        bucket.asVerbose().replaceConfiguration(newConfiguration, TokensInheritanceStrategy.RESET).get();
+                        bucket.asVerbose().replaceConfiguration(newConfiguration, TokensInheritanceStrategy.AS_IS).get();
                     }
                     assertThat(bucket.getAvailableTokens().get()).isEqualTo(60);
                 }
