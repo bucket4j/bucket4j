@@ -8,6 +8,7 @@ import io.github.bucket4j.distributed.proxy.optimization.Optimizations;
 import io.github.bucket4j.mock.BucketType;
 import io.github.bucket4j.mock.TimeMeterMock;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
@@ -34,13 +35,14 @@ class ImplicitConfigurationReplacementTest {
 
     static int key = 42;
 
-    @ParameterizedTest
-    @MethodSource("bucketTypes")
-    void shouldReplaceConfigurationImplicitlyWhenVersionWasNotProvidedPreviously(BucketTypeCase testCase) throws Exception {
-        for (boolean sync : new boolean[]{true, false}) {
+    @Nested
+    class SyncBucket {
+
+        @ParameterizedTest
+        @MethodSource("io.github.bucket4j.ImplicitConfigurationReplacementTest#bucketTypes")
+        void shouldReplaceConfigurationImplicitlyWhenVersionWasNotProvidedPreviously(BucketTypeCase testCase) {
             for (boolean verbose : new boolean[]{true, false}) {
                 for (boolean batching : new boolean[]{true, false}) {
-                    // System.err.println("sync: " + sync + " verbose: " + verbose + " " + batching)
                     BucketConfiguration oldConfiguration = BucketConfiguration.builder()
                         .addLimit(Bandwidth.simple(60, Duration.ofNanos(1000)))
                         .build();
@@ -51,56 +53,103 @@ class ImplicitConfigurationReplacementTest {
                     TimeMeterMock clock = new TimeMeterMock(0);
                     ProxyManager<Integer> proxyManager = testCase.bucketType().createProxyManager(clock);
 
-                    if (!proxyManager.isAsyncModeSupported() && !sync) {
-                        continue;
+                    RemoteBucketBuilder<Integer> builder = proxyManager.builder();
+                    if (batching) {
+                        builder.withOptimization(Optimizations.batching());
                     }
+                    Bucket bucket1 = builder.build(key, oldConfiguration);
+                    assertThat(bucket1.getAvailableTokens()).isEqualTo(60);
 
-                    if (sync) {
-                        RemoteBucketBuilder<Integer> builder = proxyManager.builder();
-                        if (batching) {
-                            builder.withOptimization(Optimizations.batching());
-                        }
-                        Bucket bucket1 = builder.build(key, oldConfiguration);
-                        assertThat(bucket1.getAvailableTokens()).isEqualTo(60);
+                    builder.withImplicitConfigurationReplacement(1L, TokensInheritanceStrategy.AS_IS);
+                    Bucket bucket2 = builder.build(key, newConfiguration);
 
-                        builder.withImplicitConfigurationReplacement(1L, TokensInheritanceStrategy.AS_IS);
-                        Bucket bucket2 = builder.build(key, newConfiguration);
-
-                        if (!verbose) {
-                            assertThat(bucket2.getAvailableTokens()).isEqualTo(3);
-                        } else {
-                            assertThat(bucket2.asVerbose().getAvailableTokens().getValue()).isEqualTo(3);
-                        }
+                    if (!verbose) {
+                        assertThat(bucket2.getAvailableTokens()).isEqualTo(3);
                     } else {
-                        RemoteAsyncBucketBuilder<Integer> builder = proxyManager.asAsync().builder();
-                        if (batching) {
-                            builder.withOptimization(Optimizations.batching());
-                        }
-
-                        AsyncBucketProxy bucket1 = builder.build(key, oldConfiguration);
-                        assertThat(bucket1.getAvailableTokens().get()).isEqualTo(60);
-
-                        builder.withImplicitConfigurationReplacement(1L, TokensInheritanceStrategy.AS_IS);
-                        AsyncBucketProxy bucket2 = builder.build(key, newConfiguration);
-
-                        if (!verbose) {
-                            assertThat(bucket2.getAvailableTokens().get()).isEqualTo(3);
-                        } else {
-                            assertThat(bucket2.asVerbose().getAvailableTokens().get().getValue()).isEqualTo(3);
-                        }
+                        assertThat(bucket2.asVerbose().getAvailableTokens().getValue()).isEqualTo(3);
                     }
                 }
             }
         }
+
+        @ParameterizedTest
+        @MethodSource("io.github.bucket4j.ImplicitConfigurationReplacementTest#bucketTypes")
+        void shouldReplaceConfigurationImplicitlyWhenPreviousVersionLessThanCurrent(BucketTypeCase testCase) {
+            for (boolean verbose : new boolean[]{true, false}) {
+                for (boolean batching : new boolean[]{true, false}) {
+                    BucketConfiguration oldConfiguration = BucketConfiguration.builder()
+                        .addLimit(Bandwidth.simple(60, Duration.ofNanos(1000)))
+                        .build();
+                    BucketConfiguration newConfiguration = BucketConfiguration.builder()
+                        .addLimit(Bandwidth.simple(3, Duration.ofNanos(5)))
+                        .build();
+
+                    TimeMeterMock clock = new TimeMeterMock(0);
+                    ProxyManager<Integer> proxyManager = testCase.bucketType().createProxyManager(clock);
+
+                    RemoteBucketBuilder<Integer> builder = proxyManager.builder();
+                    if (batching) {
+                        builder.withOptimization(Optimizations.batching());
+                    }
+                    Bucket bucket1 = builder.withImplicitConfigurationReplacement(1L, TokensInheritanceStrategy.AS_IS).build(key, oldConfiguration);
+                    assertThat(bucket1.getAvailableTokens()).isEqualTo(60);
+
+                    builder.withImplicitConfigurationReplacement(2L, TokensInheritanceStrategy.AS_IS);
+                    Bucket bucket2 = builder.build(key, newConfiguration);
+
+                    if (!verbose) {
+                        assertThat(bucket2.getAvailableTokens()).isEqualTo(3);
+                    } else {
+                        assertThat(bucket2.asVerbose().getAvailableTokens().getValue()).isEqualTo(3);
+                    }
+                }
+            }
+        }
+
+        @ParameterizedTest
+        @MethodSource("io.github.bucket4j.ImplicitConfigurationReplacementTest#bucketTypes")
+        void shouldNotReplaceConfigurationImplicitlyWhenPreviousVersionEqualsWithCurrent(BucketTypeCase testCase) {
+            for (boolean verbose : new boolean[]{true, false}) {
+                for (boolean batching : new boolean[]{true, false}) {
+                    BucketConfiguration oldConfiguration = BucketConfiguration.builder()
+                        .addLimit(Bandwidth.simple(60, Duration.ofNanos(1000)))
+                        .build();
+                    BucketConfiguration newConfiguration = BucketConfiguration.builder()
+                        .addLimit(Bandwidth.simple(3, Duration.ofNanos(5)))
+                        .build();
+
+                    TimeMeterMock clock = new TimeMeterMock(0);
+                    ProxyManager<Integer> proxyManager = testCase.bucketType().createProxyManager(clock);
+
+                    RemoteBucketBuilder<Integer> builder = proxyManager.builder();
+                    if (batching) {
+                        builder.withOptimization(Optimizations.batching());
+                    }
+                    Bucket bucket1 = builder.withImplicitConfigurationReplacement(1L, TokensInheritanceStrategy.AS_IS).build(key, oldConfiguration);
+                    assertThat(bucket1.getAvailableTokens()).isEqualTo(60);
+
+                    builder.withImplicitConfigurationReplacement(1L, TokensInheritanceStrategy.AS_IS);
+                    Bucket bucket2 = builder.build(key, newConfiguration);
+
+                    if (!verbose) {
+                        assertThat(bucket2.getAvailableTokens()).isEqualTo(60);
+                    } else {
+                        assertThat(bucket2.asVerbose().getAvailableTokens().getValue()).isEqualTo(60);
+                    }
+                }
+            }
+        }
+
     }
 
-    @ParameterizedTest
-    @MethodSource("bucketTypes")
-    void shouldReplaceConfigurationImplicitlyWhenPreviousVersionLessThanCurrent(BucketTypeCase testCase) throws Exception {
-        for (boolean sync : new boolean[]{true, false}) {
+    @Nested
+    class AsyncBucket {
+
+        @ParameterizedTest
+        @MethodSource("io.github.bucket4j.ImplicitConfigurationReplacementTest#bucketTypes")
+        void shouldReplaceConfigurationImplicitlyWhenVersionWasNotProvidedPreviously(BucketTypeCase testCase) throws Exception {
             for (boolean verbose : new boolean[]{true, false}) {
                 for (boolean batching : new boolean[]{true, false}) {
-                    // System.err.println("sync: " + sync + " verbose: " + verbose + " " + batching)
                     BucketConfiguration oldConfiguration = BucketConfiguration.builder()
                         .addLimit(Bandwidth.simple(60, Duration.ofNanos(1000)))
                         .build();
@@ -111,56 +160,35 @@ class ImplicitConfigurationReplacementTest {
                     TimeMeterMock clock = new TimeMeterMock(0);
                     ProxyManager<Integer> proxyManager = testCase.bucketType().createProxyManager(clock);
 
-                    if (!proxyManager.isAsyncModeSupported() && !sync) {
+                    if (!proxyManager.isAsyncModeSupported()) {
                         continue;
                     }
 
-                    if (sync) {
-                        RemoteBucketBuilder<Integer> builder = proxyManager.builder();
-                        if (batching) {
-                            builder.withOptimization(Optimizations.batching());
-                        }
-                        Bucket bucket1 = builder.withImplicitConfigurationReplacement(1L, TokensInheritanceStrategy.AS_IS).build(key, oldConfiguration);
-                        assertThat(bucket1.getAvailableTokens()).isEqualTo(60);
+                    RemoteAsyncBucketBuilder<Integer> builder = proxyManager.asAsync().builder();
+                    if (batching) {
+                        builder.withOptimization(Optimizations.batching());
+                    }
 
-                        builder.withImplicitConfigurationReplacement(2L, TokensInheritanceStrategy.AS_IS);
-                        Bucket bucket2 = builder.build(key, newConfiguration);
+                    AsyncBucketProxy bucket1 = builder.build(key, oldConfiguration);
+                    assertThat(bucket1.getAvailableTokens().get()).isEqualTo(60);
 
-                        if (!verbose) {
-                            assertThat(bucket2.getAvailableTokens()).isEqualTo(3);
-                        } else {
-                            assertThat(bucket2.asVerbose().getAvailableTokens().getValue()).isEqualTo(3);
-                        }
+                    builder.withImplicitConfigurationReplacement(1L, TokensInheritanceStrategy.AS_IS);
+                    AsyncBucketProxy bucket2 = builder.build(key, newConfiguration);
+
+                    if (!verbose) {
+                        assertThat(bucket2.getAvailableTokens().get()).isEqualTo(3);
                     } else {
-                        RemoteAsyncBucketBuilder<Integer> builder = proxyManager.asAsync().builder();
-                        if (batching) {
-                            builder.withOptimization(Optimizations.batching());
-                        }
-
-                        AsyncBucketProxy bucket1 = builder.withImplicitConfigurationReplacement(1L, TokensInheritanceStrategy.AS_IS).build(key, oldConfiguration);
-                        assertThat(bucket1.getAvailableTokens().get()).isEqualTo(60);
-
-                        builder.withImplicitConfigurationReplacement(2L, TokensInheritanceStrategy.AS_IS);
-                        AsyncBucketProxy bucket2 = builder.build(key, newConfiguration);
-
-                        if (!verbose) {
-                            assertThat(bucket2.getAvailableTokens().get()).isEqualTo(3);
-                        } else {
-                            assertThat(bucket2.asVerbose().getAvailableTokens().get().getValue()).isEqualTo(3);
-                        }
+                        assertThat(bucket2.asVerbose().getAvailableTokens().get().getValue()).isEqualTo(3);
                     }
                 }
             }
         }
-    }
 
-    @ParameterizedTest
-    @MethodSource("bucketTypes")
-    void shouldNotReplaceConfigurationImplicitlyWhenPreviousVersionEqualsWithCurrent(BucketTypeCase testCase) throws Exception {
-        for (boolean sync : new boolean[]{true, false}) {
+        @ParameterizedTest
+        @MethodSource("io.github.bucket4j.ImplicitConfigurationReplacementTest#bucketTypes")
+        void shouldReplaceConfigurationImplicitlyWhenPreviousVersionLessThanCurrent(BucketTypeCase testCase) throws Exception {
             for (boolean verbose : new boolean[]{true, false}) {
                 for (boolean batching : new boolean[]{true, false}) {
-                    // System.err.println("sync: " + sync + " verbose: " + verbose + " " + batching)
                     BucketConfiguration oldConfiguration = BucketConfiguration.builder()
                         .addLimit(Bandwidth.simple(60, Duration.ofNanos(1000)))
                         .build();
@@ -171,47 +199,69 @@ class ImplicitConfigurationReplacementTest {
                     TimeMeterMock clock = new TimeMeterMock(0);
                     ProxyManager<Integer> proxyManager = testCase.bucketType().createProxyManager(clock);
 
-                    if (!proxyManager.isAsyncModeSupported() && !sync) {
+                    if (!proxyManager.isAsyncModeSupported()) {
                         continue;
                     }
 
-                    if (sync) {
-                        RemoteBucketBuilder<Integer> builder = proxyManager.builder();
-                        if (batching) {
-                            builder.withOptimization(Optimizations.batching());
-                        }
-                        Bucket bucket1 = builder.withImplicitConfigurationReplacement(1L, TokensInheritanceStrategy.AS_IS).build(key, oldConfiguration);
-                        assertThat(bucket1.getAvailableTokens()).isEqualTo(60);
+                    RemoteAsyncBucketBuilder<Integer> builder = proxyManager.asAsync().builder();
+                    if (batching) {
+                        builder.withOptimization(Optimizations.batching());
+                    }
 
-                        builder.withImplicitConfigurationReplacement(1L, TokensInheritanceStrategy.AS_IS);
-                        Bucket bucket2 = builder.build(key, newConfiguration);
+                    AsyncBucketProxy bucket1 = builder.withImplicitConfigurationReplacement(1L, TokensInheritanceStrategy.AS_IS).build(key, oldConfiguration);
+                    assertThat(bucket1.getAvailableTokens().get()).isEqualTo(60);
 
-                        if (!verbose) {
-                            assertThat(bucket2.getAvailableTokens()).isEqualTo(60);
-                        } else {
-                            assertThat(bucket2.asVerbose().getAvailableTokens().getValue()).isEqualTo(60);
-                        }
+                    builder.withImplicitConfigurationReplacement(2L, TokensInheritanceStrategy.AS_IS);
+                    AsyncBucketProxy bucket2 = builder.build(key, newConfiguration);
+
+                    if (!verbose) {
+                        assertThat(bucket2.getAvailableTokens().get()).isEqualTo(3);
                     } else {
-                        RemoteAsyncBucketBuilder<Integer> builder = proxyManager.asAsync().builder();
-                        if (batching) {
-                            builder.withOptimization(Optimizations.batching());
-                        }
-
-                        AsyncBucketProxy bucket1 = builder.withImplicitConfigurationReplacement(1L, TokensInheritanceStrategy.AS_IS).build(key, oldConfiguration);
-                        assertThat(bucket1.getAvailableTokens().get()).isEqualTo(60);
-
-                        builder.withImplicitConfigurationReplacement(1L, TokensInheritanceStrategy.AS_IS);
-                        AsyncBucketProxy bucket2 = builder.build(key, newConfiguration);
-
-                        if (!verbose) {
-                            assertThat(bucket2.getAvailableTokens().get()).isEqualTo(60);
-                        } else {
-                            assertThat(bucket2.asVerbose().getAvailableTokens().get().getValue()).isEqualTo(60);
-                        }
+                        assertThat(bucket2.asVerbose().getAvailableTokens().get().getValue()).isEqualTo(3);
                     }
                 }
             }
         }
+
+        @ParameterizedTest
+        @MethodSource("io.github.bucket4j.ImplicitConfigurationReplacementTest#bucketTypes")
+        void shouldNotReplaceConfigurationImplicitlyWhenPreviousVersionEqualsWithCurrent(BucketTypeCase testCase) throws Exception {
+            for (boolean verbose : new boolean[]{true, false}) {
+                for (boolean batching : new boolean[]{true, false}) {
+                    BucketConfiguration oldConfiguration = BucketConfiguration.builder()
+                        .addLimit(Bandwidth.simple(60, Duration.ofNanos(1000)))
+                        .build();
+                    BucketConfiguration newConfiguration = BucketConfiguration.builder()
+                        .addLimit(Bandwidth.simple(3, Duration.ofNanos(5)))
+                        .build();
+
+                    TimeMeterMock clock = new TimeMeterMock(0);
+                    ProxyManager<Integer> proxyManager = testCase.bucketType().createProxyManager(clock);
+
+                    if (!proxyManager.isAsyncModeSupported()) {
+                        continue;
+                    }
+
+                    RemoteAsyncBucketBuilder<Integer> builder = proxyManager.asAsync().builder();
+                    if (batching) {
+                        builder.withOptimization(Optimizations.batching());
+                    }
+
+                    AsyncBucketProxy bucket1 = builder.withImplicitConfigurationReplacement(1L, TokensInheritanceStrategy.AS_IS).build(key, oldConfiguration);
+                    assertThat(bucket1.getAvailableTokens().get()).isEqualTo(60);
+
+                    builder.withImplicitConfigurationReplacement(1L, TokensInheritanceStrategy.AS_IS);
+                    AsyncBucketProxy bucket2 = builder.build(key, newConfiguration);
+
+                    if (!verbose) {
+                        assertThat(bucket2.getAvailableTokens().get()).isEqualTo(60);
+                    } else {
+                        assertThat(bucket2.asVerbose().getAvailableTokens().get().getValue()).isEqualTo(60);
+                    }
+                }
+            }
+        }
+
     }
 
 }

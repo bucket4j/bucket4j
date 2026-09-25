@@ -9,6 +9,7 @@ import io.github.bucket4j.distributed.AsyncBucketProxy;
 import io.github.bucket4j.mock.BucketType;
 import io.github.bucket4j.mock.TimeMeterMock;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -93,161 +94,192 @@ class ConsumeIgnoringLimitsTest {
         return Stream.of(BucketType.values()).map(BucketTypeCase::new);
     }
 
-    @ParameterizedTest
-    @MethodSource("caseWhenLimitsAreNotOverflownCases")
-    void caseWhenLimitsAreNotOverflown(NotOverflownCase testCase) throws Exception {
-        for (BucketType type : BucketType.values()) {
-            for (boolean sync : List.of(true, false)) {
+    @Nested
+    class SyncBucket {
+
+        @ParameterizedTest
+        @MethodSource("io.github.bucket4j.api_specifications.regular.ConsumeIgnoringLimitsTest#caseWhenLimitsAreNotOverflownCases")
+        void caseWhenLimitsAreNotOverflown(NotOverflownCase testCase) {
+            for (BucketType type : BucketType.values()) {
                 for (boolean verbose : List.of(false, true)) {
-                    System.out.println("type=" + type + " sync=" + sync + " verbose=" + verbose);
                     TimeMeterMock timeMeter = new TimeMeterMock(0);
-                    if (sync) {
-                        Bucket bucket = type.createBucket(testCase.configuration(), timeMeter);
-                        bucket.getAvailableTokens();
-                        timeMeter.addTime(testCase.nanosIncrement());
-                        if (!verbose) {
-                            assertThat(bucket.consumeIgnoringRateLimits(testCase.tokensToConsume())).isEqualTo(0);
-                        } else {
-                            VerboseResult<Long> verboseResult = bucket.asVerbose().consumeIgnoringRateLimits(testCase.tokensToConsume());
-                            assertThat(verboseResult.getValue()).isEqualTo(0L);
-                            if (type.isLocal()) {
-                                assertNotSame(verboseResult.getState(), getState(bucket));
-                            }
-                        }
-                        assertThat(bucket.getAvailableTokens()).isEqualTo(testCase.remainedTokens());
+                    Bucket bucket = type.createBucket(testCase.configuration(), timeMeter);
+                    bucket.getAvailableTokens();
+                    timeMeter.addTime(testCase.nanosIncrement());
+                    if (!verbose) {
+                        assertThat(bucket.consumeIgnoringRateLimits(testCase.tokensToConsume())).isEqualTo(0);
                     } else {
-                        AsyncBucketProxy asyncBucket = type.createAsyncBucket(testCase.configuration(), timeMeter);
-                        asyncBucket.getAvailableTokens().get();
-                        timeMeter.addTime(testCase.nanosIncrement());
-                        if (!verbose) {
-                            assertThat(asyncBucket.consumeIgnoringRateLimits(testCase.tokensToConsume()).get()).isEqualTo(0);
-                        } else {
-                            VerboseResult<Long> verboseResult = asyncBucket.asVerbose().consumeIgnoringRateLimits(testCase.tokensToConsume()).get();
-                            assertThat(verboseResult.getValue()).isEqualTo(0L);
+                        VerboseResult<Long> verboseResult = bucket.asVerbose().consumeIgnoringRateLimits(testCase.tokensToConsume());
+                        assertThat(verboseResult.getValue()).isEqualTo(0L);
+                        if (type.isLocal()) {
+                            assertNotSame(verboseResult.getState(), getState(bucket));
                         }
-                        assertThat(asyncBucket.getAvailableTokens().get()).isEqualTo(testCase.remainedTokens());
                     }
+                    assertThat(bucket.getAvailableTokens()).isEqualTo(testCase.remainedTokens());
                 }
             }
         }
-    }
 
-    @ParameterizedTest
-    @MethodSource("caseWhenLimitsAreOverflownCases")
-    void caseWhenLimitsAreOverflown(OverflownCase testCase) throws Exception {
-        for (BucketType type : BucketType.values()) {
-            for (boolean sync : List.of(true, false)) {
+        @ParameterizedTest
+        @MethodSource("io.github.bucket4j.api_specifications.regular.ConsumeIgnoringLimitsTest#caseWhenLimitsAreOverflownCases")
+        void caseWhenLimitsAreOverflown(OverflownCase testCase) {
+            for (BucketType type : BucketType.values()) {
                 for (boolean verbose : List.of(false, true)) {
-                    System.out.println("type=" + type + " sync=" + sync + " verbose=" + verbose);
                     TimeMeterMock timeMeter = new TimeMeterMock(0);
-                    if (sync) {
-                        Bucket bucket = type.createBucket(testCase.configuration(), timeMeter);
-                        bucket.getAvailableTokens();
-                        timeMeter.addTime(testCase.nanosIncrement());
-                        if (!verbose) {
-                            assertThat(bucket.consumeIgnoringRateLimits(testCase.tokensToConsume())).isEqualTo(testCase.overflowNanos());
-                        } else {
-                            VerboseResult<Long> verboseResult = bucket.asVerbose().consumeIgnoringRateLimits(testCase.tokensToConsume());
-                            assertThat(verboseResult.getValue()).isEqualTo(testCase.overflowNanos());
-                            if (type.isLocal()) {
-                                assertNotSame(verboseResult.getState(), getState(bucket));
-                            }
-                        }
-                        assertThat(bucket.getAvailableTokens()).isEqualTo(testCase.remainedTokens());
+                    Bucket bucket = type.createBucket(testCase.configuration(), timeMeter);
+                    bucket.getAvailableTokens();
+                    timeMeter.addTime(testCase.nanosIncrement());
+                    if (!verbose) {
+                        assertThat(bucket.consumeIgnoringRateLimits(testCase.tokensToConsume())).isEqualTo(testCase.overflowNanos());
                     } else {
-                        AsyncBucketProxy asyncBucket = type.createAsyncBucket(testCase.configuration(), timeMeter);
-                        asyncBucket.getAvailableTokens().get();
-                        timeMeter.addTime(testCase.nanosIncrement());
-                        if (!verbose) {
-                            assertThat(asyncBucket.consumeIgnoringRateLimits(testCase.tokensToConsume()).get()).isEqualTo(testCase.overflowNanos());
-                        } else {
-                            VerboseResult<Long> verboseResult = asyncBucket.asVerbose().consumeIgnoringRateLimits(testCase.tokensToConsume()).get();
-                            assertThat(verboseResult.getValue()).isEqualTo(testCase.overflowNanos());
+                        VerboseResult<Long> verboseResult = bucket.asVerbose().consumeIgnoringRateLimits(testCase.tokensToConsume());
+                        assertThat(verboseResult.getValue()).isEqualTo(testCase.overflowNanos());
+                        if (type.isLocal()) {
+                            assertNotSame(verboseResult.getState(), getState(bucket));
                         }
-                        assertThat(asyncBucket.getAvailableTokens().get()).isEqualTo(testCase.remainedTokens());
                     }
+                    assertThat(bucket.getAvailableTokens()).isEqualTo(testCase.remainedTokens());
                 }
             }
         }
-    }
 
-    @Test
-    void reservationOverflowCase() throws Exception {
-        BucketConfiguration configuration = BucketConfiguration.builder()
-            .addLimit(Bandwidth.simple(1, Duration.ofMinutes(1)).withInitialTokens(0))
-            .build();
-        long veryBigAmountOfTokensWhichCannotBeReserved = Long.MAX_VALUE / 2;
-        for (BucketType type : BucketType.values()) {
-            for (boolean sync : List.of(true, false)) {
+        @Test
+        void reservationOverflowCase() {
+            BucketConfiguration configuration = BucketConfiguration.builder()
+                .addLimit(Bandwidth.simple(1, Duration.ofMinutes(1)).withInitialTokens(0))
+                .build();
+            long veryBigAmountOfTokensWhichCannotBeReserved = Long.MAX_VALUE / 2;
+            for (BucketType type : BucketType.values()) {
                 TimeMeterMock timeMeter = new TimeMeterMock(0);
                 Bucket bucket = type.createBucket(configuration, timeMeter);
-                if (sync) {
-                    try {
-                        bucket.consumeIgnoringRateLimits(veryBigAmountOfTokensWhichCannotBeReserved);
-                        fail();
-                    } catch (IllegalArgumentException e) {
-                        assertThat(e.getMessage()).isEqualTo(BucketExceptions.reservationOverflow().getMessage());
-                    }
-                } else {
-                    AsyncBucketProxy asyncBucket = type.createAsyncBucket(configuration, timeMeter);
-                    try {
-                        asyncBucket.consumeIgnoringRateLimits(veryBigAmountOfTokensWhichCannotBeReserved).get();
-                        fail();
-                    } catch (ExecutionException e) {
-                        assertThat(e.getCause().getMessage()).isEqualTo(BucketExceptions.reservationOverflow().getMessage());
-                    }
+                try {
+                    bucket.consumeIgnoringRateLimits(veryBigAmountOfTokensWhichCannotBeReserved);
+                    fail();
+                } catch (IllegalArgumentException e) {
+                    assertThat(e.getMessage()).isEqualTo(BucketExceptions.reservationOverflow().getMessage());
                 }
             }
         }
+
+        @ParameterizedTest
+        // https://github.com/bucket4j/bucket4j/issues/417
+        @MethodSource("io.github.bucket4j.api_specifications.regular.ConsumeIgnoringLimitsTest#bucketTypes")
+        void testConsumptionWhenAmountOfTokensBecameNegativeAfterConsumeIgnoringRateLimits(BucketTypeCase testCase) {
+            TimeMeterMock timeMeter = new TimeMeterMock(0);
+            BucketConfiguration configuration = BucketConfiguration.builder()
+                .addLimit(it -> it.capacity(10).refillGreedy(5, Duration.ofSeconds(1)))
+                .build();
+            for (boolean verbose : List.of(false, true)) {
+                Bucket bucket = testCase.type().createBucket(configuration, timeMeter);
+                if (!verbose) {
+                    bucket.consumeIgnoringRateLimits(15);
+                    assertThat(bucket.tryConsume(1)).isFalse();
+                    assertThat(bucket.tryConsumeAsMuchAsPossible()).isEqualTo(0);
+                    assertThat(bucket.tryConsumeAsMuchAsPossible(2)).isEqualTo(0);
+                    assertThat(bucket.estimateAbilityToConsume(2).canBeConsumed()).isFalse();
+                    assertThat(bucket.tryConsumeAndReturnRemaining(2).isConsumed()).isFalse();
+                } else {
+                    bucket.asVerbose().consumeIgnoringRateLimits(15);
+                    assertThat(bucket.asVerbose().tryConsume(1).getValue()).isFalse();
+                    assertThat(bucket.asVerbose().tryConsumeAsMuchAsPossible().getValue()).isEqualTo(0);
+                    assertThat(bucket.asVerbose().tryConsumeAsMuchAsPossible(2).getValue()).isEqualTo(0);
+                    assertThat(bucket.asVerbose().estimateAbilityToConsume(2).getValue().canBeConsumed()).isFalse();
+                    assertThat(bucket.asVerbose().tryConsumeAndReturnRemaining(2).getValue().isConsumed()).isFalse();
+                }
+            }
+        }
+
     }
 
-    @ParameterizedTest
-    // https://github.com/bucket4j/bucket4j/issues/417
-    @MethodSource("bucketTypes")
-    void testConsumptionWhenAmountOfTokensBecameNegativeAfterConsumeIgnoringRateLimits(BucketTypeCase testCase) throws Exception {
-        TimeMeterMock timeMeter = new TimeMeterMock(0);
-        BucketConfiguration configuration = BucketConfiguration.builder()
-            .addLimit(it -> it.capacity(10).refillGreedy(5, Duration.ofSeconds(1)))
-            .build();
-        for (boolean sync : List.of(true, false)) {
-            for (boolean verbose : List.of(false, true)) {
-                if (sync) {
-                    Bucket bucket = testCase.type().createBucket(configuration, timeMeter);
+    @Nested
+    class AsyncBucket {
+
+        @ParameterizedTest
+        @MethodSource("io.github.bucket4j.api_specifications.regular.ConsumeIgnoringLimitsTest#caseWhenLimitsAreNotOverflownCases")
+        void caseWhenLimitsAreNotOverflown(NotOverflownCase testCase) throws Exception {
+            for (BucketType type : BucketType.values()) {
+                for (boolean verbose : List.of(false, true)) {
+                    TimeMeterMock timeMeter = new TimeMeterMock(0);
+                    AsyncBucketProxy asyncBucket = type.createAsyncBucket(testCase.configuration(), timeMeter);
+                    asyncBucket.getAvailableTokens().get();
+                    timeMeter.addTime(testCase.nanosIncrement());
                     if (!verbose) {
-                        bucket.consumeIgnoringRateLimits(15);
-                        assertThat(bucket.tryConsume(1)).isFalse();
-                        assertThat(bucket.tryConsumeAsMuchAsPossible()).isEqualTo(0);
-                        assertThat(bucket.tryConsumeAsMuchAsPossible(2)).isEqualTo(0);
-                        assertThat(bucket.estimateAbilityToConsume(2).canBeConsumed()).isFalse();
-                        assertThat(bucket.tryConsumeAndReturnRemaining(2).isConsumed()).isFalse();
+                        assertThat(asyncBucket.consumeIgnoringRateLimits(testCase.tokensToConsume()).get()).isEqualTo(0);
                     } else {
-                        bucket.asVerbose().consumeIgnoringRateLimits(15);
-                        assertThat(bucket.asVerbose().tryConsume(1).getValue()).isFalse();
-                        assertThat(bucket.asVerbose().tryConsumeAsMuchAsPossible().getValue()).isEqualTo(0);
-                        assertThat(bucket.asVerbose().tryConsumeAsMuchAsPossible(2).getValue()).isEqualTo(0);
-                        assertThat(bucket.asVerbose().estimateAbilityToConsume(2).getValue().canBeConsumed()).isFalse();
-                        assertThat(bucket.asVerbose().tryConsumeAndReturnRemaining(2).getValue().isConsumed()).isFalse();
+                        VerboseResult<Long> verboseResult = asyncBucket.asVerbose().consumeIgnoringRateLimits(testCase.tokensToConsume()).get();
+                        assertThat(verboseResult.getValue()).isEqualTo(0L);
                     }
-                } else {
-                    AsyncBucketProxy bucket = testCase.type().createAsyncBucket(configuration, timeMeter);
-                    if (!verbose) {
-                        bucket.consumeIgnoringRateLimits(15).get();
-                        assertThat(bucket.tryConsume(1).get()).isFalse();
-                        assertThat(bucket.tryConsumeAsMuchAsPossible().get()).isEqualTo(0);
-                        assertThat(bucket.tryConsumeAsMuchAsPossible(2).get()).isEqualTo(0);
-                        assertThat(bucket.estimateAbilityToConsume(2).get().canBeConsumed()).isFalse();
-                        assertThat(bucket.tryConsumeAndReturnRemaining(2).get().isConsumed()).isFalse();
-                    } else {
-                        bucket.asVerbose().consumeIgnoringRateLimits(15).get();
-                        assertThat(bucket.asVerbose().tryConsume(1).get().getValue()).isFalse();
-                        assertThat(bucket.asVerbose().tryConsumeAsMuchAsPossible().get().getValue()).isEqualTo(0);
-                        assertThat(bucket.asVerbose().tryConsumeAsMuchAsPossible(2).get().getValue()).isEqualTo(0);
-                        assertThat(bucket.asVerbose().estimateAbilityToConsume(2).get().getValue().canBeConsumed()).isFalse();
-                        assertThat(bucket.asVerbose().tryConsumeAndReturnRemaining(2).get().getValue().isConsumed()).isFalse();
-                    }
+                    assertThat(asyncBucket.getAvailableTokens().get()).isEqualTo(testCase.remainedTokens());
                 }
             }
         }
+
+        @ParameterizedTest
+        @MethodSource("io.github.bucket4j.api_specifications.regular.ConsumeIgnoringLimitsTest#caseWhenLimitsAreOverflownCases")
+        void caseWhenLimitsAreOverflown(OverflownCase testCase) throws Exception {
+            for (BucketType type : BucketType.values()) {
+                for (boolean verbose : List.of(false, true)) {
+                    TimeMeterMock timeMeter = new TimeMeterMock(0);
+                    AsyncBucketProxy asyncBucket = type.createAsyncBucket(testCase.configuration(), timeMeter);
+                    asyncBucket.getAvailableTokens().get();
+                    timeMeter.addTime(testCase.nanosIncrement());
+                    if (!verbose) {
+                        assertThat(asyncBucket.consumeIgnoringRateLimits(testCase.tokensToConsume()).get()).isEqualTo(testCase.overflowNanos());
+                    } else {
+                        VerboseResult<Long> verboseResult = asyncBucket.asVerbose().consumeIgnoringRateLimits(testCase.tokensToConsume()).get();
+                        assertThat(verboseResult.getValue()).isEqualTo(testCase.overflowNanos());
+                    }
+                    assertThat(asyncBucket.getAvailableTokens().get()).isEqualTo(testCase.remainedTokens());
+                }
+            }
+        }
+
+        @Test
+        void reservationOverflowCase() throws Exception {
+            BucketConfiguration configuration = BucketConfiguration.builder()
+                .addLimit(Bandwidth.simple(1, Duration.ofMinutes(1)).withInitialTokens(0))
+                .build();
+            long veryBigAmountOfTokensWhichCannotBeReserved = Long.MAX_VALUE / 2;
+            for (BucketType type : BucketType.values()) {
+                TimeMeterMock timeMeter = new TimeMeterMock(0);
+                AsyncBucketProxy asyncBucket = type.createAsyncBucket(configuration, timeMeter);
+                try {
+                    asyncBucket.consumeIgnoringRateLimits(veryBigAmountOfTokensWhichCannotBeReserved).get();
+                    fail();
+                } catch (ExecutionException e) {
+                    assertThat(e.getCause().getMessage()).isEqualTo(BucketExceptions.reservationOverflow().getMessage());
+                }
+            }
+        }
+
+        @ParameterizedTest
+        // https://github.com/bucket4j/bucket4j/issues/417
+        @MethodSource("io.github.bucket4j.api_specifications.regular.ConsumeIgnoringLimitsTest#bucketTypes")
+        void testConsumptionWhenAmountOfTokensBecameNegativeAfterConsumeIgnoringRateLimits(BucketTypeCase testCase) throws Exception {
+            TimeMeterMock timeMeter = new TimeMeterMock(0);
+            BucketConfiguration configuration = BucketConfiguration.builder()
+                .addLimit(it -> it.capacity(10).refillGreedy(5, Duration.ofSeconds(1)))
+                .build();
+            for (boolean verbose : List.of(false, true)) {
+                AsyncBucketProxy bucket = testCase.type().createAsyncBucket(configuration, timeMeter);
+                if (!verbose) {
+                    bucket.consumeIgnoringRateLimits(15).get();
+                    assertThat(bucket.tryConsume(1).get()).isFalse();
+                    assertThat(bucket.tryConsumeAsMuchAsPossible().get()).isEqualTo(0);
+                    assertThat(bucket.tryConsumeAsMuchAsPossible(2).get()).isEqualTo(0);
+                    assertThat(bucket.estimateAbilityToConsume(2).get().canBeConsumed()).isFalse();
+                    assertThat(bucket.tryConsumeAndReturnRemaining(2).get().isConsumed()).isFalse();
+                } else {
+                    bucket.asVerbose().consumeIgnoringRateLimits(15).get();
+                    assertThat(bucket.asVerbose().tryConsume(1).get().getValue()).isFalse();
+                    assertThat(bucket.asVerbose().tryConsumeAsMuchAsPossible().get().getValue()).isEqualTo(0);
+                    assertThat(bucket.asVerbose().tryConsumeAsMuchAsPossible(2).get().getValue()).isEqualTo(0);
+                    assertThat(bucket.asVerbose().estimateAbilityToConsume(2).get().getValue().canBeConsumed()).isFalse();
+                    assertThat(bucket.asVerbose().tryConsumeAndReturnRemaining(2).get().getValue().isConsumed()).isFalse();
+                }
+            }
+        }
+
     }
 
 }
