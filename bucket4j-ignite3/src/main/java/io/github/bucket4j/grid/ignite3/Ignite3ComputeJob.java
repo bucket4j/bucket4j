@@ -60,7 +60,7 @@ public class Ignite3ComputeJob<K> implements ComputeJob<byte[], byte[]> {
             .resultMarshaller(ByteArrayMarshaller.create())
             .build();
 
-    // structure: table_name -> bucket key -> request batcher for reduce contention on key inside particular table
+    // structure: ignite-instance-id+table_name -> bucket key -> request batcher for reduce contention on key inside particular table
     // is used to fight with SERIALIZABLE nature of Ignite-3 transactions that rollbacks conflicting transactions
     // idea is simple - instead of allow to independent requests to fight with each other we just do accumulation independent requests into batches
     // and then execute all batch in single interaction with Ignite transaction engine
@@ -111,7 +111,10 @@ public class Ignite3ComputeJob<K> implements ComputeJob<byte[], byte[]> {
         // find appropriate batcher
         K key = jobInput.key();
         String tableName = jobInput.tableName();
-        ConcurrentHashMap<K, BatcherEntry<K>> tableBatchers = findTableBatchers(tableName);
+        // to avoid mixing requests to different ignite instances inside same JVM(unlikely but can be)
+        String registryKey = tableName + context.ignite().name();
+
+        ConcurrentHashMap<K, BatcherEntry<K>> tableBatchers = findTableBatchers(registryKey);
         BatcherEntry entry = tableBatchers.compute(key, (K k, BatcherEntry<K> previous) -> {
             if (previous != null) {
                 previous.inProgressCount++;
@@ -144,10 +147,10 @@ public class Ignite3ComputeJob<K> implements ComputeJob<byte[], byte[]> {
         }
     }
 
-    private ConcurrentHashMap<K, BatcherEntry<K>> findTableBatchers(String tableName) {
-        ConcurrentHashMap tableBatchers = batchersPerTable.get(tableName);
+    private ConcurrentHashMap<K, BatcherEntry<K>> findTableBatchers(String tableNameregistryKey) {
+        ConcurrentHashMap tableBatchers = batchersPerTable.get(tableNameregistryKey);
         if (tableBatchers == null) {
-            tableBatchers = batchersPerTable.computeIfAbsent(tableName, k -> new ConcurrentHashMap<>());
+            tableBatchers = batchersPerTable.computeIfAbsent(tableNameregistryKey, k -> new ConcurrentHashMap<>());
         }
         return tableBatchers;
     }
