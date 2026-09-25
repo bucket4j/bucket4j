@@ -31,6 +31,7 @@ import io.github.bucket4j.distributed.versioning.UsageOfUnsupportedApiException;
 import io.github.bucket4j.distributed.versioning.Versions;
 import io.github.bucket4j.grid.ignite3.internal.JobInputCodec;
 import io.github.bucket4j.util.concurrent.batch.AsyncBatchHelper;
+import io.github.bucket4j.util.concurrent.batch.MultiAsyncBatcherHelper;
 
 import org.apache.ignite.Ignite;
 import org.apache.ignite.compute.ComputeJob;
@@ -45,7 +46,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import static io.github.bucket4j.distributed.serialization.InternalSerializationHelper.serializeResult;
 import static java.util.concurrent.CompletableFuture.completedFuture;
@@ -60,25 +60,11 @@ public class Ignite3ComputeJob<K> implements ComputeJob<byte[], byte[]> {
             .resultMarshaller(ByteArrayMarshaller.create())
             .build();
 
-    // structure: ignite-instance-id+table_name -> bucket key -> request batcher for reduce contention on key inside particular table
+    // registry key: ignite-instance-id+table_name -> per-table batcher registry keyed by bucket key
     // is used to fight with SERIALIZABLE nature of Ignite-3 transactions that rollbacks conflicting transactions
     // idea is simple - instead of allow to independent requests to fight with each other we just do accumulation independent requests into batches
     // and then execute all batch in single interaction with Ignite transaction engine
-    private static final ConcurrentHashMap<String, ConcurrentHashMap<?, BatcherEntry<?>>> batchersPerTable = new ConcurrentHashMap<>();
-
-    private static final class BatcherEntry<K> {
-        private int inProgressCount;
-        private final AsyncBatchHelper<Request<?>, CommandResult<?>, List<Request<?>>, List<CommandResult<?>>> batcher;
-
-        BatcherEntry(Ignite3ComputeJob<K> job, JobExecutionContext context, String tableName, K key, int initialCount) {
-            this.inProgressCount = initialCount;
-            this.batcher = AsyncBatchHelper.create(
-                (List<Request<?>> requests) -> requests,
-                (List<Request<?>> requests) -> job.executeBatchAsync(context, tableName, key, requests),
-                (List<Request<?>> requests, List<CommandResult<?>> results) -> results
-            );
-        }
-    }
+    private static final ConcurrentHashMap<String, MultiAsyncBatcherHelper<?, Request<?>, CommandResult<?>, List<Request<?>>, List<CommandResult<?>>>> batchersPerTable = new ConcurrentHashMap<>();
 
     @Override
     public Marshaller<byte[], byte[]> inputMarshaller() {
@@ -114,58 +100,36 @@ public class Ignite3ComputeJob<K> implements ComputeJob<byte[], byte[]> {
         // to avoid mixing requests to different ignite instances inside same JVM(unlikely but can be)
         String registryKey = tableName + ":" + context.ignite().name();
 
-        ConcurrentHashMap<K, BatcherEntry<K>> tableBatchers = findTableBatchers(registryKey);
-        BatcherEntry entry = tableBatchers.compute(key, (K k, BatcherEntry<K> previous) -> {
-            if (previous != null) {
-                previous.inProgressCount++;
-                return previous;
-            } else {
-                return new BatcherEntry(this, context, tableName, key, 1);
-            }
-        });
-
-        // schedule async execution via batcher
-        AtomicBoolean decrementFlag = new AtomicBoolean();
-        try {
-            CompletableFuture<CommandResult<?>> completableFuture = entry.batcher.executeAsync(request);
-            return completableFuture
-                .whenComplete((CommandResult<?> result, Throwable throwable) -> tryClear(key, decrementFlag, tableBatchers))
-                .thenApply((CommandResult<?> result) -> {
-                    try {
-                        return serializeResult(result, request.getBackwardCompatibilityVersion(), SerializationStyle.BYTE_BUFFER);
-                    } catch (UnsupportedTypeException e) {
-                        return serializeResult(CommandResult.unsupportedType(e.getTypeId()), request.getBackwardCompatibilityVersion(), SerializationStyle.BYTE_BUFFER);
-                    } catch (UsageOfUnsupportedApiException e) {
-                        return serializeResult(CommandResult.usageOfUnsupportedApiException(e.getRequestedFormatNumber(), e.getMaxSupportedFormatNumber()), request.getBackwardCompatibilityVersion(), SerializationStyle.BYTE_BUFFER);
-                    } catch (UsageOfObsoleteApiException e) {
-                        return serializeResult(CommandResult.usageOfObsoleteApiException(e.getRequestedFormatNumber(), e.getMinSupportedFormatNumber()), request.getBackwardCompatibilityVersion(), SerializationStyle.BYTE_BUFFER);
-                    }
-                });
-        } catch (Throwable t) {
-            tryClear(key, decrementFlag, tableBatchers);
-            throw t;
-        }
-    }
-
-    private ConcurrentHashMap<K, BatcherEntry<K>> findTableBatchers(String tableNameregistryKey) {
-        ConcurrentHashMap tableBatchers = batchersPerTable.get(tableNameregistryKey);
-        if (tableBatchers == null) {
-            tableBatchers = batchersPerTable.computeIfAbsent(tableNameregistryKey, k -> new ConcurrentHashMap<>());
-        }
-        return tableBatchers;
-    }
-
-    private void tryClear(K key, AtomicBoolean decrementFlag, ConcurrentHashMap<K, BatcherEntry<K>> batchers) {
-        if (decrementFlag.compareAndSet(false, true)) {
-            batchers.compute(key, (K k, BatcherEntry<K> previous) -> {
-                if (previous == null) {
-                    return null;
-                } else {
-                    previous.inProgressCount--;
-                    return previous.inProgressCount == 0 ? null : previous;
+        // schedule async execution via batcher shared with other requests targeting the same key
+        CompletableFuture<CommandResult<?>> completableFuture = scheduleViaBatcher(context, registryKey, tableName, key, request);
+        return completableFuture
+            .thenApply((CommandResult<?> result) -> {
+                try {
+                    return serializeResult(result, request.getBackwardCompatibilityVersion(), SerializationStyle.BYTE_BUFFER);
+                } catch (UnsupportedTypeException e) {
+                    return serializeResult(CommandResult.unsupportedType(e.getTypeId()), request.getBackwardCompatibilityVersion(), SerializationStyle.BYTE_BUFFER);
+                } catch (UsageOfUnsupportedApiException e) {
+                    return serializeResult(CommandResult.usageOfUnsupportedApiException(e.getRequestedFormatNumber(), e.getMaxSupportedFormatNumber()), request.getBackwardCompatibilityVersion(), SerializationStyle.BYTE_BUFFER);
+                } catch (UsageOfObsoleteApiException e) {
+                    return serializeResult(CommandResult.usageOfObsoleteApiException(e.getRequestedFormatNumber(), e.getMinSupportedFormatNumber()), request.getBackwardCompatibilityVersion(), SerializationStyle.BYTE_BUFFER);
                 }
             });
-        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private CompletableFuture<CommandResult<?>> scheduleViaBatcher(JobExecutionContext context, String registryKey, String tableName, K key, Request<?> request) {
+        MultiAsyncBatcherHelper<K, Request<?>, CommandResult<?>, List<Request<?>>, List<CommandResult<?>>> batchers =
+                (MultiAsyncBatcherHelper<K, Request<?>, CommandResult<?>, List<Request<?>>, List<CommandResult<?>>>) (MultiAsyncBatcherHelper<?, Request<?>, CommandResult<?>, List<Request<?>>, List<CommandResult<?>>>)
+                        batchersPerTable.computeIfAbsent(registryKey, k -> new MultiAsyncBatcherHelper<>());
+        return batchers.executeAsync(key, request, (K k) -> createBatcher(context, tableName, k));
+    }
+
+    private AsyncBatchHelper<Request<?>, CommandResult<?>, List<Request<?>>, List<CommandResult<?>>> createBatcher(JobExecutionContext context, String tableName, K key) {
+        return AsyncBatchHelper.create(
+            (List<Request<?>> requests) -> requests,
+            (List<Request<?>> requests) -> executeBatchAsync(context, tableName, key, requests),
+            (List<Request<?>> requests, List<CommandResult<?>> results) -> results
+        );
     }
 
     private CompletableFuture<List<CommandResult<?>>> executeBatchAsync(JobExecutionContext context, String tableName, K key, List<Request<?>> requests) {
