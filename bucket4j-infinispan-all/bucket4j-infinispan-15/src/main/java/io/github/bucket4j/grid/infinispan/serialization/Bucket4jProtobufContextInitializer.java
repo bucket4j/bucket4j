@@ -38,10 +38,12 @@ public class Bucket4jProtobufContextInitializer implements SerializationContextI
         }
         """;
 
+    @Override
     public String getProtoFileName() {
         return "bucket4j.proto";
     }
 
+    @Override
     public String getProtoFile() throws UncheckedIOException {
         return "/" + getProtoFileName();
     }
