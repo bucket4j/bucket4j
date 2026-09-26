@@ -50,7 +50,7 @@
         <geode.version>2.0.2</geode.version>
 
         <hazelcast.4.version>4.1</hazelcast.4.version>
-        <hazelcast.latest.version>5.3.6</hazelcast.latest.version>
+        <hazelcast.latest.version>5.7.0</hazelcast.latest.version>
         <coherence.21.version>21.06</coherence.21.version>
         <coherence.latest.version>26.07</coherence.latest.version>
         <infinispan.latest.version>15.0.4.Final</infinispan.latest.version>
