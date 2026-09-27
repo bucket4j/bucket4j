@@ -56,13 +56,13 @@
         <dependency>
             <groupId>org.infinispan</groupId>
             <artifactId>infinispan-core</artifactId>
-            <version>${infinispan.latest.version}</version>
+            <version>${infinispan.latest.v15.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.infinispan</groupId>
             <artifactId>infinispan-jcache</artifactId>
-            <version>${infinispan.latest.version}</version>
+            <version>${infinispan.latest.v15.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>

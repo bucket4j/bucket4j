@@ -11,12 +11,12 @@
         <version>8.21.0</version>
         <relativePath>../../bucket4j-infinispan-all</relativePath>
     </parent>
-    <artifactId>bucket4j_jdk17-infinispan</artifactId>
-    <name>bucket4j_jdk17-infinispan</name>
-    <description>Bucket4j integration with Infinispan</description>
+    <artifactId>bucket4j_jdk17-infinispan-15</artifactId>
+    <name>bucket4j_jdk17-infinispan-15</name>
+    <description>Bucket4j integration with Infinispan 15.x</description>
 
     <properties>
-        <modular-name>infinispan</modular-name>
+        <modular-name>infinispan15</modular-name>
     </properties>
 
     <!-- https://mvnrepository.com/artifact/org.infinispan/infinispan-core -->
@@ -42,42 +42,31 @@
         <dependency>
             <groupId>org.infinispan</groupId>
             <artifactId>infinispan-core</artifactId>
-            <version>${infinispan.latest.v16.version}</version>
+            <version>${infinispan.latest.v15.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.infinispan</groupId>
-            <artifactId>infinispan-tasks-api</artifactId>
-            <version>${infinispan.latest.v16.version}</version>
+            <artifactId>infinispan-server-hotrod</artifactId>
+            <version>${infinispan.latest.v15.version}</version>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.infinispan</groupId>
+            <artifactId>infinispan-server-runtime</artifactId>
+            <version>${infinispan.latest.v15.version}</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.infinispan</groupId>
             <artifactId>infinispan-client-hotrod</artifactId>
-            <version>${infinispan.latest.v16.version}</version>
+            <version>${infinispan.latest.v15.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.infinispan</groupId>
             <artifactId>infinispan-jcache</artifactId>
-            <version>${infinispan.latest.v16.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <!--
-            Infinispan 16.1+ server modules (infinispan-server-hotrod, infinispan-server-runtime) are
-            compiled for JDK 25 and cannot be used to embed an in-process Hot Rod server under our JDK 17
-            build. Instead, HotRod integration tests run against a real containerized Infinispan server.
-        -->
-        <dependency>
-            <groupId>org.infinispan</groupId>
-            <artifactId>testcontainers-infinispan</artifactId>
-            <version>${infinispan.latest.v16.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.testcontainers</groupId>
-            <artifactId>testcontainers</artifactId>
-            <version>${testcontainers.version}</version>
+            <version>${infinispan.latest.v15.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

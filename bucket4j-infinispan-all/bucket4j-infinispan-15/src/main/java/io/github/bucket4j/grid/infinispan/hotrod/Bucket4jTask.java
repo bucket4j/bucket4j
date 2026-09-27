@@ -29,6 +29,7 @@ import org.infinispan.Cache;
 import org.infinispan.commons.CacheException;
 import org.infinispan.functional.FunctionalMap.ReadWriteMap;
 import org.infinispan.functional.impl.FunctionalMapImpl;
+import org.infinispan.functional.impl.ReadWriteMapImpl;
 import org.infinispan.tasks.ServerTask;
 import org.infinispan.tasks.TaskContext;
 
@@ -61,7 +62,7 @@ public class Bucket4jTask implements ServerTask<byte[]> {
         if (cacheContext == null) {
             perCacheContext.computeIfAbsent(cacheName, k -> {
                 FunctionalMapImpl<Object, byte[]> functionalMap = FunctionalMapImpl.create((AdvancedCache) advancedCache);
-                return new CacheContext(functionalMap.toReadWriteMap());
+                return new CacheContext(ReadWriteMapImpl.create(functionalMap));
             });
         }
         threadLocalTaskContext.set(ctx);
