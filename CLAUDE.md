@@ -51,6 +51,7 @@ Each backend module provides a `ProxyManager` implementation:
 | `bucket4j-caffeine` | Caffeine cache | N/A |
 | `bucket4j-mongodb` | MongoDB | Yes |
 | `bucket4j-memcached` | Memcached (CAS-based) | Yes |
+| `bucket4j-cassandra` | Apache Cassandra (LWT-based) | Yes |
 
 ### Redis sub-modules (`bucket4j-redis/`)
 - `bucket4j-redis-common` — shared interfaces and base implementations

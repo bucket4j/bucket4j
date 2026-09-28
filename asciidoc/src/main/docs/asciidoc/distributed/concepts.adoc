@@ -5,7 +5,7 @@ Using Bucket4j in a cluster of JVMs introduces a few new entities in addition to
 
 [[proxy-manager, ProxyManager]]
 ==== ProxyManager
-`ProxyManager` is the main extension point that connects Bucket4j to a particular storage technology (a JCache-compliant grid, Redis, a relational database, MongoDB, Couchbase, etc).
+`ProxyManager` is the main extension point that connects Bucket4j to a particular storage technology (a JCache-compliant grid, Redis, a relational database, MongoDB, Couchbase, Apache Cassandra, etc).
 A `ProxyManager` is typically built once per RDBMS table, grid cache, or similarly isolated part of the external storage, and buckets are distinguished from each other within it by a primary key.
 
 Each backend module provides its own way to build a `ProxyManager` (see the documentation page for your specific backend), but once built, it is used the same way everywhere:

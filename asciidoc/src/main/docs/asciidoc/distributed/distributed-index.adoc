@@ -15,3 +15,5 @@ include::mongodb/mongodb-integrations.adoc[]
 include::couchbase/couchbase.adoc[]
 
 include::memcached/memcached.adoc[]
+
+include::cassandra/cassandra.adoc[]

@@ -1,6 +1,6 @@
 === Framework for implementing support for a custom database
 
-Bucket4j ships with `ProxyManager` implementations for a number of backends (Redis, Hazelcast, Apache Ignite, Infinispan, Oracle Coherence, PostgreSQL, MySQL, MariaDB, MSSQL, DB2, Oracle, MongoDB, Couchbase), but you are not limited to them.
+Bucket4j ships with `ProxyManager` implementations for a number of backends (Redis, Hazelcast, Apache Ignite, Infinispan, Oracle Coherence, PostgreSQL, MySQL, MariaDB, MSSQL, DB2, Oracle, MongoDB, Couchbase, Apache Cassandra), but you are not limited to them.
 If your storage of choice is not on this list, you can implement a `ProxyManager` for it using the generic framework described below, as long as your storage supports one of the following:
 
 * **Pessimistic locking** - an exclusive lock can be acquired on a row/entry by key, and released later in the same transaction.
