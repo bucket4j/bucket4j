@@ -11,8 +11,15 @@ import org.jetbrains.kotlinx.lincheck.strategy.stress.StressOptions
 import org.jetbrains.kotlinx.lincheck.verifier.VerifierState
 import org.jetbrains.kotlinx.lincheck.verifier.linearizability.LinearizabilityVerifier
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Timeout
 import java.util.concurrent.CompletableFuture
 
+/**
+ * Covers only the happy path: every command succeeds, so this test can never observe a hang caused by an
+ * uncaught exception on the failure path. See [io.github.bucket4j.util.concurrent.batch.AsyncBatchHelperSynchronousFailureLincheckTest]
+ * and [io.github.bucket4j.util.concurrent.batch.AsyncBatchHelperResultSplitterFailureLincheckTest] for
+ * dedicated failure-path coverage.
+ */
 @StressCTest(verifier = LinearizabilityVerifier::class)
 @Param(name = "amount", gen = LongGen::class, conf = "1:20")
 class BatchingAsyncExecutorLincheckTest : VerifierState() {
@@ -27,6 +34,7 @@ class BatchingAsyncExecutorLincheckTest : VerifierState() {
     }
 
     @Test
+    @Timeout(60)
     fun runTest() {
         val opts: Options<*, *> = StressOptions()
                 .iterations(10)

@@ -98,9 +98,17 @@ public class AsyncBatchHelper<T, R, CT, CR> {
             return asyncTaskExecutor.apply(task)
                     .whenComplete((result, error) -> scheduleNextBatchAsync());
         } catch (Throwable error) {
-            CompletableFuture<R> failedFuture = new CompletableFuture<>();
-            failedFuture.completeExceptionally(error);
-            return failedFuture;
+            // asyncTaskExecutor failed synchronously instead of returning a failed future,
+            // so the batch that was already released by scheduleNextBatchAsync's completion callback
+            // never happened. Without this call, the lock acquired by lockExclusivelyOrEnqueue above
+            // would never be released, permanently hanging every task enqueued afterwards.
+            try {
+                CompletableFuture<R> failedFuture = new CompletableFuture<>();
+                failedFuture.completeExceptionally(error);
+                return failedFuture;
+            } finally {
+                scheduleNextBatchAsync();
+            }
         }
     }
 
@@ -132,22 +140,29 @@ public class AsyncBatchHelper<T, R, CT, CR> {
     }
 
     private void completeWaitingFutures(CT combinedTask, List<WaitingTask<T, R>> waitingNodes, CR multiResult, Throwable error) {
-        if (error != null) {
-            for (WaitingTask<T, R> waitingNode : waitingNodes) {
-                try {
-                    waitingNode.future.completeExceptionally(error);
-                } catch (Throwable t) {
-                    waitingNode.future.completeExceptionally(t);
+        if (error == null) {
+            try {
+                // combinedResultSplitter can throw even though the combined task itself succeeded
+                // (e.g. a bug in result unwrapping). This call must stay inside the try block,
+                // otherwise none of the waitingNodes would ever be completed and their callers would hang forever.
+                List<R> singleResults = combinedResultSplitter.apply(combinedTask, multiResult);
+                for (int i = 0; i < waitingNodes.size(); i++) {
+                    try {
+                        waitingNodes.get(i).future.complete(singleResults.get(i));
+                    } catch (Throwable t) {
+                        waitingNodes.get(i).future.completeExceptionally(t);
+                    }
                 }
+                return;
+            } catch (Throwable e) {
+                error = e;
             }
-        } else {
-            List<R> singleResults = combinedResultSplitter.apply(combinedTask, multiResult);
-            for (int i = 0; i < waitingNodes.size(); i++) {
-                try {
-                    waitingNodes.get(i).future.complete(singleResults.get(i));
-                } catch (Throwable t) {
-                    waitingNodes.get(i).future.completeExceptionally(t);
-                }
+        }
+        for (WaitingTask<T, R> waitingNode : waitingNodes) {
+            try {
+                waitingNode.future.completeExceptionally(error);
+            } catch (Throwable t) {
+                waitingNode.future.completeExceptionally(t);
             }
         }
     }

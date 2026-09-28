@@ -11,7 +11,13 @@ import org.jetbrains.kotlinx.lincheck.strategy.stress.StressOptions
 import org.jetbrains.kotlinx.lincheck.verifier.VerifierState
 import org.jetbrains.kotlinx.lincheck.verifier.linearizability.LinearizabilityVerifier
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Timeout
 
+/**
+ * Covers only the happy path: every command succeeds, so this test can never observe a hang caused by an
+ * uncaught exception on the failure path. `BatchHelper` itself has no known equivalent bugs (unlike
+ * `AsyncBatchHelper`), so no dedicated failure-path Lincheck test was added for it.
+ */
 @StressCTest(verifier = LinearizabilityVerifier::class)
 @Param(name = "amount", gen = LongGen::class, conf = "1:20")
 class BatchingExecutorLincheckTest  : VerifierState() {
@@ -25,6 +31,7 @@ class BatchingExecutorLincheckTest  : VerifierState() {
     }
 
     @Test
+    @Timeout(60)
     fun runTest() {
         val opts: Options<*, *> = StressOptions()
                 .iterations(10)
