@@ -19,9 +19,8 @@
  */
 package io.github.bucket4j.grid.ignite3;
 
+import io.github.bucket4j.distributed.remote.BatchRequest;
 import io.github.bucket4j.distributed.remote.CommandResult;
-import io.github.bucket4j.distributed.remote.MutableBucketEntry;
-import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.remote.Request;
 import io.github.bucket4j.distributed.serialization.InternalSerializationHelper;
 import io.github.bucket4j.distributed.serialization.SerializationStyle;
@@ -41,6 +40,7 @@ import org.apache.ignite.marshalling.ByteArrayMarshaller;
 import org.apache.ignite.marshalling.Marshaller;
 import org.apache.ignite.table.KeyValueView;
 import org.apache.ignite.table.Table;
+import org.jetbrains.annotations.VisibleForTesting;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -132,25 +132,19 @@ public class Ignite3ComputeJob<K> implements ComputeJob<byte[], byte[]> {
         );
     }
 
-    private CompletableFuture<List<CommandResult<?>>> executeBatchAsync(JobExecutionContext context, String tableName, K key, List<Request<?>> requests) {
+    // visible for testing
+    CompletableFuture<List<CommandResult<?>>> executeBatchAsync(JobExecutionContext context, String tableName, K key, List<Request<?>> requests) {
         Ignite ignite = context.ignite();
         return ignite.transactions().runInTransactionAsync((tx) -> {
             Table table = ignite.tables().table(tableName);
             KeyValueView<K, byte[]> keyValueView = (KeyValueView<K, byte[]>) table.keyValueView(key.getClass(), byte[].class);
             return keyValueView.getAsync(tx, key).thenCompose(((byte[] stateBytes) -> {
+                BatchRequest batch = new BatchRequest(requests, stateBytes);
                 List<CommandResult<?>> results = new ArrayList<>(requests.size());
-                MutableBucketEntry entryWrapper = new MutableBucketEntry(stateBytes);
-                for (Request<?> request : requests) {
-                    long currentTimeNanos = request.getClientSideTime() != null? request.getClientSideTime(): System.currentTimeMillis() * 1_000_000;
-                    RemoteCommand<?> command = request.getCommand();
-                    CommandResult<?> result = command.execute(entryWrapper, currentTimeNanos);
-                    results.add(result);
-                }
-                if (!entryWrapper.isStateModified()) {
+                byte[] finalState = batch.execute(results);
+                if (finalState == null) {
                     return CompletableFuture.completedFuture(results);
                 } else {
-                    Request<?> lastRequest = requests.get(requests.size() - 1);
-                    byte[] finalState = entryWrapper.getStateBytes(lastRequest.getBackwardCompatibilityVersion());
                     return keyValueView.putAsync(tx, key, finalState).thenApply((Void v) -> results);
                 }
             }));
