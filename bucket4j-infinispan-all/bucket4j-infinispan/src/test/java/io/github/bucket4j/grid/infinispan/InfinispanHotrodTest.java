@@ -2,17 +2,20 @@ package io.github.bucket4j.grid.infinispan;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -103,8 +106,8 @@ public class InfinispanHotrodTest extends AbstractDistributedBucketTest {
         jarFile.toFile().deleteOnExit();
         Set<String> addedEntries = new HashSet<>();
         try (JarOutputStream jarOut = new JarOutputStream(Files.newOutputStream(jarFile))) {
-            addDirectoryToJar(jarOut, classesDirOf(Bandwidth.class), addedEntries);
-            addDirectoryToJar(jarOut, classesDirOf(Bucket4jInfinispan.class), addedEntries);
+            addClasspathEntryToJar(jarOut, classpathEntryOf(Bandwidth.class), addedEntries);
+            addClasspathEntryToJar(jarOut, classpathEntryOf(Bucket4jInfinispan.class), addedEntries);
         }
         // Files.createTempFile creates the file with mode rw------- (owner-only), which the
         // container's non-root user cannot read once it's mounted; Infinispan Server then silently
@@ -113,9 +116,22 @@ public class InfinispanHotrodTest extends AbstractDistributedBucketTest {
         return jarFile;
     }
 
-    private static Path classesDirOf(Class<?> type) throws URISyntaxException {
+    private static Path classpathEntryOf(Class<?> type) throws URISyntaxException {
         URL location = type.getProtectionDomain().getCodeSource().getLocation();
         return Paths.get(location.toURI());
+    }
+
+    /**
+     * A dependency's classpath entry is a directory of {@code .class} files when it's built as part
+     * of the same reactor, but a packaged jar when resolved from the local repository (e.g. when this
+     * test is run standalone via {@code mvn -pl}); both forms need to be merged into the extension jar.
+     */
+    private static void addClasspathEntryToJar(JarOutputStream jarOut, Path classpathEntry, Set<String> addedEntries) throws IOException {
+        if (Files.isDirectory(classpathEntry)) {
+            addDirectoryToJar(jarOut, classpathEntry, addedEntries);
+        } else {
+            addJarToJar(jarOut, classpathEntry, addedEntries);
+        }
     }
 
     private static void addDirectoryToJar(JarOutputStream jarOut, Path directory, Set<String> addedEntries) throws IOException {
@@ -131,6 +147,23 @@ public class InfinispanHotrodTest extends AbstractDistributedBucketTest {
             jarOut.putNextEntry(new JarEntry(entryName));
             Files.copy(path, jarOut);
             jarOut.closeEntry();
+        }
+    }
+
+    private static void addJarToJar(JarOutputStream jarOut, Path sourceJar, Set<String> addedEntries) throws IOException {
+        try (JarFile jarIn = new JarFile(sourceJar.toFile())) {
+            Enumeration<JarEntry> entries = jarIn.entries();
+            while (entries.hasMoreElements()) {
+                JarEntry entry = entries.nextElement();
+                if (entry.isDirectory() || !addedEntries.add(entry.getName())) {
+                    continue;
+                }
+                jarOut.putNextEntry(new JarEntry(entry.getName()));
+                try (InputStream entryIn = jarIn.getInputStream(entry)) {
+                    entryIn.transferTo(jarOut);
+                }
+                jarOut.closeEntry();
+            }
         }
     }
 
