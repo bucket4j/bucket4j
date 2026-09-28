@@ -13,101 +13,90 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class CassandraTest extends AbstractDistributedBucketTest {
 
-    private static final String KEYSPACE   = "bucket4j_test";
-    private static final String TABLE      = "rate_limits";
-    private static final String KEY_COL    = "key";
-    private static final String STATE_COL  = "state";
-    private static final String VERSION_COL = "version";
+    private static final String KEYSPACE = "bucket4j_test";
+    private static final String TABLE = "buckets";
+    private static final String KEY_COLUMN = "bucket_key";
+    private static final String STATE_COLUMN = "bucket_state";
+    private static final String VERSION_COLUMN = "bucket_version";
 
-    private static CassandraContainer<?> container;
-
-    /** Session without a default keyspace — simulates a shared/microservice session. */
-    private static CqlSession sharedSession;
-
-    /** Session with {@value KEYSPACE} as its default keyspace — simulates a dedicated cluster session. */
-    private static CqlSession dedicatedSession;
+    private static CassandraContainer container;
+    private static CqlSession sessionWithoutDefaultKeyspace;
+    private static CqlSession sessionWithDefaultKeyspace;
 
     @BeforeAll
-    public static void setup() {
-        container = new CassandraContainer<>("cassandra:5.0");
+    public static void setupCassandra() {
+        container = new CassandraContainer("cassandra:5.0");
         container.start();
 
-        // Bootstrap: shared session has no default keyspace; used for schema creation and microservice specs.
-        sharedSession = CqlSession.builder()
-                .addContactPoint(container.getContactPoint())
-                .withLocalDatacenter(container.getLocalDatacenter())
-                .build();
+        sessionWithoutDefaultKeyspace = CqlSession.builder()
+            .addContactPoint(container.getContactPoint())
+            .withLocalDatacenter(container.getLocalDatacenter())
+            .build();
 
-        sharedSession.execute(
-                "CREATE KEYSPACE IF NOT EXISTS " + KEYSPACE +
-                " WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1}"
-        );
-        sharedSession.execute(
-                "CREATE TABLE IF NOT EXISTS " + KEYSPACE + "." + TABLE + " (" +
-                KEY_COL + "     text    PRIMARY KEY, " +
-                STATE_COL + "   blob, " +
-                VERSION_COL + " bigint" +
-                ")"
-        );
+        sessionWithoutDefaultKeyspace.execute(
+            "CREATE KEYSPACE IF NOT EXISTS " + KEYSPACE +
+                " WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1}");
+        sessionWithoutDefaultKeyspace.execute(
+            "CREATE TABLE IF NOT EXISTS " + KEYSPACE + "." + TABLE + " (" +
+                KEY_COLUMN + " text PRIMARY KEY, " +
+                STATE_COLUMN + " blob, " +
+                VERSION_COLUMN + " bigint)");
 
-        dedicatedSession = CqlSession.builder()
-                .addContactPoint(container.getContactPoint())
-                .withLocalDatacenter(container.getLocalDatacenter())
-                .withKeyspace(KEYSPACE)
-                .build();
+        sessionWithDefaultKeyspace = CqlSession.builder()
+            .addContactPoint(container.getContactPoint())
+            .withLocalDatacenter(container.getLocalDatacenter())
+            .withKeyspace(KEYSPACE)
+            .build();
 
         specs = List.of(
             new ProxyManagerSpec<>(
-                "CassandraCompareAndSwap_DedicatedSession",
+                "CassandraCompareAndSwapBasedProxyManager_DedicatedSession",
                 () -> UUID.randomUUID().toString(),
-                () -> Bucket4jCassandra.compareAndSwapBasedBuilder(dedicatedSession)
-                        .tableName(TABLE)
-                        .keyColumn(KEY_COL)
-                        .stateColumn(STATE_COL)
-                        .versionColumn(VERSION_COL)
+                () -> Bucket4jCassandra.compareAndSwapBasedBuilder(sessionWithDefaultKeyspace)
+                    .tableName(TABLE)
+                    .keyColumn(KEY_COLUMN)
+                    .stateColumn(STATE_COLUMN)
+                    .versionColumn(VERSION_COLUMN)
             ).checkExpiration(),
-
             new ProxyManagerSpec<>(
-                "CassandraCompareAndSwap_SharedSession",
+                "CassandraCompareAndSwapBasedProxyManager_SharedSession",
                 () -> UUID.randomUUID().toString(),
-                () -> Bucket4jCassandra.compareAndSwapBasedBuilder(sharedSession)
-                        .keyspace(KEYSPACE)
-                        .tableName(TABLE)
-                        .keyColumn(KEY_COL)
-                        .stateColumn(STATE_COL)
-                        .versionColumn(VERSION_COL)
+                () -> Bucket4jCassandra.compareAndSwapBasedBuilder(sessionWithoutDefaultKeyspace)
+                    .keyspace(KEYSPACE)
+                    .tableName(TABLE)
+                    .keyColumn(KEY_COLUMN)
+                    .stateColumn(STATE_COLUMN)
+                    .versionColumn(VERSION_COLUMN)
             ).checkExpiration(),
-
             new ProxyManagerSpec<>(
-                "CassandraCompareAndSwap_DedicatedSession_LongKeys",
+                "CassandraCompareAndSwapBasedProxyManager_DedicatedSessionWithLongKeys",
                 () -> ThreadLocalRandom.current().nextLong(),
-                () -> Bucket4jCassandra.compareAndSwapBasedBuilder(dedicatedSession, Mapper.LONG)
-                        .tableName(TABLE)
-                        .keyColumn(KEY_COL)
-                        .stateColumn(STATE_COL)
-                        .versionColumn(VERSION_COL)
+                () -> Bucket4jCassandra.compareAndSwapBasedBuilder(sessionWithDefaultKeyspace, Mapper.LONG)
+                    .tableName(TABLE)
+                    .keyColumn(KEY_COLUMN)
+                    .stateColumn(STATE_COLUMN)
+                    .versionColumn(VERSION_COLUMN)
             ).checkExpiration(),
-
             new ProxyManagerSpec<>(
-                "CassandraCompareAndSwap_SharedSession_LongKeys",
+                "CassandraCompareAndSwapBasedProxyManager_SharedSessionWithLongKeys",
                 () -> ThreadLocalRandom.current().nextLong(),
-                () -> Bucket4jCassandra.compareAndSwapBasedBuilder(sharedSession, Mapper.LONG)
-                        .keyspace(KEYSPACE)
-                        .tableName(TABLE)
-                        .keyColumn(KEY_COL)
-                        .stateColumn(STATE_COL)
-                        .versionColumn(VERSION_COL)
+                () -> Bucket4jCassandra.compareAndSwapBasedBuilder(sessionWithoutDefaultKeyspace, Mapper.LONG)
+                    .keyspace(KEYSPACE)
+                    .tableName(TABLE)
+                    .keyColumn(KEY_COLUMN)
+                    .stateColumn(STATE_COLUMN)
+                    .versionColumn(VERSION_COLUMN)
             ).checkExpiration()
         );
     }
 
     @AfterAll
-    public static void teardown() {
-        if (dedicatedSession != null) {
-            dedicatedSession.close();
+    public static void cleanupCassandra() {
+        if (sessionWithDefaultKeyspace != null) {
+            sessionWithDefaultKeyspace.close();
         }
-        if (sharedSession != null) {
-            sharedSession.close();
+        if (sessionWithoutDefaultKeyspace != null) {
+            sessionWithoutDefaultKeyspace.close();
         }
         if (container != null) {
             container.stop();

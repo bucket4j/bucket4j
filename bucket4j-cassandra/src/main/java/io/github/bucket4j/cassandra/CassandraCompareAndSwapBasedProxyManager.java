@@ -5,6 +5,7 @@ import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.BoundStatement;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.driver.api.core.cql.Row;
+import com.datastax.oss.driver.api.core.data.ByteUtils;
 import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
 import io.github.bucket4j.distributed.expiration.NoneExpirationAfterWriteStrategy;
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AbstractCompareAndSwapBasedProxyManager;
@@ -12,7 +13,6 @@ import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.AsyncCompar
 import io.github.bucket4j.distributed.proxy.generic.compare_and_swap.CompareAndSwapOperation;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.distributed.serialization.Mapper;
-import com.datastax.oss.driver.api.core.data.ByteUtils;
 
 import java.nio.ByteBuffer;
 import java.time.Duration;
@@ -20,147 +20,111 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * Compare-and-swap-based proxy manager for Apache Cassandra using the DataStax Java Driver 4.x.
+ * Compare-and-swap-based proxy manager for Apache Cassandra that uses the Cassandra Java Driver 4.x.
  *
- * <p>Uses Cassandra Lightweight Transactions (LWT) for atomic read-modify-write semantics.
- * The LWT guard is a {@code bigint} version column — not the full state blob — to minimize
- * Paxos condition-evaluation overhead.
+ * <p>
+ * Atomicity of read-modify-write cycle is achieved by Lightweight Transactions. The condition of conditional write
+ * is a {@code bigint} version column instead of the state blob itself, in order to keep the amount of data
+ * evaluated by Paxos as small as possible.
  *
- * <h3>Deployment modes</h3>
+ * <p>
+ * Be aware that Lightweight Transactions are expensive, each successful write requires four round-trips between
+ * Paxos participants. This integration is a reasonable choice for teams that already run Cassandra and do not want
+ * to introduce another storage just for rate limiting, but it is not a replacement for in-memory grids or Redis
+ * when the same bucket key is updated with high rate.
+ *
+ * <p>
+ * Both deployment modes are supported:
  * <ul>
- *   <li><b>Cluster-level / dedicated session</b>: create the {@link CqlSession} with
- *       {@code .withKeyspace("rate_limits")} so the session already targets the rate-limiting
- *       keyspace. Leave {@code .keyspace(...)} unset on the builder. All CQL statements use
- *       the bare table name.</li>
- *   <li><b>Microservice / shared session</b>: the session's default keyspace belongs to the
- *       core application. Set {@code .keyspace("rate_limits")} on the builder so that every
- *       CQL statement qualifies the table as {@code keyspace.table} and cannot accidentally
- *       touch the application keyspace.</li>
+ *   <li>Dedicated session - the session is created with {@code CqlSession.builder().withKeyspace(...)},
+ *   the keyspace is not specified on the builder and all statements use bare table name.</li>
+ *   <li>Shared session - the default keyspace of the session belongs to the application, the keyspace is specified
+ *   on the builder and all statements refer the table as {@code keyspace.table}.</li>
  * </ul>
  *
  * @param <K> type of primary key
  */
 public class CassandraCompareAndSwapBasedProxyManager<K> extends AbstractCompareAndSwapBasedProxyManager<K> {
 
+    private static final long ABSENT_VERSION = 0L;
+    private static final int MIN_TIME_TO_LIVE_SECONDS = 1;
+    private static final int MAX_TIME_TO_LIVE_SECONDS = 630_720_000;
+
+    private static final String KEY_MARKER = "bucket4j_key";
+    private static final String STATE_MARKER = "bucket4j_state";
+    private static final String NEW_VERSION_MARKER = "bucket4j_new_version";
+    private static final String CURRENT_VERSION_MARKER = "bucket4j_current_version";
+    private static final String TIME_TO_LIVE_MARKER = "bucket4j_time_to_live";
+
     private final CqlSession session;
     private final Mapper<K> keyMapper;
     private final ExpirationAfterWriteStrategy expirationStrategy;
-    private final ConsistencyLevel serialCL;
-    private final String stateCol;
-    private final String versionCol;
-    private final PreparedStatement selectStmt;
-    private final PreparedStatement insertStmt;
-    private final PreparedStatement insertTtlStmt;
-    private final PreparedStatement updateStmt;
-    private final PreparedStatement updateTtlStmt;
-    private final PreparedStatement deleteStmt;
+    private final ConsistencyLevel readConsistencyLevel;
+    private final ConsistencyLevel serialConsistencyLevel;
+    private final String stateColumn;
+    private final String versionColumn;
+    private final PreparedStatement selectStatement;
+    private final PreparedStatement insertStatement;
+    private final PreparedStatement insertWithTimeToLiveStatement;
+    private final PreparedStatement updateStatement;
+    private final PreparedStatement updateWithTimeToLiveStatement;
+    private final PreparedStatement deleteStatement;
 
     protected CassandraCompareAndSwapBasedProxyManager(Bucket4jCassandra.CassandraCompareAndSwapBasedProxyManagerBuilder<K> builder) {
         super(builder.getClientSideConfig());
-        this.session           = builder.getSession();
-        this.keyMapper         = builder.getKeyMapper();
+        this.session = builder.getSession();
+        this.keyMapper = builder.getKeyMapper();
         this.expirationStrategy = builder.getClientSideConfig()
-                .getExpirationAfterWriteStrategy()
-                .orElseGet(ExpirationAfterWriteStrategy::none);
-        this.serialCL   = builder.getSerialConsistencyLevel();
-        this.stateCol   = builder.getStateColumn();
-        this.versionCol = builder.getVersionColumn();
+            .getExpirationAfterWriteStrategy()
+            .orElseGet(ExpirationAfterWriteStrategy::none);
+        this.readConsistencyLevel = builder.getReadConsistencyLevel();
+        this.serialConsistencyLevel = builder.getSerialConsistencyLevel();
+        this.stateColumn = builder.getStateColumn();
+        this.versionColumn = builder.getVersionColumn();
 
-        String tableRef = resolveTableRef(builder);
-        String keyCol   = builder.getKeyColumn();
+        String table = resolveTable(builder);
+        String keyColumn = builder.getKeyColumn();
 
-        this.selectStmt    = prepareSelect(tableRef, keyCol, stateCol, versionCol);
-        this.insertStmt    = prepareInsert(tableRef, keyCol, stateCol, versionCol);
-        this.insertTtlStmt = prepareInsertTtl(tableRef, keyCol, stateCol, versionCol);
-        this.updateStmt    = prepareUpdate(tableRef, keyCol, stateCol, versionCol);
-        this.updateTtlStmt = prepareUpdateTtl(tableRef, keyCol, stateCol, versionCol);
-        this.deleteStmt    = prepareDelete(tableRef, keyCol);
-    }
-
-    /**
-     * Returns the fully-qualified table reference ({@code keyspace.table}) when a keyspace is
-     * configured on the builder, or the bare table name when it is not.
-     *
-     * <p><b>Shared session (microservice):</b> the builder's {@code keyspace} is set, so every
-     * prepared statement explicitly targets the rate-limiting keyspace regardless of the session's
-     * own default keyspace.
-     *
-     * <p><b>Dedicated session (cluster):</b> no keyspace override; the session was created
-     * with {@code CqlSession.builder().withKeyspace("rate_limits")}, so the bare table name is
-     * sufficient and Cassandra resolves it against the session's default keyspace.
-     */
-    private static String resolveTableRef(Bucket4jCassandra.CassandraCompareAndSwapBasedProxyManagerBuilder<?> builder) {
-        String ks = builder.getKeyspace();
-        return (ks != null && !ks.isBlank()) ? ks + "." + builder.getTableName() : builder.getTableName();
-    }
-
-    private PreparedStatement prepareSelect(String tableRef, String keyCol, String stateCol, String versionCol) {
-        return session.prepare(
-                "SELECT %s, %s FROM %s WHERE %s = :key".formatted(stateCol, versionCol, tableRef, keyCol)
-        );
-    }
-
-    private PreparedStatement prepareInsert(String tableRef, String keyCol, String stateCol, String versionCol) {
-        return session.prepare(
-                "INSERT INTO %s (%s, %s, %s) VALUES (:key, :state, :nextVersion) IF NOT EXISTS".formatted(tableRef, keyCol, stateCol, versionCol)
-        );
-    }
-
-    private PreparedStatement prepareInsertTtl(String tableRef, String keyCol, String stateCol, String versionCol) {
-        return session.prepare(
-                "INSERT INTO %s (%s, %s, %s) VALUES (:key, :state, :nextVersion) IF NOT EXISTS USING TTL :ttl".formatted(tableRef, keyCol, stateCol, versionCol)
-        );
-    }
-
-    private PreparedStatement prepareUpdate(String tableRef, String keyCol, String stateCol, String versionCol) {
-        // Guards on version (bigint) — not the state blob — to minimize Paxos condition size.
-        return session.prepare(
-                "UPDATE %s SET %s = :state, %s = :nextVersion WHERE %s = :key IF %s = :currentVersion".formatted(tableRef, stateCol, versionCol, keyCol, versionCol)
-        );
-    }
-
-    private PreparedStatement prepareUpdateTtl(String tableRef, String keyCol, String stateCol, String versionCol) {
-        return session.prepare(
-                "UPDATE %s USING TTL :ttl SET %s = :state, %s = :nextVersion WHERE %s = :key IF %s = :currentVersion".formatted(tableRef, stateCol, versionCol, keyCol, versionCol)
-        );
-    }
-
-    private PreparedStatement prepareDelete(String tableRef, String keyCol) {
-        return session.prepare(
-                "DELETE FROM %s WHERE %s = :key".formatted(tableRef, keyCol)
-        );
+        this.selectStatement = session.prepare(
+            "SELECT %s, %s FROM %s WHERE %s = :%s"
+                .formatted(stateColumn, versionColumn, table, keyColumn, KEY_MARKER));
+        this.insertStatement = session.prepare(
+            "INSERT INTO %s (%s, %s, %s) VALUES (:%s, :%s, :%s) IF NOT EXISTS"
+                .formatted(table, keyColumn, stateColumn, versionColumn, KEY_MARKER, STATE_MARKER, NEW_VERSION_MARKER));
+        this.insertWithTimeToLiveStatement = session.prepare(
+            "INSERT INTO %s (%s, %s, %s) VALUES (:%s, :%s, :%s) IF NOT EXISTS USING TTL :%s"
+                .formatted(table, keyColumn, stateColumn, versionColumn, KEY_MARKER, STATE_MARKER, NEW_VERSION_MARKER, TIME_TO_LIVE_MARKER));
+        this.updateStatement = session.prepare(
+            "UPDATE %s SET %s = :%s, %s = :%s WHERE %s = :%s IF %s = :%s"
+                .formatted(table, stateColumn, STATE_MARKER, versionColumn, NEW_VERSION_MARKER, keyColumn, KEY_MARKER, versionColumn, CURRENT_VERSION_MARKER));
+        this.updateWithTimeToLiveStatement = session.prepare(
+            "UPDATE %s USING TTL :%s SET %s = :%s, %s = :%s WHERE %s = :%s IF %s = :%s"
+                .formatted(table, TIME_TO_LIVE_MARKER, stateColumn, STATE_MARKER, versionColumn, NEW_VERSION_MARKER, keyColumn, KEY_MARKER, versionColumn, CURRENT_VERSION_MARKER));
+        this.deleteStatement = session.prepare(
+            "DELETE FROM %s WHERE %s = :%s"
+                .formatted(table, keyColumn, KEY_MARKER));
     }
 
     @Override
     protected CompareAndSwapOperation beginCompareAndSwapOperation(K key) {
         return new CompareAndSwapOperation() {
-            private final String k = keyMapper.toString(key);
-            private long currentVersion;
+            private final String bucketKey = keyMapper.toString(key);
+            private long currentVersion = ABSENT_VERSION;
 
             @Override
             public Optional<byte[]> getStateData(Optional<Long> timeoutNanos) {
-                BoundStatement stmt = applyTimeout(selectStmt.bind().setString("key", k), timeoutNanos);
-                Row row = session.execute(stmt).one();
-                if (row == null) {
-                    currentVersion = 0L;
-                    return Optional.empty();
-                }
-                currentVersion = row.isNull(versionCol) ? 0L : row.getLong(versionCol);
-                return Optional.ofNullable(ByteUtils.getArray(row.getByteBuffer(stateCol)));
+                Row row = session.execute(buildSelectStatement(bucketKey, timeoutNanos)).one();
+                currentVersion = readVersion(row);
+                return readState(row);
             }
 
             @Override
-            public boolean compareAndSwap(byte[] originalData, byte[] newData, RemoteBucketState newState,
-                                          Optional<Long> timeoutNanos) {
-                // LWT statements are non-idempotent — the driver will NOT auto-retry on
-                // WriteTimeoutException. Any retry goes through the full CAS loop, which
-                // re-reads state via getStateData() before attempting another write.
-                long nextVersion = currentVersion + 1;
-                BoundStatement stmt = buildCasStmt(k, originalData, newData, newState,
-                        currentVersion, nextVersion, timeoutNanos);
-                boolean applied = session.execute(stmt).wasApplied();
+            public boolean compareAndSwap(byte[] originalData, byte[] newData, RemoteBucketState newState, Optional<Long> timeoutNanos) {
+                long newVersion = currentVersion + 1;
+                BoundStatement statement = buildCompareAndSwapStatement(bucketKey, newData, newState, currentVersion, newVersion, timeoutNanos);
+                boolean applied = session.execute(statement).wasApplied();
                 if (applied) {
-                    currentVersion = nextVersion;
+                    currentVersion = newVersion;
                 }
                 return applied;
             }
@@ -170,53 +134,47 @@ public class CassandraCompareAndSwapBasedProxyManager<K> extends AbstractCompare
     @Override
     protected AsyncCompareAndSwapOperation beginAsyncCompareAndSwapOperation(K key) {
         return new AsyncCompareAndSwapOperation() {
-            private final String k = keyMapper.toString(key);
-            private volatile long currentVersion;
+            private final String bucketKey = keyMapper.toString(key);
+            private volatile long currentVersion = ABSENT_VERSION;
 
             @Override
             public CompletableFuture<Optional<byte[]>> getStateData(Optional<Long> timeoutNanos) {
-                BoundStatement stmt = applyTimeout(selectStmt.bind().setString("key", k), timeoutNanos);
-                return session.executeAsync(stmt).toCompletableFuture()
-                        .thenApply(rs -> {
-                            Row row = rs.one();
-                            if (row == null) {
-                                currentVersion = 0L;
-                                return Optional.empty();
-                            }
-                            currentVersion = row.isNull(versionCol) ? 0L : row.getLong(versionCol);
-                            return Optional.<byte[]>ofNullable(toBytes(row.getByteBuffer(stateCol)));
-                        });
+                return session.executeAsync(buildSelectStatement(bucketKey, timeoutNanos))
+                    .toCompletableFuture()
+                    .thenApply(resultSet -> {
+                        Row row = resultSet.one();
+                        currentVersion = readVersion(row);
+                        return readState(row);
+                    });
             }
 
             @Override
-            public CompletableFuture<Boolean> compareAndSwap(byte[] originalData, byte[] newData,
-                                                              RemoteBucketState newState,
-                                                              Optional<Long> timeoutNanos) {
-                long nextVersion = currentVersion + 1;
-                BoundStatement stmt = buildCasStmt(k, originalData, newData, newState,
-                        currentVersion, nextVersion, timeoutNanos);
-                return session.executeAsync(stmt).toCompletableFuture()
-                        .thenApply(rs -> {
-                            boolean applied = rs.wasApplied();
-                            if (applied) {
-                                currentVersion = nextVersion;
-                            }
-                            return applied;
-                        });
+            public CompletableFuture<Boolean> compareAndSwap(byte[] originalData, byte[] newData, RemoteBucketState newState, Optional<Long> timeoutNanos) {
+                long newVersion = currentVersion + 1;
+                BoundStatement statement = buildCompareAndSwapStatement(bucketKey, newData, newState, currentVersion, newVersion, timeoutNanos);
+                return session.executeAsync(statement)
+                    .toCompletableFuture()
+                    .thenApply(resultSet -> {
+                        boolean applied = resultSet.wasApplied();
+                        if (applied) {
+                            currentVersion = newVersion;
+                        }
+                        return applied;
+                    });
             }
         };
     }
 
     @Override
     public void removeProxy(K key) {
-        session.execute(deleteStmt.bind().setString("key", keyMapper.toString(key)));
+        session.execute(buildDeleteStatement(key));
     }
 
     @Override
     protected CompletableFuture<Void> removeAsync(K key) {
-        return session.executeAsync(deleteStmt.bind().setString("key", keyMapper.toString(key)))
-                .toCompletableFuture()
-                .thenApply(ignored -> null);
+        return session.executeAsync(buildDeleteStatement(key))
+            .toCompletableFuture()
+            .thenAccept(resultSet -> { });
     }
 
     @Override
@@ -229,75 +187,74 @@ public class CassandraCompareAndSwapBasedProxyManager<K> extends AbstractCompare
         return true;
     }
 
-    /**
-     * Builds the LWT bound statement for a CAS attempt.
-     *
-     * <ul>
-     *   <li>INSERT path ({@code originalData == null}): row does not yet exist.</li>
-     *   <li>UPDATE path: row exists; guard on {@code IF version = currentVersion}.</li>
-     * </ul>
-     *
-     * Serial consistency ({@link #serialCL}) is applied only to these LWT statements — not to
-     * the plain SELECT in {@code getStateData}.
-     */
-    private BoundStatement buildCasStmt(String k, byte[] originalData, byte[] newData,
-                                         RemoteBucketState newState, long currentVersion,
-                                         long nextVersion, Optional<Long> timeoutNanos) {
-        boolean useTtl = hasTtl();
-        BoundStatement stmt;
-        if (originalData == null) {
-            if (useTtl) {
-                stmt = insertTtlStmt.bind()
-                        .setString("key", k)
-                        .setByteBuffer("state", toBuffer(newData))
-                        .setLong("nextVersion", nextVersion)
-                        .setInt("ttl", ttlSeconds(newState));
-            } else {
-                stmt = insertStmt.bind()
-                        .setString("key", k)
-                        .setByteBuffer("state", toBuffer(newData))
-                        .setLong("nextVersion", nextVersion);
-            }
+    private static String resolveTable(Bucket4jCassandra.CassandraCompareAndSwapBasedProxyManagerBuilder<?> builder) {
+        String keyspace = builder.getKeyspace();
+        return keyspace == null || keyspace.isBlank() ? builder.getTableName() : keyspace + "." + builder.getTableName();
+    }
+
+    private BoundStatement buildSelectStatement(String bucketKey, Optional<Long> timeoutNanos) {
+        BoundStatement statement = selectStatement.bind()
+            .setString(KEY_MARKER, bucketKey)
+            .setConsistencyLevel(readConsistencyLevel)
+            .setIdempotent(true);
+        return applyTimeout(statement, timeoutNanos);
+    }
+
+    private BoundStatement buildDeleteStatement(K key) {
+        return deleteStatement.bind()
+            .setString(KEY_MARKER, keyMapper.toString(key))
+            .setIdempotent(true);
+    }
+
+    private BoundStatement buildCompareAndSwapStatement(String bucketKey, byte[] newData, RemoteBucketState newState,
+                                                        long currentVersion, long newVersion, Optional<Long> timeoutNanos) {
+        boolean withTimeToLive = isTimeToLiveEnabled();
+        BoundStatement statement;
+        if (currentVersion == ABSENT_VERSION) {
+            statement = withTimeToLive ? insertWithTimeToLiveStatement.bind() : insertStatement.bind();
         } else {
-            if (useTtl) {
-                stmt = updateTtlStmt.bind()
-                        .setInt("ttl", ttlSeconds(newState))
-                        .setByteBuffer("state", toBuffer(newData))
-                        .setLong("nextVersion", nextVersion)
-                        .setString("key", k)
-                        .setLong("currentVersion", currentVersion);
-            } else {
-                stmt = updateStmt.bind()
-                        .setByteBuffer("state", toBuffer(newData))
-                        .setLong("nextVersion", nextVersion)
-                        .setString("key", k)
-                        .setLong("currentVersion", currentVersion);
-            }
+            statement = withTimeToLive ? updateWithTimeToLiveStatement.bind() : updateStatement.bind();
+            statement = statement.setLong(CURRENT_VERSION_MARKER, currentVersion);
         }
-        return applySerial(applyTimeout(stmt, timeoutNanos));
+        if (withTimeToLive) {
+            statement = statement.setInt(TIME_TO_LIVE_MARKER, calculateTimeToLiveSeconds(newState));
+        }
+        statement = statement
+            .setString(KEY_MARKER, bucketKey)
+            .setByteBuffer(STATE_MARKER, ByteBuffer.wrap(newData))
+            .setLong(NEW_VERSION_MARKER, newVersion)
+            .setSerialConsistencyLevel(serialConsistencyLevel)
+            .setIdempotent(false);
+        return applyTimeout(statement, timeoutNanos);
     }
 
-    private BoundStatement applyTimeout(BoundStatement stmt, Optional<Long> timeoutNanos) {
-        return timeoutNanos.isPresent()
-                ? stmt.setTimeout(Duration.ofNanos(timeoutNanos.get()))
-                : stmt;
+    private static BoundStatement applyTimeout(BoundStatement statement, Optional<Long> timeoutNanos) {
+        return timeoutNanos.isPresent() ? statement.setTimeout(Duration.ofNanos(timeoutNanos.get())) : statement;
     }
 
-    private BoundStatement applySerial(BoundStatement stmt) {
-        return stmt.setSerialConsistencyLevel(serialCL);
+    private long readVersion(Row row) {
+        return row == null || row.isNull(versionColumn) ? ABSENT_VERSION : row.getLong(versionColumn);
     }
 
-    private boolean hasTtl() {
+    private Optional<byte[]> readState(Row row) {
+        return row == null ? Optional.empty() : Optional.ofNullable(toBytes(row.getByteBuffer(stateColumn)));
+    }
+
+    private boolean isTimeToLiveEnabled() {
         return expirationStrategy.getClass() != NoneExpirationAfterWriteStrategy.class;
     }
 
-    private int ttlSeconds(RemoteBucketState newState) {
-        long ttlMillis = expirationStrategy.calculateTimeToLiveMillis(newState, currentTimeNanos());
-        return (int) Math.max(1, ttlMillis / 1_000);
+    private int calculateTimeToLiveSeconds(RemoteBucketState newState) {
+        long timeToLiveMillis = expirationStrategy.calculateTimeToLiveMillis(newState, currentTimeNanos());
+        if (timeToLiveMillis <= MIN_TIME_TO_LIVE_SECONDS * 1_000L) {
+            return MIN_TIME_TO_LIVE_SECONDS;
+        }
+        long timeToLiveSeconds = timeToLiveMillis / 1_000L + (timeToLiveMillis % 1_000L == 0 ? 0 : 1);
+        return (int) Math.min(timeToLiveSeconds, MAX_TIME_TO_LIVE_SECONDS);
     }
 
-    private static ByteBuffer toBuffer(byte[] bytes) {
-        return bytes == null ? null : ByteBuffer.wrap(bytes);
+    private static byte[] toBytes(ByteBuffer buffer) {
+        return buffer == null ? null : ByteUtils.getArray(buffer);
     }
 
 }
