@@ -196,6 +196,11 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket, Compa
                 newState.copyStateFrom(previousState);
                 continue;
             }
+
+            if (nanosToCloseDeficit == Long.MAX_VALUE || nanosToCloseDeficit > maxWaitTimeNanos) {
+                return new VerboseResult<>(currentTimeNanos, Long.MAX_VALUE, newState);
+            }
+
             newState.consume(tokensToConsume);
             if (stateRef.compareAndSet(previousState, newState)) {
                 return new VerboseResult<>(currentTimeNanos, nanosToCloseDeficit, newState.copy());
@@ -248,8 +253,7 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket, Compa
         long currentTimeNanos = timeMeter.currentTimeNanos();
 
         while (true) {
-            newState.syncRefillTimestamps(currentTimeNanos);
-            newState.reset();
+            newState.reset(currentTimeNanos);
             if (stateRef.compareAndSet(previousState, newState)) {
                 return;
             } else {
@@ -441,8 +445,7 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket, Compa
         long currentTimeNanos = timeMeter.currentTimeNanos();
 
         while (true) {
-            newState.syncRefillTimestamps(currentTimeNanos);
-            newState.reset();
+            newState.reset(currentTimeNanos);
             if (stateRef.compareAndSet(previousState, newState)) {
                 return new VerboseResult<>(currentTimeNanos, Nothing.INSTANCE, newState.copy());
             } else {

@@ -52,7 +52,7 @@ public interface BucketState {
 
     void addTokens(long tokensToAdd);
 
-    void reset();
+    void reset(long currentTimeNanos);
 
     void forceAddTokens(long tokensToAdd);
 
@@ -61,8 +61,6 @@ public interface BucketState {
     long getRoundingError(int bandwidth);
 
     MathType getMathType();
-
-    void syncRefillTimestamps(long currentTimeNanos);
 
     static BucketState createInitialState(BucketConfiguration configuration, MathType mathType, long currentTimeNanos) {
         return switch (mathType) {

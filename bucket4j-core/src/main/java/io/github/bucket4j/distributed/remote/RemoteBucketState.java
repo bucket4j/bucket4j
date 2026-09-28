@@ -172,10 +172,6 @@ public class RemoteBucketState implements ComparableByContent<RemoteBucketState>
         state.refillAllBandwidth(currentTimeNanos);
     }
 
-    public void syncRefillTimestamps(long currentTimeNanos) {
-        state.syncRefillTimestamps(currentTimeNanos);
-    }
-
     public long getAvailableTokens() {
         return state.getAvailableTokens();
     }
@@ -201,8 +197,8 @@ public class RemoteBucketState implements ComparableByContent<RemoteBucketState>
         state.forceAddTokens(tokensToAdd);
     }
 
-    public void reset() {
-        state.reset();
+    public void reset(long currentTimeNanos) {
+        state.reset(currentTimeNanos);
     }
 
     public BucketState copyBucketState() {
