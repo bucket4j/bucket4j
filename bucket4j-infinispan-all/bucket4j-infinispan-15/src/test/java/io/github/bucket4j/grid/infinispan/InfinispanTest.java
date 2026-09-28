@@ -13,6 +13,7 @@ import org.infinispan.configuration.global.GlobalConfiguration;
 import org.infinispan.configuration.global.GlobalConfigurationBuilder;
 import org.infinispan.functional.FunctionalMap.ReadWriteMap;
 import org.infinispan.functional.impl.FunctionalMapImpl;
+import org.infinispan.functional.impl.ReadWriteMapImpl;
 import org.infinispan.manager.DefaultCacheManager;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -78,7 +79,7 @@ public class InfinispanTest extends AbstractDistributedBucketTest {
 
     private static ReadWriteMap<String, byte[]> toMap(Cache<String, byte[]> cache) {
         FunctionalMapImpl<String, byte[]> functionalMap = FunctionalMapImpl.create(cache.getAdvancedCache());
-        return functionalMap.toReadWriteMap();
+        return ReadWriteMapImpl.create(functionalMap);
     }
 
 }

@@ -14,6 +14,7 @@
 
     <artifactId>bucket4j_jdk17-infinispan-all</artifactId>
     <modules>
+        <module>bucket4j-infinispan-15</module>
         <module>bucket4j-infinispan</module>
     </modules>
 

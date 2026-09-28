@@ -1,12 +1,21 @@
 [[bucket4j-infinispan, Bucket4j-Infinispan]]
 ==== Infinispan integration
 ===== Dependencies
-To use ``bucket4j-infinispan`` with ``Infinispan 9.x/10.x``, add the following dependency:
+To use the Bucket4j extension with a current version of Infinispan, add the following dependency:
 [source, xml, subs=attributes+]
 ----
 <dependency>
     <groupId>com.bucket4j</groupId>
     <artifactId>bucket4j_jdk17-infinispan</artifactId>
+    <version>{revnumber}</version>
+</dependency>
+----
+If you are using a legacy ``Infinispan 15.x`` release, add this dependency instead:
+[source, xml, subs=attributes+]
+----
+<dependency>
+    <groupId>com.bucket4j</groupId>
+    <artifactId>bucket4j_jdk17-infinispan-15</artifactId>
     <version>{revnumber}</version>
 </dependency>
 ----

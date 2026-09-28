@@ -46,15 +46,16 @@
         <argLine/>
         <maven.build.timestamp.format>yyyy-MM-dd HH</maven.build.timestamp.format>
         <jcache.version>1.0.0</jcache.version>
-        <ignite.version>2.16.0</ignite.version>
+        <ignite.version>2.18.0</ignite.version>
         <ignite3.version>3.1.0</ignite3.version>
         <geode.version>2.0.2</geode.version>
 
         <hazelcast.4.version>4.1</hazelcast.4.version>
-        <hazelcast.latest.version>5.3.6</hazelcast.latest.version>
+        <hazelcast.latest.version>5.7.0</hazelcast.latest.version>
         <coherence.21.version>21.06</coherence.21.version>
         <coherence.latest.version>26.07</coherence.latest.version>
-        <infinispan.latest.version>15.0.4.Final</infinispan.latest.version>
+        <infinispan.latest.v15.version>15.0.4.Final</infinispan.latest.v15.version>
+        <infinispan.latest.v16.version>16.2.2</infinispan.latest.v16.version>
         <ehcache.version>3.8.1</ehcache.version>
 
         <testcontainers.version>2.0.5</testcontainers.version>
@@ -465,7 +466,7 @@
         <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
-            <version>3.27.3</version>
+            <version>3.27.7</version>
             <scope>test</scope>
         </dependency>
 
