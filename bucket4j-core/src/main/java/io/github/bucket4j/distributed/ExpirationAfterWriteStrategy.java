@@ -2,7 +2,7 @@
  * ========================LICENSE_START=================================
  * Bucket4j
  * %%
- * Copyright (C) 2015 - 2022 Vladimir Bukhtoyarov
+ * Copyright (C) 2015 - 2026 Vladimir Bukhtoyarov
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ import io.github.bucket4j.distributed.expiration.NoneExpirationAfterWriteStrateg
 import io.github.bucket4j.distributed.expiration.BasedOnTimeForRefillingBucketUpToMaxExpirationAfterWriteStrategy;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
+import io.github.bucket4j.distributed.serialization.PrimitiveSizeCalculator;
 import io.github.bucket4j.distributed.serialization.Scope;
 import io.github.bucket4j.distributed.serialization.SerializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
@@ -85,7 +86,7 @@ public interface ExpirationAfterWriteStrategy {
      *
      * @param keepAfterRefillDuration specifies how long bucket should be held in the cache after all consumed tokens have been refilled.
      *                                It can be a zero duration, but from performance considerations it is recommended to provide at least few seconds,
-     *                                because reusing of already persisted can be faster that initialization of bucket from scratch,
+     *                                because reusing of already persisted can be faster than initialization of bucket from scratch,
      *                                so <b>keepAfterRefillDuration</b> helps to not evict buckets from storage too frequent.
      * @return
      *
@@ -105,6 +106,11 @@ public interface ExpirationAfterWriteStrategy {
         int typeId = adapter.readInt(input);
         SerializationHandle<?> serializer = SerializationHandles.CORE_HANDLES.getHandleByTypeId(typeId);
         return (ExpirationAfterWriteStrategy) serializer.deserialize(adapter, input);
+    }
+
+    static int estimateSize(ExpirationAfterWriteStrategy expirationStrategy, Version backwardCompatibilityVersion, Scope scope) {
+        SerializationHandle<ExpirationAfterWriteStrategy> serializer = expirationStrategy.getSerializationHandle();
+        return PrimitiveSizeCalculator.SIZE_OF_INT + serializer.estimateSize(expirationStrategy, backwardCompatibilityVersion, scope);
     }
 
     static ExpirationAfterWriteStrategy fromJsonCompatibleSnapshot(Map<String, Object> snapshot) throws IOException {

@@ -2,14 +2,14 @@
  * ========================LICENSE_START=================================
  * Bucket4j
  * %%
- * Copyright (C) 2015 - 2020 Vladimir Bukhtoyarov
+ * Copyright (C) 2015 - 2026 Vladimir Bukhtoyarov
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  *      http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,6 +24,7 @@ import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.BucketState;
 import io.github.bucket4j.TokensInheritanceStrategy;
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
+import io.github.bucket4j.distributed.serialization.PrimitiveSizeCalculator;
 import io.github.bucket4j.distributed.serialization.Scope;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
 import io.github.bucket4j.distributed.serialization.SerializationAdapter;
@@ -83,6 +84,22 @@ public class RemoteBucketState implements ComparableByContent<RemoteBucketState>
                     adapter.writeBoolean(output, false);
                 }
             }
+        }
+
+        @Override
+        public int estimateSize(RemoteBucketState remoteState, Version backwardCompatibilityVersion, Scope scope) {
+            Version serializationVersion = getSerializationVersion(remoteState, backwardCompatibilityVersion, scope);
+            int size = PrimitiveSizeCalculator.SIZE_OF_INT;
+            size += BucketConfiguration.SERIALIZATION_HANDLE.estimateSize(remoteState.getConfiguration(), backwardCompatibilityVersion, scope);
+            size += BucketState.estimateSize(remoteState.state, backwardCompatibilityVersion, scope);
+            size += RemoteStat.SERIALIZATION_HANDLE.estimateSize(remoteState.stat, backwardCompatibilityVersion, scope);
+            if (serializationVersion == v_8_1_0) {
+                size += PrimitiveSizeCalculator.SIZE_OF_BOOLEAN;
+                if (remoteState.configurationVersion != null) {
+                    size += PrimitiveSizeCalculator.SIZE_OF_LONG;
+                }
+            }
+            return size;
         }
 
         private static Version getSerializationVersion(RemoteBucketState remoteState, Version backwardCompatibilityVersion, Scope scope) {

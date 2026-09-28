@@ -2,7 +2,7 @@
  * ========================LICENSE_START=================================
  * Bucket4j
  * %%
- * Copyright (C) 2015 - 2020 Vladimir Bukhtoyarov
+ * Copyright (C) 2015 - 2026 Vladimir Bukhtoyarov
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,6 +31,7 @@ import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
 import io.github.bucket4j.distributed.remote.AbstractBinaryTransaction;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.distributed.remote.Request;
+import io.github.bucket4j.distributed.serialization.SerializationStyle;
 import io.github.bucket4j.util.ComparableByContent;
 
 import static io.github.bucket4j.distributed.serialization.InternalSerializationHelper.serializeRequest;
@@ -44,7 +45,7 @@ public class HazelcastEntryProcessor<K, T> implements EntryProcessor<K, byte[], 
     private EntryProcessor<K, byte[], byte[]> backupProcessor;
 
     public HazelcastEntryProcessor(Request<T> request) {
-        this.requestBytes = serializeRequest(request);
+        this.requestBytes = serializeRequest(request, SerializationStyle.BYTE_BUFFER);
     }
 
     public HazelcastEntryProcessor(byte[] requestBytes) {

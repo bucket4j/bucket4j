@@ -2,7 +2,7 @@
  * ========================LICENSE_START=================================
  * Bucket4j
  * %%
- * Copyright (C) 2015 - 2024 Vladimir Bukhtoyarov
+ * Copyright (C) 2015 - 2026 Vladimir Bukhtoyarov
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,6 +32,7 @@ import io.lettuce.core.cluster.RedisClusterClient;
 import io.lettuce.core.cluster.api.StatefulRedisClusterConnection;
 import io.lettuce.core.cluster.api.async.RedisAdvancedClusterAsyncCommands;
 import io.lettuce.core.codec.ByteArrayCodec;
+import io.lettuce.core.masterreplica.StatefulRedisMasterReplicaConnection;
 
 /**
  * Entry point for Lettuce integration
@@ -63,6 +64,17 @@ public class Bucket4jLettuce {
             }
         };
         return new LettuceBasedProxyManagerBuilder<>(redisApi);
+    }
+
+    /**
+     * Returns the builder for {@link LettuceBasedProxyManager}
+     *
+     * @param statefulRedisMasterReplicaConnection
+     *
+     * @return new instance of {@link LettuceBasedProxyManagerBuilder}
+     */
+    public static <K> LettuceBasedProxyManagerBuilder<K> casBasedBuilder(StatefulRedisMasterReplicaConnection<K, byte[]> statefulRedisMasterReplicaConnection) {
+       return casBasedBuilder(statefulRedisMasterReplicaConnection.async());
     }
 
     /**

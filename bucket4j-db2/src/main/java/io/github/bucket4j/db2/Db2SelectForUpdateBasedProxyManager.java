@@ -2,7 +2,7 @@
  * ========================LICENSE_START=================================
  * Bucket4j
  * %%
- * Copyright (C) 2015 - 2022 Vladimir Bukhtoyarov
+ * Copyright (C) 2015 - 2026 Vladimir Bukhtoyarov
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ import io.github.bucket4j.distributed.proxy.generic.select_for_update.AbstractSe
 import io.github.bucket4j.distributed.proxy.generic.select_for_update.LockAndGetResult;
 import io.github.bucket4j.distributed.proxy.generic.select_for_update.SelectForUpdateBasedTransaction;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
-import io.github.bucket4j.util.HexUtil;
+import io.github.bucket4j.db2.util.HexUtil;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -41,7 +41,7 @@ import java.util.Optional;
 
 import com.ibm.db2.jcc.am.SqlIntegrityConstraintViolationException;
 
-import static io.github.bucket4j.util.HexUtil.*;
+import static io.github.bucket4j.db2.util.HexUtil.*;
 
 /**
  * The extension of Bucket4j library addressed to support IBM Db2

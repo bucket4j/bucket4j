@@ -1,7 +1,7 @@
 [[bucket4j-mariadb, Bucket4j-MariaDB]]
 ==== MariaDB integration
 ===== Dependencies
-To use Bucket4j extension for MariaDB you need to add following dependency:
+To use the Bucket4j extension for MariaDB, add the following dependency:
 
 [source, xml, subs=attributes+]
 ----
@@ -16,12 +16,12 @@ To use Bucket4j extension for MariaDB you need to add following dependency:
 ===== DDL example
 [,sql]
 ----
-// in case of expiration feature is not required
+// if the expiration feature is not required
 CREATE TABLE IF NOT EXISTS bucket(id BIGINT PRIMARY KEY, state BLOB);
 ----
 [,sql]
 ----
-// in case of expiration feature is required
+// if the expiration feature is required
 CREATE TABLE IF NOT EXISTS bucket(id BIGINT PRIMARY KEY, state BLOB, expires_at BIGINT);
 ----
 

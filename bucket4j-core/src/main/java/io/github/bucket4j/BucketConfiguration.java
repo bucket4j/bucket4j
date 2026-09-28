@@ -2,7 +2,7 @@
  * ========================LICENSE_START=================================
  * Bucket4j
  * %%
- * Copyright (C) 2015 - 2020 Vladimir Bukhtoyarov
+ * Copyright (C) 2015 - 2026 Vladimir Bukhtoyarov
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@
 package io.github.bucket4j;
 
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
+import io.github.bucket4j.distributed.serialization.PrimitiveSizeCalculator;
 import io.github.bucket4j.distributed.serialization.Scope;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
 import io.github.bucket4j.distributed.serialization.SerializationAdapter;
@@ -109,6 +110,15 @@ public final class BucketConfiguration implements ComparableByContent<BucketConf
             for (Bandwidth bandwidth : configuration.bandwidths) {
                 Bandwidth.SERIALIZATION_HANDLE.serialize(adapter, output, bandwidth, backwardCompatibilityVersion, scope);
             }
+        }
+
+        @Override
+        public int estimateSize(BucketConfiguration configuration, Version backwardCompatibilityVersion, Scope scope) {
+            int size = PrimitiveSizeCalculator.SIZE_OF_INT + PrimitiveSizeCalculator.SIZE_OF_INT;
+            for (Bandwidth bandwidth : configuration.bandwidths) {
+                size += Bandwidth.SERIALIZATION_HANDLE.estimateSize(bandwidth, backwardCompatibilityVersion, scope);
+            }
+            return size;
         }
 
         @Override

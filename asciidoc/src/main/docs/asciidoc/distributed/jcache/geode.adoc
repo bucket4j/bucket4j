@@ -1,0 +1,119 @@
+[[bucket4j-geode, Bucket4j-Geode]]
+==== Apache Geode (GemFire) integration
+===== Dependencies
+To use the ``bucket4j-geode`` extension, add the following dependency:
+[source, xml, subs=attributes+]
+----
+<dependency>
+    <groupId>com.bucket4j</groupId>
+    <artifactId>bucket4j_jdk17-geode</artifactId>
+    <version>{revnumber}</version>
+</dependency>
+----
+
+===== Example of Bucket instantiation
+[source, java]
+----
+org.apache.geode.cache.Region<K, byte[]> region = ...;
+private static final GeodeProxyManager<K> proxyManager = Bucket4jGeode
+    .compareAndSwapBasedBuilder(region)
+    // setup optional parameters if necessary
+    .build();
+
+...
+BucketConfiguration configuration = BucketConfiguration.builder()
+    .addLimit(limit -> limit.capacity(1_000).refillGreedy(1_000, ofMinutes(1)))
+    .build();
+
+Bucket bucket = proxyManager.getProxy(key, () -> configuration);
+----
+NOTE: Unlike `bucket4j-coherence` and the thick-client flavor of `bucket4j-ignite`, `GeodeProxyManager` does not
+ship any Bucket4j class to the Geode members - see below for why - so there is no need to put the Bucket4j jars
+on the classpath of the members that host the region; only the client-side application needs the dependency.
+
+===== Why Bucket4j-Geode is compare-and-swap based, and not entry-processor based (unlike Coherence and Ignite)
+Coherence's ``NamedCache.invoke()`` and Ignite's ``IgniteCache.invoke()`` both provide a genuine per-key atomic
+read-modify-write guarantee at the platform level: the entry-processor callback is executed exactly once,
+holding an exclusive lock on the targeted key for the whole callback duration.
+
+Geode has no equivalent primitive for a `PARTITION` region. `FunctionService.onRegion(region).withFilter(...)`
+only *routes* the function to the member that owns the key's bucket - it does not serialize concurrent
+invocations that target the same key, so two functions racing on the same key can both read the same "old"
+state and then independently overwrite it, silently losing one of the updates. An early prototype of this
+module was built on top of `FunctionService` and reliably failed the Bucket4j TCK's concurrency tests
+(over-consumption of tokens, lost bucket initializations) for exactly this reason.
+
+`GeodeProxyManager` therefore extends `AbstractCompareAndSwapBasedProxyManager` and performs the
+read-modify-write cycle from the client side, guarding the write with a Geode
+https://geode.apache.org/docs/guide/latest/developing/transactions/chapter_overview.html[cache transaction]:
+the current value of the key is re-checked once the transaction has started, and `CommitConflictException`
+on commit reveals that another member concurrently changed the same entry, so the Bucket4j retry loop simply
+tries again. Note that ``Region.replace(key, oldValue, newValue)`` (inherited from ``ConcurrentMap``) was
+deliberately *not* used for this purpose: it compares the old value using ``byte[].equals()``, which is an
+identity comparison, and Geode is free to hand back a freshly deserialized array on every ``get()`` - so the
+comparison can spuriously fail (or spuriously succeed, for two logically-different-but-never-fetched values)
+depending on internal storage details that are not part of Geode's public contract.
+
+===== Function-based alternative: colocating the retry loop with the data
+`GeodeProxyManager`'s compare-and-swap loop runs on the *client*: every losing racer's retry is a fresh
+`get()` followed by a fresh transactional `put()`/`commit()`, each a full client-server round-trip. Under
+heavy contention on the same key, this means the number of round-trips grows with the number of retries.
+
+`Bucket4jGeode.functionBasedBuilder(region)` avoids this by dispatching the whole request to a Geode
+`Function` (`GeodeBucketFunction`) that runs colocated with the data, on the member owning the key's
+bucket. The function performs the exact same compare-and-swap-via-transaction loop described above, but
+entirely on the server: a losing racer retries locally against the freshly committed state instead of
+making another round-trip back to the client. The client only pays for one round-trip per call, regardless
+of how much local contention that call has to resolve on the server.
+
+[source, java]
+----
+org.apache.geode.cache.Region<K, byte[]> region = ...;
+private static final GeodeFunctionProxyManager<K> proxyManager = Bucket4jGeode
+    .functionBasedBuilder(region)
+    // setup optional parameters if necessary
+    .build();
+----
+
+This comes at a deployment cost that `GeodeProxyManager` does not have: `GeodeFunctionProxyManager` ships
+the `GeodeBucketFunction` instance to the server on every call (via `Execution.execute(Function)`, which
+does not require pre-registration through `FunctionService.registerFunction`), so the Bucket4j jar must be
+present on the classpath of every Geode member that can host the region - the same requirement
+`bucket4j-coherence` and the thick-client flavor of `bucket4j-ignite` already have. Choose
+`compareAndSwapBasedBuilder` if only the client application can depend on Bucket4j; choose
+`functionBasedBuilder` if the servers can also carry the dependency and contention on individual keys is
+expected to be significant.
+
+`GeodeFunctionProxyManager` overrides `Function.isHA()` to return `false`. Geode's default (`true`) would
+let it transparently re-run the whole function on another member if the result never reached the caller -
+for example, if the owning member dies right after `commit()` succeeds but before the result is delivered.
+Since the function performs a non-idempotent bucket mutation, a silent automatic re-execution in that window
+would risk double-applying an already-committed change. Disabling `isHA()` turns that unavoidable ambiguity
+into a visible exception to the caller instead, the same failure mode `GeodeProxyManager` already has for a
+lost acknowledgement.
+
+===== Why there is no asynchronous API yet
+Every other in-memory-grid integration that supports asynchronous mode (Hazelcast, Ignite, Coherence, Infinispan)
+does so because the underlying client exposes a `CompletableFuture`-returning (or otherwise non-blocking)
+counterpart to the synchronous call that ``Bucket4j`` needs.
+
+Geode's client API does not offer such a counterpart for the operations this module relies on:
+
+* `Region` (both for a peer `Cache` and for a `ClientCache`) only exposes blocking `get`/`put`, there is no
+`getAsync`/`putAsync`.
+* `CacheTransactionManager` is likewise fully synchronous - `begin()`/`commit()`/`rollback()` all block the
+calling thread, there is no asynchronous transaction API to compose a non-blocking read-modify-write cycle on top of.
+* Geode's own asynchronous story instead centers on `AsyncEventListener`/`AsyncEventQueue`, which are
+fire-and-forget, one-way notifications used for write-behind gateways - they have no request/response shape and
+cannot be adapted into a `CompletableFuture<CommandResult<T>>` the way `Bucket4j` needs.
+
+It is technically possible to fake asynchronicity by submitting the whole compare-and-swap cycle to an
+`Executor` and wrapping the result in a `CompletableFuture` (this is what ``Bucket4j``'s own
+``ExecutionStrategy.background(Executor)`` option already lets any caller opt into, for any backend, entirely
+on the client side). But that only moves blocking I/O to another thread; it does not give callers the
+throughput benefit a *real* non-blocking network client provides. Since baking a look-alike async API into
+`GeodeProxyManager` itself would be a misleading half-measure rather than actual asynchronous support,
+`GeodeProxyManager.isAsyncModeSupported()` returns `false`, and the module currently only advertises the
+synchronous API - users who need to run calls off the calling thread can still do so explicitly via
+`ExecutionStrategy.background(...)`. This may be revisited if a future Geode client release adds genuine
+non-blocking primitives.

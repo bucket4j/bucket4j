@@ -2,7 +2,7 @@
  * ========================LICENSE_START=================================
  * Bucket4j
  * %%
- * Copyright (C) 2015 - 2020 Vladimir Bukhtoyarov
+ * Copyright (C) 2015 - 2026 Vladimir Bukhtoyarov
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -100,14 +100,6 @@ public class DataOutputSerializationAdapter implements SerializationAdapter<Data
         target.writeInt(value.length);
         for (int i = 0; i < value.length; i++) {
             target.writeLong(value[i]);
-        }
-    }
-
-    @Override
-    public void writeDoubleArray(DataOutput target, double[] value) throws IOException {
-        target.writeInt(value.length);
-        for (int i = 0; i < value.length; i++) {
-            target.writeDouble(value[i]);
         }
     }
 

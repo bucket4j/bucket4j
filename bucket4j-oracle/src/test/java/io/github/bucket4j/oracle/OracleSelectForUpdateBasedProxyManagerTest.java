@@ -10,6 +10,7 @@ import io.github.bucket4j.tck.ProxyManagerSpec;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.testcontainers.containers.OracleContainer;
+import org.testcontainers.utility.DockerImageName;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -68,7 +69,12 @@ public class OracleSelectForUpdateBasedProxyManagerTest extends AbstractDistribu
     }
 
     private static OracleContainer startOracleXeContainer() {
-        OracleContainer oracle = new OracleContainer("gvenzl/oracle-xe:21-slim-faststart")
+        // gvenzl/oracle-xe is amd64-only, so on Apple Silicon it runs under emulation
+        // and is prone to startup timeouts. gvenzl/oracle-free is a compatible multi-arch
+        // (amd64 + arm64) image maintained by the same author, so it runs natively on Macos.
+        DockerImageName imageName = DockerImageName.parse("gvenzl/oracle-free:23-slim-faststart")
+                .asCompatibleSubstituteFor("gvenzl/oracle-xe");
+        OracleContainer oracle = new OracleContainer(imageName)
                 .withDatabaseName("testDB")
                 .withUsername("testUser")
                 .withPassword("testPassword");

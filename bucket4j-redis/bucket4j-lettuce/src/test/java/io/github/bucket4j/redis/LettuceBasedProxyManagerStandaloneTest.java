@@ -9,8 +9,8 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.testcontainers.containers.GenericContainer;
 
+import io.github.bucket4j.distributed.proxy.RetryDecision;
 import io.github.bucket4j.redis.lettuce.Bucket4jLettuce;
-import io.github.bucket4j.redis.lettuce.cas.LettuceBasedProxyManager;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
 import io.github.bucket4j.tck.ProxyManagerSpec;
 import io.lettuce.core.RedisClient;
@@ -43,6 +43,12 @@ public class LettuceBasedProxyManagerStandaloneTest extends AbstractDistributedB
                 "LettuceBasedProxyManager_StringKey",
                 () -> UUID.randomUUID().toString(),
                 () -> Bucket4jLettuce.casBasedBuilder(redisClient.connect(RedisCodec.of(StringCodec.UTF8, ByteArrayCodec.INSTANCE)))
+            ).checkExpiration(),
+            new ProxyManagerSpec<>(
+                "LettuceBasedProxyManager_StringKey_WithBackoffRetryStrategy",
+                () -> UUID.randomUUID().toString(),
+                () -> Bucket4jLettuce.casBasedBuilder(redisClient.connect(RedisCodec.of(StringCodec.UTF8, ByteArrayCodec.INSTANCE)))
+                    .retryStrategy(metadata -> RetryDecision.retryAfter(Duration.ofNanos(metadata.getAttemptNumber())))
             ).checkExpiration()
         );
     }

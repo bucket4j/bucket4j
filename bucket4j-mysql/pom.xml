@@ -7,7 +7,7 @@
     <parent>
         <groupId>com.bucket4j</groupId>
         <artifactId>bucket4j_jdk17-parent</artifactId>
-        <version>8.18.0</version>
+        <version>8.21.0</version>
         <relativePath>../bucket4j-parent</relativePath>
     </parent>
 
@@ -40,8 +40,8 @@
         </dependency>
         <dependency>
             <groupId>org.testcontainers</groupId>
-            <artifactId>mysql</artifactId>
-            <version>1.19.7</version>
+            <artifactId>testcontainers-mysql</artifactId>
+            <version>${testcontainers.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>

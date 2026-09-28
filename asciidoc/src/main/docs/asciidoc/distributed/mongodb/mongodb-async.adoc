@@ -1,7 +1,7 @@
 [[bucket4j-mongodb-async, Bucket4j-MongoDB-Async]]
 ==== MongoDB Async integration
 ===== Dependencies
-To use ``bucket4j-mongodb-async`` extension you need to add following dependency:
+To use the ``bucket4j-mongodb-async`` extension, add the following dependency:
 [source, xml, subs=attributes+]
 ----
 <dependency>
@@ -45,7 +45,7 @@ CompletableFuture<ConsumptionProbe> future = asyncBucket.tryConsumeAndReturnRema
 ----
 
 ===== Custom field names
-By default, MongoDB integration uses `state` field to store bucket state and `expiresAt` field for expiration timestamp. You can customize these field names:
+By default, the MongoDB integration uses the `state` field to store the bucket state and the `expiresAt` field for the expiration timestamp. You can customize these field names:
 [source, java]
 ----
 MongoDBAsyncCompareAndSwapBasedProxyManager<String> proxyManager = 
@@ -83,7 +83,7 @@ consumeFuture.thenAccept(probe -> {
 });
 
 // Async removal
-CompletableFuture<Void> removeFuture = proxyManager.removeAsync("user-123");
+CompletableFuture<Void> removeFuture = proxyManager.asAsync().removeProxy("user-123");
 ----
 
 ===== Expired entries cleanup

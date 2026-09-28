@@ -1,22 +1,22 @@
 [[bucket4j-ignite, Bucket4j-Ignite]]
 ==== Apache Ignite integration
-Before use ``bucket4j-ignite`` module please read [bucket4j-jcache documentation](jcache-usage.md),
-because ``bucket4j-ignite`` is just a follow-up of ``bucket4j-jcache``.
+Before using the ``bucket4j-ignite`` module, please read the <<bucket4j-jcache, bucket4j-jcache documentation>>,
+because ``bucket4j-ignite`` is just a follow-up to ``bucket4j-jcache``.
 
-Bucket4j supports Ignite Thin-Client as well as regular deployment scenarios.
+Bucket4j supports the Ignite thin client as well as regular (thick client) deployment scenarios.
 
-**Question:** Bucket4j already supports JCache since version ``1.2``. Why it was needed to introduce direct support for ``Apache Ignite``?
-**Answer:** Because https://www.jcp.org/en/jsr/detail?id=107[JCache API (JSR 107)] does not specify asynchronous API,
-developing the dedicated module ``bucket4j-ignite`` was the only way to provide asynchrony for users who use ``Bucket4j`` and ``Apache Ignite`` together.
+**Question:** Bucket4j has supported JCache since version ``1.2``. Why was direct support for ``Apache Ignite`` needed?
+**Answer:** Because the https://www.jcp.org/en/jsr/detail?id=107[JCache API (JSR 107)] does not specify an asynchronous API,
+developing the dedicated ``bucket4j-ignite`` module was the only way to provide asynchronous support to users who use ``Bucket4j`` together with ``Apache Ignite``.
 
-**Question:** Should I migrate from ``bucket4j-jcache`` to ``bucketj-ignite`` If I do not need an asynchronous API?
-**Answer:** No, you should not migrate to ``bucketj-ignite`` in this case.
+**Question:** Should I migrate from ``bucket4j-jcache`` to ``bucket4j-ignite`` if I do not need an asynchronous API?
+**Answer:** No, you do not need to migrate to ``bucket4j-ignite`` in that case.
 
 ===== Dependencies
-To use ``bucket4j-ignite`` extension you need to add following dependency:
+To use the ``bucket4j-ignite`` extension, add the following dependency:
 [source, xml, subs=attributes+]
 ----
-<!-- For java 17 -->
+<!-- For Java 17 -->
 <dependency>
     <groupId>com.bucket4j</groupId>
     <artifactId>bucket4j_jdk17-ignite</artifactId>
@@ -28,7 +28,7 @@ To use ``bucket4j-ignite`` extension you need to add following dependency:
 [source, java]
 ----
 org.apache.ignite.IgniteCache<K, byte[]> cache = ...;
-private static final IgniteProxyManager proxyManager = Bucket4jIgnite.thickClient()
+private static final IgniteProxyManager<K> proxyManager = Bucket4jIgnite.thickClient()
     .entryProcessorBasedBuilder(cache)
     // setup optional parameters if necessary
     .build();
@@ -39,9 +39,9 @@ BucketConfiguration configuration = BucketConfiguration.builder()
     .build();
 Bucket bucket = proxyManager.getProxy(key, () -> configuration);
 ----
-IMPORTANT: Pay attention that IgniteProxyManager requires all nodes in the cluster to contain Bucket4j Jars in classpath.
+IMPORTANT: `IgniteProxyManager` requires every node in the cluster to have the Bucket4j jars on its classpath.
 
-===== Example of Bucket instantiation via Thin Client
+===== Example of Bucket instantiation via the thin client
 [source, java]
 ----
 org.apache.ignite.client.ClientCache<K, byte[]> cache = ...;
@@ -57,12 +57,12 @@ BucketConfiguration configuration = BucketConfiguration.builder()
     .build();
 Bucket bucket = proxyManager.getProxy(key, () -> configuration);
 ----
-IMPORTANT: Pay attention that IgniteThinClientProxyManager requires all nodes in the cluster to contain Bucket4j Jars in classpath.
+IMPORTANT: `IgniteThinClientProxyManager` requires every node in the cluster to have the Bucket4j jars on its classpath.
 
-===== Example of Bucket instantiation of via Thin Client and IgniteThinClientCasBasedProxyManager
+===== Example of Bucket instantiation via the thin client and IgniteThinClientCasBasedProxyManager
 [source, java]
 ----
-org.apache.ignite.client.ClientCache<K, byte[]> cache = ...;
+org.apache.ignite.client.ClientCache<K, java.nio.ByteBuffer> cache = ...;
 private static final IgniteThinClientCasBasedProxyManager<K> proxyManager = Bucket4jIgnite.thinClient()
     .casBasedBuilder(cache)
     // setup optional parameters if necessary
@@ -74,9 +74,9 @@ BucketConfiguration configuration = BucketConfiguration.builder()
     .build();
 Bucket bucket = proxyManager.getProxy(key, () -> configuration);
 ----
-IMPORTANT: IgniteThinClientCasBasedProxyManager does not require all nodes in the cluster to contain Bucket4j Jars in classpath, but it operates with more latency, so choose it over IgniteThinClientProxyManager if and only if you have no control over cluster classpath.
+IMPORTANT: unlike the other two options, `IgniteThinClientCasBasedProxyManager` does not require the Bucket4j jars to be present on every cluster node, but it operates with higher latency. Choose it over `IgniteThinClientProxyManager` only if you have no control over the cluster's classpath.
 
-===== Notes about expiration-policy
-In opposite to Infinispan, Coherence and Hazelcast, Ignite does not provide API to configure per-entry expiration.
-So, there is only one way to do something according the issue - configure per cache expiration, https://apacheignite.readme.io/docs/expiry-policies[for example like there].
-If this is not acceptable, then switch to another in-memory grid, like one of mentioned above.
+===== Notes about the expiration policy
+Unlike Infinispan, Coherence, and Hazelcast, Ignite does not provide an API for configuring per-entry expiration.
+So there is currently only one option - configure expiration at the cache level, https://apacheignite.readme.io/docs/expiry-policies[for example, as described here].
+If this is not acceptable, switch to one of the other in-memory grids mentioned above.

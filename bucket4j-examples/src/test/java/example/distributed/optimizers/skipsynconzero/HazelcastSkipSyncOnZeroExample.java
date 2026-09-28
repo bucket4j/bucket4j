@@ -12,9 +12,9 @@ import org.gridkit.nanocloud.Cloud;
 import org.gridkit.nanocloud.CloudFactory;
 import org.gridkit.nanocloud.VX;
 import org.gridkit.vicluster.ViNode;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,7 +52,7 @@ public class HazelcastSkipSyncOnZeroExample {
 
     private static HazelcastInstance hazelcastInstance;
 
-    @BeforeClass
+    @BeforeAll
     public static void setup() {
         // start separated JVM on current host
         cloud = CloudFactory.createCloud();
@@ -75,7 +75,7 @@ public class HazelcastSkipSyncOnZeroExample {
         map = hazelcastInstance.getMap("my_buckets");
     }
 
-    @AfterClass
+    @AfterAll
     public static void shutdown() {
         if (hazelcastInstance != null) {
             hazelcastInstance.shutdown();

@@ -2,7 +2,7 @@
  * ========================LICENSE_START=================================
  * Bucket4j
  * %%
- * Copyright (C) 2015 - 2020 Vladimir Bukhtoyarov
+ * Copyright (C) 2015 - 2026 Vladimir Bukhtoyarov
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,8 +32,6 @@ public interface SerializationAdapter<T> {
     void writeLong(T target, long value) throws IOException;
 
     void writeLongArray(T target, long[] value) throws IOException;
-
-    void writeDoubleArray(T target, double[] value) throws IOException;
 
     void writeString(T target, String value) throws IOException;
 

@@ -37,7 +37,7 @@ public class AbstractProxyManagerBuilderTest {
         TestProxyManagerBuilder builder = new TestProxyManagerBuilder();
         
         // Configure retryStrategy
-        RetryStrategy strategy = metadata -> metadata.getAttemptNumber() < 10;
+        RetryStrategy strategy = metadata -> metadata.getAttemptNumber() < 10 ? RetryDecision.retryImmediately() : RetryDecision.stop();
         builder.retryStrategy(strategy);
         
         // Verify it's set in the builder
@@ -94,7 +94,7 @@ public class AbstractProxyManagerBuilderTest {
         TestProxyManagerBuilder builder = new TestProxyManagerBuilder();
         
         // Configure both
-        RetryStrategy strategy = metadata -> metadata.getAttemptNumber() < 10;
+        RetryStrategy strategy = metadata -> metadata.getAttemptNumber() < 10 ? RetryDecision.retryImmediately() : RetryDecision.stop();
         builder.maxRetries(5).retryStrategy(strategy);
         
         // Verify both are set
@@ -154,4 +154,3 @@ public class AbstractProxyManagerBuilderTest {
         }
     }
 }
-

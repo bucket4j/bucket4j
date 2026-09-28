@@ -2,7 +2,7 @@
  * ========================LICENSE_START=================================
  * Bucket4j
  * %%
- * Copyright (C) 2015 - 2020 Vladimir Bukhtoyarov
+ * Copyright (C) 2015 - 2026 Vladimir Bukhtoyarov
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,6 +38,11 @@ public class PrimitiveSerializationHandles {
         @Override
         public <O> void serialize(SerializationAdapter<O> adapter, O output, Nothing serializableObject, Version backwardCompatibilityVersion, Scope scope) {
 
+        }
+
+        @Override
+        public int estimateSize(Nothing serializableObject, Version backwardCompatibilityVersion, Scope scope) {
+            return 0;
         }
 
         @Override
@@ -78,6 +83,11 @@ public class PrimitiveSerializationHandles {
         }
 
         @Override
+        public int estimateSize(Long value, Version backwardCompatibilityVersion, Scope scope) {
+            return PrimitiveSizeCalculator.SIZE_OF_LONG;
+        }
+
+        @Override
         public int getTypeId() {
             return -1;
         }
@@ -114,6 +124,11 @@ public class PrimitiveSerializationHandles {
         @Override
         public <O> void serialize(SerializationAdapter<O> adapter, O output, Boolean value, Version backwardCompatibilityVersion, Scope scope) throws IOException {
             adapter.writeBoolean(output, value);
+        }
+
+        @Override
+        public int estimateSize(Boolean value, Version backwardCompatibilityVersion, Scope scope) {
+            return PrimitiveSizeCalculator.SIZE_OF_BOOLEAN;
         }
 
         @Override

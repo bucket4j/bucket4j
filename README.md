@@ -13,11 +13,9 @@ The Bucket4j is distributed through [Maven Central](http://search.maven.org/):
 <dependency>
   <groupId>com.bucket4j</groupId>
   <artifactId>bucket4j_jdk17-core</artifactId>
-  <version>8.18.0</version>
+  <version>8.20.0</version>
 </dependency>
 ```
-##### Java 8 dependencies
-Builds for Java 8 are not distributed through Maven Central. For direct downloading of Bucket4j builds for Java 8 [visit this page](https://bucket4j.com/commercial/java8.html).
 
 #### Quick start
 ```java
@@ -37,11 +35,11 @@ private void doSomethingProtected() {
    }
 }
 ```
-More examples [can be found there](https://bucket4j.github.io/8.18.0/toc.html#quick-start-examples)
+More examples [can be found there](https://bucket4j.github.io/8.20.0/toc.html#quick-start-examples)
 
 ## [Documentation](https://bucket4j.github.io)
-* [Reference](https://bucket4j.github.io/8.18.0/toc.html)
-* [Quick start examples](https://bucket4j.github.io/8.18.0/toc.html#quick-start-examples)
+* [Reference](https://bucket4j.github.io//toc.html)
+* [Quick start examples](https://bucket4j.github.io/8.20.0/toc.html#quick-start-examples)
 * [Third-party articles](https://bucket4j.github.io/#third-party-articles)
 
 ## Bucket4j basic features
@@ -70,42 +68,48 @@ In addition to local in-memory buckets, the Bucket4j supports clustered usage sc
 
 | Back-end                   |  Async supported | Flexible per-entry expiration | Optimized serialization | Thin-client support |                                  Documentation link                                   | 
 | :---                       | :---:            |:-----------------------------:|:-----------------------:|:-------------------:|:-------------------------------------------------------------------------------------:|
-| ```JCache API (JSR 107)``` |  No              |              No               |          No             |         No          |     [bucket4j-jcache](https://bucket4j.github.io/8.18.0/toc.html#bucket4j-jcache)     |
-| ```Hazelcast```            |  Yes             |              Yes              |           Yes           |         No          |  [bucket4j-hazelcast](https://bucket4j.github.io/8.18.0/toc.html#bucket4j-hazelcast)  |
-| ```Apache Ignite```        |  Yes             |              No               |           n/a           |         Yes         |     [bucket4j-ignite](https://bucket4j.github.io/8.18.0/toc.html#bucket4j-ignite)     |
-| ```Inifinispan```          |  Yes             |              Yes              |           Yes           |         No          | [bucket4j-infinispan](https://bucket4j.github.io/8.18.0/toc.html#bucket4j-infinispan) |
-| ```Oracle Coherence```     |  Yes             |              Yes              |           Yes           |         No          |  [bucket4j-coherence](https://bucket4j.github.io/8.18.0/toc.html#bucket4j-coherence)  |
-| ```Couchbase```            |  Yes             |              Yes              |           Yes           |         No          |   [bucket4j-couchbase](https://bucket4j.github.io/8.18.0/toc.html#bucket4j-couchbase)  |
+| ```JCache API (JSR 107)``` |  No              |              No               |          No             |         No          |     [bucket4j-jcache](https://bucket4j.github.io/8.20.0/toc.html#bucket4j-jcache)     |
+| ```Hazelcast```            |  Yes             |              Yes              |           Yes           |         No          |  [bucket4j-hazelcast](https://bucket4j.github.io/8.20.0/toc.html#bucket4j-hazelcast)  |
+| ```Apache Ignite```        |  Yes             |              No               |           n/a           |         Yes         |     [bucket4j-ignite](https://bucket4j.github.io/8.20.0/toc.html#bucket4j-ignite)     |
+| ```Inifinispan```          |  Yes             |              Yes              |           Yes           |         No          | [bucket4j-infinispan](https://bucket4j.github.io/8.20.0/toc.html#bucket4j-infinispan) |
+| ```Oracle Coherence```     |  Yes             |              Yes              |           Yes           |         No          |  [bucket4j-coherence](https://bucket4j.github.io/8.20.0/toc.html#bucket4j-coherence)  |
+| ```Couchbase```            |  Yes             |              Yes              |           Yes           |         No          |  [bucket4j-couchbase](https://bucket4j.github.io/8.20.0/toc.html#bucket4j-couchbase)  |
+| ```Apache Geode (GemFire)```|  No              |              No               |           n/a           |         No          |      [bucket4j-geode](https://bucket4j.github.io/8.20.0/toc.html#bucket4j-geode)      |
 
 ### Redis back-ends
-| Back-end                   |  Async supported | Redis cluster supported |                                       Documentation link                                       |
-| :---                       | :---:            |:-----------------------:|:----------------------------------------------------------------------------------------------:|
-| ```Redis/Vert.x Redis Client``` |  Yes             |           Yes           | [bucket4j-redis/Vert.x](https://bucket4j.github.io/8.18.0/toc.html#bucket4j-vertx)         |
-| ```Redis/Redisson```       |  Yes             |           Yes           |    [bucket4j-redis/Redisson](https://bucket4j.github.io/8.16.1/toc.html#bucket4j-redisson)     |
-| ```Redis/Jedis```          |  No              |           Yes           |  [bucket4j-redis/Jedis](https://bucket4j.github.io/8.16.1/toc.html#bucket4j-jedis)             |
-| ```Redis/Lettuce```        |  Yes             |           Yes           | [bucket4j-redis/Lettuce](https://bucket4j.github.io/8.16.1/toc.html#bucket4j-lettuce)          |
+| Back-end                   |  Async supported | Redis cluster supported |                                   Documentation link                                    |
+| :---                       | :---:            |:-----------------------:|:---------------------------------------------------------------------------------------:|
+| ```Redis/Vert.x Redis Client``` |  Yes             |           Yes           |   [bucket4j-redis/Vert.x](https://bucket4j.github.io/8.20.0/toc.html#bucket4j-vertx)    |
+| ```Redis/Redisson```       |  Yes             |           Yes           | [bucket4j-redis/Redisson](https://bucket4j.github.io/8.20.0/toc.html#bucket4j-redisson) |
+| ```Redis/Jedis```          |  No              |           Yes           |    [bucket4j-redis/Jedis](https://bucket4j.github.io/8.20.0/toc.html#bucket4j-jedis)    |
+| ```Redis/Lettuce```        |  Yes             |           Yes           |  [bucket4j-redis/Lettuce](https://bucket4j.github.io/8.20.0/toc.html#bucket4j-lettuce)  |
 
 ### Valkey back-ends
-| Back-end                   |  Async supported | Redis cluster supported |                                       Documentation link                                       |
-| :---                       | :---:            |:-----------------------:|:----------------------------------------------------------------------------------------------:|
-| ```Valkey/Glide```         |  Yes             |           Yes           | [bucket4j-valkey/Glide](https://bucket4j.github.io/8.16.1/toc.html#bucket4j-glide)             |
+| Back-end                   |  Async supported | Redis cluster supported |                                 Documentation link                                 |
+| :---                       | :---:            |:-----------------------:|:----------------------------------------------------------------------------------:|
+| ```Valkey/Glide```         |  Yes             |           Yes           | [bucket4j-valkey/Glide](https://bucket4j.github.io/8.20.0/toc.html#bucket4j-glide) |
 
 
 ### Mongo back-ends
-| Back-end                      | Async supported |                                          Documentation link                                          |
-|:------------------------------|:---------------:|:----------------------------------------------------------------------------------------------------:|
-| ```Mongodb/mongodb-driver-sync```            |       No        | [bucket4j-mongodb/sync](https://bucket4j.github.io/8.16.1/toc.html#bucket4j-mongodb-sync)   |
-| ```Mongodb/mongodb-driver-reactivestreams``` |       Yes       | [bucket4j-mongodb/async](https://bucket4j.github.io/8.16.1/toc.html#bucket4j-mongodb-async) |
+| Back-end                      | Async supported |                                     Documentation link                                      |
+|:------------------------------|:---------------:|:-------------------------------------------------------------------------------------------:|
+| ```Mongodb/mongodb-driver-sync```            |       No        |  [bucket4j-mongodb/sync](https://bucket4j.github.io/8.20.0/toc.html#bucket4j-mongodb-sync)  |
+| ```Mongodb/mongodb-driver-reactivestreams``` |       Yes       | [bucket4j-mongodb/async](https://bucket4j.github.io/8.20.0/toc.html#bucket4j-mongodb-async) |
+
+### Memcached back-ends
+| Back-end                                | Async supported |                                  Documentation link                                   |
+|:-----------------------------------------|:---------------:|:---------------------------------------------------------------------------------------:|
+| ```Memcached/compare-and-swap based```   |       Yes       | [bucket4j-memcached](https://bucket4j.github.io/8.20.0/toc.html#bucket4j-memcached)   |
 
 ### JDBC back-ends
 | Back-end                   |                                  Documentation link                                   |
 |:---------------------------|:-------------------------------------------------------------------------------------:|
-| ```MySQL```                |      [bucket4j-mysql](https://bucket4j.github.io/8.16.1/toc.html#bucket4j-mysql)      |
-| ```PostgreSQL```           | [bucket4j-postgresql](https://bucket4j.github.io/8.16.1/toc.html#bucket4j-postgresql) |
-| ```Oracle```               |     [bucket4j-oracle](https://bucket4j.github.io/8.16.1/toc.html#bucket4j-oracle)     |
-| ```Microsoft SQL Server``` |      [bucket4j-mssql](https://bucket4j.github.io/8.16.1/toc.html#bucket4j-mssql)      |
-| ```MariaDB```              |    [bucket4j-mariadb](https://bucket4j.github.io/8.16.1/toc.html#bucket4j-mariadb)    |
-| ```DB2```                  |        [bucket4j-db2](https://bucket4j.github.io/8.16.1/toc.html#bucket4j-db2)        |
+| ```MySQL```                |      [bucket4j-mysql](https://bucket4j.github.io/8.20.0/toc.html#bucket4j-mysql)      |
+| ```PostgreSQL```           | [bucket4j-postgresql](https://bucket4j.github.io/8.20.0/toc.html#bucket4j-postgresql) |
+| ```Oracle```               |     [bucket4j-oracle](https://bucket4j.github.io/8.20.0/toc.html#bucket4j-oracle)     |
+| ```Microsoft SQL Server``` |      [bucket4j-mssql](https://bucket4j.github.io/8.20.0/toc.html#bucket4j-mssql)      |
+| ```MariaDB```              |    [bucket4j-mariadb](https://bucket4j.github.io/8.20.0/toc.html#bucket4j-mariadb)    |
+| ```DB2```                  |        [bucket4j-db2](https://bucket4j.github.io/8.20.0/toc.html#bucket4j-db2)        |
 
 
 ### Local caches support
@@ -121,13 +125,43 @@ Sometimes you are having deal with bucket per key scenarios but distributed sync
 
 ## [Bucket4j Backward compatibility policy](backward-compatibility-policy.md)
 
+## Snapshot builds
+Every commit/merge to the `master` branch is automatically built and published as a `-SNAPSHOT` artifact to [GitHub Packages](https://github.com/bucket4j/bucket4j/packages) (see [`.github/workflows/snapshot-release.yml`](.github/workflows/snapshot-release.yml)).
+
+To consume a snapshot, add the GitHub Packages repository to your `pom.xml`:
+```xml
+<repositories>
+  <repository>
+    <id>github</id>
+    <name>Bucket4j GitHub Packages</name>
+    <url>https://maven.pkg.github.com/bucket4j/bucket4j</url>
+  </repository>
+</repositories>
+```
+GitHub Packages requires authentication even for reading public packages, so add a server entry with your GitHub username and a [personal access token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens) that has the `read:packages` scope to your `~/.m2/settings.xml`:
+```xml
+<servers>
+  <server>
+    <id>github</id>
+    <username>YOUR_GITHUB_USERNAME</username>
+    <password>YOUR_GITHUB_TOKEN</password>
+  </server>
+</servers>
+```
+Then reference the snapshot version (current `pom.xml` version with the `-SNAPSHOT` suffix), for example:
+```xml
+<dependency>
+  <groupId>com.bucket4j</groupId>
+  <artifactId>bucket4j_jdk17-core</artifactId>
+  <version>8.21.0-SNAPSHOT</version>
+</dependency>
+```
+
 ## Have a question?
 Feel free to ask via:
 * [Bucket4j github issue tracker](https://github.com/bucket4j/bucket4j/issues/new) to report a bug.
 * [Bucket4j github discussions](https://github.com/bucket4j/bucket4j/discussions) for questions, feature proposals, sharing of experience.
-* [Bucket4j telegram chat(Eng)](https://t.me/+6cB0iKpLdfY3ZWRi)
-* [Bucket4j telegram chat(Ru)](https://t.me/+bpqEMT9GL744MjA6)
 
 ## License
-Copyright 2015-2024 Vladimir Bukhtoyarov
+Copyright 2015-2026 Vladimir Bukhtoyarov
 Licensed under the Apache Software License, Version 2.0: <http://www.apache.org/licenses/LICENSE-2.0>.

@@ -2,7 +2,7 @@
  * ========================LICENSE_START=================================
  * Bucket4j
  * %%
- * Copyright (C) 2015 - 2022 Vladimir Bukhtoyarov
+ * Copyright (C) 2015 - 2026 Vladimir Bukhtoyarov
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -117,9 +117,17 @@ public class MySQLSelectForUpdateBasedProxyManager<K> extends AbstractSelectForU
         }
 
         return new SelectForUpdateBasedTransaction() {
+            private int previousTransactionIsolation;
+            private boolean transactionIsolationChanged;
+
             @Override
             public void begin(Optional<Long> requestTimeoutNanos) {
                 try {
+                    previousTransactionIsolation = connection.getTransactionIsolation();
+                    if (previousTransactionIsolation != Connection.TRANSACTION_READ_COMMITTED) {
+                        connection.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
+                        transactionIsolationChanged = true;
+                    }
                     connection.setAutoCommit(false);
                 } catch (SQLException e) {
                     throw new BucketExceptions.BucketExecutionException(e);
@@ -146,8 +154,10 @@ public class MySQLSelectForUpdateBasedProxyManager<K> extends AbstractSelectForU
 
             @Override
             public void release() {
-                try {
-                    connection.close();
+                try (connection) {
+                    if (transactionIsolationChanged) {
+                        connection.setTransactionIsolation(previousTransactionIsolation);
+                    }
                 } catch (SQLException e) {
                     throw new BucketExceptions.BucketExecutionException(e);
                 }
