@@ -39,6 +39,7 @@ package io.github.bucket4j.distributed.remote;
 import java.io.IOException;
 import java.util.Map;
 
+import io.github.bucket4j.distributed.remote.commands.MultiCommand;
 import io.github.bucket4j.distributed.remote.commands.VerboseCommand;
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
 import io.github.bucket4j.distributed.serialization.PrimitiveSizeCalculator;
@@ -50,6 +51,22 @@ import io.github.bucket4j.distributed.versioning.Version;
 
 public interface RemoteCommand<T> {
 
+    /**
+     * Executes this command against the given mutable bucket entry.
+     *
+     * <p>Backends are free to execute several commands against the same {@link MutableBucketEntry}
+     * one after another in a single batch (see {@link MultiCommand} and backend-specific batching
+     * helpers) before any of the produced results are serialized or handed back to callers. Because
+     * of that, if the result returned by this method embeds a bucket state object (for example
+     * {@link RemoteBucketState}), the implementation MUST embed a copy of that state (e.g. via
+     * {@link RemoteBucketState#copy()}) rather than the same mutable instance held by {@code mutableEntry} -
+     * otherwise a later command in the same batch would silently mutate the state already captured
+     * in an earlier command's result.
+     *
+     * @param mutableEntry the mutable holder of the current bucket state
+     * @param currentTimeNanos current time in nanoseconds, from the same clock the bucket was configured with
+     * @return the result of the command execution
+     */
     CommandResult<T> execute(MutableBucketEntry mutableEntry, long currentTimeNanos);
 
     default VerboseCommand<T> asVerbose() {

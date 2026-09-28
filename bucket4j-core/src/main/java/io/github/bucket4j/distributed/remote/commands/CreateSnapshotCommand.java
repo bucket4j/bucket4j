@@ -102,7 +102,9 @@ public class CreateSnapshotCommand implements RemoteCommand<RemoteBucketState>, 
 
         RemoteBucketState state = mutableEntry.get();
         state.refillAllBandwidth(currentTimeNanos);
-        return CommandResult.success(state, RemoteBucketState.SERIALIZATION_HANDLE);
+        // return a copy, because this command can be merged into a batch with other commands
+        // that keep mutating the same MutableBucketEntry after this result has been produced
+        return CommandResult.success(state.copy(), RemoteBucketState.SERIALIZATION_HANDLE);
     }
 
     @Override

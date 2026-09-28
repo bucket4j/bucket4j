@@ -101,7 +101,9 @@ public class VerboseCommand<T> implements RemoteCommand<RemoteVerboseResult<T>>,
             return CommandResult.bucketNotFound();
         }
         CommandResult<T> result = targetCommand.execute(mutableEntry, currentTimeNanos);
-        RemoteVerboseResult<T> verboseResult = new RemoteVerboseResult<>(currentTimeNanos, result.getResultTypeId(), result.getData(), mutableEntry.get());
+        // copy the state, because this command can be merged into a batch with other commands
+        // that keep mutating the same MutableBucketEntry after this result has been produced
+        RemoteVerboseResult<T> verboseResult = new RemoteVerboseResult<>(currentTimeNanos, result.getResultTypeId(), result.getData(), mutableEntry.get().copy());
         return CommandResult.success(verboseResult, RemoteVerboseResult.SERIALIZATION_HANDLE);
     }
 
