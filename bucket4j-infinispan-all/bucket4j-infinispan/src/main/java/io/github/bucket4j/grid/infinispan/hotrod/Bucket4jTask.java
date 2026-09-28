@@ -2,7 +2,7 @@
  * ========================LICENSE_START=================================
  * Bucket4j
  * %%
- * Copyright (C) 2015 - 2024 Vladimir Bukhtoyarov
+ * Copyright (C) 2015 - 2026 Vladimir Bukhtoyarov
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,6 @@ import org.infinispan.Cache;
 import org.infinispan.commons.CacheException;
 import org.infinispan.functional.FunctionalMap.ReadWriteMap;
 import org.infinispan.functional.impl.FunctionalMapImpl;
-import org.infinispan.functional.impl.ReadWriteMapImpl;
 import org.infinispan.tasks.ServerTask;
 import org.infinispan.tasks.TaskContext;
 
@@ -62,7 +61,7 @@ public class Bucket4jTask implements ServerTask<byte[]> {
         if (cacheContext == null) {
             perCacheContext.computeIfAbsent(cacheName, k -> {
                 FunctionalMapImpl<Object, byte[]> functionalMap = FunctionalMapImpl.create((AdvancedCache) advancedCache);
-                return new CacheContext(ReadWriteMapImpl.create(functionalMap));
+                return new CacheContext(functionalMap.toReadWriteMap());
             });
         }
         threadLocalTaskContext.set(ctx);

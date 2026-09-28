@@ -2,7 +2,7 @@
  * ========================LICENSE_START=================================
  * Bucket4j
  * %%
- * Copyright (C) 2015 - 2020 Vladimir Bukhtoyarov
+ * Copyright (C) 2015 - 2026 Vladimir Bukhtoyarov
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,6 +49,7 @@ import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.Request;
 import io.github.bucket4j.distributed.serialization.InternalSerializationHelper;
+import io.github.bucket4j.distributed.serialization.SerializationStyle;
 import io.github.bucket4j.distributed.versioning.Version;
 import io.github.bucket4j.grid.hazelcast.Bucket4jHazelcast.HazelcastProxyManagerBuilder;
 import io.github.bucket4j.grid.hazelcast.serialization.HazelcastEntryProcessorSerializer;
@@ -108,7 +109,7 @@ public class HazelcastProxyManager<K> extends AbstractProxyManager<K> {
                 new HazelcastOffloadableEntryProcessor<>(request, offloadableExecutorName);
         byte[] response = map.executeOnKey(key, entryProcessor);
         Version backwardCompatibilityVersion = request.getBackwardCompatibilityVersion();
-        return deserializeResult(response, backwardCompatibilityVersion);
+        return deserializeResult(response, backwardCompatibilityVersion, SerializationStyle.BYTE_BUFFER);
     }
 
     @Override
@@ -128,7 +129,7 @@ public class HazelcastProxyManager<K> extends AbstractProxyManager<K> {
                 new HazelcastOffloadableEntryProcessor<>(request, offloadableExecutorName);
         CompletionStage<byte[]> future = map.submitToKey(key, entryProcessor);
         Version backwardCompatibilityVersion = request.getBackwardCompatibilityVersion();
-        return (CompletableFuture) future.thenApply((byte[] bytes) -> InternalSerializationHelper.deserializeResult(bytes, backwardCompatibilityVersion));
+        return (CompletableFuture) future.thenApply((byte[] bytes) -> InternalSerializationHelper.deserializeResult(bytes, backwardCompatibilityVersion, SerializationStyle.BYTE_BUFFER));
     }
 
     @Override

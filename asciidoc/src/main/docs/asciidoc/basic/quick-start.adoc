@@ -1,7 +1,7 @@
 === Quick start examples
-==== How to dependency to Bucket4j
-The Bucket4j is distributed through https://mvnrepository.com/artifact/com.bucket4j/bucket4j-core[Maven Central].
-You need to add the dependency to your project as described below in order to be able to compile and run examples
+==== Adding the Bucket4j dependency
+Bucket4j is distributed through https://mvnrepository.com/artifact/com.bucket4j/bucket4j-core[Maven Central].
+Add the dependency below to your project so that you can compile and run the examples that follow.
 
 .Maven dependency
 [,xml,subs=attributes+]
@@ -13,18 +13,18 @@ You need to add the dependency to your project as described below in order to be
 </dependency>
 ----
 
-NOTE: see https://bucket4j.com/commercial/java8.html[Java compatibility matrix] if you need for build that is compatible with Java 8
+NOTE: See the https://bucket4j.com/commercial/java8.html[Java compatibility matrix] if you need a build that is compatible with Java 8.
 
-==== Limiting the rate of access to REST API
-Imagine that you develop yet another social network, and you want to provide REST API for third-party developers.
-To protect your system from overloading you want to introduce the following limitation:
+==== Limiting the rate of access to a REST API
+Imagine that you are building yet another social network and want to expose a REST API to third-party developers.
+To protect your system from being overloaded, you want to introduce the following limitation:
 
-> The bucket size is 50 calls (which cannot be exceeded at any given time), with a "refill rate" of 10 calls per second that continually increases tokens in the bucket.
-In other words. if the client app averages 10 calls per second, it will never be throttled,
-and moreover, the client has overdraft equals to 50 calls which can be used if the average is a little bit higher than 10 calls/sec in a short time period.
+> The bucket size is 50 calls (which cannot be exceeded at any given time), with a "refill rate" of 10 calls per second that continuously adds tokens to the bucket.
+In other words, if the client app averages 10 calls per second, it will never be throttled.
+Moreover, the client has an overdraft of 50 calls, which can be used if the average is a little higher than 10 calls/sec over a short period of time.
 
-Constructing the bucket to satisfy the requirements above is a little bit more complicated than for previous examples,
-because we have to deal with overdraft, but it is not rocket science:
+Constructing a bucket that satisfies the requirements above is a little more complicated than the previous examples
+because we have to deal with the overdraft, but it is still fairly simple:
 [source, java]
 ----
 import io.github.bucket4j.Bucket;
@@ -83,9 +83,9 @@ If you want to provide more information to the end-user about the state of the b
         }
 ----
 
-==== Specifying initial amount of tokens
-By default, initial size of the bucket equals capacity.
-But sometimes, you may want to have a lesser initial size, for example for the case of cold start in order to prevent denial of service:
+==== Specifying the initial amount of tokens
+By default, the initial size of the bucket equals its capacity.
+But sometimes you may want a smaller initial size - for example, to avoid a thundering-herd effect on a cold start:
 
 [source, java]
 ----
@@ -95,8 +95,8 @@ Bucket bucket = Bucket.builder()
     .build();
 ----
 
-==== Returning tokens back to bucket
-The https://en.wikipedia.org/wiki/Compensating_transaction[compensating transaction] is one of the obvious use cases when you want to return tokens back to the bucket:
+==== Returning tokens back to the bucket
+A https://en.wikipedia.org/wiki/Compensating_transaction[compensating transaction] is one of the obvious use cases for returning tokens back to the bucket:
 [source, java]
 ----
 Bucket wallet;
@@ -111,20 +111,21 @@ if (wallet.tryConsume(50)) { // get 50 cents from wallet
 }
 ----
 
-==== Customizing time measurement - choosing nanotime time resolution
-By default, Bucket4j uses millisecond time resolution, it is the preferred time measurement strategy.
-But rarely(for example benchmarking) do you wish the nanosecond precision:
+==== Customizing time measurement - nanosecond resolution
+By default, Bucket4j measures time with millisecond resolution, which is the preferred strategy for most use cases.
+In rare cases (for example, benchmarking, or bandwidths whose period is too short to be measured reliably in milliseconds) you may want nanosecond resolution instead:
 [source, java]
 ----
 Bucket.builder().withNanosecondPrecision()
 ----
-Be very careful to choose this time measurement strategy, because ``System.nanoTime()`` produces inaccurate results,
-use this strategy only if the period of bandwidth is too small that millisecond resolution will be undesired.
+Be careful when choosing this strategy: `System.nanoTime()` is not tied to wall-clock time and its value cannot be compared across JVM instances,
+so it must not be used for buckets whose state is shared between processes (for example distributed buckets). Use it only within a single JVM, and only when
+millisecond resolution is genuinely too coarse for the period of your bandwidth.
 
-==== Customizing time measurement -  Specify custom time measurement strategy
-You can specify your custom time meter if existing milliseconds or nanotime time meters are not enough for your purposes.
-Imagine that you have a clock, which synchronizes its time with other machines in the current cluster,
-if you want to use the time provided by this clock instead of time provided by JVM then you can write something like this:
+==== Customizing time measurement - a custom time measurement strategy
+You can specify your own time meter if neither the millisecond nor the nanosecond time meter fits your needs.
+For example, imagine that you have a clock that synchronizes its time with other machines in the cluster,
+and you want to use the time provided by this clock instead of the time provided by the JVM:
 
 [source, java]
 ----
@@ -144,19 +145,19 @@ Bucket bucket = Bucket.builder()
 ----
 
 ==== Blocking API example
-Suppose that you implement consumer of messages from a messaging system and want to process message no fastly then desired rate
+Suppose you are implementing a consumer of messages from a messaging system, and you want to process messages no faster than a desired rate:
 [source, java]
 ----
-// define the bucket with capacity 100  and refill 100 tokens per 1 minute
+// define a bucket with capacity 100 and a refill of 100 tokens per minute
 Bucket bucket = Bucket.builder()
     .addLimit(limit -> limit.capacity(100).refillGreedy(100, ofMinutes(1)))
     .build();
 
-// do polling in infinite loop
+// poll in an infinite loop
 while (true) {
     List<Message> messages = consumer.poll();
     for (Message message : messages) {
-        // Consume a token from the token bucket. If a token is not available this method will block until the refill adds one to the bucket.
+        // Consume a token from the bucket. If no token is available, this method blocks until the refill adds one.
         bucket.asBlocking().consume(1);
         process(message);
     }

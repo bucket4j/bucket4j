@@ -1,7 +1,7 @@
 [[bucket4j-glide, Bucket4j-Glide]]
-==== Valkey glide integration
+==== Valkey Glide integration
 ===== Dependencies
-To use ``valkey-glide`` extension you need to add following dependency:
+To use the ``bucket4j-glide`` extension, add the following dependency:
 [source, xml, subs=attributes+]
 ----
 <dependency>
@@ -26,7 +26,7 @@ GlideBasedProxyManager<K> proxyManager = Bucket4jGlide.casBasedBuilder(client)
 ...
 
 BucketConfiguration configuration = BucketConfiguration.builder()
-    .addLimit(limit -> capacity(1_000).refillGreedy(1_000, ofMinutes(1)))
+    .addLimit(limit -> limit.capacity(1_000).refillGreedy(1_000, ofMinutes(1)))
     .build();
 Bucket bucket = proxyManager.getProxy(key, () -> configuration);
 ----

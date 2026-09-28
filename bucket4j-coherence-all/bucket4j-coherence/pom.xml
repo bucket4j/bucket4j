@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.bucket4j</groupId>
+        <artifactId>bucket4j_jdk17-coherence-all</artifactId>
+        <version>8.21.0</version>
+        <relativePath>../../bucket4j-coherence-all</relativePath>
+    </parent>
+
+    <name>bucket4j_jdk17-coherence</name>
+    <description>Bucket4j integration with a current version of Oracle Coherence</description>
+    <artifactId>bucket4j_jdk17-coherence</artifactId>
+
+    <properties>
+        <modular-name>coherence</modular-name>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.bucket4j</groupId>
+            <artifactId>bucket4j_jdk17-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle.coherence.ce</groupId>
+            <artifactId>coherence</artifactId>
+            <version>${coherence.latest.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>javax.cache</groupId>
+            <artifactId>cache-api</artifactId>
+            <version>${jcache.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.bucket4j</groupId>
+            <artifactId>bucket4j_jdk17-core</artifactId>
+            <version>${project.version}</version>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <!--
+                        Oracle Coherence keeps most of its cluster/network state in static singletons (CacheFactory),
+                        so a JVM that already hosted one Coherence cluster member cannot cleanly host another one
+                        after the first is shut down. Every test class here starts its own real Coherence cluster,
+                        so each of them needs a pristine JVM.
+                    -->
+                    <reuseForks>false</reuseForks>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

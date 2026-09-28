@@ -9,7 +9,7 @@ import io.github.bucket4j.tck.ProxyManagerSpec;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.postgresql.PostgreSQLContainer;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -94,7 +94,7 @@ public class PostgreSQLTest extends AbstractDistributedBucketTest {
     }
 
     private static PostgreSQLContainer startPostgreSQLContainer() {
-        PostgreSQLContainer container = new PostgreSQLContainer();
+        PostgreSQLContainer container = new PostgreSQLContainer("postgres:9.6.12");
         container.start();
         return container;
     }

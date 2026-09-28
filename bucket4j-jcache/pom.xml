@@ -7,7 +7,7 @@
     <parent>
         <groupId>com.bucket4j</groupId>
         <artifactId>bucket4j_jdk17-parent</artifactId>
-        <version>8.18.0</version>
+        <version>8.21.0</version>
         <relativePath>../bucket4j-parent</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -56,13 +56,13 @@
         <dependency>
             <groupId>org.infinispan</groupId>
             <artifactId>infinispan-core</artifactId>
-            <version>${infinispan.latest.version}</version>
+            <version>${infinispan.latest.v15.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.infinispan</groupId>
             <artifactId>infinispan-jcache</artifactId>
-            <version>${infinispan.latest.version}</version>
+            <version>${infinispan.latest.v15.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>

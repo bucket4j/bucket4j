@@ -2,7 +2,7 @@
  * ========================LICENSE_START=================================
  * Bucket4j
  * %%
- * Copyright (C) 2015 - 2020 Vladimir Bukhtoyarov
+ * Copyright (C) 2015 - 2026 Vladimir Bukhtoyarov
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ package io.github.bucket4j.distributed.remote;
 
 import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
+import io.github.bucket4j.distributed.serialization.PrimitiveSizeCalculator;
 import io.github.bucket4j.distributed.serialization.Scope;
 import io.github.bucket4j.distributed.serialization.SerializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
@@ -119,6 +120,28 @@ public class Request<T> implements ComparableByContent<Request<T>> {
                     adapter.writeBoolean(output, false);
                 }
             }
+        }
+
+        @Override
+        public int estimateSize(Request<?> request, Version backwardCompatibilityVersion, Scope scope) {
+            Version selfVersion = request.getSelfVersion();
+
+            int size = PrimitiveSizeCalculator.SIZE_OF_INT; // selfVersion
+            size += PrimitiveSizeCalculator.SIZE_OF_INT; // effectiveVersion
+
+            size += RemoteCommand.estimateSize(request.command, backwardCompatibilityVersion, scope);
+
+            size += PrimitiveSizeCalculator.SIZE_OF_BOOLEAN;
+            if (request.clientSideTime != null) {
+                size += PrimitiveSizeCalculator.SIZE_OF_LONG;
+            }
+            if (selfVersion.getNumber() >= v_8_10_0.getNumber()) {
+                size += PrimitiveSizeCalculator.SIZE_OF_BOOLEAN;
+                if (request.expirationStrategy != null) {
+                    size += ExpirationAfterWriteStrategy.estimateSize(request.expirationStrategy, backwardCompatibilityVersion, scope);
+                }
+            }
+            return size;
         }
 
         @Override

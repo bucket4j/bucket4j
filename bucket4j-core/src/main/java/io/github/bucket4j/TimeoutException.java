@@ -2,7 +2,7 @@
  * ========================LICENSE_START=================================
  * Bucket4j
  * %%
- * Copyright (C) 2015 - 2024 Vladimir Bukhtoyarov
+ * Copyright (C) 2015 - 2026 Vladimir Bukhtoyarov
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,9 +25,9 @@ public class TimeoutException extends BucketExceptions.BucketExecutionException 
     private final long requestTimeoutNanos;
 
     public TimeoutException(String message, long nanosElapsed, long requestTimeoutNanos) {
-        super(message);
-        this.nanosElapsed = nanosElapsed;
-        this.requestTimeoutNanos = requestTimeoutNanos;
+       super(message, null, true, false);
+       this.nanosElapsed = nanosElapsed;
+       this.requestTimeoutNanos = requestTimeoutNanos;
     }
 
     public long getNanosElapsed() {

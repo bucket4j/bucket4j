@@ -77,8 +77,23 @@ public class VertxBasedProxyManagerClusterTest extends AbstractDistributedBucket
     }
 
     private static GenericContainer startRedisContainer() {
-        GenericContainer genericContainer = new GenericContainer("grokzen/redis-cluster:6.0.7");
+        // Redis Cluster nodes announce the address that was used to build the cluster
+        // (the IP env var below) as their own address in CLUSTER SLOTS/MOVED replies.
+        // By default grokzen/redis-cluster auto-detects the container's internal bridge
+        // IP, which is not reachable from the host on many Docker setups (Docker
+        // Desktop/OrbStack NAT, VPN split-tunnel routes, etc). Vert.x's Redis client has
+        // no client-side NAT-mapping hook (unlike Lettuce/Jedis/Redisson), so instead we
+        // force the container to announce 127.0.0.1 and bind its ports 1:1 to the host,
+        // so whatever the client is told always resolves back to the same container.
+        GenericContainer genericContainer = new GenericContainer("grokzen/redis-cluster:6.0.7") {
+            {
+                for (Integer port : CONTAINER_CLUSTER_PORTS) {
+                    addFixedExposedPort(port, port);
+                }
+            }
+        };
         genericContainer.withExposedPorts(CONTAINER_CLUSTER_PORTS);
+        genericContainer.withEnv("IP", "127.0.0.1");
         genericContainer.start();
 
         for (int i = 0; i < CLUSTER_START_TIMEOUT_SECONDS; i++) {

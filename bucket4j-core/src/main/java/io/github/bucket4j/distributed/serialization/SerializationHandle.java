@@ -2,7 +2,7 @@
  * ========================LICENSE_START=================================
  * Bucket4j
  * %%
- * Copyright (C) 2015 - 2020 Vladimir Bukhtoyarov
+ * Copyright (C) 2015 - 2026 Vladimir Bukhtoyarov
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,6 +30,13 @@ public interface SerializationHandle<T> {
     <I> T deserialize(DeserializationAdapter<I> adapter, I input) throws IOException;
 
     <O> void serialize(SerializationAdapter<O> adapter, O output, T serializableObject, Version backwardCompatibilityVersion, Scope scope) throws IOException;
+
+    /**
+     * @return the exact number of bytes that {@link #serialize} will write for {@code serializableObject}
+     * with the given {@code backwardCompatibilityVersion} and {@code scope}. Used to pre-allocate a
+     * right-sized buffer for two-phase(estimate-then-serialize) serialization, see {@link SerializationStyle#BYTE_BUFFER}.
+     */
+    int estimateSize(T serializableObject, Version backwardCompatibilityVersion, Scope scope);
 
     /**
      * @return the type identifier that is unique across all Bucket4j classes

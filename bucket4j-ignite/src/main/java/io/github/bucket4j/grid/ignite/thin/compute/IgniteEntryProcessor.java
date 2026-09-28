@@ -2,7 +2,7 @@
  * ========================LICENSE_START=================================
  * Bucket4j
  * %%
- * Copyright (C) 2015 - 2021 Vladimir Bukhtoyarov
+ * Copyright (C) 2015 - 2026 Vladimir Bukhtoyarov
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,8 @@ package io.github.bucket4j.grid.ignite.thin.compute;
 import io.github.bucket4j.distributed.remote.AbstractBinaryTransaction;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.distributed.remote.Request;
+import io.github.bucket4j.distributed.serialization.SerializationStyle;
+
 import org.apache.ignite.cache.CacheEntryProcessor;
 
 import javax.cache.processor.EntryProcessorException;
@@ -40,7 +42,7 @@ public class IgniteEntryProcessor<K> implements Serializable, CacheEntryProcesso
     private final byte[] requestBytes;
 
     IgniteEntryProcessor(Request<?> request) {
-        this.requestBytes = serializeRequest(request);
+        this.requestBytes = serializeRequest(request, SerializationStyle.BYTE_BUFFER);
     }
 
     @Override

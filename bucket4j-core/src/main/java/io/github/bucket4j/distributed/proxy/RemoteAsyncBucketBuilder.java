@@ -2,7 +2,7 @@
  * ========================LICENSE_START=================================
  * Bucket4j
  * %%
- * Copyright (C) 2015 - 2020 Vladimir Bukhtoyarov
+ * Copyright (C) 2015 - 2026 Vladimir Bukhtoyarov
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -75,7 +75,7 @@ public interface RemoteAsyncBucketBuilder<K> {
      * in case of persisted version of configuration in the storage < than provided {@code desiredConfigurationVersion}.
      *
      * @param desiredConfigurationVersion specifies desired configuration version
-     * @param tokensInheritanceStrategy the strategy that will be used for token migration if {@code desiredConfigurationVersion of persisted bucket} is less that provided desiredConfigurationVersion
+     * @param tokensInheritanceStrategy the strategy that will be used for token migration if {@code desiredConfigurationVersion of persisted bucket} is less than provided desiredConfigurationVersion
      *
      * @return {@code this}
      */

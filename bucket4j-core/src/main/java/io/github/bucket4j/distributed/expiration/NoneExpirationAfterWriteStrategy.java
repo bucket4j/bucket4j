@@ -2,7 +2,7 @@
  * ========================LICENSE_START=================================
  * Bucket4j
  * %%
- * Copyright (C) 2015 - 2024 Vladimir Bukhtoyarov
+ * Copyright (C) 2015 - 2026 Vladimir Bukhtoyarov
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ import java.util.Map;
 import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
+import io.github.bucket4j.distributed.serialization.PrimitiveSizeCalculator;
 import io.github.bucket4j.distributed.serialization.Scope;
 import io.github.bucket4j.distributed.serialization.SerializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
@@ -54,6 +55,11 @@ public class NoneExpirationAfterWriteStrategy implements ExpirationAfterWriteStr
         @Override
         public <O> void serialize(SerializationAdapter<O> adapter, O output, NoneExpirationAfterWriteStrategy strategy, Version backwardCompatibilityVersion, Scope scope) throws IOException {
             adapter.writeInt(output, v_8_10_0.getNumber());
+        }
+
+        @Override
+        public int estimateSize(NoneExpirationAfterWriteStrategy strategy, Version backwardCompatibilityVersion, Scope scope) {
+            return PrimitiveSizeCalculator.SIZE_OF_INT; // format version
         }
 
         @Override

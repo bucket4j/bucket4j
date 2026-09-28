@@ -2,7 +2,7 @@
  * ========================LICENSE_START=================================
  * Bucket4j
  * %%
- * Copyright (C) 2015 - 2024 Vladimir Bukhtoyarov
+ * Copyright (C) 2015 - 2026 Vladimir Bukhtoyarov
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ import io.github.bucket4j.BucketExceptions;
 import io.github.bucket4j.BucketListener;
 import io.github.bucket4j.TimeMeter;
 import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
+import io.github.bucket4j.distributed.serialization.SerializationStyle;
 import io.github.bucket4j.distributed.versioning.Version;
 import io.github.bucket4j.distributed.versioning.Versions;
 
@@ -84,7 +85,7 @@ public abstract class AbstractProxyManagerBuilder<K, P extends ProxyManager<K>, 
      * @return this builder with configured {@code clientClock}.
      */
     public B clientClock(TimeMeter clientClock) {
-        Objects.requireNonNull(clientSideClock);
+        Objects.requireNonNull(clientClock);
         if (!clientClock.isWallClockBased()) {
             throw BucketExceptions.isNotWallBasedClockUsedInDistributedEnvironment(clientClock.getClass());
         }
@@ -203,6 +204,7 @@ public abstract class AbstractProxyManagerBuilder<K, P extends ProxyManager<K>, 
      * <ul>
      *     <li>Delegating decisions to a mediator component</li>
      *     <li>Applying arbitrary business logic (e.g., neural networks trained on traffic patterns)</li>
+     *     <li>Adding backoff, jitter or fixed delays between CAS retries</li>
      *     <li>Integrating metrics/monitoring for analysis and tuning</li>
      * </ul>
      *
@@ -210,7 +212,7 @@ public abstract class AbstractProxyManagerBuilder<K, P extends ProxyManager<K>, 
      * The retry strategy takes precedence over {@link #maxRetries(int)} if both are configured.
      *
      * <p>
-     * By default, retryStrategy is not set. This means that either maxRetries or infinite retries will be used.
+     * By default, retryStrategy is not set. This means that either maxRetries or infinite immediate retries will be used.
      *
      * @param retryStrategy the custom retry strategy for CAS operations.
      *

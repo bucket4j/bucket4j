@@ -1,69 +1,80 @@
 package io.github.bucket4j.grid.infinispan;
 
+import java.io.File;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.UUID;
+import java.util.jar.JarEntry;
+import java.util.jar.JarOutputStream;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-import org.infinispan.Cache;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
+import org.infinispan.client.hotrod.configuration.ClientIntelligence;
 import org.infinispan.client.hotrod.configuration.Configuration;
-import org.infinispan.configuration.cache.CacheMode;
-import org.infinispan.configuration.global.GlobalConfiguration;
-import org.infinispan.configuration.global.GlobalConfigurationBuilder;
-import org.infinispan.factories.GlobalComponentRegistry;
-import org.infinispan.manager.DefaultCacheManager;
-import org.infinispan.server.Extensions;
-import org.infinispan.server.hotrod.HotRodServer;
-import org.infinispan.server.hotrod.configuration.HotRodServerConfiguration;
-import org.infinispan.server.hotrod.configuration.HotRodServerConfigurationBuilder;
-import org.infinispan.tasks.TaskManager;
+import org.infinispan.client.hotrod.configuration.ConfigurationBuilder;
+import org.infinispan.commons.configuration.StringConfiguration;
+import org.infinispan.testcontainers.InfinispanContainer;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.testcontainers.utility.DockerImageName;
+import org.testcontainers.utility.MountableFile;
 
-import io.github.bucket4j.grid.infinispan.serialization.Bucket4jProtobufContextInitializer;
+import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
 import io.github.bucket4j.tck.ProxyManagerSpec;
 
+/*
+ * Infinispan 16.1+ server modules are compiled for JDK 25, so a Hot Rod server can no longer be
+ * embedded in-process under our JDK 17 build (see bucket4j-infinispan/pom.xml). This test instead
+ * runs against a real containerized Infinispan server, deploying the compiled bucket4j-core and
+ * bucket4j-infinispan classes into the server's lib directory so that the Bucket4jTask ServerTask
+ * is available for the Hot Rod client to invoke.
+ */
 public class InfinispanHotrodTest extends AbstractDistributedBucketTest {
 
-    private static Cache<String, byte[]> cache;
-    private static DefaultCacheManager cacheManager;
-    private static HotRodServer hotrodServer;
+    private static final String CACHE_NAME = "my-cache";
+
+    private static InfinispanContainer container;
     private static RemoteCacheManager remoteCacheManager;
 
     @BeforeAll
-    public static void init() throws MalformedURLException, URISyntaxException {
-        cacheManager = new DefaultCacheManager(getGlobalConfiguration());
-        cacheManager.defineConfiguration("my-cache",
-            new org.infinispan.configuration.cache.ConfigurationBuilder()
-                .clustering()
-                .cacheMode(CacheMode.DIST_SYNC)
-                .hash().numOwners(1)
-                .build()
-        );
-        cache = cacheManager.getCache("my-cache");
+    public static void init() throws IOException, URISyntaxException {
+        Path extensionJar = buildServerExtensionJar();
 
-        // it needs to load remote-tasks
-        GlobalComponentRegistry gcr = GlobalComponentRegistry.of(cacheManager);
-        Extensions extensions = new Extensions();
-        extensions.load(InfinispanHotrodTest.class.getClassLoader());
-        TaskManager taskManager = gcr.getComponent(TaskManager.class);
-        taskManager.registerTaskEngine(extensions.getServerTaskEngine(cacheManager));
+        container = new InfinispanContainer(DockerImageName.parse("quay.io/infinispan/server:16.2"))
+            .withUser(InfinispanContainer.DEFAULT_USERNAME)
+            .withPassword(InfinispanContainer.DEFAULT_PASSWORD)
+            .withCopyFileToContainer(MountableFile.forHostPath(extensionJar), "/opt/infinispan/server/lib/bucket4j-infinispan-ext.jar");
+        container.start();
 
-        // Create a Hot Rod server which exposes the cache manager
-        HotRodServerConfiguration hotrodServerConfig = new HotRodServerConfigurationBuilder().build();
-        hotrodServer = new HotRodServer();
-        hotrodServer.start(hotrodServerConfig, cacheManager);
+        ConfigurationBuilder clientConfigBuilder = new ConfigurationBuilder();
+        clientConfigBuilder.addServer()
+            .host(container.getHost())
+            .port(container.getMappedPort(InfinispanContainer.DEFAULT_HOTROD_PORT));
+        // The server advertises its container-internal IP as part of its cluster topology, which is
+        // unreachable from the host; since it's a single-node container, disable topology-aware
+        // routing so the client keeps using the published host/port it was given above.
+        clientConfigBuilder.clientIntelligence(ClientIntelligence.BASIC);
+        clientConfigBuilder.security().authentication()
+            .username(InfinispanContainer.DEFAULT_USERNAME)
+            .password(InfinispanContainer.DEFAULT_PASSWORD)
+            .realm("default");
+        Configuration clientConfig = clientConfigBuilder.build();
+        remoteCacheManager = new RemoteCacheManager(clientConfig);
 
-        // Create a Hot Rod client
-        org.infinispan.client.hotrod.configuration.ConfigurationBuilder hotrodClientConfigBuilder = new org.infinispan.client.hotrod.configuration.ConfigurationBuilder();
-        hotrodClientConfigBuilder.addServers("localhost");
-        Configuration hotrodClientConfig = hotrodClientConfigBuilder.build();
-        remoteCacheManager = new RemoteCacheManager(hotrodClientConfig);
-        RemoteCache<String, byte[]> remoteCache = remoteCacheManager.getCache("my-cache");
+        String cacheXml = "<distributed-cache><encoding media-type=\"application/x-protostream\"/></distributed-cache>";
+        remoteCacheManager.administration().getOrCreateCache(CACHE_NAME, new StringConfiguration(cacheXml));
+        RemoteCache<String, byte[]> remoteCache = remoteCacheManager.getCache(CACHE_NAME);
 
         specs = Arrays.asList(
             new ProxyManagerSpec<>(
@@ -74,22 +85,52 @@ public class InfinispanHotrodTest extends AbstractDistributedBucketTest {
         );
     }
 
-    private static GlobalConfiguration getGlobalConfiguration() {
-        GlobalConfigurationBuilder globalConfigurationBuilder = GlobalConfigurationBuilder.defaultClusteredBuilder();
-        globalConfigurationBuilder.serialization().addContextInitializer(new Bucket4jProtobufContextInitializer());
-        return globalConfigurationBuilder.build();
+    @AfterAll
+    public static void destroy() {
+        try {
+            if (remoteCacheManager != null) {
+                remoteCacheManager.close();
+            }
+        } finally {
+            if (container != null) {
+                container.stop();
+            }
+        }
     }
 
-    @AfterAll
-    public static void destroy() throws IOException {
-        try {
-            remoteCacheManager.stop();
-        } finally {
-            try {
-                hotrodServer.stop();
-            } finally {
-                cacheManager.close();
+    private static Path buildServerExtensionJar() throws IOException, URISyntaxException {
+        Path jarFile = Files.createTempFile("bucket4j-infinispan-ext", ".jar");
+        jarFile.toFile().deleteOnExit();
+        Set<String> addedEntries = new HashSet<>();
+        try (JarOutputStream jarOut = new JarOutputStream(Files.newOutputStream(jarFile))) {
+            addDirectoryToJar(jarOut, classesDirOf(Bandwidth.class), addedEntries);
+            addDirectoryToJar(jarOut, classesDirOf(Bucket4jInfinispan.class), addedEntries);
+        }
+        // Files.createTempFile creates the file with mode rw------- (owner-only), which the
+        // container's non-root user cannot read once it's mounted; Infinispan Server then silently
+        // skips the jar while scanning its lib directory instead of failing loudly.
+        jarFile.toFile().setReadable(true, false);
+        return jarFile;
+    }
+
+    private static Path classesDirOf(Class<?> type) throws URISyntaxException {
+        URL location = type.getProtectionDomain().getCodeSource().getLocation();
+        return Paths.get(location.toURI());
+    }
+
+    private static void addDirectoryToJar(JarOutputStream jarOut, Path directory, Set<String> addedEntries) throws IOException {
+        List<Path> files;
+        try (Stream<Path> paths = Files.walk(directory)) {
+            files = paths.filter(Files::isRegularFile).collect(Collectors.toList());
+        }
+        for (Path path : files) {
+            String entryName = directory.relativize(path).toString().replace(File.separatorChar, '/');
+            if (!addedEntries.add(entryName)) {
+                continue;
             }
+            jarOut.putNextEntry(new JarEntry(entryName));
+            Files.copy(path, jarOut);
+            jarOut.closeEntry();
         }
     }
 

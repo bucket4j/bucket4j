@@ -1,7 +1,7 @@
 [[bucket4j-vertx, Bucket4j-Vertx]]
 ==== Vert.x Redis client integration
 ===== Dependencies
-To use ``bucket4j-vertx`` extension you need to add following dependency:
+To use the ``bucket4j-vertx`` extension, add the following dependency:
 [source, xml, subs=attributes+]
 ----
 <dependency>

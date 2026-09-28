@@ -2,14 +2,14 @@
  * ========================LICENSE_START=================================
  * Bucket4j
  * %%
- * Copyright (C) 2015 - 2020 Vladimir Bukhtoyarov
+ * Copyright (C) 2015 - 2026 Vladimir Bukhtoyarov
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  *      http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,6 +20,7 @@
 package io.github.bucket4j;
 
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
+import io.github.bucket4j.distributed.serialization.PrimitiveSizeCalculator;
 import io.github.bucket4j.distributed.serialization.Scope;
 import io.github.bucket4j.distributed.serialization.SerializationAdapter;
 import io.github.bucket4j.distributed.versioning.Version;
@@ -84,6 +85,15 @@ public interface BucketState {
                 break;
             default:
                 throw new IOException("Unknown mathType=" + state.getMathType());
+        }
+    }
+
+    static int estimateSize(BucketState state, Version backwardCompatibilityVersion, Scope scope) {
+        switch (state.getMathType()) {
+            case INTEGER_64_BITS:
+                return PrimitiveSizeCalculator.SIZE_OF_INT + BucketState64BitsInteger.SERIALIZATION_HANDLE.estimateSize((BucketState64BitsInteger) state, backwardCompatibilityVersion, scope);
+            default:
+                throw new IllegalStateException("Unknown mathType=" + state.getMathType());
         }
     }
 

@@ -2,7 +2,7 @@
  * ========================LICENSE_START=================================
  * Bucket4j
  * %%
- * Copyright (C) 2015 - 2020 Vladimir Bukhtoyarov
+ * Copyright (C) 2015 - 2026 Vladimir Bukhtoyarov
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ package io.github.bucket4j.distributed.remote;
 
 import java.util.Objects;
 
+import io.github.bucket4j.distributed.serialization.SerializationStyle;
 import io.github.bucket4j.distributed.versioning.Version;
 
 import static io.github.bucket4j.distributed.serialization.InternalSerializationHelper.deserializeState;
@@ -37,7 +38,7 @@ public class MutableBucketEntry {
     }
 
     public MutableBucketEntry(byte[] originalStateBytes) {
-        this.state = originalStateBytes == null? null : deserializeState(originalStateBytes);
+        this.state = originalStateBytes == null? null : deserializeState(originalStateBytes, SerializationStyle.BYTE_BUFFER);
     }
 
     public boolean exists() {
@@ -61,7 +62,7 @@ public class MutableBucketEntry {
     }
 
     public byte[] getStateBytes(Version backwardCompatibilityVersion) {
-        return serializeState(get(), backwardCompatibilityVersion);
+        return serializeState(get(), backwardCompatibilityVersion, SerializationStyle.BYTE_BUFFER);
     }
 
 }

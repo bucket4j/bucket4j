@@ -7,9 +7,9 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
@@ -43,13 +43,13 @@ public class RedisBatchingExample {
     private static GenericContainer container;
     private static RedisClient redisClient;
 
-    @BeforeClass
+    @BeforeAll
     public static void setup() {
         container = startRedisContainer();
         redisClient = createLettuceClient(container);
     }
 
-    @AfterClass
+    @AfterAll
     public static void shutdown() {
         if (redisClient != null) {
             redisClient.shutdown();

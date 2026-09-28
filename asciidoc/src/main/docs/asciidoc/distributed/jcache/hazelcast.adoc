@@ -1,7 +1,7 @@
 [[bucket4j-hazelcast, Bucket4j-Hazelcast]]
 ==== Hazelcast integration
 ===== Dependencies
-To use Bucket4j extension for Hazelcast with ``Hazelcast 4.x`` you need to add the following dependency:
+To use the Bucket4j extension with a current version of Hazelcast, add the following dependency:
 [source, xml, subs=attributes+]
 ----
 <dependency>
@@ -10,7 +10,7 @@ To use Bucket4j extension for Hazelcast with ``Hazelcast 4.x`` you need to add t
     <version>{revnumber}</version>
 </dependency>
 ----
-If you are using a legacy version of Hazelcast ``4.x`` then you need to add the following dependency:
+If you are using a legacy ``Hazelcast 4.x`` release, add this dependency instead:
 [source, xml, subs=attributes+]
 ----
 <dependency>
@@ -20,10 +20,10 @@ If you are using a legacy version of Hazelcast ``4.x`` then you need to add the 
 </dependency>
 ----
 
-===== General compatibility matrix principles:
-* Bucket4j authors do not perform continuous monitoring of new Hazelcast releases. So, there is can be a case when there is no one version of Bucket4j which is compatible with the newly released Hazelcast,
-just log an issue to https://github.com/bucket4j/bucket4j/issues[bug tracker] in this case, adding support to new version of Hazelcast is usually an easy exercise.
-* Integrations with legacy versions of Hazelcast are not removed without a clear reason. Hence, You are in safety, even you are working in a big enterprise company that does not update its infrastructure frequently because You still get new Bucket4j's features even for legacy Hazelcast releases.
+===== General compatibility matrix principles
+* Bucket4j's authors do not continuously monitor new Hazelcast releases, so there can be periods when no Bucket4j version is compatible with a newly released Hazelcast version.
+Log an issue in the https://github.com/bucket4j/bucket4j/issues[bug tracker] if you hit this - adding support for a new Hazelcast version is usually an easy fix.
+* Integrations with legacy Hazelcast versions are not removed without a clear reason. Even if you work at a large enterprise that does not update its infrastructure often, you still get Bucket4j's new features on legacy Hazelcast releases.
 
 ===== Example of Bucket instantiation
 [source, java]
@@ -42,14 +42,14 @@ BucketConfiguration configuration = BucketConfiguration.builder()
 Bucket bucket = proxyManager.getProxy(key, () -> configuration);
 ----
 
-===== Configuring flexible per entry expiration
-It is possible configure precise expiration for bucket entries inside cache,
-in order to avoid storing data related to buckets more than it needs to refill for consumed tokens.
+===== Configuring flexible per-entry expiration
+It is possible to configure precise expiration for bucket entries in the cache,
+so that data related to a bucket is not stored for longer than needed to refill its consumed tokens.
 [source, java]
 ----
 IMap<K, byte[]> map = ...;
 Duration evictionJitter = Duration.ofSeconds(15);
-ExpirationAfterWriteStrategy expiration = ExpirationAfterWriteStrategy.basedOnTimeForRefillingBucketUpToMax(evictionJitter)
+ExpirationAfterWriteStrategy expiration = ExpirationAfterWriteStrategy.basedOnTimeForRefillingBucketUpToMax(evictionJitter);
 
 private static final HazelcastProxyManager<K> proxyManager = Bucket4jHazelcast
     .entryProcessorBasedBuilder(map)
@@ -57,15 +57,14 @@ private static final HazelcastProxyManager<K> proxyManager = Bucket4jHazelcast
      // setup optional parameters if necessary
     .build();
 ----
-How to choose eviction jitter properly? Zero means immediate eviction after refill,
-however it is better to avoid too small jitter, because recreation of bucket after expiration will require one network hop,
-so it is better to configure at least of few seconds for jitter in order to avoid to frequent buckets recreation.
+How should you choose the eviction jitter? Zero means immediate eviction after refill; however, it is better to avoid too small a jitter, because recreating a bucket after expiration requires an extra network hop.
+Configuring at least a few seconds of jitter helps avoid recreating buckets too frequently.
 
-===== Configuring Custom Serialization for Bucket4j library classes
-If you configure nothing, then by default Java serialization will be used for serialization Bucket4j library classes. Java serialization can be rather slow and should be avoided in general.
-``Bucket4j`` provides https://docs.hazelcast.org/docs/3.0/manual/html/ch03s03.html[custom serializers] for all library classes that could be transferred over the network.
+===== Configuring custom serialization for Bucket4j library classes
+If you configure nothing, Bucket4j library classes are serialized using plain Java serialization by default, which can be rather slow and should generally be avoided.
+``Bucket4j`` provides https://docs.hazelcast.org/docs/3.0/manual/html/ch03s03.html[custom serializers] for all library classes that can be transferred over the network.
 
-To let Hazelcast know about fast serializers you should register them programmatically in the serialization config:
+To let Hazelcast know about the fast serializers, register them programmatically in the serialization config:
 [source, java]
 ----
 import com.hazelcast.config.Config;
@@ -77,25 +76,25 @@ import io.github.bucket4j.grid.hazelcast.serialization.HazelcastSerializer;
     SerializationConfig serializationConfig = config.getSerializationConfig();
 
     // the starting type ID number for Bucket4j classes.
-    // you free to choose any unused ID, but be aware that Bucket4j uses 2 types currently,
-    // and may use more types in the future, so leave enough empty space after baseTypeIdNumber
+    // you are free to choose any unused ID, but be aware that Bucket4j currently uses 2 types
+    // and may use more in the future, so leave enough empty space after baseTypeIdNumber
     int baseTypeIdNumber = 10000;
 
     HazelcastProxyManager.addCustomSerializers(serializationConfig, baseTypeIdNumber);
 ----
 
-===== Configuring Custom Serialization using a Hazelcast standalone cluster
-In case the Hazelcast Cluster is running as a standalone cluster outside your application, maybe started directly using its own jar or hosted by a third party software, you are not in position to register the custom serializers programmatically.
+===== Configuring custom serialization for a standalone Hazelcast cluster
+If the Hazelcast cluster runs standalone, outside your application - started directly from its own jar or hosted by third-party software - you are not in a position to register the custom serializers programmatically.
 
-In order to let the hazelcast cluster be aware of the custom serialization the following 3 actions are required:
+To make such a cluster aware of the custom serialization, three actions are required:
 
-  1. Add the Bucket4j jars (`bucket4j-core` and `bucket4j-hazelcast`) into the classpath of each node of the Hazelcast cluster
-  2. Declare the typeIdBase via **OS Environment Variable** or via **Java System Property**, in both case the name is: `bucket4j.hazelcast.serializer.type_id_base`. Of course the value provided here at the Hazelcast server side has to be the same used programmatically into your java code at hazelcast client side.
-  3. Configure the custom serializers into the Hazelcast server configuration file, see the following hazelcast config snippet as reference:
+  1. Add the Bucket4j jars (`bucket4j-core` and `bucket4j-hazelcast`) to the classpath of every node in the Hazelcast cluster.
+  2. Declare `typeIdBase` via an **OS environment variable** or a **Java system property**; in both cases the name is `bucket4j.hazelcast.serializer.type_id_base`. The value provided on the Hazelcast server side must match the one used programmatically in your Java code on the Hazelcast client side.
+  3. Configure the custom serializers in the Hazelcast server configuration file - see the following snippet for reference:
 
 [source,yaml]
 ----
-# ----- Hazelcast SERIALIZATIONs configuration -----
+# ----- Hazelcast serialization configuration -----
 serialization:
   serializers:
     - type-class: io.github.bucket4j.grid.hazelcast.HazelcastEntryProcessor
@@ -107,23 +106,23 @@ serialization:
 ----
 
 ===== Support for externally managed Hazelcast without classpath access
-`bucket4j-hazelcast` requires putting Bucket4j jars to classpath of each node of Hazelcast cluster.
-Sometimes you have no control over classpath because the Hazelcast cluster is externally managed(Paas scenario).
-In such cases ```HazelcastProxyManager``` can not be used because it is implemented on top of https://docs.hazelcast.com/imdg/4.2/computing/entry-processor[EntryProcessor] functionality.
+`bucket4j-hazelcast` requires putting the Bucket4j jars on the classpath of every node in the Hazelcast cluster.
+Sometimes you have no control over the classpath, because the Hazelcast cluster is externally managed (a PaaS scenario).
+In such cases, `HazelcastProxyManager` cannot be used, because it is implemented on top of the https://docs.hazelcast.com/imdg/4.2/computing/entry-processor[EntryProcessor] functionality.
 
-.Bucket4j provides two alternatives for PaaS topology:
-HazelcastLockBasedProxyManager:: is implemented on top IMap methods `lock`, `get`, `put`, `unlock`.
-This implementation always requires 4 network hops for one rate-limit check.
+.Bucket4j provides two alternatives for PaaS topologies:
+HazelcastLockBasedProxyManager:: implemented on top of the IMap methods `lock`, `get`, `put`, `unlock`.
+This implementation always requires 4 network hops per rate-limit check.
 
-HazelcastCompareAndSwapBasedProxyManager:: is implemented on top IMap methods `get`, `replace`, `putIfAbsent`.
-This implementation requires 2 network hops if no contention happens, but in case of high contention on the key amount of hops is unpredictable.
+HazelcastCompareAndSwapBasedProxyManager:: implemented on top of the IMap methods `get`, `replace`, `putIfAbsent`.
+This implementation requires 2 network hops when there is no contention, but the number of hops is unpredictable under high contention on the key.
 
 .Limitations of HazelcastLockBasedProxyManager and HazelcastCompareAndSwapBasedProxyManager
-* `HazelcastLockBasedProxyManager` does not provide async API because of lack of `lockAsync` and `unlockAsync`  methods inside IMap API.
-* `HazelcastCompareAndSwapBasedProxyManager` does not provide async API because lack of `replaceAsync` and `putIfAbsentAsync` methods inside IMap API.
+* `HazelcastLockBasedProxyManager` does not provide an async API, because the IMap API lacks `lockAsync` and `unlockAsync` methods.
+* `HazelcastCompareAndSwapBasedProxyManager` does not provide an async API, because the IMap API lacks `replaceAsync` and `putIfAbsentAsync` methods.
 
-If you wish to async API be supported by `HazelcastLockBasedProxyManager` and `HazelcastCompareAndSwapBasedProxyManager` ask Hazelcast maintainers to support the missed APIs mentioned above.
+If you would like `HazelcastLockBasedProxyManager` and `HazelcastCompareAndSwapBasedProxyManager` to support an async API, ask the Hazelcast maintainers to add the missing APIs mentioned above.
 
-===== Known issues related with Docker and(or) SpringBoot
+===== Known issues related to Docker and/or Spring Boot
 * https://github.com/bucket4j/bucket4j/discussions/186[#186 HazelcastEntryProcessor class not found] - check file permissions inside your image.
-* https://github.com/bucket4j/bucket4j/issues/162[#182 HazelcastSerializationException with Hazelcast 4.2] - properly setup classloader for Hazelcast client configuration.
+* https://github.com/bucket4j/bucket4j/issues/162[#162 HazelcastSerializationException with Hazelcast 4.2] - properly set up the classloader in your Hazelcast client configuration.

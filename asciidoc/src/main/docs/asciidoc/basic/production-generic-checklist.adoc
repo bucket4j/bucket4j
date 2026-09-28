@@ -1,39 +1,39 @@
 === Generic production checklist
-The considerations described below apply to each solution based on the token-bucket or leaky-bucket algorithm.
-You need to understand, agree, and configure the following points:
+The considerations below apply to any solution based on the token-bucket or leaky-bucket algorithm, not just Bucket4j.
+Before going to production, make sure you understand, agree with, and have configured the following points.
 
 ==== Be wary of long periods
-When you are planning to use any solution based on token-bucket for throttling incoming requests,
-you need to pay close attention to the throttling time window.
+When you are using a token-bucket-based solution to throttle incoming requests,
+pay close attention to the throttling time window.
 
 .Example of a dangerous configuration:
-* Given a bucket with a limit of 10000 tokens/ per 1 hour per user.
-* A malicious attacker may send 9999 requests in a very short period, for example within 10 seconds. This would correspond to 100 requests per second which could seriously impact your system.
-* A skilled attacker could stop at 9999 requests per hour, and repeat every hour, which would make this attack impossible to detect (because the limit would not be reached).
+* Given a bucket with a limit of 10,000 tokens per hour, per user.
+* A malicious attacker could send 9,999 requests in a very short period, for example within 10 seconds. That is roughly 1,000 requests per second, which could seriously impact your system.
+* A skilled attacker could stop at 9,999 requests per hour and repeat this every hour, making the attack effectively undetectable, because the configured limit is never actually reached.
 
-To protect from this kind of attack, you should specify multiple limits like bellow
+To protect against this kind of attack, specify multiple limits, as shown below:
 [source, java]
 ----
 Bucket bucket = Bucket.builder()
-    .addLimit(limit -> capacity(10_000).refillGreedy(10_000, ofHours(1)))
-    .addLimit(limit -> capacity(20).refillGreedy(20, ofSeconds(1))) // attacker is unable to achieve 1000RPS and crash service in short time
+    .addLimit(limit -> limit.capacity(10_000).refillGreedy(10_000, ofHours(1)))
+    .addLimit(limit -> limit.capacity(20).refillGreedy(20, ofSeconds(1))) // the attacker can no longer reach 1000 RPS and overwhelm the service in a short burst
 ----
-The number of limits specified per bucket does not impact the performance.
+The number of limits configured per bucket has no impact on performance.
 
 [[short-timed-bursts, short-timed bursts]]
 ==== Be wary of short-timed bursts
-The token bucket is an efficient algorithm with a low and fixed memory footprint, independently of the incoming request rate (it can be millions per second) the bucket consumes no more than 40 bytes(five longs).
-But an efficient memory footprint has its own cost - bandwidth limitation is only satisfied over a long period. In other words, you cannot avoid short-timed bursts.
+The token bucket is an efficient algorithm with a low, fixed memory footprint - regardless of the incoming request rate (even millions of requests per second), a bucket consumes no more than 40 bytes (five longs).
+But this efficient memory footprint comes at a cost: a bandwidth limit is only guaranteed over a long period of time. In other words, short-timed bursts cannot be avoided.
 
-.Let us describe an example of a local burst:
-* Given a bucket with a limit of 100 tokens/min. We start with a full bucket, i.e. with 100 tokens.
-* At ``T1`` 100 requests are made and thus the bucket becomes empty.
-* At ``T1+1min`` the bucket is full again because tokens are fully regenerated, and we can immediately consume 100 tokens.
-* This means that between  ``T1`` and ``T1+1min`` we have consumed 200 tokens. Over a long time, there will be no more than 100 requests per min, but as shown above, it is possible to burst at **twice the limit** here at 100 tokens per min.
+.An example of a local burst:
+* Given a bucket with a limit of 100 tokens/min. We start with a full bucket, i.e. 100 tokens.
+* At `T1`, 100 requests are made, so the bucket becomes empty.
+* At `T1 + 1min`, the bucket is full again because the tokens have fully regenerated, so we can immediately consume 100 more tokens.
+* This means that between `T1` and `T1 + 1min` we consumed 200 tokens. Over a long time window there will never be more than 100 requests per minute on average, but as shown above, it is possible to burst up to **twice the configured limit** - here, 200 tokens within roughly a minute.
 
-.These bursts are inherent to token bucket algorithms and cannot be avoided. If short-timed bursts are unacceptable you then have three options:
-* Do not use Bucket4j or any other solution implemented on top of token-bucket algorithms, because token-bucket is specially designed for network traffic management devices for which short-living traffic spike is a regular case, trying to avoid spike at all contradicts with the nature of token-bucket.
-* Since the value of burst always equals capacity, try to reduce the capacity and speed of refill. For example, if you have ***strong*** requirements ``100tokens/60seconds`` then configure bucket as ``capacity=50tokens  refill=50tokens/60seconds``. It is worth mentioning that this way leads to the following drawbacks:
--- In one time you are not allowed to consume several tokens greater than capacity, according to the example above - before capacity reducing you were able to consume 100 tokens in a single request, after reducing you can consume 50 tokens in one request at max.
--- Reducing the speed of refill leads to under-consumption on long term periods, it is obvious that with refill ``50tokens/60seconds`` you will be able to consume 3050 tokens for 1 hour, instead of 6100(as was prior refill reducing).
--- As a summary of the two drawbacks above, we can say that you will pay via **under-consumption** for eliminating the risk of **overconsumption**.
+.Such bursts are inherent to the token-bucket algorithm and cannot be avoided. If short-timed bursts are unacceptable to you, you have three options:
+* Do not use Bucket4j, or any other token-bucket-based solution, because the token-bucket algorithm was specifically designed for network traffic management devices, where short-lived traffic spikes are the normal case. Trying to avoid spikes altogether goes against the nature of the token-bucket algorithm.
+* Since the size of a burst always equals the capacity, you can reduce the capacity and the refill speed together. For example, if you have a ***strict*** requirement of ``100 tokens/60 seconds``, configure the bucket as ``capacity=50 tokens, refill=50 tokens/60 seconds``. Note that this approach has the following drawbacks:
+-- You can no longer consume more tokens in a single request than the (now smaller) capacity - in the example above, before reducing capacity you could consume up to 100 tokens in a single request; after reducing it, you can consume at most 50.
+-- Reducing the refill speed leads to under-consumption over long periods. In the worst case (starting with a full bucket and draining it immediately after every refill), a refill of ``50 tokens/60 seconds`` lets you consume at most 3,050 tokens per hour, instead of the 6,100 tokens per hour possible before reducing the refill speed.
+-- In short, you trade **under-consumption** in exchange for eliminating the risk of **overconsumption**.

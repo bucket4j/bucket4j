@@ -1,7 +1,7 @@
 [[bucket4j-mongodb-sync, Bucket4j-MongoDB-Sync]]
 ==== MongoDB Sync integration
 ===== Dependencies
-To use ``bucket4j-mongodb-sync`` extension you need to add following dependency:
+To use the ``bucket4j-mongodb-sync`` extension, add the following dependency:
 [source, xml, subs=attributes+]
 ----
 <dependency>
@@ -37,7 +37,7 @@ Bucket bucket = proxyManager.getProxy("user-123", () -> configuration);
 ----
 
 ===== Custom field names
-By default, MongoDB integration uses `state` field to store bucket state and `expiresAt` field for expiration timestamp. You can customize these field names:
+By default, the MongoDB integration uses the `state` field to store the bucket state and the `expiresAt` field for the expiration timestamp. You can customize these field names:
 [source, java]
 ----
 MongoDBSyncCompareAndSwapBasedProxyManager<String> proxyManager = 

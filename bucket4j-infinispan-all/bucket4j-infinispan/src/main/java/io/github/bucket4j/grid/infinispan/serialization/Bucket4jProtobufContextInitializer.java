@@ -2,7 +2,7 @@
  * ========================LICENSE_START=================================
  * Bucket4j
  * %%
- * Copyright (C) 2015 - 2020 Vladimir Bukhtoyarov
+ * Copyright (C) 2015 - 2026 Vladimir Bukhtoyarov
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,12 +38,10 @@ public class Bucket4jProtobufContextInitializer implements SerializationContextI
         }
         """;
 
-    @Override
     public String getProtoFileName() {
         return "bucket4j.proto";
     }
 
-    @Override
     public String getProtoFile() throws UncheckedIOException {
         return "/" + getProtoFileName();
     }

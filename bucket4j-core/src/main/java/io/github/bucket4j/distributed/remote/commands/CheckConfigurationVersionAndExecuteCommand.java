@@ -2,7 +2,7 @@
  * ========================LICENSE_START=================================
  * Bucket4j
  * %%
- * Copyright (C) 2015 - 2020 Vladimir Bukhtoyarov
+ * Copyright (C) 2015 - 2026 Vladimir Bukhtoyarov
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ package io.github.bucket4j.distributed.remote.commands;
 
 import io.github.bucket4j.distributed.remote.*;
 import io.github.bucket4j.distributed.serialization.DeserializationAdapter;
+import io.github.bucket4j.distributed.serialization.PrimitiveSizeCalculator;
 import io.github.bucket4j.distributed.serialization.Scope;
 import io.github.bucket4j.distributed.serialization.SerializationAdapter;
 import io.github.bucket4j.distributed.serialization.SerializationHandle;
@@ -123,6 +124,15 @@ public class CheckConfigurationVersionAndExecuteCommand<T> implements RemoteComm
 
             RemoteCommand.serialize(adapter, output, command.targetCommand, backwardCompatibilityVersion, scope);
             adapter.writeLong(output, command.desiredConfigurationVersion);
+        }
+
+        @Override
+        public int estimateSize(CheckConfigurationVersionAndExecuteCommand<?> command, Version backwardCompatibilityVersion, Scope scope) {
+            int size = PrimitiveSizeCalculator.SIZE_OF_INT; // format version
+
+            size += RemoteCommand.estimateSize(command.targetCommand, backwardCompatibilityVersion, scope);
+            size += PrimitiveSizeCalculator.SIZE_OF_LONG; // desiredConfigurationVersion
+            return size;
         }
 
         @Override
