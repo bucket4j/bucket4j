@@ -23,6 +23,7 @@ package io.github.bucket4j.distributed.remote;
 import java.util.Objects;
 
 import io.github.bucket4j.distributed.serialization.SerializationStyle;
+import io.github.bucket4j.distributed.versioning.BackwardCompatibilityException;
 import io.github.bucket4j.distributed.versioning.Version;
 
 import static io.github.bucket4j.distributed.serialization.InternalSerializationHelper.deserializeState;
@@ -37,7 +38,7 @@ public class MutableBucketEntry {
         this.state = state;
     }
 
-    public MutableBucketEntry(byte[] originalStateBytes) {
+    public MutableBucketEntry(byte[] originalStateBytes) throws BackwardCompatibilityException {
         this.state = originalStateBytes == null? null : deserializeState(originalStateBytes, SerializationStyle.BYTE_BUFFER);
     }
 

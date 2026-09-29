@@ -20,6 +20,7 @@
 package io.github.bucket4j.grid.ignite3;
 
 import io.github.bucket4j.distributed.remote.BatchRequest;
+import io.github.bucket4j.distributed.remote.BatchResults;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.Request;
 import io.github.bucket4j.distributed.serialization.InternalSerializationHelper;
@@ -130,12 +131,11 @@ public class Ignite3ComputeJob<K> implements ComputeJob<byte[], byte[]> {
             KeyValueView<K, byte[]> keyValueView = (KeyValueView<K, byte[]>) table.keyValueView(key.getClass(), byte[].class);
             return keyValueView.getAsync(tx, key).thenCompose(((byte[] stateBytes) -> {
                 BatchRequest batch = new BatchRequest(requests, stateBytes);
-                List<CommandResult<?>> results = new ArrayList<>(requests.size());
-                byte[] finalState = batch.execute(results);
-                if (finalState == null) {
-                    return CompletableFuture.completedFuture(results);
+                BatchResults batchResults = batch.execute();
+                if (!batchResults.stateModified) {
+                    return CompletableFuture.completedFuture(batchResults.results);
                 } else {
-                    return keyValueView.putAsync(tx, key, finalState).thenApply((Void v) -> results);
+                    return keyValueView.putAsync(tx, key, batchResults.finalState).thenApply((Void v) -> batchResults.results);
                 }
             }));
         });

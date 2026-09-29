@@ -30,6 +30,7 @@ import io.github.bucket4j.distributed.remote.MutableBucketEntry;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.remote.Request;
+import io.github.bucket4j.distributed.versioning.BackwardCompatibilityException;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -133,6 +134,9 @@ public abstract class AbstractSelectForUpdateBasedProxyManager<K> extends Abstra
             return result;
         } catch (Throwable t) {
             transaction.rollback();
+            if (t instanceof BackwardCompatibilityException) {
+                return (CommandResult<T>) ((BackwardCompatibilityException) t).toResult();
+            }
             throw BucketExceptions.from(t);
         }
     }

@@ -31,6 +31,7 @@ import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.MutableBucketEntry;
 import io.github.bucket4j.distributed.remote.RemoteCommand;
 import io.github.bucket4j.distributed.remote.Request;
+import io.github.bucket4j.distributed.versioning.BackwardCompatibilityException;
 
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -103,19 +104,23 @@ public abstract class AbstractCompareAndSwapBasedProxyManager<K> extends Abstrac
     protected abstract AsyncCompareAndSwapOperation beginAsyncCompareAndSwapOperation(K key);
 
     private <T> CommandResult<T> execute(Request<T> request, CompareAndSwapOperation operation, Timeout timeout) {
-        RemoteCommand<T> command = request.getCommand();
-        byte[] originalStateBytes = timeout.call(operation::getStateData).orElse(null);
-        MutableBucketEntry entry = new MutableBucketEntry(originalStateBytes);
-        CommandResult<T> result = command.execute(entry, getClientSideTime());
-        if (!entry.isStateModified()) {
-            return result;
-        }
+        try {
+            RemoteCommand<T> command = request.getCommand();
+            byte[] originalStateBytes = timeout.call(operation::getStateData).orElse(null);
+            MutableBucketEntry entry = new MutableBucketEntry(originalStateBytes);
+            CommandResult<T> result = command.execute(entry, getClientSideTime());
+            if (!entry.isStateModified()) {
+                return result;
+            }
 
-        byte[] newStateBytes = entry.getStateBytes(request.getBackwardCompatibilityVersion());
-        if (timeout.call(requestTimeout -> operation.compareAndSwap(originalStateBytes, newStateBytes, entry.get(), requestTimeout))) {
-            return result;
-        } else {
-            return null;
+            byte[] newStateBytes = entry.getStateBytes(request.getBackwardCompatibilityVersion());
+            if (timeout.call(requestTimeout -> operation.compareAndSwap(originalStateBytes, newStateBytes, entry.get(), requestTimeout))) {
+                return result;
+            } else {
+                return null;
+            }
+        } catch (BackwardCompatibilityException e) {
+            return (CommandResult<T>) e.toResult();
         }
     }
 
@@ -157,13 +162,24 @@ public abstract class AbstractCompareAndSwapBasedProxyManager<K> extends Abstrac
             .thenApply((Optional<byte[]> originalStateBytes) -> originalStateBytes.orElse(null))
             .thenCompose((byte[] originalStateBytes) -> {
                 RemoteCommand<T> command = request.getCommand();
-                MutableBucketEntry entry = new MutableBucketEntry(originalStateBytes);
+                MutableBucketEntry entry;
+                try {
+                    entry = new MutableBucketEntry(originalStateBytes);
+                } catch (BackwardCompatibilityException e) {
+                    return CompletableFuture.completedFuture((CommandResult<T>) e.toResult());
+                }
                 CommandResult<T> result = command.execute(entry, getClientSideTime());
                 if (!entry.isStateModified()) {
                     return CompletableFuture.completedFuture(result);
                 }
 
-                byte[] newStateBytes = entry.getStateBytes(request.getBackwardCompatibilityVersion());
+                byte[] newStateBytes;
+                try {
+                    newStateBytes = entry.getStateBytes(request.getBackwardCompatibilityVersion());
+                } catch (BackwardCompatibilityException e) {
+                    return CompletableFuture.completedFuture((CommandResult<T>) e.toResult());
+                }
+
                 return timeout.callAsync(requestTimeout -> operation.compareAndSwap(originalStateBytes, newStateBytes, entry.get(), requestTimeout))
                     .thenApply((casWasSuccessful) -> casWasSuccessful? result : null);
             });
