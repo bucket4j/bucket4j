@@ -49,7 +49,7 @@ class ResetStateTest {
     private static BucketConfiguration greedyAndIntervally() {
         return BucketConfiguration.builder()
             .addLimit(limit -> limit.capacity(100).refillGreedy(100, Duration.ofNanos(100)))
-            .addLimit(limit -> limit.capacity(1000).refillIntervally(1000, Duration.ofNanos(700)))
+            .addLimit(limit -> limit.capacity(1000).refillIntervally(1000, Duration.ofNanos(7000)))
             .build();
     }
 
@@ -61,7 +61,7 @@ class ResetStateTest {
             new ResetCase("intervally, clock moved inside the period", intervally(), 0, 40, 30),
             new ResetCase("intervally, clock moved to the period boundary", intervally(), 0, 40, 100),
             new ResetCase("intervally, clock moved over an incomplete period", intervally(), 0, 40, 150),
-            new ResetCase("several bandwidths", greedyAndIntervally(), 0, 40, 950),
+            new ResetCase("several bandwidths", greedyAndIntervally(), 0, 40, 9500),
             new ResetCase("nothing was consumed", greedy(), 0, 0, 30),
             new ResetCase("everything was consumed", greedy(), 0, 100, 30),
 
