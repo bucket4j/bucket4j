@@ -197,8 +197,8 @@ public class RemoteBucketState implements ComparableByContent<RemoteBucketState>
         state.forceAddTokens(tokensToAdd);
     }
 
-    public void reset() {
-        state.reset();
+    public void reset(long currentTimeNanos) {
+        state.reset(currentTimeNanos);
     }
 
     public BucketState copyBucketState() {

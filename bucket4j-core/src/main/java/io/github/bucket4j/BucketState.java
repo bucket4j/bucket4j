@@ -52,7 +52,7 @@ public interface BucketState {
 
     void addTokens(long tokensToAdd);
 
-    void reset();
+    void reset(long currentTimeNanos);
 
     void forceAddTokens(long tokensToAdd);
 
