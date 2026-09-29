@@ -32,7 +32,7 @@ jobs:
         CURRENT_VERSION=$(./mvnw help:evaluate -Dexpression=project.version -q -DforceStdout)
         if [[ ! $CURRENT_VERSION == *"-SNAPSHOT" ]]; then
           SNAPSHOT_VERSION="${CURRENT_VERSION}-SNAPSHOT"
-          ./mvnw versions:set -DnewVersion=$SNAPSHOT_VERSION -DgenerateBackupPoms=false
+          ./mvnw versions:set -DnewVersion=$SNAPSHOT_VERSION -DgenerateBackupPoms=false -DprocessAllModules=true
         fi
     
     - name: Build and deploy snapshot
