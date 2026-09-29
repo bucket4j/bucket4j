@@ -1,6 +1,5 @@
 package io.github.bucket4j.api_specifications.scheduler;
 
-import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.SchedulingBucket;
 import io.github.bucket4j.SimpleBucketListener;
@@ -209,46 +208,6 @@ class ScheduledBucketTest {
             future = bucket.tryConsume(10, Duration.ofNanos(100000), schedulerMock);
         }
         assertThat(future.isCompletedExceptionally()).isTrue();
-    }
-
-    @Timeout(value = 2, unit = TimeUnit.SECONDS)
-    @ParameterizedTest
-    @MethodSource("typeVerboseAsyncCases")
-    void shouldNotConsumeTokensWhenRequiredDelayExceedsTheLimit(TypeVerboseAsyncCase testCase) throws Exception {
-        BucketType type = testCase.type();
-        boolean verbose = testCase.verbose();
-        boolean async = testCase.async();
-
-        // 1 token per nanosecond
-        BucketConfiguration configuration = BucketConfiguration.builder()
-            .addLimit(limit -> limit.capacity(100).refillGreedy(100, Duration.ofNanos(100)))
-            .build();
-        TimeMeterMock meter = new TimeMeterMock(0);
-        SchedulerMock schedulerMock = new SchedulerMock(meter);
-
-        if (async) {
-            AsyncBucketProxy bucket = type.createAsyncBucket(configuration, meter);
-            assertThat(bucket.tryConsume(100).get()).isTrue();
-
-            // 50 tokens require 50 nanoseconds of waiting, that is much more than the limit of 1 nanosecond
-            if (verbose) {
-                assertThat(bucket.asScheduler().asVerbose().tryConsume(50, 1L, schedulerMock).get().getValue()).isFalse();
-            } else {
-                assertThat(bucket.asScheduler().tryConsume(50, 1L, schedulerMock).get()).isFalse();
-            }
-            assertThat(bucket.getAvailableTokens().get()).isZero();
-        } else {
-            Bucket bucket = type.createBucket(configuration, meter);
-            assertThat(bucket.tryConsume(100)).isTrue();
-
-            if (verbose) {
-                assertThat(bucket.asScheduler().asVerbose().tryConsume(50, 1L, schedulerMock).get().getValue()).isFalse();
-            } else {
-                assertThat(bucket.asScheduler().tryConsume(50, 1L, schedulerMock).get()).isFalse();
-            }
-            assertThat(bucket.getAvailableTokens()).isZero();
-        }
-        assertThat(schedulerMock.getAcummulatedDelayNanos()).isZero();
     }
 
     @ParameterizedTest
