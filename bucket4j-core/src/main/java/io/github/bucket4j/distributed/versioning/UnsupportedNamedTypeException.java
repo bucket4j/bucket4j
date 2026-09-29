@@ -19,6 +19,8 @@
  */
 package io.github.bucket4j.distributed.versioning;
 
+import io.github.bucket4j.distributed.remote.CommandResult;
+
 public class UnsupportedNamedTypeException extends BackwardCompatibilityException {
 
     private final String typeName;
@@ -30,6 +32,11 @@ public class UnsupportedNamedTypeException extends BackwardCompatibilityExceptio
 
     public String getTypeName() {
         return typeName;
+    }
+
+    @Override
+    public CommandResult<?> toResult() {
+        return CommandResult.unsupportedNamedType(typeName);
     }
 
     private static String formatMessage(String typeName) {

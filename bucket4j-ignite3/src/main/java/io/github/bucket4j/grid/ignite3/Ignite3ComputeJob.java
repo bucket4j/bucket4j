@@ -24,9 +24,7 @@ import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.Request;
 import io.github.bucket4j.distributed.serialization.InternalSerializationHelper;
 import io.github.bucket4j.distributed.serialization.SerializationStyle;
-import io.github.bucket4j.distributed.versioning.UnsupportedTypeException;
-import io.github.bucket4j.distributed.versioning.UsageOfObsoleteApiException;
-import io.github.bucket4j.distributed.versioning.UsageOfUnsupportedApiException;
+import io.github.bucket4j.distributed.versioning.BackwardCompatibilityException;
 import io.github.bucket4j.distributed.versioning.Versions;
 import io.github.bucket4j.grid.ignite3.internal.JobInputCodec;
 import io.github.bucket4j.util.concurrent.batch.AsyncBatchHelper;
@@ -40,7 +38,7 @@ import org.apache.ignite.marshalling.ByteArrayMarshaller;
 import org.apache.ignite.marshalling.Marshaller;
 import org.apache.ignite.table.KeyValueView;
 import org.apache.ignite.table.Table;
-import org.jetbrains.annotations.VisibleForTesting;
+
 
 import java.util.ArrayList;
 import java.util.List;
@@ -86,12 +84,8 @@ public class Ignite3ComputeJob<K> implements ComputeJob<byte[], byte[]> {
         Request<?> request;
         try {
             request = InternalSerializationHelper.deserializeRequest(requestBytes, SerializationStyle.BYTE_BUFFER);
-        } catch (UnsupportedTypeException e) {
-            return completedFuture(serializeResult(CommandResult.unsupportedType(e.getTypeId()), Versions.getOldest(), SerializationStyle.BYTE_BUFFER));
-        } catch (UsageOfUnsupportedApiException e) {
-            return completedFuture(serializeResult(CommandResult.usageOfUnsupportedApiException(e.getRequestedFormatNumber(), e.getMaxSupportedFormatNumber()), Versions.getOldest(), SerializationStyle.BYTE_BUFFER));
-        } catch (UsageOfObsoleteApiException e) {
-            return completedFuture(serializeResult(CommandResult.usageOfObsoleteApiException(e.getRequestedFormatNumber(), e.getMinSupportedFormatNumber()), Versions.getOldest(), SerializationStyle.BYTE_BUFFER));
+        } catch (BackwardCompatibilityException e) {
+            return completedFuture(serializeResult(e.toResult(), Versions.getOldest(), SerializationStyle.BYTE_BUFFER));
         }
 
         // find appropriate batcher
@@ -106,12 +100,8 @@ public class Ignite3ComputeJob<K> implements ComputeJob<byte[], byte[]> {
             .thenApply((CommandResult<?> result) -> {
                 try {
                     return serializeResult(result, request.getBackwardCompatibilityVersion(), SerializationStyle.BYTE_BUFFER);
-                } catch (UnsupportedTypeException e) {
-                    return serializeResult(CommandResult.unsupportedType(e.getTypeId()), request.getBackwardCompatibilityVersion(), SerializationStyle.BYTE_BUFFER);
-                } catch (UsageOfUnsupportedApiException e) {
-                    return serializeResult(CommandResult.usageOfUnsupportedApiException(e.getRequestedFormatNumber(), e.getMaxSupportedFormatNumber()), request.getBackwardCompatibilityVersion(), SerializationStyle.BYTE_BUFFER);
-                } catch (UsageOfObsoleteApiException e) {
-                    return serializeResult(CommandResult.usageOfObsoleteApiException(e.getRequestedFormatNumber(), e.getMinSupportedFormatNumber()), request.getBackwardCompatibilityVersion(), SerializationStyle.BYTE_BUFFER);
+                } catch (BackwardCompatibilityException e) {
+                    return serializeResult(e.toResult(), request.getBackwardCompatibilityVersion(), SerializationStyle.BYTE_BUFFER);
                 }
             });
     }

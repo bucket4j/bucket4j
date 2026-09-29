@@ -19,6 +19,8 @@
  */
 package io.github.bucket4j.distributed.versioning;
 
+import io.github.bucket4j.distributed.remote.CommandResult;
+
 import java.text.MessageFormat;
 
 public class UsageOfUnsupportedApiException extends BackwardCompatibilityException {
@@ -38,6 +40,11 @@ public class UsageOfUnsupportedApiException extends BackwardCompatibilityExcepti
 
     public int getMaxSupportedFormatNumber() {
         return maxSupportedFormatNumber;
+    }
+
+    @Override
+    public CommandResult<?> toResult() {
+        return CommandResult.usageOfUnsupportedApiException(requestedFormatNumber, maxSupportedFormatNumber);
     }
 
     private static String formatMessage(int formatNumber, int maxFormatNumber) {

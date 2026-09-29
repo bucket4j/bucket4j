@@ -19,10 +19,14 @@
  */
 package io.github.bucket4j.distributed.versioning;
 
-public class BackwardCompatibilityException extends RuntimeException {
+import io.github.bucket4j.distributed.remote.CommandResult;
+
+public abstract class BackwardCompatibilityException extends RuntimeException {
 
     public BackwardCompatibilityException(String message) {
         super(message);
     }
+
+    public abstract CommandResult<?> toResult();
 
 }

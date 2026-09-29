@@ -61,7 +61,7 @@ public class InternalSerializationHelper {
                 case DATA_OUTPUT -> serializeViaDataOutput(handle, serializableObject, backwardCompatibilityVersion, scope);
                 case BYTE_BUFFER -> serializeViaByteBuffer(handle, serializableObject, backwardCompatibilityVersion, scope);
             };
-        } catch (Exception e) {
+        } catch (IOException e) {
             throw new IllegalStateException(e);
         }
     }
@@ -93,7 +93,7 @@ public class InternalSerializationHelper {
                 case DATA_OUTPUT -> deserializeViaDataInput(handle, bytes);
                 case BYTE_BUFFER -> handle.deserialize(ByteBufferSerializationAdapter.INSTANCE, ByteBuffer.wrap(bytes));
             };
-        } catch (Exception e) {
+        } catch (IOException e) {
             throw new IllegalStateException(e);
         }
     }
