@@ -101,7 +101,7 @@ public class CassandraCompareAndSwapBasedProxyManager<K> extends AbstractCompare
             "UPDATE %s USING TTL :%s SET %s = :%s, %s = :%s WHERE %s = :%s IF %s = :%s"
                 .formatted(table, TIME_TO_LIVE_MARKER, stateColumn, STATE_MARKER, versionColumn, NEW_VERSION_MARKER, keyColumn, KEY_MARKER, versionColumn, CURRENT_VERSION_MARKER));
         this.deleteStatement = session.prepare(
-            "DELETE FROM %s WHERE %s = :%s"
+            "DELETE FROM %s WHERE %s = :%s IF EXISTS"
                 .formatted(table, keyColumn, KEY_MARKER));
     }
 
@@ -203,7 +203,8 @@ public class CassandraCompareAndSwapBasedProxyManager<K> extends AbstractCompare
     private BoundStatement buildDeleteStatement(K key) {
         return deleteStatement.bind()
             .setString(KEY_MARKER, keyMapper.toString(key))
-            .setIdempotent(true);
+            .setSerialConsistencyLevel(serialConsistencyLevel)
+            .setIdempotent(false);
     }
 
     private BoundStatement buildCompareAndSwapStatement(String bucketKey, byte[] newData, RemoteBucketState newState,

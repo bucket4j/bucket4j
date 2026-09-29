@@ -122,4 +122,5 @@ Non-serial levels such as `LOCAL_QUORUM` cost less and are still safe - a stale 
 * The table must exist before the proxy manager is built
 * Expired buckets rely on Cassandra's native per-row `TTL`, which is applied only when an expiration strategy is configured
 * `TTL` values are rounded up to whole seconds and clamped to the range `[1 second, 630720000 seconds]` (the Cassandra maximum of 20 years)
+* `removeProxy` is executed as `DELETE ... IF EXISTS`, so it is a Lightweight Transaction too. A plain `DELETE` cannot be used, because it would take its timestamp from the coordinator clock instead of the Paxos ballot and could therefore be silently discarded as an outdated write
 * Bucket state is stored as a `blob`, bypassing Java serialization
