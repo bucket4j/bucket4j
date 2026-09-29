@@ -17,6 +17,9 @@ import io.github.bucket4j.distributed.proxy.optimization.delay.DelayOptimization
 import io.github.bucket4j.distributed.proxy.optimization.manual.ManuallySyncingOptimization;
 import io.github.bucket4j.distributed.proxy.optimization.predictive.PredictiveOptimization;
 import io.github.bucket4j.distributed.proxy.optimization.skiponzero.SkipSyncOnZeroOptimization;
+import io.github.bucket4j.distributed.versioning.UsageOfObsoleteApiException;
+import io.github.bucket4j.distributed.versioning.UsageOfUnsupportedApiException;
+import io.github.bucket4j.distributed.versioning.Versions;
 import io.github.bucket4j.util.AsyncConsumptionScenario;
 import io.github.bucket4j.util.ConsumptionScenario;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -106,6 +109,95 @@ public abstract class AbstractDistributedBucketTest {
             fail();
         } catch (BucketNotFoundException e) {
             // ok
+        }
+    }
+
+    @MethodSource("specs")
+    @ParameterizedTest
+    public <K, P extends ProxyManager<K>, B extends AbstractProxyManagerBuilder<K, P, B>> void testBackwardCompatibilityExceptionsForPersistedState(ProxyManagerSpec<K, P, B> spec) throws InterruptedException {
+        if (spec.backwardCompatibilityStateCheckHelper == null) {
+            return;
+        }
+
+        K key = spec.generateRandomKey();
+        BucketConfiguration configuration = BucketConfiguration.builder()
+                .addLimit(Bandwidth.simple(1_000, Duration.ofMinutes(1)))
+                .build();
+        ProxyManager<K> proxyManager = spec.builder.get().build();
+        Bucket bucket = proxyManager.builder().build(key, configuration);
+        assertTrue(bucket.tryConsume(1));
+
+        // simulate obsolete persisted state
+        byte[] stateBytes = spec.backwardCompatibilityStateCheckHelper.getRawState(key);
+        stateBytes[3] = (byte) (Versions.getOldest().getNumber() - 1);
+        spec.backwardCompatibilityStateCheckHelper.setRawState(key, stateBytes);
+
+        try {
+            bucket.tryConsume(1);
+            fail();
+        } catch (UsageOfObsoleteApiException e) {
+            // ok
+        }
+
+        try {
+            bucket.asVerbose().tryConsume(1);
+            fail();
+        } catch (UsageOfObsoleteApiException e) {
+            // ok
+        }
+
+        stateBytes[3] = (byte) (Versions.getLatest().getNumber() + 1);
+        spec.backwardCompatibilityStateCheckHelper.setRawState(key, stateBytes);
+        try {
+            bucket.tryConsume(1);
+            fail();
+        } catch (UsageOfUnsupportedApiException e) {
+            // ok
+        }
+
+        try {
+            bucket.asVerbose().tryConsume(1);
+            fail();
+        } catch (UsageOfUnsupportedApiException e) {
+            // ok
+        }
+
+        if (!proxyManager.isAsyncModeSupported()) {
+            return;
+        }
+
+        AsyncBucketProxy asyncBucket = proxyManager.asAsync().builder().build(key, () -> CompletableFuture.completedFuture(configuration));
+        stateBytes[3] = (byte) (Versions.getOldest().getNumber() - 1);
+        spec.backwardCompatibilityStateCheckHelper.setRawState(key, stateBytes);
+
+        try {
+            asyncBucket.tryConsume(1).get();
+            fail();
+        } catch (ExecutionException e) {
+            assertInstanceOf(UsageOfObsoleteApiException.class, e.getCause());
+        }
+
+        try {
+            asyncBucket.tryConsume(1).get();
+            fail();
+        } catch (ExecutionException e) {
+            assertInstanceOf(UsageOfObsoleteApiException.class, e.getCause());
+        }
+
+        stateBytes[3] = (byte) (Versions.getLatest().getNumber() + 1);
+        spec.backwardCompatibilityStateCheckHelper.setRawState(key, stateBytes);
+        try {
+            asyncBucket.asVerbose().tryConsume(1).get();
+            fail();
+        } catch (ExecutionException e) {
+            assertInstanceOf(UsageOfUnsupportedApiException.class, e.getCause());
+        }
+
+        try {
+            asyncBucket.asVerbose().tryConsume(1).get();
+            fail();
+        } catch (ExecutionException e) {
+            assertInstanceOf(UsageOfUnsupportedApiException.class, e.getCause());
         }
     }
 

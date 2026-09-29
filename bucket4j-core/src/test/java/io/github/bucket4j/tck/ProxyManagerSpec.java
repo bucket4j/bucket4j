@@ -11,12 +11,17 @@ public class ProxyManagerSpec<K, P extends ProxyManager<K>, B extends AbstractPr
     public final Supplier<AbstractProxyManagerBuilder<K, P, B>> builder;
     public final Supplier<K> keyGenerator;
     public final boolean expirationSupported;
+    public final BackwardCompatibilityStateCheckHelper<K> backwardCompatibilityStateCheckHelper;
 
-    public ProxyManagerSpec(String description, boolean expirationSupported, Supplier<K> keyGenerator, Supplier<AbstractProxyManagerBuilder<K, P, B>> builder) {
+    private ProxyManagerSpec(String description, boolean expirationSupported,
+                             BackwardCompatibilityStateCheckHelper<K> backwardCompatibilityStateCheckHelper,
+                             Supplier<K> keyGenerator,
+                             Supplier<AbstractProxyManagerBuilder<K, P, B>> builder) {
         this.description = description;
         this.expirationSupported = expirationSupported;
         this.keyGenerator = keyGenerator;
         this.builder = builder;
+        this.backwardCompatibilityStateCheckHelper = backwardCompatibilityStateCheckHelper;
     }
 
     public ProxyManagerSpec(String description, Supplier<K> keyGenerator, Supplier<AbstractProxyManagerBuilder<K, P, B>> builder) {
@@ -24,10 +29,15 @@ public class ProxyManagerSpec<K, P extends ProxyManager<K>, B extends AbstractPr
         this.expirationSupported = false;
         this.keyGenerator = keyGenerator;
         this.builder = builder;
+        this.backwardCompatibilityStateCheckHelper = null;
     }
 
     public ProxyManagerSpec<K, P , B> checkExpiration() {
-        return new ProxyManagerSpec<>(description, true, keyGenerator, builder);
+        return new ProxyManagerSpec<>(description, true, backwardCompatibilityStateCheckHelper, keyGenerator, builder);
+    }
+
+    public ProxyManagerSpec<K, P , B> checkStateBackwardCompatibility(BackwardCompatibilityStateCheckHelper<K> backwardCompatibilityStateCheckHelper) {
+        return new ProxyManagerSpec<>(description, expirationSupported, backwardCompatibilityStateCheckHelper, keyGenerator, builder);
     }
 
     @Override
