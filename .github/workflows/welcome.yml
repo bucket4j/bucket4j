@@ -1,0 +1,35 @@
+name: Greetings
+
+on:
+  pull_request:
+    types:
+      - opened
+  issues:
+    types:
+      - opened
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  greeting:
+    name: Greet First-Time Contributors
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/first-interaction@v3
+        with:
+          issue_message: |
+            Thanks for opening your first issue in Bucket4j!
+
+            This project is maintained by a single person in their spare time,
+            so please allow a few days for a response. In the meantime, if
+            this is a usage question rather than a bug report, you might get a
+            faster answer in [Discussions](https://github.com/bucket4j/bucket4j/discussions).
+          pr_message: |
+            Thanks for opening your first pull request in Bucket4j!
+
+            This project is maintained by a single person in their spare time,
+            so please allow a few days for review. CI only builds the modules
+            affected by your change, so results should come back quickly.

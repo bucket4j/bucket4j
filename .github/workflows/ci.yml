@@ -19,11 +19,22 @@ jobs:
     timeout-minutes: 60
     steps:
     - uses: actions/checkout@v4
+      with:
+        # full history is needed to diff against the PR base commit below
+        fetch-depth: 0
     - name: Set up JDK ${{ matrix.java }}
       uses: actions/setup-java@v5
       with:
         java-version: ${{ matrix.java }}
         distribution: 'zulu'
         cache: 'maven'
-    - name: Build
+    - name: Determine affected modules
+      if: github.event_name == 'pull_request'
+      id: affected
+      run: .github/scripts/determine-build-modules.sh "${{ github.event.pull_request.base.sha }}" "${{ github.event.pull_request.head.sha }}"
+    - name: Build (pull request, affected modules only)
+      if: github.event_name == 'pull_request' && steps.affected.outputs.full_build == 'false'
+      run: ./mvnw --no-transfer-progress -B -pl "${{ steps.affected.outputs.modules }}" -am -amd clean package
+    - name: Build (full reactor)
+      if: github.event_name != 'pull_request' || steps.affected.outputs.full_build == 'true'
       run: ./mvnw --no-transfer-progress -B clean package
