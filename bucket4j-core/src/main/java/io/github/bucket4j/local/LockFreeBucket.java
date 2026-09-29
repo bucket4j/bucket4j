@@ -253,8 +253,7 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket, Compa
         long currentTimeNanos = timeMeter.currentTimeNanos();
 
         while (true) {
-            newState.refillAllBandwidth(currentTimeNanos);
-            newState.reset();
+            newState.reset(currentTimeNanos);
             if (stateRef.compareAndSet(previousState, newState)) {
                 return;
             } else {
@@ -446,8 +445,7 @@ public class LockFreeBucket extends AbstractBucket implements LocalBucket, Compa
         long currentTimeNanos = timeMeter.currentTimeNanos();
 
         while (true) {
-            newState.refillAllBandwidth(currentTimeNanos);
-            newState.reset();
+            newState.reset(currentTimeNanos);
             if (stateRef.compareAndSet(previousState, newState)) {
                 return new VerboseResult<>(currentTimeNanos, Nothing.INSTANCE, newState.copy());
             } else {

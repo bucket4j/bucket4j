@@ -356,9 +356,10 @@ public class BucketState64BitsInteger implements BucketState, ComparableByConten
     }
 
     @Override
-    public void reset() {
+    public void reset(long currentTimeNanos) {
         Bandwidth[] bandwidths = configuration.getBandwidths();
         for (int i = 0; i < bandwidths.length; i++) {
+            setLastRefillTimeNanos(i, normalizeRefillTime(i, bandwidths[i], currentTimeNanos));
             resetBandwidth(i, bandwidths[i].capacity);
         }
     }
@@ -452,19 +453,11 @@ public class BucketState64BitsInteger implements BucketState, ComparableByConten
 
     private void refill(int bandwidthIndex, Bandwidth bandwidth, long currentTimeNanos) {
         long previousRefillNanos = getLastRefillTimeNanos(bandwidthIndex);
-        if (currentTimeNanos <= previousRefillNanos) {
+        currentTimeNanos = normalizeRefillTime(bandwidthIndex, bandwidth, currentTimeNanos);
+        if (currentTimeNanos == previousRefillNanos) {
             return;
         }
-
-        if (bandwidth.isRefillIntervally()) {
-            long incompleteIntervalCorrection = (currentTimeNanos - previousRefillNanos) % bandwidth.getRefillPeriodNanos();
-            currentTimeNanos -= incompleteIntervalCorrection;
-        }
-        if (currentTimeNanos <= previousRefillNanos) {
-            return;
-        } else {
-            setLastRefillTimeNanos(bandwidthIndex, currentTimeNanos);
-        }
+        setLastRefillTimeNanos(bandwidthIndex, currentTimeNanos);
 
         final long capacity = bandwidth.getCapacity();
         final long refillPeriodNanos = bandwidth.getRefillPeriodNanos();
@@ -663,6 +656,18 @@ public class BucketState64BitsInteger implements BucketState, ComparableByConten
     @Override
     public boolean equalsByContent(BucketState64BitsInteger other) {
         return Arrays.equals(stateData, other.stateData);
+    }
+
+    private long normalizeRefillTime(int bandwidthIndex, Bandwidth bandwidth, long currentTimeNanos) {
+        long previousRefillNanos = getLastRefillTimeNanos(bandwidthIndex);
+        if (currentTimeNanos <= previousRefillNanos) {
+            return previousRefillNanos;
+        }
+        if (bandwidth.isRefillIntervally()) {
+            long incompleteIntervalCorrection = (currentTimeNanos - previousRefillNanos) % bandwidth.getRefillPeriodNanos();
+            currentTimeNanos -= incompleteIntervalCorrection;
+        }
+        return Math.max(currentTimeNanos, previousRefillNanos);
     }
 
 }

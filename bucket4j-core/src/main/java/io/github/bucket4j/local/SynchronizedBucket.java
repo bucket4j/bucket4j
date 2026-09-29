@@ -321,8 +321,7 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket, C
         long currentTimeNanos = timeMeter.currentTimeNanos();
         lock.lock();
         try {
-            state.refillAllBandwidth(currentTimeNanos);
-            state.reset();
+            state.reset(currentTimeNanos);
             return new VerboseResult<>(currentTimeNanos, Nothing.INSTANCE, state.copy());
         } finally {
             lock.unlock();
@@ -390,8 +389,7 @@ public class SynchronizedBucket extends AbstractBucket implements LocalBucket, C
         long currentTimeNanos = timeMeter.currentTimeNanos();
         lock.lock();
         try {
-            state.refillAllBandwidth(currentTimeNanos);
-            state.reset();
+            state.reset(currentTimeNanos);
         } finally {
             lock.unlock();
         }
