@@ -160,6 +160,16 @@ public class RedissonBasedProxyManagerRedisClusterTest extends AbstractDistribut
                     }
 
                     clusterConnection.sync().get("42");
+
+                    // The slot/topology view above can become visible before every node has
+                    // locally flipped its own cluster_state to "ok" (each node confirms full
+                    // slot coverage independently, with some gossip delay). Commands routed to
+                    // a node that hasn't caught up yet fail with CLUSTERDOWN, so require every
+                    // node to report cluster_state:ok before handing the container to tests.
+                    if (!allNodesReportClusterStateOk(genericContainer)) {
+                        throw new IllegalStateException("Not all nodes report cluster_state:ok yet");
+                    }
+
                     return genericContainer;
                 } catch (Throwable e) {
                     logger.error("Failed to check Redis Cluster availability: {}", e.getMessage(), e);
@@ -179,7 +189,17 @@ public class RedissonBasedProxyManagerRedisClusterTest extends AbstractDistribut
             probeClientResources.shutdown();
         }
 
-        throw new IllegalStateException("Cluster was not assembled in " + TimeUnit.MILLISECONDS.toSeconds(200 * 100) + " seconds");
+        throw new IllegalStateException("Cluster was not assembled in " + TimeUnit.MILLISECONDS.toSeconds(200 * 1000) + " seconds");
+    }
+
+    private static boolean allNodesReportClusterStateOk(GenericContainer container) throws Exception {
+        for (Integer port : CONTAINER_CLUSTER_PORTS) {
+            String clusterInfo = container.execInContainer("redis-cli", "-p", String.valueOf(port), "cluster", "info").getStdout();
+            if (!clusterInfo.contains("cluster_state:ok")) {
+                return false;
+            }
+        }
+        return true;
     }
 
 }
