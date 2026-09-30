@@ -4,6 +4,7 @@ package io.github.bucket4j.grid.infinispan;
 
 import io.github.bucket4j.grid.infinispan.serialization.Bucket4jProtobufContextInitializer;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
+import io.github.bucket4j.tck.BackwardCompatibilityRequestCheckHelper;
 import io.github.bucket4j.tck.BackwardCompatibilityStateCheckHelper;
 import io.github.bucket4j.tck.ProxyManagerSpec;
 
@@ -23,6 +24,8 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 
 public class InfinispanTest extends AbstractDistributedBucketTest {
@@ -70,6 +73,16 @@ public class InfinispanTest extends AbstractDistributedBucketTest {
                 @Override
                 public void setRawState(String key, byte[] state) {
                     cache.put(key, state);
+                }
+            }).checkRequestBackwardCompatibility(new BackwardCompatibilityRequestCheckHelper<String>() {
+                @Override
+                public byte[] execute(String key, byte[] requestBytes) throws ExecutionException, InterruptedException {
+                    return readWriteMap.eval(key, new InfinispanProcessor<>(requestBytes)).get();
+                }
+
+                @Override
+                public CompletableFuture<byte[]> executeAsync(String key, byte[] requestBytes) {
+                    return readWriteMap.eval(key, new InfinispanProcessor<>(requestBytes));
                 }
             })
         );
