@@ -21,6 +21,7 @@ package io.github.bucket4j.grid.ignite3.internal;
 
 import io.github.bucket4j.distributed.serialization.ByteBufferSerializationAdapter;
 import io.github.bucket4j.distributed.serialization.PrimitiveSizeCalculator;
+import io.github.bucket4j.distributed.versioning.Versions;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -45,12 +46,14 @@ public final class JobInputCodec {
     }
 
     public static <K> byte[] encode(String tableName, K key, byte[] requestBytes) {
-        int size = PrimitiveSizeCalculator.sizeOfString(tableName)
+        int size = PrimitiveSizeCalculator.SIZE_OF_INT
+                + PrimitiveSizeCalculator.sizeOfString(tableName)
                 + KeyCodec.estimateSize(key)
                 + PrimitiveSizeCalculator.SIZE_OF_INT
                 + requestBytes.length;
         ByteBuffer out = ByteBuffer.allocate(size);
         try {
+            out.putInt(Versions.v_8_10_0.getNumber());
             ByteBufferSerializationAdapter.INSTANCE.writeString(out, tableName);
             KeyCodec.encode(out, key);
             out.putInt(requestBytes.length);
@@ -64,6 +67,8 @@ public final class JobInputCodec {
     public static <K> JobInput<K> decode(byte[] bytes) {
         ByteBuffer in = ByteBuffer.wrap(bytes);
         try {
+            int formatNumber = in.getInt();
+            Versions.check(formatNumber, Versions.v_8_10_0, Versions.v_8_10_0);
             String tableName = ByteBufferSerializationAdapter.INSTANCE.readString(in);
             K key = KeyCodec.decode(in);
             int length = in.getInt();

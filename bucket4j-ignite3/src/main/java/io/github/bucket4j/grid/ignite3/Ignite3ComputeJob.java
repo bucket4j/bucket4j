@@ -72,10 +72,15 @@ public class Ignite3ComputeJob<K> implements ComputeJob<byte[], byte[]> {
     @Override
     public CompletableFuture<byte[]> executeAsync(JobExecutionContext context, byte[] jobBytes) {
         // deserialize job
-        JobInputCodec.JobInput<K> jobInput = JobInputCodec.decode(jobBytes);
-        byte[] requestBytes  = jobInput.requestBytes();
+        JobInputCodec.JobInput<K> jobInput;
+        try {
+            jobInput = JobInputCodec.decode(jobBytes);
+        } catch (BackwardCompatibilityException e) {
+            return completedFuture(serializeResult(e.toResult(), Versions.getOldest(), SerializationStyle.BYTE_BUFFER));
+        }
 
         // deserialize request
+        byte[] requestBytes  = jobInput.requestBytes();
         Request<?> request;
         try {
             request = InternalSerializationHelper.deserializeRequest(requestBytes, SerializationStyle.BYTE_BUFFER);
