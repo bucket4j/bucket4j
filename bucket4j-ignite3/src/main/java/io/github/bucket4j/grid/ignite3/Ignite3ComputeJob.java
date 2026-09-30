@@ -19,8 +19,6 @@
  */
 package io.github.bucket4j.grid.ignite3;
 
-import io.github.bucket4j.distributed.remote.BatchRequest;
-import io.github.bucket4j.distributed.remote.BatchResults;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.Request;
 import io.github.bucket4j.distributed.serialization.InternalSerializationHelper;
@@ -31,17 +29,13 @@ import io.github.bucket4j.grid.ignite3.internal.JobInputCodec;
 import io.github.bucket4j.util.concurrent.batch.AsyncBatchHelper;
 import io.github.bucket4j.util.concurrent.batch.MultiAsyncBatcherHelper;
 
-import org.apache.ignite.Ignite;
 import org.apache.ignite.compute.ComputeJob;
 import org.apache.ignite.compute.JobDescriptor;
 import org.apache.ignite.compute.JobExecutionContext;
 import org.apache.ignite.marshalling.ByteArrayMarshaller;
 import org.apache.ignite.marshalling.Marshaller;
-import org.apache.ignite.table.KeyValueView;
-import org.apache.ignite.table.Table;
 
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -110,36 +104,16 @@ public class Ignite3ComputeJob<K> implements ComputeJob<byte[], byte[]> {
     @SuppressWarnings("unchecked")
     private CompletableFuture<CommandResult<?>> scheduleViaBatcher(JobExecutionContext context, String registryKey, String tableName, K key, Request<?> request) {
         MultiAsyncBatcherHelper<K, Request<?>, CommandResult<?>, List<Request<?>>, List<CommandResult<?>>> batchers =
-                (MultiAsyncBatcherHelper<K, Request<?>, CommandResult<?>, List<Request<?>>, List<CommandResult<?>>>) (MultiAsyncBatcherHelper<?, Request<?>, CommandResult<?>, List<Request<?>>, List<CommandResult<?>>>)
-                        batchersPerTable.computeIfAbsent(registryKey, k -> new MultiAsyncBatcherHelper<>());
+                (MultiAsyncBatcherHelper<K, Request<?>, CommandResult<?>, List<Request<?>>, List<CommandResult<?>>>) batchersPerTable.computeIfAbsent(registryKey, k -> new MultiAsyncBatcherHelper<>());
         return batchers.executeAsync(key, request, (K k) -> createBatcher(context, tableName, k));
     }
 
     private AsyncBatchHelper<Request<?>, CommandResult<?>, List<Request<?>>, List<CommandResult<?>>> createBatcher(JobExecutionContext context, String tableName, K key) {
         return AsyncBatchHelper.create(
             (List<Request<?>> requests) -> requests,
-            (List<Request<?>> requests) -> executeBatchAsync(context, tableName, key, requests),
+            (List<Request<?>> requests) -> context.ignite().transactions().runInTransactionAsync(new Ignite3AsyncTransaction(context.ignite(), tableName, key, requests)),
             (List<Request<?>> requests, List<CommandResult<?>> results) -> results
         );
-    }
-
-    // visible for testing
-    CompletableFuture<List<CommandResult<?>>> executeBatchAsync(JobExecutionContext context, String tableName, K key, List<Request<?>> requests) {
-        Ignite ignite = context.ignite();
-        return ignite.transactions().runInTransactionAsync((tx) -> {
-            Table table = ignite.tables().table(tableName);
-            KeyValueView<K, byte[]> keyValueView = (KeyValueView<K, byte[]>) table.keyValueView(key.getClass(), byte[].class);
-            return keyValueView.getAsync(tx, key).thenCompose(((byte[] stateBytes) -> {
-                BatchRequest batch = new BatchRequest(requests, stateBytes);
-                BatchResults batchResults = batch.execute();
-                if (!batchResults.stateModified) {
-                    return CompletableFuture.completedFuture(batchResults.results);
-                } else {
-                    return keyValueView.putAsync(tx, key, batchResults.finalState).thenApply((Void v) -> batchResults.results);
-                }
-            }));
-        });
-
     }
 
 }

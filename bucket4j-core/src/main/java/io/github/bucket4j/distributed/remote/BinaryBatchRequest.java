@@ -6,17 +6,17 @@ import java.util.List;
 import io.github.bucket4j.distributed.versioning.BackwardCompatibilityException;
 import io.github.bucket4j.distributed.versioning.Version;
 
-public class BatchRequest {
+public class BinaryBatchRequest {
 
     private final List<Request<?>> requests;
     private final byte[] originalState;
 
-    public BatchRequest(List<Request<?>> requests, byte[] originalState) {
+    public BinaryBatchRequest(List<Request<?>> requests, byte[] originalState) {
         this.requests = requests;
         this.originalState = originalState;
     }
 
-    public BatchResults execute() {
+    public BinaryBatchResults execute() {
         MutableBucketEntry entryWrapper;
         try {
             entryWrapper = new MutableBucketEntry(originalState);
@@ -40,21 +40,21 @@ public class BatchRequest {
         }
         if (versionOfLatestUpdate == null) {
             // nothing was updated
-            return new BatchResults(false, results, originalState);
+            return new BinaryBatchResults(false, results, originalState);
         }
         try {
-            return new BatchResults(true, results, entryWrapper.getStateBytes(versionOfLatestUpdate));
+            return new BinaryBatchResults(true, results, entryWrapper.getStateBytes(versionOfLatestUpdate));
         } catch (BackwardCompatibilityException e) {
             return populateBatchResults(e.toResult());
         }
     }
 
-    private BatchResults populateBatchResults(CommandResult<?> result) {
+    private BinaryBatchResults populateBatchResults(CommandResult<?> result) {
         List<CommandResult<?>> results = new ArrayList<>(requests.size());
         for (Request<?> request : requests) {
             results.add(result);
         }
-        return new BatchResults(false, results, originalState);
+        return new BinaryBatchResults(false, results, originalState);
     }
 
 }
