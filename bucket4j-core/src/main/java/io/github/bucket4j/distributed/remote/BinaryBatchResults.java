@@ -6,12 +6,14 @@ public class BinaryBatchResults {
 
     public final boolean stateModified;
     public final List<CommandResult<?>> results;
-    public final byte[] finalState;
+    public final byte[] newStateBytes;
+    public final Long ttlMillis;
 
-    public BinaryBatchResults(boolean stateModified, List<CommandResult<?>> results, byte[] finalState) {
+    public BinaryBatchResults(Long ttlMillis, boolean stateModified, List<CommandResult<?>> results, byte[] newStateBytes) {
+        this.ttlMillis = ttlMillis;
         this.stateModified = stateModified;
         this.results = results;
-        this.finalState = finalState;
+        this.newStateBytes = newStateBytes;
     }
 
 }

@@ -26,6 +26,7 @@ import org.apache.ignite.Ignite;
 import org.apache.ignite.IgniteServer;
 import org.apache.ignite.InitParameters;
 import org.apache.ignite.table.KeyValueView;
+import org.apache.ignite.table.Tuple;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 
@@ -64,19 +65,19 @@ public class Ignite3ProxyManagerTest extends AbstractDistributedBucketTest {
         ignite = server.api();
 
         ignite.sql().executeScript(
-                "CREATE TABLE " + TABLE_NAME + " (\"key\" VARCHAR PRIMARY KEY, \"value\" VARBINARY)");
+                "CREATE TABLE " + TABLE_NAME + " (BUCKET_KEY VARCHAR PRIMARY KEY, BUCKET_STATE VARBINARY)");
 
-        KeyValueView<String, byte[]> keyValueView = ignite.tables().table(TABLE_NAME).keyValueView(String.class, byte[].class);
+        KeyValueView<Tuple, Tuple> keyValueView = ignite.tables().table(TABLE_NAME).keyValueView();
 
         BackwardCompatibilityStateCheckHelper<String> backwardCompatibilityHelper = new BackwardCompatibilityStateCheckHelper<>() {
             @Override
             public byte[] getRawState(String key) {
-                return keyValueView.get(null, key);
+                return keyValueView.get(null, Tuple.create().set("BUCKET_KEY", key)).bytesValue("BUCKET_STATE");
             }
 
             @Override
             public void setRawState(String key, byte[] state) {
-                keyValueView.put(null, key, state);
+                keyValueView.put(null, Tuple.create().set("BUCKET_KEY", key), Tuple.create().set("BUCKET_STATE", state));
             }
         };
 

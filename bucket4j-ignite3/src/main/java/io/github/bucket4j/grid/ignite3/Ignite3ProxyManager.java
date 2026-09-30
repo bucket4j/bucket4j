@@ -41,6 +41,9 @@ import static io.github.bucket4j.distributed.serialization.InternalSerialization
  */
 public class Ignite3ProxyManager<K> extends AbstractProxyManager<K> {
 
+    public static final String KEY_COLUMN_NAME = "BUCKET_KEY";
+    public static final String STATE_COLUMN_NAME = "BUCKET_STATE";
+
     private final Ignite ignite;
     private final String tableName;
     private final Mapper<K> keyMapper;

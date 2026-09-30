@@ -1,5 +1,6 @@
 package io.github.bucket4j.grid.ignite3;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
@@ -7,6 +8,7 @@ import java.util.function.Function;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.table.KeyValueView;
 import org.apache.ignite.table.Table;
+import org.apache.ignite.table.Tuple;
 import org.apache.ignite.tx.Transaction;
 
 import io.github.bucket4j.distributed.remote.BinaryBatchRequest;
@@ -31,14 +33,19 @@ public class Ignite3AsyncTransaction<K> implements Function<Transaction, Complet
     @Override
     public CompletableFuture<List<CommandResult<?>>> apply(Transaction tx) {
         Table table =  ignite.tables().table(tableName);
-        KeyValueView<K, byte[]> keyValueView = (KeyValueView<K, byte[]>) table.keyValueView(key.getClass(), byte[].class);
-        return keyValueView.getAsync(tx, key).thenCompose(((byte[] stateBytes) -> {
+
+        KeyValueView<Tuple, Tuple> keyValueView = table.keyValueView();
+        Tuple keyTuple = Tuple.create().set(Ignite3ProxyManager.KEY_COLUMN_NAME, key);
+
+        return keyValueView.getAsync(tx, keyTuple).thenCompose(((Tuple persistedTuple) -> {
+            byte[] stateBytes = persistedTuple == null ? null : persistedTuple.bytesValue(Ignite3ProxyManager.STATE_COLUMN_NAME);
             BinaryBatchRequest batch = new BinaryBatchRequest(requests, stateBytes);
             BinaryBatchResults binaryBatchResults = batch.execute();
             if (!binaryBatchResults.stateModified) {
                 return CompletableFuture.completedFuture(binaryBatchResults.results);
             } else {
-                return keyValueView.putAsync(tx, key, binaryBatchResults.finalState).thenApply((Void v) -> binaryBatchResults.results);
+                Tuple newValue = Tuple.create().set(Ignite3ProxyManager.STATE_COLUMN_NAME, binaryBatchResults.newStateBytes);
+                return keyValueView.putAsync(tx, keyTuple, newValue).thenApply((Void v) -> binaryBatchResults.results);
             }
         }));
     }

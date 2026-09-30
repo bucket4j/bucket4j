@@ -3,6 +3,7 @@ package io.github.bucket4j.distributed.remote;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
 import io.github.bucket4j.distributed.versioning.BackwardCompatibilityException;
 import io.github.bucket4j.distributed.versioning.Version;
 
@@ -28,6 +29,7 @@ public class BinaryBatchRequest {
         List<CommandResult<?>> results = new ArrayList<>(requests.size());
         long defaultTime = System.currentTimeMillis() * 1_000_000;
         Version versionOfLatestUpdate = null;
+        Long ttlMillis = null;
         for (Request<?> request : requests) {
             long currentTimeNanos = request.getClientSideTime() != null ? request.getClientSideTime() : defaultTime;
             RemoteCommand<?> command = request.getCommand();
@@ -36,14 +38,16 @@ public class BinaryBatchRequest {
             if (entryWrapper.isStateModified()) {
                 versionOfLatestUpdate = request.getBackwardCompatibilityVersion();
                 entryWrapper = new MutableBucketEntry(entryWrapper.get());
+                ExpirationAfterWriteStrategy expiration = request.getExpirationStrategy();
+                ttlMillis = expiration == null ? null : expiration.calculateTimeToLiveMillis(entryWrapper.get(), currentTimeNanos);
             }
         }
         if (versionOfLatestUpdate == null) {
             // nothing was updated
-            return new BinaryBatchResults(false, results, originalState);
+            return new BinaryBatchResults(null, false, results, null);
         }
         try {
-            return new BinaryBatchResults(true, results, entryWrapper.getStateBytes(versionOfLatestUpdate));
+            return new BinaryBatchResults(ttlMillis, true, results, entryWrapper.getStateBytes(versionOfLatestUpdate));
         } catch (BackwardCompatibilityException e) {
             return populateBatchResults(e.toResult());
         }
@@ -54,7 +58,7 @@ public class BinaryBatchRequest {
         for (Request<?> request : requests) {
             results.add(result);
         }
-        return new BinaryBatchResults(false, results, originalState);
+        return new BinaryBatchResults(null, false, results, null);
     }
 
 }
