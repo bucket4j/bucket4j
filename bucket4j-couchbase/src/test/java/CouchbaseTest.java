@@ -4,7 +4,6 @@ import com.couchbase.client.java.Collection;
 import com.couchbase.client.java.codec.RawBinaryTranscoder;
 import com.couchbase.client.java.kv.GetOptions;
 import com.couchbase.client.java.kv.ReplaceOptions;
-import com.couchbase.client.java.kv.UpsertOptions;
 
 import io.github.bucket4j.couchbase.Bucket4jCouchbase;
 import io.github.bucket4j.distributed.serialization.Mapper;
@@ -88,12 +87,12 @@ public class CouchbaseTest extends AbstractDistributedBucketTest {
                 "CouchbaseCompareAndSwapBasedProxyManagerWithLongKeys",
                 () -> ThreadLocalRandom.current().nextLong(),
                 () -> Bucket4jCouchbase.compareAndSwapBasedBuilder(collection, Mapper.LONG)
-            ).checkExpiration().withoutBackwardCompatibilityChecker(),
+            ).checkExpiration().withoutBackwardCompatibilityStateChecker(),
             new ProxyManagerSpec<>(
                 "CouchbaseCompareAndSwapBasedProxyManagerAsyncCollectionWithLongKeys",
                 () -> ThreadLocalRandom.current().nextLong(),
                 () -> Bucket4jCouchbase.compareAndSwapBasedBuilder(asyncCollection, Mapper.LONG)
-            ).checkExpiration().withoutBackwardCompatibilityChecker()
+            ).checkExpiration().withoutBackwardCompatibilityStateChecker()
         );
     }
 

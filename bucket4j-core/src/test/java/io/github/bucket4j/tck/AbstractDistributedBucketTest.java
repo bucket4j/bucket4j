@@ -17,6 +17,11 @@ import io.github.bucket4j.distributed.proxy.optimization.delay.DelayOptimization
 import io.github.bucket4j.distributed.proxy.optimization.manual.ManuallySyncingOptimization;
 import io.github.bucket4j.distributed.proxy.optimization.predictive.PredictiveOptimization;
 import io.github.bucket4j.distributed.proxy.optimization.skiponzero.SkipSyncOnZeroOptimization;
+import io.github.bucket4j.distributed.remote.CommandResult;
+import io.github.bucket4j.distributed.remote.Request;
+import io.github.bucket4j.distributed.remote.commands.TryConsumeAndReturnRemainingTokensCommand;
+import io.github.bucket4j.distributed.serialization.InternalSerializationHelper;
+import io.github.bucket4j.distributed.serialization.SerializationStyle;
 import io.github.bucket4j.distributed.versioning.UsageOfObsoleteApiException;
 import io.github.bucket4j.distributed.versioning.UsageOfUnsupportedApiException;
 import io.github.bucket4j.distributed.versioning.Versions;
@@ -38,6 +43,7 @@ import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static io.github.bucket4j.distributed.proxy.RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION;
+import static io.github.bucket4j.distributed.serialization.InternalSerializationHelper.serializeRequest;
 import static org.junit.jupiter.api.Assertions.*;
 
 public abstract class AbstractDistributedBucketTest {
@@ -187,7 +193,7 @@ public abstract class AbstractDistributedBucketTest {
         stateBytes[3] = (byte) (Versions.getLatest().getNumber() + 1);
         spec.backwardCompatibilityStateCheckHelper.setRawState(key, stateBytes);
         try {
-            asyncBucket.asVerbose().tryConsume(1).get();
+            asyncBucket.tryConsume(1).get();
             fail();
         } catch (ExecutionException e) {
             assertInstanceOf(UsageOfUnsupportedApiException.class, e.getCause());
@@ -198,6 +204,62 @@ public abstract class AbstractDistributedBucketTest {
             fail();
         } catch (ExecutionException e) {
             assertInstanceOf(UsageOfUnsupportedApiException.class, e.getCause());
+        }
+    }
+
+    @MethodSource("specs")
+    @ParameterizedTest
+    public <K, P extends ProxyManager<K>, B extends AbstractProxyManagerBuilder<K, P, B>> void testBackwardCompatibilityExceptionsForRequest(ProxyManagerSpec<K, P, B> spec) throws InterruptedException, ExecutionException {
+        if (spec.backwardCompatibilityRequestCheckHelper == null) {
+            return;
+        }
+
+        K key = spec.generateRandomKey();
+        BucketConfiguration configuration = BucketConfiguration.builder()
+                .addLimit(Bandwidth.simple(1_000, Duration.ofMinutes(1)))
+                .build();
+        ProxyManager<K> proxyManager = spec.builder.get().build();
+        Bucket bucket = proxyManager.builder().build(key, configuration);
+        assertTrue(bucket.tryConsume(1));
+
+        // simulate obsolete request
+        Request<ConsumptionProbe> request = new Request<>(new TryConsumeAndReturnRemainingTokensCommand(1), Versions.getLatest(), null, null);
+        byte[] requestBytes = serializeRequest(request, SerializationStyle.BYTE_BUFFER);
+        requestBytes[3] = (byte) (Versions.getOldest().getNumber() - 1);
+
+        try {
+            deserializeResponse(spec.backwardCompatibilityRequestCheckHelper.execute(key, requestBytes)).getData();
+            fail();
+        } catch (UsageOfObsoleteApiException e) {
+            // ok
+        }
+
+        requestBytes[3] = (byte) (Versions.getLatest().getNumber() + 1);
+        try {
+            deserializeResponse(spec.backwardCompatibilityRequestCheckHelper.execute(key, requestBytes)).getData();
+            fail();
+        } catch (UsageOfUnsupportedApiException e) {
+            // ok
+        }
+
+        if (!proxyManager.isAsyncModeSupported()) {
+            return;
+        }
+
+        requestBytes[3] = (byte) (Versions.getOldest().getNumber() - 1);
+        try {
+            deserializeResponse(spec.backwardCompatibilityRequestCheckHelper.executeAsync(key, requestBytes).get()).getData();
+            fail();
+        } catch (UsageOfObsoleteApiException e) {
+            // ok
+        }
+
+        requestBytes[3] = (byte) (Versions.getLatest().getNumber() + 1);
+        try {
+            deserializeResponse(spec.backwardCompatibilityRequestCheckHelper.executeAsync(key, requestBytes).get()).getData();
+            fail();
+        } catch (UsageOfUnsupportedApiException e) {
+            // ok
         }
     }
 
@@ -1010,6 +1072,10 @@ public abstract class AbstractDistributedBucketTest {
         System.out.println("Updates by thread " + updatesByThread);
         assertTrue(errors.isEmpty());
         assertEquals(capacity - opsCount, availableTokens);
+    }
+
+    private CommandResult<?> deserializeResponse(byte[] result) {
+        return InternalSerializationHelper.deserializeResult(result, Versions.getLatest(), SerializationStyle.BYTE_BUFFER);
     }
 
 }
