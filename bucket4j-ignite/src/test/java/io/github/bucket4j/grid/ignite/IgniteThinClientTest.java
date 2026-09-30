@@ -1,6 +1,7 @@
 package io.github.bucket4j.grid.ignite;
 
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
+import io.github.bucket4j.tck.BackwardCompatibilityStateCheckHelper;
 import io.github.bucket4j.tck.ProxyManagerSpec;
 
 import org.apache.ignite.Ignite;
@@ -81,17 +82,42 @@ public class IgniteThinClientTest extends AbstractDistributedBucketTest {
         cache = igniteClient.cache(CACHE_NAME);
         cache2 = igniteClient.cache(CACHE2_NAME);
 
+        BackwardCompatibilityStateCheckHelper<String> backwardCompatibilityHelper = new BackwardCompatibilityStateCheckHelper<>() {
+            @Override
+            public byte[] getRawState(String key) {
+                return cache.get(key);
+            }
+
+            @Override
+            public void setRawState(String key, byte[] state) {
+                cache.put(key, state);
+            }
+        };
+
+        BackwardCompatibilityStateCheckHelper<String> backwardCompatibilityHelper2 = new BackwardCompatibilityStateCheckHelper<>() {
+            @Override
+            public byte[] getRawState(String key) {
+                ByteBuffer persistedState = cache2.get(key);
+                return persistedState == null ? null : persistedState.array();
+            }
+
+            @Override
+            public void setRawState(String key, byte[] state) {
+                cache2.put(key, ByteBuffer.wrap(state));
+            }
+        };
+
         specs = Arrays.asList(
             new ProxyManagerSpec<>(
                 "IgniteThinClientCompute",
                 () -> UUID.randomUUID().toString(),
                 () -> Bucket4jIgnite.thinClient().clientComputeBasedBuilder(cache, igniteClient.compute())
-            ),
+            ).checkStateBackwardCompatibility(backwardCompatibilityHelper),
             new ProxyManagerSpec<>(
                 "IgniteThinClientCas",
                 () -> UUID.randomUUID().toString(),
                 () -> Bucket4jIgnite.thinClient().casBasedBuilder(cache2)
-            )
+            ).checkStateBackwardCompatibility(backwardCompatibilityHelper2)
         );
     }
 

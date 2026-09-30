@@ -1,9 +1,15 @@
 import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.Cluster;
 import com.couchbase.client.java.Collection;
+import com.couchbase.client.java.codec.RawBinaryTranscoder;
+import com.couchbase.client.java.kv.GetOptions;
+import com.couchbase.client.java.kv.ReplaceOptions;
+import com.couchbase.client.java.kv.UpsertOptions;
+
 import io.github.bucket4j.couchbase.Bucket4jCouchbase;
 import io.github.bucket4j.distributed.serialization.Mapper;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
+import io.github.bucket4j.tck.BackwardCompatibilityStateCheckHelper;
 import io.github.bucket4j.tck.ProxyManagerSpec;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -13,6 +19,7 @@ import org.testcontainers.couchbase.CouchbaseContainer;
 import java.time.Duration;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class CouchbaseTest extends AbstractDistributedBucketTest {
@@ -44,22 +51,49 @@ public class CouchbaseTest extends AbstractDistributedBucketTest {
                 "CouchbaseCompareAndSwapBasedProxyManager",
                 () -> UUID.randomUUID().toString(),
                 () -> Bucket4jCouchbase.compareAndSwapBasedBuilder(collection)
-            ).checkExpiration(),
+            ).checkExpiration().checkStateBackwardCompatibility(new BackwardCompatibilityStateCheckHelper<String>() {
+                @Override
+                public byte[] getRawState(String key) {
+                    return collection.get(key, GetOptions.getOptions().transcoder(RawBinaryTranscoder.INSTANCE)).contentAsBytes();
+                }
+
+                @Override
+                public void setRawState(String key, byte[] state) {
+                    collection.replace(key, state, ReplaceOptions.replaceOptions().transcoder(RawBinaryTranscoder.INSTANCE));
+                }
+            }),
             new ProxyManagerSpec<>(
                 "CouchbaseCompareAndSwapBasedProxyManagerAsyncCollection",
                 () -> UUID.randomUUID().toString(),
                 () -> Bucket4jCouchbase.compareAndSwapBasedBuilder(asyncCollection)
-            ).checkExpiration(),
+            ).checkExpiration().checkStateBackwardCompatibility(new BackwardCompatibilityStateCheckHelper<String>() {
+                @Override
+                public byte[] getRawState(String key) {
+                    try {
+                        return asyncCollection.get(key, GetOptions.getOptions().transcoder(RawBinaryTranscoder.INSTANCE)).get().contentAsBytes();
+                    } catch (InterruptedException | ExecutionException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+                @Override
+                public void setRawState(String key, byte[] state) {
+                    try {
+                        asyncCollection.replace(key, state, ReplaceOptions.replaceOptions().transcoder(RawBinaryTranscoder.INSTANCE)).get();
+                    } catch (InterruptedException | ExecutionException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }),
             new ProxyManagerSpec<>(
                 "CouchbaseCompareAndSwapBasedProxyManagerWithLongKeys",
                 () -> ThreadLocalRandom.current().nextLong(),
                 () -> Bucket4jCouchbase.compareAndSwapBasedBuilder(collection, Mapper.LONG)
-            ).checkExpiration(),
+            ).checkExpiration().withoutBackwardCompatibilityChecker(),
             new ProxyManagerSpec<>(
                 "CouchbaseCompareAndSwapBasedProxyManagerAsyncCollectionWithLongKeys",
                 () -> ThreadLocalRandom.current().nextLong(),
                 () -> Bucket4jCouchbase.compareAndSwapBasedBuilder(asyncCollection, Mapper.LONG)
-            ).checkExpiration()
+            ).checkExpiration().withoutBackwardCompatibilityChecker()
         );
     }
 

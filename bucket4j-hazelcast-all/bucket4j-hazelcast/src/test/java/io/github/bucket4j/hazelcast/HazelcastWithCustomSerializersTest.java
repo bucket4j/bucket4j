@@ -8,6 +8,7 @@ import com.hazelcast.map.IMap;
 import io.github.bucket4j.grid.hazelcast.Bucket4jHazelcast;
 import io.github.bucket4j.grid.hazelcast.HazelcastProxyManager;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
+import io.github.bucket4j.tck.BackwardCompatibilityStateCheckHelper;
 import io.github.bucket4j.tck.ProxyManagerSpec;
 
 import org.gridkit.nanocloud.Cloud;
@@ -59,18 +60,29 @@ public class HazelcastWithCustomSerializersTest extends AbstractDistributedBucke
         hazelcastInstance = Hazelcast.newHazelcastInstance(config);
         map = hazelcastInstance.getMap("my_buckets");
 
+        BackwardCompatibilityStateCheckHelper<String> backwardCompatibilityHelper = new BackwardCompatibilityStateCheckHelper<>() {
+            @Override
+            public byte[] getRawState(String key) {
+                return map.get(key);
+            }
+
+            @Override
+            public void setRawState(String key, byte[] state) {
+                map.put(key, state);
+            }
+        };
         specs = Arrays.asList(
             new ProxyManagerSpec<>(
                 "HazelcastProxyManager_CustomSerialization",
                 () -> UUID.randomUUID().toString(),
                 () -> Bucket4jHazelcast.entryProcessorBasedBuilder(map)
-            ).checkExpiration(),
+            ).checkExpiration().checkStateBackwardCompatibility(backwardCompatibilityHelper),
             new ProxyManagerSpec<>(
                 "HazelcastProxyManager_JdkSerialization_offloadableExecutor",
                 () -> UUID.randomUUID().toString(),
                 () -> Bucket4jHazelcast.entryProcessorBasedBuilder(map)
                     .offloadableExecutorName("my-executor")
-            ).checkExpiration()
+            ).checkExpiration().checkStateBackwardCompatibility(backwardCompatibilityHelper)
         );
     }
 

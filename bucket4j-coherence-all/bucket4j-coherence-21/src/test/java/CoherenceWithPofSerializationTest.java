@@ -2,6 +2,7 @@ import com.tangosol.net.CacheFactory;
 import com.tangosol.net.NamedCache;
 import io.github.bucket4j.grid.coherence.Bucket4jCoherence;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
+import io.github.bucket4j.tck.BackwardCompatibilityStateCheckHelper;
 import io.github.bucket4j.tck.ProxyManagerSpec;
 
 import org.gridkit.nanocloud.Cloud;
@@ -39,12 +40,24 @@ public class CoherenceWithPofSerializationTest extends AbstractDistributedBucket
         configureCoherence(CLIENT_PORT, WKA_PORT, false);
         cache = CacheFactory.getCache("my_buckets");
 
+        BackwardCompatibilityStateCheckHelper<String> backwardCompatibilityHelper = new BackwardCompatibilityStateCheckHelper<>() {
+            @Override
+            public byte[] getRawState(String key) {
+                return cache.get(key);
+            }
+
+            @Override
+            public void setRawState(String key, byte[] state) {
+                cache.put(key, state);
+            }
+        };
+
         specs = Arrays.asList(
             new ProxyManagerSpec<>(
                 "CoherenceProxyManager_PofSerialization",
                 () -> UUID.randomUUID().toString(),
                 () -> Bucket4jCoherence.entryProcessorBasedBuilder(cache)
-            ).checkExpiration()
+            ).checkExpiration().checkStateBackwardCompatibility(backwardCompatibilityHelper)
         );
     }
 

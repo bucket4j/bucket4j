@@ -4,6 +4,7 @@ package io.github.bucket4j.grid.infinispan;
 
 import io.github.bucket4j.grid.infinispan.serialization.Bucket4jProtobufContextInitializer;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
+import io.github.bucket4j.tck.BackwardCompatibilityStateCheckHelper;
 import io.github.bucket4j.tck.ProxyManagerSpec;
 
 import org.infinispan.Cache;
@@ -61,7 +62,17 @@ public class InfinispanTest extends AbstractDistributedBucketTest {
                 "InfinispanProxyManager",
                 () -> UUID.randomUUID().toString(),
                 () -> Bucket4jInfinispan.entryProcessorBasedBuilder(readWriteMap)
-            ).checkExpiration()
+            ).checkExpiration().checkStateBackwardCompatibility(new BackwardCompatibilityStateCheckHelper<String>() {
+                @Override
+                public byte[] getRawState(String key) {
+                    return cache.get(key);
+                }
+
+                @Override
+                public void setRawState(String key, byte[] state) {
+                    cache.put(key, state);
+                }
+            })
         );
     }
 

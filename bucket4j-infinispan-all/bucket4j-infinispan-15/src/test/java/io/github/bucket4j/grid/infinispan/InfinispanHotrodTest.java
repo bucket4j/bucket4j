@@ -25,6 +25,7 @@ import org.junit.jupiter.api.BeforeAll;
 
 import io.github.bucket4j.grid.infinispan.serialization.Bucket4jProtobufContextInitializer;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
+import io.github.bucket4j.tck.BackwardCompatibilityStateCheckHelper;
 import io.github.bucket4j.tck.ProxyManagerSpec;
 
 public class InfinispanHotrodTest extends AbstractDistributedBucketTest {
@@ -70,7 +71,17 @@ public class InfinispanHotrodTest extends AbstractDistributedBucketTest {
                 "HotrodInfinispanProxyManager",
                 () -> UUID.randomUUID().toString(),
                 () -> Bucket4jInfinispan.hotrodClientBasedBuilder(remoteCache)
-            ).checkExpiration()
+            ).checkExpiration().checkStateBackwardCompatibility(new BackwardCompatibilityStateCheckHelper<String>() {
+                @Override
+                public byte[] getRawState(String key) {
+                    return remoteCache.get(key);
+                }
+
+                @Override
+                public void setRawState(String key, byte[] state) {
+                    remoteCache.put(key, state);
+                }
+            })
         );
     }
 

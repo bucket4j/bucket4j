@@ -19,6 +19,7 @@ import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.utility.DockerImageName;
 
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
+import io.github.bucket4j.tck.BackwardCompatibilityStateCheckHelper;
 import io.github.bucket4j.tck.ProxyManagerSpec;
 import org.slf4j.LoggerFactory;
 
@@ -73,17 +74,28 @@ public class GeodeClientServerTest extends AbstractDistributedBucketTest {
             .<String, byte[]>createClientRegionFactory(ClientRegionShortcut.PROXY)
             .create(REGION_NAME);
 
+        BackwardCompatibilityStateCheckHelper<String> backwardCompatibilityStateCheckHelper = new BackwardCompatibilityStateCheckHelper<>() {
+            @Override
+            public byte[] getRawState(String key) {
+                return clientRegion.get(key);
+            }
+
+            @Override
+            public void setRawState(String key, byte[] state) {
+                clientRegion.put(key, state);
+            }
+        };
         specs = Arrays.asList(
             new ProxyManagerSpec<>(
                 "GeodeProxyManager_ClientServer",
                 () -> UUID.randomUUID().toString(),
                 () -> Bucket4jGeode.compareAndSwapBasedBuilder(clientRegion)
-            ),
+            ).checkStateBackwardCompatibility(backwardCompatibilityStateCheckHelper),
             new ProxyManagerSpec<>(
                 "GeodeFunctionProxyManager_ClientServer",
                 () -> UUID.randomUUID().toString(),
                 () -> Bucket4jGeode.functionBasedBuilder(clientRegion)
-            )
+            ).checkStateBackwardCompatibility(backwardCompatibilityStateCheckHelper)
         );
     }
 

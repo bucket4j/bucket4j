@@ -19,11 +19,13 @@ import org.testcontainers.containers.GenericContainer;
 
 import io.github.bucket4j.redis.lettuce.Bucket4jLettuce;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
+import io.github.bucket4j.tck.BackwardCompatibilityStateCheckHelper;
 import io.github.bucket4j.tck.ProxyManagerSpec;
 import io.lettuce.core.RedisURI;
 import io.lettuce.core.cluster.RedisClusterClient;
 import io.lettuce.core.cluster.SlotHash;
 import io.lettuce.core.cluster.api.StatefulRedisClusterConnection;
+import io.lettuce.core.codec.ByteArrayCodec;
 import io.lettuce.core.internal.HostAndPort;
 import io.lettuce.core.resource.ClientResources;
 import io.lettuce.core.resource.MappingSocketAddressResolver;
@@ -54,12 +56,25 @@ public class LettuceBasedProxyManagerClusterTest extends AbstractDistributedBuck
 
         Thread.sleep(2000);
 
+        StatefulRedisClusterConnection<byte[], byte[]> byteArrayRawConnection = redisClient.connect(ByteArrayCodec.INSTANCE);
+        BackwardCompatibilityStateCheckHelper<byte[]> backwardCompatibilityHelper = new BackwardCompatibilityStateCheckHelper<>() {
+            @Override
+            public byte[] getRawState(byte[] key) {
+                return byteArrayRawConnection.sync().get(key);
+            }
+
+            @Override
+            public void setRawState(byte[] key, byte[] state) {
+                byteArrayRawConnection.sync().set(key, state);
+            }
+        };
+
         specs = Arrays.asList(
             new ProxyManagerSpec<>(
                 "LettuceBasedProxyManager_ByteArrayKey",
                 () -> UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8),
                 () -> Bucket4jLettuce.casBasedBuilder(redisClient)
-            ).checkExpiration()
+            ).checkExpiration().checkStateBackwardCompatibility(backwardCompatibilityHelper)
         );
     }
 

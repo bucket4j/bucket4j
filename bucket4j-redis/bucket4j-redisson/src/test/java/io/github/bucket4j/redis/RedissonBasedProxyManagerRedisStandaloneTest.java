@@ -5,6 +5,8 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.redisson.client.codec.ByteArrayCodec;
+import org.redisson.client.protocol.RedisCommands;
 import org.redisson.command.CommandAsyncExecutor;
 import org.redisson.command.CommandAsyncService;
 import org.redisson.config.Config;
@@ -16,6 +18,7 @@ import org.testcontainers.containers.GenericContainer;
 import io.github.bucket4j.distributed.serialization.Mapper;
 import io.github.bucket4j.redis.redisson.Bucket4jRedisson;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
+import io.github.bucket4j.tck.BackwardCompatibilityStateCheckHelper;
 import io.github.bucket4j.tck.ProxyManagerSpec;
 import io.lettuce.core.RedisClient;
 import io.netty.util.internal.ThreadLocalRandom;
@@ -42,18 +45,44 @@ public class RedissonBasedProxyManagerRedisStandaloneTest extends AbstractDistri
         // lettuce
         redisClient = createLettuceClient(container);
 
+        BackwardCompatibilityStateCheckHelper<Long> longKeyHelper = new BackwardCompatibilityStateCheckHelper<>() {
+            @Override
+            public byte[] getRawState(Long key) {
+                String stringKey = Mapper.LONG.toString(key);
+                return commandExecutor.get(commandExecutor.readAsync(stringKey, ByteArrayCodec.INSTANCE, RedisCommands.GET, stringKey));
+            }
+
+            @Override
+            public void setRawState(Long key, byte[] state) {
+                String stringKey = Mapper.LONG.toString(key);
+                commandExecutor.get(commandExecutor.writeAsync(stringKey, ByteArrayCodec.INSTANCE, RedisCommands.SET, stringKey, state));
+            }
+        };
+
+        BackwardCompatibilityStateCheckHelper<String> stringKeyHelper = new BackwardCompatibilityStateCheckHelper<>() {
+            @Override
+            public byte[] getRawState(String key) {
+                return commandExecutor.get(commandExecutor.readAsync(key, ByteArrayCodec.INSTANCE, RedisCommands.GET, key));
+            }
+
+            @Override
+            public void setRawState(String key, byte[] state) {
+                commandExecutor.get(commandExecutor.writeAsync(key, ByteArrayCodec.INSTANCE, RedisCommands.SET, key, state));
+            }
+        };
+
         specs = Arrays.asList(
             // Redisson
             new ProxyManagerSpec<>(
                 "RedissonBasedProxyManager_LongKey",
                 () -> ThreadLocalRandom.current().nextLong(),
                 () -> Bucket4jRedisson.casBasedBuilder(commandExecutor).keyMapper(Mapper.LONG)
-            ).checkExpiration(),
+            ).checkExpiration().checkStateBackwardCompatibility(longKeyHelper),
             new ProxyManagerSpec<>(
                 "RedissonBasedProxyManager_StringKey",
                 () -> UUID.randomUUID().toString(),
                 () -> Bucket4jRedisson.casBasedBuilder(commandExecutor)
-            ).checkExpiration()
+            ).checkExpiration().checkStateBackwardCompatibility(stringKeyHelper)
         );
     }
 

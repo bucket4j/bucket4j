@@ -1,11 +1,13 @@
 package io.github.bucket4j.redis;
 
 import glide.api.GlideClusterClient;
+import glide.api.models.GlideString;
 import glide.api.models.configuration.GlideClusterClientConfiguration;
 import glide.api.models.configuration.NodeAddress;
 import io.github.bucket4j.distributed.serialization.Mapper;
 import io.github.bucket4j.redis.glide.Bucket4jGlide;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
+import io.github.bucket4j.tck.BackwardCompatibilityStateCheckHelper;
 import io.github.bucket4j.tck.ProxyManagerSpec;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -34,17 +36,50 @@ public class GlideBasedProxyManagerClusterTest extends AbstractDistributedBucket
         container = startRedisContainer();
         client = createGlideClusterClient(container);
 
+        BackwardCompatibilityStateCheckHelper<byte[]> byteArrayKeyHelper = new BackwardCompatibilityStateCheckHelper<>() {
+            @Override
+            public byte[] getRawState(byte[] key) {
+                try {
+                    GlideString value = client.get(GlideString.of(key)).get();
+                    return value == null ? null : value.getBytes();
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+
+            @Override
+            public void setRawState(byte[] key, byte[] state) {
+                try {
+                    client.set(GlideString.of(key), GlideString.of(state)).get();
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        };
+
+        BackwardCompatibilityStateCheckHelper<String> stringKeyHelper = new BackwardCompatibilityStateCheckHelper<>() {
+            @Override
+            public byte[] getRawState(String key) {
+                return byteArrayKeyHelper.getRawState(key.getBytes(StandardCharsets.UTF_8));
+            }
+
+            @Override
+            public void setRawState(String key, byte[] state) {
+                byteArrayKeyHelper.setRawState(key.getBytes(StandardCharsets.UTF_8), state);
+            }
+        };
+
         specs = Arrays.asList(
                 new ProxyManagerSpec<>(
                         "GlideBasedProxyManager_ByteArrayKey",
                         () -> UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8),
                         () -> Bucket4jGlide.casBasedBuilder(client)
-                ).checkExpiration(),
+                ).checkExpiration().checkStateBackwardCompatibility(byteArrayKeyHelper),
                 new ProxyManagerSpec<>(
                         "GlideBasedProxyManager_StringKey",
                         () -> UUID.randomUUID().toString(),
                         () -> Bucket4jGlide.casBasedBuilder(client).keyMapper(Mapper.STRING)
-                ).checkExpiration()
+                ).checkExpiration().checkStateBackwardCompatibility(stringKeyHelper)
         );
     }
 

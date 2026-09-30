@@ -10,6 +10,7 @@ import com.hazelcast.core.ICacheManager;
 
 import io.github.bucket4j.grid.jcache.Bucket4jJCache;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
+import io.github.bucket4j.tck.BackwardCompatibilityStateCheckHelper;
 import io.github.bucket4j.tck.ProxyManagerSpec;
 
 import org.gridkit.nanocloud.Cloud;
@@ -71,7 +72,17 @@ public class HazelcastJCacheTest extends AbstractDistributedBucketTest {
                 "JCacheProxyManager",
                 () -> UUID.randomUUID().toString(),
                 () -> Bucket4jJCache.entryProcessorBasedBuilder(getCache())
-            )
+            ).checkStateBackwardCompatibility(new BackwardCompatibilityStateCheckHelper<String>() {
+                @Override
+                public byte[] getRawState(String key) {
+                    return cache.get(key);
+                }
+
+                @Override
+                public void setRawState(String key, byte[] state) {
+                    cache.put(key, state);
+                }
+            })
         );
     }
 

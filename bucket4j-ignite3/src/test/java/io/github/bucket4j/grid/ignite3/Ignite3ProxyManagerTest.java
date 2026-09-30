@@ -20,10 +20,12 @@
 package io.github.bucket4j.grid.ignite3;
 
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
+import io.github.bucket4j.tck.BackwardCompatibilityStateCheckHelper;
 import io.github.bucket4j.tck.ProxyManagerSpec;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.IgniteServer;
 import org.apache.ignite.InitParameters;
+import org.apache.ignite.table.KeyValueView;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 
@@ -64,12 +66,26 @@ public class Ignite3ProxyManagerTest extends AbstractDistributedBucketTest {
         ignite.sql().executeScript(
                 "CREATE TABLE " + TABLE_NAME + " (\"key\" VARCHAR PRIMARY KEY, \"value\" VARBINARY)");
 
+        KeyValueView<String, byte[]> keyValueView = ignite.tables().table(TABLE_NAME).keyValueView(String.class, byte[].class);
+
+        BackwardCompatibilityStateCheckHelper<String> backwardCompatibilityHelper = new BackwardCompatibilityStateCheckHelper<>() {
+            @Override
+            public byte[] getRawState(String key) {
+                return keyValueView.get(null, key);
+            }
+
+            @Override
+            public void setRawState(String key, byte[] state) {
+                keyValueView.put(null, key, state);
+            }
+        };
+
         specs = Arrays.asList(
                 new ProxyManagerSpec<>(
                         "Ignite3ProxyManager",
                         () -> UUID.randomUUID().toString(),
                         () -> Bucket4jIgnite3.<String>builder().ignite(ignite).table(TABLE_NAME).keyType(String.class)
-                )
+                ).checkStateBackwardCompatibility(backwardCompatibilityHelper)
         );
     }
 

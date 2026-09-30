@@ -1,6 +1,7 @@
 package io.github.bucket4j.grid.ignite;
 
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
+import io.github.bucket4j.tck.BackwardCompatibilityStateCheckHelper;
 import io.github.bucket4j.tck.ProxyManagerSpec;
 
 import org.apache.ignite.Ignite;
@@ -78,26 +79,38 @@ public class IgniteTest extends AbstractDistributedBucketTest {
         CacheConfiguration cacheConfiguration = new CacheConfiguration("my_buckets");
         cache = ignite.getOrCreateCache(cacheConfiguration);
 
+        BackwardCompatibilityStateCheckHelper<String> backwardCompatibilityHelper = new BackwardCompatibilityStateCheckHelper<>() {
+            @Override
+            public byte[] getRawState(String key) {
+                return cache.get(key);
+            }
+
+            @Override
+            public void setRawState(String key, byte[] state) {
+                cache.put(key, state);
+            }
+        };
+
         specs = Arrays.asList(
             new ProxyManagerSpec<>(
                 "IgniteProxyManager",
                 () -> UUID.randomUUID().toString(),
                 () -> Bucket4jIgnite.thickClient().entryProcessorBasedBuilder(cache)
-            ),
+            ).checkStateBackwardCompatibility(backwardCompatibilityHelper),
             new ProxyManagerSpec<>(
                 "IgniteProxyManager_background",
                 () -> UUID.randomUUID().toString(),
                 () -> Bucket4jIgnite.thickClient()
                     .entryProcessorBasedBuilder(cache)
                     .executionStrategy(background(Executors.newFixedThreadPool(20)))
-            ),
+            ).checkStateBackwardCompatibility(backwardCompatibilityHelper),
             new ProxyManagerSpec<>(
                 "IgniteProxyManager_backgroundTimeBounded",
                 () -> UUID.randomUUID().toString(),
                 () -> Bucket4jIgnite.thickClient()
                     .entryProcessorBasedBuilder(cache)
                     .executionStrategy(backgroundTimeBounded(Executors.newFixedThreadPool(20), Duration.ofSeconds(5)))
-            )
+            ).checkStateBackwardCompatibility(backwardCompatibilityHelper)
         );
     }
 

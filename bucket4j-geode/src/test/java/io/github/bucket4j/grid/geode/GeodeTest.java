@@ -1,6 +1,7 @@
 package io.github.bucket4j.grid.geode;
 
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
+import io.github.bucket4j.tck.BackwardCompatibilityStateCheckHelper;
 import io.github.bucket4j.tck.ProxyManagerSpec;
 
 import org.apache.geode.cache.Cache;
@@ -42,23 +43,34 @@ public class GeodeTest extends AbstractDistributedBucketTest {
         Region<String, byte[]> region = cache.<String, byte[]>createRegionFactory(RegionShortcut.PARTITION).create("my_buckets");
         backgroundExecutor = Executors.newFixedThreadPool(20);
 
+        BackwardCompatibilityStateCheckHelper<String> backwardCompatibilityStateCheckHelper = new BackwardCompatibilityStateCheckHelper<>() {
+            @Override
+            public byte[] getRawState(String key) {
+                return region.get(key);
+            }
+            @Override
+            public void setRawState(String key, byte[] state) {
+                region.put(key, state);
+            }
+        };
+
         specs = Arrays.asList(
             new ProxyManagerSpec<>(
                 "GeodeProxyManager",
                 () -> UUID.randomUUID().toString(),
                 () -> Bucket4jGeode.compareAndSwapBasedBuilder(region)
-            ),
+            ).checkStateBackwardCompatibility(backwardCompatibilityStateCheckHelper),
             new ProxyManagerSpec<>(
                 "GeodeProxyManager_background",
                 () -> UUID.randomUUID().toString(),
                 () -> Bucket4jGeode.compareAndSwapBasedBuilder(region)
                     .executionStrategy(background(backgroundExecutor))
-            ),
+            ).checkStateBackwardCompatibility(backwardCompatibilityStateCheckHelper),
             new ProxyManagerSpec<>(
                 "GeodeFunctionProxyManager",
                 () -> UUID.randomUUID().toString(),
                 () -> Bucket4jGeode.functionBasedBuilder(region)
-            )
+            ).checkStateBackwardCompatibility(backwardCompatibilityStateCheckHelper)
         );
     }
 

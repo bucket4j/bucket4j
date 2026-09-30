@@ -29,7 +29,19 @@ public class ProxyManagerSpec<K, P extends ProxyManager<K>, B extends AbstractPr
         this.expirationSupported = false;
         this.keyGenerator = keyGenerator;
         this.builder = builder;
-        this.backwardCompatibilityStateCheckHelper = null;
+        this.backwardCompatibilityStateCheckHelper = new BackwardCompatibilityStateCheckHelper<K>() {
+            @Override
+            public byte[] getRawState(K key) {
+                throw new IllegalStateException("You should explicitly call withoutBackwardCompatibilityChecker on ProxyManagerSpec" +
+                        " if you want to avoid backward compatibility testing, " +
+                        " however it is strongly recommended to configure checker via ProxyManagerSpec#checkStateBackwardCompatibility");
+            }
+
+            @Override
+            public void setRawState(K key, byte[] state) {
+
+            }
+        };
     }
 
     public ProxyManagerSpec<K, P , B> checkExpiration() {
@@ -38,6 +50,10 @@ public class ProxyManagerSpec<K, P extends ProxyManager<K>, B extends AbstractPr
 
     public ProxyManagerSpec<K, P , B> checkStateBackwardCompatibility(BackwardCompatibilityStateCheckHelper<K> backwardCompatibilityStateCheckHelper) {
         return new ProxyManagerSpec<>(description, expirationSupported, backwardCompatibilityStateCheckHelper, keyGenerator, builder);
+    }
+
+    public ProxyManagerSpec<K, P , B> withoutBackwardCompatibilityChecker() {
+        return new ProxyManagerSpec<>(description, expirationSupported, null, keyGenerator, builder);
     }
 
     @Override

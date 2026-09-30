@@ -21,6 +21,7 @@ import org.testcontainers.containers.GenericContainer;
 
 import io.github.bucket4j.redis.jedis.Bucket4jJedis;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
+import io.github.bucket4j.tck.BackwardCompatibilityStateCheckHelper;
 import io.github.bucket4j.tck.ProxyManagerSpec;
 import io.lettuce.core.RedisURI;
 import io.lettuce.core.cluster.RedisClusterClient;
@@ -54,12 +55,24 @@ public class JedisBasedProxyManagerClusterTest extends AbstractDistributedBucket
         // Jedis
         unifiedJedisCluster = createUnifiedJedisCluster(container);
 
+        BackwardCompatibilityStateCheckHelper<byte[]> backwardCompatibilityHelper = new BackwardCompatibilityStateCheckHelper<>() {
+            @Override
+            public byte[] getRawState(byte[] key) {
+                return jedisCluster.get(key);
+            }
+
+            @Override
+            public void setRawState(byte[] key, byte[] state) {
+                jedisCluster.set(key, state);
+            }
+        };
+
         specs = Arrays.asList(
             new ProxyManagerSpec<>(
                 "JedisBasedProxyManager_ByteArrayKey",
                 () -> UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8),
                 () -> Bucket4jJedis.casBasedBuilder(jedisCluster)
-            ).checkExpiration()
+            ).checkExpiration().checkStateBackwardCompatibility(backwardCompatibilityHelper)
         );
     }
 
