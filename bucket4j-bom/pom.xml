@@ -39,6 +39,11 @@
             </dependency>
             <dependency>
                 <groupId>com.bucket4j</groupId>
+                <artifactId>bucket4j_jdk17-ignite3</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.bucket4j</groupId>
                 <artifactId>bucket4j_jdk17-infinispan</artifactId>
                 <version>${project.version}</version>
             </dependency>

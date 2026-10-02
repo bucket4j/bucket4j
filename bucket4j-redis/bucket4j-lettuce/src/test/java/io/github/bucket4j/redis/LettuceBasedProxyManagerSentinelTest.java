@@ -8,6 +8,7 @@ import org.testcontainers.containers.GenericContainer;
 
 import io.github.bucket4j.redis.lettuce.Bucket4jLettuce;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
+import io.github.bucket4j.tck.BackwardCompatibilityStateCheckHelper;
 import io.github.bucket4j.tck.ProxyManagerSpec;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.RedisURI;
@@ -75,7 +76,17 @@ public class LettuceBasedProxyManagerSentinelTest extends AbstractDistributedBuc
                         "LettuceBasedProxyManager_Sentinel_StringKey",
                         () -> UUID.randomUUID().toString(),
                         () -> Bucket4jLettuce.casBasedBuilder(redisConnection)
-                ).checkExpiration()
+                ).checkExpiration().checkStateBackwardCompatibility(new BackwardCompatibilityStateCheckHelper<>() {
+                    @Override
+                    public byte[] getRawState(String key) {
+                        return redisConnection.sync().get(key);
+                    }
+
+                    @Override
+                    public void setRawState(String key, byte[] state) {
+                        redisConnection.sync().set(key, state);
+                    }
+                }).withoutBackwardCompatibilityRequestChecker()
         );
     }
 

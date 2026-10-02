@@ -1,0 +1,109 @@
+[[bucket4j-ignite3, Bucket4j-Ignite3]]
+=== Bucket4j-Ignite3
+Bucket4j provides integration with https://ignite.apache.org/docs/ignite3/latest/[Apache Ignite 3.x] through the ``bucket4j-ignite3`` module.
+
+IMPORTANT: Apache Ignite 3 is a complete rewrite of Apache Ignite 2 - it has a different API, a different storage model, and is not compatible with Ignite 2 in any way.
+For that reason ``bucket4j-ignite3`` is an independent module, which is *not* a follow-up of ``bucket4j-jcache`` and does not share any code with ``bucket4j-ignite``.
+If you use Apache Ignite 2.x, see the <<bucket4j-ignite, Apache Ignite integration>> instead.
+
+==== How it works
+The state of every bucket is stored as a binary value in a row of an Ignite SQL table, so you can use the usual Ignite tooling to manage that table (distribution zone, replicas, storage profile, etc).
+
+To execute a bucket operation, Bucket4j sends a compute job to the node that holds the partition with the bucket's key (colocated execution), so the bucket state never travels over the network.
+The job reads the state, applies the command, and writes the new state back inside an Ignite transaction.
+
+Ignite 3 transactions are ``SERIALIZABLE``, and Ignite resolves conflicts between concurrent transactions by rolling back one of them.
+When many threads (or many application instances) hit the same bucket, this would turn into a storm of rollbacks.
+To avoid it, each node accumulates concurrent requests targeting the same key into a batch, and applies the whole batch in a single transaction.
+As a result, the throughput on a single hot key does not degrade with the growth of contention.
+
+Both synchronous and asynchronous APIs are supported - ``isAsyncModeSupported()`` returns ``true``.
+
+==== Dependencies
+To use the ``bucket4j-ignite3`` extension, add the following dependency:
+[source, xml, subs=attributes+]
+----
+<!-- For Java 17 -->
+<dependency>
+    <groupId>com.bucket4j</groupId>
+    <artifactId>bucket4j_jdk17-ignite3</artifactId>
+    <version>{revnumber}</version>
+</dependency>
+----
+The Ignite client library (``org.apache.ignite:ignite-client``) is declared with ``provided`` scope, so your application is responsible for bringing the version that matches your cluster.
+
+IMPORTANT: The compute job is invoked by its class name, so the Bucket4j jars (``bucket4j_jdk17-core`` and ``bucket4j_jdk17-ignite3``) must be present on the classpath of **every server node** of the cluster, in addition to the client application.
+
+==== Table structure
+``bucket4j-ignite3`` does not create the table, it must exist before the proxy manager is built, otherwise ``IllegalArgumentException`` is thrown.
+The table must contain the following columns, the names are case-sensitive and must be upper-case:
+
+[cols="1,1,3"]
+|===
+|Column | Type | Purpose
+
+|``BUCKET_KEY``
+|The type matching the ``keyType`` passed to the builder
+|Primary key, identifies the bucket.
+
+|``BUCKET_STATE``
+|``VARBINARY``
+|Serialized state of the bucket.
+|===
+
+For example:
+[source, sql]
+----
+CREATE TABLE bucket4j_buckets (
+    BUCKET_KEY VARCHAR PRIMARY KEY,
+    BUCKET_STATE VARBINARY
+)
+----
+
+The following key types are supported: ``String``, ``Long``, ``Integer``, ``Short``, ``Byte`` and ``UUID``.
+
+==== Example of Bucket instantiation via Ignite3ProxyManager
+[source, java]
+----
+org.apache.ignite.Ignite ignite = ...;
+private static final Ignite3ProxyManager<String> proxyManager = Bucket4jIgnite3.<String>builder()
+    .ignite(ignite)
+    .table("bucket4j_buckets")
+    .keyType(String.class)
+    // setup optional parameters if necessary
+    .build();
+...
+
+BucketConfiguration configuration = BucketConfiguration.builder()
+    .addLimit(limit -> limit.capacity(1_000).refillGreedy(1_000, ofMinutes(1)))
+    .build();
+Bucket bucket = proxyManager.getProxy("user-123", () -> configuration);
+----
+The ``Ignite`` instance can be either the API of an embedded node (``IgniteServer#api()``) or a client connected to the cluster (``IgniteClient``):
+[source, java]
+----
+try (IgniteClient ignite = IgniteClient.builder().addresses("127.0.0.1:10800").build()) {
+    Ignite3ProxyManager<String> proxyManager = Bucket4jIgnite3.<String>builder()
+        .ignite(ignite)
+        .table("bucket4j_buckets")
+        .keyType(String.class)
+        .build();
+    ...
+}
+----
+
+==== Asynchronous usage
+[source, java]
+----
+AsyncBucketProxy asyncBucket = proxyManager.asAsync().getProxy("user-123", () -> configuration);
+CompletableFuture<ConsumptionProbe> future = asyncBucket.tryConsumeAndReturnRemaining(1);
+----
+
+==== Notes about the expiration policy
+Per-entry expiration is not supported yet: ``expirationAfterWrite(...)`` is not available for this integration, and an attempt to configure it fails with an exception.
+Buckets that are no longer needed can be removed explicitly via ``proxyManager.removeProxy(key)``.
+If your application creates a lot of buckets (bucket per user or per IP address), you need to clean up the table yourself, otherwise it keeps growing, see the <<distributed-checklist, distributed usage checklist>>.
+
+==== Notes about high availability
+Bucket4j relies on Ignite for durability and failover.
+If the state of buckets must survive the loss of a node, configure enough replicas in the distribution zone used by the table, and verify the behavior of your cluster under failure.

@@ -6,6 +6,8 @@ include::distributed-checklist.adoc[]
 
 include::jcache/in-memory-grid.adoc[]
 
+include::ignite3/ignite3.adoc[]
+
 include::redis/redis.adoc[]
 
 include::jdbc/jdbc-integrations.adoc[]

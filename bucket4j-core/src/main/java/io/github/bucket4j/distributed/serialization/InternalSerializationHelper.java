@@ -22,6 +22,7 @@ package io.github.bucket4j.distributed.serialization;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.RemoteBucketState;
 import io.github.bucket4j.distributed.remote.Request;
+import io.github.bucket4j.distributed.versioning.BackwardCompatibilityException;
 import io.github.bucket4j.distributed.versioning.Version;
 
 import java.io.*;
@@ -29,11 +30,11 @@ import java.nio.ByteBuffer;
 
 public class InternalSerializationHelper {
 
-    public static byte[] serializeState(RemoteBucketState state, Version backwardCompatibilityVersion, SerializationStyle style) {
+    public static byte[] serializeState(RemoteBucketState state, Version backwardCompatibilityVersion, SerializationStyle style) throws BackwardCompatibilityException {
         return serialize(RemoteBucketState.SERIALIZATION_HANDLE, state, backwardCompatibilityVersion, Scope.PERSISTED_STATE, style);
     }
 
-    public static RemoteBucketState deserializeState(byte[] bytes, SerializationStyle style) {
+    public static RemoteBucketState deserializeState(byte[] bytes, SerializationStyle style) throws BackwardCompatibilityException {
         return deserialize(RemoteBucketState.SERIALIZATION_HANDLE, bytes, style);
     }
 
@@ -42,7 +43,7 @@ public class InternalSerializationHelper {
     }
 
     @SuppressWarnings("unchecked")
-    public static <T> Request<T> deserializeRequest(byte[] bytes, SerializationStyle style) {
+    public static <T> Request<T> deserializeRequest(byte[] bytes, SerializationStyle style) throws BackwardCompatibilityException {
         return (Request<T>) deserialize(Request.SERIALIZATION_HANDLE, bytes, style);
     }
 
@@ -52,7 +53,11 @@ public class InternalSerializationHelper {
 
     @SuppressWarnings("unchecked")
     public static <T> CommandResult<T> deserializeResult(byte[] bytes, Version backwardCompatibilityVersion, SerializationStyle style) {
-        return (CommandResult<T>) deserialize(CommandResult.SERIALIZATION_HANDLE, bytes, style);
+        try {
+            return (CommandResult<T>) deserialize(CommandResult.SERIALIZATION_HANDLE, bytes, style);
+        } catch (BackwardCompatibilityException e) {
+            return (CommandResult<T>) e.toResult();
+        }
     }
 
     private static <T> byte[] serialize(SerializationHandle<T> handle, T serializableObject, Version backwardCompatibilityVersion, Scope scope, SerializationStyle style) {
@@ -61,7 +66,7 @@ public class InternalSerializationHelper {
                 case DATA_OUTPUT -> serializeViaDataOutput(handle, serializableObject, backwardCompatibilityVersion, scope);
                 case BYTE_BUFFER -> serializeViaByteBuffer(handle, serializableObject, backwardCompatibilityVersion, scope);
             };
-        } catch (Exception e) {
+        } catch (IOException e) {
             throw new IllegalStateException(e);
         }
     }
@@ -93,7 +98,7 @@ public class InternalSerializationHelper {
                 case DATA_OUTPUT -> deserializeViaDataInput(handle, bytes);
                 case BYTE_BUFFER -> handle.deserialize(ByteBufferSerializationAdapter.INSTANCE, ByteBuffer.wrap(bytes));
             };
-        } catch (Exception e) {
+        } catch (IOException e) {
             throw new IllegalStateException(e);
         }
     }

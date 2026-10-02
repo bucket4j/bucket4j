@@ -7,7 +7,10 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.map.IMap;
 
 import io.github.bucket4j.grid.hazelcast.Bucket4jHazelcast;
+import io.github.bucket4j.grid.hazelcast.HazelcastEntryProcessor;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
+import io.github.bucket4j.tck.BackwardCompatibilityRequestCheckHelper;
+import io.github.bucket4j.tck.BackwardCompatibilityStateCheckHelper;
 import io.github.bucket4j.tck.ProxyManagerSpec;
 
 import org.gridkit.nanocloud.Cloud;
@@ -20,6 +23,7 @@ import org.junit.jupiter.api.BeforeAll;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 public class HazelcastTest extends AbstractDistributedBucketTest {
 
@@ -57,22 +61,46 @@ public class HazelcastTest extends AbstractDistributedBucketTest {
         hazelcastInstance = Hazelcast.newHazelcastInstance(config);
         map = hazelcastInstance.getMap("my_buckets");
 
+        BackwardCompatibilityStateCheckHelper<String> backwardCompatibilityHelper = new BackwardCompatibilityStateCheckHelper<>() {
+            @Override
+            public byte[] getRawState(String key) {
+                return map.get(key);
+            }
+
+            @Override
+            public void setRawState(String key, byte[] state) {
+                map.put(key, state);
+            }
+        };
+
+        BackwardCompatibilityRequestCheckHelper<String> requestCompatibilityHelper = new BackwardCompatibilityRequestCheckHelper<>() {
+            @Override
+            public byte[] execute(String key, byte[] requestBytes) {
+                return map.executeOnKey(key, new HazelcastEntryProcessor<String, Object>(requestBytes));
+            }
+
+            @Override
+            public CompletableFuture<byte[]> executeAsync(String key, byte[] requestBytes) {
+                return map.submitToKey(key, new HazelcastEntryProcessor<String, Object>(requestBytes)).toCompletableFuture();
+            }
+        };
+
         specs = Arrays.asList(
             new ProxyManagerSpec<>(
                 "HazelcastProxyManager_JdkSerialization",
                 () -> UUID.randomUUID().toString(),
                 () -> Bucket4jHazelcast.entryProcessorBasedBuilder(map)
-            ).checkExpiration(),
+            ).checkExpiration().checkStateBackwardCompatibility(backwardCompatibilityHelper).checkRequestBackwardCompatibility(requestCompatibilityHelper),
             new ProxyManagerSpec<>(
                 "HazelcastLockBasedProxyManager_JdkSerialization",
                 () -> UUID.randomUUID().toString(),
                 () -> Bucket4jHazelcast.lockBasedBuilder(map)
-            ).checkExpiration(),
+            ).checkExpiration().checkStateBackwardCompatibility(backwardCompatibilityHelper).withoutBackwardCompatibilityRequestChecker(),
             new ProxyManagerSpec<>(
                 "HazelcastCompareAndSwapBasedProxyManager_JdkSerialization",
                 () -> UUID.randomUUID().toString(),
                 () -> Bucket4jHazelcast.casBasedBuilder(map)
-            )
+            ).checkStateBackwardCompatibility(backwardCompatibilityHelper).withoutBackwardCompatibilityRequestChecker()
         );
     }
 

@@ -6,6 +6,7 @@ import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.distributed.jdbc.BucketTableSettings;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
+import io.github.bucket4j.tck.BackwardCompatibilityStateCheckHelper;
 import io.github.bucket4j.tck.ProxyManagerSpec;
 
 import org.junit.jupiter.api.AfterAll;
@@ -22,6 +23,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
@@ -62,12 +64,44 @@ public class MySQLSelectForUpdateLockBasedTransactionTest extends AbstractDistri
             }
         }
 
+        BackwardCompatibilityStateCheckHelper<Long> backwardCompatibilityHelper = new BackwardCompatibilityStateCheckHelper<>() {
+            @Override
+            public byte[] getRawState(Long key) {
+                String query = "SELECT state FROM test.bucket WHERE id = ?";
+                try (Connection connection = dataSource.getConnection();
+                     PreparedStatement statement = connection.prepareStatement(query)) {
+                    statement.setLong(1, key);
+                    try (ResultSet resultSet = statement.executeQuery()) {
+                        if (!resultSet.next()) {
+                            throw new IllegalStateException("There is no row for key " + key + " in table test.bucket");
+                        }
+                        return resultSet.getBytes(1);
+                    }
+                } catch (SQLException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+
+            @Override
+            public void setRawState(Long key, byte[] state) {
+                String query = "UPDATE test.bucket SET state = ? WHERE id = ?";
+                try (Connection connection = dataSource.getConnection();
+                     PreparedStatement statement = connection.prepareStatement(query)) {
+                    statement.setBytes(1, state);
+                    statement.setLong(2, key);
+                    statement.executeUpdate();
+                } catch (SQLException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        };
+
         specs = Arrays.asList(
             new ProxyManagerSpec<>(
                 "MySQLSelectForUpdateBasedProxyManager",
                 () -> ThreadLocalRandom.current().nextLong(1_000_000_000),
                 () -> Bucket4jMySQL.selectForUpdateBasedBuilder(dataSource)
-            ).checkExpiration()
+            ).checkExpiration().checkStateBackwardCompatibility(backwardCompatibilityHelper).withoutBackwardCompatibilityRequestChecker()
         );
     }
 

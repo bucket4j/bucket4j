@@ -19,7 +19,7 @@ the number of buckets in the cache keeps growing, because a new bucket is create
 
 To avoid exhausting the memory of your cluster, you need to configure the following:
 * **Maximum cache size (in bytes)** - it is preferable to lose some bucket data than to lose the whole cluster to an out-of-memory error.
-* **Expiration policy** - Bucket4j provides a way to configure flexible per-entry expiration for most integrations (Apache Ignite is the exception).
+* **Expiration policy** - Bucket4j provides a way to configure flexible per-entry expiration for most integrations (Apache Ignite 2 and Apache Ignite 3 are the exceptions).
 Consult the Bucket4j documentation for your particular backend to find out how to configure its expiration policy.
 
 .High availability (HA) tuning and testing is your responsibility

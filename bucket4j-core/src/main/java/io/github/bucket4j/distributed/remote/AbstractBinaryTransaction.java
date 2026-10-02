@@ -39,12 +39,8 @@ public abstract class AbstractBinaryTransaction {
     public byte[] execute() {
         try {
             request = InternalSerializationHelper.deserializeRequest(requestBytes, SerializationStyle.BYTE_BUFFER);
-        } catch (UnsupportedTypeException e) {
-            return serializeResult(CommandResult.unsupportedType(e.getTypeId()), Versions.getOldest(), SerializationStyle.BYTE_BUFFER);
-        } catch (UsageOfUnsupportedApiException e) {
-            return serializeResult(CommandResult.usageOfUnsupportedApiException(e.getRequestedFormatNumber(), e.getMaxSupportedFormatNumber()), Versions.getOldest(), SerializationStyle.BYTE_BUFFER);
-        } catch (UsageOfObsoleteApiException e) {
-            return serializeResult(CommandResult.usageOfObsoleteApiException(e.getRequestedFormatNumber(), e.getMinSupportedFormatNumber()), Versions.getOldest(), SerializationStyle.BYTE_BUFFER);
+        } catch (BackwardCompatibilityException e) {
+            return serializeResult(e.toResult(), Versions.getOldest(), SerializationStyle.BYTE_BUFFER);
         }
 
         Version backwardCompatibilityVersion = request.getBackwardCompatibilityVersion();
@@ -67,12 +63,8 @@ public abstract class AbstractBinaryTransaction {
             }
 
             return serializeResult(result, request.getBackwardCompatibilityVersion(), SerializationStyle.BYTE_BUFFER);
-        } catch (UnsupportedTypeException e) {
-            return serializeResult(CommandResult.unsupportedType(e.getTypeId()), backwardCompatibilityVersion, SerializationStyle.BYTE_BUFFER);
-        } catch (UsageOfUnsupportedApiException e) {
-            return serializeResult(CommandResult.usageOfUnsupportedApiException(e.getRequestedFormatNumber(), e.getMaxSupportedFormatNumber()), backwardCompatibilityVersion, SerializationStyle.BYTE_BUFFER);
-        } catch (UsageOfObsoleteApiException e) {
-            return serializeResult(CommandResult.usageOfObsoleteApiException(e.getRequestedFormatNumber(), e.getMinSupportedFormatNumber()), backwardCompatibilityVersion, SerializationStyle.BYTE_BUFFER);
+        } catch (BackwardCompatibilityException e) {
+            return serializeResult(e.toResult(), backwardCompatibilityVersion, SerializationStyle.BYTE_BUFFER);
         }
     }
 

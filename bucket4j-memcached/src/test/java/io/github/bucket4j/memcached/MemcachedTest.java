@@ -14,6 +14,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.testcontainers.containers.GenericContainer;
 
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
+import io.github.bucket4j.tck.BackwardCompatibilityStateCheckHelper;
 import io.github.bucket4j.tck.ProxyManagerSpec;
 
 public class MemcachedTest extends AbstractDistributedBucketTest {
@@ -38,7 +39,24 @@ public class MemcachedTest extends AbstractDistributedBucketTest {
                 "MemcachedCompareAndSwapBasedProxyManager",
                 () -> UUID.randomUUID().toString(),
                 () -> Bucket4jMemcached.casBasedBuilder(client)
-            ).checkExpiration()
+            ).checkExpiration().checkStateBackwardCompatibility(new BackwardCompatibilityStateCheckHelper<>() {
+                @Override
+                public byte[] getRawState(String key) {
+                    try {
+                        return client.get(key).toCompletableFuture().get();
+                    } catch (InterruptedException | ExecutionException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+                @Override
+                public void setRawState(String key, byte[] state) {
+                    try {
+                        client.set(key, state, 100).toCompletableFuture().get();
+                    } catch (InterruptedException | ExecutionException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }).withoutBackwardCompatibilityRequestChecker()
         );
     }
 

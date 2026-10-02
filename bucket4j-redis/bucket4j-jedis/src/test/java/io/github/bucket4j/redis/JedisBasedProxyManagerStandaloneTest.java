@@ -11,8 +11,10 @@ import org.testcontainers.containers.GenericContainer;
 import io.github.bucket4j.distributed.serialization.Mapper;
 import io.github.bucket4j.redis.jedis.Bucket4jJedis;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
+import io.github.bucket4j.tck.BackwardCompatibilityStateCheckHelper;
 import io.github.bucket4j.tck.ProxyManagerSpec;
 import redis.clients.jedis.HostAndPort;
+import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPooled;
 import redis.clients.jedis.UnifiedJedis;
@@ -36,23 +38,67 @@ public class JedisBasedProxyManagerStandaloneTest extends AbstractDistributedBuc
         unifiedJedisPooled = createUnifiedJedisPooledClient(container);
         unifiedJedis = createUnifiedJedisClient(container);
 
+        BackwardCompatibilityStateCheckHelper<byte[]> byteArrayKeyHelper = new BackwardCompatibilityStateCheckHelper<>() {
+            @Override
+            public byte[] getRawState(byte[] key) {
+                try (Jedis jedis = jedisPool.getResource()) {
+                    return jedis.get(key);
+                }
+            }
+
+            @Override
+            public void setRawState(byte[] key, byte[] state) {
+                try (Jedis jedis = jedisPool.getResource()) {
+                    jedis.set(key, state);
+                }
+            }
+        };
+
+        BackwardCompatibilityStateCheckHelper<String> stringKeyHelper = new BackwardCompatibilityStateCheckHelper<>() {
+            @Override
+            public byte[] getRawState(String key) {
+                try (Jedis jedis = jedisPool.getResource()) {
+                    return jedis.get(key.getBytes(StandardCharsets.UTF_8));
+                }
+            }
+
+            @Override
+            public void setRawState(String key, byte[] state) {
+                try (Jedis jedis = jedisPool.getResource()) {
+                    jedis.set(key.getBytes(StandardCharsets.UTF_8), state);
+                }
+            }
+        };
+
+        BackwardCompatibilityStateCheckHelper<byte[]> unifiedJedisPooledByteArrayKeyHelper = new BackwardCompatibilityStateCheckHelper<>() {
+            @Override
+            public byte[] getRawState(byte[] key) {
+                return unifiedJedisPooled.get(key);
+            }
+
+            @Override
+            public void setRawState(byte[] key, byte[] state) {
+                unifiedJedisPooled.set(key, state);
+            }
+        };
+
         specs = Arrays.asList(
             // Jedis
             new ProxyManagerSpec<>(
                 "JedisBasedProxyManager_ByteArrayKey",
                 () -> UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8),
                 () -> Bucket4jJedis.casBasedBuilder(jedisPool)
-            ).checkExpiration(),
+            ).checkExpiration().checkStateBackwardCompatibility(byteArrayKeyHelper).withoutBackwardCompatibilityRequestChecker(),
             new ProxyManagerSpec<>(
                 "JedisBasedProxyManager_StringKey",
                 () -> UUID.randomUUID().toString(),
                 () -> Bucket4jJedis.casBasedBuilder(jedisPool).keyMapper(Mapper.STRING)
-            ).checkExpiration(),
+            ).checkExpiration().checkStateBackwardCompatibility(stringKeyHelper).withoutBackwardCompatibilityRequestChecker(),
             new ProxyManagerSpec<>(
                 "JedisBasedProxyManager_unifiedJedisPooled_ByteArrayKey",
                 () -> UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8),
                 () -> Bucket4jJedis.casBasedBuilder(unifiedJedisPooled)
-            ).checkExpiration()
+            ).checkExpiration().checkStateBackwardCompatibility(unifiedJedisPooledByteArrayKeyHelper).withoutBackwardCompatibilityRequestChecker()
         );
     }
 

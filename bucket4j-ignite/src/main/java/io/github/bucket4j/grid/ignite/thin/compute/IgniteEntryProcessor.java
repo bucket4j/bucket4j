@@ -45,6 +45,10 @@ public class IgniteEntryProcessor<K> implements Serializable, CacheEntryProcesso
         this.requestBytes = serializeRequest(request, SerializationStyle.BYTE_BUFFER);
     }
 
+    public IgniteEntryProcessor(byte[] requestBytes) {
+        this.requestBytes = requestBytes;
+    }
+
     @Override
     public byte[] process(MutableEntry<K, byte[]> entry, Object... arguments) throws EntryProcessorException {
         return new AbstractBinaryTransaction(requestBytes) {

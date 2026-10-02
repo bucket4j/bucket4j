@@ -2,7 +2,9 @@
 package io.github.bucket4j.grid.jcache.infinispan;
 
 import io.github.bucket4j.grid.jcache.Bucket4jJCache;
+import io.github.bucket4j.grid.jcache.JCacheRequestCheckHelper;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
+import io.github.bucket4j.tck.BackwardCompatibilityStateCheckHelper;
 import io.github.bucket4j.tck.ProxyManagerSpec;
 
 import org.junit.jupiter.api.AfterAll;
@@ -53,7 +55,17 @@ public class InfinispanJCacheTest extends AbstractDistributedBucketTest {
                 "JCacheProxyManager",
                 () -> UUID.randomUUID().toString(),
                 () -> Bucket4jJCache.entryProcessorBasedBuilder(getCache())
-            )
+            ).checkStateBackwardCompatibility(new BackwardCompatibilityStateCheckHelper<String>() {
+                @Override
+                public byte[] getRawState(String key) {
+                    return getCache().get(key);
+                }
+
+                @Override
+                public void setRawState(String key, byte[] state) {
+                    getCache().put(key, state);
+                }
+            }).checkRequestBackwardCompatibility(new JCacheRequestCheckHelper(cache1, true))
         );
     }
 

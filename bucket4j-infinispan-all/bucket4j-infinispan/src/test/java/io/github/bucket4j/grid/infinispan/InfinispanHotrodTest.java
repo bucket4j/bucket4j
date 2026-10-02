@@ -10,10 +10,13 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
@@ -33,7 +36,10 @@ import org.testcontainers.utility.DockerImageName;
 import org.testcontainers.utility.MountableFile;
 
 import io.github.bucket4j.Bandwidth;
+import io.github.bucket4j.grid.infinispan.hotrod.Bucket4jTask;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
+import io.github.bucket4j.tck.BackwardCompatibilityRequestCheckHelper;
+import io.github.bucket4j.tck.BackwardCompatibilityStateCheckHelper;
 import io.github.bucket4j.tck.ProxyManagerSpec;
 
 /*
@@ -84,7 +90,30 @@ public class InfinispanHotrodTest extends AbstractDistributedBucketTest {
                 "HotrodInfinispanProxyManager",
                 () -> UUID.randomUUID().toString(),
                 () -> Bucket4jInfinispan.hotrodClientBasedBuilder(remoteCache)
-            ).checkExpiration()
+            ).checkExpiration().checkStateBackwardCompatibility(new BackwardCompatibilityStateCheckHelper<String>() {
+                @Override
+                public byte[] getRawState(String key) {
+                    return remoteCache.get(key);
+                }
+
+                @Override
+                public void setRawState(String key, byte[] state) {
+                    remoteCache.put(key, state);
+                }
+            }).checkRequestBackwardCompatibility(new BackwardCompatibilityRequestCheckHelper<String>() {
+                @Override
+                public byte[] execute(String key, byte[] requestBytes) {
+                    Map<String, Object> params = new HashMap<>();
+                    params.put(Bucket4jTask.KEY_PARAM, key);
+                    params.put(Bucket4jTask.REQUEST_PARAM, requestBytes);
+                    return remoteCache.execute(Bucket4jTask.TASK_NAME, params, key);
+                }
+
+                @Override
+                public CompletableFuture<byte[]> executeAsync(String key, byte[] requestBytes) {
+                    throw new UnsupportedOperationException();
+                }
+            })
         );
     }
 

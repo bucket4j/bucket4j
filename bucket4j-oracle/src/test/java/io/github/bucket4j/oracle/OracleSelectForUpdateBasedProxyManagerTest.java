@@ -3,8 +3,8 @@ package io.github.bucket4j.oracle;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import io.github.bucket4j.distributed.jdbc.BucketTableSettings;
-import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
+import io.github.bucket4j.tck.BackwardCompatibilityStateCheckHelper;
 import io.github.bucket4j.tck.ProxyManagerSpec;
 
 import org.junit.jupiter.api.AfterAll;
@@ -15,6 +15,7 @@ import org.testcontainers.utility.DockerImageName;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.MessageFormat;
@@ -39,6 +40,38 @@ public class OracleSelectForUpdateBasedProxyManagerTest extends AbstractDistribu
             }
         }
 
+        BackwardCompatibilityStateCheckHelper<Long> backwardCompatibilityHelper = new BackwardCompatibilityStateCheckHelper<>() {
+            @Override
+            public byte[] getRawState(Long key) {
+                String query = "SELECT state FROM bucket WHERE id = ?";
+                try (Connection connection = dataSource.getConnection();
+                     PreparedStatement statement = connection.prepareStatement(query)) {
+                    statement.setLong(1, key);
+                    try (ResultSet resultSet = statement.executeQuery()) {
+                        if (!resultSet.next()) {
+                            throw new IllegalStateException("There is no row for key " + key + " in table bucket");
+                        }
+                        return resultSet.getBytes(1);
+                    }
+                } catch (SQLException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+
+            @Override
+            public void setRawState(Long key, byte[] state) {
+                String query = "UPDATE bucket SET state = ? WHERE id = ?";
+                try (Connection connection = dataSource.getConnection();
+                     PreparedStatement statement = connection.prepareStatement(query)) {
+                    statement.setBytes(1, state);
+                    statement.setLong(2, key);
+                    statement.executeUpdate();
+                } catch (SQLException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        };
+
         specs = Arrays.asList(
             new ProxyManagerSpec<>(
                 "OracleSelectForUpdateBasedProxyManager",
@@ -47,7 +80,7 @@ public class OracleSelectForUpdateBasedProxyManagerTest extends AbstractDistribu
                     .table("bucket")
                     .idColumn("id")
                     .stateColumn("state")
-            ).checkExpiration()
+            ).checkExpiration().checkStateBackwardCompatibility(backwardCompatibilityHelper).withoutBackwardCompatibilityRequestChecker()
         );
     }
 

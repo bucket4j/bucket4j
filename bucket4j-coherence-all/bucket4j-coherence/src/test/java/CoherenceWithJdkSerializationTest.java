@@ -1,7 +1,10 @@
 import com.tangosol.net.CacheFactory;
 import com.tangosol.net.NamedCache;
 import io.github.bucket4j.grid.coherence.Bucket4jCoherence;
+import io.github.bucket4j.grid.coherence.CoherenceProcessor;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
+import io.github.bucket4j.tck.BackwardCompatibilityRequestCheckHelper;
+import io.github.bucket4j.tck.BackwardCompatibilityStateCheckHelper;
 import io.github.bucket4j.tck.ProxyManagerSpec;
 
 import org.gridkit.nanocloud.Cloud;
@@ -14,6 +17,7 @@ import org.junit.jupiter.api.BeforeAll;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 public class CoherenceWithJdkSerializationTest extends AbstractDistributedBucketTest {
 
@@ -39,12 +43,36 @@ public class CoherenceWithJdkSerializationTest extends AbstractDistributedBucket
         configureCoherence(CLIENT_PORT, WKA_PORT, false);
         cache = CacheFactory.getCache("my_buckets");
 
+        BackwardCompatibilityStateCheckHelper<String> backwardCompatibilityHelper = new BackwardCompatibilityStateCheckHelper<>() {
+            @Override
+            public byte[] getRawState(String key) {
+                return cache.get(key);
+            }
+
+            @Override
+            public void setRawState(String key, byte[] state) {
+                cache.put(key, state);
+            }
+        };
+
+        BackwardCompatibilityRequestCheckHelper<String> requestCompatibilityHelper = new BackwardCompatibilityRequestCheckHelper<>() {
+            @Override
+            public byte[] execute(String key, byte[] requestBytes) {
+                return cache.invoke(key, new CoherenceProcessor<>(requestBytes));
+            }
+
+            @Override
+            public CompletableFuture<byte[]> executeAsync(String key, byte[] requestBytes) {
+                return cache.async().invoke(key, new CoherenceProcessor<>(requestBytes));
+            }
+        };
+
         specs = Arrays.asList(
             new ProxyManagerSpec<>(
                 "CoherenceProxyManager_JdkSerialization",
                 () -> UUID.randomUUID().toString(),
                 () -> Bucket4jCoherence.entryProcessorBasedBuilder(cache)
-            ).checkExpiration()
+            ).checkExpiration().checkStateBackwardCompatibility(backwardCompatibilityHelper).checkRequestBackwardCompatibility(requestCompatibilityHelper)
         );
     }
 

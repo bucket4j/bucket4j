@@ -5,7 +5,6 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
 import io.github.bucket4j.tck.ProxyManagerSpec;
 
-import java.time.Duration;
 import java.util.Arrays;
 import java.util.UUID;
 
@@ -22,7 +21,7 @@ public class CaffeineTest extends AbstractDistributedBucketTest {
                 "CaffeineProxyManager",
                 () -> UUID.randomUUID().toString(),
                 () -> Bucket4jCaffeine.builderFor(Caffeine.newBuilder().maximumSize(100))
-            ).checkExpiration()
+            ).checkExpiration().withoutBackwardCompatibilityStateChecker().withoutBackwardCompatibilityRequestChecker()
         );
     }
 

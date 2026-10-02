@@ -1,0 +1,93 @@
+/*-
+ * ========================LICENSE_START=================================
+ * Bucket4j
+ * %%
+ * Copyright (C) 2015 - 2026 Vladimir Bukhtoyarov
+ * %%
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * =========================LICENSE_END==================================
+ */
+package io.github.bucket4j.grid.ignite3.internal;
+
+import io.github.bucket4j.distributed.serialization.ByteBufferSerializationAdapter;
+import io.github.bucket4j.distributed.serialization.PrimitiveSizeCalculator;
+import io.github.bucket4j.distributed.versioning.Versions;
+
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.ByteBuffer;
+
+/**
+ * Ignite 3's {@code ComputeJob} accepts a single argument, but bucket4j-ignite3 needs to ship both the routing
+ * key and the serialized bucket4j request to the job body. This codec packs
+ * {@code (formatVersion, tableName, key, requestBytes)} into one {@code byte[]} envelope that becomes the job
+ * argument; the key itself is separately handed to {@code JobTarget.colocated} for node routing.
+ *
+ * <p>The envelope starts with the number of the bucket4j version that defined its layout, so that during rolling
+ * upgrade a node can detect an envelope written by an incompatible version and reject it with
+ * {@link io.github.bucket4j.distributed.versioning.BackwardCompatibilityException} instead of misreading it.
+ * The layout is part of the contract between nodes running different bucket4j versions and must not be changed
+ * without introducing a new format version.
+ *
+ * <p>Follows the estimate-size-then-serialize {@link ByteBuffer} approach used by
+ * {@code io.github.bucket4j.distributed.serialization.InternalSerializationHelper}: the exact envelope size is
+ * computed upfront so that exactly one right-sized {@link ByteBuffer} is allocated.
+ */
+public final class JobInputCodec {
+
+    private JobInputCodec() {
+    }
+
+    public record JobInput<K>(String tableName, K key, byte[] requestBytes) {
+    }
+
+    public static <K> byte[] encode(String tableName, K key, byte[] requestBytes) {
+        int size = PrimitiveSizeCalculator.SIZE_OF_INT
+                + PrimitiveSizeCalculator.sizeOfString(tableName)
+                + KeyCodec.estimateSize(key)
+                + PrimitiveSizeCalculator.SIZE_OF_INT
+                + requestBytes.length;
+        ByteBuffer out = ByteBuffer.allocate(size);
+        try {
+            out.putInt(Versions.v_8_10_0.getNumber());
+            ByteBufferSerializationAdapter.INSTANCE.writeString(out, tableName);
+            KeyCodec.encode(out, key);
+            out.putInt(requestBytes.length);
+            out.put(requestBytes);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+        return out.array();
+    }
+
+    /**
+     * @throws io.github.bucket4j.distributed.versioning.BackwardCompatibilityException if the envelope was written by
+     * a bucket4j version whose format is older or newer than the one supported by this node
+     */
+    public static <K> JobInput<K> decode(byte[] bytes) {
+        ByteBuffer in = ByteBuffer.wrap(bytes);
+        try {
+            int formatNumber = in.getInt();
+            Versions.check(formatNumber, Versions.v_8_10_0, Versions.v_8_10_0);
+            String tableName = ByteBufferSerializationAdapter.INSTANCE.readString(in);
+            K key = KeyCodec.decode(in);
+            int length = in.getInt();
+            byte[] requestBytes = new byte[length];
+            in.get(requestBytes);
+            return new JobInput<>(tableName, key, requestBytes);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+}

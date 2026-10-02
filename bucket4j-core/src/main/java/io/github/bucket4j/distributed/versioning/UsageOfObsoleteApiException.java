@@ -19,6 +19,8 @@
  */
 package io.github.bucket4j.distributed.versioning;
 
+import io.github.bucket4j.distributed.remote.CommandResult;
+
 import java.text.MessageFormat;
 
 public class UsageOfObsoleteApiException extends BackwardCompatibilityException {
@@ -38,6 +40,11 @@ public class UsageOfObsoleteApiException extends BackwardCompatibilityException 
 
     public int getMinSupportedFormatNumber() {
         return minSupportedFormatNumber;
+    }
+
+    @Override
+    public CommandResult<?> toResult() {
+        return CommandResult.usageOfObsoleteApiException(requestedFormatNumber, minSupportedFormatNumber);
     }
 
     private static String formatMessage(int formatNumber, int minFormatNumber) {
