@@ -28,8 +28,7 @@ import java.util.Objects;
 /**
  * Entry point for building {@link Ignite3ProxyManager} instances backed by an Apache Ignite 3.x table.
  *
- * <p>The target table must already exist and have a column named {@code "value"} of type {@code VARBINARY}
- * (or {@code BLOB}) to hold the serialized bucket state, in addition to its primary key column(s).
+     * <p>The target table must already exist with a primary-key column named {@code "BUCKET_KEY"} whose type matches the configured key type, and a {@code "BUCKET_STATE"} column of type {@code VARBINARY} (or {@code BLOB}) to hold the serialized bucket state.
  */
 public final class Bucket4jIgnite3 {
 
