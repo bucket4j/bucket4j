@@ -1,0 +1,126 @@
+[[bucket4j-cassandra, Bucket4j-Cassandra]]
+=== Bucket4j-Cassandra
+Bucket4j provides integration with Apache Cassandra through the https://github.com/apache/cassandra-java-driver[Cassandra Java Driver 4.x].
+
+Cassandra has no server-side scripting/RPC capability, so the bucket state transition cannot be executed atomically on the server as it is for Redis or JDBC-based backends.
+Instead, the state transition is computed on the client and persisted using https://cassandra.apache.org/doc/latest/cassandra/developing/cql/dml.html#lightweight-transactions[Lightweight Transactions] to implement optimistic (compare-and-swap) concurrency control.
+Since the driver's API natively exposes `CompletionStage`, this proxy manager supports both the synchronous and the asynchronous `Bucket` API.
+
+Bucket state is stored as a `blob`. Expiration is delegated to Cassandra's native per-row `TTL`.
+
+WARNING: Lightweight Transactions are expensive - each successful conditional write requires four round-trips between Paxos participants, and contention on the same partition key makes it worse.
+This integration is a reasonable choice for teams that already run Cassandra and do not want to introduce another storage just for rate limiting.
+It is *not* a replacement for in-memory grids or Redis when the same bucket key is updated with a high rate.
+Consider request optimizers to reduce the number of conditional writes.
+
+==== Cassandra integration
+===== Dependencies
+To use ``bucket4j_jdk17-cassandra``, add the following dependency:
+[source, xml, subs=attributes+]
+----
+<dependency>
+    <groupId>com.bucket4j</groupId>
+    <artifactId>bucket4j_jdk17-cassandra</artifactId>
+    <version>{revnumber}</version>
+</dependency>
+<dependency>
+    <groupId>org.apache.cassandra</groupId>
+    <artifactId>java-driver-core</artifactId>
+    <version>4.19.3</version>
+</dependency>
+----
+
+===== Table schema
+The table must be created before the proxy manager is built. Bucket4j never creates or alters the schema.
+[source, sql]
+----
+CREATE KEYSPACE rate_limits WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1};
+
+CREATE TABLE rate_limits.buckets (
+    bucket_key     text PRIMARY KEY,
+    bucket_state   blob,
+    bucket_version bigint
+);
+----
+
+The `bucket_version` column is a monotonically increasing counter that is incremented by each successful write.
+Conditional updates are guarded by this column instead of comparing the whole state blob, which significantly reduces the amount of data that Paxos needs to evaluate.
+
+===== Example of Bucket instantiation via CassandraCompareAndSwapBasedProxyManager
+[source, java]
+----
+CqlSession session = CqlSession.builder().build();
+
+CassandraCompareAndSwapBasedProxyManager<String> proxyManager = Bucket4jCassandra
+    .compareAndSwapBasedBuilder(session)
+    .keyspace("rate_limits")
+    .tableName("buckets")
+    .keyColumn("bucket_key")
+    .stateColumn("bucket_state")
+    .versionColumn("bucket_version")
+    .expirationAfterWrite(ExpirationAfterWriteStrategy.basedOnTimeForRefillingBucketUpToMax(ofSeconds(10)))
+    .build();
+
+BucketConfiguration configuration = BucketConfiguration.builder()
+    .addLimit(limit -> limit.capacity(1_000).refillGreedy(1_000, ofMinutes(1)))
+    .build();
+
+Bucket bucketProxy = proxyManager.getProxy("user-123", () -> configuration);
+----
+
+The schema attributes `tableName`, `keyColumn`, `stateColumn` and `versionColumn` have no defaults and must be specified explicitly, so that the builder maps exactly to an already existing table.
+`keyspace` is optional - it is required only when the session has no default keyspace, or when a keyspace other than the session default should be targeted.
+
+===== Asynchronous usage
+`CassandraCompareAndSwapBasedProxyManager` reports `isAsyncModeSupported() == true`, so it can also be used through the asynchronous `Bucket` API:
+[source, java]
+----
+AsyncBucketProxy bucketProxy = proxyManager.asAsync().getProxy("user-123", () -> configuration);
+
+CompletableFuture<ConsumptionProbe> probeFuture = bucketProxy.tryConsumeAndReturnRemaining(1);
+----
+
+===== Custom key mapping
+By default, the integration uses String keys.
+You can specify custom key types using a Mapper:
+[source, java]
+----
+CassandraCompareAndSwapBasedProxyManager<Long> proxyManager = Bucket4jCassandra
+    .compareAndSwapBasedBuilder(session, Mapper.LONG)
+    .tableName("buckets")
+    .keyColumn("bucket_key")
+    .stateColumn("bucket_state")
+    .versionColumn("bucket_version")
+    .build();
+
+Bucket bucket = proxyManager.getProxy(123L, () -> configuration);
+----
+
+`Mapper.toString(key)` is used as the value of the partition key column, so the key column must be declared as `text`.
+
+===== Consistency levels
+[source, java]
+----
+CassandraCompareAndSwapBasedProxyManager<String> proxyManager = Bucket4jCassandra
+    .compareAndSwapBasedBuilder(session)
+    .tableName("buckets")
+    .keyColumn("bucket_key")
+    .stateColumn("bucket_state")
+    .versionColumn("bucket_version")
+    .readConsistencyLevel(DefaultConsistencyLevel.LOCAL_SERIAL)
+    .serialConsistencyLevel(DefaultConsistencyLevel.LOCAL_SERIAL)
+    .build();
+----
+
+`readConsistencyLevel` is applied to the statement that reads bucket state. It defaults to `LOCAL_SERIAL`, because a serial read is the only way to observe the result of the latest committed Lightweight Transaction, which in turn guarantees that the compare-and-swap loop converges even when replicas lag behind.
+Non-serial levels such as `LOCAL_QUORUM` cost less and are still safe - a stale read always leads to an unsuccessful compare-and-swap instead of corrupted state - but the number of retries can grow when replicas are not up to date.
+
+`serialConsistencyLevel` is applied to the conditional writes. It defaults to `LOCAL_SERIAL`, which restricts Paxos coordination to the local datacenter. Use `SERIAL` only when cross-datacenter coordination is required, for example in active-active multi-datacenter deployments.
+
+===== Important notes
+* `CassandraCompareAndSwapBasedProxyManager` supports both the synchronous and the asynchronous `Bucket` API (`isAsyncModeSupported()` returns `true`)
+* The table must exist before the proxy manager is built
+* Expired buckets rely on Cassandra's native per-row `TTL`, which is applied only when an expiration strategy is configured
+* `TTL` values are rounded up to whole seconds and clamped to the range `[1 second, 630720000 seconds]` (the Cassandra maximum of 20 years)
+* `removeProxy` is executed as `DELETE ... IF EXISTS`, so it is a Lightweight Transaction too. A plain `DELETE` cannot be used, because it would take its timestamp from the coordinator clock instead of the Paxos ballot and could therefore be silently discarded as an outdated write
+* Bucket state is stored as a `blob`, bypassing Java serialization
