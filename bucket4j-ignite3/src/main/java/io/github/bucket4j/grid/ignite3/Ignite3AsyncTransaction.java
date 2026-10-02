@@ -16,6 +16,16 @@ import io.github.bucket4j.distributed.remote.BinaryBatchResults;
 import io.github.bucket4j.distributed.remote.CommandResult;
 import io.github.bucket4j.distributed.remote.Request;
 
+/**
+ * The body of the Ignite transaction that applies a batch of bucket4j requests to the state of a single bucket.
+ *
+ * <p>Reads the row identified by {@link Ignite3ProxyManager#KEY_COLUMN_NAME}, executes all requests of the batch
+ * against the state stored in {@link Ignite3ProxyManager#STATE_COLUMN_NAME} (a missing row is treated as a missing
+ * bucket), and writes the new state back only if at least one request has modified it. The table is accessed
+ * via {@link Tuple} views, so columns other than the two above are never touched.
+ *
+ * @param <K> the type of bucket key
+ */
 public class Ignite3AsyncTransaction<K> implements Function<Transaction, CompletableFuture<List<CommandResult<?>>>> {
 
     private final Ignite ignite;
@@ -23,6 +33,12 @@ public class Ignite3AsyncTransaction<K> implements Function<Transaction, Complet
     private final K key;
     private final List<Request<?>> requests;
 
+    /**
+     * @param ignite the Ignite instance of the node that executes the job
+     * @param tableName the name of the table that holds bucket state
+     * @param key the key of the bucket
+     * @param requests the requests to execute, in the order in which their results are returned
+     */
     public Ignite3AsyncTransaction(Ignite ignite, String tableName, K key, List<Request<?>> requests) {
         this.ignite = ignite;
         this.tableName = tableName;
@@ -30,6 +46,9 @@ public class Ignite3AsyncTransaction<K> implements Function<Transaction, Complet
         this.requests = requests;
     }
 
+    /**
+     * @return the future that is completed with one result per request, in the same order as the requests
+     */
     @Override
     public CompletableFuture<List<CommandResult<?>>> apply(Transaction tx) {
         Table table =  ignite.tables().table(tableName);

@@ -5,6 +5,8 @@ because ``bucket4j-ignite`` is just a follow-up to ``bucket4j-jcache``.
 
 Bucket4j supports the Ignite thin client as well as regular (thick client) deployment scenarios.
 
+NOTE: This page is about Apache Ignite 2.x. For Apache Ignite 3.x, which is a different product with an incompatible API, see <<bucket4j-ignite3, Bucket4j-Ignite3>>.
+
 **Question:** Bucket4j has supported JCache since version ``1.2``. Why was direct support for ``Apache Ignite`` needed?
 **Answer:** Because the https://www.jcp.org/en/jsr/detail?id=107[JCache API (JSR 107)] does not specify an asynchronous API,
 developing the dedicated ``bucket4j-ignite`` module was the only way to provide asynchronous support to users who use ``Bucket4j`` together with ``Apache Ignite``.

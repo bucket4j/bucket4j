@@ -37,11 +37,29 @@ import static io.github.bucket4j.distributed.serialization.InternalSerialization
 import static io.github.bucket4j.distributed.serialization.InternalSerializationHelper.serializeRequest;
 
 /**
- * TODO
+ * The {@link io.github.bucket4j.distributed.proxy.ProxyManager} that keeps bucket state in a row of an Apache Ignite 3.x table.
+ *
+ * <p>Every command is serialized and sent as an {@link Ignite3ComputeJob} to the node that is colocated with the
+ * bucket's key. The job reads the state, applies the command and writes the new state back inside an Ignite
+ * transaction, so the state itself never travels over the network. Both the synchronous and the asynchronous
+ * API are supported.
+ *
+ * <p>Instances are created via {@link Bucket4jIgnite3#builder()}, see {@link Bucket4jIgnite3} for the requirements
+ * to the table structure and to the classpath of the cluster nodes.
+ *
+ * @param <K> the type of bucket key, one of {@code String}, {@code Long}, {@code Integer}, {@code Short},
+ *            {@code Byte}, {@code UUID}
  */
 public class Ignite3ProxyManager<K> extends AbstractProxyManager<K> {
 
+    /**
+     * The name of the primary-key column that identifies a bucket.
+     */
     public static final String KEY_COLUMN_NAME = "BUCKET_KEY";
+
+    /**
+     * The name of the {@code VARBINARY} column that holds the serialized bucket state.
+     */
     public static final String STATE_COLUMN_NAME = "BUCKET_STATE";
 
     private final Ignite ignite;
@@ -82,6 +100,9 @@ public class Ignite3ProxyManager<K> extends AbstractProxyManager<K> {
                 deserializeResult(resultBytes, request.getBackwardCompatibilityVersion(), SerializationStyle.BYTE_BUFFER));
     }
 
+    /**
+     * Deletes the row of the bucket directly from the calling node, the compute job is not involved.
+     */
     @Override
     public void removeProxy(K key) {
         keyValueView.remove(null, key);

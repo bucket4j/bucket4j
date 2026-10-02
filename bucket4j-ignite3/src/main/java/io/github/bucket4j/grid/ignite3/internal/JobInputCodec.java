@@ -29,9 +29,15 @@ import java.nio.ByteBuffer;
 
 /**
  * Ignite 3's {@code ComputeJob} accepts a single argument, but bucket4j-ignite3 needs to ship both the routing
- * key and the serialized bucket4j request to the job body. This codec packs {@code (tableName, key, requestBytes)}
- * into one {@code byte[]} envelope that becomes the job argument; the key itself is separately handed to
- * {@code JobTarget.colocated} for node routing.
+ * key and the serialized bucket4j request to the job body. This codec packs
+ * {@code (formatVersion, tableName, key, requestBytes)} into one {@code byte[]} envelope that becomes the job
+ * argument; the key itself is separately handed to {@code JobTarget.colocated} for node routing.
+ *
+ * <p>The envelope starts with the number of the bucket4j version that defined its layout, so that during rolling
+ * upgrade a node can detect an envelope written by an incompatible version and reject it with
+ * {@link io.github.bucket4j.distributed.versioning.BackwardCompatibilityException} instead of misreading it.
+ * The layout is part of the contract between nodes running different bucket4j versions and must not be changed
+ * without introducing a new format version.
  *
  * <p>Follows the estimate-size-then-serialize {@link ByteBuffer} approach used by
  * {@code io.github.bucket4j.distributed.serialization.InternalSerializationHelper}: the exact envelope size is
@@ -64,6 +70,10 @@ public final class JobInputCodec {
         return out.array();
     }
 
+    /**
+     * @throws io.github.bucket4j.distributed.versioning.BackwardCompatibilityException if the envelope was written by
+     * a bucket4j version whose format is older or newer than the one supported by this node
+     */
     public static <K> JobInput<K> decode(byte[] bytes) {
         ByteBuffer in = ByteBuffer.wrap(bytes);
         try {

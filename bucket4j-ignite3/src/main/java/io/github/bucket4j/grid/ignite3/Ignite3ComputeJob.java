@@ -44,16 +44,35 @@ import static io.github.bucket4j.distributed.serialization.InternalSerialization
 import static java.util.concurrent.CompletableFuture.completedFuture;
 
 /**
- * TODO
+ * The server-side part of {@link Ignite3ProxyManager}: executes bucket4j requests on the node that owns the bucket's key.
+ *
+ * <p>The job argument is the envelope produced by {@link JobInputCodec}, and the job result is the serialized
+ * {@link CommandResult}. Both are passed as raw {@code byte[]}, so neither Ignite nor the job depend on the
+ * bucket4j classes during marshalling, which is what makes rolling upgrade possible: a request or an envelope
+ * whose format is newer or older than the format supported by this node is answered with the serialized
+ * {@link io.github.bucket4j.distributed.versioning.BackwardCompatibilityException} result instead of failing the job.
+ *
+ * <p>Ignite 3 transactions are {@code SERIALIZABLE} and conflicting transactions are rolled back, so concurrent
+ * requests to the same bucket must not run their own transactions. Instead, the job accumulates the requests
+ * that target the same key into batches and applies each batch in a single transaction, see
+ * {@link Ignite3AsyncTransaction}. Requests to different keys are batched independently.
+ *
+ * <p>The job is referenced by {@link #JOB_DESCRIPTOR} by class name, without deployment units, so this class
+ * must be on the classpath of every server node.
+ *
+ * @param <K> the type of bucket key
  */
 public class Ignite3ComputeJob<K> implements ComputeJob<byte[], byte[]> {
 
+    /**
+     * Describes the job for {@code IgniteCompute}: the argument and the result are marshalled as plain {@code byte[]}.
+     */
     public static final JobDescriptor<byte[], byte[]> JOB_DESCRIPTOR = (JobDescriptor) JobDescriptor.builder(Ignite3ComputeJob.class.getName())
             .argumentMarshaller(ByteArrayMarshaller.create())
             .resultMarshaller(ByteArrayMarshaller.create())
             .build();
 
-    // registry key: ignite-instance-id+table_name -> per-table batcher registry keyed by bucket key
+    // registry key: table_name:ignite_node_name -> per-table batcher registry keyed by bucket key
     // is used to fight with SERIALIZABLE nature of Ignite-3 transactions that rollbacks conflicting transactions
     // idea is simple - instead of allow to independent requests to fight with each other we just do accumulation independent requests into batches
     // and then execute all batch in single interaction with Ignite transaction engine
