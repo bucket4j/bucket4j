@@ -19,11 +19,18 @@
  */
 package io.github.bucket4j.grid.ignite3;
 
+import io.github.bucket4j.Bandwidth;
+import io.github.bucket4j.Bucket;
+import io.github.bucket4j.BucketConfiguration;
+import io.github.bucket4j.distributed.proxy.AbstractProxyManagerBuilder;
+import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.grid.ignite3.internal.JobInputCodec;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
 import io.github.bucket4j.tck.BackwardCompatibilityRequestCheckHelper;
 import io.github.bucket4j.tck.BackwardCompatibilityStateCheckHelper;
 import io.github.bucket4j.tck.ProxyManagerSpec;
+import io.github.bucket4j.util.ConsumptionScenario;
+
 import org.apache.ignite.Ignite;
 import org.apache.ignite.IgniteServer;
 import org.apache.ignite.InitParameters;
@@ -33,12 +40,20 @@ import org.apache.ignite.table.Tuple;
 import org.apache.ignite.table.mapper.Mapper;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
+import java.util.function.Supplier;
+
+import static io.github.bucket4j.distributed.proxy.RecoveryStrategy.THROW_BUCKET_NOT_FOUND_EXCEPTION;
 
 /**
  * Runs the bucket4j TCK suite against a single embedded (same-JVM) Apache Ignite 3.x node backed by
@@ -112,6 +127,27 @@ public class Ignite3ProxyManagerTest extends AbstractDistributedBucketTest {
                 ).checkStateBackwardCompatibility(backwardCompatibilityHelper)
                  .checkRequestBackwardCompatibility(requestCompatibilityHelper)
         );
+    }
+
+    @MethodSource("specs")
+    @ParameterizedTest
+    public <K, P extends ProxyManager<K>, B extends AbstractProxyManagerBuilder<K, P, B>> void extremeTryConsumeTest(ProxyManagerSpec<K, P, B> spec) throws Throwable {
+        BucketConfiguration configurationForLongRunningTests = BucketConfiguration.builder()
+                .addLimit(Bandwidth.simple(1_000, Duration.ofMinutes(1)).withInitialTokens(0))
+                .addLimit(Bandwidth.simple(200, Duration.ofSeconds(10)).withInitialTokens(0))
+                .build();
+        double permittedRatePerSecond = Math.min(1_000d / 60, 200.0 / 10);
+
+        ProxyManager<K> proxyManager = spec.builder.get().build();
+        K key = spec.generateRandomKey();
+        Function<Bucket, Long> action = bucket -> bucket.tryConsume(1)? 1L : 0L;
+        Supplier<Bucket> bucketSupplier = () -> proxyManager.builder()
+                .withRecoveryStrategy(THROW_BUCKET_NOT_FOUND_EXCEPTION)
+                .build(key, configurationForLongRunningTests);
+        int durationSeconds = System.getenv("CI") == null ? 50 : 10;
+        int threadCount = System.getenv("CI") == null ? 128 : 80;
+        ConsumptionScenario scenario = new ConsumptionScenario(threadCount, TimeUnit.SECONDS.toNanos(durationSeconds), bucketSupplier, action, permittedRatePerSecond);
+        scenario.executeAndValidateRate();
     }
 
     @AfterAll
