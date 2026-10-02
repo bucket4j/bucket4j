@@ -8,7 +8,7 @@
     <parent>
         <groupId>com.bucket4j</groupId>
         <artifactId>bucket4j_jdk17-infinispan-all</artifactId>
-        <version>8.21.0</version>
+        <version>8.22.0</version>
         <relativePath>../../bucket4j-infinispan-all</relativePath>
     </parent>
     <artifactId>bucket4j_jdk17-infinispan</artifactId>
@@ -81,5 +81,38 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>biz.aQute.bnd</groupId>
+                <artifactId>bnd-maven-plugin</artifactId>
+                <configuration>
+                    <!-- infinispan-core 16.x lists org.infinispan.protostream.types.java.CommonTypesSchema in
+                         META-INF/services, but that class lives in a different jar. When our artifact carries
+                         Automatic-Module-Name, maven-javadoc-plugin switches to the module path and fails to
+                         derive a descriptor for infinispan-core. -removeheaders keeps javadoc on the classpath. -->
+                    <bnd><![CDATA[
+    Bundle-SymbolicName: ${osgi.symbolicName}
+    Bundle-Name: ${project.name}
+    Bundle-Version: ${project.version}
+    Automatic-Module-Name: io.github.bucket4j.${modular-name}
+
+    # Export your own packages; import everything else
+    -exportcontents: io.github.bucket4j.*;version="${project.version}";-noimport:=true
+    Import-Package: *
+
+    # Nice-to-have OSGi metadata
+    Bundle-Vendor: Vladimir Bukhtoyarov
+    Bundle-Description: ${project.description}
+    Bundle-DocURL: ${project.url}
+    -reproducible: true
+    -noextraheaders: true
+    -removeheaders: Automatic-Module-Name
+                    ]]></bnd>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 
 </project>
