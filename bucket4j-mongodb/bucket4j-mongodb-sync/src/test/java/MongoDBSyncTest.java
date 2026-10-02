@@ -51,7 +51,7 @@ public class MongoDBSyncTest extends AbstractDistributedBucketTest {
                         "BasicMongoDBCompareAndSwapBasedProxyManager",
                         () -> UUID.randomUUID().toString(),
                         () -> Bucket4jMongoDBSync.compareAndSwapBasedBuilder(basicCollection)
-                ).checkExpiration().checkStateBackwardCompatibility(basicBackwardCompatibilityHelper),
+                ).checkExpiration().checkStateBackwardCompatibility(basicBackwardCompatibilityHelper).withoutBackwardCompatibilityRequestChecker(),
                 new ProxyManagerSpec<>(
                         "MongoDBCompareAndSwapBasedProxyManagerWithRenamedFields",
                         () -> UUID.randomUUID().toString(),
@@ -59,7 +59,7 @@ public class MongoDBSyncTest extends AbstractDistributedBucketTest {
                                 .compareAndSwapBasedBuilder(modifiedCollection)
                                 .expiresAtField(modifiedExpiresAtFieldName)
                                 .stateField(modifiedStateFieldName)
-                ).checkExpiration().checkStateBackwardCompatibility(modifiedBackwardCompatibilityHelper)
+                ).checkExpiration().checkStateBackwardCompatibility(modifiedBackwardCompatibilityHelper).withoutBackwardCompatibilityRequestChecker()
         );
     }
 

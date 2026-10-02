@@ -86,7 +86,7 @@ public class LettuceBasedProxyManagerSentinelTest extends AbstractDistributedBuc
                     public void setRawState(String key, byte[] state) {
                         redisConnection.sync().set(key, state);
                     }
-                })
+                }).withoutBackwardCompatibilityRequestChecker()
         );
     }
 

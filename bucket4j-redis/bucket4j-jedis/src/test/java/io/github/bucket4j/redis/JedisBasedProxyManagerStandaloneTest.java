@@ -88,17 +88,17 @@ public class JedisBasedProxyManagerStandaloneTest extends AbstractDistributedBuc
                 "JedisBasedProxyManager_ByteArrayKey",
                 () -> UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8),
                 () -> Bucket4jJedis.casBasedBuilder(jedisPool)
-            ).checkExpiration().checkStateBackwardCompatibility(byteArrayKeyHelper),
+            ).checkExpiration().checkStateBackwardCompatibility(byteArrayKeyHelper).withoutBackwardCompatibilityRequestChecker(),
             new ProxyManagerSpec<>(
                 "JedisBasedProxyManager_StringKey",
                 () -> UUID.randomUUID().toString(),
                 () -> Bucket4jJedis.casBasedBuilder(jedisPool).keyMapper(Mapper.STRING)
-            ).checkExpiration().checkStateBackwardCompatibility(stringKeyHelper),
+            ).checkExpiration().checkStateBackwardCompatibility(stringKeyHelper).withoutBackwardCompatibilityRequestChecker(),
             new ProxyManagerSpec<>(
                 "JedisBasedProxyManager_unifiedJedisPooled_ByteArrayKey",
                 () -> UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8),
                 () -> Bucket4jJedis.casBasedBuilder(unifiedJedisPooled)
-            ).checkExpiration().checkStateBackwardCompatibility(unifiedJedisPooledByteArrayKeyHelper)
+            ).checkExpiration().checkStateBackwardCompatibility(unifiedJedisPooledByteArrayKeyHelper).withoutBackwardCompatibilityRequestChecker()
         );
     }
 

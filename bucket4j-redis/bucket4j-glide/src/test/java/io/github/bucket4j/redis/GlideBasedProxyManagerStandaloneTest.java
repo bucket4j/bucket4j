@@ -69,12 +69,12 @@ public class GlideBasedProxyManagerStandaloneTest extends AbstractDistributedBuc
                         "GlideBasedProxyManager_ByteArrayKey",
                         () -> UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8),
                         () -> Bucket4jGlide.casBasedBuilder(client)
-                ).checkExpiration().checkStateBackwardCompatibility(byteArrayKeyHelper),
+                ).checkExpiration().checkStateBackwardCompatibility(byteArrayKeyHelper).withoutBackwardCompatibilityRequestChecker(),
                 new ProxyManagerSpec<>(
                         "GlideBasedProxyManager_StringKey",
                         () -> UUID.randomUUID().toString(),
                         () -> Bucket4jGlide.casBasedBuilder(client).keyMapper(Mapper.STRING)
-                ).checkExpiration().checkStateBackwardCompatibility(stringKeyHelper)
+                ).checkExpiration().checkStateBackwardCompatibility(stringKeyHelper).withoutBackwardCompatibilityRequestChecker()
         );
     }
 

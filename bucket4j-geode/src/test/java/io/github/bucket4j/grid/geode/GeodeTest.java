@@ -1,19 +1,26 @@
 package io.github.bucket4j.grid.geode;
 
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
+import io.github.bucket4j.tck.BackwardCompatibilityRequestCheckHelper;
 import io.github.bucket4j.tck.BackwardCompatibilityStateCheckHelper;
 import io.github.bucket4j.tck.ProxyManagerSpec;
 
 import org.apache.geode.cache.Cache;
 import org.apache.geode.cache.CacheFactory;
 import org.apache.geode.cache.Region;
+import org.apache.geode.cache.execute.Execution;
+import org.apache.geode.cache.execute.FunctionService;
+import org.apache.geode.cache.execute.ResultCollector;
 import org.apache.geode.cache.RegionShortcut;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -54,23 +61,39 @@ public class GeodeTest extends AbstractDistributedBucketTest {
             }
         };
 
+        BackwardCompatibilityRequestCheckHelper<String> requestCompatibilityHelper = new BackwardCompatibilityRequestCheckHelper<>() {
+            @Override
+            public byte[] execute(String key, byte[] requestBytes) {
+                Execution<byte[], byte[], List<byte[]>> execution = FunctionService.<byte[], byte[], List<byte[]>>onRegion(region)
+                    .withFilter(Collections.singleton(key))
+                    .setArguments(requestBytes);
+                ResultCollector<byte[], List<byte[]>> resultCollector = execution.execute(new GeodeBucketFunction<String>());
+                return resultCollector.getResult().get(0);
+            }
+
+            @Override
+            public CompletableFuture<byte[]> executeAsync(String key, byte[] requestBytes) {
+                throw new UnsupportedOperationException();
+            }
+        };
+
         specs = Arrays.asList(
             new ProxyManagerSpec<>(
                 "GeodeProxyManager",
                 () -> UUID.randomUUID().toString(),
                 () -> Bucket4jGeode.compareAndSwapBasedBuilder(region)
-            ).checkStateBackwardCompatibility(backwardCompatibilityStateCheckHelper),
+            ).checkStateBackwardCompatibility(backwardCompatibilityStateCheckHelper).withoutBackwardCompatibilityRequestChecker(),
             new ProxyManagerSpec<>(
                 "GeodeProxyManager_background",
                 () -> UUID.randomUUID().toString(),
                 () -> Bucket4jGeode.compareAndSwapBasedBuilder(region)
                     .executionStrategy(background(backgroundExecutor))
-            ).checkStateBackwardCompatibility(backwardCompatibilityStateCheckHelper),
+            ).checkStateBackwardCompatibility(backwardCompatibilityStateCheckHelper).withoutBackwardCompatibilityRequestChecker(),
             new ProxyManagerSpec<>(
                 "GeodeFunctionProxyManager",
                 () -> UUID.randomUUID().toString(),
                 () -> Bucket4jGeode.functionBasedBuilder(region)
-            ).checkStateBackwardCompatibility(backwardCompatibilityStateCheckHelper)
+            ).checkStateBackwardCompatibility(backwardCompatibilityStateCheckHelper).checkRequestBackwardCompatibility(requestCompatibilityHelper)
         );
     }
 

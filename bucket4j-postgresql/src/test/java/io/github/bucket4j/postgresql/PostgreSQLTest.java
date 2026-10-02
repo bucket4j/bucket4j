@@ -122,7 +122,7 @@ public class PostgreSQLTest extends AbstractDistributedBucketTest {
                     .table("bucket")
                     .idColumn("id")
                     .stateColumn("state")
-            ).checkExpiration().checkStateBackwardCompatibility(backwardCompatibilityHelper),
+            ).checkExpiration().checkStateBackwardCompatibility(backwardCompatibilityHelper).withoutBackwardCompatibilityRequestChecker(),
             new ProxyManagerSpec<>(
                 "PostgreSQLSelectForUpdateBasedProxyManager",
                 () -> ThreadLocalRandom.current().nextLong(1_000_000_000),
@@ -130,7 +130,7 @@ public class PostgreSQLTest extends AbstractDistributedBucketTest {
                     .table("bucket")
                     .idColumn("id")
                     .stateColumn("state")
-            ).checkExpiration().checkStateBackwardCompatibility(backwardCompatibilityHelper),
+            ).checkExpiration().checkStateBackwardCompatibility(backwardCompatibilityHelper).withoutBackwardCompatibilityRequestChecker(),
             new ProxyManagerSpec<>(
                 "PostgreSQLadvisoryLockBasedProxyManager_StringKey",
                 () -> UUID.randomUUID().toString(),
@@ -139,7 +139,7 @@ public class PostgreSQLTest extends AbstractDistributedBucketTest {
                     .idColumn("id")
                     .stateColumn("state")
                     .primaryKeyMapper(PrimaryKeyMapper.STRING)
-            ).checkExpiration().checkStateBackwardCompatibility(backwardCompatibilityHelperStringKeyTable)
+            ).checkExpiration().checkStateBackwardCompatibility(backwardCompatibilityHelperStringKeyTable).withoutBackwardCompatibilityRequestChecker()
         );
     }
 

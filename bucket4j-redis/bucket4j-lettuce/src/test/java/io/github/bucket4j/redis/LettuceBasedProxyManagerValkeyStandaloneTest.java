@@ -73,18 +73,18 @@ public class LettuceBasedProxyManagerValkeyStandaloneTest extends AbstractDistri
                 "LettuceBasedProxyManager_ByteArrayKey",
                 () -> UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8),
                 () -> Bucket4jLettuce.casBasedBuilder(redisClient)
-            ).checkExpiration().checkStateBackwardCompatibility(byteArrayKeyHelper),
+            ).checkExpiration().checkStateBackwardCompatibility(byteArrayKeyHelper).withoutBackwardCompatibilityRequestChecker(),
             new ProxyManagerSpec<>(
                 "LettuceBasedProxyManager_StringKey",
                 () -> UUID.randomUUID().toString(),
                 () -> Bucket4jLettuce.casBasedBuilder(redisClient.connect(RedisCodec.of(StringCodec.UTF8, ByteArrayCodec.INSTANCE)))
-            ).checkExpiration().checkStateBackwardCompatibility(stringKeyHelper),
+            ).checkExpiration().checkStateBackwardCompatibility(stringKeyHelper).withoutBackwardCompatibilityRequestChecker(),
             new ProxyManagerSpec<>(
                 "LettuceBasedProxyManager_StringKey_WithBackoffRetryStrategy",
                 () -> UUID.randomUUID().toString(),
                 () -> Bucket4jLettuce.casBasedBuilder(redisClient.connect(RedisCodec.of(StringCodec.UTF8, ByteArrayCodec.INSTANCE)))
                     .retryStrategy(metadata -> RetryDecision.retryAfter(Duration.ofNanos(metadata.getAttemptNumber())))
-            ).checkExpiration().checkStateBackwardCompatibility(stringKeyHelper)
+            ).checkExpiration().checkStateBackwardCompatibility(stringKeyHelper).withoutBackwardCompatibilityRequestChecker()
         );
     }
 

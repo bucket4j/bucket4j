@@ -1,6 +1,11 @@
 package io.github.bucket4j.grid.ignite;
 
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
+import io.github.bucket4j.grid.ignite.thin.ThinClientUtils;
+import io.github.bucket4j.grid.ignite.thin.compute.Bucket4jComputeTask;
+import io.github.bucket4j.grid.ignite.thin.compute.Bucket4jComputeTaskParams;
+import io.github.bucket4j.grid.ignite.thin.compute.IgniteEntryProcessor;
+import io.github.bucket4j.tck.BackwardCompatibilityRequestCheckHelper;
 import io.github.bucket4j.tck.BackwardCompatibilityStateCheckHelper;
 import io.github.bucket4j.tck.ProxyManagerSpec;
 
@@ -23,6 +28,8 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 
 public class IgniteThinClientTest extends AbstractDistributedBucketTest {
@@ -107,17 +114,33 @@ public class IgniteThinClientTest extends AbstractDistributedBucketTest {
             }
         };
 
+        BackwardCompatibilityRequestCheckHelper<String> requestCompatibilityHelper = new BackwardCompatibilityRequestCheckHelper<>() {
+            @Override
+            public byte[] execute(String key, byte[] requestBytes) throws ExecutionException, InterruptedException {
+                return igniteClient.compute().execute(Bucket4jComputeTask.JOB_NAME, newTaskParams(key, requestBytes));
+            }
+
+            @Override
+            public CompletableFuture<byte[]> executeAsync(String key, byte[] requestBytes) {
+                return ThinClientUtils.convertFuture(igniteClient.compute().<Bucket4jComputeTaskParams<String>, byte[]>executeAsync2(Bucket4jComputeTask.JOB_NAME, newTaskParams(key, requestBytes)));
+            }
+
+            private Bucket4jComputeTaskParams<String> newTaskParams(String key, byte[] requestBytes) {
+                return new Bucket4jComputeTaskParams<>(CACHE_NAME, key, new IgniteEntryProcessor<>(requestBytes));
+            }
+        };
+
         specs = Arrays.asList(
             new ProxyManagerSpec<>(
                 "IgniteThinClientCompute",
                 () -> UUID.randomUUID().toString(),
                 () -> Bucket4jIgnite.thinClient().clientComputeBasedBuilder(cache, igniteClient.compute())
-            ).checkStateBackwardCompatibility(backwardCompatibilityHelper),
+            ).checkStateBackwardCompatibility(backwardCompatibilityHelper).checkRequestBackwardCompatibility(requestCompatibilityHelper),
             new ProxyManagerSpec<>(
                 "IgniteThinClientCas",
                 () -> UUID.randomUUID().toString(),
                 () -> Bucket4jIgnite.thinClient().casBasedBuilder(cache2)
-            ).checkStateBackwardCompatibility(backwardCompatibilityHelper2)
+            ).checkStateBackwardCompatibility(backwardCompatibilityHelper2).withoutBackwardCompatibilityRequestChecker()
         );
     }
 

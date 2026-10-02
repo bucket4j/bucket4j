@@ -60,7 +60,7 @@ public class CouchbaseTest extends AbstractDistributedBucketTest {
                 public void setRawState(String key, byte[] state) {
                     collection.replace(key, state, ReplaceOptions.replaceOptions().transcoder(RawBinaryTranscoder.INSTANCE));
                 }
-            }),
+            }).withoutBackwardCompatibilityRequestChecker(),
             new ProxyManagerSpec<>(
                 "CouchbaseCompareAndSwapBasedProxyManagerAsyncCollection",
                 () -> UUID.randomUUID().toString(),
@@ -82,17 +82,17 @@ public class CouchbaseTest extends AbstractDistributedBucketTest {
                         throw new RuntimeException(e);
                     }
                 }
-            }),
+            }).withoutBackwardCompatibilityRequestChecker(),
             new ProxyManagerSpec<>(
                 "CouchbaseCompareAndSwapBasedProxyManagerWithLongKeys",
                 () -> ThreadLocalRandom.current().nextLong(),
                 () -> Bucket4jCouchbase.compareAndSwapBasedBuilder(collection, Mapper.LONG)
-            ).checkExpiration().withoutBackwardCompatibilityStateChecker(),
+            ).checkExpiration().withoutBackwardCompatibilityStateChecker().withoutBackwardCompatibilityRequestChecker(),
             new ProxyManagerSpec<>(
                 "CouchbaseCompareAndSwapBasedProxyManagerAsyncCollectionWithLongKeys",
                 () -> ThreadLocalRandom.current().nextLong(),
                 () -> Bucket4jCouchbase.compareAndSwapBasedBuilder(asyncCollection, Mapper.LONG)
-            ).checkExpiration().withoutBackwardCompatibilityStateChecker()
+            ).checkExpiration().withoutBackwardCompatibilityStateChecker().withoutBackwardCompatibilityRequestChecker()
         );
     }
 

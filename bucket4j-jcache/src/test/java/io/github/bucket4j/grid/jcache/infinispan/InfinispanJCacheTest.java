@@ -2,6 +2,7 @@
 package io.github.bucket4j.grid.jcache.infinispan;
 
 import io.github.bucket4j.grid.jcache.Bucket4jJCache;
+import io.github.bucket4j.grid.jcache.JCacheRequestCheckHelper;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
 import io.github.bucket4j.tck.BackwardCompatibilityStateCheckHelper;
 import io.github.bucket4j.tck.ProxyManagerSpec;
@@ -64,7 +65,7 @@ public class InfinispanJCacheTest extends AbstractDistributedBucketTest {
                 public void setRawState(String key, byte[] state) {
                     getCache().put(key, state);
                 }
-            })
+            }).checkRequestBackwardCompatibility(new JCacheRequestCheckHelper(cache1, true))
         );
     }
 

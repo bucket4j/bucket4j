@@ -6,8 +6,11 @@ import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.map.IMap;
 import io.github.bucket4j.grid.hazelcast.Bucket4jHazelcast;
+import io.github.bucket4j.grid.hazelcast.HazelcastEntryProcessor;
+import io.github.bucket4j.grid.hazelcast.HazelcastOffloadableEntryProcessor;
 import io.github.bucket4j.grid.hazelcast.HazelcastProxyManager;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
+import io.github.bucket4j.tck.BackwardCompatibilityRequestCheckHelper;
 import io.github.bucket4j.tck.BackwardCompatibilityStateCheckHelper;
 import io.github.bucket4j.tck.ProxyManagerSpec;
 
@@ -21,6 +24,7 @@ import org.junit.jupiter.api.BeforeAll;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 public class HazelcastWithCustomSerializersTest extends AbstractDistributedBucketTest {
 
@@ -71,18 +75,43 @@ public class HazelcastWithCustomSerializersTest extends AbstractDistributedBucke
                 map.put(key, state);
             }
         };
+
+        BackwardCompatibilityRequestCheckHelper<String> requestCompatibilityHelper = new BackwardCompatibilityRequestCheckHelper<>() {
+            @Override
+            public byte[] execute(String key, byte[] requestBytes) {
+                return map.executeOnKey(key, new HazelcastEntryProcessor<String, Object>(requestBytes));
+            }
+
+            @Override
+            public CompletableFuture<byte[]> executeAsync(String key, byte[] requestBytes) {
+                return map.submitToKey(key, new HazelcastEntryProcessor<String, Object>(requestBytes)).toCompletableFuture();
+            }
+        };
+
+        BackwardCompatibilityRequestCheckHelper<String> offloadableRequestCompatibilityHelper = new BackwardCompatibilityRequestCheckHelper<>() {
+            @Override
+            public byte[] execute(String key, byte[] requestBytes) {
+                return map.executeOnKey(key, new HazelcastOffloadableEntryProcessor<String, Object>(requestBytes, "my-executor"));
+            }
+
+            @Override
+            public CompletableFuture<byte[]> executeAsync(String key, byte[] requestBytes) {
+                return map.submitToKey(key, new HazelcastOffloadableEntryProcessor<String, Object>(requestBytes, "my-executor")).toCompletableFuture();
+            }
+        };
+
         specs = Arrays.asList(
             new ProxyManagerSpec<>(
                 "HazelcastProxyManager_CustomSerialization",
                 () -> UUID.randomUUID().toString(),
                 () -> Bucket4jHazelcast.entryProcessorBasedBuilder(map)
-            ).checkExpiration().checkStateBackwardCompatibility(backwardCompatibilityHelper),
+            ).checkExpiration().checkStateBackwardCompatibility(backwardCompatibilityHelper).checkRequestBackwardCompatibility(requestCompatibilityHelper),
             new ProxyManagerSpec<>(
                 "HazelcastProxyManager_JdkSerialization_offloadableExecutor",
                 () -> UUID.randomUUID().toString(),
                 () -> Bucket4jHazelcast.entryProcessorBasedBuilder(map)
                     .offloadableExecutorName("my-executor")
-            ).checkExpiration().checkStateBackwardCompatibility(backwardCompatibilityHelper)
+            ).checkExpiration().checkStateBackwardCompatibility(backwardCompatibilityHelper).checkRequestBackwardCompatibility(offloadableRequestCompatibilityHelper)
         );
     }
 

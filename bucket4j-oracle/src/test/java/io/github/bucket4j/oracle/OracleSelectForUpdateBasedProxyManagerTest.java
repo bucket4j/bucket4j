@@ -80,7 +80,7 @@ public class OracleSelectForUpdateBasedProxyManagerTest extends AbstractDistribu
                     .table("bucket")
                     .idColumn("id")
                     .stateColumn("state")
-            ).checkExpiration().checkStateBackwardCompatibility(backwardCompatibilityHelper)
+            ).checkExpiration().checkStateBackwardCompatibility(backwardCompatibilityHelper).withoutBackwardCompatibilityRequestChecker()
         );
     }
 

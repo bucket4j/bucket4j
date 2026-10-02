@@ -79,7 +79,7 @@ public class MariaDBSelectForUpdateBasedTransactionTest extends AbstractDistribu
                     .table("test.bucket")
                     .idColumn("id")
                     .stateColumn("state")
-            ).checkExpiration().checkStateBackwardCompatibility(backwardCompatibilityHelper)
+            ).checkExpiration().checkStateBackwardCompatibility(backwardCompatibilityHelper).withoutBackwardCompatibilityRequestChecker()
         );
     }
 

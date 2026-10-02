@@ -9,6 +9,7 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ICacheManager;
 
 import io.github.bucket4j.grid.jcache.Bucket4jJCache;
+import io.github.bucket4j.grid.jcache.JCacheRequestCheckHelper;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
 import io.github.bucket4j.tck.BackwardCompatibilityStateCheckHelper;
 import io.github.bucket4j.tck.ProxyManagerSpec;
@@ -82,7 +83,7 @@ public class HazelcastJCacheTest extends AbstractDistributedBucketTest {
                 public void setRawState(String key, byte[] state) {
                     cache.put(key, state);
                 }
-            })
+            }).checkRequestBackwardCompatibility(new JCacheRequestCheckHelper(cache, false))
         );
     }
 

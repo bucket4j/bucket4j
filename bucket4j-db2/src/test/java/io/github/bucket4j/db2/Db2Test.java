@@ -62,7 +62,7 @@ public class Db2Test extends AbstractDistributedBucketTest {
                     .table("bucket")
                     .idColumn("id")
                     .stateColumn("state")
-            ).checkExpiration().checkStateBackwardCompatibility(backwardCompatibilityHelper),
+            ).checkExpiration().checkStateBackwardCompatibility(backwardCompatibilityHelper).withoutBackwardCompatibilityRequestChecker(),
             new ProxyManagerSpec<>(
                 "Db2SelectForUpdateBasedProxyManager_StringKey",
                 () -> ThreadLocalRandom.current().nextLong(1_000_000_000),
@@ -70,7 +70,7 @@ public class Db2Test extends AbstractDistributedBucketTest {
                     .table("buckets_String_key")
                     .idColumn("id")
                     .stateColumn("state")
-            ).checkExpiration().checkStateBackwardCompatibility(backwardCompatibilityHelperStringKeyTable)
+            ).checkExpiration().checkStateBackwardCompatibility(backwardCompatibilityHelperStringKeyTable).withoutBackwardCompatibilityRequestChecker()
         );
     }
 

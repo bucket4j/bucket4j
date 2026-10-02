@@ -86,7 +86,7 @@ public class MSSQLSelectForUpdateBasedProxyManagerTest extends AbstractDistribut
                     .idColumn("id")
                     .stateColumn("state")
                     .expiresAtColumn("expires_at")
-            ).checkExpiration().checkStateBackwardCompatibility(backwardCompatibilityHelper)
+            ).checkExpiration().checkStateBackwardCompatibility(backwardCompatibilityHelper).withoutBackwardCompatibilityRequestChecker()
         );
     }
 

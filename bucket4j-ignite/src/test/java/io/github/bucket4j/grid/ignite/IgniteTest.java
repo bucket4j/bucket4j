@@ -1,6 +1,8 @@
 package io.github.bucket4j.grid.ignite;
 
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
+import io.github.bucket4j.grid.ignite.thin.compute.IgniteEntryProcessor;
+import io.github.bucket4j.tck.BackwardCompatibilityRequestCheckHelper;
 import io.github.bucket4j.tck.BackwardCompatibilityStateCheckHelper;
 import io.github.bucket4j.tck.ProxyManagerSpec;
 
@@ -9,6 +11,8 @@ import org.apache.ignite.IgniteCache;
 import org.apache.ignite.Ignition;
 import org.apache.ignite.configuration.CacheConfiguration;
 import org.apache.ignite.configuration.IgniteConfiguration;
+import org.apache.ignite.lang.IgniteFuture;
+import org.apache.ignite.lang.IgniteInClosure;
 import org.apache.ignite.spi.discovery.tcp.TcpDiscoverySpi;
 import org.apache.ignite.spi.discovery.tcp.ipfinder.vm.TcpDiscoveryVmIpFinder;
 import org.gridkit.nanocloud.Cloud;
@@ -24,6 +28,7 @@ import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 
 import static io.github.bucket4j.distributed.proxy.ExecutionStrategy.background;
@@ -91,26 +96,47 @@ public class IgniteTest extends AbstractDistributedBucketTest {
             }
         };
 
+        BackwardCompatibilityRequestCheckHelper<String> requestCompatibilityHelper = new BackwardCompatibilityRequestCheckHelper<>() {
+            @Override
+            public byte[] execute(String key, byte[] requestBytes) {
+                return cache.invoke(key, new IgniteEntryProcessor<String>(requestBytes));
+            }
+
+            @Override
+            public CompletableFuture<byte[]> executeAsync(String key, byte[] requestBytes) {
+                IgniteFuture<byte[]> igniteFuture = cache.invokeAsync(key, new IgniteEntryProcessor<String>(requestBytes));
+                CompletableFuture<byte[]> completableFuture = new CompletableFuture<>();
+                igniteFuture.listen((IgniteInClosure<IgniteFuture<byte[]>>) completedIgniteFuture -> {
+                    try {
+                        completableFuture.complete(completedIgniteFuture.get());
+                    } catch (Throwable t) {
+                        completableFuture.completeExceptionally(t);
+                    }
+                });
+                return completableFuture;
+            }
+        };
+
         specs = Arrays.asList(
             new ProxyManagerSpec<>(
                 "IgniteProxyManager",
                 () -> UUID.randomUUID().toString(),
                 () -> Bucket4jIgnite.thickClient().entryProcessorBasedBuilder(cache)
-            ).checkStateBackwardCompatibility(backwardCompatibilityHelper),
+            ).checkStateBackwardCompatibility(backwardCompatibilityHelper).checkRequestBackwardCompatibility(requestCompatibilityHelper),
             new ProxyManagerSpec<>(
                 "IgniteProxyManager_background",
                 () -> UUID.randomUUID().toString(),
                 () -> Bucket4jIgnite.thickClient()
                     .entryProcessorBasedBuilder(cache)
                     .executionStrategy(background(Executors.newFixedThreadPool(20)))
-            ).checkStateBackwardCompatibility(backwardCompatibilityHelper),
+            ).checkStateBackwardCompatibility(backwardCompatibilityHelper).checkRequestBackwardCompatibility(requestCompatibilityHelper),
             new ProxyManagerSpec<>(
                 "IgniteProxyManager_backgroundTimeBounded",
                 () -> UUID.randomUUID().toString(),
                 () -> Bucket4jIgnite.thickClient()
                     .entryProcessorBasedBuilder(cache)
                     .executionStrategy(backgroundTimeBounded(Executors.newFixedThreadPool(20), Duration.ofSeconds(5)))
-            ).checkStateBackwardCompatibility(backwardCompatibilityHelper)
+            ).checkStateBackwardCompatibility(backwardCompatibilityHelper).checkRequestBackwardCompatibility(requestCompatibilityHelper)
         );
     }
 

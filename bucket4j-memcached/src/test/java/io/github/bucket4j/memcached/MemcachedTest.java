@@ -56,7 +56,7 @@ public class MemcachedTest extends AbstractDistributedBucketTest {
                         throw new RuntimeException(e);
                     }
                 }
-            })
+            }).withoutBackwardCompatibilityRequestChecker()
         );
     }
 

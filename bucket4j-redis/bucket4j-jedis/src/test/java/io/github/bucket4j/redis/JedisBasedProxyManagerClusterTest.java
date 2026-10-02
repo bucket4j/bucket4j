@@ -72,7 +72,7 @@ public class JedisBasedProxyManagerClusterTest extends AbstractDistributedBucket
                 "JedisBasedProxyManager_ByteArrayKey",
                 () -> UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8),
                 () -> Bucket4jJedis.casBasedBuilder(jedisCluster)
-            ).checkExpiration().checkStateBackwardCompatibility(backwardCompatibilityHelper)
+            ).checkExpiration().checkStateBackwardCompatibility(backwardCompatibilityHelper).withoutBackwardCompatibilityRequestChecker()
         );
     }
 

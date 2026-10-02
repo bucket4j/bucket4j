@@ -19,14 +19,18 @@
  */
 package io.github.bucket4j.grid.ignite3;
 
+import io.github.bucket4j.grid.ignite3.internal.JobInputCodec;
 import io.github.bucket4j.tck.AbstractDistributedBucketTest;
+import io.github.bucket4j.tck.BackwardCompatibilityRequestCheckHelper;
 import io.github.bucket4j.tck.BackwardCompatibilityStateCheckHelper;
 import io.github.bucket4j.tck.ProxyManagerSpec;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.IgniteServer;
 import org.apache.ignite.InitParameters;
+import org.apache.ignite.compute.JobTarget;
 import org.apache.ignite.table.KeyValueView;
 import org.apache.ignite.table.Tuple;
+import org.apache.ignite.table.mapper.Mapper;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 
@@ -34,6 +38,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Runs the bucket4j TCK suite against a single embedded (same-JVM) Apache Ignite 3.x node backed by
@@ -81,12 +86,31 @@ public class Ignite3ProxyManagerTest extends AbstractDistributedBucketTest {
             }
         };
 
+        BackwardCompatibilityRequestCheckHelper<String> requestCompatibilityHelper = new BackwardCompatibilityRequestCheckHelper<>() {
+            @Override
+            public byte[] execute(String key, byte[] requestBytes) {
+                return ignite.compute().execute(
+                        JobTarget.colocated(TABLE_NAME, key, Mapper.of(String.class)),
+                        Ignite3ComputeJob.JOB_DESCRIPTOR,
+                        JobInputCodec.encode(TABLE_NAME, key, requestBytes));
+            }
+
+            @Override
+            public CompletableFuture<byte[]> executeAsync(String key, byte[] requestBytes) {
+                return ignite.compute().executeAsync(
+                        JobTarget.colocated(TABLE_NAME, key, Mapper.of(String.class)),
+                        Ignite3ComputeJob.JOB_DESCRIPTOR,
+                        JobInputCodec.encode(TABLE_NAME, key, requestBytes));
+            }
+        };
+
         specs = Arrays.asList(
                 new ProxyManagerSpec<>(
                         "Ignite3ProxyManager",
                         () -> UUID.randomUUID().toString(),
                         () -> Bucket4jIgnite3.<String>builder().ignite(ignite).table(TABLE_NAME).keyType(String.class)
                 ).checkStateBackwardCompatibility(backwardCompatibilityHelper)
+                 .checkRequestBackwardCompatibility(requestCompatibilityHelper)
         );
     }
 

@@ -70,12 +70,12 @@ public class VertxBasedProxyManagerClusterTest extends AbstractDistributedBucket
                 "VertxBasedProxyManager_ByteArrayKey",
                 () -> UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8),
                 () -> Bucket4jVertx.casBasedBuilder(redis)
-            ).checkExpiration().checkStateBackwardCompatibility(byteArrayKeyHelper),
+            ).checkExpiration().checkStateBackwardCompatibility(byteArrayKeyHelper).withoutBackwardCompatibilityRequestChecker(),
             new ProxyManagerSpec<>(
                 "VertxBasedProxyManager_StringKey",
                 () -> UUID.randomUUID().toString(),
                 () -> Bucket4jVertx.casBasedBuilder(redis).keyMapper(Mapper.STRING)
-            ).checkExpiration().checkStateBackwardCompatibility(stringKeyHelper)
+            ).checkExpiration().checkStateBackwardCompatibility(stringKeyHelper).withoutBackwardCompatibilityRequestChecker()
         );
     }
 
