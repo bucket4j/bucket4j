@@ -345,6 +345,9 @@
                                 <goals>
                                     <goal>sign</goal>
                                 </goals>
+                                <configuration>
+                                    <skip>${skip.gpg}</skip>
+                                </configuration>
                             </execution>
                         </executions>
                     </plugin>

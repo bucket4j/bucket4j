@@ -49,4 +49,37 @@
         </dependency>
     </dependencies>
 
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>biz.aQute.bnd</groupId>
+                <artifactId>bnd-maven-plugin</artifactId>
+                <configuration>
+                    <!-- folsom pulls in dnsjava 2.1.8, which has a class in the jar root (unnamed package) and so
+                         cannot be turned into an automatic module. When our artifact carries Automatic-Module-Name,
+                         maven-javadoc-plugin switches to the module path and fails on it. -removeheaders keeps
+                         javadoc on the classpath. -->
+                    <bnd><![CDATA[
+    Bundle-SymbolicName: ${osgi.symbolicName}
+    Bundle-Name: ${project.name}
+    Bundle-Version: ${project.version}
+    Automatic-Module-Name: io.github.bucket4j.${modular-name}
+
+    # Export your own packages; import everything else
+    -exportcontents: io.github.bucket4j.*;version="${project.version}";-noimport:=true
+    Import-Package: *
+
+    # Nice-to-have OSGi metadata
+    Bundle-Vendor: Vladimir Bukhtoyarov
+    Bundle-Description: ${project.description}
+    Bundle-DocURL: ${project.url}
+    -reproducible: true
+    -noextraheaders: true
+    -removeheaders: Automatic-Module-Name
+                    ]]></bnd>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
 </project>
