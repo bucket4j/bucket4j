@@ -49,7 +49,12 @@ public class BasedOnTimeForRefillingBucketUpToMaxExpirationAfterWriteStrategy im
 
     @Override
     public long calculateTimeToLiveMillis(RemoteBucketState state, long currentTimeNanos) {
-        long millisToFullRefill = state.calculateFullRefillingTime(currentTimeNanos) / 1_000_000;
+        long nanosToFullRefill = state.calculateFullRefillingTime(currentTimeNanos);
+        long millisToFullRefill = nanosToFullRefill / 1_000_000;
+        if (nanosToFullRefill % 1_000_000 != 0) {
+            // Expiring a partially refilled bucket would restore tokens too early.
+            millisToFullRefill++;
+        }
         long result = keepAfterRefillDurationMillis + millisToFullRefill;
         return result <= 0 ? 1 : result;
     }
