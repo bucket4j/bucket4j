@@ -37,10 +37,12 @@ Refill is lazy. Tokens are not added by a timer; they are computed from the elap
 ===== Greedy refill
 
 Greedy refill (`refillGreedy`) lets tokens appear continuously.
-The code first consumes whole periods, then converts the remainder into tokens:
+Every touch first stamps the new timestamp, then consumes whole periods, and only then converts the remainder into tokens:
 
 [source]
 ----
+lastRefillNanos = now
+
 whole      = elapsed / periodNanos
 available += whole * refillTokens
 elapsed    = elapsed % periodNanos
@@ -48,14 +50,24 @@ elapsed    = elapsed % periodNanos
 credit     = elapsed * refillTokens + roundingError
 available += credit / periodNanos
 roundingError = credit % periodNanos
+
+if available >= capacity:
+    available     = capacity
+    roundingError = 0
 ----
+
+The trailing block is not an optimisation, it is what bounds the bucket: `available` is never allowed to grow past `capacity`, however long the bucket sat untouched.
+A bucket that is already full is the extreme case of it — the timestamp still advances, but no credit is accumulated at all, so an idle full bucket gains nothing.
 
 `roundingError` is what keeps the rate exact.
 Without it, a refill of `1 token per 3 seconds` touched every second would round `1 * 1 / 3` to zero three times in a row and never refill.
 With it, the remainders accumulate: the second touch carries a third of a token, the third carries two thirds, and the fourth produces the token.
 The accumulated error is always in `[0, periodNanos)`, so it can never leak an extra token.
 
-Because the arithmetic is integer arithmetic, a greedy bucket refills exactly as many tokens as the configured rate dictates over any window, with no drift.
+Because the arithmetic is integer arithmetic, a greedy bucket that stays below `capacity` refills exactly as many tokens as the configured rate dictates, with no drift.
+The guarantee is one-sided once the bucket saturates: reaching `capacity` resets `roundingError` to zero, so up to one token of already-earned credit is discarded at that moment.
+That can only make the bucket more conservative than the nominal rate, never more generous, which is why the saturation step belongs in the model rather than being left out as an implementation detail.
+The second qualification is the floating-point fallback described in <<math-model-overflow>>, which is taken only when an intermediate product does not fit in 64 bits.
 
 [[math-model-interval]]
 ===== Interval refill
@@ -67,10 +79,15 @@ Interval refill (`refillIntervally`) is the classic step function: tokens appear
 aligned    = lastRefillNanos + ((now - lastRefillNanos) / periodNanos) * periodNanos
 available += ((aligned - lastRefillNanos) / periodNanos) * refillTokens
 lastRefill = aligned
+
+if available >= capacity:
+    available     = capacity
+    roundingError = 0
 ----
 
 `lastRefillNanos` only ever moves by whole periods, which is what makes the grid stable: a bucket configured `100 tokens per hour` adds its 100 tokens once per hour no matter how often it is touched in between.
-An interval bucket does not accumulate rounding error; the field stays zero in normal operation, and is only carried over when an existing state is re-used by a new configuration.
+The saturation step is the same one greedy refill performs, so an interval bucket is also capped at `capacity` and also drops any carried-over fraction when it saturates.
+An interval bucket does not accumulate rounding error of its own; the field stays zero in normal operation, and is only carried over when an existing state is re-used by a new configuration.
 
 The practical difference between the two styles is the shape of the allowance, not the long-run rate: greedy spreads a period over its whole duration, interval gives the same allowance in a single step at the end of each period.
 
@@ -88,7 +105,12 @@ This is the mechanism behind the recommendation in <<short-timed-bursts>>: a `10
 [[math-model-delay]]
 ==== Estimating the wait time
 
-For a deficit `d` (`d = n - available`), greedy and interval bandwidths answer differently.
+Two guards are evaluated before any refill arithmetic, and both matter for the result:
+
+* If `n` is greater than `capacity` the request can never be satisfied, because the bucket can never hold more than `capacity` tokens; the answer is `Long.MAX_VALUE`, which the API reports as "essentially never". An empty bucket with `capacity = 10` refilling at `10 tokens per second` answers `Long.MAX_VALUE` for `n = 20`, not the two seconds a naive division would suggest.
+* If `n <= available` there is nothing to wait for and the answer is `0`.
+
+Only a positive deficit `d = n - available` reaches the formulas below, and greedy and interval bandwidths answer it differently.
 
 Greedy: the answer is the time needed to earn `d` tokens, minus the credit already accumulated in `roundingError`:
 
@@ -113,15 +135,23 @@ otherwise                   -> wait + ceil((d - refillTokens) / refillTokens) * 
 `refillIntervallyAligned(tokens, period, timeOfFirstRefill)` pins the grid to a wall-clock instant instead of to the moment the bucket was created: `lastRefillNanos` is initialised to `timeOfFirstRefill - period`, so the first tick happens at the requested time and every later tick keeps the same offset.
 This is what lets independent instances of an application agree on when a shared bucket refills.
 
-Adaptive initial tokens (`refillIntervallyAlignedWithAdaptiveInitialTokens`) fill a brand-new bucket according to the time left before the first refill, so that a bucket created at 10:50 with an hourly grid is not already empty at 10:51:
+Adaptive initial tokens (`refillIntervallyAlignedWithAdaptiveInitialTokens`) cut the starting allowance of a brand-new bucket down to the tokens it has actually earned since the previous grid tick, so that a bucket created at 10:50 on an hourly grid does not start with the full `capacity` and then receive another whole portion ten minutes later:
 
 [source]
 ----
-guaranteedBase = max(0, capacity - refillTokens)
-initialTokens  = min(capacity, guaranteedBase + (timeOfFirstRefill - now) * refillTokens / periodNanos)
+if now >= timeOfFirstRefill:
+    initialTokens = configuredInitialTokens
+else:
+    guaranteedBase = max(0, capacity - refillTokens)
+    initialTokens  = min(capacity, guaranteedBase + (timeOfFirstRefill - now) * refillTokens / periodNanos)
 ----
 
-Without that adjustment, every freshly created aligned bucket would start with the configured `initialTokens` (by default the full `capacity`) and then receive the whole next portion at the grid tick, briefly allowing twice the intended allowance.
+The first branch is the fallback: when the bucket is created at or after `timeOfFirstRefill`, the first refill instant is already in the past and there is no partial window left to interpolate, so the configured `initialTokens` are used as they are.
+`guaranteedBase` keeps at least the tokens of one full future period available, and the rest is the fraction of the period that has already elapsed.
+
+Without the adjustment, every freshly created aligned bucket would start with the configured `initialTokens` (by default the full `capacity`) and then receive the whole next portion at the grid tick.
+With `capacity` equal to `refillTokens` that is twice the intended allowance inside a single period.
+Note what the adjustment does and does not do: it lowers the starting allowance, it does not protect the bucket from being drained to zero — for that, the ordinary refill described above and the wait time estimated below are what apply.
 
 [[math-model-overflow]]
 ==== Integer arithmetic and overflow
@@ -135,4 +165,14 @@ Both are computed with a `multiplyExact` variant that returns `Long.MAX_VALUE` i
 * In `addTokens` and `forceAddTokens`, a sum that would overflow is treated as "the bucket is full": `addTokens` resets to `capacity`, `forceAddTokens` sets `Long.MAX_VALUE`.
 
 The invariant across all of these paths is that an overflow is never allowed to produce a negative or wrapped value; it is turned into "full" or "infinitely far away".
-In normal use the sentinel is not reachable: `Bandwidth` rejects `capacity <= 0`, `periodNanos <= 0`, and `refillTokens > periodNanos`, so the refill rate is capped at one token per nanosecond, and an overflow needs either a period measured in centuries or a deficit close to `Long.MAX_VALUE`.
+
+What overflows, however, is usually an intermediate product rather than the final answer, and reaching it does not take exotic settings.
+A bandwidth of `10,000,000 tokens per hour` left untouched for half an hour multiplies `elapsed` by `refillTokens` into `1.8e19`, past `Long.MAX_VALUE`, while the true refill is a perfectly ordinary `5,000,000` tokens.
+The same bandwidth with a `10,000,000` token deficit multiplies `deficit` by `periodNanos` into `3.6e19` and lands in the floating-point fallback of the greedy delay formula.
+The two cases therefore have to be kept apart:
+
+* An overflowing intermediate product is handled by the `double` fallback, and the result stays finite and close to correct.
+* A final result that genuinely does not fit — an unsatisfiable request, or a wait longer than roughly 292 years expressed in nanoseconds — stays saturated at `Long.MAX_VALUE` and is reported as "essentially never".
+
+The constructors remove the degenerate configurations: `Refill` rejects `periodNanos <= 0` and `refillTokens > periodNanos`, so the rate never exceeds one token per nanosecond, and `Bandwidth` rejects `capacity <= 0`.
+They do not bound `capacity`, the refill period, or how long a bucket may sit untouched, so both the intermediate overflow above and the saturated final result remain reachable with settings the API accepts.
