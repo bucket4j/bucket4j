@@ -4,6 +4,8 @@ include::quick-start.adoc[]
 
 include::concepts.adoc[]
 
+include::math-model.adoc[]
+
 include::listener.adoc[]
 
 include::verbose-api.adoc[]
