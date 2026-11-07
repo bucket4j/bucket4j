@@ -33,6 +33,7 @@ import java.time.Duration;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
@@ -223,7 +224,7 @@ public class DefaultAsyncBucketProxy implements AsyncBucketProxy, AsyncOptimizat
                     listener.onConsumed(tokensToConsume);
                     listener.onDelayed(nanosToSleep);
                     Runnable delayedCompletion = () -> resultFuture.complete(true);
-                    scheduler.schedule(delayedCompletion, nanosToSleep, TimeUnit.NANOSECONDS);
+                    scheduleDelayedCompletion(resultFuture, delayedCompletion, nanosToSleep, scheduler);
                 } catch (Throwable t) {
                     resultFuture.completeExceptionally(t);
                 }
@@ -256,7 +257,7 @@ public class DefaultAsyncBucketProxy implements AsyncBucketProxy, AsyncOptimizat
                     listener.onConsumed(tokensToConsume);
                     listener.onDelayed(nanosToSleep);
                     Runnable delayedCompletion = () -> resultFuture.complete(null);
-                    scheduler.schedule(delayedCompletion, nanosToSleep, TimeUnit.NANOSECONDS);
+                    scheduleDelayedCompletion(resultFuture, delayedCompletion, nanosToSleep, scheduler);
                 } catch (Throwable t) {
                     resultFuture.completeExceptionally(t);
                 }
@@ -299,7 +300,7 @@ public class DefaultAsyncBucketProxy implements AsyncBucketProxy, AsyncOptimizat
                     listener.onConsumed(tokensToConsume);
                     listener.onDelayed(nanosToSleep);
                     Runnable delayedCompletion = () -> resultFuture.complete(nanosToSleepVerbose.withValue(true).asLocal());
-                    scheduler.schedule(delayedCompletion, nanosToSleep, TimeUnit.NANOSECONDS);
+                    scheduleDelayedCompletion(resultFuture, delayedCompletion, nanosToSleep, scheduler);
                 } catch (Throwable t) {
                     resultFuture.completeExceptionally(t);
                 }
@@ -333,7 +334,7 @@ public class DefaultAsyncBucketProxy implements AsyncBucketProxy, AsyncOptimizat
                     listener.onConsumed(tokensToConsume);
                     listener.onDelayed(nanosToSleep);
                     Runnable delayedCompletion = () -> resultFuture.complete(nanosToSleepVerbose.withValue((Void) null).asLocal());
-                    scheduler.schedule(delayedCompletion, nanosToSleep, TimeUnit.NANOSECONDS);
+                    scheduleDelayedCompletion(resultFuture, delayedCompletion, nanosToSleep, scheduler);
                 } catch (Throwable t) {
                     resultFuture.completeExceptionally(t);
                 }
@@ -504,6 +505,19 @@ public class DefaultAsyncBucketProxy implements AsyncBucketProxy, AsyncOptimizat
                     return initAndExecuteCmdResult.getData();
                 });
             });
+        });
+    }
+
+    private static void scheduleDelayedCompletion(CompletableFuture<?> resultFuture, Runnable delayedCompletion,
+                                                   long nanosToSleep, ScheduledExecutorService scheduler) {
+        if (resultFuture.isCancelled()) {
+            return;
+        }
+        ScheduledFuture<?> scheduledTask = scheduler.schedule(delayedCompletion, nanosToSleep, TimeUnit.NANOSECONDS);
+        resultFuture.whenComplete((result, exception) -> {
+            if (resultFuture.isCancelled()) {
+                scheduledTask.cancel(false);
+            }
         });
     }
 
