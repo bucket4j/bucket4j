@@ -21,6 +21,7 @@ package io.github.bucket4j;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
@@ -296,7 +297,7 @@ public abstract class AbstractBucket implements Bucket {
                 listener.onDelayed(nanosToSleep);
                 CompletableFuture<Boolean> resultFuture = new CompletableFuture<>();
                 Runnable delayedCompletion = () -> resultFuture.complete(true);
-                scheduler.schedule(delayedCompletion, nanosToSleep, TimeUnit.NANOSECONDS);
+                scheduleDelayedCompletion(resultFuture, delayedCompletion, nanosToSleep, scheduler);
                 return resultFuture;
             } catch (Throwable t) {
                 return failedFuture(t);
@@ -322,7 +323,7 @@ public abstract class AbstractBucket implements Bucket {
                 listener.onDelayed(nanosToSleep);
                 CompletableFuture<Void> resultFuture = new CompletableFuture<>();
                 Runnable delayedCompletion = () -> resultFuture.complete(null);
-                scheduler.schedule(delayedCompletion, nanosToSleep, TimeUnit.NANOSECONDS);
+                scheduleDelayedCompletion(resultFuture, delayedCompletion, nanosToSleep, scheduler);
                 return resultFuture;
             } catch (Throwable t) {
                 return failedFuture(t);
@@ -359,7 +360,7 @@ public abstract class AbstractBucket implements Bucket {
                 listener.onDelayed(nanosToSleep);
                 CompletableFuture<VerboseResult<Boolean>> resultFuture = new CompletableFuture<>();
                 Runnable delayedCompletion = () -> resultFuture.complete(nanosToSleepVerbose.withValue(true));
-                scheduler.schedule(delayedCompletion, nanosToSleep, TimeUnit.NANOSECONDS);
+                scheduleDelayedCompletion(resultFuture, delayedCompletion, nanosToSleep, scheduler);
                 return resultFuture;
             } catch (Throwable t) {
                 return failedFuture(t);
@@ -386,7 +387,7 @@ public abstract class AbstractBucket implements Bucket {
                 listener.onDelayed(nanosToSleep);
                 CompletableFuture<VerboseResult<Void>> resultFuture = new CompletableFuture<>();
                 Runnable delayedCompletion = () -> resultFuture.complete(nanosToSleepVerbose.withValue(null));
-                scheduler.schedule(delayedCompletion, nanosToSleep, TimeUnit.NANOSECONDS);
+                scheduleDelayedCompletion(resultFuture, delayedCompletion, nanosToSleep, scheduler);
                 return resultFuture;
             } catch (Throwable t) {
                 return failedFuture(t);
@@ -605,6 +606,19 @@ public abstract class AbstractBucket implements Bucket {
         CompletableFuture<T> fail = new CompletableFuture<>();
         fail.completeExceptionally(t);
         return fail;
+    }
+
+    private static void scheduleDelayedCompletion(CompletableFuture<?> resultFuture, Runnable delayedCompletion,
+                                                   long nanosToSleep, ScheduledExecutorService scheduler) {
+        if (resultFuture.isCancelled()) {
+            return;
+        }
+        ScheduledFuture<?> scheduledTask = scheduler.schedule(delayedCompletion, nanosToSleep, TimeUnit.NANOSECONDS);
+        resultFuture.whenComplete((result, exception) -> {
+            if (resultFuture.isCancelled()) {
+                scheduledTask.cancel(false);
+            }
+        });
     }
 
 }
