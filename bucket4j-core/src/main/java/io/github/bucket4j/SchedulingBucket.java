@@ -29,6 +29,11 @@ import java.util.function.Function;
 /**
  * Provides the scheduling API for {@link Bucket}.
  * Any method of this interface can delay user operation via {@link java.util.concurrent.ScheduledExecutorService} in case of lack of tokens.
+ *
+ * <p>Cancelling a returned future cancels its pending delayed-completion task, if any, without interrupting the scheduler thread.
+ * Cancellation does not cancel the token reservation or return already consumed tokens to the bucket.
+ * Whether a cancelled task is immediately removed from the scheduler queue depends on the scheduler's cancellation policy,
+ * for example {@link java.util.concurrent.ScheduledThreadPoolExecutor#setRemoveOnCancelPolicy(boolean)}.
  */
 public interface SchedulingBucket {
 
