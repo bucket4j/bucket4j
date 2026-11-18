@@ -610,9 +610,6 @@ public abstract class AbstractBucket implements Bucket {
 
     private static void scheduleDelayedCompletion(CompletableFuture<?> resultFuture, Runnable delayedCompletion,
                                                    long nanosToSleep, ScheduledExecutorService scheduler) {
-        if (resultFuture.isCancelled()) {
-            return;
-        }
         ScheduledFuture<?> scheduledTask = scheduler.schedule(delayedCompletion, nanosToSleep, TimeUnit.NANOSECONDS);
         resultFuture.whenComplete((result, exception) -> {
             if (resultFuture.isCancelled()) {
