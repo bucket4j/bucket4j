@@ -1,9 +1,6 @@
 === Bucket4j {revnumber} release notes
 Release `{revnumber}`
 
-==== The features in release scope are following:
-* https://github.com/bucket4j/bucket4j/pull/644[#641 Add a page about the mathematical model of a bucket]
-
 ==== The bugfixes in release scope are following:
-* https://github.com/bucket4j/bucket4j/pull/644[#644 Round refill-based expiration up to whole milliseconds]
+* https://github.com/bucket4j/bucket4j/pull/648[#648 Cancel scheduled tasks when scheduling futures are cancelled]
 
