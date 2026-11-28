@@ -118,7 +118,7 @@ need to hand-roll it:
 [source, java]
 ----
 RetryStrategy backoffWithJitter = RetryStrategies.exponentialBackoffWithJitter(
-    Duration.ofMicros(500),   // base delay - at least one round trip to the backend
+    Duration.ofNanos(500_000),   // base delay - at least one round trip to the backend
     Duration.ofMillis(20),    // max delay - caps added latency under sustained contention
     Duration.ofMillis(150));  // budget - total time before giving up, not attempt count
 
